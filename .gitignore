@@ -3,9 +3,13 @@ node_modules/
 /dist/
 coverage/
 .oximut/
-.stryker-tmp/
+.stryker-tmp*/
+.vitest/
+/packages/vitest-adapter/.experiment-*/
 *.log
 .env
 .env.*
 !.env.example
 .DS_Store
+__pycache__/
+*.pyc

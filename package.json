@@ -1,0 +1,26 @@
+{
+  "name": "oximut",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Rust/Oxc mutation testing with a Vitest adapter — feasibility prototype",
+  "engines": {
+    "node": "26.3.1"
+  },
+  "packageManager": "npm@11.16.0",
+  "scripts": {
+    "test": "npm run test:fixtures && npm run test:adapter && npm run test:benchmarks",
+    "test:fixtures": "vitest run --config fixtures/pure/vitest.config.ts && vitest run --config fixtures/stateful/vitest.config.ts",
+    "test:adapter": "node --test packages/vitest-adapter/test/*.test.mjs",
+    "test:benchmarks": "python3 -m unittest discover -s benchmarks/tests -v",
+    "benchmark": "python3 benchmarks/run.py",
+    "experiment": "node packages/vitest-adapter/experiment.mjs --output .oximut/experiment.json"
+  },
+  "devDependencies": {
+    "@stryker-mutator/core": "10.0.0",
+    "@stryker-mutator/vitest-runner": "10.0.0",
+    "@vitest/coverage-v8": "4.1.10",
+    "typescript": "7.0.2",
+    "vitest": "4.1.10"
+  }
+}

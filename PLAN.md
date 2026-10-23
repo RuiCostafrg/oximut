@@ -9,17 +9,22 @@ separately; do not assume changing implementation language is sufficient.
 
 ## M0 — Baseline and integration feasibility
 
-- [ ] Pin a supported Node release, Vitest version, Rust toolchain, Oxc crates,
+- [x] Pin a supported Node release, Vitest version, Rust toolchain, Oxc crates,
   Stryker version, and dependency lockfiles. Record actual versions in results.
-- [ ] Create a pure-function fixture and a fixture with imports, mocks, hooks,
+- [x] Create a pure-function fixture and a fixture with imports, mocks, hooks,
   module state, asynchronous tests, and top-level initialization.
 - [ ] Measure ordinary Vitest and tuned Stryker: elapsed time, CPU time, peak
   process-tree memory, worker count, mutant count, and phase timings.
-- [ ] Prototype Vitest discovery, filtered reruns, cleanup, cancellation, and
+- [x] Prototype Vitest discovery, filtered reruns, cleanup, cancellation, and
   coverage collection through its supported APIs.
-- [ ] Establish which state can safely persist: controller, transform cache,
+- [x] Establish which state can safely persist: controller, transform cache,
   test process, and module graph. Record required invalidation boundaries.
-- [ ] Document the exact tested compatibility range and API risks in an ADR.
+- [x] Document the exact tested compatibility range and API risks in an ADR.
+
+Implementation evidence: [Vitest lifecycle ADR](docs/adr/0001-vitest-lifecycle.md).
+The safe observed reuse boundary is the controller; test-worker processes and
+module evaluations are fresh. Transform-cache benefits and persistent test-worker
+reuse remain unproven. M1 retains a fresh-process correctness reference.
 
 **Gate:** repeated clean runs agree; the adapter can select tests and terminate
 a hung run. Demonstrate fresh versus reused execution equivalence on the stateful
