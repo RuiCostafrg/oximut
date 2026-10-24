@@ -1,0 +1,43 @@
+name: M0 feasibility
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  feasibility:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: '1.96.0'
+          components: rustfmt, clippy
+      - run: npm ci
+      - run: npm test
+      - run: npm run experiment
+      - run: cargo fmt --all -- --check
+      - run: cargo clippy --workspace --all-targets --locked -- -D warnings
+      - run: cargo test --workspace --locked
+      - name: Verify Oxc parses the fixture sources
+        run: cargo run --locked -p oximut-oxc-smoke -- fixtures/pure/src/logic.ts fixtures/stateful/src/service.ts
+      - name: Baseline smoke (not a performance comparison)
+        run: python3 benchmarks/run.py --repetitions 1 --warmups 0 --timeout 180 --output .oximut/ci-baselines
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: m0-feasibility-results
+          path: .oximut/
+          include-hidden-files: true

@@ -1,0 +1,9 @@
+[32m23:17:34 (4809) INFO ProjectReader[39m Found 3 of 43 file(s) to be mutated.
+[32m23:17:35 (4809) INFO Instrumenter[39m Instrumented 3 source file(s) with 16 mutant(s)
+[32m23:17:35 (4809) INFO ConcurrencyTokenProvider[39m Creating 1 test runner process(es).
+[32m23:17:40 (4809) INFO BroadcastReporter[39m Detected that current console does not support the "progress" reporter, downgrading to "progress-append-only" reporter
+[32m23:17:44 (4809) INFO DryRunExecutor[39m Starting initial test run (vitest test runner with "perTest" coverage analysis). This may take a while.
+[32m23:17:46 (4809) INFO DryRunExecutor[39m Initial test run succeeded. Ran 4 tests in 1 second (net 12.472394999999779 ms, overhead 1286.5276050000002 ms).
+Mutation testing 58% (elapsed: <1m, remaining: <1m) 13/16 tested (1 survived, 0 timed out)
+[32m23:17:59 (4809) INFO JsonReporter[39m Your report can be found at: file:///root/.t3/scratch/2026-10-23-stryker-for-node-is-really-d7dbed62/benchmarks/results/2026-10-23-m0-arm64/warmup-01-stateful-stryker/report.json
+[32m23:17:59 (4809) INFO MutationTestExecutor[39m Done in 25 seconds.
