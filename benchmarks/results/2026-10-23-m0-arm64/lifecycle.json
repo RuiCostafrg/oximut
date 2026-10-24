@@ -1,0 +1,2427 @@
+{
+  "schemaVersion": 1,
+  "experiment": "M0-vitest-lifecycle",
+  "started": "2026-10-23T23:15:00.652Z",
+  "completed": "2026-10-23T23:15:40.645Z",
+  "runtime": {
+    "node": "v26.3.1",
+    "platform": "linux",
+    "arch": "arm64"
+  },
+  "fixtures": [
+    {
+      "name": "pure",
+      "reused": {
+        "discovery": {
+          "tests": [
+            {
+              "id": "[\"\",\"test/logic.test.ts\",\"610138126_0_0\"]",
+              "vitestId": "610138126_0_0",
+              "project": "",
+              "file": "test/logic.test.ts",
+              "name": "clamp > keeps values inside the bounds and returns the nearest bound outside",
+              "state": "pending",
+              "errors": [],
+              "meta": {},
+              "concurrent": false
+            },
+            {
+              "id": "[\"\",\"test/logic.test.ts\",\"610138126_1_0\"]",
+              "vitestId": "610138126_1_0",
+              "project": "",
+              "file": "test/logic.test.ts",
+              "name": "classifyScore > classifies negative, failing, passing, and excellent scores at boundaries",
+              "state": "pending",
+              "errors": [],
+              "meta": {},
+              "concurrent": false
+            },
+            {
+              "id": "[\"\",\"test/logic.test.ts\",\"610138126_2_0\"]",
+              "vitestId": "610138126_2_0",
+              "project": "",
+              "file": "test/logic.test.ts",
+              "name": "applyDiscount > preserves invalid prices and discounts, and caps full discounts at zero",
+              "state": "pending",
+              "errors": [],
+              "meta": {},
+              "concurrent": false
+            },
+            {
+              "id": "[\"\",\"test/logic.test.ts\",\"610138126_3_0\"]",
+              "vitestId": "610138126_3_0",
+              "project": "",
+              "file": "test/logic.test.ts",
+              "name": "shippingCost > uses weight tiers and adds the expedited fee",
+              "state": "pending",
+              "errors": [],
+              "meta": {},
+              "concurrent": false
+            },
+            {
+              "id": "[\"\",\"test/logic.test.ts\",\"610138126_4_0\"]",
+              "vitestId": "610138126_4_0",
+              "project": "",
+              "file": "test/logic.test.ts",
+              "name": "canAccess > requires an adult, a pass, and an active account",
+              "state": "pending",
+              "errors": [],
+              "meta": {},
+              "concurrent": false
+            },
+            {
+              "id": "[\"\",\"test/logic.test.ts\",\"610138126_5_0\"]",
+              "vitestId": "610138126_5_0",
+              "project": "",
+              "file": "test/logic.test.ts",
+              "name": "describeRange and combineFlags > uses inclusive upper boundary for medium",
+              "state": "pending",
+              "errors": [],
+              "meta": {},
+              "concurrent": false
+            },
+            {
+              "id": "[\"\",\"test/logic.test.ts\",\"610138126_5_1\"]",
+              "vitestId": "610138126_5_1",
+              "project": "",
+              "file": "test/logic.test.ts",
+              "name": "describeRange and combineFlags > combines either true flag",
+              "state": "pending",
+              "errors": [],
+              "meta": {},
+              "concurrent": false
+            }
+          ],
+          "errors": [],
+          "controllerPid": 32460,
+          "discovery": "runtime collection; imports execute, test callbacks do not"
+        },
+        "runs": [
+          {
+            "tests": [
+              {
+                "id": "[\"\",\"test/logic.test.ts\",\"610138126_0_0\"]",
+                "vitestId": "610138126_0_0",
+                "project": "",
+                "file": "test/logic.test.ts",
+                "name": "clamp > keeps values inside the bounds and returns the nearest bound outside",
+                "state": "passed",
+                "errors": [],
+                "meta": {},
+                "concurrent": false
+              },
+              {
+                "id": "[\"\",\"test/logic.test.ts\",\"610138126_1_0\"]",
+                "vitestId": "610138126_1_0",
+                "project": "",
+                "file": "test/logic.test.ts",
+                "name": "classifyScore > classifies negative, failing, passing, and excellent scores at boundaries",
+                "state": "passed",
+                "errors": [],
+                "meta": {},
+                "concurrent": false
+              },
+              {
+                "id": "[\"\",\"test/logic.test.ts\",\"610138126_2_0\"]",
+                "vitestId": "610138126_2_0",
+                "project": "",
+                "file": "test/logic.test.ts",
+                "name": "applyDiscount > preserves invalid prices and discounts, and caps full discounts at zero",
+                "state": "passed",
+                "errors": [],
+                "meta": {},
+                "concurrent": false
+              },
+              {
+                "id": "[\"\",\"test/logic.test.ts\",\"610138126_3_0\"]",
+                "vitestId": "610138126_3_0",
+                "project": "",
+                "file": "test/logic.test.ts",
+                "name": "shippingCost > uses weight tiers and adds the expedited fee",
+                "state": "passed",
+                "errors": [],
+                "meta": {},
+                "concurrent": false
+              },
+              {
+                "id": "[\"\",\"test/logic.test.ts\",\"610138126_4_0\"]",
+                "vitestId": "610138126_4_0",
+                "project": "",
+                "file": "test/logic.test.ts",
+                "name": "canAccess > requires an adult, a pass, and an active account",
+                "state": "passed",
+                "errors": [],
+                "meta": {},
+                "concurrent": false
+              },
+              {
+                "id": "[\"\",\"test/logic.test.ts\",\"610138126_5_0\"]",
+                "vitestId": "610138126_5_0",
+                "project": "",
+                "file": "test/logic.test.ts",
+                "name": "describeRange and combineFlags > uses inclusive upper boundary for medium",
+                "state": "passed",
+                "errors": [],
+                "meta": {},
+                "concurrent": false
+              },
+              {
+                "id": "[\"\",\"test/logic.test.ts\",\"610138126_5_1\"]",
+                "vitestId": "610138126_5_1",
+                "project": "",
+                "file": "test/logic.test.ts",
+                "name": "describeRange and combineFlags > combines either true flag",
+                "state": "passed",
+                "errors": [],
+                "meta": {},
+                "concurrent": false
+              }
+            ],
+            "errors": [],
+            "outcome": "passed",
+            "runNumber": 1,
+            "controllerPid": 32460,
+            "elapsedMs": 581.275208,
+            "coverage": {
+              "complete": true,
+              "granularity": "whole-run",
+              "source": "supported Reporter.onCoverage (V8 provider)",
+              "files": [
+                {
+                  "file": "src/logic.ts",
+                  "statements": {
+                    "total": 28,
+                    "covered": 28
+                  },
+                  "functions": {
+                    "total": 7,
+                    "covered": 7
+                  },
+                  "branches": {
+                    "total": 33,
+                    "covered": 33
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "tests": [
+              {
+                "id": "[\"\",\"test/logic.test.ts\",\"610138126_0_0\"]",
+                "vitestId": "610138126_0_0",
+                "project": "",
+                "file": "test/logic.test.ts",
+                "name": "clamp > keeps values inside the bounds and returns the nearest bound outside",
+                "state": "passed",
+                "errors": [],
+                "meta": {},
+                "concurrent": false
+              },
+              {
+                "id": "[\"\",\"test/logic.test.ts\",\"610138126_1_0\"]",
+                "vitestId": "610138126_1_0",
+                "project": "",
+                "file": "test/logic.test.ts",
+                "name": "classifyScore > classifies negative, failing, passing, and excellent scores at boundaries",
+                "state": "passed",
+                "errors": [],
+                "meta": {},
+                "concurrent": false
+              },
+              {
+                "id": "[\"\",\"test/logic.test.ts\",\"610138126_2_0\"]",
+                "vitestId": "610138126_2_0",
+                "project": "",
+                "file": "test/logic.test.ts",
+                "name": "applyDiscount > preserves invalid prices and discounts, and caps full discounts at zero",
+                "state": "passed",
+                "errors": [],
+                "meta": {},
+                "concurrent": false
+              },
+              {
+                "id": "[\"\",\"test/logic.test.ts\",\"610138126_3_0\"]",
+                "vitestId": "610138126_3_0",
+                "project": "",
+                "file": "test/logic.test.ts",
+                "name": "shippingCost > uses weight tiers and adds the expedited fee",
+                "state": "passed",
+                "errors": [],
+                "meta": {},
+                "concurrent": false
+              },
+              {
+                "id": "[\"\",\"test/logic.test.ts\",\"610138126_4_0\"]",
+                "vitestId": "610138126_4_0",
+                "project": "",
+                "file": "test/logic.test.ts",
+                "name": "canAccess > requires an adult, a pass, and an active account",
+                "state": "passed",
+                "errors": [],
+                "meta": {},
+                "concurrent": false
+              },
+              {
+                "id": "[\"\",\"test/logic.test.ts\",\"610138126_5_0\"]",
+                "vitestId": "610138126_5_0",
+                "project": "",
+                "file": "test/logic.test.ts",
+                "name": "describeRange and combineFlags > uses inclusive upper boundary for medium",
+                "state": "passed",
+                "errors": [],
+                "meta": {},
+                "concurrent": false
+              },
+              {
+                "id": "[\"\",\"test/logic.test.ts\",\"610138126_5_1\"]",
+                "vitestId": "610138126_5_1",
+                "project": "",
+                "file": "test/logic.test.ts",
+                "name": "describeRange and combineFlags > combines either true flag",
+                "state": "passed",
+                "errors": [],
+                "meta": {},
+                "concurrent": false
+              }
+            ],
+            "errors": [],
+            "outcome": "passed",
+            "runNumber": 2,
+            "controllerPid": 32460,
+            "elapsedMs": 451.1344270000002,
+            "coverage": {
+              "complete": true,
+              "granularity": "whole-run",
+              "source": "supported Reporter.onCoverage (V8 provider)",
+              "files": [
+                {
+                  "file": "src/logic.ts",
+                  "statements": {
+                    "total": 28,
+                    "covered": 28
+                  },
+                  "functions": {
+                    "total": 7,
+                    "covered": 7
+                  },
+                  "branches": {
+                    "total": 33,
+                    "covered": 33
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "tests": [
+              {
+                "id": "[\"\",\"test/logic.test.ts\",\"610138126_0_0\"]",
+                "vitestId": "610138126_0_0",
+                "project": "",
+                "file": "test/logic.test.ts",
+                "name": "clamp > keeps values inside the bounds and returns the nearest bound outside",
+                "state": "passed",
+                "errors": [],
+                "meta": {},
+                "concurrent": false
+              },
+              {
+                "id": "[\"\",\"test/logic.test.ts\",\"610138126_1_0\"]",
+                "vitestId": "610138126_1_0",
+                "project": "",
+                "file": "test/logic.test.ts",
+                "name": "classifyScore > classifies negative, failing, passing, and excellent scores at boundaries",
+                "state": "passed",
+                "errors": [],
+                "meta": {},
+                "concurrent": false
+              },
+              {
+                "id": "[\"\",\"test/logic.test.ts\",\"610138126_2_0\"]",
+                "vitestId": "610138126_2_0",
+                "project": "",
+                "file": "test/logic.test.ts",
+                "name": "applyDiscount > preserves invalid prices and discounts, and caps full discounts at zero",
+                "state": "passed",
+                "errors": [],
+                "meta": {},
+                "concurrent": false
+              },
+              {
+                "id": "[\"\",\"test/logic.test.ts\",\"610138126_3_0\"]",
+                "vitestId": "610138126_3_0",
+                "project": "",
+                "file": "test/logic.test.ts",
+                "name": "shippingCost > uses weight tiers and adds the expedited fee",
+                "state": "passed",
+                "errors": [],
+                "meta": {},
+                "concurrent": false
+              },
+              {
+                "id": "[\"\",\"test/logic.test.ts\",\"610138126_4_0\"]",
+                "vitestId": "610138126_4_0",
+                "project": "",
+                "file": "test/logic.test.ts",
+                "name": "canAccess > requires an adult, a pass, and an active account",
+                "state": "passed",
+                "errors": [],
+                "meta": {},
+                "concurrent": false
+              },
+              {
+                "id": "[\"\",\"test/logic.test.ts\",\"610138126_5_0\"]",
+                "vitestId": "610138126_5_0",
+                "project": "",
+                "file": "test/logic.test.ts",
+                "name": "describeRange and combineFlags > uses inclusive upper boundary for medium",
+                "state": "passed",
+                "errors": [],
+                "meta": {},
+                "concurrent": false
+              },
+              {
+                "id": "[\"\",\"test/logic.test.ts\",\"610138126_5_1\"]",
+                "vitestId": "610138126_5_1",
+                "project": "",
+                "file": "test/logic.test.ts",
+                "name": "describeRange and combineFlags > combines either true flag",
+                "state": "passed",
+                "errors": [],
+                "meta": {},
+                "concurrent": false
+              }
+            ],
+            "errors": [],
+            "outcome": "passed",
+            "runNumber": 3,
+            "controllerPid": 32460,
+            "elapsedMs": 448.68807300000026,
+            "coverage": {
+              "complete": true,
+              "granularity": "whole-run",
+              "source": "supported Reporter.onCoverage (V8 provider)",
+              "files": [
+                {
+                  "file": "src/logic.ts",
+                  "statements": {
+                    "total": 28,
+                    "covered": 28
+                  },
+                  "functions": {
+                    "total": 7,
+                    "covered": 7
+                  },
+                  "branches": {
+                    "total": 33,
+                    "covered": 33
+                  }
+                }
+              ]
+            }
+          }
+        ],
+        "selection": {
+          "tests": [
+            {
+              "id": "[\"\",\"test/logic.test.ts\",\"610138126_0_0\"]",
+              "vitestId": "610138126_0_0",
+              "project": "",
+              "file": "test/logic.test.ts",
+              "name": "clamp > keeps values inside the bounds and returns the nearest bound outside",
+              "state": "passed",
+              "errors": [],
+              "meta": {},
+              "concurrent": false
+            },
+            {
+              "id": "[\"\",\"test/logic.test.ts\",\"610138126_1_0\"]",
+              "vitestId": "610138126_1_0",
+              "project": "",
+              "file": "test/logic.test.ts",
+              "name": "classifyScore > classifies negative, failing, passing, and excellent scores at boundaries",
+              "state": "skipped",
+              "errors": [],
+              "meta": {},
+              "concurrent": false
+            },
+            {
+              "id": "[\"\",\"test/logic.test.ts\",\"610138126_2_0\"]",
+              "vitestId": "610138126_2_0",
+              "project": "",
+              "file": "test/logic.test.ts",
+              "name": "applyDiscount > preserves invalid prices and discounts, and caps full discounts at zero",
+              "state": "skipped",
+              "errors": [],
+              "meta": {},
+              "concurrent": false
+            },
+            {
+              "id": "[\"\",\"test/logic.test.ts\",\"610138126_3_0\"]",
+              "vitestId": "610138126_3_0",
+              "project": "",
+              "file": "test/logic.test.ts",
+              "name": "shippingCost > uses weight tiers and adds the expedited fee",
+              "state": "skipped",
+              "errors": [],
+              "meta": {},
+              "concurrent": false
+            },
+            {
+              "id": "[\"\",\"test/logic.test.ts\",\"610138126_4_0\"]",
+              "vitestId": "610138126_4_0",
+              "project": "",
+              "file": "test/logic.test.ts",
+              "name": "canAccess > requires an adult, a pass, and an active account",
+              "state": "skipped",
+              "errors": [],
+              "meta": {},
+              "concurrent": false
+            },
+            {
+              "id": "[\"\",\"test/logic.test.ts\",\"610138126_5_0\"]",
+              "vitestId": "610138126_5_0",
+              "project": "",
+              "file": "test/logic.test.ts",
+              "name": "describeRange and combineFlags > uses inclusive upper boundary for medium",
+              "state": "skipped",
+              "errors": [],
+              "meta": {},
+              "concurrent": false
+            },
+            {
+              "id": "[\"\",\"test/logic.test.ts\",\"610138126_5_1\"]",
+              "vitestId": "610138126_5_1",
+              "project": "",
+              "file": "test/logic.test.ts",
+              "name": "describeRange and combineFlags > combines either true flag",
+              "state": "skipped",
+              "errors": [],
+              "meta": {},
+              "concurrent": false
+            }
+          ],
+          "errors": [],
+          "outcome": "passed",
+          "runNumber": 4,
+          "controllerPid": 32460,
+          "elapsedMs": 419.02671899999996,
+          "coverage": {
+            "complete": true,
+            "granularity": "whole-run",
+            "source": "supported Reporter.onCoverage (V8 provider)",
+            "files": [
+              {
+                "file": "src/logic.ts",
+                "statements": {
+                  "total": 28,
+                  "covered": 5
+                },
+                "functions": {
+                  "total": 7,
+                  "covered": 1
+                },
+                "branches": {
+                  "total": 33,
+                  "covered": 4
+                }
+              }
+            ]
+          }
+        },
+        "selectionMatchesBaseline": true,
+        "controllerPid": 32460,
+        "versions": {
+          "node": "v26.3.1",
+          "vitest": "4.1.10"
+        }
+      },
+      "fresh": [
+        {
+          "discovery": {
+            "tests": [
+              {
+                "id": "[\"\",\"test/logic.test.ts\",\"610138126_0_0\"]",
+                "vitestId": "610138126_0_0",
+                "project": "",
+                "file": "test/logic.test.ts",
+                "name": "clamp > keeps values inside the bounds and returns the nearest bound outside",
+                "state": "pending",
+                "errors": [],
+                "meta": {},
+                "concurrent": false
+              },
+              {
+                "id": "[\"\",\"test/logic.test.ts\",\"610138126_1_0\"]",
+                "vitestId": "610138126_1_0",
+                "project": "",
+                "file": "test/logic.test.ts",
+                "name": "classifyScore > classifies negative, failing, passing, and excellent scores at boundaries",
+                "state": "pending",
+                "errors": [],
+                "meta": {},
+                "concurrent": false
+              },
+              {
+                "id": "[\"\",\"test/logic.test.ts\",\"610138126_2_0\"]",
+                "vitestId": "610138126_2_0",
+                "project": "",
+                "file": "test/logic.test.ts",
+                "name": "applyDiscount > preserves invalid prices and discounts, and caps full discounts at zero",
+                "state": "pending",
+                "errors": [],
+                "meta": {},
+                "concurrent": false
+              },
+              {
+                "id": "[\"\",\"test/logic.test.ts\",\"610138126_3_0\"]",
+                "vitestId": "610138126_3_0",
+                "project": "",
+                "file": "test/logic.test.ts",
+                "name": "shippingCost > uses weight tiers and adds the expedited fee",
+                "state": "pending",
+                "errors": [],
+                "meta": {},
+                "concurrent": false
+              },
+              {
+                "id": "[\"\",\"test/logic.test.ts\",\"610138126_4_0\"]",
+                "vitestId": "610138126_4_0",
+                "project": "",
+                "file": "test/logic.test.ts",
+                "name": "canAccess > requires an adult, a pass, and an active account",
+                "state": "pending",
+                "errors": [],
+                "meta": {},
+                "concurrent": false
+              },
+              {
+                "id": "[\"\",\"test/logic.test.ts\",\"610138126_5_0\"]",
+                "vitestId": "610138126_5_0",
+                "project": "",
+                "file": "test/logic.test.ts",
+                "name": "describeRange and combineFlags > uses inclusive upper boundary for medium",
+                "state": "pending",
+                "errors": [],
+                "meta": {},
+                "concurrent": false
+              },
+              {
+                "id": "[\"\",\"test/logic.test.ts\",\"610138126_5_1\"]",
+                "vitestId": "610138126_5_1",
+                "project": "",
+                "file": "test/logic.test.ts",
+                "name": "describeRange and combineFlags > combines either true flag",
+                "state": "pending",
+                "errors": [],
+                "meta": {},
+                "concurrent": false
+              }
+            ],
+            "errors": [],
+            "controllerPid": 32546,
+            "discovery": "runtime collection; imports execute, test callbacks do not"
+          },
+          "run": {
+            "tests": [
+              {
+                "id": "[\"\",\"test/logic.test.ts\",\"610138126_0_0\"]",
+                "vitestId": "610138126_0_0",
+                "project": "",
+                "file": "test/logic.test.ts",
+                "name": "clamp > keeps values inside the bounds and returns the nearest bound outside",
+                "state": "passed",
+                "errors": [],
+                "meta": {},
+                "concurrent": false
+              },
+              {
+                "id": "[\"\",\"test/logic.test.ts\",\"610138126_1_0\"]",
+                "vitestId": "610138126_1_0",
+                "project": "",
+                "file": "test/logic.test.ts",
+                "name": "classifyScore > classifies negative, failing, passing, and excellent scores at boundaries",
+                "state": "passed",
+                "errors": [],
+                "meta": {},
+                "concurrent": false
+              },
+              {
+                "id": "[\"\",\"test/logic.test.ts\",\"610138126_2_0\"]",
+                "vitestId": "610138126_2_0",
+                "project": "",
+                "file": "test/logic.test.ts",
+                "name": "applyDiscount > preserves invalid prices and discounts, and caps full discounts at zero",
+                "state": "passed",
+                "errors": [],
+                "meta": {},
+                "concurrent": false
+              },
+              {
+                "id": "[\"\",\"test/logic.test.ts\",\"610138126_3_0\"]",
+                "vitestId": "610138126_3_0",
+                "project": "",
+                "file": "test/logic.test.ts",
+                "name": "shippingCost > uses weight tiers and adds the expedited fee",
+                "state": "passed",
+                "errors": [],
+                "meta": {},
+                "concurrent": false
+              },
+              {
+                "id": "[\"\",\"test/logic.test.ts\",\"610138126_4_0\"]",
+                "vitestId": "610138126_4_0",
+                "project": "",
+                "file": "test/logic.test.ts",
+                "name": "canAccess > requires an adult, a pass, and an active account",
+                "state": "passed",
+                "errors": [],
+                "meta": {},
+                "concurrent": false
+              },
+              {
+                "id": "[\"\",\"test/logic.test.ts\",\"610138126_5_0\"]",
+                "vitestId": "610138126_5_0",
+                "project": "",
+                "file": "test/logic.test.ts",
+                "name": "describeRange and combineFlags > uses inclusive upper boundary for medium",
+                "state": "passed",
+                "errors": [],
+                "meta": {},
+                "concurrent": false
+              },
+              {
+                "id": "[\"\",\"test/logic.test.ts\",\"610138126_5_1\"]",
+                "vitestId": "610138126_5_1",
+                "project": "",
+                "file": "test/logic.test.ts",
+                "name": "describeRange and combineFlags > combines either true flag",
+                "state": "passed",
+                "errors": [],
+                "meta": {},
+                "concurrent": false
+              }
+            ],
+            "errors": [],
+            "outcome": "passed",
+            "runNumber": 1,
+            "controllerPid": 32546,
+            "elapsedMs": 1061.4401560000001,
+            "coverage": {
+              "complete": true,
+              "granularity": "whole-run",
+              "source": "supported Reporter.onCoverage (V8 provider)",
+              "files": [
+                {
+                  "file": "src/logic.ts",
+                  "statements": {
+                    "total": 28,
+                    "covered": 28
+                  },
+                  "functions": {
+                    "total": 7,
+                    "covered": 7
+                  },
+                  "branches": {
+                    "total": 33,
+                    "covered": 33
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "discovery": {
+            "tests": [
+              {
+                "id": "[\"\",\"test/logic.test.ts\",\"610138126_0_0\"]",
+                "vitestId": "610138126_0_0",
+                "project": "",
+                "file": "test/logic.test.ts",
+                "name": "clamp > keeps values inside the bounds and returns the nearest bound outside",
+                "state": "pending",
+                "errors": [],
+                "meta": {},
+                "concurrent": false
+              },
+              {
+                "id": "[\"\",\"test/logic.test.ts\",\"610138126_1_0\"]",
+                "vitestId": "610138126_1_0",
+                "project": "",
+                "file": "test/logic.test.ts",
+                "name": "classifyScore > classifies negative, failing, passing, and excellent scores at boundaries",
+                "state": "pending",
+                "errors": [],
+                "meta": {},
+                "concurrent": false
+              },
+              {
+                "id": "[\"\",\"test/logic.test.ts\",\"610138126_2_0\"]",
+                "vitestId": "610138126_2_0",
+                "project": "",
+                "file": "test/logic.test.ts",
+                "name": "applyDiscount > preserves invalid prices and discounts, and caps full discounts at zero",
+                "state": "pending",
+                "errors": [],
+                "meta": {},
+                "concurrent": false
+              },
+              {
+                "id": "[\"\",\"test/logic.test.ts\",\"610138126_3_0\"]",
+                "vitestId": "610138126_3_0",
+                "project": "",
+                "file": "test/logic.test.ts",
+                "name": "shippingCost > uses weight tiers and adds the expedited fee",
+                "state": "pending",
+                "errors": [],
+                "meta": {},
+                "concurrent": false
+              },
+              {
+                "id": "[\"\",\"test/logic.test.ts\",\"610138126_4_0\"]",
+                "vitestId": "610138126_4_0",
+                "project": "",
+                "file": "test/logic.test.ts",
+                "name": "canAccess > requires an adult, a pass, and an active account",
+                "state": "pending",
+                "errors": [],
+                "meta": {},
+                "concurrent": false
+              },
+              {
+                "id": "[\"\",\"test/logic.test.ts\",\"610138126_5_0\"]",
+                "vitestId": "610138126_5_0",
+                "project": "",
+                "file": "test/logic.test.ts",
+                "name": "describeRange and combineFlags > uses inclusive upper boundary for medium",
+                "state": "pending",
+                "errors": [],
+                "meta": {},
+                "concurrent": false
+              },
+              {
+                "id": "[\"\",\"test/logic.test.ts\",\"610138126_5_1\"]",
+                "vitestId": "610138126_5_1",
+                "project": "",
+                "file": "test/logic.test.ts",
+                "name": "describeRange and combineFlags > combines either true flag",
+                "state": "pending",
+                "errors": [],
+                "meta": {},
+                "concurrent": false
+              }
+            ],
+            "errors": [],
+            "controllerPid": 32595,
+            "discovery": "runtime collection; imports execute, test callbacks do not"
+          },
+          "run": {
+            "tests": [
+              {
+                "id": "[\"\",\"test/logic.test.ts\",\"610138126_0_0\"]",
+                "vitestId": "610138126_0_0",
+                "project": "",
+                "file": "test/logic.test.ts",
+                "name": "clamp > keeps values inside the bounds and returns the nearest bound outside",
+                "state": "passed",
+                "errors": [],
+                "meta": {},
+                "concurrent": false
+              },
+              {
+                "id": "[\"\",\"test/logic.test.ts\",\"610138126_1_0\"]",
+                "vitestId": "610138126_1_0",
+                "project": "",
+                "file": "test/logic.test.ts",
+                "name": "classifyScore > classifies negative, failing, passing, and excellent scores at boundaries",
+                "state": "passed",
+                "errors": [],
+                "meta": {},
+                "concurrent": false
+              },
+              {
+                "id": "[\"\",\"test/logic.test.ts\",\"610138126_2_0\"]",
+                "vitestId": "610138126_2_0",
+                "project": "",
+                "file": "test/logic.test.ts",
+                "name": "applyDiscount > preserves invalid prices and discounts, and caps full discounts at zero",
+                "state": "passed",
+                "errors": [],
+                "meta": {},
+                "concurrent": false
+              },
+              {
+                "id": "[\"\",\"test/logic.test.ts\",\"610138126_3_0\"]",
+                "vitestId": "610138126_3_0",
+                "project": "",
+                "file": "test/logic.test.ts",
+                "name": "shippingCost > uses weight tiers and adds the expedited fee",
+                "state": "passed",
+                "errors": [],
+                "meta": {},
+                "concurrent": false
+              },
+              {
+                "id": "[\"\",\"test/logic.test.ts\",\"610138126_4_0\"]",
+                "vitestId": "610138126_4_0",
+                "project": "",
+                "file": "test/logic.test.ts",
+                "name": "canAccess > requires an adult, a pass, and an active account",
+                "state": "passed",
+                "errors": [],
+                "meta": {},
+                "concurrent": false
+              },
+              {
+                "id": "[\"\",\"test/logic.test.ts\",\"610138126_5_0\"]",
+                "vitestId": "610138126_5_0",
+                "project": "",
+                "file": "test/logic.test.ts",
+                "name": "describeRange and combineFlags > uses inclusive upper boundary for medium",
+                "state": "passed",
+                "errors": [],
+                "meta": {},
+                "concurrent": false
+              },
+              {
+                "id": "[\"\",\"test/logic.test.ts\",\"610138126_5_1\"]",
+                "vitestId": "610138126_5_1",
+                "project": "",
+                "file": "test/logic.test.ts",
+                "name": "describeRange and combineFlags > combines either true flag",
+                "state": "passed",
+                "errors": [],
+                "meta": {},
+                "concurrent": false
+              }
+            ],
+            "errors": [],
+            "outcome": "passed",
+            "runNumber": 1,
+            "controllerPid": 32595,
+            "elapsedMs": 489.325104,
+            "coverage": {
+              "complete": true,
+              "granularity": "whole-run",
+              "source": "supported Reporter.onCoverage (V8 provider)",
+              "files": [
+                {
+                  "file": "src/logic.ts",
+                  "statements": {
+                    "total": 28,
+                    "covered": 28
+                  },
+                  "functions": {
+                    "total": 7,
+                    "covered": 7
+                  },
+                  "branches": {
+                    "total": 33,
+                    "covered": 33
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "equivalence": true,
+      "stableDiscovery": true,
+      "completeCoverage": true
+    },
+    {
+      "name": "stateful",
+      "reused": {
+        "discovery": {
+          "tests": [
+            {
+              "id": "[\"\",\"test/service.test.ts\",\"-117226587_0_0\"]",
+              "vitestId": "-117226587_0_0",
+              "project": "",
+              "file": "test/service.test.ts",
+              "name": "stateful service > captures the environment at module initialization and starts with a clean singleton",
+              "state": "pending",
+              "errors": [],
+              "meta": {},
+              "concurrent": false
+            },
+            {
+              "id": "[\"\",\"test/service.test.ts\",\"-117226587_0_1\"]",
+              "vitestId": "-117226587_0_1",
+              "project": "",
+              "file": "test/service.test.ts",
+              "name": "stateful service > awaits the dependency and advances singleton state once per call",
+              "state": "pending",
+              "errors": [],
+              "meta": {},
+              "concurrent": false
+            },
+            {
+              "id": "[\"\",\"test/service.test.ts\",\"-117226587_0_2\"]",
+              "vitestId": "-117226587_0_2",
+              "project": "",
+              "file": "test/service.test.ts",
+              "name": "stateful service > uses an asynchronous adjustment for an inclusive limit check",
+              "state": "pending",
+              "errors": [],
+              "meta": {},
+              "concurrent": false
+            },
+            {
+              "id": "[\"\",\"test/dependency.test.ts\",\"-281792939_0\"]",
+              "vitestId": "-281792939_0",
+              "project": "",
+              "file": "test/dependency.test.ts",
+              "name": "uses the code length as the default adjustment",
+              "state": "pending",
+              "errors": [],
+              "meta": {},
+              "concurrent": false
+            }
+          ],
+          "errors": [],
+          "controllerPid": 32644,
+          "discovery": "runtime collection; imports execute, test callbacks do not"
+        },
+        "runs": [
+          {
+            "tests": [
+              {
+                "id": "[\"\",\"test/dependency.test.ts\",\"-281792939_0\"]",
+                "vitestId": "-281792939_0",
+                "project": "",
+                "file": "test/dependency.test.ts",
+                "name": "uses the code length as the default adjustment",
+                "state": "passed",
+                "errors": [],
+                "meta": {},
+                "concurrent": false
+              },
+              {
+                "id": "[\"\",\"test/service.test.ts\",\"-117226587_0_0\"]",
+                "vitestId": "-117226587_0_0",
+                "project": "",
+                "file": "test/service.test.ts",
+                "name": "stateful service > captures the environment at module initialization and starts with a clean singleton",
+                "state": "passed",
+                "errors": [],
+                "meta": {},
+                "concurrent": false
+              },
+              {
+                "id": "[\"\",\"test/service.test.ts\",\"-117226587_0_1\"]",
+                "vitestId": "-117226587_0_1",
+                "project": "",
+                "file": "test/service.test.ts",
+                "name": "stateful service > awaits the dependency and advances singleton state once per call",
+                "state": "passed",
+                "errors": [],
+                "meta": {},
+                "concurrent": false
+              },
+              {
+                "id": "[\"\",\"test/service.test.ts\",\"-117226587_0_2\"]",
+                "vitestId": "-117226587_0_2",
+                "project": "",
+                "file": "test/service.test.ts",
+                "name": "stateful service > uses an asynchronous adjustment for an inclusive limit check",
+                "state": "passed",
+                "errors": [],
+                "meta": {},
+                "concurrent": false
+              }
+            ],
+            "errors": [],
+            "outcome": "passed",
+            "runNumber": 1,
+            "controllerPid": 32644,
+            "elapsedMs": 898.3392180000003,
+            "coverage": {
+              "complete": true,
+              "granularity": "whole-run",
+              "source": "supported Reporter.onCoverage (V8 provider)",
+              "files": [
+                {
+                  "file": "src/dependency.ts",
+                  "statements": {
+                    "total": 1,
+                    "covered": 1
+                  },
+                  "functions": {
+                    "total": 1,
+                    "covered": 1
+                  },
+                  "branches": {
+                    "total": 0,
+                    "covered": 0
+                  }
+                },
+                {
+                  "file": "src/service.ts",
+                  "statements": {
+                    "total": 6,
+                    "covered": 6
+                  },
+                  "functions": {
+                    "total": 2,
+                    "covered": 2
+                  },
+                  "branches": {
+                    "total": 2,
+                    "covered": 1
+                  }
+                },
+                {
+                  "file": "src/state.ts",
+                  "statements": {
+                    "total": 4,
+                    "covered": 4
+                  },
+                  "functions": {
+                    "total": 2,
+                    "covered": 2
+                  },
+                  "branches": {
+                    "total": 0,
+                    "covered": 0
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "tests": [
+              {
+                "id": "[\"\",\"test/dependency.test.ts\",\"-281792939_0\"]",
+                "vitestId": "-281792939_0",
+                "project": "",
+                "file": "test/dependency.test.ts",
+                "name": "uses the code length as the default adjustment",
+                "state": "passed",
+                "errors": [],
+                "meta": {},
+                "concurrent": false
+              },
+              {
+                "id": "[\"\",\"test/service.test.ts\",\"-117226587_0_0\"]",
+                "vitestId": "-117226587_0_0",
+                "project": "",
+                "file": "test/service.test.ts",
+                "name": "stateful service > captures the environment at module initialization and starts with a clean singleton",
+                "state": "passed",
+                "errors": [],
+                "meta": {},
+                "concurrent": false
+              },
+              {
+                "id": "[\"\",\"test/service.test.ts\",\"-117226587_0_1\"]",
+                "vitestId": "-117226587_0_1",
+                "project": "",
+                "file": "test/service.test.ts",
+                "name": "stateful service > awaits the dependency and advances singleton state once per call",
+                "state": "passed",
+                "errors": [],
+                "meta": {},
+                "concurrent": false
+              },
+              {
+                "id": "[\"\",\"test/service.test.ts\",\"-117226587_0_2\"]",
+                "vitestId": "-117226587_0_2",
+                "project": "",
+                "file": "test/service.test.ts",
+                "name": "stateful service > uses an asynchronous adjustment for an inclusive limit check",
+                "state": "passed",
+                "errors": [],
+                "meta": {},
+                "concurrent": false
+              }
+            ],
+            "errors": [],
+            "outcome": "passed",
+            "runNumber": 2,
+            "controllerPid": 32644,
+            "elapsedMs": 1172.0080200000002,
+            "coverage": {
+              "complete": true,
+              "granularity": "whole-run",
+              "source": "supported Reporter.onCoverage (V8 provider)",
+              "files": [
+                {
+                  "file": "src/dependency.ts",
+                  "statements": {
+                    "total": 1,
+                    "covered": 1
+                  },
+                  "functions": {
+                    "total": 1,
+                    "covered": 1
+                  },
+                  "branches": {
+                    "total": 0,
+                    "covered": 0
+                  }
+                },
+                {
+                  "file": "src/service.ts",
+                  "statements": {
+                    "total": 6,
+                    "covered": 6
+                  },
+                  "functions": {
+                    "total": 2,
+                    "covered": 2
+                  },
+                  "branches": {
+                    "total": 2,
+                    "covered": 1
+                  }
+                },
+                {
+                  "file": "src/state.ts",
+                  "statements": {
+                    "total": 4,
+                    "covered": 4
+                  },
+                  "functions": {
+                    "total": 2,
+                    "covered": 2
+                  },
+                  "branches": {
+                    "total": 0,
+                    "covered": 0
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "tests": [
+              {
+                "id": "[\"\",\"test/dependency.test.ts\",\"-281792939_0\"]",
+                "vitestId": "-281792939_0",
+                "project": "",
+                "file": "test/dependency.test.ts",
+                "name": "uses the code length as the default adjustment",
+                "state": "passed",
+                "errors": [],
+                "meta": {},
+                "concurrent": false
+              },
+              {
+                "id": "[\"\",\"test/service.test.ts\",\"-117226587_0_0\"]",
+                "vitestId": "-117226587_0_0",
+                "project": "",
+                "file": "test/service.test.ts",
+                "name": "stateful service > captures the environment at module initialization and starts with a clean singleton",
+                "state": "passed",
+                "errors": [],
+                "meta": {},
+                "concurrent": false
+              },
+              {
+                "id": "[\"\",\"test/service.test.ts\",\"-117226587_0_1\"]",
+                "vitestId": "-117226587_0_1",
+                "project": "",
+                "file": "test/service.test.ts",
+                "name": "stateful service > awaits the dependency and advances singleton state once per call",
+                "state": "passed",
+                "errors": [],
+                "meta": {},
+                "concurrent": false
+              },
+              {
+                "id": "[\"\",\"test/service.test.ts\",\"-117226587_0_2\"]",
+                "vitestId": "-117226587_0_2",
+                "project": "",
+                "file": "test/service.test.ts",
+                "name": "stateful service > uses an asynchronous adjustment for an inclusive limit check",
+                "state": "passed",
+                "errors": [],
+                "meta": {},
+                "concurrent": false
+              }
+            ],
+            "errors": [],
+            "outcome": "passed",
+            "runNumber": 3,
+            "controllerPid": 32644,
+            "elapsedMs": 1496.8054160000002,
+            "coverage": {
+              "complete": true,
+              "granularity": "whole-run",
+              "source": "supported Reporter.onCoverage (V8 provider)",
+              "files": [
+                {
+                  "file": "src/dependency.ts",
+                  "statements": {
+                    "total": 1,
+                    "covered": 1
+                  },
+                  "functions": {
+                    "total": 1,
+                    "covered": 1
+                  },
+                  "branches": {
+                    "total": 0,
+                    "covered": 0
+                  }
+                },
+                {
+                  "file": "src/service.ts",
+                  "statements": {
+                    "total": 6,
+                    "covered": 6
+                  },
+                  "functions": {
+                    "total": 2,
+                    "covered": 2
+                  },
+                  "branches": {
+                    "total": 2,
+                    "covered": 1
+                  }
+                },
+                {
+                  "file": "src/state.ts",
+                  "statements": {
+                    "total": 4,
+                    "covered": 4
+                  },
+                  "functions": {
+                    "total": 2,
+                    "covered": 2
+                  },
+                  "branches": {
+                    "total": 0,
+                    "covered": 0
+                  }
+                }
+              ]
+            }
+          }
+        ],
+        "selection": {
+          "tests": [
+            {
+              "id": "[\"\",\"test/service.test.ts\",\"-117226587_0_0\"]",
+              "vitestId": "-117226587_0_0",
+              "project": "",
+              "file": "test/service.test.ts",
+              "name": "stateful service > captures the environment at module initialization and starts with a clean singleton",
+              "state": "passed",
+              "errors": [],
+              "meta": {},
+              "concurrent": false
+            },
+            {
+              "id": "[\"\",\"test/service.test.ts\",\"-117226587_0_1\"]",
+              "vitestId": "-117226587_0_1",
+              "project": "",
+              "file": "test/service.test.ts",
+              "name": "stateful service > awaits the dependency and advances singleton state once per call",
+              "state": "skipped",
+              "errors": [],
+              "meta": {},
+              "concurrent": false
+            },
+            {
+              "id": "[\"\",\"test/service.test.ts\",\"-117226587_0_2\"]",
+              "vitestId": "-117226587_0_2",
+              "project": "",
+              "file": "test/service.test.ts",
+              "name": "stateful service > uses an asynchronous adjustment for an inclusive limit check",
+              "state": "skipped",
+              "errors": [],
+              "meta": {},
+              "concurrent": false
+            }
+          ],
+          "errors": [],
+          "outcome": "passed",
+          "runNumber": 4,
+          "controllerPid": 32644,
+          "elapsedMs": 564.2303119999997,
+          "coverage": {
+            "complete": true,
+            "granularity": "whole-run",
+            "source": "supported Reporter.onCoverage (V8 provider)",
+            "files": [
+              {
+                "file": "src/service.ts",
+                "statements": {
+                  "total": 6,
+                  "covered": 1
+                },
+                "functions": {
+                  "total": 2,
+                  "covered": 0
+                },
+                "branches": {
+                  "total": 2,
+                  "covered": 1
+                }
+              },
+              {
+                "file": "src/state.ts",
+                "statements": {
+                  "total": 4,
+                  "covered": 2
+                },
+                "functions": {
+                  "total": 2,
+                  "covered": 1
+                },
+                "branches": {
+                  "total": 0,
+                  "covered": 0
+                }
+              }
+            ]
+          }
+        },
+        "selectionMatchesBaseline": true,
+        "controllerPid": 32644,
+        "versions": {
+          "node": "v26.3.1",
+          "vitest": "4.1.10"
+        }
+      },
+      "fresh": [
+        {
+          "discovery": {
+            "tests": [
+              {
+                "id": "[\"\",\"test/service.test.ts\",\"-117226587_0_0\"]",
+                "vitestId": "-117226587_0_0",
+                "project": "",
+                "file": "test/service.test.ts",
+                "name": "stateful service > captures the environment at module initialization and starts with a clean singleton",
+                "state": "pending",
+                "errors": [],
+                "meta": {},
+                "concurrent": false
+              },
+              {
+                "id": "[\"\",\"test/service.test.ts\",\"-117226587_0_1\"]",
+                "vitestId": "-117226587_0_1",
+                "project": "",
+                "file": "test/service.test.ts",
+                "name": "stateful service > awaits the dependency and advances singleton state once per call",
+                "state": "pending",
+                "errors": [],
+                "meta": {},
+                "concurrent": false
+              },
+              {
+                "id": "[\"\",\"test/service.test.ts\",\"-117226587_0_2\"]",
+                "vitestId": "-117226587_0_2",
+                "project": "",
+                "file": "test/service.test.ts",
+                "name": "stateful service > uses an asynchronous adjustment for an inclusive limit check",
+                "state": "pending",
+                "errors": [],
+                "meta": {},
+                "concurrent": false
+              },
+              {
+                "id": "[\"\",\"test/dependency.test.ts\",\"-281792939_0\"]",
+                "vitestId": "-281792939_0",
+                "project": "",
+                "file": "test/dependency.test.ts",
+                "name": "uses the code length as the default adjustment",
+                "state": "pending",
+                "errors": [],
+                "meta": {},
+                "concurrent": false
+              }
+            ],
+            "errors": [],
+            "controllerPid": 32747,
+            "discovery": "runtime collection; imports execute, test callbacks do not"
+          },
+          "run": {
+            "tests": [
+              {
+                "id": "[\"\",\"test/dependency.test.ts\",\"-281792939_0\"]",
+                "vitestId": "-281792939_0",
+                "project": "",
+                "file": "test/dependency.test.ts",
+                "name": "uses the code length as the default adjustment",
+                "state": "passed",
+                "errors": [],
+                "meta": {},
+                "concurrent": false
+              },
+              {
+                "id": "[\"\",\"test/service.test.ts\",\"-117226587_0_0\"]",
+                "vitestId": "-117226587_0_0",
+                "project": "",
+                "file": "test/service.test.ts",
+                "name": "stateful service > captures the environment at module initialization and starts with a clean singleton",
+                "state": "passed",
+                "errors": [],
+                "meta": {},
+                "concurrent": false
+              },
+              {
+                "id": "[\"\",\"test/service.test.ts\",\"-117226587_0_1\"]",
+                "vitestId": "-117226587_0_1",
+                "project": "",
+                "file": "test/service.test.ts",
+                "name": "stateful service > awaits the dependency and advances singleton state once per call",
+                "state": "passed",
+                "errors": [],
+                "meta": {},
+                "concurrent": false
+              },
+              {
+                "id": "[\"\",\"test/service.test.ts\",\"-117226587_0_2\"]",
+                "vitestId": "-117226587_0_2",
+                "project": "",
+                "file": "test/service.test.ts",
+                "name": "stateful service > uses an asynchronous adjustment for an inclusive limit check",
+                "state": "passed",
+                "errors": [],
+                "meta": {},
+                "concurrent": false
+              }
+            ],
+            "errors": [],
+            "outcome": "passed",
+            "runNumber": 1,
+            "controllerPid": 32747,
+            "elapsedMs": 1676.708385,
+            "coverage": {
+              "complete": true,
+              "granularity": "whole-run",
+              "source": "supported Reporter.onCoverage (V8 provider)",
+              "files": [
+                {
+                  "file": "src/dependency.ts",
+                  "statements": {
+                    "total": 1,
+                    "covered": 1
+                  },
+                  "functions": {
+                    "total": 1,
+                    "covered": 1
+                  },
+                  "branches": {
+                    "total": 0,
+                    "covered": 0
+                  }
+                },
+                {
+                  "file": "src/service.ts",
+                  "statements": {
+                    "total": 6,
+                    "covered": 6
+                  },
+                  "functions": {
+                    "total": 2,
+                    "covered": 2
+                  },
+                  "branches": {
+                    "total": 2,
+                    "covered": 1
+                  }
+                },
+                {
+                  "file": "src/state.ts",
+                  "statements": {
+                    "total": 4,
+                    "covered": 4
+                  },
+                  "functions": {
+                    "total": 2,
+                    "covered": 2
+                  },
+                  "branches": {
+                    "total": 0,
+                    "covered": 0
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "discovery": {
+            "tests": [
+              {
+                "id": "[\"\",\"test/service.test.ts\",\"-117226587_0_0\"]",
+                "vitestId": "-117226587_0_0",
+                "project": "",
+                "file": "test/service.test.ts",
+                "name": "stateful service > captures the environment at module initialization and starts with a clean singleton",
+                "state": "pending",
+                "errors": [],
+                "meta": {},
+                "concurrent": false
+              },
+              {
+                "id": "[\"\",\"test/service.test.ts\",\"-117226587_0_1\"]",
+                "vitestId": "-117226587_0_1",
+                "project": "",
+                "file": "test/service.test.ts",
+                "name": "stateful service > awaits the dependency and advances singleton state once per call",
+                "state": "pending",
+                "errors": [],
+                "meta": {},
+                "concurrent": false
+              },
+              {
+                "id": "[\"\",\"test/service.test.ts\",\"-117226587_0_2\"]",
+                "vitestId": "-117226587_0_2",
+                "project": "",
+                "file": "test/service.test.ts",
+                "name": "stateful service > uses an asynchronous adjustment for an inclusive limit check",
+                "state": "pending",
+                "errors": [],
+                "meta": {},
+                "concurrent": false
+              },
+              {
+                "id": "[\"\",\"test/dependency.test.ts\",\"-281792939_0\"]",
+                "vitestId": "-281792939_0",
+                "project": "",
+                "file": "test/dependency.test.ts",
+                "name": "uses the code length as the default adjustment",
+                "state": "pending",
+                "errors": [],
+                "meta": {},
+                "concurrent": false
+              }
+            ],
+            "errors": [],
+            "controllerPid": 599,
+            "discovery": "runtime collection; imports execute, test callbacks do not"
+          },
+          "run": {
+            "tests": [
+              {
+                "id": "[\"\",\"test/dependency.test.ts\",\"-281792939_0\"]",
+                "vitestId": "-281792939_0",
+                "project": "",
+                "file": "test/dependency.test.ts",
+                "name": "uses the code length as the default adjustment",
+                "state": "passed",
+                "errors": [],
+                "meta": {},
+                "concurrent": false
+              },
+              {
+                "id": "[\"\",\"test/service.test.ts\",\"-117226587_0_0\"]",
+                "vitestId": "-117226587_0_0",
+                "project": "",
+                "file": "test/service.test.ts",
+                "name": "stateful service > captures the environment at module initialization and starts with a clean singleton",
+                "state": "passed",
+                "errors": [],
+                "meta": {},
+                "concurrent": false
+              },
+              {
+                "id": "[\"\",\"test/service.test.ts\",\"-117226587_0_1\"]",
+                "vitestId": "-117226587_0_1",
+                "project": "",
+                "file": "test/service.test.ts",
+                "name": "stateful service > awaits the dependency and advances singleton state once per call",
+                "state": "passed",
+                "errors": [],
+                "meta": {},
+                "concurrent": false
+              },
+              {
+                "id": "[\"\",\"test/service.test.ts\",\"-117226587_0_2\"]",
+                "vitestId": "-117226587_0_2",
+                "project": "",
+                "file": "test/service.test.ts",
+                "name": "stateful service > uses an asynchronous adjustment for an inclusive limit check",
+                "state": "passed",
+                "errors": [],
+                "meta": {},
+                "concurrent": false
+              }
+            ],
+            "errors": [],
+            "outcome": "passed",
+            "runNumber": 1,
+            "controllerPid": 599,
+            "elapsedMs": 1208.247551,
+            "coverage": {
+              "complete": true,
+              "granularity": "whole-run",
+              "source": "supported Reporter.onCoverage (V8 provider)",
+              "files": [
+                {
+                  "file": "src/dependency.ts",
+                  "statements": {
+                    "total": 1,
+                    "covered": 1
+                  },
+                  "functions": {
+                    "total": 1,
+                    "covered": 1
+                  },
+                  "branches": {
+                    "total": 0,
+                    "covered": 0
+                  }
+                },
+                {
+                  "file": "src/service.ts",
+                  "statements": {
+                    "total": 6,
+                    "covered": 6
+                  },
+                  "functions": {
+                    "total": 2,
+                    "covered": 2
+                  },
+                  "branches": {
+                    "total": 2,
+                    "covered": 1
+                  }
+                },
+                {
+                  "file": "src/state.ts",
+                  "statements": {
+                    "total": 4,
+                    "covered": 4
+                  },
+                  "functions": {
+                    "total": 2,
+                    "covered": 2
+                  },
+                  "branches": {
+                    "total": 0,
+                    "covered": 0
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "equivalence": true,
+      "stableDiscovery": true,
+      "completeCoverage": true
+    }
+  ],
+  "reuse": {
+    "discovery": {
+      "tests": [
+        {
+          "id": "[\"\",\"test/state.test.mjs\",\"1564295924_0\"]",
+          "vitestId": "1564295924_0",
+          "project": "",
+          "file": "test/state.test.mjs",
+          "name": "clean module and mock state",
+          "state": "pending",
+          "errors": [],
+          "meta": {},
+          "concurrent": false
+        },
+        {
+          "id": "[\"\",\"test/state.test.mjs\",\"1564295924_1\"]",
+          "vitestId": "1564295924_1",
+          "project": "",
+          "file": "test/state.test.mjs",
+          "name": "duplicate name",
+          "state": "pending",
+          "errors": [],
+          "meta": {},
+          "concurrent": false
+        },
+        {
+          "id": "[\"\",\"test/state.test.mjs\",\"1564295924_2\"]",
+          "vitestId": "1564295924_2",
+          "project": "",
+          "file": "test/state.test.mjs",
+          "name": "duplicate name",
+          "state": "pending",
+          "errors": [],
+          "meta": {},
+          "concurrent": false
+        },
+        {
+          "id": "[\"\",\"test/state.test.mjs\",\"1564295924_3\"]",
+          "vitestId": "1564295924_3",
+          "project": "",
+          "file": "test/state.test.mjs",
+          "name": "parameter 1",
+          "state": "pending",
+          "errors": [],
+          "meta": {},
+          "concurrent": false
+        },
+        {
+          "id": "[\"\",\"test/state.test.mjs\",\"1564295924_4\"]",
+          "vitestId": "1564295924_4",
+          "project": "",
+          "file": "test/state.test.mjs",
+          "name": "parameter 2",
+          "state": "pending",
+          "errors": [],
+          "meta": {},
+          "concurrent": false
+        }
+      ],
+      "errors": [],
+      "controllerPid": 730,
+      "discovery": "runtime collection; imports execute, test callbacks do not"
+    },
+    "runs": [
+      {
+        "tests": [
+          {
+            "id": "[\"\",\"test/state.test.mjs\",\"1564295924_0\"]",
+            "vitestId": "1564295924_0",
+            "project": "",
+            "file": "test/state.test.mjs",
+            "name": "clean module and mock state",
+            "state": "passed",
+            "errors": [],
+            "meta": {
+              "observation": {
+                "pid": 784,
+                "phase": "alpha",
+                "evaluation": "edf14a3d-a59b-475b-928b-6f0f58683bb6",
+                "count": 0
+              }
+            },
+            "concurrent": false
+          },
+          {
+            "id": "[\"\",\"test/state.test.mjs\",\"1564295924_1\"]",
+            "vitestId": "1564295924_1",
+            "project": "",
+            "file": "test/state.test.mjs",
+            "name": "duplicate name",
+            "state": "passed",
+            "errors": [],
+            "meta": {
+              "observation": {
+                "pid": 784,
+                "phase": "alpha",
+                "evaluation": "edf14a3d-a59b-475b-928b-6f0f58683bb6"
+              }
+            },
+            "concurrent": false
+          },
+          {
+            "id": "[\"\",\"test/state.test.mjs\",\"1564295924_2\"]",
+            "vitestId": "1564295924_2",
+            "project": "",
+            "file": "test/state.test.mjs",
+            "name": "duplicate name",
+            "state": "passed",
+            "errors": [],
+            "meta": {
+              "observation": {
+                "pid": 784,
+                "phase": "alpha",
+                "evaluation": "edf14a3d-a59b-475b-928b-6f0f58683bb6"
+              }
+            },
+            "concurrent": false
+          },
+          {
+            "id": "[\"\",\"test/state.test.mjs\",\"1564295924_3\"]",
+            "vitestId": "1564295924_3",
+            "project": "",
+            "file": "test/state.test.mjs",
+            "name": "parameter 1",
+            "state": "passed",
+            "errors": [],
+            "meta": {},
+            "concurrent": false
+          },
+          {
+            "id": "[\"\",\"test/state.test.mjs\",\"1564295924_4\"]",
+            "vitestId": "1564295924_4",
+            "project": "",
+            "file": "test/state.test.mjs",
+            "name": "parameter 2",
+            "state": "passed",
+            "errors": [],
+            "meta": {},
+            "concurrent": false
+          }
+        ],
+        "errors": [],
+        "outcome": "passed",
+        "runNumber": 1,
+        "controllerPid": 730,
+        "elapsedMs": 411.66140600000017,
+        "coverage": {
+          "complete": false,
+          "reason": "disabled or no coverage event"
+        }
+      },
+      {
+        "tests": [
+          {
+            "id": "[\"\",\"test/state.test.mjs\",\"1564295924_0\"]",
+            "vitestId": "1564295924_0",
+            "project": "",
+            "file": "test/state.test.mjs",
+            "name": "clean module and mock state",
+            "state": "passed",
+            "errors": [],
+            "meta": {
+              "observation": {
+                "pid": 881,
+                "phase": "alpha",
+                "evaluation": "44313222-5b16-46f7-8c4b-d62c8cf98bbc",
+                "count": 0
+              }
+            },
+            "concurrent": false
+          },
+          {
+            "id": "[\"\",\"test/state.test.mjs\",\"1564295924_1\"]",
+            "vitestId": "1564295924_1",
+            "project": "",
+            "file": "test/state.test.mjs",
+            "name": "duplicate name",
+            "state": "passed",
+            "errors": [],
+            "meta": {
+              "observation": {
+                "pid": 881,
+                "phase": "alpha",
+                "evaluation": "44313222-5b16-46f7-8c4b-d62c8cf98bbc"
+              }
+            },
+            "concurrent": false
+          },
+          {
+            "id": "[\"\",\"test/state.test.mjs\",\"1564295924_2\"]",
+            "vitestId": "1564295924_2",
+            "project": "",
+            "file": "test/state.test.mjs",
+            "name": "duplicate name",
+            "state": "passed",
+            "errors": [],
+            "meta": {
+              "observation": {
+                "pid": 881,
+                "phase": "alpha",
+                "evaluation": "44313222-5b16-46f7-8c4b-d62c8cf98bbc"
+              }
+            },
+            "concurrent": false
+          },
+          {
+            "id": "[\"\",\"test/state.test.mjs\",\"1564295924_3\"]",
+            "vitestId": "1564295924_3",
+            "project": "",
+            "file": "test/state.test.mjs",
+            "name": "parameter 1",
+            "state": "passed",
+            "errors": [],
+            "meta": {},
+            "concurrent": false
+          },
+          {
+            "id": "[\"\",\"test/state.test.mjs\",\"1564295924_4\"]",
+            "vitestId": "1564295924_4",
+            "project": "",
+            "file": "test/state.test.mjs",
+            "name": "parameter 2",
+            "state": "passed",
+            "errors": [],
+            "meta": {},
+            "concurrent": false
+          }
+        ],
+        "errors": [],
+        "outcome": "passed",
+        "runNumber": 2,
+        "controllerPid": 730,
+        "elapsedMs": 394.628021,
+        "coverage": {
+          "complete": false,
+          "reason": "disabled or no coverage event"
+        }
+      },
+      {
+        "tests": [
+          {
+            "id": "[\"\",\"test/state.test.mjs\",\"1564295924_0\"]",
+            "vitestId": "1564295924_0",
+            "project": "",
+            "file": "test/state.test.mjs",
+            "name": "clean module and mock state",
+            "state": "passed",
+            "errors": [],
+            "meta": {
+              "observation": {
+                "pid": 889,
+                "phase": "beta",
+                "evaluation": "0ec92992-19c9-480b-94bb-48d7913b0d03",
+                "count": 0
+              }
+            },
+            "concurrent": false
+          },
+          {
+            "id": "[\"\",\"test/state.test.mjs\",\"1564295924_1\"]",
+            "vitestId": "1564295924_1",
+            "project": "",
+            "file": "test/state.test.mjs",
+            "name": "duplicate name",
+            "state": "passed",
+            "errors": [],
+            "meta": {
+              "observation": {
+                "pid": 889,
+                "phase": "beta",
+                "evaluation": "0ec92992-19c9-480b-94bb-48d7913b0d03"
+              }
+            },
+            "concurrent": false
+          },
+          {
+            "id": "[\"\",\"test/state.test.mjs\",\"1564295924_2\"]",
+            "vitestId": "1564295924_2",
+            "project": "",
+            "file": "test/state.test.mjs",
+            "name": "duplicate name",
+            "state": "passed",
+            "errors": [],
+            "meta": {
+              "observation": {
+                "pid": 889,
+                "phase": "beta",
+                "evaluation": "0ec92992-19c9-480b-94bb-48d7913b0d03"
+              }
+            },
+            "concurrent": false
+          },
+          {
+            "id": "[\"\",\"test/state.test.mjs\",\"1564295924_3\"]",
+            "vitestId": "1564295924_3",
+            "project": "",
+            "file": "test/state.test.mjs",
+            "name": "parameter 1",
+            "state": "passed",
+            "errors": [],
+            "meta": {},
+            "concurrent": false
+          },
+          {
+            "id": "[\"\",\"test/state.test.mjs\",\"1564295924_4\"]",
+            "vitestId": "1564295924_4",
+            "project": "",
+            "file": "test/state.test.mjs",
+            "name": "parameter 2",
+            "state": "passed",
+            "errors": [],
+            "meta": {},
+            "concurrent": false
+          }
+        ],
+        "errors": [],
+        "outcome": "passed",
+        "runNumber": 3,
+        "controllerPid": 730,
+        "elapsedMs": 368.0491670000001,
+        "coverage": {
+          "complete": false,
+          "reason": "disabled or no coverage event"
+        }
+      }
+    ],
+    "observations": [
+      {
+        "pid": 784,
+        "phase": "alpha",
+        "evaluation": "edf14a3d-a59b-475b-928b-6f0f58683bb6",
+        "count": 0
+      },
+      {
+        "pid": 881,
+        "phase": "alpha",
+        "evaluation": "44313222-5b16-46f7-8c4b-d62c8cf98bbc",
+        "count": 0
+      },
+      {
+        "pid": 889,
+        "phase": "beta",
+        "evaluation": "0ec92992-19c9-480b-94bb-48d7913b0d03",
+        "count": 0
+      }
+    ],
+    "selection": {
+      "tests": [
+        {
+          "id": "[\"\",\"test/state.test.mjs\",\"1564295924_0\"]",
+          "vitestId": "1564295924_0",
+          "project": "",
+          "file": "test/state.test.mjs",
+          "name": "clean module and mock state",
+          "state": "skipped",
+          "errors": [],
+          "meta": {},
+          "concurrent": false
+        },
+        {
+          "id": "[\"\",\"test/state.test.mjs\",\"1564295924_1\"]",
+          "vitestId": "1564295924_1",
+          "project": "",
+          "file": "test/state.test.mjs",
+          "name": "duplicate name",
+          "state": "skipped",
+          "errors": [],
+          "meta": {},
+          "concurrent": false
+        },
+        {
+          "id": "[\"\",\"test/state.test.mjs\",\"1564295924_2\"]",
+          "vitestId": "1564295924_2",
+          "project": "",
+          "file": "test/state.test.mjs",
+          "name": "duplicate name",
+          "state": "passed",
+          "errors": [],
+          "meta": {
+            "observation": {
+              "pid": 896,
+              "phase": "beta",
+              "evaluation": "94d58e19-80a8-4959-8ca4-a113c66d9c22"
+            }
+          },
+          "concurrent": false
+        },
+        {
+          "id": "[\"\",\"test/state.test.mjs\",\"1564295924_3\"]",
+          "vitestId": "1564295924_3",
+          "project": "",
+          "file": "test/state.test.mjs",
+          "name": "parameter 1",
+          "state": "skipped",
+          "errors": [],
+          "meta": {},
+          "concurrent": false
+        },
+        {
+          "id": "[\"\",\"test/state.test.mjs\",\"1564295924_4\"]",
+          "vitestId": "1564295924_4",
+          "project": "",
+          "file": "test/state.test.mjs",
+          "name": "parameter 2",
+          "state": "skipped",
+          "errors": [],
+          "meta": {},
+          "concurrent": false
+        }
+      ],
+      "errors": [],
+      "outcome": "passed",
+      "runNumber": 4,
+      "controllerPid": 730,
+      "elapsedMs": 366.06197900000006,
+      "coverage": {
+        "complete": false,
+        "reason": "disabled or no coverage event"
+      }
+    },
+    "exactDuplicateSelection": true,
+    "sameController": true,
+    "moduleReevaluated": true,
+    "environmentUpdated": true,
+    "freshBetaPhase": "beta",
+    "freshBeta": {
+      "tests": [
+        {
+          "id": "[\"\",\"test/state.test.mjs\",\"1564295924_0\"]",
+          "vitestId": "1564295924_0",
+          "project": "",
+          "file": "test/state.test.mjs",
+          "name": "clean module and mock state",
+          "state": "passed",
+          "errors": [],
+          "meta": {
+            "observation": {
+              "pid": 957,
+              "phase": "beta",
+              "evaluation": "e43eb4ad-38e2-40b5-954e-87a4ca038fd8",
+              "count": 0
+            }
+          },
+          "concurrent": false
+        },
+        {
+          "id": "[\"\",\"test/state.test.mjs\",\"1564295924_1\"]",
+          "vitestId": "1564295924_1",
+          "project": "",
+          "file": "test/state.test.mjs",
+          "name": "duplicate name",
+          "state": "passed",
+          "errors": [],
+          "meta": {
+            "observation": {
+              "pid": 957,
+              "phase": "beta",
+              "evaluation": "e43eb4ad-38e2-40b5-954e-87a4ca038fd8"
+            }
+          },
+          "concurrent": false
+        },
+        {
+          "id": "[\"\",\"test/state.test.mjs\",\"1564295924_2\"]",
+          "vitestId": "1564295924_2",
+          "project": "",
+          "file": "test/state.test.mjs",
+          "name": "duplicate name",
+          "state": "passed",
+          "errors": [],
+          "meta": {
+            "observation": {
+              "pid": 957,
+              "phase": "beta",
+              "evaluation": "e43eb4ad-38e2-40b5-954e-87a4ca038fd8"
+            }
+          },
+          "concurrent": false
+        },
+        {
+          "id": "[\"\",\"test/state.test.mjs\",\"1564295924_3\"]",
+          "vitestId": "1564295924_3",
+          "project": "",
+          "file": "test/state.test.mjs",
+          "name": "parameter 1",
+          "state": "passed",
+          "errors": [],
+          "meta": {},
+          "concurrent": false
+        },
+        {
+          "id": "[\"\",\"test/state.test.mjs\",\"1564295924_4\"]",
+          "vitestId": "1564295924_4",
+          "project": "",
+          "file": "test/state.test.mjs",
+          "name": "parameter 2",
+          "state": "passed",
+          "errors": [],
+          "meta": {},
+          "concurrent": false
+        }
+      ],
+      "errors": [],
+      "outcome": "passed",
+      "runNumber": 1,
+      "controllerPid": 908,
+      "elapsedMs": 436.2859900000001,
+      "coverage": {
+        "complete": false,
+        "reason": "disabled or no coverage event"
+      }
+    },
+    "distinctWorkerPids": [
+      784,
+      881,
+      889
+    ],
+    "controllerPid": 730
+  },
+  "cancellation": {
+    "outcome": "cancelled",
+    "termination": {
+      "supervisorPid": 970,
+      "controllerPid": 989,
+      "tracked": [
+        989,
+        1086,
+        1098,
+        1114
+      ],
+      "states": [
+        {
+          "pid": 989,
+          "startTime": "325170845",
+          "state": "absent"
+        },
+        {
+          "pid": 1086,
+          "startTime": "325170927",
+          "state": "absent"
+        },
+        {
+          "pid": 1098,
+          "startTime": "325171033",
+          "state": "absent"
+        },
+        {
+          "pid": 1114,
+          "startTime": "325171083",
+          "state": "absent"
+        }
+      ],
+      "reaped": [
+        989,
+        1098,
+        1114
+      ],
+      "allExited": true,
+      "allReaped": true,
+      "controllerStatus": -9,
+      "method": "Linux PR_SET_CHILD_SUBREAPER + waitpid; PID/start-time ownership",
+      "exit": {
+        "code": 0,
+        "signal": null
+      },
+      "elapsedMs": 205.85505199999898
+    },
+    "started": {
+      "workerPid": 1098,
+      "descendantPid": 1114
+    },
+    "proved": true,
+    "deadlineMs": 30000,
+    "readinessTimeoutMs": 20000,
+    "readinessElapsedMs": 508.1898960000035,
+    "platform": "linux",
+    "verification": "Readiness marker before AbortSignal cancellation; Linux subreaper + waitpid + PID/start-time checks prove exit and reaping"
+  },
+  "deadline": {
+    "outcome": "timeout",
+    "termination": {
+      "supervisorPid": 1134,
+      "controllerPid": 1137,
+      "tracked": [
+        1137,
+        1193,
+        1203,
+        1218
+      ],
+      "states": [
+        {
+          "pid": 1137,
+          "startTime": "325171144",
+          "state": "absent"
+        },
+        {
+          "pid": 1193,
+          "startTime": "325171248",
+          "state": "absent"
+        },
+        {
+          "pid": 1203,
+          "startTime": "325171294",
+          "state": "absent"
+        },
+        {
+          "pid": 1218,
+          "startTime": "325171365",
+          "state": "absent"
+        }
+      ],
+      "reaped": [
+        1137,
+        1218
+      ],
+      "allExited": true,
+      "allReaped": true,
+      "controllerStatus": -9,
+      "method": "Linux PR_SET_CHILD_SUBREAPER + waitpid; PID/start-time ownership",
+      "exit": {
+        "code": 0,
+        "signal": null
+      },
+      "elapsedMs": 157.11562499999854
+    },
+    "deadlineMs": 1,
+    "proved": true
+  },
+  "normalCleanup": {
+    "run": {
+      "tests": [
+        {
+          "id": "[\"\",\"test/detached.test.mjs\",\"-140514855_0\"]",
+          "vitestId": "-140514855_0",
+          "project": "",
+          "file": "test/detached.test.mjs",
+          "name": "passing test leaves a detached child",
+          "state": "passed",
+          "errors": [],
+          "meta": {},
+          "concurrent": false
+        }
+      ],
+      "errors": [],
+      "outcome": "passed",
+      "runNumber": 1,
+      "controllerPid": 1231,
+      "elapsedMs": 462.06828100000007,
+      "coverage": {
+        "complete": false,
+        "reason": "disabled or no coverage event"
+      }
+    },
+    "cleanup": {
+      "supervisorPid": 1230,
+      "controllerPid": 1231,
+      "tracked": [
+        1231,
+        1305,
+        1317,
+        1333
+      ],
+      "states": [
+        {
+          "pid": 1231,
+          "startTime": "325171442",
+          "state": "absent"
+        },
+        {
+          "pid": 1305,
+          "startTime": "325171532",
+          "state": "absent"
+        },
+        {
+          "pid": 1317,
+          "startTime": "325171592",
+          "state": "absent"
+        },
+        {
+          "pid": 1333,
+          "startTime": "325171635",
+          "state": "absent"
+        }
+      ],
+      "reaped": [
+        1231,
+        1333
+      ],
+      "allExited": true,
+      "allReaped": true,
+      "controllerStatus": 0,
+      "method": "Linux PR_SET_CHILD_SUBREAPER + waitpid; PID/start-time ownership"
+    },
+    "started": {
+      "descendantPid": 1333
+    },
+    "proved": true
+  },
+  "gates": {
+    "repeatedFreshAndReusedResultsAgree": true,
+    "fixturesBaselinePassed": true,
+    "stableIdentities": true,
+    "selectedResultsAgree": true,
+    "coverageCollected": true,
+    "isolatedModuleReevaluation": true,
+    "cpuHangTerminated": true,
+    "absoluteDeadlineEnforced": true,
+    "cleanProbeRuns": true,
+    "reusedEnvironmentUpdated": true,
+    "freshEnvironmentReferencePassed": true,
+    "normalDetachedChildReaped": true
+  },
+  "passed": true
+}

@@ -1,0 +1,14 @@
+[32m23:20:07 (6184) INFO ProjectReader[39m Found 1 of 43 file(s) to be mutated.
+[32m23:20:08 (6184) INFO Instrumenter[39m Instrumented 1 source file(s) with 83 mutant(s)
+[32m23:20:08 (6184) INFO ConcurrencyTokenProvider[39m Creating 1 test runner process(es).
+[32m23:20:11 (6184) INFO BroadcastReporter[39m Detected that current console does not support the "progress" reporter, downgrading to "progress-append-only" reporter
+[32m23:20:15 (6184) INFO DryRunExecutor[39m Starting initial test run (vitest test runner with "perTest" coverage analysis). This may take a while.
+[32m23:20:16 (6184) INFO DryRunExecutor[39m Initial test run succeeded. Ran 7 tests in 0 seconds (net 7.834375000000364 ms, overhead 948.1656249999996 ms).
+Mutation testing 42% (elapsed: <1m, remaining: <1m) 12/83 tested (2 survived, 0 timed out)
+Mutation testing 54% (elapsed: <1m, remaining: <1m) 23/83 tested (2 survived, 0 timed out)
+Mutation testing 69% (elapsed: <1m, remaining: <1m) 40/83 tested (7 survived, 0 timed out)
+Mutation testing 78% (elapsed: <1m, remaining: <1m) 52/83 tested (7 survived, 0 timed out)
+Mutation testing 85% (elapsed: <1m, remaining: <1m) 62/83 tested (7 survived, 0 timed out)
+Mutation testing 93% (elapsed: ~1m, remaining: <1m) 74/83 tested (7 survived, 0 timed out)
+[32m23:21:24 (6184) INFO JsonReporter[39m Your report can be found at: file:///root/.t3/scratch/2026-10-23-stryker-for-node-is-really-d7dbed62/benchmarks/results/2026-10-23-m0-arm64/measured-02-pure-stryker/report.json
+[32m23:21:24 (6184) INFO MutationTestExecutor[39m Done in 1 minute and 17 seconds.

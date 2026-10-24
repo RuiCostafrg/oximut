@@ -1,0 +1,118 @@
+[
+  {
+    "fixture": "pure",
+    "tool": "stryker",
+    "measured_successes": 5,
+    "wall_seconds": {
+      "median": 96.18026027595624,
+      "min": 80.45805746898986,
+      "max": 97.10252511897124
+    },
+    "cpu_seconds": {
+      "median": 65.658092,
+      "min": 54.575795,
+      "max": 66.148063
+    },
+    "peak_aggregate_rss_bytes": {
+      "median": 397029376,
+      "min": 368988160,
+      "max": 414547968
+    },
+    "peak_process_count": {
+      "median": 4,
+      "min": 4,
+      "max": 4
+    },
+    "mutation_status_counts_agree": true,
+    "mutation_outcomes_agree": true,
+    "test_identities_and_counts_agree": true,
+    "outcomes_agree": true
+  },
+  {
+    "fixture": "pure",
+    "tool": "vitest",
+    "measured_successes": 5,
+    "wall_seconds": {
+      "median": 2.1739383328240365,
+      "min": 1.78383015608415,
+      "max": 2.3046786449849606
+    },
+    "cpu_seconds": {
+      "median": 1.648041,
+      "min": 1.394995,
+      "max": 1.717438
+    },
+    "peak_aggregate_rss_bytes": {
+      "median": 102572032,
+      "min": 95154176,
+      "max": 118136832
+    },
+    "peak_process_count": {
+      "median": 1,
+      "min": 1,
+      "max": 1
+    },
+    "mutation_status_counts_agree": true,
+    "mutation_outcomes_agree": true,
+    "test_identities_and_counts_agree": true,
+    "outcomes_agree": true
+  },
+  {
+    "fixture": "stateful",
+    "tool": "stryker",
+    "measured_successes": 5,
+    "wall_seconds": {
+      "median": 35.59917441289872,
+      "min": 34.774988112039864,
+      "max": 37.06997956894338
+    },
+    "cpu_seconds": {
+      "median": 22.679738,
+      "min": 20.93414,
+      "max": 23.117359999999998
+    },
+    "peak_aggregate_rss_bytes": {
+      "median": 392564736,
+      "min": 385671168,
+      "max": 402546688
+    },
+    "peak_process_count": {
+      "median": 4,
+      "min": 3,
+      "max": 4
+    },
+    "mutation_status_counts_agree": true,
+    "mutation_outcomes_agree": true,
+    "test_identities_and_counts_agree": true,
+    "outcomes_agree": true
+  },
+  {
+    "fixture": "stateful",
+    "tool": "vitest",
+    "measured_successes": 5,
+    "wall_seconds": {
+      "median": 3.5290324988309294,
+      "min": 2.3990947380661964,
+      "max": 3.7142204681877047
+    },
+    "cpu_seconds": {
+      "median": 2.54263,
+      "min": 1.6710459999999998,
+      "max": 2.610001
+    },
+    "peak_aggregate_rss_bytes": {
+      "median": 109170688,
+      "min": 101777408,
+      "max": 112226304
+    },
+    "peak_process_count": {
+      "median": 1,
+      "min": 1,
+      "max": 1
+    },
+    "mutation_status_counts_agree": true,
+    "mutation_outcomes_agree": true,
+    "test_identities_and_counts_agree": true,
+    "outcomes_agree": true
+  }
+]

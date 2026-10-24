@@ -23,6 +23,7 @@ Oximut is a working name.
 - [Architecture](docs/architecture.md): ownership, execution protocol, and correctness rules.
 - [Benchmark plan](docs/benchmarks.md): fair comparison with Stryker and success criteria.
 - [Vitest lifecycle decision](docs/adr/0001-vitest-lifecycle.md): measured reuse boundaries.
+- [Recorded M0 results](benchmarks/results/2026-10-23-m0-arm64/README.md): five-repeat baselines and lifecycle evidence.
 - [Benchmark harness](benchmarks/README.md): commands and measurement limitations.
 
 ## Run the feasibility checks

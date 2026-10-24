@@ -13,7 +13,7 @@ separately; do not assume changing implementation language is sufficient.
   Stryker version, and dependency lockfiles. Record actual versions in results.
 - [x] Create a pure-function fixture and a fixture with imports, mocks, hooks,
   module state, asynchronous tests, and top-level initialization.
-- [ ] Measure ordinary Vitest and tuned Stryker: elapsed time, CPU time, peak
+- [x] Measure ordinary Vitest and tuned Stryker: elapsed time, CPU time, peak
   process-tree memory, worker count, mutant count, and phase timings.
 - [x] Prototype Vitest discovery, filtered reruns, cleanup, cancellation, and
   coverage collection through its supported APIs.
@@ -21,7 +21,9 @@ separately; do not assume changing implementation language is sufficient.
   test process, and module graph. Record required invalidation boundaries.
 - [x] Document the exact tested compatibility range and API risks in an ADR.
 
-Implementation evidence: [Vitest lifecycle ADR](docs/adr/0001-vitest-lifecycle.md).
+Implementation evidence: [Vitest lifecycle ADR](docs/adr/0001-vitest-lifecycle.md)
+and [recorded M0 results](benchmarks/results/2026-10-23-m0-arm64/README.md).
+Phase timings are retained where emitted by the tools; unavailable phases are explicit.
 The safe observed reuse boundary is the controller; test-worker processes and
 module evaluations are fresh. Transform-cache benefits and persistent test-worker
 reuse remain unproven. M1 retains a fresh-process correctness reference.
