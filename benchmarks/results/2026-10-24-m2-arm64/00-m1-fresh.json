@@ -1,0 +1,117 @@
+{
+  "schemaVersion": 1,
+  "runId": "30186-1792862367306087913",
+  "baseline": {
+    "protocol": 1,
+    "runId": "30186-1792862367306087913",
+    "jobId": "baseline",
+    "generation": 0,
+    "outcome": "passed",
+    "tests": {
+      "passed": 2,
+      "failed": 0,
+      "skipped": 0
+    },
+    "errors": []
+  },
+  "mutants": [
+    {
+      "id": "e1cb6842d8b4c350fb8db06adcbb32c8aee2fad0b81f0a816bd10b7455b315c0",
+      "file": "/root/oximut/fixtures/m1/src/subject.ts",
+      "operator": "comparison-boundary",
+      "original": "<",
+      "replacement": "<=",
+      "location": {
+        "start": {
+          "offset": 123,
+          "line": 6,
+          "column": 16
+        },
+        "end": {
+          "offset": 124,
+          "line": 6,
+          "column": 17
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 1,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected true to be false // Object.is equality"
+      ]
+    },
+    {
+      "id": "641c30d54b8db3f4d8d1212ac1bb3a4f0b65044421a93240a2bd8fac98aabcc7",
+      "file": "/root/oximut/fixtures/m1/src/subject.ts",
+      "operator": "boolean-literal",
+      "original": "true",
+      "replacement": "false",
+      "location": {
+        "start": {
+          "offset": 46,
+          "line": 2,
+          "column": 10
+        },
+        "end": {
+          "offset": 50,
+          "line": 2,
+          "column": 14
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 1,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected false to be true // Object.is equality"
+      ]
+    },
+    {
+      "id": "c6b0a1eacb6302f1a93a386334d6b06ebbd26bfddb6ee024539082a895a335b9",
+      "file": "/root/oximut/fixtures/m1/src/subject.ts",
+      "operator": "boolean-literal",
+      "original": "false",
+      "replacement": "true",
+      "location": {
+        "start": {
+          "offset": 258,
+          "line": 11,
+          "column": 10
+        },
+        "end": {
+          "offset": 263,
+          "line": 11,
+          "column": 15
+        }
+      },
+      "outcome": "survived",
+      "tests": {
+        "passed": 2,
+        "failed": 0,
+        "skipped": 0
+      },
+      "errors": []
+    }
+  ],
+  "diagnostics": [
+    "execution=fresh; isolation=fresh-controller-and-test-process"
+  ],
+  "summary": {
+    "total": 3,
+    "killed": 2,
+    "survived": 1,
+    "noCoverage": 0,
+    "invalid": 0,
+    "timeout": 0,
+    "infrastructureError": 0,
+    "skipped": 0,
+    "scoreDenominator": 3,
+    "score": 66.66666666666667,
+    "complete": true
+  }
+}

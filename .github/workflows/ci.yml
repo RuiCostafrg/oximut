@@ -1,4 +1,4 @@
-name: M0 feasibility
+name: Correctness and feasibility
 
 on:
   push:
@@ -26,11 +26,17 @@ jobs:
           toolchain: '1.96.0'
           components: rustfmt, clippy
       - run: npm ci
+      - run: npm run format:check
+      - run: npm run lint
+      - run: npm run typecheck
       - run: npm test
       - run: npm run experiment
       - run: cargo fmt --all -- --check
       - run: cargo clippy --workspace --all-targets --locked -- -D warnings
       - run: cargo test --workspace --locked
+      - run: cargo build -p oximut-cli --locked
+      - name: M1 correctness, M2 isolation, and M3 selection acceptance
+        run: python3 -m unittest discover -s tests -v
       - name: Verify Oxc parses the fixture sources
         run: cargo run --locked -p oximut-oxc-smoke -- fixtures/pure/src/logic.ts fixtures/stateful/src/service.ts
       - name: Baseline smoke (not a performance comparison)

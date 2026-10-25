@@ -1,0 +1,17 @@
+Baseline: Passed (4 passed, 0 failed, 0 skipped)
+killed 3268d01c2f0c /root/oximut/fixtures/m2/src/subject.ts:10:56 < -> <=
+  expected true to be false // Object.is equality
+killed 218e3b3ca725 /root/oximut/fixtures/m2/src/subject.ts:9:48 + -> -
+  expected { value: 2, done: true } to deeply equal { value: 6, done: true }
+killed 12bde19ced53 /root/oximut/fixtures/m2/src/subject.ts:7:42 + -> -
+  expected -5 to be 7 // Object.is equality
+killed 0d28b786eb84 /root/oximut/fixtures/m2/src/subject.ts:8:74 + -> -
+  expected 1 to be 5 // Object.is equality
+survived aea96455175c /root/oximut/fixtures/m2/src/subject.ts:11:35 false -> true
+killed 950495df1051 /root/oximut/fixtures/m2/src/subject.ts:2:28 true -> false
+  expected false to be true // Object.is equality
+killed c8dfc4d84c81 /root/oximut/fixtures/m2/src/subject.ts:7:51 * -> /
+  expected 1.6666666666666665 to be 7 // Object.is equality
+Mutants: 7 total, 6 killed, 1 survived, 0 no-coverage, 0 invalid, 0 timeout, 0 infrastructure-error, 0 skipped
+Score: 85.71% (6/7); complete: true
+Diagnostic: execution=fresh; isolation=fresh-controller-and-test-process

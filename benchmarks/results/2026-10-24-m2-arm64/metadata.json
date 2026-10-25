@@ -1,0 +1,27 @@
+{
+  "platform": "Android-12-aarch64-64bit",
+  "architecture": "aarch64",
+  "node": "v26.3.1",
+  "rust": "rustc 1.96.0 (ac68faa20 2026-05-25) (built from a source tarball)",
+  "commit": "76f386240c415fdb5cfc3f7f36cf543a883205be",
+  "dirty": true,
+  "binarySha256": "a38fd0a24ecf6b09f74459b454232e614f5354e2bbd821f701c1478165a16472",
+  "repetitions": 3,
+  "warmups": 1,
+  "build": "debug",
+  "workers": 1,
+  "metric": "end-to-end monotonic elapsed seconds; no CPU or memory claim",
+  "implementationSha256": {
+    "package-lock.json": "6e97ed25e6fd3b1042e86d7f50921e0ecd5b8405e169cead64a8d2577050c0d0",
+    "Cargo.lock": "a25b6a574ce04e014b4a795f6018393d14b15be212b57bbb16d70416509b5f97",
+    "packages/vitest-adapter/experiment.mjs": "8aef7cae2ef734311a1998ec6928f389a8887b59e32979c27c0ebe87d77468fe",
+    "packages/vitest-adapter/index.mjs": "3e2346c45e3e3aa2236cf6a7c243abbca4ca88b75db58d346681ac29edcba01d",
+    "packages/vitest-adapter/m1-runner.mjs": "f33f43731294536fe5aebbe6b42f21585073ee2744a73a7324c8145a9fc0c5c5",
+    "packages/vitest-adapter/m2-runner.mjs": "ee023140aca75bd8d9000d0ec8c285f1def3df6da8c63901d0644a47ee8bd761",
+    "packages/vitest-adapter/worker.mjs": "fd7e829e8661def956bcda8b9cf4b3a6413c9d0d0ac66e9baded7a75ba799642",
+    "packages/vitest-adapter/m1-worker.ts": "76dc89553ef7433fcd14e0b2b9f17890c9309223df820777e8c7ffaa1aada474",
+    "packages/vitest-adapter/m2-worker.ts": "9530c0b034ec6924f2fea0edfb8378e704768d05bfdf9e5a99b9177e739395ff",
+    "packages/vitest-adapter/protocol.ts": "75e850f4e9cf4171b0e6990a3cb7437d63080edc3b7315c5df527585c0b75ae5",
+    "packages/vitest-adapter/supervisor.py": "d645285d4e0ee132e219a418923a916dfd3038df4754975a35d2c9f0d3b84a60"
+  }
+}

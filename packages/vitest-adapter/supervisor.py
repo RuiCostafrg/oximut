@@ -50,6 +50,8 @@ signal.signal(signal.SIGTERM, request_stop)
 signal.signal(signal.SIGINT, request_stop)
 controller = subprocess.Popen([node, worker], pass_fds=(ipc_fd,))
 os.close(ipc_fd)
+with open(report_path + '.ready', 'w', encoding='utf8') as stream:
+    stream.write('ready')
 owned = {}
 reaped = []
 controller_status = None
