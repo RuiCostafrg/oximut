@@ -3,12 +3,16 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "Rust/Oxc mutation testing with a Vitest adapter — feasibility prototype",
+  "description": "Rust/Oxc mutation testing with a Vitest adapter \u2014 feasibility prototype",
   "engines": {
     "node": "26.3.1"
   },
   "packageManager": "npm@11.16.0",
   "scripts": {
+    "format": "cd packages/vitest-adapter && biome format --write .",
+    "format:check": "cd packages/vitest-adapter && biome format .",
+    "lint": "cd packages/vitest-adapter && biome lint .",
+    "typecheck": "tsc -p packages/vitest-adapter/tsconfig.json",
     "test": "npm run test:fixtures && npm run test:adapter && npm run test:benchmarks",
     "test:fixtures": "vitest run --config fixtures/pure/vitest.config.ts && vitest run --config fixtures/stateful/vitest.config.ts",
     "test:adapter": "node --test packages/vitest-adapter/test/*.test.mjs",
@@ -17,8 +21,10 @@
     "experiment": "node packages/vitest-adapter/experiment.mjs --output .oximut/experiment.json"
   },
   "devDependencies": {
+    "@biomejs/biome": "2.3.8",
     "@stryker-mutator/core": "10.0.0",
     "@stryker-mutator/vitest-runner": "10.0.0",
+    "@types/node": "26.0.0",
     "@vitest/coverage-v8": "4.1.10",
     "typescript": "7.0.2",
     "vitest": "4.1.10"

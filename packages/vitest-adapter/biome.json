@@ -1,0 +1,16 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.3.8/schema.json",
+  "files": {
+    "includes": [
+      "*.ts",
+      "m1-runner.mjs",
+      "m2-runner.mjs",
+      "test/m1.test.mjs",
+      "test/m2.test.mjs",
+      "test/m3.test.mjs"
+    ]
+  },
+  "formatter": { "indentStyle": "space", "indentWidth": 2, "lineWidth": 100 },
+  "javascript": { "formatter": { "quoteStyle": "single" } },
+  "linter": { "enabled": true, "rules": { "recommended": true } }
+}

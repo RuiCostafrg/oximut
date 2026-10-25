@@ -43,8 +43,8 @@ measured repetitions also exits nonzero. The harness fixes the fixture's declare
 Both reports must identify exactly the fixture's checked-in test file set and
 test count (seven pure tests or four stateful tests). Stryker's discovered test
 identities/counts must also agree across measured repetitions.
-Inspect raw rows before using a partial summary. There is no Oximut mutation
-implementation here and these runs establish no mutation-engine speed ratio.
+Inspect raw rows before using a partial summary. The M0 harness does not execute
+Oximut, and these runs establish no mutation-engine speed ratio.
 
 Stryker `Killed`/`Survived` outcomes must include a positive completed-test count.
 For each fixture, a known function-body-removal mutant must be killed (the first
@@ -77,3 +77,18 @@ of uninterruptible tasks; the harness bounds cleanup and records any failure.
 Output capture is bounded while continuing to drain pipes. Tool phase boundaries
 are retained only where explicitly emitted; unavailable phase timings, worker
 restart counts, and queue depths are not invented.
+
+## M2 fresh versus persistent execution
+
+Build the debug CLI, then run the matched end-to-end comparison:
+
+```sh
+cargo build -p oximut-cli --locked
+python3 benchmarks/m2.py --repetitions 3 --warmups 1 --output .oximut/m2-benchmark
+```
+
+This separate harness alternates mode order, varies mutant order reproducibly,
+and rejects incomplete or disagreeing outcomes. It saves all reports and timing
+samples, plus environment and implementation hashes. It measures elapsed time
+only; the M0 CPU/RSS methodology above does not apply to these samples. See
+[M2 semantics](../docs/m2.md) for isolation and scope.

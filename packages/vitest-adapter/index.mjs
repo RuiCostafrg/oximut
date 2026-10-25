@@ -18,10 +18,11 @@ async function within(promise, ms, message) {
 
 /** A separate controller process owns Vitest; stdout/stderr never carry IPC. */
 export async function openController(options) {
+  const openingStarted = performance.now();
   if (process.platform !== 'linux') throw new Error('M0 deadline/process-tree verification requires Linux');
   const temporary = await mkdtemp(join(tmpdir(), 'oximut-controller-'));
   const cleanupPath = join(temporary, 'cleanup.json');
-  const child = fork(controllerFile, [cleanupPath], {
+  const child = fork(options.workerFile ?? controllerFile, [cleanupPath], {
     detached: true,
     execPath: 'python3',
     execArgv: [supervisorFile, process.execPath],
@@ -71,6 +72,18 @@ export async function openController(options) {
   };
   async function terminate() {
     const started = performance.now();
+    // Do not deliver SIGTERM before Python has installed its cleanup handler.
+    // A startup-inclusive deadline can expire before the supervisor starts.
+    while (!closed) {
+      try { await readFile(`${cleanupPath}.ready`); break; }
+      catch (error) { if (error.code !== 'ENOENT') throw error; }
+      if (performance.now() - started >= 1000) {
+        try { process.kill(-child.pid, 'SIGKILL'); } catch (error) { if (error.code !== 'ESRCH') throw error; }
+        await within(exited, 3000, 'Unready supervisor failed to stop');
+        throw new Error('Supervisor failed to become ready for verified cleanup');
+      }
+      await new Promise((resolve) => setTimeout(resolve, 5));
+    }
     if (!closed) child.kill('SIGTERM');
     let exit;
     try { exit = await within(exited, 3000, 'Subreaper failed to stop within deadline'); }
@@ -120,7 +133,7 @@ export async function openController(options) {
   const controller = {
     supervisorPid: child.pid,
     discover: (deadlineMs) => bounded('discover', {}, deadlineMs),
-    run: ({ testIds, environment, deadlineMs, signal } = {}) => bounded('run', { testIds, environment }, deadlineMs, signal),
+    run: ({ testIds, environment, request: jobRequest, deadlineMs, signal } = {}) => bounded('run', { testIds, environment, request: jobRequest }, deadlineMs, signal),
     diagnostics: () => ({ output, truncated }),
     terminate,
     async close() {
@@ -138,14 +151,22 @@ export async function openController(options) {
     },
   };
   try {
-    const initialized = await bounded('initialize', options, 30000);
-    if (initialized.outcome === 'timeout') throw new Error('Controller initialization timed out');
+    const initializationBudget = options.initializationDeadlineMs === undefined ? 30000 : Math.max(1, options.initializationDeadlineMs - (performance.now() - openingStarted));
+    const initialized = await bounded('initialize', options, initializationBudget);
+    if (initialized.outcome === 'timeout') {
+      const error = new Error('Controller initialization timed out after verified cleanup');
+      error.code = 'OXIMUT_TIMEOUT';
+      throw error;
+    }
     controller.versions = initialized.versions;
     controller.pid = initialized.controllerPid;
+    controller.reuse = initialized.reuse;
     return controller;
   } catch (error) {
     if (!closed) await terminate();
-    throw new Error(`${error.message}\n${output}`, { cause: error });
+    const wrapped = new Error(`${error.message}\n${output}`, { cause: error });
+    wrapped.code = error.code;
+    throw wrapped;
   }
 }
 

@@ -1,0 +1,9 @@
+Baseline: Passed (2 passed, 0 failed, 0 skipped)
+killed e1cb6842d8b4 /root/oximut/fixtures/m1/src/subject.ts:6:16 < -> <=
+  expected true to be false // Object.is equality
+killed 641c30d54b8d /root/oximut/fixtures/m1/src/subject.ts:2:10 true -> false
+  expected false to be true // Object.is equality
+survived c6b0a1eacb63 /root/oximut/fixtures/m1/src/subject.ts:11:10 false -> true
+Mutants: 3 total, 2 killed, 1 survived, 0 no-coverage, 0 invalid, 0 timeout, 0 infrastructure-error, 0 skipped
+Score: 66.67% (2/3); complete: true
+Diagnostic: execution=fresh; isolation=fresh-controller-and-test-process

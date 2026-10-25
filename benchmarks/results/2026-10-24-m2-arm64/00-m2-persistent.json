@@ -1,0 +1,231 @@
+{
+  "schemaVersion": 1,
+  "runId": "30396-1792862375390649212",
+  "baseline": {
+    "protocol": 1,
+    "runId": "30396-1792862375390649212",
+    "jobId": "baseline",
+    "generation": 0,
+    "outcome": "passed",
+    "tests": {
+      "passed": 4,
+      "failed": 0,
+      "skipped": 0
+    },
+    "errors": []
+  },
+  "mutants": [
+    {
+      "id": "3268d01c2f0c8a67335e58e2b6caeffd23f41c388bb698491a552d22e70a8e75",
+      "file": "/root/oximut/fixtures/m2/src/subject.ts",
+      "operator": "comparison-boundary",
+      "original": "<",
+      "replacement": "<=",
+      "location": {
+        "start": {
+          "offset": 490,
+          "line": 10,
+          "column": 56
+        },
+        "end": {
+          "offset": 491,
+          "line": 10,
+          "column": 57
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 3,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected true to be false // Object.is equality"
+      ]
+    },
+    {
+      "id": "218e3b3ca72556f7c5d47ded0a4f1b4317bb7993a4b48bfa35f3dcd7c4d3135c",
+      "file": "/root/oximut/fixtures/m2/src/subject.ts",
+      "operator": "arithmetic",
+      "original": "+",
+      "replacement": "-",
+      "location": {
+        "start": {
+          "offset": 428,
+          "line": 9,
+          "column": 48
+        },
+        "end": {
+          "offset": 429,
+          "line": 9,
+          "column": 49
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 3,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected { value: 2, done: true } to deeply equal { value: 6, done: true }"
+      ]
+    },
+    {
+      "id": "12bde19ced534f4e488a804a996ab1e5e2afa8665ca0409b8c644cb6bf4caac1",
+      "file": "/root/oximut/fixtures/m2/src/subject.ts",
+      "operator": "arithmetic",
+      "original": "+",
+      "replacement": "-",
+      "location": {
+        "start": {
+          "offset": 280,
+          "line": 7,
+          "column": 42
+        },
+        "end": {
+          "offset": 281,
+          "line": 7,
+          "column": 43
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 3,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected -5 to be 7 // Object.is equality"
+      ]
+    },
+    {
+      "id": "0d28b786eb84079acd4468232784c5a2ab708d6a92a35d4bb1aa1c886c87aa28",
+      "file": "/root/oximut/fixtures/m2/src/subject.ts",
+      "operator": "arithmetic",
+      "original": "+",
+      "replacement": "-",
+      "location": {
+        "start": {
+          "offset": 374,
+          "line": 8,
+          "column": 74
+        },
+        "end": {
+          "offset": 375,
+          "line": 8,
+          "column": 75
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 3,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected 1 to be 5 // Object.is equality"
+      ]
+    },
+    {
+      "id": "aea96455175c71a76f319c35008f4dbc965d8d3c67691a8ef38f60bace16e7e3",
+      "file": "/root/oximut/fixtures/m2/src/subject.ts",
+      "operator": "boolean-literal",
+      "original": "false",
+      "replacement": "true",
+      "location": {
+        "start": {
+          "offset": 531,
+          "line": 11,
+          "column": 35
+        },
+        "end": {
+          "offset": 536,
+          "line": 11,
+          "column": 40
+        }
+      },
+      "outcome": "survived",
+      "tests": {
+        "passed": 4,
+        "failed": 0,
+        "skipped": 0
+      },
+      "errors": []
+    },
+    {
+      "id": "950495df105134e7cc239569081b41bf7eb8ca270c106ccdb00dae5f56ac4388",
+      "file": "/root/oximut/fixtures/m2/src/subject.ts",
+      "operator": "boolean-literal",
+      "original": "true",
+      "replacement": "false",
+      "location": {
+        "start": {
+          "offset": 101,
+          "line": 2,
+          "column": 28
+        },
+        "end": {
+          "offset": 105,
+          "line": 2,
+          "column": 32
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 3,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected false to be true // Object.is equality"
+      ]
+    },
+    {
+      "id": "c8dfc4d84c81822bc571a4167cd825d799b34da340281d9aac622420a0ce5d86",
+      "file": "/root/oximut/fixtures/m2/src/subject.ts",
+      "operator": "arithmetic",
+      "original": "*",
+      "replacement": "/",
+      "location": {
+        "start": {
+          "offset": 289,
+          "line": 7,
+          "column": 51
+        },
+        "end": {
+          "offset": 290,
+          "line": 7,
+          "column": 52
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 3,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected 1.6666666666666665 to be 7 // Object.is equality"
+      ]
+    }
+  ],
+  "diagnostics": [
+    "execution=persistent; isolation=fresh-test-forks; controller reuse only; baseline=original-and-disabled-switches",
+    "disabled switching validation: /root/oximut/fixtures/m2/src/subject.ts: Passed",
+    "adapter observed reuse boundary: controller"
+  ],
+  "summary": {
+    "total": 7,
+    "killed": 6,
+    "survived": 1,
+    "noCoverage": 0,
+    "invalid": 0,
+    "timeout": 0,
+    "infrastructureError": 0,
+    "skipped": 0,
+    "scoreDenominator": 7,
+    "score": 85.71428571428571,
+    "complete": true
+  }
+}

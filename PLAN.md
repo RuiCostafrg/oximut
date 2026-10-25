@@ -37,55 +37,85 @@ scope, or contribute the measured improvement to an existing runner.
 
 Depends on M0.
 
-- [ ] Create the Rust workspace and TypeScript adapter package, lock dependencies,
+- [x] Create the Rust workspace and TypeScript adapter package, lock dependencies,
   and add formatting, linting, unit tests, and integration checks in CI.
-- [ ] Parse JS/TS with Oxc and implement a small operator set: boolean literal
+- [x] Parse JS/TS with Oxc and implement a small operator set: boolean literal
   inversion, comparison boundary changes, and selected arithmetic replacements.
-- [ ] Generate deterministic mutant IDs, exact source locations, transformed
+- [x] Generate deterministic mutant IDs, exact source locations, transformed
   code, and source maps; exclude type-only syntax and unsupported contexts.
-- [ ] Implement versioned request/response IPC and a baseline test run.
-- [ ] Run one mutant at a time in a fresh process as the correctness reference.
-- [ ] Produce text and JSON reports with explicit killed, survived, no-coverage,
+- [x] Implement versioned request/response IPC and a baseline test run.
+- [x] Run one mutant at a time in a fresh process as the correctness reference.
+- [x] Produce text and JSON reports with explicit killed, survived, no-coverage,
   invalid, timeout, infrastructure-error, and skipped outcomes.
-- [ ] Define exit codes and score denominators. Infrastructure failures and
+- [x] Define exit codes and score denominators. Infrastructure failures and
   skipped mutants must never become successful test evidence.
 
 **Gate:** known killed and surviving mutants are classified correctly; with all
 mutants disabled, instrumented code matches original behavior. Parse/transform
 errors are distinguished from test failures. The user's source tree is unchanged.
 
+Implementation evidence: [M1 runner and semantics](docs/m1.md), Rust unit tests,
+[adapter regression tests](packages/vitest-adapter/test/m1.test.mjs), and
+[CLI acceptance tests](tests/test_m1.py). The acceptance corpus yields two known
+kills and one survivor; all four stateful service mutants are killed. Failure
+tests reject malformed/stale IPC and verify detached-process cleanup. M1 reserves
+the no-coverage outcome without assigning it; sound attribution remains M3.
+
 ## M2 — Persistent execution and isolation
 
 Depends on M1.
 
-- [ ] Add mutation switching so compatible mutants share transformed code.
-- [ ] Keep the adapter and safe Vitest state alive across requests; preserve
+- [x] Add mutation switching so compatible mutants share transformed code.
+- [x] Keep the adapter and safe Vitest state alive across requests; preserve
   isolation according to the M0 findings.
-- [ ] Set the active mutant before module evaluation and reset it after each job.
-- [ ] Reload or restart for import-time mutations and state that cannot be reset.
-- [ ] Add per-job deadlines, process-tree termination, worker recycling, and
+- [x] Set the active mutant before module evaluation and reset it after each job.
+- [x] Reload or restart for import-time mutations and state that cannot be reset.
+- [x] Add per-job deadlines, process-tree termination, worker recycling, and
   bounded retries. Distinguish worker crashes from mutant-induced timeouts.
-- [ ] Compare randomized mutant execution order against the fresh-process reference.
+- [x] Compare randomized mutant execution order against the fresh-process reference.
 
 **Gate:** no unexplained outcome disagreements across the isolation corpus;
 repeatable measured benefit over the fresh-process reference. If safe reuse is
 limited, expose the limitation instead of disabling isolation silently.
 
+Implementation evidence: [M2 execution and limitations](docs/m2.md), switched
+instrumentation unit tests, [adapter isolation tests](packages/vitest-adapter/test/m2.test.mjs),
+[randomized equivalence tests](tests/test_m2.py), and
+[persistent transport failure tests](tests/test_m2_failures.py). Reuse is opt-in
+and limited to the controller/transform state; test forks remain fresh.
+
+**Gate result:** passed on the three-fixture corpus. [Recorded M2 measurements](benchmarks/results/2026-10-24-m2-arm64/README.md)
+show no disagreements across 14 mutants, with three measured pairs per fixture
+and median fresh/persistent ratios of 1.49×, 2.53×, and 1.39×. The scope remains
+the pinned Linux/Node/Vitest combination and the documented fallback policies.
+
 ## M3 — Precise test selection
 
 Depends on M2.
 
-- [ ] Record mutant hits per stable test identity during an unmutated baseline.
-- [ ] Attribute before/after hooks and suite initialization conservatively.
-- [ ] Start with sequential tests; detect concurrent tests and unsupported
+- [x] Record mutant hits per stable test identity during an unmutated baseline.
+- [x] Attribute before/after hooks and suite initialization conservatively.
+- [x] Start with sequential tests; detect concurrent tests and unsupported
   attribution, using broader file/suite execution or rejecting the mode clearly.
-- [ ] Treat code executed during imports and global setup as requiring broader
+- [x] Treat code executed during imports and global setup as requiring broader
   execution. Use fresh evaluation when activating import-time mutants.
-- [ ] Mark no-coverage only when collection is complete and attribution is sound.
-- [ ] Validate selected-test results against full-suite execution for the same mutants.
+- [x] Mark no-coverage only when collection is complete and attribution is sound.
+- [x] Validate selected-test results against full-suite execution for the same mutants.
 
 **Gate:** no unexplained missed kills versus the full-suite reference on the
 selection corpus. Reports include selected test counts and reasons for fallback.
+
+Implementation evidence: [M3 attribution and limitations](docs/m3.md), probe and
+selection unit tests, [adapter regressions](packages/vitest-adapter/test/m3.test.mjs),
+[selected/full-suite acceptance](tests/test_m3.py), and
+[invalid-attribution tests](tests/test_m3_failures.py).
+
+**Gate result:** passed on the selection corpus in fresh and persistent modes,
+including hooks, suite initialization, shared module state, duplicate test names,
+imports, concurrent tests, and global setup. Selection retains whole hit files;
+unsupported or incomplete attribution falls back to the full suite. Function
+source reflection and unobserved transforms cannot establish no-coverage. This
+remains opt-in and assumes files do not communicate through external state.
 
 ## M4 — Reliable incremental cache
 
@@ -140,15 +170,15 @@ Depends on M3, M4, and M5.
 the design. An alpha must have passing correctness and resource-failure tests
 regardless of performance.
 
-## First implementation task
+## Next implementation task
 
-Complete M0 with two fixture projects and a minimal adapter experiment. Deliver
-raw baseline measurements and an ADR describing the reusable Vitest lifecycle.
-Do not build broad mutation support before this experiment answers the main risk.
+M4: implement the conservative project-wide execution fingerprint and reliable
+incremental cache. Preserve baseline validation, M3 attribution safeguards,
+M2 fresh-fork isolation, and the full-suite fresh-process reference.
 
 ## Decisions still open
 
-- Exact supported versions and minimum Rust version: choose and lock in M0.
+- Compatibility expansion beyond the exact versions pinned in M0.
 - Safe reuse boundary in Vitest: prove in M0/M2.
 - Linux-first hard memory enforcement versus portable soft budgets: decide in M5.
 - Public name, license, distribution targets, and npm packaging: decide in M6.

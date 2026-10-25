@@ -3,9 +3,14 @@
 Mutation testing for JavaScript and TypeScript, designed around a Rust + Oxc
 instrumentation engine and a thin Vitest adapter.
 
-**Status: M0 feasibility prototype.** The repository contains runnable Vitest
-lifecycle experiments, baseline benchmarks, and an Oxc parser smoke check. It does
-not yet generate or execute its own mutants, and there is no published package.
+**Status: M3 conservative test selection.** The repository generates JS/TS mutants with
+Oxc and executes them sequentially, with text and JSON reports. Fresh execution
+remains the default correctness reference; opt-in persistent execution shares
+transformed code and a Vitest controller while retaining fresh test processes.
+Opt-in test selection collects baseline mutant hits and retains covering test files,
+with full-suite fallbacks when attribution is uncertain.
+It also retains the M0 lifecycle experiments and baseline benchmarks.
+There is no published package.
 Faster execution and lower memory use than Stryker remain hypotheses to measure.
 Oximut is a working name.
 
@@ -20,6 +25,9 @@ Oximut is a working name.
 ## Start here
 
 - [Implementation plan](PLAN.md): milestones, dependencies, and acceptance gates.
+- [M1 runner](docs/m1.md): commands, report semantics, exit codes, and limitations.
+- [M2 execution](docs/m2.md): switching, persistent controllers, isolation, and validation.
+- [M3 selection](docs/m3.md): baseline attribution, conservative selection, and fallbacks.
 - [Architecture](docs/architecture.md): ownership, execution protocol, and correctness rules.
 - [Benchmark plan](docs/benchmarks.md): fair comparison with Stryker and success criteria.
 - [Vitest lifecycle decision](docs/adr/0001-vitest-lifecycle.md): measured reuse boundaries.
@@ -60,21 +68,22 @@ When running Ubuntu through Android/Termux PRoot, put a Linux Node executable on
 `PATH`. An inherited Android Node can fail to load native bindings from Ubuntu
 paths. The recorded local measurements describe that environment explicitly.
 
-## Proposed layout
+## Layout
 
-The production components below remain planned; the M0 adapter and fixtures now
-exist, along with the isolated `experiments/oxc-smoke` Rust package.
+The M1 components implement the correctness reference. M2 adds controller reuse
+and mutation switching. M3 adds opt-in conservative test selection. Outcome
+caching and resource budgeting remain planned.
 
-- `crates/oximut-cli`: configuration, scheduling, resource limits, reporting.
-- `crates/oximut-instrument`: Oxc parsing, mutation generation, source maps.
-- `crates/oximut-core`: mutant identities, protocol types, cache fingerprints.
-- `packages/vitest-adapter`: Node worker, Vitest lifecycle, transform plugin, coverage hooks.
+- `crates/cli`: sequential execution, configuration, and reporting.
+- `crates/instrument`: Oxc parsing, mutation generation, source maps.
+- `crates/core`: mutant identities, protocol types, and outcome semantics.
+- `packages/vitest-adapter`: Node worker, Vitest lifecycle, and transform plugin.
 - `fixtures`: semantic and isolation regression projects.
 - `benchmarks`: pinned projects, runner scripts, raw measurements.
 
 ## Initial scope
 
-Node execution with Vitest, JavaScript/TypeScript ESM, and eventually a small
+Node execution with Vitest, JavaScript/TypeScript ESM, and a small
 documented set of expression mutations. Expand compatibility from the pinned
 combination only when supported by tests.
 
