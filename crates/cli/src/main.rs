@@ -1,7 +1,10 @@
 //! Sequential fresh-reference and persistent-controller runners.
+mod cache;
+mod resources;
+mod scheduler;
 use oximut_core::{
-    Coverage, Mutant, MutantResult, Mutation, Outcome, PROTOCOL, Report, Request, Response,
-    Summary, TestOutcome, Tests,
+    Coverage, Mutant, MutantResult, Mutation, Outcome, PROTOCOL, Provenance, Report, Request,
+    Response, Summary, TestOutcome, Tests,
 };
 use std::{
     collections::{BTreeMap, BTreeSet},
@@ -13,14 +16,15 @@ use std::{
     time::{Duration, Instant, SystemTime, UNIX_EPOCH},
 };
 
-const HELP: &str = "Usage: oximut [--root DIR] [--config FILE] --source FILE [--source FILE ...]\n  --report FILE       JSON report (- for stdout)\n  --timeout-ms N      Per-job deadline, default 30000 ms\n  --execution MODE   fresh (default) or persistent controller with fresh test forks\n  --test-selection    Collect baseline hits and conservatively select hit test files\n  --order-seed N     Deterministically shuffle mutant execution order\n  --adapter FILE      Node adapter entry point override\n  --list              Generate mutants as JSON without executing tests\n  --baseline-only     Run original sources without mutants\nExit: 0 complete/no survivors; 1 survivors/no coverage; 2 incomplete/error.\nScore: killed/(killed+survived+no-coverage)*100; empty denominator => null.\nInvalid/timeout/infrastructure-error/skipped are excluded and make a run incomplete.";
+const HELP: &str = "Usage: oximut [--root DIR] [--config FILE] --source FILE [--source FILE ...]\n  --report FILE       JSON report (- for stdout)\n  --timeout-ms N      Per-job deadline, default 30000 ms\n  --workers N         Maximum simultaneous mutation jobs (default 1; bounded by CPU limits)\n  --memory-budget-mib N Aggregate sampled RSS budget in MiB (1 MiB = 1048576 bytes); default host/container limit\n  --memory-reserve-mib N Reserved admission headroom in MiB (default 64)\n  --execution MODE   fresh (default) or persistent controller with fresh test forks\n  --test-selection    Collect baseline hits and conservatively select hit test files\n  --order-seed N     Deterministically shuffle mutant execution order\n  --adapter FILE      Node adapter entry point override\n  --cache             Cache instrumentation; outcomes require --cache-inputs-complete\n  --cache-inputs-complete Assert all nondeterministic/external inputs are declared\n  --cache-input FILE  Additional input file/directory (repeatable)\n  --cache-env NAME    Additional environment input (repeatable; values stay private)\n  --no-cache, --force Bypass all cache reads and writes\n  --list              Generate mutants as JSON without executing tests\n  --baseline-only     Run original sources without mutants\nExit: 0 complete/no survivors; 1 survivors/no coverage; 2 incomplete/error.\nScore: killed/(killed+survived+no-coverage)*100; empty denominator => null.\nInvalid/timeout/infrastructure-error/resource-exhausted/skipped are excluded and make a run incomplete.";
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 enum Execution {
     Fresh,
     Persistent,
 }
 
+#[derive(serde::Serialize, serde::Deserialize)]
 struct Options {
     root: PathBuf,
     config: PathBuf,
@@ -33,6 +37,14 @@ struct Options {
     execution: Execution,
     order_seed: Option<u64>,
     test_selection: bool,
+    cache: bool,
+    cache_inputs_complete: bool,
+    no_cache: bool,
+    cache_inputs: Vec<PathBuf>,
+    cache_env: Vec<String>,
+    workers: usize,
+    memory_budget_mib: Option<u64>,
+    memory_reserve_mib: u64,
 }
 
 fn options() -> Result<Option<Options>, String> {
@@ -50,6 +62,14 @@ fn options() -> Result<Option<Options>, String> {
     let mut list = false;
     let mut baseline_only = false;
     let mut test_selection = false;
+    let mut cache = false;
+    let mut cache_inputs_complete = false;
+    let mut no_cache = false;
+    let mut cache_inputs = vec![];
+    let mut cache_env = vec![];
+    let mut workers = 1;
+    let mut memory_budget_mib = None;
+    let mut memory_reserve_mib = 64;
     while let Some(arg) = args.next() {
         match arg.as_str() {
             "--help" | "-h" => {
@@ -59,13 +79,51 @@ fn options() -> Result<Option<Options>, String> {
             "--list" => list = true,
             "--baseline-only" => baseline_only = true,
             "--test-selection" => test_selection = true,
-            "--root" | "--config" | "--source" | "--report" | "--timeout-ms" | "--adapter"
-            | "--execution" | "--order-seed" => {
+            "--cache" => cache = true,
+            "--cache-inputs-complete" => cache_inputs_complete = true,
+            "--no-cache" | "--force" => no_cache = true,
+            "--root"
+            | "--config"
+            | "--source"
+            | "--report"
+            | "--timeout-ms"
+            | "--adapter"
+            | "--execution"
+            | "--order-seed"
+            | "--cache-input"
+            | "--cache-env"
+            | "--workers"
+            | "--memory-budget-mib"
+            | "--memory-reserve-mib" => {
                 let value = args
                     .next()
                     .ok_or_else(|| format!("missing value for {arg}"))?;
                 match arg.as_str() {
+                    "--workers" => {
+                        workers = value.parse().map_err(|_| "--workers requires an integer")?
+                    }
+                    "--memory-budget-mib" => {
+                        memory_budget_mib = Some(
+                            value
+                                .parse()
+                                .map_err(|_| "--memory-budget-mib requires an integer in MiB")?,
+                        )
+                    }
+                    "--memory-reserve-mib" => {
+                        memory_reserve_mib = value
+                            .parse()
+                            .map_err(|_| "--memory-reserve-mib requires an integer in MiB")?
+                    }
                     "--root" => root = value.into(),
+                    "--cache-input" => cache_inputs.push(PathBuf::from(value)),
+                    "--cache-env" => {
+                        if value.is_empty() || value.contains('=') || value.contains('\0') {
+                            return Err(
+                                "--cache-env requires a valid environment variable name".into()
+                            );
+                        }
+                        cache_env.push(value);
+                    }
                     "--config" => config = value.into(),
                     "--source" => sources.push(PathBuf::from(value)),
                     "--report" => report = Some(PathBuf::from(value)),
@@ -100,6 +158,20 @@ fn options() -> Result<Option<Options>, String> {
     if execution == Execution::Persistent && !adapter_override {
         adapter = Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../packages/vitest-adapter/m2-runner.mjs");
+    }
+    if !(1..=1024).contains(&workers) {
+        return Err("--workers must be 1..1024".into());
+    }
+    if memory_budget_mib == Some(0)
+        || memory_budget_mib.is_some_and(|n| n > u64::MAX / resources::MIB)
+        || memory_reserve_mib > u64::MAX / resources::MIB
+    {
+        return Err(
+            "memory settings require representable integer MiB; budget must be positive".into(),
+        );
+    }
+    if memory_budget_mib.is_some_and(|n| memory_reserve_mib >= n) {
+        return Err("--memory-reserve-mib must be smaller than --memory-budget-mib".into());
     }
     if timeout_ms == 0 || timeout_ms > 86_400_000 {
         return Err("--timeout-ms must be 1..86400000".into());
@@ -165,6 +237,14 @@ fn options() -> Result<Option<Options>, String> {
         execution,
         order_seed,
         test_selection,
+        cache,
+        cache_inputs_complete,
+        no_cache,
+        cache_inputs,
+        cache_env,
+        workers,
+        memory_budget_mib,
+        memory_reserve_mib,
     }))
 }
 
@@ -304,7 +384,10 @@ fn invoke(options: &Options, request: &Request) -> Response {
             .current_dir(&options.root)
             .stdin(Stdio::null())
             .stdout(Stdio::null())
-            .stderr(Stdio::null());
+            .stderr(Stdio::null())
+            .env("OXIMUT_BUDGETED", "1")
+            .env("RAYON_NUM_THREADS", "1")
+            .env("UV_THREADPOOL_SIZE", "1");
         #[cfg(unix)]
         {
             use std::os::unix::process::CommandExt;
@@ -412,7 +495,10 @@ impl Session {
             .current_dir(&options.root)
             .stdin(Stdio::null())
             .stdout(Stdio::null())
-            .stderr(Stdio::null());
+            .stderr(Stdio::null())
+            .env("OXIMUT_BUDGETED", "1")
+            .env("RAYON_NUM_THREADS", "1")
+            .env("UV_THREADPOOL_SIZE", "1");
         #[cfg(unix)]
         {
             use std::os::unix::process::CommandExt;
@@ -531,7 +617,7 @@ impl Drop for Session {
     }
 }
 
-fn execute(options: &Options, request: &Request, session: &mut Option<Session>) -> Response {
+fn execute_local(options: &Options, request: &Request, session: &mut Option<Session>) -> Response {
     if options.execution == Execution::Fresh {
         return invoke(options, request);
     }
@@ -586,6 +672,7 @@ fn validate_coverage(
 }
 
 fn run(options: Options) -> Result<u8, String> {
+    let mut cache = cache::Cache::new(&options);
     let mut mutants: Vec<Mutant> = vec![];
     let mut diagnostics = vec![];
     let mut disabled_checks = vec![];
@@ -597,18 +684,13 @@ fn run(options: Options) -> Result<u8, String> {
             .strip_prefix(&options.root)
             .map_err(|e| e.to_string())?
             .to_string_lossy();
-        if options.test_selection {
-            match oximut_instrument::generate_probes(&identity, path, &source) {
+        let (generated, probe) = cache.artifact(&options, &identity, path, &source)?;
+        if let Some(probe) = probe {
+            match probe {
                 Ok(probe) => probe_transforms.push(probe),
                 Err(reason) => probe_reasons.push(reason),
             }
         }
-        let generated = match options.execution {
-            Execution::Fresh => oximut_instrument::generate(&identity, path, &source)?,
-            Execution::Persistent => {
-                oximut_instrument::generate_switched(&identity, path, &source)?
-            }
-        };
         if options.execution == Execution::Persistent
             && !generated
                 .diagnostics
@@ -649,6 +731,7 @@ fn run(options: Options) -> Result<u8, String> {
         return Ok(0);
     }
     enable_subreaper()?;
+    let mut cached = cache.prepare(&options);
     let run_id = format!(
         "{}-{}",
         std::process::id(),
@@ -670,8 +753,8 @@ fn run(options: Options) -> Result<u8, String> {
         collect_coverage: None,
         selection: None,
     };
-    let mut session = None;
-    let mut baseline = execute(&options, &request, &mut session);
+    let mut scheduler = scheduler::Scheduler::new(&options)?;
+    let mut baseline = scheduler.execute(&request);
     if baseline.outcome == TestOutcome::Passed {
         for mutation in disabled_checks {
             request.generation += 1;
@@ -679,7 +762,7 @@ fn run(options: Options) -> Result<u8, String> {
             request.kind = "mutant".into();
             let file = mutation.file.clone();
             request.mutation = Some(mutation);
-            let mut checked = execute(&options, &request, &mut session);
+            let mut checked = scheduler.execute(&request);
             if checked.outcome == TestOutcome::Passed
                 && (checked.tests.passed != baseline.tests.passed
                     || checked.tests.failed != baseline.tests.failed
@@ -704,7 +787,7 @@ fn run(options: Options) -> Result<u8, String> {
         request.kind = "baseline".into();
         request.mutation = None;
         request.collect_coverage = Some(probe_transforms);
-        let mut collected = execute(&options, &request, &mut session);
+        let mut collected = scheduler.execute(&request);
         if collected.outcome != TestOutcome::Passed {
             diagnostics.push("probe baseline failed; mutation execution blocked".into());
             baseline = collected;
@@ -740,6 +823,25 @@ fn run(options: Options) -> Result<u8, String> {
     let generation_offset = request.generation;
     let baseline_ok = baseline.outcome == TestOutcome::Passed;
     let mut results = vec![];
+    let mut jobs = vec![];
+    if cached.is_some() && !cache.inputs_unchanged(&options) {
+        cached = None;
+        cache.report.reason = "inputs-changed-during-baseline".into();
+    }
+    if baseline_ok {
+        if cached
+            .as_ref()
+            .is_some_and(|entry| !entry.validate(&mutants, &baseline.tests))
+        {
+            cached = None;
+            cache.report.reason = "cached-outcomes-failed-baseline-or-inventory-validation".into();
+        }
+    } else {
+        cached = None;
+        if cache.report.outcomes_enabled {
+            cache.report.reason = "baseline-did-not-pass".into();
+        }
+    }
     if !options.baseline_only {
         for (index, mutant) in mutants.into_iter().enumerate() {
             let selection = baseline.coverage.as_ref().map(|coverage| {
@@ -756,6 +858,25 @@ fn run(options: Options) -> Result<u8, String> {
                 && selection
                     .as_ref()
                     .is_some_and(|selected| selected.mode == "none");
+            if let Some(entry) = &cached
+                && let Some(previous) = entry.results.iter().find(|result| result.id == mutant.id)
+                && cache::same(&previous.selection, &selection)
+                && (previous.outcome != Outcome::NoCoverage || no_coverage)
+            {
+                let mut reused = previous.clone();
+                reused.provenance = Provenance {
+                    source: "cache".into(),
+                    reason: "matching-project-fingerprint-and-fresh-baseline".into(),
+                    fingerprint: cache.report.fingerprint.clone(),
+                    original_run_id: Some(entry.run_id.clone()),
+                };
+                cache.report.outcome_hits += 1;
+                results.push(reused);
+                continue;
+            }
+            if cache.report.outcomes_enabled {
+                cache.report.outcome_misses += 1;
+            }
             let response = if baseline_ok && !no_coverage {
                 request.job_id = mutant.id.clone();
                 request.generation = generation_offset + index as u64 + 1;
@@ -767,7 +888,8 @@ fn run(options: Options) -> Result<u8, String> {
                     code: mutant.code,
                     map: mutant.map,
                 });
-                execute(&options, &request, &mut session)
+                jobs.push((results.len(), request.clone()));
+                infrastructure(&request, "pending scheduler execution")
             } else {
                 Response {
                     protocol: PROTOCOL,
@@ -799,46 +921,60 @@ fn run(options: Options) -> Result<u8, String> {
                 tests: response.tests,
                 errors: response.errors,
                 selection,
+                provenance: Provenance {
+                    source: if no_coverage {
+                        "baseline-coverage"
+                    } else if baseline_ok {
+                        "executed"
+                    } else {
+                        "skipped"
+                    }
+                    .into(),
+                    reason: if cached.is_some() {
+                        "fresh-selection-differs-from-cached-result".into()
+                    } else {
+                        cache.report.reason.clone()
+                    },
+                    fingerprint: cache.report.fingerprint.clone(),
+                    original_run_id: None,
+                },
             });
         }
     }
-    let cleanup = session.as_mut().map_or(Ok(()), Session::finish);
-    if let Some(session) = &session {
-        let events = session.directory.path().join("events.jsonl");
-        if let Ok(file) = fs::File::open(events) {
-            let mut bytes = Vec::new();
-            if file.take(1_048_577).read_to_end(&mut bytes).is_ok() && bytes.len() <= 1_048_576 {
-                let mut modes = BTreeSet::new();
-                for line in bytes.split(|byte| *byte == b'\n') {
-                    if let Ok(event) = serde_json::from_slice::<serde_json::Value>(line)
-                        && let Some(mode) = event.get("reuse").and_then(|value| value.as_str())
-                    {
-                        modes.insert(mode.to_owned());
-                    }
-                }
-                for mode in modes {
-                    diagnostics.push(format!("adapter observed reuse boundary: {mode}"));
-                }
-            } else {
-                diagnostics.push("adapter reuse diagnostics unavailable: event log exceeds limit or cannot be read".into());
+    scheduler.run_jobs(jobs, &mut results);
+    let cleanup_ok = scheduler.finish(&mut diagnostics);
+    let resources = scheduler.report();
+    let inputs_unchanged = cache.inputs_unchanged(&options);
+    if !inputs_unchanged {
+        for result in &mut results {
+            if result.provenance.source == "cache" {
+                result.outcome = Outcome::InfrastructureError;
+                result
+                    .errors
+                    .push("inputs changed during run; cached evidence invalidated".into());
             }
         }
     }
-    let cleanup_ok = cleanup.is_ok();
-    if let Err(error) = cleanup {
-        diagnostics.push(error);
-    }
-    drop(session);
     let mut summary = Summary::from_results(&results);
     summary.complete &= baseline_ok && cleanup_ok;
     let code = summary.exit_code();
-    let report = Report {
+    let publication = cache.stage(
+        &options,
+        summary.complete,
+        inputs_unchanged,
+        &run_id,
+        &baseline.tests,
+        &results,
+    );
+    let mut report = Report {
         schema_version: 1,
         run_id,
         baseline,
         mutants: results,
         diagnostics,
         summary,
+        cache: cache.report.clone(),
+        resources,
     };
     let json = serde_json::to_string_pretty(&report).map_err(|e| e.to_string())?;
     if let Some(path) = &options.report {
@@ -862,6 +998,12 @@ fn run(options: Options) -> Result<u8, String> {
                 .persist(path)
                 .map_err(|e| format!("report: {e}"))?;
         }
+    }
+    if let Some(publication) = publication {
+        report.cache.persistence = match publication.commit() {
+            Ok(()) => "complete-run-persisted".into(),
+            Err(error) => format!("outcome-commit-failed: {error}"),
+        };
     }
     if options.report.as_deref() != Some(Path::new("-")) {
         println!(
@@ -901,7 +1043,7 @@ fn run(options: Options) -> Result<u8, String> {
         }
         let s = &report.summary;
         println!(
-            "Mutants: {} total, {} killed, {} survived, {} no-coverage, {} invalid, {} timeout, {} infrastructure-error, {} skipped",
+            "Mutants: {} total, {} killed, {} survived, {} no-coverage, {} invalid, {} timeout, {} infrastructure-error, {} resource-exhausted, {} skipped",
             s.total,
             s.killed,
             s.survived,
@@ -909,6 +1051,7 @@ fn run(options: Options) -> Result<u8, String> {
             s.invalid,
             s.timeout,
             s.infrastructure_error,
+            s.resource_exhausted,
             s.skipped
         );
         let score = s
@@ -918,6 +1061,15 @@ fn run(options: Options) -> Result<u8, String> {
             "Score: {score} ({}/{}); complete: {}",
             s.killed, s.score_denominator, s.complete
         );
+        println!(
+            "Cache: {}; instrumentation hits/misses: {}/{}; outcome hits/misses: {}/{}; {}",
+            report.cache.reason,
+            report.cache.instrumentation_hits,
+            report.cache.instrumentation_misses,
+            report.cache.outcome_hits,
+            report.cache.outcome_misses,
+            report.cache.persistence
+        );
         for diagnostic in &report.diagnostics {
             println!("Diagnostic: {diagnostic}");
         }
@@ -926,6 +1078,15 @@ fn run(options: Options) -> Result<u8, String> {
 }
 
 fn main() -> ExitCode {
+    if env::args().nth(1).as_deref() == Some("--internal-worker") {
+        return match scheduler::worker_main() {
+            Ok(()) => ExitCode::SUCCESS,
+            Err(error) => {
+                eprintln!("oximut worker: {error}");
+                ExitCode::from(2)
+            }
+        };
+    }
     match options().and_then(|options| options.map_or(Ok(0), run)) {
         Ok(code) => ExitCode::from(code),
         Err(error) => {

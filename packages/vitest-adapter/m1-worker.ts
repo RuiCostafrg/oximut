@@ -28,7 +28,7 @@ async function command(name: string, args: Request): Promise<unknown> {
   if (name === 'initialize') {
     job = args;
     if (vitest) throw new Error('Already initialized');
-    if (version !== '4.1.10') throw new Error(`Unsupported Vitest ${version}; expected 4.1.10`);
+    if (version !== '4.1.12') throw new Error(`Unsupported Vitest ${version}; expected 4.1.12`);
     const mutation = args.mutation;
     vitest = await createVitest(
       'test',
@@ -38,6 +38,7 @@ async function command(name: string, args: Request): Promise<unknown> {
         watch: false,
         pool: 'forks',
         maxWorkers: 1,
+        maxConcurrency: 1,
         fileParallelism: false,
         isolate: true,
         coverage: { enabled: false },
@@ -71,6 +72,19 @@ async function command(name: string, args: Request): Promise<unknown> {
       },
     );
     await vitest.standalone();
+    if (
+      vitest.projects.length !== 1 ||
+      vitest.projects.some(
+        (project) =>
+          project.config.pool !== 'forks' ||
+          project.config.isolate !== true ||
+          project.config.maxWorkers !== 1 ||
+          project.config.maxConcurrency !== 1,
+      )
+    )
+      throw new Error(
+        'Unsupported resource configuration: one project, one fork, sequential files and tests, and isolation are required',
+      );
     return { versions: { node: process.version, vitest: version }, controllerPid: process.pid };
   }
   if (!vitest) throw new Error('Not initialized');
