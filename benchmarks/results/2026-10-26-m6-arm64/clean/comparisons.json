@@ -1,0 +1,3272 @@
+[
+  {
+    "equal_mutation_scope": true,
+    "explained_no_coverage_refinements": [],
+    "fixture": "pure",
+    "kind": "optimized-reference",
+    "left_count": 18,
+    "left_only": {},
+    "left_run": "warmup-01-pure-oximut-clean-fresh",
+    "mismatches": [],
+    "ratio_eligible": true,
+    "right_count": 18,
+    "right_only": {},
+    "right_run": "warmup-01-pure-oximut-clean-persistent",
+    "round_index": 0,
+    "shared": [
+      "src/logic.ts:1fb23814931382aeaf48468c888ce88187df302479b8c7f04997e9f0c1bb4bba",
+      "src/logic.ts:3730906228c329ffce2081b02edf17dfe061b5a094492c075d33b09590a48107",
+      "src/logic.ts:3a376dd61b757b4dddc3ad89615c366cd81653520df578204263b1db729d2764",
+      "src/logic.ts:3c8b9455473c4e1900c94575778193e406a17ff48f2ae7c0d9682aec8d3ab0f4",
+      "src/logic.ts:474c32b62c8d8b4a3c3a6ca8cd755934222fe47f94c95b32a0f1a19c775d44ee",
+      "src/logic.ts:579d9df53b09ec9f062932927e3b400dfcc2bae1d1feb6e83ade14d50d167223",
+      "src/logic.ts:5bb144b4ae012c474365c881dc2e547b57f69f4fd3adf1527693d67591aef9cf",
+      "src/logic.ts:6782b6f40fba37e1cf6a5450a154edef43d5d4c093d125abf62078c4e3f9a3e3",
+      "src/logic.ts:95dedf74e2516a03ff015a07d283869960c7a76ae1f2467371c462fe6a4cfd35",
+      "src/logic.ts:9dac40c8e142d67328deff9a60e2bd1fd993b439f9e25e25e98a535934670059",
+      "src/logic.ts:9ee84871027018304f3b45f9600c4855de8e56aad662e0f2ad71f835ac699b05",
+      "src/logic.ts:a7605444d4a59b11e733b8fab2cfc9d153d86ec992b660f8a20226a3bf73682c",
+      "src/logic.ts:accf3ead5949da33b61e0d6b4ba601de9e50ec8a234f4633602b736fe46f672d",
+      "src/logic.ts:b5f746dda1bc205d60027c66281cd2939892f57d52ca77b297c20af4d2ee5b5f",
+      "src/logic.ts:c19d80bdb92a86781b8391f51f400045613f6fcea8bbd97831ef0ce9a4a2dcbe",
+      "src/logic.ts:c354c320e8b7d567937c52f6e14d377eb7a4f15103387a01c40f9bac2286d6a2",
+      "src/logic.ts:c69e015db47b405136cf3f324f91e703fb6fe1c85f2b2b42363ae5d9df2bd1b1",
+      "src/logic.ts:f3521ab179ab483d26df09d0d41a64055f8fc3ee6a4d50c0c030b9ae97a6eecf"
+    ],
+    "shared_classifications_agree": true,
+    "shared_count": 18
+  },
+  {
+    "equal_mutation_scope": true,
+    "explained_no_coverage_refinements": [],
+    "fixture": "pure",
+    "kind": "optimized-reference",
+    "left_count": 18,
+    "left_only": {},
+    "left_run": "warmup-01-pure-oximut-clean-fresh",
+    "mismatches": [],
+    "ratio_eligible": true,
+    "right_count": 18,
+    "right_only": {},
+    "right_run": "warmup-01-pure-oximut-clean-selection",
+    "round_index": 0,
+    "shared": [
+      "src/logic.ts:1fb23814931382aeaf48468c888ce88187df302479b8c7f04997e9f0c1bb4bba",
+      "src/logic.ts:3730906228c329ffce2081b02edf17dfe061b5a094492c075d33b09590a48107",
+      "src/logic.ts:3a376dd61b757b4dddc3ad89615c366cd81653520df578204263b1db729d2764",
+      "src/logic.ts:3c8b9455473c4e1900c94575778193e406a17ff48f2ae7c0d9682aec8d3ab0f4",
+      "src/logic.ts:474c32b62c8d8b4a3c3a6ca8cd755934222fe47f94c95b32a0f1a19c775d44ee",
+      "src/logic.ts:579d9df53b09ec9f062932927e3b400dfcc2bae1d1feb6e83ade14d50d167223",
+      "src/logic.ts:5bb144b4ae012c474365c881dc2e547b57f69f4fd3adf1527693d67591aef9cf",
+      "src/logic.ts:6782b6f40fba37e1cf6a5450a154edef43d5d4c093d125abf62078c4e3f9a3e3",
+      "src/logic.ts:95dedf74e2516a03ff015a07d283869960c7a76ae1f2467371c462fe6a4cfd35",
+      "src/logic.ts:9dac40c8e142d67328deff9a60e2bd1fd993b439f9e25e25e98a535934670059",
+      "src/logic.ts:9ee84871027018304f3b45f9600c4855de8e56aad662e0f2ad71f835ac699b05",
+      "src/logic.ts:a7605444d4a59b11e733b8fab2cfc9d153d86ec992b660f8a20226a3bf73682c",
+      "src/logic.ts:accf3ead5949da33b61e0d6b4ba601de9e50ec8a234f4633602b736fe46f672d",
+      "src/logic.ts:b5f746dda1bc205d60027c66281cd2939892f57d52ca77b297c20af4d2ee5b5f",
+      "src/logic.ts:c19d80bdb92a86781b8391f51f400045613f6fcea8bbd97831ef0ce9a4a2dcbe",
+      "src/logic.ts:c354c320e8b7d567937c52f6e14d377eb7a4f15103387a01c40f9bac2286d6a2",
+      "src/logic.ts:c69e015db47b405136cf3f324f91e703fb6fe1c85f2b2b42363ae5d9df2bd1b1",
+      "src/logic.ts:f3521ab179ab483d26df09d0d41a64055f8fc3ee6a4d50c0c030b9ae97a6eecf"
+    ],
+    "shared_classifications_agree": true,
+    "shared_count": 18
+  },
+  {
+    "equal_mutation_scope": false,
+    "explained_no_coverage_refinements": [],
+    "fixture": "pure",
+    "kind": "cross-tool",
+    "left_count": 18,
+    "left_only": {
+      "src/logic.ts:accf3ead5949da33b61e0d6b4ba601de9e50ec8a234f4633602b736fe46f672d": {
+        "file": "src/logic.ts",
+        "id": "7c788a9b1144adea81e7a7e4ad53b3d9e34de634c7ce03774e33dbe15ecad391",
+        "location": {
+          "end": {
+            "column": 37,
+            "line": 17,
+            "offset": 544
+          },
+          "start": {
+            "column": 36,
+            "line": 17,
+            "offset": 543
+          }
+        },
+        "operator": "arithmetic",
+        "outcome": "killed",
+        "replacement": "*",
+        "selection": null
+      },
+      "src/logic.ts:b5f746dda1bc205d60027c66281cd2939892f57d52ca77b297c20af4d2ee5b5f": {
+        "file": "src/logic.ts",
+        "id": "ad43fe22222632bf0db1f0f3fdfa26da643dc07dd2a6f407467fda22ea1b32f7",
+        "location": {
+          "end": {
+            "column": 17,
+            "line": 17,
+            "offset": 524
+          },
+          "start": {
+            "column": 16,
+            "line": 17,
+            "offset": 523
+          }
+        },
+        "operator": "arithmetic",
+        "outcome": "killed",
+        "replacement": "+",
+        "selection": null
+      }
+    },
+    "left_run": "warmup-01-pure-oximut-clean-fresh",
+    "mismatches": [],
+    "ratio_eligible": false,
+    "right_count": 33,
+    "right_only": {
+      "src/logic.ts:19d107a9eefa2519ac6a1dc6d1b5473c95ad45461754dab6fbac5cde6c1a0272": {
+        "file": "src/logic.ts",
+        "id": "76",
+        "location": {
+          "end": {
+            "column": 18,
+            "line": 36
+          },
+          "start": {
+            "column": 7,
+            "line": 36
+          }
+        },
+        "operator": "EqualityOperator",
+        "outcome": "killed",
+        "replacement": "value > 20",
+        "selection": null
+      },
+      "src/logic.ts:22b453fc6dfb7cd31c584a75c8689105a4954f7118c35735d86763406a312ae0": {
+        "file": "src/logic.ts",
+        "id": "51",
+        "location": {
+          "end": {
+            "column": 27,
+            "line": 22
+          },
+          "start": {
+            "column": 16,
+            "line": 22
+          }
+        },
+        "operator": "EqualityOperator",
+        "outcome": "killed",
+        "replacement": "weight > 2",
+        "selection": null
+      },
+      "src/logic.ts:25557a69feeba12680531f889ceaf1cb948a0fb0c98e3c7e7c563a1018016b65": {
+        "file": "src/logic.ts",
+        "id": "35",
+        "location": {
+          "end": {
+            "column": 33,
+            "line": 15
+          },
+          "start": {
+            "column": 21,
+            "line": 15
+          }
+        },
+        "operator": "EqualityOperator",
+        "outcome": "killed",
+        "replacement": "percent > 0",
+        "selection": null
+      },
+      "src/logic.ts:260040bed8448fb0d93c92d55c17271bc2db6a290e30112e6407fde01ac2711c": {
+        "file": "src/logic.ts",
+        "id": "47",
+        "location": {
+          "end": {
+            "column": 18,
+            "line": 21
+          },
+          "start": {
+            "column": 7,
+            "line": 21
+          }
+        },
+        "operator": "EqualityOperator",
+        "outcome": "killed",
+        "replacement": "weight > 0",
+        "selection": null
+      },
+      "src/logic.ts:2afd13f03c324f8d462bd564ef7d2a7f8336f837616d45760f48f5bf2533d5e9": {
+        "file": "src/logic.ts",
+        "id": "13",
+        "location": {
+          "end": {
+            "column": 16,
+            "line": 8
+          },
+          "start": {
+            "column": 7,
+            "line": 8
+          }
+        },
+        "operator": "EqualityOperator",
+        "outcome": "killed",
+        "replacement": "score >= 0",
+        "selection": null
+      },
+      "src/logic.ts:2d0052277b5352e9814f3b38fab4057fae4ec0b540900ac06f518fd3ea1eaf96": {
+        "file": "src/logic.ts",
+        "id": "40",
+        "location": {
+          "end": {
+            "column": 41,
+            "line": 17
+          },
+          "start": {
+            "column": 10,
+            "line": 17
+          }
+        },
+        "operator": "ArithmeticOperator",
+        "outcome": "killed",
+        "replacement": "price + price * percent / 100",
+        "selection": null
+      },
+      "src/logic.ts:3280d36ead3645cb682704410e8b0fe0b8d246715edd139f86dcdcb58b0ef4f4": {
+        "file": "src/logic.ts",
+        "id": "18",
+        "location": {
+          "end": {
+            "column": 18,
+            "line": 9
+          },
+          "start": {
+            "column": 7,
+            "line": 9
+          }
+        },
+        "operator": "EqualityOperator",
+        "outcome": "killed",
+        "replacement": "score < 90",
+        "selection": null
+      },
+      "src/logic.ts:3c5fb34c4b0712073de93f983b89aa4750b19ee42da15c4ea4e142e181a9c96e": {
+        "file": "src/logic.ts",
+        "id": "66",
+        "location": {
+          "end": {
+            "column": 46,
+            "line": 31
+          },
+          "start": {
+            "column": 34,
+            "line": 31
+          }
+        },
+        "operator": "BooleanLiteral",
+        "outcome": "killed",
+        "replacement": "isSuspended",
+        "selection": null
+      },
+      "src/logic.ts:4358e48294bfcd8a2e40b89426425b7cb26e155f03d894d9eacb30fe391656cb": {
+        "file": "src/logic.ts",
+        "id": "71",
+        "location": {
+          "end": {
+            "column": 17,
+            "line": 35
+          },
+          "start": {
+            "column": 7,
+            "line": 35
+          }
+        },
+        "operator": "EqualityOperator",
+        "outcome": "killed",
+        "replacement": "value >= 10",
+        "selection": null
+      },
+      "src/logic.ts:677ad56b28a3004dcf77bca54853fc7f068036f87f29d53e58f3aeaf8f4e2ffe": {
+        "file": "src/logic.ts",
+        "id": "8",
+        "location": {
+          "end": {
+            "column": 20,
+            "line": 3
+          },
+          "start": {
+            "column": 7,
+            "line": 3
+          }
+        },
+        "operator": "EqualityOperator",
+        "outcome": "killed",
+        "replacement": "value <= upper",
+        "selection": null
+      },
+      "src/logic.ts:6d71df5468861fcbe723be647a17e6fe56e45a7664d6c7cb33b615f33cc136b1": {
+        "file": "src/logic.ts",
+        "id": "39",
+        "location": {
+          "end": {
+            "column": 21,
+            "line": 16
+          },
+          "start": {
+            "column": 7,
+            "line": 16
+          }
+        },
+        "operator": "EqualityOperator",
+        "outcome": "killed",
+        "replacement": "percent < 100",
+        "selection": null
+      },
+      "src/logic.ts:732c89f06dc40172ae487155d9471c012335d60321638d623bf6880d4715828c": {
+        "file": "src/logic.ts",
+        "id": "23",
+        "location": {
+          "end": {
+            "column": 18,
+            "line": 10
+          },
+          "start": {
+            "column": 7,
+            "line": 10
+          }
+        },
+        "operator": "EqualityOperator",
+        "outcome": "killed",
+        "replacement": "score < 60",
+        "selection": null
+      },
+      "src/logic.ts:7fac36f15f8e49900bfb1a0842fbc0ec3f6a684776ca7afed7dcf9f5482c0aa0": {
+        "file": "src/logic.ts",
+        "id": "4",
+        "location": {
+          "end": {
+            "column": 20,
+            "line": 2
+          },
+          "start": {
+            "column": 7,
+            "line": 2
+          }
+        },
+        "operator": "EqualityOperator",
+        "outcome": "killed",
+        "replacement": "value >= lower",
+        "selection": null
+      },
+      "src/logic.ts:c0f6e1b9204b80f49311743ec68d712fdf7b12e24736fcc6c13006eeea3fae61": {
+        "file": "src/logic.ts",
+        "id": "32",
+        "location": {
+          "end": {
+            "column": 17,
+            "line": 15
+          },
+          "start": {
+            "column": 7,
+            "line": 15
+          }
+        },
+        "operator": "EqualityOperator",
+        "outcome": "killed",
+        "replacement": "price > 0",
+        "selection": null
+      },
+      "src/logic.ts:c1c97335e96e8b2277fbcc644d4cbf754b71f33139e882c6a35068012faac85a": {
+        "file": "src/logic.ts",
+        "id": "55",
+        "location": {
+          "end": {
+            "column": 46,
+            "line": 22
+          },
+          "start": {
+            "column": 34,
+            "line": 22
+          }
+        },
+        "operator": "EqualityOperator",
+        "outcome": "killed",
+        "replacement": "weight > 10",
+        "selection": null
+      },
+      "src/logic.ts:d1bddace4a536fdf8e211938f3f0f7912c70b64698ef93421c6279afa9b40a5f": {
+        "file": "src/logic.ts",
+        "id": "41",
+        "location": {
+          "end": {
+            "column": 41,
+            "line": 17
+          },
+          "start": {
+            "column": 18,
+            "line": 17
+          }
+        },
+        "operator": "ArithmeticOperator",
+        "outcome": "killed",
+        "replacement": "price * percent * 100",
+        "selection": null
+      },
+      "src/logic.ts:f878989f12669ca5c419b45d49d4ac6a7d38ee0d53bcd3ba0c3ac51813d79d49": {
+        "file": "src/logic.ts",
+        "id": "65",
+        "location": {
+          "end": {
+            "column": 19,
+            "line": 31
+          },
+          "start": {
+            "column": 10,
+            "line": 31
+          }
+        },
+        "operator": "EqualityOperator",
+        "outcome": "killed",
+        "replacement": "age < 18",
+        "selection": null
+      }
+    },
+    "right_run": "warmup-01-pure-stryker-clean-stryker",
+    "round_index": 0,
+    "shared": [
+      "src/logic.ts:1fb23814931382aeaf48468c888ce88187df302479b8c7f04997e9f0c1bb4bba",
+      "src/logic.ts:3730906228c329ffce2081b02edf17dfe061b5a094492c075d33b09590a48107",
+      "src/logic.ts:3a376dd61b757b4dddc3ad89615c366cd81653520df578204263b1db729d2764",
+      "src/logic.ts:3c8b9455473c4e1900c94575778193e406a17ff48f2ae7c0d9682aec8d3ab0f4",
+      "src/logic.ts:474c32b62c8d8b4a3c3a6ca8cd755934222fe47f94c95b32a0f1a19c775d44ee",
+      "src/logic.ts:579d9df53b09ec9f062932927e3b400dfcc2bae1d1feb6e83ade14d50d167223",
+      "src/logic.ts:5bb144b4ae012c474365c881dc2e547b57f69f4fd3adf1527693d67591aef9cf",
+      "src/logic.ts:6782b6f40fba37e1cf6a5450a154edef43d5d4c093d125abf62078c4e3f9a3e3",
+      "src/logic.ts:95dedf74e2516a03ff015a07d283869960c7a76ae1f2467371c462fe6a4cfd35",
+      "src/logic.ts:9dac40c8e142d67328deff9a60e2bd1fd993b439f9e25e25e98a535934670059",
+      "src/logic.ts:9ee84871027018304f3b45f9600c4855de8e56aad662e0f2ad71f835ac699b05",
+      "src/logic.ts:a7605444d4a59b11e733b8fab2cfc9d153d86ec992b660f8a20226a3bf73682c",
+      "src/logic.ts:c19d80bdb92a86781b8391f51f400045613f6fcea8bbd97831ef0ce9a4a2dcbe",
+      "src/logic.ts:c354c320e8b7d567937c52f6e14d377eb7a4f15103387a01c40f9bac2286d6a2",
+      "src/logic.ts:c69e015db47b405136cf3f324f91e703fb6fe1c85f2b2b42363ae5d9df2bd1b1",
+      "src/logic.ts:f3521ab179ab483d26df09d0d41a64055f8fc3ee6a4d50c0c030b9ae97a6eecf"
+    ],
+    "shared_classifications_agree": true,
+    "shared_count": 16
+  },
+  {
+    "equal_mutation_scope": false,
+    "explained_no_coverage_refinements": [],
+    "fixture": "pure",
+    "kind": "cross-tool",
+    "left_count": 18,
+    "left_only": {
+      "src/logic.ts:accf3ead5949da33b61e0d6b4ba601de9e50ec8a234f4633602b736fe46f672d": {
+        "file": "src/logic.ts",
+        "id": "7c788a9b1144adea81e7a7e4ad53b3d9e34de634c7ce03774e33dbe15ecad391",
+        "location": {
+          "end": {
+            "column": 37,
+            "line": 17,
+            "offset": 544
+          },
+          "start": {
+            "column": 36,
+            "line": 17,
+            "offset": 543
+          }
+        },
+        "operator": "arithmetic",
+        "outcome": "killed",
+        "replacement": "*",
+        "selection": null
+      },
+      "src/logic.ts:b5f746dda1bc205d60027c66281cd2939892f57d52ca77b297c20af4d2ee5b5f": {
+        "file": "src/logic.ts",
+        "id": "ad43fe22222632bf0db1f0f3fdfa26da643dc07dd2a6f407467fda22ea1b32f7",
+        "location": {
+          "end": {
+            "column": 17,
+            "line": 17,
+            "offset": 524
+          },
+          "start": {
+            "column": 16,
+            "line": 17,
+            "offset": 523
+          }
+        },
+        "operator": "arithmetic",
+        "outcome": "killed",
+        "replacement": "+",
+        "selection": null
+      }
+    },
+    "left_run": "measured-01-pure-oximut-clean-fresh",
+    "mismatches": [],
+    "ratio_eligible": false,
+    "right_count": 33,
+    "right_only": {
+      "src/logic.ts:19d107a9eefa2519ac6a1dc6d1b5473c95ad45461754dab6fbac5cde6c1a0272": {
+        "file": "src/logic.ts",
+        "id": "76",
+        "location": {
+          "end": {
+            "column": 18,
+            "line": 36
+          },
+          "start": {
+            "column": 7,
+            "line": 36
+          }
+        },
+        "operator": "EqualityOperator",
+        "outcome": "killed",
+        "replacement": "value > 20",
+        "selection": null
+      },
+      "src/logic.ts:22b453fc6dfb7cd31c584a75c8689105a4954f7118c35735d86763406a312ae0": {
+        "file": "src/logic.ts",
+        "id": "51",
+        "location": {
+          "end": {
+            "column": 27,
+            "line": 22
+          },
+          "start": {
+            "column": 16,
+            "line": 22
+          }
+        },
+        "operator": "EqualityOperator",
+        "outcome": "killed",
+        "replacement": "weight > 2",
+        "selection": null
+      },
+      "src/logic.ts:25557a69feeba12680531f889ceaf1cb948a0fb0c98e3c7e7c563a1018016b65": {
+        "file": "src/logic.ts",
+        "id": "35",
+        "location": {
+          "end": {
+            "column": 33,
+            "line": 15
+          },
+          "start": {
+            "column": 21,
+            "line": 15
+          }
+        },
+        "operator": "EqualityOperator",
+        "outcome": "killed",
+        "replacement": "percent > 0",
+        "selection": null
+      },
+      "src/logic.ts:260040bed8448fb0d93c92d55c17271bc2db6a290e30112e6407fde01ac2711c": {
+        "file": "src/logic.ts",
+        "id": "47",
+        "location": {
+          "end": {
+            "column": 18,
+            "line": 21
+          },
+          "start": {
+            "column": 7,
+            "line": 21
+          }
+        },
+        "operator": "EqualityOperator",
+        "outcome": "killed",
+        "replacement": "weight > 0",
+        "selection": null
+      },
+      "src/logic.ts:2afd13f03c324f8d462bd564ef7d2a7f8336f837616d45760f48f5bf2533d5e9": {
+        "file": "src/logic.ts",
+        "id": "13",
+        "location": {
+          "end": {
+            "column": 16,
+            "line": 8
+          },
+          "start": {
+            "column": 7,
+            "line": 8
+          }
+        },
+        "operator": "EqualityOperator",
+        "outcome": "killed",
+        "replacement": "score >= 0",
+        "selection": null
+      },
+      "src/logic.ts:2d0052277b5352e9814f3b38fab4057fae4ec0b540900ac06f518fd3ea1eaf96": {
+        "file": "src/logic.ts",
+        "id": "40",
+        "location": {
+          "end": {
+            "column": 41,
+            "line": 17
+          },
+          "start": {
+            "column": 10,
+            "line": 17
+          }
+        },
+        "operator": "ArithmeticOperator",
+        "outcome": "killed",
+        "replacement": "price + price * percent / 100",
+        "selection": null
+      },
+      "src/logic.ts:3280d36ead3645cb682704410e8b0fe0b8d246715edd139f86dcdcb58b0ef4f4": {
+        "file": "src/logic.ts",
+        "id": "18",
+        "location": {
+          "end": {
+            "column": 18,
+            "line": 9
+          },
+          "start": {
+            "column": 7,
+            "line": 9
+          }
+        },
+        "operator": "EqualityOperator",
+        "outcome": "killed",
+        "replacement": "score < 90",
+        "selection": null
+      },
+      "src/logic.ts:3c5fb34c4b0712073de93f983b89aa4750b19ee42da15c4ea4e142e181a9c96e": {
+        "file": "src/logic.ts",
+        "id": "66",
+        "location": {
+          "end": {
+            "column": 46,
+            "line": 31
+          },
+          "start": {
+            "column": 34,
+            "line": 31
+          }
+        },
+        "operator": "BooleanLiteral",
+        "outcome": "killed",
+        "replacement": "isSuspended",
+        "selection": null
+      },
+      "src/logic.ts:4358e48294bfcd8a2e40b89426425b7cb26e155f03d894d9eacb30fe391656cb": {
+        "file": "src/logic.ts",
+        "id": "71",
+        "location": {
+          "end": {
+            "column": 17,
+            "line": 35
+          },
+          "start": {
+            "column": 7,
+            "line": 35
+          }
+        },
+        "operator": "EqualityOperator",
+        "outcome": "killed",
+        "replacement": "value >= 10",
+        "selection": null
+      },
+      "src/logic.ts:677ad56b28a3004dcf77bca54853fc7f068036f87f29d53e58f3aeaf8f4e2ffe": {
+        "file": "src/logic.ts",
+        "id": "8",
+        "location": {
+          "end": {
+            "column": 20,
+            "line": 3
+          },
+          "start": {
+            "column": 7,
+            "line": 3
+          }
+        },
+        "operator": "EqualityOperator",
+        "outcome": "killed",
+        "replacement": "value <= upper",
+        "selection": null
+      },
+      "src/logic.ts:6d71df5468861fcbe723be647a17e6fe56e45a7664d6c7cb33b615f33cc136b1": {
+        "file": "src/logic.ts",
+        "id": "39",
+        "location": {
+          "end": {
+            "column": 21,
+            "line": 16
+          },
+          "start": {
+            "column": 7,
+            "line": 16
+          }
+        },
+        "operator": "EqualityOperator",
+        "outcome": "killed",
+        "replacement": "percent < 100",
+        "selection": null
+      },
+      "src/logic.ts:732c89f06dc40172ae487155d9471c012335d60321638d623bf6880d4715828c": {
+        "file": "src/logic.ts",
+        "id": "23",
+        "location": {
+          "end": {
+            "column": 18,
+            "line": 10
+          },
+          "start": {
+            "column": 7,
+            "line": 10
+          }
+        },
+        "operator": "EqualityOperator",
+        "outcome": "killed",
+        "replacement": "score < 60",
+        "selection": null
+      },
+      "src/logic.ts:7fac36f15f8e49900bfb1a0842fbc0ec3f6a684776ca7afed7dcf9f5482c0aa0": {
+        "file": "src/logic.ts",
+        "id": "4",
+        "location": {
+          "end": {
+            "column": 20,
+            "line": 2
+          },
+          "start": {
+            "column": 7,
+            "line": 2
+          }
+        },
+        "operator": "EqualityOperator",
+        "outcome": "killed",
+        "replacement": "value >= lower",
+        "selection": null
+      },
+      "src/logic.ts:c0f6e1b9204b80f49311743ec68d712fdf7b12e24736fcc6c13006eeea3fae61": {
+        "file": "src/logic.ts",
+        "id": "32",
+        "location": {
+          "end": {
+            "column": 17,
+            "line": 15
+          },
+          "start": {
+            "column": 7,
+            "line": 15
+          }
+        },
+        "operator": "EqualityOperator",
+        "outcome": "killed",
+        "replacement": "price > 0",
+        "selection": null
+      },
+      "src/logic.ts:c1c97335e96e8b2277fbcc644d4cbf754b71f33139e882c6a35068012faac85a": {
+        "file": "src/logic.ts",
+        "id": "55",
+        "location": {
+          "end": {
+            "column": 46,
+            "line": 22
+          },
+          "start": {
+            "column": 34,
+            "line": 22
+          }
+        },
+        "operator": "EqualityOperator",
+        "outcome": "killed",
+        "replacement": "weight > 10",
+        "selection": null
+      },
+      "src/logic.ts:d1bddace4a536fdf8e211938f3f0f7912c70b64698ef93421c6279afa9b40a5f": {
+        "file": "src/logic.ts",
+        "id": "41",
+        "location": {
+          "end": {
+            "column": 41,
+            "line": 17
+          },
+          "start": {
+            "column": 18,
+            "line": 17
+          }
+        },
+        "operator": "ArithmeticOperator",
+        "outcome": "killed",
+        "replacement": "price * percent * 100",
+        "selection": null
+      },
+      "src/logic.ts:f878989f12669ca5c419b45d49d4ac6a7d38ee0d53bcd3ba0c3ac51813d79d49": {
+        "file": "src/logic.ts",
+        "id": "65",
+        "location": {
+          "end": {
+            "column": 19,
+            "line": 31
+          },
+          "start": {
+            "column": 10,
+            "line": 31
+          }
+        },
+        "operator": "EqualityOperator",
+        "outcome": "killed",
+        "replacement": "age < 18",
+        "selection": null
+      }
+    },
+    "right_run": "measured-01-pure-stryker-clean-stryker",
+    "round_index": 1,
+    "shared": [
+      "src/logic.ts:1fb23814931382aeaf48468c888ce88187df302479b8c7f04997e9f0c1bb4bba",
+      "src/logic.ts:3730906228c329ffce2081b02edf17dfe061b5a094492c075d33b09590a48107",
+      "src/logic.ts:3a376dd61b757b4dddc3ad89615c366cd81653520df578204263b1db729d2764",
+      "src/logic.ts:3c8b9455473c4e1900c94575778193e406a17ff48f2ae7c0d9682aec8d3ab0f4",
+      "src/logic.ts:474c32b62c8d8b4a3c3a6ca8cd755934222fe47f94c95b32a0f1a19c775d44ee",
+      "src/logic.ts:579d9df53b09ec9f062932927e3b400dfcc2bae1d1feb6e83ade14d50d167223",
+      "src/logic.ts:5bb144b4ae012c474365c881dc2e547b57f69f4fd3adf1527693d67591aef9cf",
+      "src/logic.ts:6782b6f40fba37e1cf6a5450a154edef43d5d4c093d125abf62078c4e3f9a3e3",
+      "src/logic.ts:95dedf74e2516a03ff015a07d283869960c7a76ae1f2467371c462fe6a4cfd35",
+      "src/logic.ts:9dac40c8e142d67328deff9a60e2bd1fd993b439f9e25e25e98a535934670059",
+      "src/logic.ts:9ee84871027018304f3b45f9600c4855de8e56aad662e0f2ad71f835ac699b05",
+      "src/logic.ts:a7605444d4a59b11e733b8fab2cfc9d153d86ec992b660f8a20226a3bf73682c",
+      "src/logic.ts:c19d80bdb92a86781b8391f51f400045613f6fcea8bbd97831ef0ce9a4a2dcbe",
+      "src/logic.ts:c354c320e8b7d567937c52f6e14d377eb7a4f15103387a01c40f9bac2286d6a2",
+      "src/logic.ts:c69e015db47b405136cf3f324f91e703fb6fe1c85f2b2b42363ae5d9df2bd1b1",
+      "src/logic.ts:f3521ab179ab483d26df09d0d41a64055f8fc3ee6a4d50c0c030b9ae97a6eecf"
+    ],
+    "shared_classifications_agree": true,
+    "shared_count": 16
+  },
+  {
+    "equal_mutation_scope": true,
+    "explained_no_coverage_refinements": [],
+    "fixture": "pure",
+    "kind": "optimized-reference",
+    "left_count": 18,
+    "left_only": {},
+    "left_run": "measured-01-pure-oximut-clean-fresh",
+    "mismatches": [],
+    "ratio_eligible": true,
+    "right_count": 18,
+    "right_only": {},
+    "right_run": "measured-01-pure-oximut-clean-selection",
+    "round_index": 1,
+    "shared": [
+      "src/logic.ts:1fb23814931382aeaf48468c888ce88187df302479b8c7f04997e9f0c1bb4bba",
+      "src/logic.ts:3730906228c329ffce2081b02edf17dfe061b5a094492c075d33b09590a48107",
+      "src/logic.ts:3a376dd61b757b4dddc3ad89615c366cd81653520df578204263b1db729d2764",
+      "src/logic.ts:3c8b9455473c4e1900c94575778193e406a17ff48f2ae7c0d9682aec8d3ab0f4",
+      "src/logic.ts:474c32b62c8d8b4a3c3a6ca8cd755934222fe47f94c95b32a0f1a19c775d44ee",
+      "src/logic.ts:579d9df53b09ec9f062932927e3b400dfcc2bae1d1feb6e83ade14d50d167223",
+      "src/logic.ts:5bb144b4ae012c474365c881dc2e547b57f69f4fd3adf1527693d67591aef9cf",
+      "src/logic.ts:6782b6f40fba37e1cf6a5450a154edef43d5d4c093d125abf62078c4e3f9a3e3",
+      "src/logic.ts:95dedf74e2516a03ff015a07d283869960c7a76ae1f2467371c462fe6a4cfd35",
+      "src/logic.ts:9dac40c8e142d67328deff9a60e2bd1fd993b439f9e25e25e98a535934670059",
+      "src/logic.ts:9ee84871027018304f3b45f9600c4855de8e56aad662e0f2ad71f835ac699b05",
+      "src/logic.ts:a7605444d4a59b11e733b8fab2cfc9d153d86ec992b660f8a20226a3bf73682c",
+      "src/logic.ts:accf3ead5949da33b61e0d6b4ba601de9e50ec8a234f4633602b736fe46f672d",
+      "src/logic.ts:b5f746dda1bc205d60027c66281cd2939892f57d52ca77b297c20af4d2ee5b5f",
+      "src/logic.ts:c19d80bdb92a86781b8391f51f400045613f6fcea8bbd97831ef0ce9a4a2dcbe",
+      "src/logic.ts:c354c320e8b7d567937c52f6e14d377eb7a4f15103387a01c40f9bac2286d6a2",
+      "src/logic.ts:c69e015db47b405136cf3f324f91e703fb6fe1c85f2b2b42363ae5d9df2bd1b1",
+      "src/logic.ts:f3521ab179ab483d26df09d0d41a64055f8fc3ee6a4d50c0c030b9ae97a6eecf"
+    ],
+    "shared_classifications_agree": true,
+    "shared_count": 18
+  },
+  {
+    "equal_mutation_scope": true,
+    "explained_no_coverage_refinements": [],
+    "fixture": "pure",
+    "kind": "optimized-reference",
+    "left_count": 18,
+    "left_only": {},
+    "left_run": "measured-01-pure-oximut-clean-fresh",
+    "mismatches": [],
+    "ratio_eligible": true,
+    "right_count": 18,
+    "right_only": {},
+    "right_run": "measured-01-pure-oximut-clean-persistent",
+    "round_index": 1,
+    "shared": [
+      "src/logic.ts:1fb23814931382aeaf48468c888ce88187df302479b8c7f04997e9f0c1bb4bba",
+      "src/logic.ts:3730906228c329ffce2081b02edf17dfe061b5a094492c075d33b09590a48107",
+      "src/logic.ts:3a376dd61b757b4dddc3ad89615c366cd81653520df578204263b1db729d2764",
+      "src/logic.ts:3c8b9455473c4e1900c94575778193e406a17ff48f2ae7c0d9682aec8d3ab0f4",
+      "src/logic.ts:474c32b62c8d8b4a3c3a6ca8cd755934222fe47f94c95b32a0f1a19c775d44ee",
+      "src/logic.ts:579d9df53b09ec9f062932927e3b400dfcc2bae1d1feb6e83ade14d50d167223",
+      "src/logic.ts:5bb144b4ae012c474365c881dc2e547b57f69f4fd3adf1527693d67591aef9cf",
+      "src/logic.ts:6782b6f40fba37e1cf6a5450a154edef43d5d4c093d125abf62078c4e3f9a3e3",
+      "src/logic.ts:95dedf74e2516a03ff015a07d283869960c7a76ae1f2467371c462fe6a4cfd35",
+      "src/logic.ts:9dac40c8e142d67328deff9a60e2bd1fd993b439f9e25e25e98a535934670059",
+      "src/logic.ts:9ee84871027018304f3b45f9600c4855de8e56aad662e0f2ad71f835ac699b05",
+      "src/logic.ts:a7605444d4a59b11e733b8fab2cfc9d153d86ec992b660f8a20226a3bf73682c",
+      "src/logic.ts:accf3ead5949da33b61e0d6b4ba601de9e50ec8a234f4633602b736fe46f672d",
+      "src/logic.ts:b5f746dda1bc205d60027c66281cd2939892f57d52ca77b297c20af4d2ee5b5f",
+      "src/logic.ts:c19d80bdb92a86781b8391f51f400045613f6fcea8bbd97831ef0ce9a4a2dcbe",
+      "src/logic.ts:c354c320e8b7d567937c52f6e14d377eb7a4f15103387a01c40f9bac2286d6a2",
+      "src/logic.ts:c69e015db47b405136cf3f324f91e703fb6fe1c85f2b2b42363ae5d9df2bd1b1",
+      "src/logic.ts:f3521ab179ab483d26df09d0d41a64055f8fc3ee6a4d50c0c030b9ae97a6eecf"
+    ],
+    "shared_classifications_agree": true,
+    "shared_count": 18
+  },
+  {
+    "equal_mutation_scope": true,
+    "explained_no_coverage_refinements": [],
+    "fixture": "pure",
+    "kind": "optimized-reference",
+    "left_count": 18,
+    "left_only": {},
+    "left_run": "measured-02-pure-oximut-clean-fresh",
+    "mismatches": [],
+    "ratio_eligible": true,
+    "right_count": 18,
+    "right_only": {},
+    "right_run": "measured-02-pure-oximut-clean-persistent",
+    "round_index": 2,
+    "shared": [
+      "src/logic.ts:1fb23814931382aeaf48468c888ce88187df302479b8c7f04997e9f0c1bb4bba",
+      "src/logic.ts:3730906228c329ffce2081b02edf17dfe061b5a094492c075d33b09590a48107",
+      "src/logic.ts:3a376dd61b757b4dddc3ad89615c366cd81653520df578204263b1db729d2764",
+      "src/logic.ts:3c8b9455473c4e1900c94575778193e406a17ff48f2ae7c0d9682aec8d3ab0f4",
+      "src/logic.ts:474c32b62c8d8b4a3c3a6ca8cd755934222fe47f94c95b32a0f1a19c775d44ee",
+      "src/logic.ts:579d9df53b09ec9f062932927e3b400dfcc2bae1d1feb6e83ade14d50d167223",
+      "src/logic.ts:5bb144b4ae012c474365c881dc2e547b57f69f4fd3adf1527693d67591aef9cf",
+      "src/logic.ts:6782b6f40fba37e1cf6a5450a154edef43d5d4c093d125abf62078c4e3f9a3e3",
+      "src/logic.ts:95dedf74e2516a03ff015a07d283869960c7a76ae1f2467371c462fe6a4cfd35",
+      "src/logic.ts:9dac40c8e142d67328deff9a60e2bd1fd993b439f9e25e25e98a535934670059",
+      "src/logic.ts:9ee84871027018304f3b45f9600c4855de8e56aad662e0f2ad71f835ac699b05",
+      "src/logic.ts:a7605444d4a59b11e733b8fab2cfc9d153d86ec992b660f8a20226a3bf73682c",
+      "src/logic.ts:accf3ead5949da33b61e0d6b4ba601de9e50ec8a234f4633602b736fe46f672d",
+      "src/logic.ts:b5f746dda1bc205d60027c66281cd2939892f57d52ca77b297c20af4d2ee5b5f",
+      "src/logic.ts:c19d80bdb92a86781b8391f51f400045613f6fcea8bbd97831ef0ce9a4a2dcbe",
+      "src/logic.ts:c354c320e8b7d567937c52f6e14d377eb7a4f15103387a01c40f9bac2286d6a2",
+      "src/logic.ts:c69e015db47b405136cf3f324f91e703fb6fe1c85f2b2b42363ae5d9df2bd1b1",
+      "src/logic.ts:f3521ab179ab483d26df09d0d41a64055f8fc3ee6a4d50c0c030b9ae97a6eecf"
+    ],
+    "shared_classifications_agree": true,
+    "shared_count": 18
+  },
+  {
+    "equal_mutation_scope": true,
+    "explained_no_coverage_refinements": [],
+    "fixture": "pure",
+    "kind": "optimized-reference",
+    "left_count": 18,
+    "left_only": {},
+    "left_run": "measured-02-pure-oximut-clean-fresh",
+    "mismatches": [],
+    "ratio_eligible": true,
+    "right_count": 18,
+    "right_only": {},
+    "right_run": "measured-02-pure-oximut-clean-selection",
+    "round_index": 2,
+    "shared": [
+      "src/logic.ts:1fb23814931382aeaf48468c888ce88187df302479b8c7f04997e9f0c1bb4bba",
+      "src/logic.ts:3730906228c329ffce2081b02edf17dfe061b5a094492c075d33b09590a48107",
+      "src/logic.ts:3a376dd61b757b4dddc3ad89615c366cd81653520df578204263b1db729d2764",
+      "src/logic.ts:3c8b9455473c4e1900c94575778193e406a17ff48f2ae7c0d9682aec8d3ab0f4",
+      "src/logic.ts:474c32b62c8d8b4a3c3a6ca8cd755934222fe47f94c95b32a0f1a19c775d44ee",
+      "src/logic.ts:579d9df53b09ec9f062932927e3b400dfcc2bae1d1feb6e83ade14d50d167223",
+      "src/logic.ts:5bb144b4ae012c474365c881dc2e547b57f69f4fd3adf1527693d67591aef9cf",
+      "src/logic.ts:6782b6f40fba37e1cf6a5450a154edef43d5d4c093d125abf62078c4e3f9a3e3",
+      "src/logic.ts:95dedf74e2516a03ff015a07d283869960c7a76ae1f2467371c462fe6a4cfd35",
+      "src/logic.ts:9dac40c8e142d67328deff9a60e2bd1fd993b439f9e25e25e98a535934670059",
+      "src/logic.ts:9ee84871027018304f3b45f9600c4855de8e56aad662e0f2ad71f835ac699b05",
+      "src/logic.ts:a7605444d4a59b11e733b8fab2cfc9d153d86ec992b660f8a20226a3bf73682c",
+      "src/logic.ts:accf3ead5949da33b61e0d6b4ba601de9e50ec8a234f4633602b736fe46f672d",
+      "src/logic.ts:b5f746dda1bc205d60027c66281cd2939892f57d52ca77b297c20af4d2ee5b5f",
+      "src/logic.ts:c19d80bdb92a86781b8391f51f400045613f6fcea8bbd97831ef0ce9a4a2dcbe",
+      "src/logic.ts:c354c320e8b7d567937c52f6e14d377eb7a4f15103387a01c40f9bac2286d6a2",
+      "src/logic.ts:c69e015db47b405136cf3f324f91e703fb6fe1c85f2b2b42363ae5d9df2bd1b1",
+      "src/logic.ts:f3521ab179ab483d26df09d0d41a64055f8fc3ee6a4d50c0c030b9ae97a6eecf"
+    ],
+    "shared_classifications_agree": true,
+    "shared_count": 18
+  },
+  {
+    "equal_mutation_scope": false,
+    "explained_no_coverage_refinements": [],
+    "fixture": "pure",
+    "kind": "cross-tool",
+    "left_count": 18,
+    "left_only": {
+      "src/logic.ts:accf3ead5949da33b61e0d6b4ba601de9e50ec8a234f4633602b736fe46f672d": {
+        "file": "src/logic.ts",
+        "id": "7c788a9b1144adea81e7a7e4ad53b3d9e34de634c7ce03774e33dbe15ecad391",
+        "location": {
+          "end": {
+            "column": 37,
+            "line": 17,
+            "offset": 544
+          },
+          "start": {
+            "column": 36,
+            "line": 17,
+            "offset": 543
+          }
+        },
+        "operator": "arithmetic",
+        "outcome": "killed",
+        "replacement": "*",
+        "selection": null
+      },
+      "src/logic.ts:b5f746dda1bc205d60027c66281cd2939892f57d52ca77b297c20af4d2ee5b5f": {
+        "file": "src/logic.ts",
+        "id": "ad43fe22222632bf0db1f0f3fdfa26da643dc07dd2a6f407467fda22ea1b32f7",
+        "location": {
+          "end": {
+            "column": 17,
+            "line": 17,
+            "offset": 524
+          },
+          "start": {
+            "column": 16,
+            "line": 17,
+            "offset": 523
+          }
+        },
+        "operator": "arithmetic",
+        "outcome": "killed",
+        "replacement": "+",
+        "selection": null
+      }
+    },
+    "left_run": "measured-02-pure-oximut-clean-fresh",
+    "mismatches": [],
+    "ratio_eligible": false,
+    "right_count": 33,
+    "right_only": {
+      "src/logic.ts:19d107a9eefa2519ac6a1dc6d1b5473c95ad45461754dab6fbac5cde6c1a0272": {
+        "file": "src/logic.ts",
+        "id": "76",
+        "location": {
+          "end": {
+            "column": 18,
+            "line": 36
+          },
+          "start": {
+            "column": 7,
+            "line": 36
+          }
+        },
+        "operator": "EqualityOperator",
+        "outcome": "killed",
+        "replacement": "value > 20",
+        "selection": null
+      },
+      "src/logic.ts:22b453fc6dfb7cd31c584a75c8689105a4954f7118c35735d86763406a312ae0": {
+        "file": "src/logic.ts",
+        "id": "51",
+        "location": {
+          "end": {
+            "column": 27,
+            "line": 22
+          },
+          "start": {
+            "column": 16,
+            "line": 22
+          }
+        },
+        "operator": "EqualityOperator",
+        "outcome": "killed",
+        "replacement": "weight > 2",
+        "selection": null
+      },
+      "src/logic.ts:25557a69feeba12680531f889ceaf1cb948a0fb0c98e3c7e7c563a1018016b65": {
+        "file": "src/logic.ts",
+        "id": "35",
+        "location": {
+          "end": {
+            "column": 33,
+            "line": 15
+          },
+          "start": {
+            "column": 21,
+            "line": 15
+          }
+        },
+        "operator": "EqualityOperator",
+        "outcome": "killed",
+        "replacement": "percent > 0",
+        "selection": null
+      },
+      "src/logic.ts:260040bed8448fb0d93c92d55c17271bc2db6a290e30112e6407fde01ac2711c": {
+        "file": "src/logic.ts",
+        "id": "47",
+        "location": {
+          "end": {
+            "column": 18,
+            "line": 21
+          },
+          "start": {
+            "column": 7,
+            "line": 21
+          }
+        },
+        "operator": "EqualityOperator",
+        "outcome": "killed",
+        "replacement": "weight > 0",
+        "selection": null
+      },
+      "src/logic.ts:2afd13f03c324f8d462bd564ef7d2a7f8336f837616d45760f48f5bf2533d5e9": {
+        "file": "src/logic.ts",
+        "id": "13",
+        "location": {
+          "end": {
+            "column": 16,
+            "line": 8
+          },
+          "start": {
+            "column": 7,
+            "line": 8
+          }
+        },
+        "operator": "EqualityOperator",
+        "outcome": "killed",
+        "replacement": "score >= 0",
+        "selection": null
+      },
+      "src/logic.ts:2d0052277b5352e9814f3b38fab4057fae4ec0b540900ac06f518fd3ea1eaf96": {
+        "file": "src/logic.ts",
+        "id": "40",
+        "location": {
+          "end": {
+            "column": 41,
+            "line": 17
+          },
+          "start": {
+            "column": 10,
+            "line": 17
+          }
+        },
+        "operator": "ArithmeticOperator",
+        "outcome": "killed",
+        "replacement": "price + price * percent / 100",
+        "selection": null
+      },
+      "src/logic.ts:3280d36ead3645cb682704410e8b0fe0b8d246715edd139f86dcdcb58b0ef4f4": {
+        "file": "src/logic.ts",
+        "id": "18",
+        "location": {
+          "end": {
+            "column": 18,
+            "line": 9
+          },
+          "start": {
+            "column": 7,
+            "line": 9
+          }
+        },
+        "operator": "EqualityOperator",
+        "outcome": "killed",
+        "replacement": "score < 90",
+        "selection": null
+      },
+      "src/logic.ts:3c5fb34c4b0712073de93f983b89aa4750b19ee42da15c4ea4e142e181a9c96e": {
+        "file": "src/logic.ts",
+        "id": "66",
+        "location": {
+          "end": {
+            "column": 46,
+            "line": 31
+          },
+          "start": {
+            "column": 34,
+            "line": 31
+          }
+        },
+        "operator": "BooleanLiteral",
+        "outcome": "killed",
+        "replacement": "isSuspended",
+        "selection": null
+      },
+      "src/logic.ts:4358e48294bfcd8a2e40b89426425b7cb26e155f03d894d9eacb30fe391656cb": {
+        "file": "src/logic.ts",
+        "id": "71",
+        "location": {
+          "end": {
+            "column": 17,
+            "line": 35
+          },
+          "start": {
+            "column": 7,
+            "line": 35
+          }
+        },
+        "operator": "EqualityOperator",
+        "outcome": "killed",
+        "replacement": "value >= 10",
+        "selection": null
+      },
+      "src/logic.ts:677ad56b28a3004dcf77bca54853fc7f068036f87f29d53e58f3aeaf8f4e2ffe": {
+        "file": "src/logic.ts",
+        "id": "8",
+        "location": {
+          "end": {
+            "column": 20,
+            "line": 3
+          },
+          "start": {
+            "column": 7,
+            "line": 3
+          }
+        },
+        "operator": "EqualityOperator",
+        "outcome": "killed",
+        "replacement": "value <= upper",
+        "selection": null
+      },
+      "src/logic.ts:6d71df5468861fcbe723be647a17e6fe56e45a7664d6c7cb33b615f33cc136b1": {
+        "file": "src/logic.ts",
+        "id": "39",
+        "location": {
+          "end": {
+            "column": 21,
+            "line": 16
+          },
+          "start": {
+            "column": 7,
+            "line": 16
+          }
+        },
+        "operator": "EqualityOperator",
+        "outcome": "killed",
+        "replacement": "percent < 100",
+        "selection": null
+      },
+      "src/logic.ts:732c89f06dc40172ae487155d9471c012335d60321638d623bf6880d4715828c": {
+        "file": "src/logic.ts",
+        "id": "23",
+        "location": {
+          "end": {
+            "column": 18,
+            "line": 10
+          },
+          "start": {
+            "column": 7,
+            "line": 10
+          }
+        },
+        "operator": "EqualityOperator",
+        "outcome": "killed",
+        "replacement": "score < 60",
+        "selection": null
+      },
+      "src/logic.ts:7fac36f15f8e49900bfb1a0842fbc0ec3f6a684776ca7afed7dcf9f5482c0aa0": {
+        "file": "src/logic.ts",
+        "id": "4",
+        "location": {
+          "end": {
+            "column": 20,
+            "line": 2
+          },
+          "start": {
+            "column": 7,
+            "line": 2
+          }
+        },
+        "operator": "EqualityOperator",
+        "outcome": "killed",
+        "replacement": "value >= lower",
+        "selection": null
+      },
+      "src/logic.ts:c0f6e1b9204b80f49311743ec68d712fdf7b12e24736fcc6c13006eeea3fae61": {
+        "file": "src/logic.ts",
+        "id": "32",
+        "location": {
+          "end": {
+            "column": 17,
+            "line": 15
+          },
+          "start": {
+            "column": 7,
+            "line": 15
+          }
+        },
+        "operator": "EqualityOperator",
+        "outcome": "killed",
+        "replacement": "price > 0",
+        "selection": null
+      },
+      "src/logic.ts:c1c97335e96e8b2277fbcc644d4cbf754b71f33139e882c6a35068012faac85a": {
+        "file": "src/logic.ts",
+        "id": "55",
+        "location": {
+          "end": {
+            "column": 46,
+            "line": 22
+          },
+          "start": {
+            "column": 34,
+            "line": 22
+          }
+        },
+        "operator": "EqualityOperator",
+        "outcome": "killed",
+        "replacement": "weight > 10",
+        "selection": null
+      },
+      "src/logic.ts:d1bddace4a536fdf8e211938f3f0f7912c70b64698ef93421c6279afa9b40a5f": {
+        "file": "src/logic.ts",
+        "id": "41",
+        "location": {
+          "end": {
+            "column": 41,
+            "line": 17
+          },
+          "start": {
+            "column": 18,
+            "line": 17
+          }
+        },
+        "operator": "ArithmeticOperator",
+        "outcome": "killed",
+        "replacement": "price * percent * 100",
+        "selection": null
+      },
+      "src/logic.ts:f878989f12669ca5c419b45d49d4ac6a7d38ee0d53bcd3ba0c3ac51813d79d49": {
+        "file": "src/logic.ts",
+        "id": "65",
+        "location": {
+          "end": {
+            "column": 19,
+            "line": 31
+          },
+          "start": {
+            "column": 10,
+            "line": 31
+          }
+        },
+        "operator": "EqualityOperator",
+        "outcome": "killed",
+        "replacement": "age < 18",
+        "selection": null
+      }
+    },
+    "right_run": "measured-02-pure-stryker-clean-stryker",
+    "round_index": 2,
+    "shared": [
+      "src/logic.ts:1fb23814931382aeaf48468c888ce88187df302479b8c7f04997e9f0c1bb4bba",
+      "src/logic.ts:3730906228c329ffce2081b02edf17dfe061b5a094492c075d33b09590a48107",
+      "src/logic.ts:3a376dd61b757b4dddc3ad89615c366cd81653520df578204263b1db729d2764",
+      "src/logic.ts:3c8b9455473c4e1900c94575778193e406a17ff48f2ae7c0d9682aec8d3ab0f4",
+      "src/logic.ts:474c32b62c8d8b4a3c3a6ca8cd755934222fe47f94c95b32a0f1a19c775d44ee",
+      "src/logic.ts:579d9df53b09ec9f062932927e3b400dfcc2bae1d1feb6e83ade14d50d167223",
+      "src/logic.ts:5bb144b4ae012c474365c881dc2e547b57f69f4fd3adf1527693d67591aef9cf",
+      "src/logic.ts:6782b6f40fba37e1cf6a5450a154edef43d5d4c093d125abf62078c4e3f9a3e3",
+      "src/logic.ts:95dedf74e2516a03ff015a07d283869960c7a76ae1f2467371c462fe6a4cfd35",
+      "src/logic.ts:9dac40c8e142d67328deff9a60e2bd1fd993b439f9e25e25e98a535934670059",
+      "src/logic.ts:9ee84871027018304f3b45f9600c4855de8e56aad662e0f2ad71f835ac699b05",
+      "src/logic.ts:a7605444d4a59b11e733b8fab2cfc9d153d86ec992b660f8a20226a3bf73682c",
+      "src/logic.ts:c19d80bdb92a86781b8391f51f400045613f6fcea8bbd97831ef0ce9a4a2dcbe",
+      "src/logic.ts:c354c320e8b7d567937c52f6e14d377eb7a4f15103387a01c40f9bac2286d6a2",
+      "src/logic.ts:c69e015db47b405136cf3f324f91e703fb6fe1c85f2b2b42363ae5d9df2bd1b1",
+      "src/logic.ts:f3521ab179ab483d26df09d0d41a64055f8fc3ee6a4d50c0c030b9ae97a6eecf"
+    ],
+    "shared_classifications_agree": true,
+    "shared_count": 16
+  },
+  {
+    "equal_mutation_scope": false,
+    "explained_no_coverage_refinements": [],
+    "fixture": "pure",
+    "kind": "cross-tool",
+    "left_count": 18,
+    "left_only": {
+      "src/logic.ts:accf3ead5949da33b61e0d6b4ba601de9e50ec8a234f4633602b736fe46f672d": {
+        "file": "src/logic.ts",
+        "id": "7c788a9b1144adea81e7a7e4ad53b3d9e34de634c7ce03774e33dbe15ecad391",
+        "location": {
+          "end": {
+            "column": 37,
+            "line": 17,
+            "offset": 544
+          },
+          "start": {
+            "column": 36,
+            "line": 17,
+            "offset": 543
+          }
+        },
+        "operator": "arithmetic",
+        "outcome": "killed",
+        "replacement": "*",
+        "selection": null
+      },
+      "src/logic.ts:b5f746dda1bc205d60027c66281cd2939892f57d52ca77b297c20af4d2ee5b5f": {
+        "file": "src/logic.ts",
+        "id": "ad43fe22222632bf0db1f0f3fdfa26da643dc07dd2a6f407467fda22ea1b32f7",
+        "location": {
+          "end": {
+            "column": 17,
+            "line": 17,
+            "offset": 524
+          },
+          "start": {
+            "column": 16,
+            "line": 17,
+            "offset": 523
+          }
+        },
+        "operator": "arithmetic",
+        "outcome": "killed",
+        "replacement": "+",
+        "selection": null
+      }
+    },
+    "left_run": "measured-03-pure-oximut-clean-fresh",
+    "mismatches": [],
+    "ratio_eligible": false,
+    "right_count": 33,
+    "right_only": {
+      "src/logic.ts:19d107a9eefa2519ac6a1dc6d1b5473c95ad45461754dab6fbac5cde6c1a0272": {
+        "file": "src/logic.ts",
+        "id": "76",
+        "location": {
+          "end": {
+            "column": 18,
+            "line": 36
+          },
+          "start": {
+            "column": 7,
+            "line": 36
+          }
+        },
+        "operator": "EqualityOperator",
+        "outcome": "killed",
+        "replacement": "value > 20",
+        "selection": null
+      },
+      "src/logic.ts:22b453fc6dfb7cd31c584a75c8689105a4954f7118c35735d86763406a312ae0": {
+        "file": "src/logic.ts",
+        "id": "51",
+        "location": {
+          "end": {
+            "column": 27,
+            "line": 22
+          },
+          "start": {
+            "column": 16,
+            "line": 22
+          }
+        },
+        "operator": "EqualityOperator",
+        "outcome": "killed",
+        "replacement": "weight > 2",
+        "selection": null
+      },
+      "src/logic.ts:25557a69feeba12680531f889ceaf1cb948a0fb0c98e3c7e7c563a1018016b65": {
+        "file": "src/logic.ts",
+        "id": "35",
+        "location": {
+          "end": {
+            "column": 33,
+            "line": 15
+          },
+          "start": {
+            "column": 21,
+            "line": 15
+          }
+        },
+        "operator": "EqualityOperator",
+        "outcome": "killed",
+        "replacement": "percent > 0",
+        "selection": null
+      },
+      "src/logic.ts:260040bed8448fb0d93c92d55c17271bc2db6a290e30112e6407fde01ac2711c": {
+        "file": "src/logic.ts",
+        "id": "47",
+        "location": {
+          "end": {
+            "column": 18,
+            "line": 21
+          },
+          "start": {
+            "column": 7,
+            "line": 21
+          }
+        },
+        "operator": "EqualityOperator",
+        "outcome": "killed",
+        "replacement": "weight > 0",
+        "selection": null
+      },
+      "src/logic.ts:2afd13f03c324f8d462bd564ef7d2a7f8336f837616d45760f48f5bf2533d5e9": {
+        "file": "src/logic.ts",
+        "id": "13",
+        "location": {
+          "end": {
+            "column": 16,
+            "line": 8
+          },
+          "start": {
+            "column": 7,
+            "line": 8
+          }
+        },
+        "operator": "EqualityOperator",
+        "outcome": "killed",
+        "replacement": "score >= 0",
+        "selection": null
+      },
+      "src/logic.ts:2d0052277b5352e9814f3b38fab4057fae4ec0b540900ac06f518fd3ea1eaf96": {
+        "file": "src/logic.ts",
+        "id": "40",
+        "location": {
+          "end": {
+            "column": 41,
+            "line": 17
+          },
+          "start": {
+            "column": 10,
+            "line": 17
+          }
+        },
+        "operator": "ArithmeticOperator",
+        "outcome": "killed",
+        "replacement": "price + price * percent / 100",
+        "selection": null
+      },
+      "src/logic.ts:3280d36ead3645cb682704410e8b0fe0b8d246715edd139f86dcdcb58b0ef4f4": {
+        "file": "src/logic.ts",
+        "id": "18",
+        "location": {
+          "end": {
+            "column": 18,
+            "line": 9
+          },
+          "start": {
+            "column": 7,
+            "line": 9
+          }
+        },
+        "operator": "EqualityOperator",
+        "outcome": "killed",
+        "replacement": "score < 90",
+        "selection": null
+      },
+      "src/logic.ts:3c5fb34c4b0712073de93f983b89aa4750b19ee42da15c4ea4e142e181a9c96e": {
+        "file": "src/logic.ts",
+        "id": "66",
+        "location": {
+          "end": {
+            "column": 46,
+            "line": 31
+          },
+          "start": {
+            "column": 34,
+            "line": 31
+          }
+        },
+        "operator": "BooleanLiteral",
+        "outcome": "killed",
+        "replacement": "isSuspended",
+        "selection": null
+      },
+      "src/logic.ts:4358e48294bfcd8a2e40b89426425b7cb26e155f03d894d9eacb30fe391656cb": {
+        "file": "src/logic.ts",
+        "id": "71",
+        "location": {
+          "end": {
+            "column": 17,
+            "line": 35
+          },
+          "start": {
+            "column": 7,
+            "line": 35
+          }
+        },
+        "operator": "EqualityOperator",
+        "outcome": "killed",
+        "replacement": "value >= 10",
+        "selection": null
+      },
+      "src/logic.ts:677ad56b28a3004dcf77bca54853fc7f068036f87f29d53e58f3aeaf8f4e2ffe": {
+        "file": "src/logic.ts",
+        "id": "8",
+        "location": {
+          "end": {
+            "column": 20,
+            "line": 3
+          },
+          "start": {
+            "column": 7,
+            "line": 3
+          }
+        },
+        "operator": "EqualityOperator",
+        "outcome": "killed",
+        "replacement": "value <= upper",
+        "selection": null
+      },
+      "src/logic.ts:6d71df5468861fcbe723be647a17e6fe56e45a7664d6c7cb33b615f33cc136b1": {
+        "file": "src/logic.ts",
+        "id": "39",
+        "location": {
+          "end": {
+            "column": 21,
+            "line": 16
+          },
+          "start": {
+            "column": 7,
+            "line": 16
+          }
+        },
+        "operator": "EqualityOperator",
+        "outcome": "killed",
+        "replacement": "percent < 100",
+        "selection": null
+      },
+      "src/logic.ts:732c89f06dc40172ae487155d9471c012335d60321638d623bf6880d4715828c": {
+        "file": "src/logic.ts",
+        "id": "23",
+        "location": {
+          "end": {
+            "column": 18,
+            "line": 10
+          },
+          "start": {
+            "column": 7,
+            "line": 10
+          }
+        },
+        "operator": "EqualityOperator",
+        "outcome": "killed",
+        "replacement": "score < 60",
+        "selection": null
+      },
+      "src/logic.ts:7fac36f15f8e49900bfb1a0842fbc0ec3f6a684776ca7afed7dcf9f5482c0aa0": {
+        "file": "src/logic.ts",
+        "id": "4",
+        "location": {
+          "end": {
+            "column": 20,
+            "line": 2
+          },
+          "start": {
+            "column": 7,
+            "line": 2
+          }
+        },
+        "operator": "EqualityOperator",
+        "outcome": "killed",
+        "replacement": "value >= lower",
+        "selection": null
+      },
+      "src/logic.ts:c0f6e1b9204b80f49311743ec68d712fdf7b12e24736fcc6c13006eeea3fae61": {
+        "file": "src/logic.ts",
+        "id": "32",
+        "location": {
+          "end": {
+            "column": 17,
+            "line": 15
+          },
+          "start": {
+            "column": 7,
+            "line": 15
+          }
+        },
+        "operator": "EqualityOperator",
+        "outcome": "killed",
+        "replacement": "price > 0",
+        "selection": null
+      },
+      "src/logic.ts:c1c97335e96e8b2277fbcc644d4cbf754b71f33139e882c6a35068012faac85a": {
+        "file": "src/logic.ts",
+        "id": "55",
+        "location": {
+          "end": {
+            "column": 46,
+            "line": 22
+          },
+          "start": {
+            "column": 34,
+            "line": 22
+          }
+        },
+        "operator": "EqualityOperator",
+        "outcome": "killed",
+        "replacement": "weight > 10",
+        "selection": null
+      },
+      "src/logic.ts:d1bddace4a536fdf8e211938f3f0f7912c70b64698ef93421c6279afa9b40a5f": {
+        "file": "src/logic.ts",
+        "id": "41",
+        "location": {
+          "end": {
+            "column": 41,
+            "line": 17
+          },
+          "start": {
+            "column": 18,
+            "line": 17
+          }
+        },
+        "operator": "ArithmeticOperator",
+        "outcome": "killed",
+        "replacement": "price * percent * 100",
+        "selection": null
+      },
+      "src/logic.ts:f878989f12669ca5c419b45d49d4ac6a7d38ee0d53bcd3ba0c3ac51813d79d49": {
+        "file": "src/logic.ts",
+        "id": "65",
+        "location": {
+          "end": {
+            "column": 19,
+            "line": 31
+          },
+          "start": {
+            "column": 10,
+            "line": 31
+          }
+        },
+        "operator": "EqualityOperator",
+        "outcome": "killed",
+        "replacement": "age < 18",
+        "selection": null
+      }
+    },
+    "right_run": "measured-03-pure-stryker-clean-stryker",
+    "round_index": 3,
+    "shared": [
+      "src/logic.ts:1fb23814931382aeaf48468c888ce88187df302479b8c7f04997e9f0c1bb4bba",
+      "src/logic.ts:3730906228c329ffce2081b02edf17dfe061b5a094492c075d33b09590a48107",
+      "src/logic.ts:3a376dd61b757b4dddc3ad89615c366cd81653520df578204263b1db729d2764",
+      "src/logic.ts:3c8b9455473c4e1900c94575778193e406a17ff48f2ae7c0d9682aec8d3ab0f4",
+      "src/logic.ts:474c32b62c8d8b4a3c3a6ca8cd755934222fe47f94c95b32a0f1a19c775d44ee",
+      "src/logic.ts:579d9df53b09ec9f062932927e3b400dfcc2bae1d1feb6e83ade14d50d167223",
+      "src/logic.ts:5bb144b4ae012c474365c881dc2e547b57f69f4fd3adf1527693d67591aef9cf",
+      "src/logic.ts:6782b6f40fba37e1cf6a5450a154edef43d5d4c093d125abf62078c4e3f9a3e3",
+      "src/logic.ts:95dedf74e2516a03ff015a07d283869960c7a76ae1f2467371c462fe6a4cfd35",
+      "src/logic.ts:9dac40c8e142d67328deff9a60e2bd1fd993b439f9e25e25e98a535934670059",
+      "src/logic.ts:9ee84871027018304f3b45f9600c4855de8e56aad662e0f2ad71f835ac699b05",
+      "src/logic.ts:a7605444d4a59b11e733b8fab2cfc9d153d86ec992b660f8a20226a3bf73682c",
+      "src/logic.ts:c19d80bdb92a86781b8391f51f400045613f6fcea8bbd97831ef0ce9a4a2dcbe",
+      "src/logic.ts:c354c320e8b7d567937c52f6e14d377eb7a4f15103387a01c40f9bac2286d6a2",
+      "src/logic.ts:c69e015db47b405136cf3f324f91e703fb6fe1c85f2b2b42363ae5d9df2bd1b1",
+      "src/logic.ts:f3521ab179ab483d26df09d0d41a64055f8fc3ee6a4d50c0c030b9ae97a6eecf"
+    ],
+    "shared_classifications_agree": true,
+    "shared_count": 16
+  },
+  {
+    "equal_mutation_scope": true,
+    "explained_no_coverage_refinements": [],
+    "fixture": "pure",
+    "kind": "optimized-reference",
+    "left_count": 18,
+    "left_only": {},
+    "left_run": "measured-03-pure-oximut-clean-fresh",
+    "mismatches": [],
+    "ratio_eligible": true,
+    "right_count": 18,
+    "right_only": {},
+    "right_run": "measured-03-pure-oximut-clean-selection",
+    "round_index": 3,
+    "shared": [
+      "src/logic.ts:1fb23814931382aeaf48468c888ce88187df302479b8c7f04997e9f0c1bb4bba",
+      "src/logic.ts:3730906228c329ffce2081b02edf17dfe061b5a094492c075d33b09590a48107",
+      "src/logic.ts:3a376dd61b757b4dddc3ad89615c366cd81653520df578204263b1db729d2764",
+      "src/logic.ts:3c8b9455473c4e1900c94575778193e406a17ff48f2ae7c0d9682aec8d3ab0f4",
+      "src/logic.ts:474c32b62c8d8b4a3c3a6ca8cd755934222fe47f94c95b32a0f1a19c775d44ee",
+      "src/logic.ts:579d9df53b09ec9f062932927e3b400dfcc2bae1d1feb6e83ade14d50d167223",
+      "src/logic.ts:5bb144b4ae012c474365c881dc2e547b57f69f4fd3adf1527693d67591aef9cf",
+      "src/logic.ts:6782b6f40fba37e1cf6a5450a154edef43d5d4c093d125abf62078c4e3f9a3e3",
+      "src/logic.ts:95dedf74e2516a03ff015a07d283869960c7a76ae1f2467371c462fe6a4cfd35",
+      "src/logic.ts:9dac40c8e142d67328deff9a60e2bd1fd993b439f9e25e25e98a535934670059",
+      "src/logic.ts:9ee84871027018304f3b45f9600c4855de8e56aad662e0f2ad71f835ac699b05",
+      "src/logic.ts:a7605444d4a59b11e733b8fab2cfc9d153d86ec992b660f8a20226a3bf73682c",
+      "src/logic.ts:accf3ead5949da33b61e0d6b4ba601de9e50ec8a234f4633602b736fe46f672d",
+      "src/logic.ts:b5f746dda1bc205d60027c66281cd2939892f57d52ca77b297c20af4d2ee5b5f",
+      "src/logic.ts:c19d80bdb92a86781b8391f51f400045613f6fcea8bbd97831ef0ce9a4a2dcbe",
+      "src/logic.ts:c354c320e8b7d567937c52f6e14d377eb7a4f15103387a01c40f9bac2286d6a2",
+      "src/logic.ts:c69e015db47b405136cf3f324f91e703fb6fe1c85f2b2b42363ae5d9df2bd1b1",
+      "src/logic.ts:f3521ab179ab483d26df09d0d41a64055f8fc3ee6a4d50c0c030b9ae97a6eecf"
+    ],
+    "shared_classifications_agree": true,
+    "shared_count": 18
+  },
+  {
+    "equal_mutation_scope": true,
+    "explained_no_coverage_refinements": [],
+    "fixture": "pure",
+    "kind": "optimized-reference",
+    "left_count": 18,
+    "left_only": {},
+    "left_run": "measured-03-pure-oximut-clean-fresh",
+    "mismatches": [],
+    "ratio_eligible": true,
+    "right_count": 18,
+    "right_only": {},
+    "right_run": "measured-03-pure-oximut-clean-persistent",
+    "round_index": 3,
+    "shared": [
+      "src/logic.ts:1fb23814931382aeaf48468c888ce88187df302479b8c7f04997e9f0c1bb4bba",
+      "src/logic.ts:3730906228c329ffce2081b02edf17dfe061b5a094492c075d33b09590a48107",
+      "src/logic.ts:3a376dd61b757b4dddc3ad89615c366cd81653520df578204263b1db729d2764",
+      "src/logic.ts:3c8b9455473c4e1900c94575778193e406a17ff48f2ae7c0d9682aec8d3ab0f4",
+      "src/logic.ts:474c32b62c8d8b4a3c3a6ca8cd755934222fe47f94c95b32a0f1a19c775d44ee",
+      "src/logic.ts:579d9df53b09ec9f062932927e3b400dfcc2bae1d1feb6e83ade14d50d167223",
+      "src/logic.ts:5bb144b4ae012c474365c881dc2e547b57f69f4fd3adf1527693d67591aef9cf",
+      "src/logic.ts:6782b6f40fba37e1cf6a5450a154edef43d5d4c093d125abf62078c4e3f9a3e3",
+      "src/logic.ts:95dedf74e2516a03ff015a07d283869960c7a76ae1f2467371c462fe6a4cfd35",
+      "src/logic.ts:9dac40c8e142d67328deff9a60e2bd1fd993b439f9e25e25e98a535934670059",
+      "src/logic.ts:9ee84871027018304f3b45f9600c4855de8e56aad662e0f2ad71f835ac699b05",
+      "src/logic.ts:a7605444d4a59b11e733b8fab2cfc9d153d86ec992b660f8a20226a3bf73682c",
+      "src/logic.ts:accf3ead5949da33b61e0d6b4ba601de9e50ec8a234f4633602b736fe46f672d",
+      "src/logic.ts:b5f746dda1bc205d60027c66281cd2939892f57d52ca77b297c20af4d2ee5b5f",
+      "src/logic.ts:c19d80bdb92a86781b8391f51f400045613f6fcea8bbd97831ef0ce9a4a2dcbe",
+      "src/logic.ts:c354c320e8b7d567937c52f6e14d377eb7a4f15103387a01c40f9bac2286d6a2",
+      "src/logic.ts:c69e015db47b405136cf3f324f91e703fb6fe1c85f2b2b42363ae5d9df2bd1b1",
+      "src/logic.ts:f3521ab179ab483d26df09d0d41a64055f8fc3ee6a4d50c0c030b9ae97a6eecf"
+    ],
+    "shared_classifications_agree": true,
+    "shared_count": 18
+  },
+  {
+    "equal_mutation_scope": true,
+    "explained_no_coverage_refinements": [],
+    "fixture": "pure",
+    "kind": "optimized-reference",
+    "left_count": 18,
+    "left_only": {},
+    "left_run": "measured-04-pure-oximut-clean-fresh",
+    "mismatches": [],
+    "ratio_eligible": true,
+    "right_count": 18,
+    "right_only": {},
+    "right_run": "measured-04-pure-oximut-clean-persistent",
+    "round_index": 4,
+    "shared": [
+      "src/logic.ts:1fb23814931382aeaf48468c888ce88187df302479b8c7f04997e9f0c1bb4bba",
+      "src/logic.ts:3730906228c329ffce2081b02edf17dfe061b5a094492c075d33b09590a48107",
+      "src/logic.ts:3a376dd61b757b4dddc3ad89615c366cd81653520df578204263b1db729d2764",
+      "src/logic.ts:3c8b9455473c4e1900c94575778193e406a17ff48f2ae7c0d9682aec8d3ab0f4",
+      "src/logic.ts:474c32b62c8d8b4a3c3a6ca8cd755934222fe47f94c95b32a0f1a19c775d44ee",
+      "src/logic.ts:579d9df53b09ec9f062932927e3b400dfcc2bae1d1feb6e83ade14d50d167223",
+      "src/logic.ts:5bb144b4ae012c474365c881dc2e547b57f69f4fd3adf1527693d67591aef9cf",
+      "src/logic.ts:6782b6f40fba37e1cf6a5450a154edef43d5d4c093d125abf62078c4e3f9a3e3",
+      "src/logic.ts:95dedf74e2516a03ff015a07d283869960c7a76ae1f2467371c462fe6a4cfd35",
+      "src/logic.ts:9dac40c8e142d67328deff9a60e2bd1fd993b439f9e25e25e98a535934670059",
+      "src/logic.ts:9ee84871027018304f3b45f9600c4855de8e56aad662e0f2ad71f835ac699b05",
+      "src/logic.ts:a7605444d4a59b11e733b8fab2cfc9d153d86ec992b660f8a20226a3bf73682c",
+      "src/logic.ts:accf3ead5949da33b61e0d6b4ba601de9e50ec8a234f4633602b736fe46f672d",
+      "src/logic.ts:b5f746dda1bc205d60027c66281cd2939892f57d52ca77b297c20af4d2ee5b5f",
+      "src/logic.ts:c19d80bdb92a86781b8391f51f400045613f6fcea8bbd97831ef0ce9a4a2dcbe",
+      "src/logic.ts:c354c320e8b7d567937c52f6e14d377eb7a4f15103387a01c40f9bac2286d6a2",
+      "src/logic.ts:c69e015db47b405136cf3f324f91e703fb6fe1c85f2b2b42363ae5d9df2bd1b1",
+      "src/logic.ts:f3521ab179ab483d26df09d0d41a64055f8fc3ee6a4d50c0c030b9ae97a6eecf"
+    ],
+    "shared_classifications_agree": true,
+    "shared_count": 18
+  },
+  {
+    "equal_mutation_scope": true,
+    "explained_no_coverage_refinements": [],
+    "fixture": "pure",
+    "kind": "optimized-reference",
+    "left_count": 18,
+    "left_only": {},
+    "left_run": "measured-04-pure-oximut-clean-fresh",
+    "mismatches": [],
+    "ratio_eligible": true,
+    "right_count": 18,
+    "right_only": {},
+    "right_run": "measured-04-pure-oximut-clean-selection",
+    "round_index": 4,
+    "shared": [
+      "src/logic.ts:1fb23814931382aeaf48468c888ce88187df302479b8c7f04997e9f0c1bb4bba",
+      "src/logic.ts:3730906228c329ffce2081b02edf17dfe061b5a094492c075d33b09590a48107",
+      "src/logic.ts:3a376dd61b757b4dddc3ad89615c366cd81653520df578204263b1db729d2764",
+      "src/logic.ts:3c8b9455473c4e1900c94575778193e406a17ff48f2ae7c0d9682aec8d3ab0f4",
+      "src/logic.ts:474c32b62c8d8b4a3c3a6ca8cd755934222fe47f94c95b32a0f1a19c775d44ee",
+      "src/logic.ts:579d9df53b09ec9f062932927e3b400dfcc2bae1d1feb6e83ade14d50d167223",
+      "src/logic.ts:5bb144b4ae012c474365c881dc2e547b57f69f4fd3adf1527693d67591aef9cf",
+      "src/logic.ts:6782b6f40fba37e1cf6a5450a154edef43d5d4c093d125abf62078c4e3f9a3e3",
+      "src/logic.ts:95dedf74e2516a03ff015a07d283869960c7a76ae1f2467371c462fe6a4cfd35",
+      "src/logic.ts:9dac40c8e142d67328deff9a60e2bd1fd993b439f9e25e25e98a535934670059",
+      "src/logic.ts:9ee84871027018304f3b45f9600c4855de8e56aad662e0f2ad71f835ac699b05",
+      "src/logic.ts:a7605444d4a59b11e733b8fab2cfc9d153d86ec992b660f8a20226a3bf73682c",
+      "src/logic.ts:accf3ead5949da33b61e0d6b4ba601de9e50ec8a234f4633602b736fe46f672d",
+      "src/logic.ts:b5f746dda1bc205d60027c66281cd2939892f57d52ca77b297c20af4d2ee5b5f",
+      "src/logic.ts:c19d80bdb92a86781b8391f51f400045613f6fcea8bbd97831ef0ce9a4a2dcbe",
+      "src/logic.ts:c354c320e8b7d567937c52f6e14d377eb7a4f15103387a01c40f9bac2286d6a2",
+      "src/logic.ts:c69e015db47b405136cf3f324f91e703fb6fe1c85f2b2b42363ae5d9df2bd1b1",
+      "src/logic.ts:f3521ab179ab483d26df09d0d41a64055f8fc3ee6a4d50c0c030b9ae97a6eecf"
+    ],
+    "shared_classifications_agree": true,
+    "shared_count": 18
+  },
+  {
+    "equal_mutation_scope": false,
+    "explained_no_coverage_refinements": [],
+    "fixture": "pure",
+    "kind": "cross-tool",
+    "left_count": 18,
+    "left_only": {
+      "src/logic.ts:accf3ead5949da33b61e0d6b4ba601de9e50ec8a234f4633602b736fe46f672d": {
+        "file": "src/logic.ts",
+        "id": "7c788a9b1144adea81e7a7e4ad53b3d9e34de634c7ce03774e33dbe15ecad391",
+        "location": {
+          "end": {
+            "column": 37,
+            "line": 17,
+            "offset": 544
+          },
+          "start": {
+            "column": 36,
+            "line": 17,
+            "offset": 543
+          }
+        },
+        "operator": "arithmetic",
+        "outcome": "killed",
+        "replacement": "*",
+        "selection": null
+      },
+      "src/logic.ts:b5f746dda1bc205d60027c66281cd2939892f57d52ca77b297c20af4d2ee5b5f": {
+        "file": "src/logic.ts",
+        "id": "ad43fe22222632bf0db1f0f3fdfa26da643dc07dd2a6f407467fda22ea1b32f7",
+        "location": {
+          "end": {
+            "column": 17,
+            "line": 17,
+            "offset": 524
+          },
+          "start": {
+            "column": 16,
+            "line": 17,
+            "offset": 523
+          }
+        },
+        "operator": "arithmetic",
+        "outcome": "killed",
+        "replacement": "+",
+        "selection": null
+      }
+    },
+    "left_run": "measured-04-pure-oximut-clean-fresh",
+    "mismatches": [],
+    "ratio_eligible": false,
+    "right_count": 33,
+    "right_only": {
+      "src/logic.ts:19d107a9eefa2519ac6a1dc6d1b5473c95ad45461754dab6fbac5cde6c1a0272": {
+        "file": "src/logic.ts",
+        "id": "76",
+        "location": {
+          "end": {
+            "column": 18,
+            "line": 36
+          },
+          "start": {
+            "column": 7,
+            "line": 36
+          }
+        },
+        "operator": "EqualityOperator",
+        "outcome": "killed",
+        "replacement": "value > 20",
+        "selection": null
+      },
+      "src/logic.ts:22b453fc6dfb7cd31c584a75c8689105a4954f7118c35735d86763406a312ae0": {
+        "file": "src/logic.ts",
+        "id": "51",
+        "location": {
+          "end": {
+            "column": 27,
+            "line": 22
+          },
+          "start": {
+            "column": 16,
+            "line": 22
+          }
+        },
+        "operator": "EqualityOperator",
+        "outcome": "killed",
+        "replacement": "weight > 2",
+        "selection": null
+      },
+      "src/logic.ts:25557a69feeba12680531f889ceaf1cb948a0fb0c98e3c7e7c563a1018016b65": {
+        "file": "src/logic.ts",
+        "id": "35",
+        "location": {
+          "end": {
+            "column": 33,
+            "line": 15
+          },
+          "start": {
+            "column": 21,
+            "line": 15
+          }
+        },
+        "operator": "EqualityOperator",
+        "outcome": "killed",
+        "replacement": "percent > 0",
+        "selection": null
+      },
+      "src/logic.ts:260040bed8448fb0d93c92d55c17271bc2db6a290e30112e6407fde01ac2711c": {
+        "file": "src/logic.ts",
+        "id": "47",
+        "location": {
+          "end": {
+            "column": 18,
+            "line": 21
+          },
+          "start": {
+            "column": 7,
+            "line": 21
+          }
+        },
+        "operator": "EqualityOperator",
+        "outcome": "killed",
+        "replacement": "weight > 0",
+        "selection": null
+      },
+      "src/logic.ts:2afd13f03c324f8d462bd564ef7d2a7f8336f837616d45760f48f5bf2533d5e9": {
+        "file": "src/logic.ts",
+        "id": "13",
+        "location": {
+          "end": {
+            "column": 16,
+            "line": 8
+          },
+          "start": {
+            "column": 7,
+            "line": 8
+          }
+        },
+        "operator": "EqualityOperator",
+        "outcome": "killed",
+        "replacement": "score >= 0",
+        "selection": null
+      },
+      "src/logic.ts:2d0052277b5352e9814f3b38fab4057fae4ec0b540900ac06f518fd3ea1eaf96": {
+        "file": "src/logic.ts",
+        "id": "40",
+        "location": {
+          "end": {
+            "column": 41,
+            "line": 17
+          },
+          "start": {
+            "column": 10,
+            "line": 17
+          }
+        },
+        "operator": "ArithmeticOperator",
+        "outcome": "killed",
+        "replacement": "price + price * percent / 100",
+        "selection": null
+      },
+      "src/logic.ts:3280d36ead3645cb682704410e8b0fe0b8d246715edd139f86dcdcb58b0ef4f4": {
+        "file": "src/logic.ts",
+        "id": "18",
+        "location": {
+          "end": {
+            "column": 18,
+            "line": 9
+          },
+          "start": {
+            "column": 7,
+            "line": 9
+          }
+        },
+        "operator": "EqualityOperator",
+        "outcome": "killed",
+        "replacement": "score < 90",
+        "selection": null
+      },
+      "src/logic.ts:3c5fb34c4b0712073de93f983b89aa4750b19ee42da15c4ea4e142e181a9c96e": {
+        "file": "src/logic.ts",
+        "id": "66",
+        "location": {
+          "end": {
+            "column": 46,
+            "line": 31
+          },
+          "start": {
+            "column": 34,
+            "line": 31
+          }
+        },
+        "operator": "BooleanLiteral",
+        "outcome": "killed",
+        "replacement": "isSuspended",
+        "selection": null
+      },
+      "src/logic.ts:4358e48294bfcd8a2e40b89426425b7cb26e155f03d894d9eacb30fe391656cb": {
+        "file": "src/logic.ts",
+        "id": "71",
+        "location": {
+          "end": {
+            "column": 17,
+            "line": 35
+          },
+          "start": {
+            "column": 7,
+            "line": 35
+          }
+        },
+        "operator": "EqualityOperator",
+        "outcome": "killed",
+        "replacement": "value >= 10",
+        "selection": null
+      },
+      "src/logic.ts:677ad56b28a3004dcf77bca54853fc7f068036f87f29d53e58f3aeaf8f4e2ffe": {
+        "file": "src/logic.ts",
+        "id": "8",
+        "location": {
+          "end": {
+            "column": 20,
+            "line": 3
+          },
+          "start": {
+            "column": 7,
+            "line": 3
+          }
+        },
+        "operator": "EqualityOperator",
+        "outcome": "killed",
+        "replacement": "value <= upper",
+        "selection": null
+      },
+      "src/logic.ts:6d71df5468861fcbe723be647a17e6fe56e45a7664d6c7cb33b615f33cc136b1": {
+        "file": "src/logic.ts",
+        "id": "39",
+        "location": {
+          "end": {
+            "column": 21,
+            "line": 16
+          },
+          "start": {
+            "column": 7,
+            "line": 16
+          }
+        },
+        "operator": "EqualityOperator",
+        "outcome": "killed",
+        "replacement": "percent < 100",
+        "selection": null
+      },
+      "src/logic.ts:732c89f06dc40172ae487155d9471c012335d60321638d623bf6880d4715828c": {
+        "file": "src/logic.ts",
+        "id": "23",
+        "location": {
+          "end": {
+            "column": 18,
+            "line": 10
+          },
+          "start": {
+            "column": 7,
+            "line": 10
+          }
+        },
+        "operator": "EqualityOperator",
+        "outcome": "killed",
+        "replacement": "score < 60",
+        "selection": null
+      },
+      "src/logic.ts:7fac36f15f8e49900bfb1a0842fbc0ec3f6a684776ca7afed7dcf9f5482c0aa0": {
+        "file": "src/logic.ts",
+        "id": "4",
+        "location": {
+          "end": {
+            "column": 20,
+            "line": 2
+          },
+          "start": {
+            "column": 7,
+            "line": 2
+          }
+        },
+        "operator": "EqualityOperator",
+        "outcome": "killed",
+        "replacement": "value >= lower",
+        "selection": null
+      },
+      "src/logic.ts:c0f6e1b9204b80f49311743ec68d712fdf7b12e24736fcc6c13006eeea3fae61": {
+        "file": "src/logic.ts",
+        "id": "32",
+        "location": {
+          "end": {
+            "column": 17,
+            "line": 15
+          },
+          "start": {
+            "column": 7,
+            "line": 15
+          }
+        },
+        "operator": "EqualityOperator",
+        "outcome": "killed",
+        "replacement": "price > 0",
+        "selection": null
+      },
+      "src/logic.ts:c1c97335e96e8b2277fbcc644d4cbf754b71f33139e882c6a35068012faac85a": {
+        "file": "src/logic.ts",
+        "id": "55",
+        "location": {
+          "end": {
+            "column": 46,
+            "line": 22
+          },
+          "start": {
+            "column": 34,
+            "line": 22
+          }
+        },
+        "operator": "EqualityOperator",
+        "outcome": "killed",
+        "replacement": "weight > 10",
+        "selection": null
+      },
+      "src/logic.ts:d1bddace4a536fdf8e211938f3f0f7912c70b64698ef93421c6279afa9b40a5f": {
+        "file": "src/logic.ts",
+        "id": "41",
+        "location": {
+          "end": {
+            "column": 41,
+            "line": 17
+          },
+          "start": {
+            "column": 18,
+            "line": 17
+          }
+        },
+        "operator": "ArithmeticOperator",
+        "outcome": "killed",
+        "replacement": "price * percent * 100",
+        "selection": null
+      },
+      "src/logic.ts:f878989f12669ca5c419b45d49d4ac6a7d38ee0d53bcd3ba0c3ac51813d79d49": {
+        "file": "src/logic.ts",
+        "id": "65",
+        "location": {
+          "end": {
+            "column": 19,
+            "line": 31
+          },
+          "start": {
+            "column": 10,
+            "line": 31
+          }
+        },
+        "operator": "EqualityOperator",
+        "outcome": "killed",
+        "replacement": "age < 18",
+        "selection": null
+      }
+    },
+    "right_run": "measured-04-pure-stryker-clean-stryker",
+    "round_index": 4,
+    "shared": [
+      "src/logic.ts:1fb23814931382aeaf48468c888ce88187df302479b8c7f04997e9f0c1bb4bba",
+      "src/logic.ts:3730906228c329ffce2081b02edf17dfe061b5a094492c075d33b09590a48107",
+      "src/logic.ts:3a376dd61b757b4dddc3ad89615c366cd81653520df578204263b1db729d2764",
+      "src/logic.ts:3c8b9455473c4e1900c94575778193e406a17ff48f2ae7c0d9682aec8d3ab0f4",
+      "src/logic.ts:474c32b62c8d8b4a3c3a6ca8cd755934222fe47f94c95b32a0f1a19c775d44ee",
+      "src/logic.ts:579d9df53b09ec9f062932927e3b400dfcc2bae1d1feb6e83ade14d50d167223",
+      "src/logic.ts:5bb144b4ae012c474365c881dc2e547b57f69f4fd3adf1527693d67591aef9cf",
+      "src/logic.ts:6782b6f40fba37e1cf6a5450a154edef43d5d4c093d125abf62078c4e3f9a3e3",
+      "src/logic.ts:95dedf74e2516a03ff015a07d283869960c7a76ae1f2467371c462fe6a4cfd35",
+      "src/logic.ts:9dac40c8e142d67328deff9a60e2bd1fd993b439f9e25e25e98a535934670059",
+      "src/logic.ts:9ee84871027018304f3b45f9600c4855de8e56aad662e0f2ad71f835ac699b05",
+      "src/logic.ts:a7605444d4a59b11e733b8fab2cfc9d153d86ec992b660f8a20226a3bf73682c",
+      "src/logic.ts:c19d80bdb92a86781b8391f51f400045613f6fcea8bbd97831ef0ce9a4a2dcbe",
+      "src/logic.ts:c354c320e8b7d567937c52f6e14d377eb7a4f15103387a01c40f9bac2286d6a2",
+      "src/logic.ts:c69e015db47b405136cf3f324f91e703fb6fe1c85f2b2b42363ae5d9df2bd1b1",
+      "src/logic.ts:f3521ab179ab483d26df09d0d41a64055f8fc3ee6a4d50c0c030b9ae97a6eecf"
+    ],
+    "shared_classifications_agree": true,
+    "shared_count": 16
+  },
+  {
+    "equal_mutation_scope": false,
+    "explained_no_coverage_refinements": [],
+    "fixture": "pure",
+    "kind": "cross-tool",
+    "left_count": 18,
+    "left_only": {
+      "src/logic.ts:accf3ead5949da33b61e0d6b4ba601de9e50ec8a234f4633602b736fe46f672d": {
+        "file": "src/logic.ts",
+        "id": "7c788a9b1144adea81e7a7e4ad53b3d9e34de634c7ce03774e33dbe15ecad391",
+        "location": {
+          "end": {
+            "column": 37,
+            "line": 17,
+            "offset": 544
+          },
+          "start": {
+            "column": 36,
+            "line": 17,
+            "offset": 543
+          }
+        },
+        "operator": "arithmetic",
+        "outcome": "killed",
+        "replacement": "*",
+        "selection": null
+      },
+      "src/logic.ts:b5f746dda1bc205d60027c66281cd2939892f57d52ca77b297c20af4d2ee5b5f": {
+        "file": "src/logic.ts",
+        "id": "ad43fe22222632bf0db1f0f3fdfa26da643dc07dd2a6f407467fda22ea1b32f7",
+        "location": {
+          "end": {
+            "column": 17,
+            "line": 17,
+            "offset": 524
+          },
+          "start": {
+            "column": 16,
+            "line": 17,
+            "offset": 523
+          }
+        },
+        "operator": "arithmetic",
+        "outcome": "killed",
+        "replacement": "+",
+        "selection": null
+      }
+    },
+    "left_run": "measured-05-pure-oximut-clean-fresh",
+    "mismatches": [],
+    "ratio_eligible": false,
+    "right_count": 33,
+    "right_only": {
+      "src/logic.ts:19d107a9eefa2519ac6a1dc6d1b5473c95ad45461754dab6fbac5cde6c1a0272": {
+        "file": "src/logic.ts",
+        "id": "76",
+        "location": {
+          "end": {
+            "column": 18,
+            "line": 36
+          },
+          "start": {
+            "column": 7,
+            "line": 36
+          }
+        },
+        "operator": "EqualityOperator",
+        "outcome": "killed",
+        "replacement": "value > 20",
+        "selection": null
+      },
+      "src/logic.ts:22b453fc6dfb7cd31c584a75c8689105a4954f7118c35735d86763406a312ae0": {
+        "file": "src/logic.ts",
+        "id": "51",
+        "location": {
+          "end": {
+            "column": 27,
+            "line": 22
+          },
+          "start": {
+            "column": 16,
+            "line": 22
+          }
+        },
+        "operator": "EqualityOperator",
+        "outcome": "killed",
+        "replacement": "weight > 2",
+        "selection": null
+      },
+      "src/logic.ts:25557a69feeba12680531f889ceaf1cb948a0fb0c98e3c7e7c563a1018016b65": {
+        "file": "src/logic.ts",
+        "id": "35",
+        "location": {
+          "end": {
+            "column": 33,
+            "line": 15
+          },
+          "start": {
+            "column": 21,
+            "line": 15
+          }
+        },
+        "operator": "EqualityOperator",
+        "outcome": "killed",
+        "replacement": "percent > 0",
+        "selection": null
+      },
+      "src/logic.ts:260040bed8448fb0d93c92d55c17271bc2db6a290e30112e6407fde01ac2711c": {
+        "file": "src/logic.ts",
+        "id": "47",
+        "location": {
+          "end": {
+            "column": 18,
+            "line": 21
+          },
+          "start": {
+            "column": 7,
+            "line": 21
+          }
+        },
+        "operator": "EqualityOperator",
+        "outcome": "killed",
+        "replacement": "weight > 0",
+        "selection": null
+      },
+      "src/logic.ts:2afd13f03c324f8d462bd564ef7d2a7f8336f837616d45760f48f5bf2533d5e9": {
+        "file": "src/logic.ts",
+        "id": "13",
+        "location": {
+          "end": {
+            "column": 16,
+            "line": 8
+          },
+          "start": {
+            "column": 7,
+            "line": 8
+          }
+        },
+        "operator": "EqualityOperator",
+        "outcome": "killed",
+        "replacement": "score >= 0",
+        "selection": null
+      },
+      "src/logic.ts:2d0052277b5352e9814f3b38fab4057fae4ec0b540900ac06f518fd3ea1eaf96": {
+        "file": "src/logic.ts",
+        "id": "40",
+        "location": {
+          "end": {
+            "column": 41,
+            "line": 17
+          },
+          "start": {
+            "column": 10,
+            "line": 17
+          }
+        },
+        "operator": "ArithmeticOperator",
+        "outcome": "killed",
+        "replacement": "price + price * percent / 100",
+        "selection": null
+      },
+      "src/logic.ts:3280d36ead3645cb682704410e8b0fe0b8d246715edd139f86dcdcb58b0ef4f4": {
+        "file": "src/logic.ts",
+        "id": "18",
+        "location": {
+          "end": {
+            "column": 18,
+            "line": 9
+          },
+          "start": {
+            "column": 7,
+            "line": 9
+          }
+        },
+        "operator": "EqualityOperator",
+        "outcome": "killed",
+        "replacement": "score < 90",
+        "selection": null
+      },
+      "src/logic.ts:3c5fb34c4b0712073de93f983b89aa4750b19ee42da15c4ea4e142e181a9c96e": {
+        "file": "src/logic.ts",
+        "id": "66",
+        "location": {
+          "end": {
+            "column": 46,
+            "line": 31
+          },
+          "start": {
+            "column": 34,
+            "line": 31
+          }
+        },
+        "operator": "BooleanLiteral",
+        "outcome": "killed",
+        "replacement": "isSuspended",
+        "selection": null
+      },
+      "src/logic.ts:4358e48294bfcd8a2e40b89426425b7cb26e155f03d894d9eacb30fe391656cb": {
+        "file": "src/logic.ts",
+        "id": "71",
+        "location": {
+          "end": {
+            "column": 17,
+            "line": 35
+          },
+          "start": {
+            "column": 7,
+            "line": 35
+          }
+        },
+        "operator": "EqualityOperator",
+        "outcome": "killed",
+        "replacement": "value >= 10",
+        "selection": null
+      },
+      "src/logic.ts:677ad56b28a3004dcf77bca54853fc7f068036f87f29d53e58f3aeaf8f4e2ffe": {
+        "file": "src/logic.ts",
+        "id": "8",
+        "location": {
+          "end": {
+            "column": 20,
+            "line": 3
+          },
+          "start": {
+            "column": 7,
+            "line": 3
+          }
+        },
+        "operator": "EqualityOperator",
+        "outcome": "killed",
+        "replacement": "value <= upper",
+        "selection": null
+      },
+      "src/logic.ts:6d71df5468861fcbe723be647a17e6fe56e45a7664d6c7cb33b615f33cc136b1": {
+        "file": "src/logic.ts",
+        "id": "39",
+        "location": {
+          "end": {
+            "column": 21,
+            "line": 16
+          },
+          "start": {
+            "column": 7,
+            "line": 16
+          }
+        },
+        "operator": "EqualityOperator",
+        "outcome": "killed",
+        "replacement": "percent < 100",
+        "selection": null
+      },
+      "src/logic.ts:732c89f06dc40172ae487155d9471c012335d60321638d623bf6880d4715828c": {
+        "file": "src/logic.ts",
+        "id": "23",
+        "location": {
+          "end": {
+            "column": 18,
+            "line": 10
+          },
+          "start": {
+            "column": 7,
+            "line": 10
+          }
+        },
+        "operator": "EqualityOperator",
+        "outcome": "killed",
+        "replacement": "score < 60",
+        "selection": null
+      },
+      "src/logic.ts:7fac36f15f8e49900bfb1a0842fbc0ec3f6a684776ca7afed7dcf9f5482c0aa0": {
+        "file": "src/logic.ts",
+        "id": "4",
+        "location": {
+          "end": {
+            "column": 20,
+            "line": 2
+          },
+          "start": {
+            "column": 7,
+            "line": 2
+          }
+        },
+        "operator": "EqualityOperator",
+        "outcome": "killed",
+        "replacement": "value >= lower",
+        "selection": null
+      },
+      "src/logic.ts:c0f6e1b9204b80f49311743ec68d712fdf7b12e24736fcc6c13006eeea3fae61": {
+        "file": "src/logic.ts",
+        "id": "32",
+        "location": {
+          "end": {
+            "column": 17,
+            "line": 15
+          },
+          "start": {
+            "column": 7,
+            "line": 15
+          }
+        },
+        "operator": "EqualityOperator",
+        "outcome": "killed",
+        "replacement": "price > 0",
+        "selection": null
+      },
+      "src/logic.ts:c1c97335e96e8b2277fbcc644d4cbf754b71f33139e882c6a35068012faac85a": {
+        "file": "src/logic.ts",
+        "id": "55",
+        "location": {
+          "end": {
+            "column": 46,
+            "line": 22
+          },
+          "start": {
+            "column": 34,
+            "line": 22
+          }
+        },
+        "operator": "EqualityOperator",
+        "outcome": "killed",
+        "replacement": "weight > 10",
+        "selection": null
+      },
+      "src/logic.ts:d1bddace4a536fdf8e211938f3f0f7912c70b64698ef93421c6279afa9b40a5f": {
+        "file": "src/logic.ts",
+        "id": "41",
+        "location": {
+          "end": {
+            "column": 41,
+            "line": 17
+          },
+          "start": {
+            "column": 18,
+            "line": 17
+          }
+        },
+        "operator": "ArithmeticOperator",
+        "outcome": "killed",
+        "replacement": "price * percent * 100",
+        "selection": null
+      },
+      "src/logic.ts:f878989f12669ca5c419b45d49d4ac6a7d38ee0d53bcd3ba0c3ac51813d79d49": {
+        "file": "src/logic.ts",
+        "id": "65",
+        "location": {
+          "end": {
+            "column": 19,
+            "line": 31
+          },
+          "start": {
+            "column": 10,
+            "line": 31
+          }
+        },
+        "operator": "EqualityOperator",
+        "outcome": "killed",
+        "replacement": "age < 18",
+        "selection": null
+      }
+    },
+    "right_run": "measured-05-pure-stryker-clean-stryker",
+    "round_index": 5,
+    "shared": [
+      "src/logic.ts:1fb23814931382aeaf48468c888ce88187df302479b8c7f04997e9f0c1bb4bba",
+      "src/logic.ts:3730906228c329ffce2081b02edf17dfe061b5a094492c075d33b09590a48107",
+      "src/logic.ts:3a376dd61b757b4dddc3ad89615c366cd81653520df578204263b1db729d2764",
+      "src/logic.ts:3c8b9455473c4e1900c94575778193e406a17ff48f2ae7c0d9682aec8d3ab0f4",
+      "src/logic.ts:474c32b62c8d8b4a3c3a6ca8cd755934222fe47f94c95b32a0f1a19c775d44ee",
+      "src/logic.ts:579d9df53b09ec9f062932927e3b400dfcc2bae1d1feb6e83ade14d50d167223",
+      "src/logic.ts:5bb144b4ae012c474365c881dc2e547b57f69f4fd3adf1527693d67591aef9cf",
+      "src/logic.ts:6782b6f40fba37e1cf6a5450a154edef43d5d4c093d125abf62078c4e3f9a3e3",
+      "src/logic.ts:95dedf74e2516a03ff015a07d283869960c7a76ae1f2467371c462fe6a4cfd35",
+      "src/logic.ts:9dac40c8e142d67328deff9a60e2bd1fd993b439f9e25e25e98a535934670059",
+      "src/logic.ts:9ee84871027018304f3b45f9600c4855de8e56aad662e0f2ad71f835ac699b05",
+      "src/logic.ts:a7605444d4a59b11e733b8fab2cfc9d153d86ec992b660f8a20226a3bf73682c",
+      "src/logic.ts:c19d80bdb92a86781b8391f51f400045613f6fcea8bbd97831ef0ce9a4a2dcbe",
+      "src/logic.ts:c354c320e8b7d567937c52f6e14d377eb7a4f15103387a01c40f9bac2286d6a2",
+      "src/logic.ts:c69e015db47b405136cf3f324f91e703fb6fe1c85f2b2b42363ae5d9df2bd1b1",
+      "src/logic.ts:f3521ab179ab483d26df09d0d41a64055f8fc3ee6a4d50c0c030b9ae97a6eecf"
+    ],
+    "shared_classifications_agree": true,
+    "shared_count": 16
+  },
+  {
+    "equal_mutation_scope": true,
+    "explained_no_coverage_refinements": [],
+    "fixture": "pure",
+    "kind": "optimized-reference",
+    "left_count": 18,
+    "left_only": {},
+    "left_run": "measured-05-pure-oximut-clean-fresh",
+    "mismatches": [],
+    "ratio_eligible": true,
+    "right_count": 18,
+    "right_only": {},
+    "right_run": "measured-05-pure-oximut-clean-selection",
+    "round_index": 5,
+    "shared": [
+      "src/logic.ts:1fb23814931382aeaf48468c888ce88187df302479b8c7f04997e9f0c1bb4bba",
+      "src/logic.ts:3730906228c329ffce2081b02edf17dfe061b5a094492c075d33b09590a48107",
+      "src/logic.ts:3a376dd61b757b4dddc3ad89615c366cd81653520df578204263b1db729d2764",
+      "src/logic.ts:3c8b9455473c4e1900c94575778193e406a17ff48f2ae7c0d9682aec8d3ab0f4",
+      "src/logic.ts:474c32b62c8d8b4a3c3a6ca8cd755934222fe47f94c95b32a0f1a19c775d44ee",
+      "src/logic.ts:579d9df53b09ec9f062932927e3b400dfcc2bae1d1feb6e83ade14d50d167223",
+      "src/logic.ts:5bb144b4ae012c474365c881dc2e547b57f69f4fd3adf1527693d67591aef9cf",
+      "src/logic.ts:6782b6f40fba37e1cf6a5450a154edef43d5d4c093d125abf62078c4e3f9a3e3",
+      "src/logic.ts:95dedf74e2516a03ff015a07d283869960c7a76ae1f2467371c462fe6a4cfd35",
+      "src/logic.ts:9dac40c8e142d67328deff9a60e2bd1fd993b439f9e25e25e98a535934670059",
+      "src/logic.ts:9ee84871027018304f3b45f9600c4855de8e56aad662e0f2ad71f835ac699b05",
+      "src/logic.ts:a7605444d4a59b11e733b8fab2cfc9d153d86ec992b660f8a20226a3bf73682c",
+      "src/logic.ts:accf3ead5949da33b61e0d6b4ba601de9e50ec8a234f4633602b736fe46f672d",
+      "src/logic.ts:b5f746dda1bc205d60027c66281cd2939892f57d52ca77b297c20af4d2ee5b5f",
+      "src/logic.ts:c19d80bdb92a86781b8391f51f400045613f6fcea8bbd97831ef0ce9a4a2dcbe",
+      "src/logic.ts:c354c320e8b7d567937c52f6e14d377eb7a4f15103387a01c40f9bac2286d6a2",
+      "src/logic.ts:c69e015db47b405136cf3f324f91e703fb6fe1c85f2b2b42363ae5d9df2bd1b1",
+      "src/logic.ts:f3521ab179ab483d26df09d0d41a64055f8fc3ee6a4d50c0c030b9ae97a6eecf"
+    ],
+    "shared_classifications_agree": true,
+    "shared_count": 18
+  },
+  {
+    "equal_mutation_scope": true,
+    "explained_no_coverage_refinements": [],
+    "fixture": "pure",
+    "kind": "optimized-reference",
+    "left_count": 18,
+    "left_only": {},
+    "left_run": "measured-05-pure-oximut-clean-fresh",
+    "mismatches": [],
+    "ratio_eligible": true,
+    "right_count": 18,
+    "right_only": {},
+    "right_run": "measured-05-pure-oximut-clean-persistent",
+    "round_index": 5,
+    "shared": [
+      "src/logic.ts:1fb23814931382aeaf48468c888ce88187df302479b8c7f04997e9f0c1bb4bba",
+      "src/logic.ts:3730906228c329ffce2081b02edf17dfe061b5a094492c075d33b09590a48107",
+      "src/logic.ts:3a376dd61b757b4dddc3ad89615c366cd81653520df578204263b1db729d2764",
+      "src/logic.ts:3c8b9455473c4e1900c94575778193e406a17ff48f2ae7c0d9682aec8d3ab0f4",
+      "src/logic.ts:474c32b62c8d8b4a3c3a6ca8cd755934222fe47f94c95b32a0f1a19c775d44ee",
+      "src/logic.ts:579d9df53b09ec9f062932927e3b400dfcc2bae1d1feb6e83ade14d50d167223",
+      "src/logic.ts:5bb144b4ae012c474365c881dc2e547b57f69f4fd3adf1527693d67591aef9cf",
+      "src/logic.ts:6782b6f40fba37e1cf6a5450a154edef43d5d4c093d125abf62078c4e3f9a3e3",
+      "src/logic.ts:95dedf74e2516a03ff015a07d283869960c7a76ae1f2467371c462fe6a4cfd35",
+      "src/logic.ts:9dac40c8e142d67328deff9a60e2bd1fd993b439f9e25e25e98a535934670059",
+      "src/logic.ts:9ee84871027018304f3b45f9600c4855de8e56aad662e0f2ad71f835ac699b05",
+      "src/logic.ts:a7605444d4a59b11e733b8fab2cfc9d153d86ec992b660f8a20226a3bf73682c",
+      "src/logic.ts:accf3ead5949da33b61e0d6b4ba601de9e50ec8a234f4633602b736fe46f672d",
+      "src/logic.ts:b5f746dda1bc205d60027c66281cd2939892f57d52ca77b297c20af4d2ee5b5f",
+      "src/logic.ts:c19d80bdb92a86781b8391f51f400045613f6fcea8bbd97831ef0ce9a4a2dcbe",
+      "src/logic.ts:c354c320e8b7d567937c52f6e14d377eb7a4f15103387a01c40f9bac2286d6a2",
+      "src/logic.ts:c69e015db47b405136cf3f324f91e703fb6fe1c85f2b2b42363ae5d9df2bd1b1",
+      "src/logic.ts:f3521ab179ab483d26df09d0d41a64055f8fc3ee6a4d50c0c030b9ae97a6eecf"
+    ],
+    "shared_classifications_agree": true,
+    "shared_count": 18
+  },
+  {
+    "equal_mutation_scope": true,
+    "explained_no_coverage_refinements": [],
+    "fixture": "stateful",
+    "kind": "optimized-reference",
+    "left_count": 4,
+    "left_only": {},
+    "left_run": "warmup-01-stateful-oximut-clean-fresh",
+    "mismatches": [],
+    "ratio_eligible": true,
+    "right_count": 4,
+    "right_only": {},
+    "right_run": "warmup-01-stateful-oximut-clean-persistent",
+    "round_index": 0,
+    "shared": [
+      "src/service.ts:12b2bd39913bc79f0ee98da09a4432e3f0a11e10dba453d7e46f655fad8db7b7",
+      "src/service.ts:207044c1a2eb276c9daceea34bf80a9f3d6790d1c618019f2362f9e23bc0a1b6",
+      "src/service.ts:cbd93400b7fd6a3e67cf75a6774cf2b6ee65fc32c4cb20a849a0608c9a5dbebc",
+      "src/service.ts:d7beb0ca44da3c31c7a3e39b72b41add3837e42aa59cb0727f87288279e7a502"
+    ],
+    "shared_classifications_agree": true,
+    "shared_count": 4
+  },
+  {
+    "equal_mutation_scope": true,
+    "explained_no_coverage_refinements": [],
+    "fixture": "stateful",
+    "kind": "optimized-reference",
+    "left_count": 4,
+    "left_only": {},
+    "left_run": "warmup-01-stateful-oximut-clean-fresh",
+    "mismatches": [],
+    "ratio_eligible": true,
+    "right_count": 4,
+    "right_only": {},
+    "right_run": "warmup-01-stateful-oximut-clean-selection",
+    "round_index": 0,
+    "shared": [
+      "src/service.ts:12b2bd39913bc79f0ee98da09a4432e3f0a11e10dba453d7e46f655fad8db7b7",
+      "src/service.ts:207044c1a2eb276c9daceea34bf80a9f3d6790d1c618019f2362f9e23bc0a1b6",
+      "src/service.ts:cbd93400b7fd6a3e67cf75a6774cf2b6ee65fc32c4cb20a849a0608c9a5dbebc",
+      "src/service.ts:d7beb0ca44da3c31c7a3e39b72b41add3837e42aa59cb0727f87288279e7a502"
+    ],
+    "shared_classifications_agree": true,
+    "shared_count": 4
+  },
+  {
+    "equal_mutation_scope": false,
+    "explained_no_coverage_refinements": [],
+    "fixture": "stateful",
+    "kind": "cross-tool",
+    "left_count": 4,
+    "left_only": {},
+    "left_run": "warmup-01-stateful-oximut-clean-fresh",
+    "mismatches": [],
+    "ratio_eligible": false,
+    "right_count": 5,
+    "right_only": {
+      "src/service.ts:1b97fe27db3d11b7d0d4094e5a96ea564bb9c5f477b03e532cfe4113713dcaf3": {
+        "file": "src/service.ts",
+        "id": "11",
+        "location": {
+          "end": {
+            "column": 37,
+            "line": 17
+          },
+          "start": {
+            "column": 10,
+            "line": 17
+          }
+        },
+        "operator": "EqualityOperator",
+        "outcome": "killed",
+        "replacement": "value + adjustment > limit",
+        "selection": null
+      }
+    },
+    "right_run": "warmup-01-stateful-stryker-clean-stryker",
+    "round_index": 0,
+    "shared": [
+      "src/service.ts:12b2bd39913bc79f0ee98da09a4432e3f0a11e10dba453d7e46f655fad8db7b7",
+      "src/service.ts:207044c1a2eb276c9daceea34bf80a9f3d6790d1c618019f2362f9e23bc0a1b6",
+      "src/service.ts:cbd93400b7fd6a3e67cf75a6774cf2b6ee65fc32c4cb20a849a0608c9a5dbebc",
+      "src/service.ts:d7beb0ca44da3c31c7a3e39b72b41add3837e42aa59cb0727f87288279e7a502"
+    ],
+    "shared_classifications_agree": true,
+    "shared_count": 4
+  },
+  {
+    "equal_mutation_scope": false,
+    "explained_no_coverage_refinements": [],
+    "fixture": "stateful",
+    "kind": "cross-tool",
+    "left_count": 4,
+    "left_only": {},
+    "left_run": "measured-01-stateful-oximut-clean-fresh",
+    "mismatches": [],
+    "ratio_eligible": false,
+    "right_count": 5,
+    "right_only": {
+      "src/service.ts:1b97fe27db3d11b7d0d4094e5a96ea564bb9c5f477b03e532cfe4113713dcaf3": {
+        "file": "src/service.ts",
+        "id": "11",
+        "location": {
+          "end": {
+            "column": 37,
+            "line": 17
+          },
+          "start": {
+            "column": 10,
+            "line": 17
+          }
+        },
+        "operator": "EqualityOperator",
+        "outcome": "killed",
+        "replacement": "value + adjustment > limit",
+        "selection": null
+      }
+    },
+    "right_run": "measured-01-stateful-stryker-clean-stryker",
+    "round_index": 1,
+    "shared": [
+      "src/service.ts:12b2bd39913bc79f0ee98da09a4432e3f0a11e10dba453d7e46f655fad8db7b7",
+      "src/service.ts:207044c1a2eb276c9daceea34bf80a9f3d6790d1c618019f2362f9e23bc0a1b6",
+      "src/service.ts:cbd93400b7fd6a3e67cf75a6774cf2b6ee65fc32c4cb20a849a0608c9a5dbebc",
+      "src/service.ts:d7beb0ca44da3c31c7a3e39b72b41add3837e42aa59cb0727f87288279e7a502"
+    ],
+    "shared_classifications_agree": true,
+    "shared_count": 4
+  },
+  {
+    "equal_mutation_scope": true,
+    "explained_no_coverage_refinements": [],
+    "fixture": "stateful",
+    "kind": "optimized-reference",
+    "left_count": 4,
+    "left_only": {},
+    "left_run": "measured-01-stateful-oximut-clean-fresh",
+    "mismatches": [],
+    "ratio_eligible": true,
+    "right_count": 4,
+    "right_only": {},
+    "right_run": "measured-01-stateful-oximut-clean-selection",
+    "round_index": 1,
+    "shared": [
+      "src/service.ts:12b2bd39913bc79f0ee98da09a4432e3f0a11e10dba453d7e46f655fad8db7b7",
+      "src/service.ts:207044c1a2eb276c9daceea34bf80a9f3d6790d1c618019f2362f9e23bc0a1b6",
+      "src/service.ts:cbd93400b7fd6a3e67cf75a6774cf2b6ee65fc32c4cb20a849a0608c9a5dbebc",
+      "src/service.ts:d7beb0ca44da3c31c7a3e39b72b41add3837e42aa59cb0727f87288279e7a502"
+    ],
+    "shared_classifications_agree": true,
+    "shared_count": 4
+  },
+  {
+    "equal_mutation_scope": true,
+    "explained_no_coverage_refinements": [],
+    "fixture": "stateful",
+    "kind": "optimized-reference",
+    "left_count": 4,
+    "left_only": {},
+    "left_run": "measured-01-stateful-oximut-clean-fresh",
+    "mismatches": [],
+    "ratio_eligible": true,
+    "right_count": 4,
+    "right_only": {},
+    "right_run": "measured-01-stateful-oximut-clean-persistent",
+    "round_index": 1,
+    "shared": [
+      "src/service.ts:12b2bd39913bc79f0ee98da09a4432e3f0a11e10dba453d7e46f655fad8db7b7",
+      "src/service.ts:207044c1a2eb276c9daceea34bf80a9f3d6790d1c618019f2362f9e23bc0a1b6",
+      "src/service.ts:cbd93400b7fd6a3e67cf75a6774cf2b6ee65fc32c4cb20a849a0608c9a5dbebc",
+      "src/service.ts:d7beb0ca44da3c31c7a3e39b72b41add3837e42aa59cb0727f87288279e7a502"
+    ],
+    "shared_classifications_agree": true,
+    "shared_count": 4
+  },
+  {
+    "equal_mutation_scope": true,
+    "explained_no_coverage_refinements": [],
+    "fixture": "stateful",
+    "kind": "optimized-reference",
+    "left_count": 4,
+    "left_only": {},
+    "left_run": "measured-02-stateful-oximut-clean-fresh",
+    "mismatches": [],
+    "ratio_eligible": true,
+    "right_count": 4,
+    "right_only": {},
+    "right_run": "measured-02-stateful-oximut-clean-persistent",
+    "round_index": 2,
+    "shared": [
+      "src/service.ts:12b2bd39913bc79f0ee98da09a4432e3f0a11e10dba453d7e46f655fad8db7b7",
+      "src/service.ts:207044c1a2eb276c9daceea34bf80a9f3d6790d1c618019f2362f9e23bc0a1b6",
+      "src/service.ts:cbd93400b7fd6a3e67cf75a6774cf2b6ee65fc32c4cb20a849a0608c9a5dbebc",
+      "src/service.ts:d7beb0ca44da3c31c7a3e39b72b41add3837e42aa59cb0727f87288279e7a502"
+    ],
+    "shared_classifications_agree": true,
+    "shared_count": 4
+  },
+  {
+    "equal_mutation_scope": true,
+    "explained_no_coverage_refinements": [],
+    "fixture": "stateful",
+    "kind": "optimized-reference",
+    "left_count": 4,
+    "left_only": {},
+    "left_run": "measured-02-stateful-oximut-clean-fresh",
+    "mismatches": [],
+    "ratio_eligible": true,
+    "right_count": 4,
+    "right_only": {},
+    "right_run": "measured-02-stateful-oximut-clean-selection",
+    "round_index": 2,
+    "shared": [
+      "src/service.ts:12b2bd39913bc79f0ee98da09a4432e3f0a11e10dba453d7e46f655fad8db7b7",
+      "src/service.ts:207044c1a2eb276c9daceea34bf80a9f3d6790d1c618019f2362f9e23bc0a1b6",
+      "src/service.ts:cbd93400b7fd6a3e67cf75a6774cf2b6ee65fc32c4cb20a849a0608c9a5dbebc",
+      "src/service.ts:d7beb0ca44da3c31c7a3e39b72b41add3837e42aa59cb0727f87288279e7a502"
+    ],
+    "shared_classifications_agree": true,
+    "shared_count": 4
+  },
+  {
+    "equal_mutation_scope": false,
+    "explained_no_coverage_refinements": [],
+    "fixture": "stateful",
+    "kind": "cross-tool",
+    "left_count": 4,
+    "left_only": {},
+    "left_run": "measured-02-stateful-oximut-clean-fresh",
+    "mismatches": [],
+    "ratio_eligible": false,
+    "right_count": 5,
+    "right_only": {
+      "src/service.ts:1b97fe27db3d11b7d0d4094e5a96ea564bb9c5f477b03e532cfe4113713dcaf3": {
+        "file": "src/service.ts",
+        "id": "11",
+        "location": {
+          "end": {
+            "column": 37,
+            "line": 17
+          },
+          "start": {
+            "column": 10,
+            "line": 17
+          }
+        },
+        "operator": "EqualityOperator",
+        "outcome": "killed",
+        "replacement": "value + adjustment > limit",
+        "selection": null
+      }
+    },
+    "right_run": "measured-02-stateful-stryker-clean-stryker",
+    "round_index": 2,
+    "shared": [
+      "src/service.ts:12b2bd39913bc79f0ee98da09a4432e3f0a11e10dba453d7e46f655fad8db7b7",
+      "src/service.ts:207044c1a2eb276c9daceea34bf80a9f3d6790d1c618019f2362f9e23bc0a1b6",
+      "src/service.ts:cbd93400b7fd6a3e67cf75a6774cf2b6ee65fc32c4cb20a849a0608c9a5dbebc",
+      "src/service.ts:d7beb0ca44da3c31c7a3e39b72b41add3837e42aa59cb0727f87288279e7a502"
+    ],
+    "shared_classifications_agree": true,
+    "shared_count": 4
+  },
+  {
+    "equal_mutation_scope": false,
+    "explained_no_coverage_refinements": [],
+    "fixture": "stateful",
+    "kind": "cross-tool",
+    "left_count": 4,
+    "left_only": {},
+    "left_run": "measured-03-stateful-oximut-clean-fresh",
+    "mismatches": [],
+    "ratio_eligible": false,
+    "right_count": 5,
+    "right_only": {
+      "src/service.ts:1b97fe27db3d11b7d0d4094e5a96ea564bb9c5f477b03e532cfe4113713dcaf3": {
+        "file": "src/service.ts",
+        "id": "11",
+        "location": {
+          "end": {
+            "column": 37,
+            "line": 17
+          },
+          "start": {
+            "column": 10,
+            "line": 17
+          }
+        },
+        "operator": "EqualityOperator",
+        "outcome": "killed",
+        "replacement": "value + adjustment > limit",
+        "selection": null
+      }
+    },
+    "right_run": "measured-03-stateful-stryker-clean-stryker",
+    "round_index": 3,
+    "shared": [
+      "src/service.ts:12b2bd39913bc79f0ee98da09a4432e3f0a11e10dba453d7e46f655fad8db7b7",
+      "src/service.ts:207044c1a2eb276c9daceea34bf80a9f3d6790d1c618019f2362f9e23bc0a1b6",
+      "src/service.ts:cbd93400b7fd6a3e67cf75a6774cf2b6ee65fc32c4cb20a849a0608c9a5dbebc",
+      "src/service.ts:d7beb0ca44da3c31c7a3e39b72b41add3837e42aa59cb0727f87288279e7a502"
+    ],
+    "shared_classifications_agree": true,
+    "shared_count": 4
+  },
+  {
+    "equal_mutation_scope": true,
+    "explained_no_coverage_refinements": [],
+    "fixture": "stateful",
+    "kind": "optimized-reference",
+    "left_count": 4,
+    "left_only": {},
+    "left_run": "measured-03-stateful-oximut-clean-fresh",
+    "mismatches": [],
+    "ratio_eligible": true,
+    "right_count": 4,
+    "right_only": {},
+    "right_run": "measured-03-stateful-oximut-clean-selection",
+    "round_index": 3,
+    "shared": [
+      "src/service.ts:12b2bd39913bc79f0ee98da09a4432e3f0a11e10dba453d7e46f655fad8db7b7",
+      "src/service.ts:207044c1a2eb276c9daceea34bf80a9f3d6790d1c618019f2362f9e23bc0a1b6",
+      "src/service.ts:cbd93400b7fd6a3e67cf75a6774cf2b6ee65fc32c4cb20a849a0608c9a5dbebc",
+      "src/service.ts:d7beb0ca44da3c31c7a3e39b72b41add3837e42aa59cb0727f87288279e7a502"
+    ],
+    "shared_classifications_agree": true,
+    "shared_count": 4
+  },
+  {
+    "equal_mutation_scope": true,
+    "explained_no_coverage_refinements": [],
+    "fixture": "stateful",
+    "kind": "optimized-reference",
+    "left_count": 4,
+    "left_only": {},
+    "left_run": "measured-03-stateful-oximut-clean-fresh",
+    "mismatches": [],
+    "ratio_eligible": true,
+    "right_count": 4,
+    "right_only": {},
+    "right_run": "measured-03-stateful-oximut-clean-persistent",
+    "round_index": 3,
+    "shared": [
+      "src/service.ts:12b2bd39913bc79f0ee98da09a4432e3f0a11e10dba453d7e46f655fad8db7b7",
+      "src/service.ts:207044c1a2eb276c9daceea34bf80a9f3d6790d1c618019f2362f9e23bc0a1b6",
+      "src/service.ts:cbd93400b7fd6a3e67cf75a6774cf2b6ee65fc32c4cb20a849a0608c9a5dbebc",
+      "src/service.ts:d7beb0ca44da3c31c7a3e39b72b41add3837e42aa59cb0727f87288279e7a502"
+    ],
+    "shared_classifications_agree": true,
+    "shared_count": 4
+  },
+  {
+    "equal_mutation_scope": true,
+    "explained_no_coverage_refinements": [],
+    "fixture": "stateful",
+    "kind": "optimized-reference",
+    "left_count": 4,
+    "left_only": {},
+    "left_run": "measured-04-stateful-oximut-clean-fresh",
+    "mismatches": [],
+    "ratio_eligible": true,
+    "right_count": 4,
+    "right_only": {},
+    "right_run": "measured-04-stateful-oximut-clean-persistent",
+    "round_index": 4,
+    "shared": [
+      "src/service.ts:12b2bd39913bc79f0ee98da09a4432e3f0a11e10dba453d7e46f655fad8db7b7",
+      "src/service.ts:207044c1a2eb276c9daceea34bf80a9f3d6790d1c618019f2362f9e23bc0a1b6",
+      "src/service.ts:cbd93400b7fd6a3e67cf75a6774cf2b6ee65fc32c4cb20a849a0608c9a5dbebc",
+      "src/service.ts:d7beb0ca44da3c31c7a3e39b72b41add3837e42aa59cb0727f87288279e7a502"
+    ],
+    "shared_classifications_agree": true,
+    "shared_count": 4
+  },
+  {
+    "equal_mutation_scope": true,
+    "explained_no_coverage_refinements": [],
+    "fixture": "stateful",
+    "kind": "optimized-reference",
+    "left_count": 4,
+    "left_only": {},
+    "left_run": "measured-04-stateful-oximut-clean-fresh",
+    "mismatches": [],
+    "ratio_eligible": true,
+    "right_count": 4,
+    "right_only": {},
+    "right_run": "measured-04-stateful-oximut-clean-selection",
+    "round_index": 4,
+    "shared": [
+      "src/service.ts:12b2bd39913bc79f0ee98da09a4432e3f0a11e10dba453d7e46f655fad8db7b7",
+      "src/service.ts:207044c1a2eb276c9daceea34bf80a9f3d6790d1c618019f2362f9e23bc0a1b6",
+      "src/service.ts:cbd93400b7fd6a3e67cf75a6774cf2b6ee65fc32c4cb20a849a0608c9a5dbebc",
+      "src/service.ts:d7beb0ca44da3c31c7a3e39b72b41add3837e42aa59cb0727f87288279e7a502"
+    ],
+    "shared_classifications_agree": true,
+    "shared_count": 4
+  },
+  {
+    "equal_mutation_scope": false,
+    "explained_no_coverage_refinements": [],
+    "fixture": "stateful",
+    "kind": "cross-tool",
+    "left_count": 4,
+    "left_only": {},
+    "left_run": "measured-04-stateful-oximut-clean-fresh",
+    "mismatches": [],
+    "ratio_eligible": false,
+    "right_count": 5,
+    "right_only": {
+      "src/service.ts:1b97fe27db3d11b7d0d4094e5a96ea564bb9c5f477b03e532cfe4113713dcaf3": {
+        "file": "src/service.ts",
+        "id": "11",
+        "location": {
+          "end": {
+            "column": 37,
+            "line": 17
+          },
+          "start": {
+            "column": 10,
+            "line": 17
+          }
+        },
+        "operator": "EqualityOperator",
+        "outcome": "killed",
+        "replacement": "value + adjustment > limit",
+        "selection": null
+      }
+    },
+    "right_run": "measured-04-stateful-stryker-clean-stryker",
+    "round_index": 4,
+    "shared": [
+      "src/service.ts:12b2bd39913bc79f0ee98da09a4432e3f0a11e10dba453d7e46f655fad8db7b7",
+      "src/service.ts:207044c1a2eb276c9daceea34bf80a9f3d6790d1c618019f2362f9e23bc0a1b6",
+      "src/service.ts:cbd93400b7fd6a3e67cf75a6774cf2b6ee65fc32c4cb20a849a0608c9a5dbebc",
+      "src/service.ts:d7beb0ca44da3c31c7a3e39b72b41add3837e42aa59cb0727f87288279e7a502"
+    ],
+    "shared_classifications_agree": true,
+    "shared_count": 4
+  },
+  {
+    "equal_mutation_scope": false,
+    "explained_no_coverage_refinements": [],
+    "fixture": "stateful",
+    "kind": "cross-tool",
+    "left_count": 4,
+    "left_only": {},
+    "left_run": "measured-05-stateful-oximut-clean-fresh",
+    "mismatches": [],
+    "ratio_eligible": false,
+    "right_count": 5,
+    "right_only": {
+      "src/service.ts:1b97fe27db3d11b7d0d4094e5a96ea564bb9c5f477b03e532cfe4113713dcaf3": {
+        "file": "src/service.ts",
+        "id": "11",
+        "location": {
+          "end": {
+            "column": 37,
+            "line": 17
+          },
+          "start": {
+            "column": 10,
+            "line": 17
+          }
+        },
+        "operator": "EqualityOperator",
+        "outcome": "killed",
+        "replacement": "value + adjustment > limit",
+        "selection": null
+      }
+    },
+    "right_run": "measured-05-stateful-stryker-clean-stryker",
+    "round_index": 5,
+    "shared": [
+      "src/service.ts:12b2bd39913bc79f0ee98da09a4432e3f0a11e10dba453d7e46f655fad8db7b7",
+      "src/service.ts:207044c1a2eb276c9daceea34bf80a9f3d6790d1c618019f2362f9e23bc0a1b6",
+      "src/service.ts:cbd93400b7fd6a3e67cf75a6774cf2b6ee65fc32c4cb20a849a0608c9a5dbebc",
+      "src/service.ts:d7beb0ca44da3c31c7a3e39b72b41add3837e42aa59cb0727f87288279e7a502"
+    ],
+    "shared_classifications_agree": true,
+    "shared_count": 4
+  },
+  {
+    "equal_mutation_scope": true,
+    "explained_no_coverage_refinements": [],
+    "fixture": "stateful",
+    "kind": "optimized-reference",
+    "left_count": 4,
+    "left_only": {},
+    "left_run": "measured-05-stateful-oximut-clean-fresh",
+    "mismatches": [],
+    "ratio_eligible": true,
+    "right_count": 4,
+    "right_only": {},
+    "right_run": "measured-05-stateful-oximut-clean-selection",
+    "round_index": 5,
+    "shared": [
+      "src/service.ts:12b2bd39913bc79f0ee98da09a4432e3f0a11e10dba453d7e46f655fad8db7b7",
+      "src/service.ts:207044c1a2eb276c9daceea34bf80a9f3d6790d1c618019f2362f9e23bc0a1b6",
+      "src/service.ts:cbd93400b7fd6a3e67cf75a6774cf2b6ee65fc32c4cb20a849a0608c9a5dbebc",
+      "src/service.ts:d7beb0ca44da3c31c7a3e39b72b41add3837e42aa59cb0727f87288279e7a502"
+    ],
+    "shared_classifications_agree": true,
+    "shared_count": 4
+  },
+  {
+    "equal_mutation_scope": true,
+    "explained_no_coverage_refinements": [],
+    "fixture": "stateful",
+    "kind": "optimized-reference",
+    "left_count": 4,
+    "left_only": {},
+    "left_run": "measured-05-stateful-oximut-clean-fresh",
+    "mismatches": [],
+    "ratio_eligible": true,
+    "right_count": 4,
+    "right_only": {},
+    "right_run": "measured-05-stateful-oximut-clean-persistent",
+    "round_index": 5,
+    "shared": [
+      "src/service.ts:12b2bd39913bc79f0ee98da09a4432e3f0a11e10dba453d7e46f655fad8db7b7",
+      "src/service.ts:207044c1a2eb276c9daceea34bf80a9f3d6790d1c618019f2362f9e23bc0a1b6",
+      "src/service.ts:cbd93400b7fd6a3e67cf75a6774cf2b6ee65fc32c4cb20a849a0608c9a5dbebc",
+      "src/service.ts:d7beb0ca44da3c31c7a3e39b72b41add3837e42aa59cb0727f87288279e7a502"
+    ],
+    "shared_classifications_agree": true,
+    "shared_count": 4
+  }
+]

@@ -153,45 +153,68 @@ performance claim is made.
 
 Depends on M2; integrate with M3–M4 before release.
 
-- [ ] Define worker count and memory budget configuration with explicit units.
-- [ ] Measure aggregate controller/adapter/test-process memory, accounting for
+- [x] Define worker count and memory budget configuration with explicit units.
+- [x] Measure aggregate controller/adapter/test-process memory, accounting for
   descendants and container limits where available.
-- [ ] Own concurrency centrally; bound Vitest's internal parallelism to avoid
+- [x] Own concurrency centrally; bound Vitest's internal parallelism to avoid
   multiplying worker pools.
-- [ ] Use measured worker cost and reserved headroom to admit jobs; pause new
+- [x] Use measured worker cost and reserved headroom to admit jobs; pause new
   work and recycle idle workers under pressure.
-- [ ] Handle a single job exceeding the budget without retry loops or false kills.
-- [ ] Clearly distinguish best-effort admission control from OS-enforced hard caps.
+- [x] Handle a single job exceeding the budget without retry loops or false kills.
+- [x] Clearly distinguish best-effort admission control from OS-enforced hard caps.
 
 **Gate:** stress tests show controlled worker admission, clean shutdown, and
 explicit resource-exhaustion outcomes. Budget compliance claims specify platform,
 measurement method, sampling interval, and enforcement mechanism.
 
+Implementation evidence: [M5 budget contract](docs/m5.md) and the M1–M5
+acceptance suites, including admission, recycling, resource exhaustion, sibling
+isolation, and shutdown. M6 retains the current validation logs with its results.
+
 ## M6 — Benchmark and alpha release decision
 
 Depends on M3, M4, and M5.
 
-- [ ] Execute the [benchmark protocol](docs/benchmarks.md) and commit raw results.
-- [ ] Resolve classification mismatches before publishing speed comparisons.
-- [ ] Publish a compatibility matrix, known limitations, report schema, and
+- [x] Execute the initial deterministic-fixture campaign from the
+  [benchmark protocol](docs/benchmarks.md) and commit raw results. Record broader
+  release experiments as follow-up rather than claiming the full protocol passed.
+- [x] Resolve classification mismatches before publishing speed comparisons.
+  Shared classifications agree; unequal cross-tool scopes suppress speed ratios.
+- [x] Publish a compatibility matrix, known limitations, report schema, and
   reproducible commands. Document clean and incremental performance separately.
-- [ ] Choose a license, confirm package-name availability, and test installation
+- [x] Choose a license, check package-name availability, and test source installation
   before any public release.
 
 **Gate:** meet the proposed performance targets or document evidence for revising
 the design. An alpha must have passing correctness and resource-failure tests
 regardless of performance.
 
+Implementation evidence: [M6 decision](docs/m6.md), [recorded measurements and
+validation](benchmarks/results/2026-10-26-m6-arm64/README.md), benchmark gate tests,
+and the source-installation smoke. Correctness/resource tests and all seven
+changed-input probes pass. Persistent execution improves elapsed time on these
+fixtures while retaining slightly more memory; unchanged caching regresses time
+on the small M1 fixture. The rejected initial cache-harness campaign is retained.
+
+**Gate result:** hold public alpha performance claims. The measured cache
+regression and controller memory cost justify profiling/revising the design;
+the Stryker workloads do not yet match exactly. Real projects, generated scaling,
+and repeated native-host CPU/memory-budget experiments remain release follow-up,
+not completed evidence. No public package has been released.
+
 ## Next implementation task
 
-M5: implement resource-aware admission and CPU/memory budgets. Preserve M4 cache
-validity, baseline validation, M3 attribution safeguards, M2 fresh-fork isolation,
-and the full-suite fresh-process reference.
+Profile the cache-enabled path without weakening complete-input hashing or fresh
+baseline validation. Establish equivalent Stryker mutation scope and expand the
+protocol to pinned real projects, generated scaling, and native Linux budget
+measurements before reconsidering an alpha. Preserve M1–M5 correctness safeguards.
 
 ## Decisions still open
 
 - Compatibility expansion beyond the exact versions pinned in M0.
-- Safe reuse boundary in Vitest: prove in M0/M2.
-- Linux-first hard memory enforcement versus portable soft budgets: decide in M5.
-- Public name, license, distribution targets, and npm packaging: decide in M6.
+- Broader test-worker reuse beyond the controller boundary proven in M0/M2.
+- Hard memory enforcement beyond M5 Linux sampled admission/cancellation.
+- Final public package reservation, binary targets/provenance, and a smaller npm
+  runtime bundle. M6 chooses MIT and tested Linux source installation; no package
+  is published.
 - Performance scope: benchmark pure modules and application-like tests separately.

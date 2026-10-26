@@ -92,3 +92,65 @@ and rejects incomplete or disagreeing outcomes. It saves all reports and timing
 samples, plus environment and implementation hashes. It measures elapsed time
 only; the M0 CPU/RSS methodology above does not apply to these samples. See
 [M2 semantics](../docs/m2.md) for isolation and scope.
+
+## M6 correctness-gated measurements
+
+Build outside the measurement window and run the harness alone:
+
+```sh
+cargo build --release --locked -p oximut-cli
+python3 benchmarks/m6.py --binary target/release/oximut \
+  --fixtures pure stateful --scenarios clean --repetitions 5 --warmups 1 \
+  --output .oximut/m6-clean
+python3 benchmarks/m6.py --binary target/release/oximut \
+  --fixtures m1 --tools oximut stryker --scenarios incremental --changes \
+  --repetitions 5 --warmups 1 --output .oximut/m6-incremental
+```
+
+Clean scenarios measure ordinary Vitest, fresh Oximut, persistent Oximut,
+persistent Oximut with selection, and tuned Stryker. Incremental scenarios
+measure a cache prime separately, then unchanged or edited execution paired with
+a forced run. Oximut cache pairs keep the live report destination and inherited
+benchmark environment stable because both participate in cache identity; each
+fresh report is then archived separately. `--changes source test helper snapshot config lockfile environment`
+selects input edits; the default selects source and test. These edits preserve
+test behavior. The imported helper changes an unused export; the snapshot is an
+inert fingerprint probe. They establish invalidation behavior, not sensitivity
+to every semantic change. The M4 regression suite supplies additional input cases.
+Oximut changed-input gates require a persisted eligible prime and zero reused
+outcomes. Stryker pairs record its native reuse and compare outcomes; agreement
+after behavior-preserving edits does not prove Stryker invalidates those inputs.
+
+Each invocation starts fresh processes and uses isolated fixture copies with
+shared installed dependencies. Setup is excluded and recorded; OS filesystem
+caches are left untouched. Scenario/fixture order and forced/incremental pair
+order alternate. The default is five measured repetitions after one warmup.
+`--workers` sets outer concurrency; `--memory-budget-mib` sets Oximut's soft
+admission budget only. Separate runs can explore budgets without implying that
+Stryker implements an equivalent cap.
+
+The M0 process-tree CPU/RSS sampler described above supplies the measurements.
+`metadata.json`, `measurements.jsonl`, `measurements.csv`, `summary.json`, and
+`comparisons.json` retain commands, configuration hashes, environment, medians,
+min/max spread, warmups, failures, overlap/exclusions, and correctness gates.
+Raw reports and bounded logs are retained per invocation. Fixture copies are
+archived as `project-inputs.json` and removed; `--keep-projects` retains them for
+debugging. Reproduction uses the harness command, not stale absolute paths in a
+recorded raw invocation.
+
+Mutation identity is the exact edited file content plus relative filename,
+including UTF-16 position conversion. Formatting/parentheses differences remain
+exclusions. Shared outcomes must agree before comparisons pass. A sound selection
+refinement from survived to no-coverage is recorded explicitly. Cross-tool ratios
+are suppressed unless the **entire** mutation sets agree; partial overlap does
+not justify a full-run speed claim. Any failed report, incomplete outcome,
+classification disagreement, or unstable repeated outcome fails the harness.
+Ordinary Vitest and Stryker inventories are checked by file/count and compared
+across repetitions. Oximut full-run reports expose baseline counts without test
+identities; those scenarios validate expected fixture counts, not identity-level
+inventory stability. This is a limit of the current report evidence.
+Single-repeat smoke/input-change runs are correctness evidence only.
+
+The harness covers deterministic fixtures. Real projects, generated scaling,
+resource-failure stress, and public release readiness require separate evidence;
+see [the M6 decision](../docs/m6.md).

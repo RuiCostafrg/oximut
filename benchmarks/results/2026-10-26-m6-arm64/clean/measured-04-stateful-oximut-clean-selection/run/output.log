@@ -1,0 +1,19 @@
+Baseline: Passed (4 passed, 0 failed, 0 skipped)
+killed 6140bcbf3946 /root/oximut/benchmarks/results/2026-10-26-m6-arm64/clean/measured-04-stateful-oximut-clean-selection/project/src/service.ts:17:16 + -> -
+  expected true to be false // Object.is equality
+  Selected tests: 3/4 (files); reasons: whole-file-preserves-sequential-state-and-hooks
+killed 113878dec120 /root/oximut/benchmarks/results/2026-10-26-m6-arm64/clean/measured-04-stateful-oximut-clean-selection/project/src/service.ts:12:28 + -> -
+  expected 13 to be 15 // Object.is equality
+  Selected tests: 3/4 (files); reasons: whole-file-preserves-sequential-state-and-hooks
+killed 019a5fa50bb6 /root/oximut/benchmarks/results/2026-10-26-m6-arm64/clean/measured-04-stateful-oximut-clean-selection/project/src/service.ts:17:29 <= -> <
+  expected false to be true // Object.is equality
+  Selected tests: 3/4 (files); reasons: whole-file-preserves-sequential-state-and-hooks
+killed 8fde30771865 /root/oximut/benchmarks/results/2026-10-26-m6-arm64/clean/measured-04-stateful-oximut-clean-selection/project/src/service.ts:12:15 + -> -
+  expected 7 to be 15 // Object.is equality
+  Selected tests: 3/4 (files); reasons: whole-file-preserves-sequential-state-and-hooks
+Mutants: 4 total, 4 killed, 0 survived, 0 no-coverage, 0 invalid, 0 timeout, 0 infrastructure-error, 0 resource-exhausted, 0 skipped
+Score: 100.00% (4/4); complete: true
+Cache: forced-no-cache; instrumentation hits/misses: 0/0; outcome hits/misses: 0/0; not-written
+Diagnostic: /root/oximut/benchmarks/results/2026-10-26-m6-arm64/clean/measured-04-stateful-oximut-clean-selection/project/src/service.ts: mutation switching fallback: process identifier may shadow or modify the Node selector; using fresh static mutants
+Diagnostic: execution=persistent; isolation=fresh-test-forks; controller reuse only; baseline=original-and-disabled-switches
+Diagnostic: adapter observed reuse boundary: controller

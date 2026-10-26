@@ -3,7 +3,7 @@
 Mutation testing for JavaScript and TypeScript, designed around a Rust + Oxc
 instrumentation engine and a thin Vitest adapter.
 
-**Status: M5 CPU and memory budgets.** The repository generates JS/TS mutants with
+**Status: M6 benchmark and alpha release evaluation.** The repository generates JS/TS mutants with
 Oxc and executes them with bounded worker concurrency, with text and JSON reports. Fresh execution
 remains the default correctness reference; opt-in persistent execution shares
 transformed code and a Vitest controller while retaining fresh test processes.
@@ -34,10 +34,13 @@ Oximut is a working name.
 - [M3 selection](docs/m3.md): baseline attribution, conservative selection, and fallbacks.
 - [M4 cache](docs/m4.md): conservative fingerprints, input declarations, and forced execution.
 - [M5 budgets](docs/m5.md): worker limits, memory units, admission, and enforcement limits.
+- [M6 decision](docs/m6.md): measured scope, release gates, and remaining work.
+- [Compatibility](docs/compatibility.md), [report schema](docs/report-schema.md), and [source installation](docs/install.md).
 - [Architecture](docs/architecture.md): ownership, execution protocol, and correctness rules.
 - [Benchmark plan](docs/benchmarks.md): fair comparison with Stryker and success criteria.
 - [Vitest lifecycle decision](docs/adr/0001-vitest-lifecycle.md): measured reuse boundaries.
 - [Recorded M0 results](benchmarks/results/2026-10-23-m0-arm64/README.md): five-repeat baselines and lifecycle evidence.
+- [Recorded M6 results](benchmarks/results/2026-10-26-m6-arm64/README.md): clean and incremental measurements, regressions, and release decision.
 - [Benchmark harness](benchmarks/README.md): commands and measurement limitations.
 
 ## Run the feasibility checks
@@ -117,4 +120,5 @@ the default remains one worker.
 - [Stryker architecture](https://stryker-mutator.io/docs/stryker-js/guides/create-a-plugin/)
 - [Stryker configuration](https://stryker-mutator.io/docs/stryker-js/configuration/)
 
-License and public package naming will be decided before distribution.
+Licensed under [MIT](LICENSE). `oximut` remains a working name; see the
+[M6 decision](docs/m6.md) before treating this prototype as a public alpha.

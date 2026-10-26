@@ -52,11 +52,15 @@ jobs:
         run: cargo run --locked -p oximut-oxc-smoke -- fixtures/pure/src/logic.ts fixtures/stateful/src/service.ts
       - name: Baseline smoke (not a performance comparison)
         run: python3 benchmarks/run.py --repetitions 1 --warmups 0 --timeout 180 --output .oximut/ci-baselines
+      - name: M6 benchmark harness smoke (not a performance claim)
+        run: python3 benchmarks/m6.py --fixtures m1 --tools oximut --scenarios clean --repetitions 1 --warmups 0 --output .oximut/ci-m6
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: always()
         with:
-          name: m0-feasibility-results
-          path: .oximut/ci-baselines/**
+          name: feasibility-results
+          path: |
+            .oximut/ci-baselines/**
+            .oximut/ci-m6/**
           include-hidden-files: true
           if-no-files-found: warn
           retention-days: 7

@@ -1,0 +1,45 @@
+{
+  "runtime": {
+    "node": "26.3.1 Linux",
+    "npm": "11.16.0",
+    "rust": "1.96.0"
+  },
+  "acceptance": {
+    "passed": 33,
+    "failed": 0,
+    "log": "acceptance.txt"
+  },
+  "rust_workspace_tests": "passed",
+  "cargo_fmt": "passed",
+  "clippy_warnings_denied": "passed",
+  "adapter_initial": {
+    "passed": 18,
+    "failed": 1,
+    "condition": "concurrent acceptance/build load",
+    "log": "adapter-initial-loaded-run.txt"
+  },
+  "adapter_isolated_rerun": {
+    "passed": 1,
+    "failed": 0,
+    "log": "adapter-isolated-rerun.txt"
+  },
+  "biome_format": "passed",
+  "biome_lint": "passed",
+  "typescript": "passed",
+  "benchmark_unit_tests": {
+    "passed": 40,
+    "failed": 0,
+    "log": "benchmark-tests.txt"
+  },
+  "install_launcher_unit_tests": 2,
+  "lifecycle_experiment": "passed",
+  "npm_audit_vulnerabilities": 0,
+  "scope": "Local Linux arm64/PRoot validation; no hosted CI result asserted.",
+  "report_schema": {
+    "checked": 110,
+    "failed": 0
+  },
+  "m6_ci_smoke": "passed",
+  "actionlint": "passed",
+  "cargo_license_metadata": "all workspace packages MIT"
+}

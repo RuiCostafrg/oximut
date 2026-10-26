@@ -1,0 +1,78 @@
+
+> oximut@0.0.0 test
+> npm run test:fixtures && npm run test:adapter && npm run test:benchmarks
+
+
+> oximut@0.0.0 test:fixtures
+> vitest run --config fixtures/pure/vitest.config.ts && vitest run --config fixtures/stateful/vitest.config.ts
+
+
+ RUN  v4.1.12 /root/oximut/fixtures/pure
+
+
+ Test Files  1 passed (1)
+      Tests  7 passed (7)
+   Start at  07:15:22
+   Duration  706ms (transform 118ms, setup 0ms, import 192ms, tests 17ms, environment 0ms)
+
+
+ RUN  v4.1.12 /root/oximut/fixtures/stateful
+
+
+ Test Files  2 passed (2)
+      Tests  4 passed (4)
+   Start at  07:15:24
+   Duration  1.32s (transform 152ms, setup 0ms, import 262ms, tests 20ms, environment 0ms)
+
+
+> oximut@0.0.0 test:adapter
+> node --test packages/vitest-adapter/test/*.test.mjs
+
+✔ Vitest lifecycle agrees with fresh execution, selects exact IDs, reports coverage and kills a CPU-hung process tree (64814.153517ms)
+✔ M1 rejects malformed requests and protocol versions before execution (797.900312ms)
+✔ M1 runs baseline, unchanged code, known killed and surviving mutations without changing source (12278.045204ms)
+✔ M1 distinguishes invalid transforms from assertions and worker crashes (11627.916194ms)
+✔ M1 never passes empty or entirely skipped execution (6577.82005ms)
+✔ M1 classifies Vitest async test and hook timeouts as timeout (6711.514997ms)
+✖ M1 applies startup deadlines and reaps a CPU-hung test and detached descendant (14911.878588ms)
+✔ M2 reuses controller with fresh test forks, switches import-time selector and clears baseline (13634.288068ms)
+✔ M2 replaces controller after timeout and crash and preserves total deadline (15383.834474ms)
+✔ M2 reaps detached descendants of passing jobs before publishing results (8542.022653ms)
+✔ M2 exposes fresh fallback for global setup and evaluates active setup imports (11556.994891ms)
+✔ M2 invalidates raw imported assets when their contents change (13392.580151ms)
+✔ M3 validates selection and collection requests before executing (50.810261ms)
+✔ M3 collects stable duplicate identities, explicit empty hits and preserves whole-file observers (13319.554162ms)
+✔ M3 treats native require bypass as incomplete collection (3945.576718ms)
+✔ M3 captures hooks and import execution and falls back for concurrent tests (9341.110725ms)
+✔ M3 persistent collection does not retain probes or test filters across jobs (11493.444162ms)
+✔ M3 retains kills when a mutation dynamically skips another test (9299.483955ms)
+✔ M3 function source reflection cannot establish no-coverage (17133.868536ms)
+ℹ tests 19
+ℹ suites 0
+ℹ pass 18
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 65079.386798
+
+✖ failing tests:
+
+test at packages/vitest-adapter/test/m1.test.mjs:168:1
+✖ M1 applies startup deadlines and reaps a CPU-hung test and detached descendant (14911.878588ms)
+  AssertionError [ERR_ASSERTION]: {"protocol":1,"runId":"adapter-test","jobId":"job-1","generation":3,"outcome":"infrastructure-error","tests":{"passed":0,"failed":0,"skipped":0},"errors":["Cleanup failed: ENOENT: no such file or directory, open '/tmp/oximut-controller-2bF9YB/cleanup.json'"]}
+  + actual - expected
+  
+  + 'infrastructure-error'
+  - 'timeout'
+  
+      at TestContext.<anonymous> (file:///root/oximut/packages/vitest-adapter/test/m1.test.mjs:190:12)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 'infrastructure-error',
+    expected: 'timeout',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
