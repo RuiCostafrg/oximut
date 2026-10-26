@@ -522,7 +522,9 @@ dependencies = [
  "libc",
  "oximut-core",
  "oximut-instrument",
+ "serde",
  "serde_json",
+ "sha2",
  "tempfile",
 ]
 
@@ -545,6 +547,7 @@ dependencies = [
  "oxc_span",
  "oxc_syntax",
  "oximut-core",
+ "serde",
  "serde_json",
  "sha2",
 ]

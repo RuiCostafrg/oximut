@@ -121,21 +121,33 @@ remains opt-in and assumes files do not communicate through external state.
 
 Depends on M3.
 
-- [ ] Cache instrumentation separately from mutation outcomes.
-- [ ] Implement a conservative project-wide execution fingerprint first; include
+- [x] Cache instrumentation separately from mutation outcomes.
+- [x] Implement a conservative project-wide execution fingerprint first; include
   sources, tests, config/setup files, snapshots, lockfiles, tool/runtime versions,
   operators, adapter behavior, and declared external inputs.
-- [ ] Run baseline validation even when outcome cache entries are available.
-- [ ] Add atomic persistence, schema versioning, interrupted-run recovery, and
+- [x] Run baseline validation even when outcome cache entries are available.
+- [x] Add atomic persistence, schema versioning, interrupted-run recovery, and
   explanations for cache misses and reused results.
-- [ ] Provide a force/no-cache mode; disable outcome caching for undeclared
+- [x] Provide a force/no-cache mode; disable outcome caching for undeclared
   nondeterministic external inputs.
-- [ ] Introduce dependency-granular invalidation only after its graph is proven
+- [x] Introduce dependency-granular invalidation only after its graph is proven
   complete. Fall back to whole-project invalidation when uncertain.
 
 **Gate:** changes to every fingerprint input invalidate the affected cache;
 cached and forced runs agree on the cache corpus. Failed or incomplete runs do
 not produce reusable successful outcomes.
+
+Implementation evidence: [M4 cache contract](docs/m4.md), Rust fingerprint,
+integrity, symlink, and transaction unit tests, and
+[cache acceptance tests](tests/test_m4.py). Dependency-granular invalidation
+remains deferred; outcome invalidation is project-wide. Outcome caching requires
+an explicit complete-input assertion and successful fresh baseline validation.
+
+**Gate result:** passed on the cache corpus. Cached and forced runs agree in
+fresh and persistent-selection modes; input edits invalidate outcomes, corrupt
+entries recover as misses, and failed/incomplete runs publish no new outcome
+bundle. Baseline validation is retained even on warm runs. No incremental
+performance claim is made.
 
 ## M5 — CPU and memory budget
 
@@ -172,9 +184,9 @@ regardless of performance.
 
 ## Next implementation task
 
-M4: implement the conservative project-wide execution fingerprint and reliable
-incremental cache. Preserve baseline validation, M3 attribution safeguards,
-M2 fresh-fork isolation, and the full-suite fresh-process reference.
+M5: implement resource-aware admission and CPU/memory budgets. Preserve M4 cache
+validity, baseline validation, M3 attribution safeguards, M2 fresh-fork isolation,
+and the full-suite fresh-process reference.
 
 ## Decisions still open
 

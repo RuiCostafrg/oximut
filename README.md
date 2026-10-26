@@ -3,12 +3,16 @@
 Mutation testing for JavaScript and TypeScript, designed around a Rust + Oxc
 instrumentation engine and a thin Vitest adapter.
 
-**Status: M3 conservative test selection.** The repository generates JS/TS mutants with
-Oxc and executes them sequentially, with text and JSON reports. Fresh execution
+**Status: M5 CPU and memory budgets.** The repository generates JS/TS mutants with
+Oxc and executes them with bounded worker concurrency, with text and JSON reports. Fresh execution
 remains the default correctness reference; opt-in persistent execution shares
 transformed code and a Vitest controller while retaining fresh test processes.
 Opt-in test selection collects baseline mutant hits and retains covering test files,
 with full-suite fallbacks when attribution is uncertain.
+Opt-in caching separates instrumentation from outcomes and validates the baseline
+on every run. Outcome reuse requires an explicit declaration of complete inputs.
+Resource admission accounts for the complete owned process tree, reserves memory
+headroom, and reports resource exhaustion separately from mutation kills.
 It also retains the M0 lifecycle experiments and baseline benchmarks.
 There is no published package.
 Faster execution and lower memory use than Stryker remain hypotheses to measure.
@@ -28,6 +32,8 @@ Oximut is a working name.
 - [M1 runner](docs/m1.md): commands, report semantics, exit codes, and limitations.
 - [M2 execution](docs/m2.md): switching, persistent controllers, isolation, and validation.
 - [M3 selection](docs/m3.md): baseline attribution, conservative selection, and fallbacks.
+- [M4 cache](docs/m4.md): conservative fingerprints, input declarations, and forced execution.
+- [M5 budgets](docs/m5.md): worker limits, memory units, admission, and enforcement limits.
 - [Architecture](docs/architecture.md): ownership, execution protocol, and correctness rules.
 - [Benchmark plan](docs/benchmarks.md): fair comparison with Stryker and success criteria.
 - [Vitest lifecycle decision](docs/adr/0001-vitest-lifecycle.md): measured reuse boundaries.
@@ -38,7 +44,9 @@ Oximut is a working name.
 
 Use Linux, Node **26.3.1**, npm **11.16.0**, Python **3.13**, and Rust **1.96.0**.
 Oxc is pinned to **0.152.0**, compatible with the pinned Rust toolchain. The
-JavaScript lockfile pins Vitest/coverage-v8 **4.1.10** and Stryker **10.0.0**.
+JavaScript lockfile pins Vitest/coverage-v8 **4.1.12** and Stryker **10.0.0**.
+Historical M0/M2 benchmark results used Vitest **4.1.10**; the security patch
+upgrade does not update those recorded measurements.
 
 ```sh
 npm ci
@@ -68,13 +76,21 @@ When running Ubuntu through Android/Termux PRoot, put a Linux Node executable on
 `PATH`. An inherited Android Node can fail to load native bindings from Ubuntu
 paths. The recorded local measurements describe that environment explicitly.
 
+CI runs on GitHub-hosted runners with a read-only repository token and checkout
+credential persistence disabled. Actions are pinned to full commit SHAs;
+Dependabot proposes weekly updates to those pins. Superseded runs are cancelled,
+and artifact uploads are restricted to baseline measurement results with seven
+day retention. CI audits npm dependencies for moderate or higher advisories;
+Dependabot also proposes npm and Cargo dependency updates.
+
 ## Layout
 
 The M1 components implement the correctness reference. M2 adds controller reuse
-and mutation switching. M3 adds opt-in conservative test selection. Outcome
-caching and resource budgeting remain planned.
+and mutation switching. M3 adds opt-in conservative test selection. M4 adds
+opt-in instrumentation and outcome caching. M5 adds central worker scheduling
+and best-effort memory admission.
 
-- `crates/cli`: sequential execution, configuration, and reporting.
+- `crates/cli`: resource admission, isolated workers, configuration, and reporting.
 - `crates/instrument`: Oxc parsing, mutation generation, source maps.
 - `crates/core`: mutant identities, protocol types, and outcome semantics.
 - `packages/vitest-adapter`: Node worker, Vitest lifecycle, and transform plugin.
@@ -87,9 +103,11 @@ Node execution with Vitest, JavaScript/TypeScript ESM, and a small
 documented set of expression mutations. Expand compatibility from the pinned
 combination only when supported by tests.
 
-Browser mode, Jest, framework-specific source formats, simultaneous active
-mutants, and TypeScript semantic checking are deferred. Unsupported constructs
+Browser mode, Jest, framework-specific source formats, and TypeScript semantic
+checking are deferred. Unsupported constructs
 must be reported, not silently treated as covered or successfully tested.
+Concurrent workers require tests whose external inputs and outputs are isolated;
+the default remains one worker.
 
 ## References
 

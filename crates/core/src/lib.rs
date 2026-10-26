@@ -42,6 +42,7 @@ pub enum Outcome {
     Invalid,
     Timeout,
     InfrastructureError,
+    ResourceExhausted,
     Skipped,
 }
 
@@ -53,6 +54,7 @@ pub enum TestOutcome {
     Invalid,
     Timeout,
     InfrastructureError,
+    ResourceExhausted,
     Skipped,
 }
 
@@ -252,13 +254,14 @@ impl Response {
             TestOutcome::Invalid => Outcome::Invalid,
             TestOutcome::Timeout => Outcome::Timeout,
             TestOutcome::InfrastructureError => Outcome::InfrastructureError,
+            TestOutcome::ResourceExhausted => Outcome::ResourceExhausted,
             TestOutcome::Skipped => Outcome::Skipped,
         }
     }
 }
 
-#[derive(Clone, Debug, Serialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct MutantResult {
     pub id: String,
     pub file: String,
@@ -271,6 +274,33 @@ pub struct MutantResult {
     pub errors: Vec<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub selection: Option<Selection>,
+    pub provenance: Provenance,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct Provenance {
+    pub source: String,
+    pub reason: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub fingerprint: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub original_run_id: Option<String>,
+}
+
+#[derive(Clone, Debug, Default, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CacheReport {
+    pub enabled: bool,
+    pub outcomes_enabled: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub fingerprint: Option<String>,
+    pub reason: String,
+    pub instrumentation_hits: usize,
+    pub instrumentation_misses: usize,
+    pub outcome_hits: usize,
+    pub outcome_misses: usize,
+    pub persistence: String,
 }
 
 #[derive(Clone, Debug, Serialize)]
@@ -283,6 +313,7 @@ pub struct Summary {
     pub invalid: usize,
     pub timeout: usize,
     pub infrastructure_error: usize,
+    pub resource_exhausted: usize,
     pub skipped: usize,
     pub score_denominator: usize,
     pub score: Option<f64>,
@@ -305,6 +336,7 @@ impl Summary {
         let timeout = count(Outcome::Timeout);
         let infrastructure_error = count(Outcome::InfrastructureError);
         let skipped = count(Outcome::Skipped);
+        let resource_exhausted = count(Outcome::ResourceExhausted);
         Self {
             total: results.len(),
             killed,
@@ -313,10 +345,11 @@ impl Summary {
             invalid,
             timeout,
             infrastructure_error,
+            resource_exhausted,
             skipped,
             score_denominator: denominator,
             score: (denominator > 0).then(|| 100.0 * killed as f64 / denominator as f64),
-            complete: invalid + timeout + infrastructure_error + skipped == 0,
+            complete: invalid + timeout + infrastructure_error + resource_exhausted + skipped == 0,
         }
     }
 
@@ -341,6 +374,8 @@ pub struct Report {
     pub mutants: Vec<MutantResult>,
     pub diagnostics: Vec<String>,
     pub summary: Summary,
+    pub cache: CacheReport,
+    pub resources: serde_json::Value,
 }
 
 #[cfg(test)]

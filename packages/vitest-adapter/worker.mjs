@@ -52,7 +52,7 @@ function coveragePayload(map) {
 async function command(name, args) {
   if (name === 'initialize') {
     if (vitest) throw new Error('Already initialized');
-    if (vitestVersion !== '4.1.10') throw new Error(`Unsupported Vitest ${vitestVersion}; M0 requires 4.1.10`);
+    if (vitestVersion !== '4.1.12') throw new Error(`Unsupported Vitest ${vitestVersion}; M0 requires 4.1.12`);
     root = resolve(args.root);
     const reporter = {
       onCoverage(map) { coverage = coveragePayload(map); },

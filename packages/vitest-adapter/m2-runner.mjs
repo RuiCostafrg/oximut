@@ -135,13 +135,15 @@ async function run(request) {
             error,
           ),
         );
-      if (crash && attempt === 0 && remaining() > 0) continue;
+      if (crash && process.env.OXIMUT_BUDGETED !== '1' && attempt === 0 && remaining() > 0)
+        continue;
       return result;
     } catch (error) {
       await close();
       if (error.code === 'OXIMUT_TIMEOUT') return empty('timeout', error.message);
       const crash = /(?:Controller exited|Channel closed|IPC channel)/i.test(error.message);
-      if (crash && attempt === 0 && remaining() > 0) continue;
+      if (crash && process.env.OXIMUT_BUDGETED !== '1' && attempt === 0 && remaining() > 0)
+        continue;
       return empty('infrastructure-error', error.message);
     }
   }

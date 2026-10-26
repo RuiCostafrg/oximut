@@ -10,7 +10,8 @@ use oxc_syntax::{operator::BinaryOperator, scope::ScopeFlags};
 use oximut_core::{Location, Mutant, Position};
 use sha2::{Digest, Sha256};
 
-#[derive(Debug)]
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+#[serde(deny_unknown_fields)]
 pub struct Generated {
     pub mutants: Vec<Mutant>,
     pub diagnostics: Vec<String>,
