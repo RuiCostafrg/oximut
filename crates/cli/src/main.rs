@@ -824,7 +824,7 @@ fn run(options: Options) -> Result<u8, String> {
     let baseline_ok = baseline.outcome == TestOutcome::Passed;
     let mut results = vec![];
     let mut jobs = vec![];
-    if cached.is_some() && !cache.inputs_unchanged(&options) {
+    if cached.is_some() && !cache.inputs_unchanged(&options, "post-baseline") {
         cached = None;
         cache.report.reason = "inputs-changed-during-baseline".into();
     }
@@ -944,7 +944,7 @@ fn run(options: Options) -> Result<u8, String> {
     scheduler.run_jobs(jobs, &mut results);
     let cleanup_ok = scheduler.finish(&mut diagnostics);
     let resources = scheduler.report();
-    let inputs_unchanged = cache.inputs_unchanged(&options);
+    let inputs_unchanged = cache.inputs_unchanged(&options, "pre-publication");
     if !inputs_unchanged {
         for result in &mut results {
             if result.provenance.source == "cache" {

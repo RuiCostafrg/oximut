@@ -193,7 +193,26 @@
         "instrumentationMisses": { "type": "integer", "minimum": 0 },
         "outcomeHits": { "type": "integer", "minimum": 0 },
         "outcomeMisses": { "type": "integer", "minimum": 0 },
-        "persistence": { "type": "string" }
+        "persistence": { "type": "string" },
+        "runnerHashMs": { "type": "integer", "minimum": 0 },
+        "fingerprintProfiles": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["phase", "completed", "elapsedMs", "runtimeIdentityMs", "resourcePolicyMs", "inputsMs", "filesHashed", "bytesHashed"],
+            "properties": {
+              "phase": { "enum": ["prepare", "post-baseline", "pre-publication"] },
+              "completed": { "type": "boolean" },
+              "elapsedMs": { "type": "integer", "minimum": 0 },
+              "runtimeIdentityMs": { "type": "integer", "minimum": 0 },
+              "resourcePolicyMs": { "type": "integer", "minimum": 0 },
+              "inputsMs": { "type": "integer", "minimum": 0 },
+              "filesHashed": { "type": "integer", "minimum": 0 },
+              "bytesHashed": { "type": "integer", "minimum": 0 }
+            }
+          }
+        }
       }
     }
   }

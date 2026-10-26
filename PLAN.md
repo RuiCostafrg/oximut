@@ -204,6 +204,10 @@ not completed evidence. No public package has been released.
 
 ## Next implementation task
 
+The [1.0.0 roadmap](docs/release-roadmap.md) defines the remaining contract,
+cache, validation, distribution, and maintenance gates. Work has started on
+additive cache fingerprint profiling; the cache performance decision remains open.
+
 Profile the cache-enabled path without weakening complete-input hashing or fresh
 baseline validation. Establish equivalent Stryker mutation scope and expand the
 protocol to pinned real projects, generated scaling, and native Linux budget

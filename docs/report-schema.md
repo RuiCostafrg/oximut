@@ -69,6 +69,23 @@ the staged outcome transaction is committed. The later text output reports
 `complete-run-persisted` or `outcome-commit-failed: ...`; the JSON staged state
 alone does not prove that publication succeeded.
 
+Cache profiling adds `runnerHashMs` (runner executable hashing) and
+`fingerprintProfiles` (ordered full fingerprint attempts). These fields are optional
+in the schema so earlier reports remain valid. Each attempt records `phase`
+(`prepare`, `post-baseline`, or `pre-publication`), `completed`, `elapsedMs`,
+`runtimeIdentityMs`, `resourcePolicyMs`, `inputsMs`, `filesHashed`, and `bytesHashed`.
+Elapsed values are monotonic wall time in whole milliseconds, rounded down;
+`inputsMs` includes path discovery, environment hashing, tree traversal, and full
+file content hashing. Total time also includes small orchestration overhead.
+`completed` means fingerprint construction succeeded, even if the resulting key
+changed. Failed attempts retain timing and partial read counts; unattempted phases
+have no entry. Counters count successful file hashes and actual content bytes read
+(including partial reads on failure), with repeated reads counted again. They do
+not include the separately timed runner hash. Disabled outcome caching emits an
+empty array; disabled cache hashing reports zero runner time. Profiling does not
+change cache keys, baseline validation, input coverage, or reserved report identity,
+and records no paths or environment values.
+
 Current `resources` fields are `configuredWorkers`, `effectiveWorkers`,
 `cpuLimitWorkers`, `configuredBudgetBytes` (nullable), `budgetBytes`,
 `reserveBytes`, `cgroups`, `measurement`, `enforcement`, `sampleIntervalMs`,
