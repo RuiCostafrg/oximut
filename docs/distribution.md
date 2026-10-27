@@ -114,3 +114,63 @@ python3 -m unittest discover -s tests -p 'test_install.py' -v
 For unpublished RC1 notes, third-party licensing scope, and the manual source
 provenance gate, see [draft release notes](release-notes-1.0.0-rc.1.md),
 [notices](../NOTICE.md), and [source provenance](source-provenance.md).
+## R3 exact artifact gate
+
+The R3 workflow (`.github/workflows/source-artifact.yml`) builds the selected
+commit's source archive, validates those exact compressed bytes, then invokes the
+archive's real release installer **once**. Its claimed native validation host is
+**Ubuntu 24.04 Linux x86_64**. Linux arm64 in developer PRoot environments is
+supplementary developer evidence only; it does not establish native arm64 support.
+A passing CI run is required evidence, not something inferred from unit tests.
+
+From a clean committed checkout, run the same gate manually:
+
+```sh
+revision=$(git rev-parse HEAD)
+tree=$(git rev-parse 'HEAD^{tree}')
+version=$(python3 -c 'import json; print(json.load(open("package.json"))["version"])')
+candidate=$(mktemp -d /tmp/oximut-r3-candidate.XXXXXX)
+python3 scripts/build-source.py --revision "$revision" --version "$version" --output-dir "$candidate"
+python3 scripts/validate-source.py \
+  --archive "$candidate/oximut-$version-source.tar.gz" \
+  --version "$version" --revision "$revision" --tree "$tree" \
+  --output-dir "$candidate/validation"
+```
+
+The validator is trusted checkout tooling; it does not execute validation code
+from the archive. It requires the external sidecar, full expected commit and tree
+IDs, canonical inventory and internal checksums, consistent package/lock/toolchain
+metadata, and normalized file ownership, permissions and timestamps. It rejects
+links, sparse files, extended tar headers, duplicates, unsafe paths, excluded
+payload, extra metadata, and nonzero trailing tar data. Limits are 64 MiB compressed,
+256 MiB decompressed (including headers/padding), 16 MiB per file and 20,000 files.
+The entire archive is verified before manual extraction into a private directory.
+The sidecar and manifest establish integrity and consistency, not authenticity;
+obtain candidate checksums and expected revision IDs from a trusted source.
+
+The gate removes the extracted source after installation. A trusted harness runs
+from a separate temporary directory outside the checkout and creates an independent
+project using only the installed dependencies. It checks the installed adapter
+paths and runs the exact installed command in fresh and persistent modes. For each
+mode it checks cold cache, warm reuse, forced execution, and invalidation after
+source, test and config changes. Each run must pass its baseline, complete mutation
+execution, kill a mutant, preserve outcome totals, and pass the strict published
+report schema. The gate repeats these checks after moving the **whole prefix**
+between paths containing spaces, and verifies the native executable hash is unchanged.
+
+`validation/evidence.json` records archive and installed binary SHA-256, source
+revision/tree, host, tool versions, installation output and test results; reports
+and cache diagnostics remain in `installed/` and `relocated/`. Failures after
+artifact inspection produce failed evidence and a failing exit status. The final
+`relocated prefix with spaces/` is retained for further checks. CI uploads the
+source archive/sidecar, evidence/reports, and a checksummed tar of this exact prefix.
+Later provenance work must reuse these assets and binary digest rather than build
+a second candidate. Installation/build and this correctness gate run outside any
+measured benchmark; these results make no performance claim.
+
+Run the lightweight gate tests without Cargo/npm installation:
+
+```sh
+python3 -m unittest discover -s tests -p 'test_artifact_validation.py' -v
+actionlint .github/workflows/source-artifact.yml
+```
