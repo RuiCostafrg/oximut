@@ -4,11 +4,27 @@ Normal run reports written with `--report FILE` use top-level
 `schemaVersion: 1`. The matching [JSON Schema](report.schema.json) describes
 the serialized report fields. It allows extra keys only inside `resources`,
 which is serialized from the scheduler's resource-accounting structure and can
-grow independently. The schema applies to completed invocation reports; `--list`
+grow independently. The schema applies to invocation reports, including runs with
+`summary.complete: false`; `--list`
 has a separate `{schemaVersion, mutants, diagnostics}` output and is not this
 report format. This describes the current pre-alpha schema-1 emitter; historical
 M1/M2 schema-1 artifacts predate the cache/resource fields and do not satisfy
 this schema. Backward compatibility with those experimental reports is not claimed.
+
+After `npm ci`, validate reports with:
+
+```sh
+node scripts/validate-reports.mjs .oximut/m1-report.json
+node scripts/validate-reports.mjs .oximut/ci-m6
+```
+
+Explicit files are always checked. Directories recursively select `report.json`
+and `*-report.json`; other JSON files such as benchmark metadata are ignored.
+Every supplied path must exist, and each directory must contain a matching report.
+Malformed JSON and schema violations fail the command with the offending path.
+CI validates all three emitted M6 smoke reports (fresh, persistent, and selection)
+against the published schema. The validator currently uses Ajv's draft-2020 module
+from the locked npm dependency tree.
 
 ## Reproducible report commands
 

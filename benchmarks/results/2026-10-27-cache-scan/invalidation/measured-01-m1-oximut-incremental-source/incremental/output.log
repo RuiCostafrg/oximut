@@ -1,0 +1,15 @@
+Baseline: Passed (2 passed, 0 failed, 0 skipped)
+killed 6309dd52344d /root/oximut/.oximut/cache-scan-invalidation/measured-01-m1-oximut-incremental-source/project/src/subject.ts:6:16 < -> <=
+  expected true to be false // Object.is equality
+  Selected tests: 2/2 (files); reasons: whole-file-preserves-sequential-state-and-hooks
+killed fc1599c4b0bb /root/oximut/.oximut/cache-scan-invalidation/measured-01-m1-oximut-incremental-source/project/src/subject.ts:2:10 true -> false
+  expected false to be true // Object.is equality
+  Selected tests: 2/2 (files); reasons: whole-file-preserves-sequential-state-and-hooks
+no-coverage 09e8f31b7ce3 /root/oximut/.oximut/cache-scan-invalidation/measured-01-m1-oximut-incremental-source/project/src/subject.ts:11:10 false -> true
+  Selected tests: 0/2 (none); reasons: complete-baseline-without-hits
+Mutants: 3 total, 2 killed, 0 survived, 1 no-coverage, 0 invalid, 0 timeout, 0 infrastructure-error, 0 resource-exhausted, 0 skipped
+Score: 66.67% (2/3); complete: true
+Cache: entry-not-found; instrumentation hits/misses: 0/1; outcome hits/misses: 0/3; complete-run-persisted
+Diagnostic: execution=persistent; isolation=fresh-test-forks; controller reuse only; baseline=original-and-disabled-switches
+Diagnostic: disabled switching validation: /root/oximut/.oximut/cache-scan-invalidation/measured-01-m1-oximut-incremental-source/project/src/subject.ts: Passed
+Diagnostic: adapter observed reuse boundary: controller

@@ -41,6 +41,8 @@ jobs:
       - run: npm run lint
       - run: npm run typecheck
       - run: npm test
+      - name: Report schema validator contract
+        run: node --test scripts/tests/validate-reports.test.mjs
       - run: npm run experiment
       - run: cargo fmt --all -- --check
       - run: cargo clippy --workspace --all-targets --locked -- -D warnings
@@ -54,6 +56,12 @@ jobs:
         run: python3 benchmarks/run.py --repetitions 1 --warmups 0 --timeout 180 --output .oximut/ci-baselines
       - name: M6 benchmark harness smoke (not a performance claim)
         run: python3 benchmarks/m6.py --fixtures m1 --tools oximut --scenarios clean --repetitions 1 --warmups 0 --output .oximut/ci-m6
+      - name: Validate emitted CLI reports against the published schema
+        run: >-
+          node scripts/validate-reports.mjs
+          .oximut/ci-m6/measured-01-m1-oximut-clean-fresh/run/report.json
+          .oximut/ci-m6/measured-01-m1-oximut-clean-persistent/run/report.json
+          .oximut/ci-m6/measured-01-m1-oximut-clean-selection/run/report.json
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: always()
         with:

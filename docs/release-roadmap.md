@@ -138,7 +138,19 @@ speedup. The M6 harness archives the new cache fields without changing workload
 identity. The [first diagnostic](../benchmarks/results/2026-10-26-cache-profile/README.md)
 passed cache/forced agreement and located most fingerprint time in full-input
 processing; repeated release-build measurements and safe optimization remain.
-R1 contract checks and the remaining R2 phases follow.
+The next slice precomputes lexical cache exclusions and combines component
+checks, with differential coverage against the previous predicate. The
+[release-build comparison](../benchmarks/results/2026-10-27-cache-scan/README.md)
+preserves correctness but does **not** establish a speedup: warm medians were
+20.07 s before and 22.39 s after, with forced medians also moving from 5.75 s to
+7.39 s. Cache performance remains an open gate; no validation pass or input read
+was removed.
+
+R1 now includes a CI validator for all three emitted M6 smoke reports and tests
+that reject missing/malformed/schema-invalid reports, with `--list` explicitly
+separate. This closes the automated normal-report schema-check gap. CLI/list
+versioning, complete exit-code policy coverage, unsupported-case coverage, and
+release-candidate evidence remain open.
 
 ## Release order
 
