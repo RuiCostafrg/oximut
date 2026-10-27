@@ -44,7 +44,7 @@ let state = 0; test('enabled', () => { expect(state++).toBe(0); expect(enabled).
   let sequence = 0;
   return {
     root,
-    async run(id, code = switched, deadlineMs = 30000) {
+    async run(id, code = switched, deadlineMs = 30000, filename = 'source.ts') {
       const n = sequence++;
       const input = {
         protocol: 1,
@@ -60,9 +60,9 @@ let state = 0; test('enabled', () => { expect(state++).toBe(0); expect(enabled).
             ? null
             : {
                 id,
-                file: join(root, 'source.ts'),
+                file: join(root, filename),
                 code,
-                map: { version: 3, sources: ['source.ts'], mappings: 'AAAA', names: [] },
+                map: { version: 3, sources: [filename], mappings: 'AAAA', names: [] },
               },
       };
       await writeFile(join(directory, 'request.tmp'), JSON.stringify(input));
@@ -230,6 +230,51 @@ test(
         assert.match(events[0].reuse, feature === 'plugin' ? /custom plugins/ : /symlink/);
         assert.notEqual(events[0].controllerPid, events[1].controllerPid);
       });
+    }
+  },
+);
+
+test(
+  'M2 restores alternating source transforms through re-exports and dynamic query imports',
+  { timeout: 120000 },
+  async (t) => {
+    const s = await session(t);
+    await writeFile(join(s.root, 'other.ts'), 'export const extra = true;');
+    await writeFile(join(s.root, 'barrel.ts'), "export { enabled } from './source';");
+    await writeFile(
+      join(s.root, 'consumer.ts'),
+      "import { enabled } from './barrel'; export function observe() { return enabled; }",
+    );
+    await writeFile(
+      join(s.root, 'sample.test.ts'),
+      `
+import { test, expect } from 'vitest';
+import { observe } from './consumer';
+let state = 0;
+test('all dependencies', async () => {
+  expect(state++).toBe(0);
+  expect(observe()).toBe(true);
+  expect((await import('./source.ts?variant')).enabled).toBe(true);
+  expect((await import('./other.ts?variant')).extra).toBe(true);
+});`,
+    );
+    const other =
+      "export const extra = process.env.OXIMUT_ACTIVE_MUTANT === 'kill' ? false : true;";
+    // Long → short → long requests also exercise the shared buffer's byte limit.
+    const padded = `${switched}\n/*${'x'.repeat(65536)}*/`;
+    for (const [id, code, file, outcome] of [
+      ['original', null, 'source.ts', 'passed'],
+      ['kill', padded, 'source.ts', 'failed'],
+      ['kill', other, 'other.ts', 'failed'],
+      ['pass', switched, 'source.ts', 'passed'],
+      ['kill', padded, 'source.ts', 'failed'],
+      ['original', null, 'source.ts', 'passed'],
+      ['kill', other, 'other.ts', 'failed'],
+      ['original', null, 'source.ts', 'passed'],
+    ]) {
+      const result = await s.run(id, code, 30000, file);
+      assert.equal(result.outcome, outcome, JSON.stringify(result));
+      assert.equal(result.tests.passed + result.tests.failed, 1);
     }
   },
 );

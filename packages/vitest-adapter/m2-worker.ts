@@ -128,15 +128,23 @@ async function command(name: string, args: Request): Promise<unknown> {
   if (name !== 'run') throw new Error(`Unknown command: ${name}`);
   const job = (args as unknown as { request: Request }).request;
   const next = job.mutation;
-  if (
-    JSON.stringify(probes) !== JSON.stringify(job.collectCoverage) ||
+  const probesChanged = JSON.stringify(probes) !== JSON.stringify(job.collectCoverage);
+  if (probesChanged) {
+    // Probe changes can affect every source file and attribution dependency.
+    for (const project of vitest.projects) project.vite.moduleGraph.invalidateAll();
+  } else if (
     mutation?.file !== next?.file ||
     mutation?.code !== next?.code ||
     JSON.stringify(mutation?.map) !== JSON.stringify(next?.map)
   ) {
     for (const project of vitest.projects) {
-      project.vite.moduleGraph.invalidateAll();
-      if (next) project.vite.moduleGraph.invalidateAll();
+      // Restore the previous transform as well as activating the next one.
+      // Vite invalidates every query/SSR variant and propagates to importers;
+      // unrelated modules retain their transform cache. Test forks stay fresh.
+      const files = new Set([mutation?.file, next?.file]);
+      for (const file of files) {
+        if (file) project.vite.moduleGraph.onFileChange(resolve(file));
+      }
     }
   }
   mutation = next;
