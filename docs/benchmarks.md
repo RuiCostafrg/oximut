@@ -72,11 +72,22 @@ Correctness gates are mandatory: no unexplained disagreements between reference
 and optimized modes on the regression corpus; no false kills from infrastructure
 or resource failures; cache invalidation passes all declared-input cases.
 
-For an alpha performance claim, target at least 2x lower median full-run wall time
-on the pure-function corpus and at least 30% lower peak aggregate memory on a
-representative application workload versus tuned Stryker, at equal CPU allocation
-and equivalent mutation scope. These are targets, not promises. Report regressions
-on every workload, and revisit the design if gains only occur on synthetic inputs.
+The current requested targets are at least **20% lower full-run elapsed time**
+and **50% lower peak aggregate memory** versus tuned Stryker, at equal CPU
+allocation and equivalent mutation scope. Expressed as Oximut/Stryker ratios,
+the thresholds are wall time ≤0.80 and peak aggregate RSS ≤0.50. Measure and
+report total CPU time separately; no numeric CPU-reduction threshold is specified.
+These are unachieved targets, not promises or a declaration of release readiness.
+
+Predeclare the primary execution mode and required workloads/scales before
+measurement; do not select a favorable mode or discard a failing scale afterward.
+A controlled synthetic result supports only that corpus and host. Broader claims
+require representative application evidence. Report regressions on every workload,
+and revisit the design if gains only occur on synthetic inputs.
+
+Earlier alpha planning proposed 2x lower wall time and 30% lower memory. Those are
+historical aspirations, superseded by the current requested targets above;
+archived measurements and their original acceptance decisions remain unchanged.
 
 For memory control, demonstrate bounded admission, worker recycling, and explicit
 failure when one job cannot fit. Only claim a strict cap where an OS mechanism
