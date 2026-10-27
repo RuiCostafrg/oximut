@@ -121,11 +121,17 @@ def install(prefix, *, build_timeout_seconds=3600, npm_timeout_seconds=900):
         shutil.copy2(repo / "scripts" / "oximut-launcher.py", staged_launcher)
         staged_launcher.chmod(0o755)
         # All expensive/fallible preparation is complete before exposing a command.
-        stage.rename(bundle)
         try:
+            stage.rename(bundle)
             staged_launcher.rename(launcher)
         except BaseException:
-            shutil.rmtree(bundle)
+            # A moved private source identifies our publication even if a signal
+            # interrupted rename before it returned. Preserve a competing install
+            # when our source still exists because its rename never completed.
+            if not staged_launcher.exists():
+                launcher.unlink(missing_ok=True)
+            if not stage.exists():
+                shutil.rmtree(bundle)
             raise
     print(f"Installed {launcher}")
     print(f"Add {prefix / 'bin'} to PATH; Node and Python must remain available.")

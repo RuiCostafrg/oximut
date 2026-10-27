@@ -133,6 +133,68 @@ class SourceInstaller(unittest.TestCase):
                 self.assertFalse((self.prefix / "bin/oximut").exists())
                 self.assertEqual(list((self.prefix / "lib").iterdir()), [])
 
+    def test_publication_interruptions_clean_partial_moves_and_allow_retry(self):
+        original_rename = Path.rename
+        executable = self.stale
+        build = subprocess.CompletedProcess(
+            [], 0, self.artifact(executable)
+        )
+        npm = subprocess.CompletedProcess([], 0, "")
+
+        for moved_source, interrupt_after_move in (
+            ("bundle", False),
+            ("bundle", True),
+            ("launcher", False),
+            ("launcher", True),
+        ):
+            with self.subTest(source=moved_source, after=interrupt_after_move):
+                prefix = self.prefix / f"retry-{moved_source}-{interrupt_after_move}"
+                rename_calls = []
+
+                def interrupt_rename(source, destination):
+                    if source.name == moved_source:
+                        rename_calls.append(source)
+                        if interrupt_after_move:
+                            original_rename(source, destination)
+                        raise KeyboardInterrupt("injected during publication")
+                    return original_rename(source, destination)
+
+                with mock.patch.object(INSTALLER, "run_phase", side_effect=[build, npm]), \
+                        mock.patch.object(Path, "rename", new=interrupt_rename):
+                    with self.assertRaisesRegex(KeyboardInterrupt, "injected"):
+                        INSTALLER.install(prefix)
+
+                self.assertEqual(len(rename_calls), 1)
+                self.assertFalse((prefix / "lib/oximut").exists())
+                self.assertFalse((prefix / "bin/oximut").exists())
+                with mock.patch.object(INSTALLER, "run_phase", side_effect=[build, npm]):
+                    INSTALLER.install(prefix)
+                self.assertEqual((prefix / "lib/oximut/oximut").read_text(), "stale binary")
+                self.assertTrue((prefix / "bin/oximut").is_file())
+
+    def test_failed_first_move_preserves_competing_installation(self):
+        original_rename = Path.rename
+        prefix = self.prefix / "competing-install"
+        bundle = prefix / "lib/oximut"
+        launcher = prefix / "bin/oximut"
+        sentinel = bundle / "other-installer-sentinel"
+        build = subprocess.CompletedProcess([], 0, self.artifact(self.stale))
+
+        def create_competing_bundle_then_rename(source, destination):
+            if source.name == "bundle":
+                sentinel.parent.mkdir(parents=True)
+                sentinel.write_text("owned by concurrent installer")
+                launcher.write_text("concurrent installer launcher")
+            return original_rename(source, destination)
+
+        with mock.patch.object(INSTALLER, "run_phase", return_value=build), \
+                mock.patch.object(Path, "rename", new=create_competing_bundle_then_rename):
+            with self.assertRaises(OSError):
+                INSTALLER.install(prefix)
+
+        self.assertEqual(sentinel.read_text(), "owned by concurrent installer")
+        self.assertEqual(launcher.read_text(), "concurrent installer launcher")
+
 
 class PhaseSupervision(unittest.TestCase):
     def test_deadline_kills_group_and_reaps_parent(self):
