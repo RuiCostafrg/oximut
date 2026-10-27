@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
-import { mkdir, mkdtemp, readFile, rename, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rename, rm, symlink, writeFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import test from 'node:test';
 
@@ -201,5 +201,35 @@ test(
       .map(JSON.parse);
     assert.equal(events.length, 2);
     assert.notEqual(events[0].controllerPid, events[1].controllerPid);
+  },
+);
+
+test(
+  'M2 uses fresh controllers for custom plugins and symlinked project inputs',
+  { timeout: 90000 },
+  async (t) => {
+    for (const feature of ['plugin', 'symlink']) {
+      await t.test(feature, async (t) => {
+        const s = await session(t);
+        if (feature === 'plugin') {
+          await writeFile(
+            join(s.root, 'vitest.config.mjs'),
+            "export default { plugins: [{ name: 'custom-contract-plugin' }], test: { include: ['sample.test.ts'] } };",
+          );
+        } else {
+          await symlink('source.ts', join(s.root, 'linked-source.ts'));
+        }
+        assert.equal((await s.run('kill')).outcome, 'failed');
+        assert.equal((await s.run('disabled')).outcome, 'passed');
+        const events = (await readFile(join(s.root, 'session/events.jsonl'), 'utf8'))
+          .trim()
+          .split('\n')
+          .map(JSON.parse);
+        assert.equal(events.length, 2);
+        assert.ok(events.every((event) => event.reuse.startsWith('fresh:')));
+        assert.match(events[0].reuse, feature === 'plugin' ? /custom plugins/ : /symlink/);
+        assert.notEqual(events[0].controllerPid, events[1].controllerPid);
+      });
+    }
   },
 );
