@@ -102,6 +102,7 @@ class AdapterProvenanceTests(unittest.TestCase):
 class RatioTests(unittest.TestCase):
     def rows(self):
         return [dict(tool=tool, round=0, warmup=False, success=True,
+                     memory_method='sum-live-smaps_rollup-rss', memory_errors=[],
                      declared_test_identity_sha256='same', mutator_families=['arithmetic'],
                      mutations={'a': {'outcome': 'killed'}},
                      **{metric: 2. for metric in benchmark.METRICS})
@@ -129,6 +130,19 @@ class RatioTests(unittest.TestCase):
                 comparisons, ratios = benchmark.compare_rows(rows)
                 self.assertFalse(comparisons[0]['ratio_eligible'])
                 self.assertEqual(ratios, [])
+
+    def test_invalid_measurements_missing_identity_and_duplicate_rows_reject_ratios(self):
+        for key, value in [('wall_seconds', 0), ('cpu_seconds', float('nan')),
+                           ('peak_aggregate_rss_bytes', float('inf')),
+                           ('memory_method', 'stat'), ('memory_errors', ['restricted']),
+                           ('declared_test_identity_sha256', None), ('warmup', True)]:
+            rows = self.rows()
+            rows[1][key] = value
+            with self.subTest(key=key, value=value):
+                self.assertEqual(benchmark.compare_rows(rows)[1], [])
+        rows = self.rows()
+        rows.append(copy.deepcopy(rows[1]))
+        self.assertEqual(benchmark.compare_rows(rows)[1], [])
 
 
 if __name__ == '__main__':

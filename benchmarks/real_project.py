@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import math
 import os
 from pathlib import Path
 import shutil
@@ -147,7 +148,8 @@ def execution_inputs(args):
 def compare_rows(rows):
     comparisons, ratios = [], []
     for index in sorted({row['round'] for row in rows}):
-        group = {row['tool']: row for row in rows if row['round'] == index}
+        round_rows = [row for row in rows if row['round'] == index]
+        group = {row['tool']: row for row in round_rows}
         if not {'vitest', 'oximut', 'stryker'} <= group.keys():
             continue
         ordinary, left, right = (group[k] for k in ('vitest', 'oximut', 'stryker'))
@@ -156,8 +158,15 @@ def compare_rows(rows):
         comparison['declared_families_agree'] = left.get('mutator_families') == right.get('mutator_families')
         comparison['ratio_eligible'] &= comparison['declared_families_agree']
         comparison['ratio_eligible'] &= all(row['success'] for row in group.values())
-        comparison['ratio_eligible'] &= len({row.get('declared_test_identity_sha256')
-                                             for row in group.values()}) == 1
+        identities = {row.get('declared_test_identity_sha256') for row in group.values()}
+        comparison['ratio_eligible'] &= len(identities) == 1 and None not in identities
+        comparison['ratio_eligible'] &= len(round_rows) == len(group) == 3
+        comparison['ratio_eligible'] &= len({row['warmup'] for row in round_rows}) == 1
+        comparison['ratio_eligible'] &= all(
+            row.get('memory_method') == 'sum-live-smaps_rollup-rss' and not row.get('memory_errors')
+            and all(type(row.get(metric)) in (int, float) and math.isfinite(row[metric])
+                    and row[metric] > 0 for metric in METRICS)
+            for row in (left, right))
         comparisons.append(comparison)
         if comparison['ratio_eligible'] and not ordinary['warmup']:
             ratios.append({'round': index, 'direction': 'stryker/oximut',
