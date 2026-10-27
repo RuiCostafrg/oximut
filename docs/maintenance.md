@@ -2,7 +2,8 @@
 
 This page records the maintenance policy and release gate status. The detailed
 runtime contract remains in [compatibility.md](compatibility.md); milestone
-behavior is documented in [M1–M6](m1.md), and the rationale and full acceptance
+behavior is documented in [M1](m1.md), [M2](m2.md), [M3](m3.md),
+[M4](m4.md), [M5](m5.md), and [M6](m6.md). The rationale and full acceptance
 criteria are in the [release roadmap](release-roadmap.md). This checklist is a
 status record, not proof that a gate has passed.
 
