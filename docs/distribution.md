@@ -1,0 +1,112 @@
+# Candidate source distribution
+
+The initial distribution format for **1.0.0-rc.1** is a versioned source archive
+intended for a GitHub Release attachment. This is a release candidate, not stable
+1.0.0. The builder creates local artifacts only: it does not create a release,
+push, tag, publish to npm/crates.io, or build downloadable binaries. GitHub's
+automatic repository snapshots are not this curated source format.
+
+The initial installation scope is Linux. No macOS, Windows, cross-compilation,
+or prebuilt binary target support is claimed by this format. The source archive
+is architecture independent; successful installation on a particular Linux
+architecture still requires compiling and validating it there. Separate artifact
+validation is required before attaching anything to a release.
+
+## Build an archive
+
+Prerequisites for the archive builder: Git and Python **3.11 or newer** (standard
+library only). Start with a clean checkout, including no non-ignored untracked
+files. Ignored dependency/build caches may remain; they are never read. The
+version must match the selected commit's Cargo workspace, workspace Cargo.lock
+entries, root npm manifest/lockfile, and adapter manifest. npm root dependency
+and engine declarations must agree with the lockfile root entry.
+
+```sh
+revision="$(git rev-parse HEAD)"
+python3 scripts/build-source.py \
+  --revision "$revision" \
+  --version 1.0.0-rc.1 \
+  --output-dir /tmp/oximut-source-candidate
+cd /tmp/oximut-source-candidate
+sha256sum -c oximut-1.0.0-rc.1-source.tar.gz.sha256
+```
+
+Use a new output directory outside the checkout; existing artifacts are never
+replaced. `--revision` is mandatory and resolves to a commit, including an earlier
+commit if explicitly requested. All payload bytes and executable permissions
+come from that commit's Git objects, not the current filesystem or untracked
+files. `--repo PATH` selects another clean repository. Run a trusted builder:
+the manifest records the running builder's SHA-256 independently of the payload
+commit. The builder at that commit can differ when packaging an older revision.
+
+The output is `oximut-VERSION-source.tar.gz` plus its SHA-256 sidecar. Extraction
+creates one `oximut-VERSION/` directory. Archive entries are sorted, regular files
+only; uid/gid, owner names, modes, tar timestamps (commit time), and gzip headers
+are normalized. The same commit, version, builder, and Python/zlib environment
+produce identical bytes regardless of checkout/output path or build time.
+Compression bytes across different Python/zlib versions are not guaranteed.
+Unsafe paths, links, submodules in the payload, and reserved metadata paths fail
+the build. No local dependencies or native executables are bundled.
+
+The archive retains source, workspace experiments, fixtures, validation tests,
+benchmark harnesses, adapter sources, docs, and locked dependency manifests.
+It excludes `.git`, `node_modules`, `target`, `dist`, coverage, private `.oximut`
+inputs, adapter `.experiment-*` inputs, Stryker/Vitest scratch directories,
+`.env*`, Python caches, logs, CI/review configuration, the internal plan, and
+`benchmarks/results/` measurement archives. Historical benchmark results are not
+needed for source compilation or tests and remain available in Git history.
+Only committed files passing these exclusions can enter the payload.
+
+`SOURCE-DISTRIBUTION/manifest.json` records the full source commit and tree IDs,
+commit timestamp, candidate version, builder digest, pinned toolchain versions,
+lockfile digests, npm installation command, and a sorted payload inventory with
+sizes, modes, and SHA-256 hashes. `SOURCE-DISTRIBUTION/SHA256SUMS` covers every
+payload file and the manifest; it omits itself to avoid a circular hash. The
+external sidecar covers the entire compressed archive. These are reproducibility
+and integrity records, not a signature, attestation, SBOM, dependency audit, or
+claim that release validation has passed.
+
+## Install and relocate
+
+Installation requires Linux, Rust **1.96.0** (Cargo and a working native linker /
+C toolchain), Node **26.3.1**, npm **11.16.0**, and Python **3.11 or newer** on PATH.
+Cargo and npm registry access is needed unless all locked dependencies are cached.
+The archive contains source and lockfiles, not vendored dependencies. Provide
+sufficient disk space for the release build and full npm development dependency
+graph. The source builder does not download or check these toolchains.
+
+```sh
+tar -xzf oximut-1.0.0-rc.1-source.tar.gz
+cd oximut-1.0.0-rc.1
+sha256sum -c SOURCE-DISTRIBUTION/SHA256SUMS
+python3 scripts/install-source.py --prefix "$HOME/oximut-rc1"
+python3 scripts/smoke-install.py --prefix "$HOME/oximut-rc1"
+```
+
+The existing installer uses `cargo build --locked --release` and a fresh
+`npm ci --include=dev --ignore-scripts` installation. Full locked development
+dependencies are intentional until a separate runtime package is designed.
+See [installation details](install.md) for deadlines and runtime project setup.
+
+To reinstall, run the installer into a new empty prefix. It refuses to overwrite
+an existing installation. Move the **whole prefix** together to relocate it:
+
+```sh
+mv "$HOME/oximut-rc1" "$HOME/oximut-rc1-relocated"
+python3 scripts/smoke-install.py --prefix "$HOME/oximut-rc1-relocated"
+export PATH="$HOME/oximut-rc1-relocated/bin:$PATH"
+oximut --help
+```
+
+Node and Python remain runtime prerequisites; the checkout/extracted archive and
+Rust are no longer needed after installation. Run the external-project smoke on
+the actual candidate before and after relocation; it checks both fresh and
+persistent adapters. Unit tests of the source format do not substitute for that
+artifact validation, which is a separate release gate.
+
+Focused format and installer checks (no dependency install or performance runs):
+
+```sh
+python3 -m unittest discover -s tests -p 'test_distribution.py' -v
+python3 -m unittest discover -s tests -p 'test_install.py' -v
+```
