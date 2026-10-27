@@ -21,6 +21,12 @@ There is no published package.
 Faster execution and lower memory use than Stryker remain hypotheses to measure.
 Oximut is a working name.
 
+Use repeatable `--mutators` options to select a comma-separated union of declared
+families (`arithmetic`, `boolean-literal`, `comparison-boundary`). With no filter,
+all families remain enabled. A filtered report describes only the requested subset;
+excluded families are not reported as full-project mutation results. Family filters
+are for matched tool comparisons and scoped analysis, not performance-target gaming.
+
 ## Goals
 
 - Reuse test workers without changing test outcomes.
