@@ -1,0 +1,13 @@
+✔ validates an archived emitted report through the CLI (424.778021ms)
+✔ allows an incomplete invocation report (355.093438ms)
+✔ rejects missing fields, wrong field types, malformed JSON, and list output (1607.901926ms)
+✔ fails for no input, missing paths, and each empty directory (1561.398437ms)
+✔ directory traversal does not skip malformed matching reports (942.392604ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 5027.432707

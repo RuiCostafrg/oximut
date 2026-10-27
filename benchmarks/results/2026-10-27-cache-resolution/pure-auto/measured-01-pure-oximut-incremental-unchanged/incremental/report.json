@@ -1,0 +1,1079 @@
+{
+  "schemaVersion": 1,
+  "runId": "21625-1793105387120067207",
+  "baseline": {
+    "protocol": 1,
+    "runId": "21625-1793105387120067207",
+    "jobId": "baseline",
+    "generation": 0,
+    "outcome": "passed",
+    "tests": {
+      "passed": 7,
+      "failed": 0,
+      "skipped": 0
+    },
+    "errors": [],
+    "coverage": {
+      "complete": true,
+      "tests": [
+        {
+          "id": "610138126_0_0",
+          "file": "/root/oximut/.oximut/cache-resolution/pure-auto/measured-01-pure-oximut-incremental-unchanged/project/test/logic.test.ts",
+          "name": "clamp > keeps values inside the bounds and returns the nearest bound outside"
+        },
+        {
+          "id": "610138126_1_0",
+          "file": "/root/oximut/.oximut/cache-resolution/pure-auto/measured-01-pure-oximut-incremental-unchanged/project/test/logic.test.ts",
+          "name": "classifyScore > classifies negative, failing, passing, and excellent scores at boundaries"
+        },
+        {
+          "id": "610138126_2_0",
+          "file": "/root/oximut/.oximut/cache-resolution/pure-auto/measured-01-pure-oximut-incremental-unchanged/project/test/logic.test.ts",
+          "name": "applyDiscount > preserves invalid prices and discounts, and caps full discounts at zero"
+        },
+        {
+          "id": "610138126_3_0",
+          "file": "/root/oximut/.oximut/cache-resolution/pure-auto/measured-01-pure-oximut-incremental-unchanged/project/test/logic.test.ts",
+          "name": "shippingCost > uses weight tiers and adds the expedited fee"
+        },
+        {
+          "id": "610138126_4_0",
+          "file": "/root/oximut/.oximut/cache-resolution/pure-auto/measured-01-pure-oximut-incremental-unchanged/project/test/logic.test.ts",
+          "name": "canAccess > requires an adult, a pass, and an active account"
+        },
+        {
+          "id": "610138126_5_0",
+          "file": "/root/oximut/.oximut/cache-resolution/pure-auto/measured-01-pure-oximut-incremental-unchanged/project/test/logic.test.ts",
+          "name": "describeRange and combineFlags > uses inclusive upper boundary for medium"
+        },
+        {
+          "id": "610138126_5_1",
+          "file": "/root/oximut/.oximut/cache-resolution/pure-auto/measured-01-pure-oximut-incremental-unchanged/project/test/logic.test.ts",
+          "name": "describeRange and combineFlags > combines either true flag"
+        }
+      ],
+      "hits": [
+        {
+          "mutantId": "8bcc660efd8fd87fff698054299b9b1cb5418bc0c57c96a4d1943411c5d04120",
+          "tests": [
+            "610138126_0_0"
+          ],
+          "outsideTest": false
+        },
+        {
+          "mutantId": "b644dd2e2f8ceb01189821bb21ce49ceab7a466c8dc2c71f5354b384d731fe4b",
+          "tests": [
+            "610138126_0_0"
+          ],
+          "outsideTest": false
+        },
+        {
+          "mutantId": "efc803a4c10083b14ba4fdddb6216cd7d058c9266715d97733bf6e22d87a5bff",
+          "tests": [
+            "610138126_1_0"
+          ],
+          "outsideTest": false
+        },
+        {
+          "mutantId": "8bb2fcb9d12ec4ec8a65292c3b6fc63eee8dd2bf48cea182625e3928a8a4bc3d",
+          "tests": [
+            "610138126_1_0"
+          ],
+          "outsideTest": false
+        },
+        {
+          "mutantId": "8bb8fc3ae53a0bba165f18eed784b1b1cd39fb30f084741a3491449bf886150b",
+          "tests": [
+            "610138126_1_0"
+          ],
+          "outsideTest": false
+        },
+        {
+          "mutantId": "f30bfebb7fd15e1f390c3988f8f6b1d4674ab41cb212c7a78b7f7dca34a2b6da",
+          "tests": [
+            "610138126_2_0"
+          ],
+          "outsideTest": false
+        },
+        {
+          "mutantId": "72e9646275a74cf5ad859b1db9447744dc888ebbd4e916f91b01eb8495de1df9",
+          "tests": [
+            "610138126_2_0"
+          ],
+          "outsideTest": false
+        },
+        {
+          "mutantId": "ce8815bd79b8a4e4a210d5d367c921e6cbcf22e56fed5bb7866fa67c9c00432f",
+          "tests": [
+            "610138126_2_0"
+          ],
+          "outsideTest": false
+        },
+        {
+          "mutantId": "ad43fe22222632bf0db1f0f3fdfa26da643dc07dd2a6f407467fda22ea1b32f7",
+          "tests": [
+            "610138126_2_0"
+          ],
+          "outsideTest": false
+        },
+        {
+          "mutantId": "7c788a9b1144adea81e7a7e4ad53b3d9e34de634c7ce03774e33dbe15ecad391",
+          "tests": [
+            "610138126_2_0"
+          ],
+          "outsideTest": false
+        },
+        {
+          "mutantId": "18e80836cf0d494874306ea3259aa401907d5c7502f3c0ea3f1302a7496353c7",
+          "tests": [
+            "610138126_2_0"
+          ],
+          "outsideTest": false
+        },
+        {
+          "mutantId": "fcadb7193882ef316bde43a816288a4882cad4a288bb19b6b67111fc2341e815",
+          "tests": [
+            "610138126_3_0"
+          ],
+          "outsideTest": false
+        },
+        {
+          "mutantId": "a5b8eaf60ac6169b4a8bdcbd7e3619c7cfa5db632be6aa62ebc50cb0a21b08f1",
+          "tests": [
+            "610138126_3_0"
+          ],
+          "outsideTest": false
+        },
+        {
+          "mutantId": "ab303175fb0790576df7a86a5a040a28e4104fd136a100be1c8b00e4d8875fca",
+          "tests": [
+            "610138126_3_0"
+          ],
+          "outsideTest": false
+        },
+        {
+          "mutantId": "149dd3d23ef649b87e771258969ba64d88a7726303cc8d7600c16d823ecb11fb",
+          "tests": [
+            "610138126_3_0"
+          ],
+          "outsideTest": false
+        },
+        {
+          "mutantId": "6782302801eb0752e935e6607c5c7da3a263886102b244e445ae28d375f633d4",
+          "tests": [
+            "610138126_4_0"
+          ],
+          "outsideTest": false
+        },
+        {
+          "mutantId": "7815ea750e08254335ca05fb42de4263b498ab6ac703a05c8b2d15217d26ea64",
+          "tests": [
+            "610138126_5_0"
+          ],
+          "outsideTest": false
+        },
+        {
+          "mutantId": "b2ed210b22d2323881a2786d3aa7385cce47495068e2bd7188f4ca992d135fc2",
+          "tests": [
+            "610138126_5_0"
+          ],
+          "outsideTest": false
+        }
+      ],
+      "reasons": []
+    }
+  },
+  "mutants": [
+    {
+      "id": "a5b8eaf60ac6169b4a8bdcbd7e3619c7cfa5db632be6aa62ebc50cb0a21b08f1",
+      "file": "/root/oximut/.oximut/cache-resolution/pure-auto/measured-01-pure-oximut-incremental-unchanged/project/src/logic.ts",
+      "operator": "comparison-boundary",
+      "original": "<=",
+      "replacement": "<",
+      "location": {
+        "start": {
+          "offset": 679,
+          "line": 22,
+          "column": 23
+        },
+        "end": {
+          "offset": 681,
+          "line": 22,
+          "column": 25
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 6,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected 10 to be 5 // Object.is equality"
+      ],
+      "selection": {
+        "mode": "files",
+        "files": [
+          "/root/oximut/.oximut/cache-resolution/pure-auto/measured-01-pure-oximut-incremental-unchanged/project/test/logic.test.ts"
+        ],
+        "selectedTests": 7,
+        "totalTests": 7,
+        "expectedSkipped": 0,
+        "reasons": [
+          "whole-file-preserves-sequential-state-and-hooks"
+        ]
+      },
+      "provenance": {
+        "source": "cache",
+        "reason": "matching-project-fingerprint-and-fresh-baseline",
+        "fingerprint": "10792aff1da1b5e53002401d53d4fada3c4c79c709b6cb1386ffa8c4c5b1e520",
+        "originalRunId": "21073-1793105342647944307"
+      }
+    },
+    {
+      "id": "7815ea750e08254335ca05fb42de4263b498ab6ac703a05c8b2d15217d26ea64",
+      "file": "/root/oximut/.oximut/cache-resolution/pure-auto/measured-01-pure-oximut-incremental-unchanged/project/src/logic.ts",
+      "operator": "comparison-boundary",
+      "original": "<",
+      "replacement": "<=",
+      "location": {
+        "start": {
+          "offset": 971,
+          "line": 35,
+          "column": 13
+        },
+        "end": {
+          "offset": 972,
+          "line": 35,
+          "column": 14
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 6,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected 'small' to be 'medium' // Object.is equality"
+      ],
+      "selection": {
+        "mode": "files",
+        "files": [
+          "/root/oximut/.oximut/cache-resolution/pure-auto/measured-01-pure-oximut-incremental-unchanged/project/test/logic.test.ts"
+        ],
+        "selectedTests": 7,
+        "totalTests": 7,
+        "expectedSkipped": 0,
+        "reasons": [
+          "whole-file-preserves-sequential-state-and-hooks"
+        ]
+      },
+      "provenance": {
+        "source": "cache",
+        "reason": "matching-project-fingerprint-and-fresh-baseline",
+        "fingerprint": "10792aff1da1b5e53002401d53d4fada3c4c79c709b6cb1386ffa8c4c5b1e520",
+        "originalRunId": "21073-1793105342647944307"
+      }
+    },
+    {
+      "id": "b2ed210b22d2323881a2786d3aa7385cce47495068e2bd7188f4ca992d135fc2",
+      "file": "/root/oximut/.oximut/cache-resolution/pure-auto/measured-01-pure-oximut-incremental-unchanged/project/src/logic.ts",
+      "operator": "comparison-boundary",
+      "original": "<=",
+      "replacement": "<",
+      "location": {
+        "start": {
+          "offset": 1005,
+          "line": 36,
+          "column": 13
+        },
+        "end": {
+          "offset": 1007,
+          "line": 36,
+          "column": 15
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 6,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected 'large' to be 'medium' // Object.is equality"
+      ],
+      "selection": {
+        "mode": "files",
+        "files": [
+          "/root/oximut/.oximut/cache-resolution/pure-auto/measured-01-pure-oximut-incremental-unchanged/project/test/logic.test.ts"
+        ],
+        "selectedTests": 7,
+        "totalTests": 7,
+        "expectedSkipped": 0,
+        "reasons": [
+          "whole-file-preserves-sequential-state-and-hooks"
+        ]
+      },
+      "provenance": {
+        "source": "cache",
+        "reason": "matching-project-fingerprint-and-fresh-baseline",
+        "fingerprint": "10792aff1da1b5e53002401d53d4fada3c4c79c709b6cb1386ffa8c4c5b1e520",
+        "originalRunId": "21073-1793105342647944307"
+      }
+    },
+    {
+      "id": "8bb8fc3ae53a0bba165f18eed784b1b1cd39fb30f084741a3491449bf886150b",
+      "file": "/root/oximut/.oximut/cache-resolution/pure-auto/measured-01-pure-oximut-incremental-unchanged/project/src/logic.ts",
+      "operator": "comparison-boundary",
+      "original": ">=",
+      "replacement": ">",
+      "location": {
+        "start": {
+          "offset": 308,
+          "line": 10,
+          "column": 13
+        },
+        "end": {
+          "offset": 310,
+          "line": 10,
+          "column": 15
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 6,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected 'failing' to be 'passing' // Object.is equality"
+      ],
+      "selection": {
+        "mode": "files",
+        "files": [
+          "/root/oximut/.oximut/cache-resolution/pure-auto/measured-01-pure-oximut-incremental-unchanged/project/test/logic.test.ts"
+        ],
+        "selectedTests": 7,
+        "totalTests": 7,
+        "expectedSkipped": 0,
+        "reasons": [
+          "whole-file-preserves-sequential-state-and-hooks"
+        ]
+      },
+      "provenance": {
+        "source": "cache",
+        "reason": "matching-project-fingerprint-and-fresh-baseline",
+        "fingerprint": "10792aff1da1b5e53002401d53d4fada3c4c79c709b6cb1386ffa8c4c5b1e520",
+        "originalRunId": "21073-1793105342647944307"
+      }
+    },
+    {
+      "id": "7c788a9b1144adea81e7a7e4ad53b3d9e34de634c7ce03774e33dbe15ecad391",
+      "file": "/root/oximut/.oximut/cache-resolution/pure-auto/measured-01-pure-oximut-incremental-unchanged/project/src/logic.ts",
+      "operator": "arithmetic",
+      "original": "/",
+      "replacement": "*",
+      "location": {
+        "start": {
+          "offset": 543,
+          "line": 17,
+          "column": 36
+        },
+        "end": {
+          "offset": 544,
+          "line": 17,
+          "column": 37
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 6,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected -249900 to be 75 // Object.is equality"
+      ],
+      "selection": {
+        "mode": "files",
+        "files": [
+          "/root/oximut/.oximut/cache-resolution/pure-auto/measured-01-pure-oximut-incremental-unchanged/project/test/logic.test.ts"
+        ],
+        "selectedTests": 7,
+        "totalTests": 7,
+        "expectedSkipped": 0,
+        "reasons": [
+          "whole-file-preserves-sequential-state-and-hooks"
+        ]
+      },
+      "provenance": {
+        "source": "cache",
+        "reason": "matching-project-fingerprint-and-fresh-baseline",
+        "fingerprint": "10792aff1da1b5e53002401d53d4fada3c4c79c709b6cb1386ffa8c4c5b1e520",
+        "originalRunId": "21073-1793105342647944307"
+      }
+    },
+    {
+      "id": "6782302801eb0752e935e6607c5c7da3a263886102b244e445ae28d375f633d4",
+      "file": "/root/oximut/.oximut/cache-resolution/pure-auto/measured-01-pure-oximut-incremental-unchanged/project/src/logic.ts",
+      "operator": "comparison-boundary",
+      "original": ">=",
+      "replacement": ">",
+      "location": {
+        "start": {
+          "offset": 867,
+          "line": 31,
+          "column": 14
+        },
+        "end": {
+          "offset": 869,
+          "line": 31,
+          "column": 16
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 6,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected false to be true // Object.is equality"
+      ],
+      "selection": {
+        "mode": "files",
+        "files": [
+          "/root/oximut/.oximut/cache-resolution/pure-auto/measured-01-pure-oximut-incremental-unchanged/project/test/logic.test.ts"
+        ],
+        "selectedTests": 7,
+        "totalTests": 7,
+        "expectedSkipped": 0,
+        "reasons": [
+          "whole-file-preserves-sequential-state-and-hooks"
+        ]
+      },
+      "provenance": {
+        "source": "cache",
+        "reason": "matching-project-fingerprint-and-fresh-baseline",
+        "fingerprint": "10792aff1da1b5e53002401d53d4fada3c4c79c709b6cb1386ffa8c4c5b1e520",
+        "originalRunId": "21073-1793105342647944307"
+      }
+    },
+    {
+      "id": "ce8815bd79b8a4e4a210d5d367c921e6cbcf22e56fed5bb7866fa67c9c00432f",
+      "file": "/root/oximut/.oximut/cache-resolution/pure-auto/measured-01-pure-oximut-incremental-unchanged/project/src/logic.ts",
+      "operator": "comparison-boundary",
+      "original": ">=",
+      "replacement": ">",
+      "location": {
+        "start": {
+          "offset": 490,
+          "line": 16,
+          "column": 15
+        },
+        "end": {
+          "offset": 492,
+          "line": 16,
+          "column": 17
+        }
+      },
+      "outcome": "survived",
+      "tests": {
+        "passed": 7,
+        "failed": 0,
+        "skipped": 0
+      },
+      "errors": [],
+      "selection": {
+        "mode": "files",
+        "files": [
+          "/root/oximut/.oximut/cache-resolution/pure-auto/measured-01-pure-oximut-incremental-unchanged/project/test/logic.test.ts"
+        ],
+        "selectedTests": 7,
+        "totalTests": 7,
+        "expectedSkipped": 0,
+        "reasons": [
+          "whole-file-preserves-sequential-state-and-hooks"
+        ]
+      },
+      "provenance": {
+        "source": "cache",
+        "reason": "matching-project-fingerprint-and-fresh-baseline",
+        "fingerprint": "10792aff1da1b5e53002401d53d4fada3c4c79c709b6cb1386ffa8c4c5b1e520",
+        "originalRunId": "21073-1793105342647944307"
+      }
+    },
+    {
+      "id": "efc803a4c10083b14ba4fdddb6216cd7d058c9266715d97733bf6e22d87a5bff",
+      "file": "/root/oximut/.oximut/cache-resolution/pure-auto/measured-01-pure-oximut-incremental-unchanged/project/src/logic.ts",
+      "operator": "comparison-boundary",
+      "original": "<",
+      "replacement": "<=",
+      "location": {
+        "start": {
+          "offset": 233,
+          "line": 8,
+          "column": 13
+        },
+        "end": {
+          "offset": 234,
+          "line": 8,
+          "column": 14
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 6,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected 'negative' to be 'failing' // Object.is equality"
+      ],
+      "selection": {
+        "mode": "files",
+        "files": [
+          "/root/oximut/.oximut/cache-resolution/pure-auto/measured-01-pure-oximut-incremental-unchanged/project/test/logic.test.ts"
+        ],
+        "selectedTests": 7,
+        "totalTests": 7,
+        "expectedSkipped": 0,
+        "reasons": [
+          "whole-file-preserves-sequential-state-and-hooks"
+        ]
+      },
+      "provenance": {
+        "source": "cache",
+        "reason": "matching-project-fingerprint-and-fresh-baseline",
+        "fingerprint": "10792aff1da1b5e53002401d53d4fada3c4c79c709b6cb1386ffa8c4c5b1e520",
+        "originalRunId": "21073-1793105342647944307"
+      }
+    },
+    {
+      "id": "8bb2fcb9d12ec4ec8a65292c3b6fc63eee8dd2bf48cea182625e3928a8a4bc3d",
+      "file": "/root/oximut/.oximut/cache-resolution/pure-auto/measured-01-pure-oximut-incremental-unchanged/project/src/logic.ts",
+      "operator": "comparison-boundary",
+      "original": ">=",
+      "replacement": ">",
+      "location": {
+        "start": {
+          "offset": 269,
+          "line": 9,
+          "column": 13
+        },
+        "end": {
+          "offset": 271,
+          "line": 9,
+          "column": 15
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 6,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected 'passing' to be 'excellent' // Object.is equality"
+      ],
+      "selection": {
+        "mode": "files",
+        "files": [
+          "/root/oximut/.oximut/cache-resolution/pure-auto/measured-01-pure-oximut-incremental-unchanged/project/test/logic.test.ts"
+        ],
+        "selectedTests": 7,
+        "totalTests": 7,
+        "expectedSkipped": 0,
+        "reasons": [
+          "whole-file-preserves-sequential-state-and-hooks"
+        ]
+      },
+      "provenance": {
+        "source": "cache",
+        "reason": "matching-project-fingerprint-and-fresh-baseline",
+        "fingerprint": "10792aff1da1b5e53002401d53d4fada3c4c79c709b6cb1386ffa8c4c5b1e520",
+        "originalRunId": "21073-1793105342647944307"
+      }
+    },
+    {
+      "id": "149dd3d23ef649b87e771258969ba64d88a7726303cc8d7600c16d823ecb11fb",
+      "file": "/root/oximut/.oximut/cache-resolution/pure-auto/measured-01-pure-oximut-incremental-unchanged/project/src/logic.ts",
+      "operator": "arithmetic",
+      "original": "+",
+      "replacement": "-",
+      "location": {
+        "start": {
+          "offset": 740,
+          "line": 23,
+          "column": 27
+        },
+        "end": {
+          "offset": 741,
+          "line": 23,
+          "column": 28
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 6,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected 3 to be 17 // Object.is equality"
+      ],
+      "selection": {
+        "mode": "files",
+        "files": [
+          "/root/oximut/.oximut/cache-resolution/pure-auto/measured-01-pure-oximut-incremental-unchanged/project/test/logic.test.ts"
+        ],
+        "selectedTests": 7,
+        "totalTests": 7,
+        "expectedSkipped": 0,
+        "reasons": [
+          "whole-file-preserves-sequential-state-and-hooks"
+        ]
+      },
+      "provenance": {
+        "source": "cache",
+        "reason": "matching-project-fingerprint-and-fresh-baseline",
+        "fingerprint": "10792aff1da1b5e53002401d53d4fada3c4c79c709b6cb1386ffa8c4c5b1e520",
+        "originalRunId": "21073-1793105342647944307"
+      }
+    },
+    {
+      "id": "18e80836cf0d494874306ea3259aa401907d5c7502f3c0ea3f1302a7496353c7",
+      "file": "/root/oximut/.oximut/cache-resolution/pure-auto/measured-01-pure-oximut-incremental-unchanged/project/src/logic.ts",
+      "operator": "arithmetic",
+      "original": "*",
+      "replacement": "/",
+      "location": {
+        "start": {
+          "offset": 532,
+          "line": 17,
+          "column": 25
+        },
+        "end": {
+          "offset": 533,
+          "line": 17,
+          "column": 26
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 6,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected 99.96 to be 75 // Object.is equality"
+      ],
+      "selection": {
+        "mode": "files",
+        "files": [
+          "/root/oximut/.oximut/cache-resolution/pure-auto/measured-01-pure-oximut-incremental-unchanged/project/test/logic.test.ts"
+        ],
+        "selectedTests": 7,
+        "totalTests": 7,
+        "expectedSkipped": 0,
+        "reasons": [
+          "whole-file-preserves-sequential-state-and-hooks"
+        ]
+      },
+      "provenance": {
+        "source": "cache",
+        "reason": "matching-project-fingerprint-and-fresh-baseline",
+        "fingerprint": "10792aff1da1b5e53002401d53d4fada3c4c79c709b6cb1386ffa8c4c5b1e520",
+        "originalRunId": "21073-1793105342647944307"
+      }
+    },
+    {
+      "id": "f30bfebb7fd15e1f390c3988f8f6b1d4674ab41cb212c7a78b7f7dca34a2b6da",
+      "file": "/root/oximut/.oximut/cache-resolution/pure-auto/measured-01-pure-oximut-incremental-unchanged/project/src/logic.ts",
+      "operator": "comparison-boundary",
+      "original": "<=",
+      "replacement": "<",
+      "location": {
+        "start": {
+          "offset": 440,
+          "line": 15,
+          "column": 13
+        },
+        "end": {
+          "offset": 442,
+          "line": 15,
+          "column": 15
+        }
+      },
+      "outcome": "survived",
+      "tests": {
+        "passed": 7,
+        "failed": 0,
+        "skipped": 0
+      },
+      "errors": [],
+      "selection": {
+        "mode": "files",
+        "files": [
+          "/root/oximut/.oximut/cache-resolution/pure-auto/measured-01-pure-oximut-incremental-unchanged/project/test/logic.test.ts"
+        ],
+        "selectedTests": 7,
+        "totalTests": 7,
+        "expectedSkipped": 0,
+        "reasons": [
+          "whole-file-preserves-sequential-state-and-hooks"
+        ]
+      },
+      "provenance": {
+        "source": "cache",
+        "reason": "matching-project-fingerprint-and-fresh-baseline",
+        "fingerprint": "10792aff1da1b5e53002401d53d4fada3c4c79c709b6cb1386ffa8c4c5b1e520",
+        "originalRunId": "21073-1793105342647944307"
+      }
+    },
+    {
+      "id": "8bcc660efd8fd87fff698054299b9b1cb5418bc0c57c96a4d1943411c5d04120",
+      "file": "/root/oximut/.oximut/cache-resolution/pure-auto/measured-01-pure-oximut-incremental-unchanged/project/src/logic.ts",
+      "operator": "comparison-boundary",
+      "original": "<",
+      "replacement": "<=",
+      "location": {
+        "start": {
+          "offset": 89,
+          "line": 2,
+          "column": 13
+        },
+        "end": {
+          "offset": 90,
+          "line": 2,
+          "column": 14
+        }
+      },
+      "outcome": "survived",
+      "tests": {
+        "passed": 7,
+        "failed": 0,
+        "skipped": 0
+      },
+      "errors": [],
+      "selection": {
+        "mode": "files",
+        "files": [
+          "/root/oximut/.oximut/cache-resolution/pure-auto/measured-01-pure-oximut-incremental-unchanged/project/test/logic.test.ts"
+        ],
+        "selectedTests": 7,
+        "totalTests": 7,
+        "expectedSkipped": 0,
+        "reasons": [
+          "whole-file-preserves-sequential-state-and-hooks"
+        ]
+      },
+      "provenance": {
+        "source": "cache",
+        "reason": "matching-project-fingerprint-and-fresh-baseline",
+        "fingerprint": "10792aff1da1b5e53002401d53d4fada3c4c79c709b6cb1386ffa8c4c5b1e520",
+        "originalRunId": "21073-1793105342647944307"
+      }
+    },
+    {
+      "id": "fcadb7193882ef316bde43a816288a4882cad4a288bb19b6b67111fc2341e815",
+      "file": "/root/oximut/.oximut/cache-resolution/pure-auto/measured-01-pure-oximut-incremental-unchanged/project/src/logic.ts",
+      "operator": "comparison-boundary",
+      "original": "<=",
+      "replacement": "<",
+      "location": {
+        "start": {
+          "offset": 641,
+          "line": 21,
+          "column": 14
+        },
+        "end": {
+          "offset": 643,
+          "line": 21,
+          "column": 16
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 6,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected 5 to be +0 // Object.is equality"
+      ],
+      "selection": {
+        "mode": "files",
+        "files": [
+          "/root/oximut/.oximut/cache-resolution/pure-auto/measured-01-pure-oximut-incremental-unchanged/project/test/logic.test.ts"
+        ],
+        "selectedTests": 7,
+        "totalTests": 7,
+        "expectedSkipped": 0,
+        "reasons": [
+          "whole-file-preserves-sequential-state-and-hooks"
+        ]
+      },
+      "provenance": {
+        "source": "cache",
+        "reason": "matching-project-fingerprint-and-fresh-baseline",
+        "fingerprint": "10792aff1da1b5e53002401d53d4fada3c4c79c709b6cb1386ffa8c4c5b1e520",
+        "originalRunId": "21073-1793105342647944307"
+      }
+    },
+    {
+      "id": "b644dd2e2f8ceb01189821bb21ce49ceab7a466c8dc2c71f5354b384d731fe4b",
+      "file": "/root/oximut/.oximut/cache-resolution/pure-auto/measured-01-pure-oximut-incremental-unchanged/project/src/logic.ts",
+      "operator": "comparison-boundary",
+      "original": ">",
+      "replacement": ">=",
+      "location": {
+        "start": {
+          "offset": 124,
+          "line": 3,
+          "column": 13
+        },
+        "end": {
+          "offset": 125,
+          "line": 3,
+          "column": 14
+        }
+      },
+      "outcome": "survived",
+      "tests": {
+        "passed": 7,
+        "failed": 0,
+        "skipped": 0
+      },
+      "errors": [],
+      "selection": {
+        "mode": "files",
+        "files": [
+          "/root/oximut/.oximut/cache-resolution/pure-auto/measured-01-pure-oximut-incremental-unchanged/project/test/logic.test.ts"
+        ],
+        "selectedTests": 7,
+        "totalTests": 7,
+        "expectedSkipped": 0,
+        "reasons": [
+          "whole-file-preserves-sequential-state-and-hooks"
+        ]
+      },
+      "provenance": {
+        "source": "cache",
+        "reason": "matching-project-fingerprint-and-fresh-baseline",
+        "fingerprint": "10792aff1da1b5e53002401d53d4fada3c4c79c709b6cb1386ffa8c4c5b1e520",
+        "originalRunId": "21073-1793105342647944307"
+      }
+    },
+    {
+      "id": "ab303175fb0790576df7a86a5a040a28e4104fd136a100be1c8b00e4d8875fca",
+      "file": "/root/oximut/.oximut/cache-resolution/pure-auto/measured-01-pure-oximut-incremental-unchanged/project/src/logic.ts",
+      "operator": "comparison-boundary",
+      "original": "<=",
+      "replacement": "<",
+      "location": {
+        "start": {
+          "offset": 697,
+          "line": 22,
+          "column": 41
+        },
+        "end": {
+          "offset": 699,
+          "line": 22,
+          "column": 43
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 6,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected 25 to be 17 // Object.is equality"
+      ],
+      "selection": {
+        "mode": "files",
+        "files": [
+          "/root/oximut/.oximut/cache-resolution/pure-auto/measured-01-pure-oximut-incremental-unchanged/project/test/logic.test.ts"
+        ],
+        "selectedTests": 7,
+        "totalTests": 7,
+        "expectedSkipped": 0,
+        "reasons": [
+          "whole-file-preserves-sequential-state-and-hooks"
+        ]
+      },
+      "provenance": {
+        "source": "cache",
+        "reason": "matching-project-fingerprint-and-fresh-baseline",
+        "fingerprint": "10792aff1da1b5e53002401d53d4fada3c4c79c709b6cb1386ffa8c4c5b1e520",
+        "originalRunId": "21073-1793105342647944307"
+      }
+    },
+    {
+      "id": "72e9646275a74cf5ad859b1db9447744dc888ebbd4e916f91b01eb8495de1df9",
+      "file": "/root/oximut/.oximut/cache-resolution/pure-auto/measured-01-pure-oximut-incremental-unchanged/project/src/logic.ts",
+      "operator": "comparison-boundary",
+      "original": "<=",
+      "replacement": "<",
+      "location": {
+        "start": {
+          "offset": 456,
+          "line": 15,
+          "column": 29
+        },
+        "end": {
+          "offset": 458,
+          "line": 15,
+          "column": 31
+        }
+      },
+      "outcome": "survived",
+      "tests": {
+        "passed": 7,
+        "failed": 0,
+        "skipped": 0
+      },
+      "errors": [],
+      "selection": {
+        "mode": "files",
+        "files": [
+          "/root/oximut/.oximut/cache-resolution/pure-auto/measured-01-pure-oximut-incremental-unchanged/project/test/logic.test.ts"
+        ],
+        "selectedTests": 7,
+        "totalTests": 7,
+        "expectedSkipped": 0,
+        "reasons": [
+          "whole-file-preserves-sequential-state-and-hooks"
+        ]
+      },
+      "provenance": {
+        "source": "cache",
+        "reason": "matching-project-fingerprint-and-fresh-baseline",
+        "fingerprint": "10792aff1da1b5e53002401d53d4fada3c4c79c709b6cb1386ffa8c4c5b1e520",
+        "originalRunId": "21073-1793105342647944307"
+      }
+    },
+    {
+      "id": "ad43fe22222632bf0db1f0f3fdfa26da643dc07dd2a6f407467fda22ea1b32f7",
+      "file": "/root/oximut/.oximut/cache-resolution/pure-auto/measured-01-pure-oximut-incremental-unchanged/project/src/logic.ts",
+      "operator": "arithmetic",
+      "original": "-",
+      "replacement": "+",
+      "location": {
+        "start": {
+          "offset": 523,
+          "line": 17,
+          "column": 16
+        },
+        "end": {
+          "offset": 524,
+          "line": 17,
+          "column": 17
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 6,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected 125 to be 75 // Object.is equality"
+      ],
+      "selection": {
+        "mode": "files",
+        "files": [
+          "/root/oximut/.oximut/cache-resolution/pure-auto/measured-01-pure-oximut-incremental-unchanged/project/test/logic.test.ts"
+        ],
+        "selectedTests": 7,
+        "totalTests": 7,
+        "expectedSkipped": 0,
+        "reasons": [
+          "whole-file-preserves-sequential-state-and-hooks"
+        ]
+      },
+      "provenance": {
+        "source": "cache",
+        "reason": "matching-project-fingerprint-and-fresh-baseline",
+        "fingerprint": "10792aff1da1b5e53002401d53d4fada3c4c79c709b6cb1386ffa8c4c5b1e520",
+        "originalRunId": "21073-1793105342647944307"
+      }
+    }
+  ],
+  "diagnostics": [
+    "execution=persistent; isolation=fresh-test-forks; controller reuse only; baseline=original-and-disabled-switches",
+    "disabled switching validation: /root/oximut/.oximut/cache-resolution/pure-auto/measured-01-pure-oximut-incremental-unchanged/project/src/logic.ts: Passed",
+    "adapter observed reuse boundary: controller"
+  ],
+  "summary": {
+    "total": 18,
+    "killed": 13,
+    "survived": 5,
+    "noCoverage": 0,
+    "invalid": 0,
+    "timeout": 0,
+    "infrastructureError": 0,
+    "resourceExhausted": 0,
+    "skipped": 0,
+    "scoreDenominator": 18,
+    "score": 72.22222222222223,
+    "complete": true
+  },
+  "cache": {
+    "enabled": true,
+    "outcomesEnabled": true,
+    "fingerprint": "10792aff1da1b5e53002401d53d4fada3c4c79c709b6cb1386ffa8c4c5b1e520",
+    "reason": "candidate-awaiting-baseline-validation",
+    "instrumentationHits": 1,
+    "instrumentationMisses": 0,
+    "outcomeHits": 18,
+    "outcomeMisses": 0,
+    "persistence": "complete-run-staged-for-commit-after-report",
+    "runnerHashMs": 11,
+    "fingerprintProfiles": [
+      {
+        "phase": "prepare",
+        "completed": true,
+        "elapsedMs": 5775,
+        "runtimeIdentityMs": 185,
+        "resourcePolicyMs": 19,
+        "inputsMs": 5570,
+        "filesHashed": 10078,
+        "bytesHashed": 294704253
+      },
+      {
+        "phase": "post-baseline-and-pre-publication",
+        "completed": true,
+        "elapsedMs": 4995,
+        "runtimeIdentityMs": 82,
+        "resourcePolicyMs": 5,
+        "inputsMs": 4907,
+        "filesHashed": 10078,
+        "bytesHashed": 294704253
+      }
+    ]
+  },
+  "resources": {
+    "admissionPauses": 0,
+    "admissionWorkerCostBytes": 382638080,
+    "budgetBytes": 12115951616,
+    "cgroups": [],
+    "configuredBudgetBytes": null,
+    "configuredWorkers": 1,
+    "cpuLimitWorkers": 8,
+    "effectiveWorkers": 1,
+    "enforcement": "best-effort sampled admission and process-tree cancellation; existing cgroup limits are OS-enforced; no new hard cap installed",
+    "exhaustion": null,
+    "maxActiveJobs": 1,
+    "measuredWorkerPeakBytes": 306110464,
+    "measurement": "Linux /proc smaps_rollup Rss sum, approximate stat RSS fallback on older/restricted kernels: main CLI and all worker/adapter/controller/test descendants; shared pages counted per process",
+    "peakAggregateRssBytes": 312049664,
+    "recycledIdleWorkers": 0,
+    "reserveBytes": 67108864,
+    "sampleIntervalMs": 50,
+    "samples": 61
+  }
+}

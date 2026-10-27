@@ -125,6 +125,7 @@ def artifact(tool, path, project, row):
             source = (project / filename).read_text()
             mutants.append((filename, source, mutant, mutant['outcome']))
         extra = {'report_run_id': report.get('runId'), 'cache': report.get('cache'), 'resources': report.get('resources'),
+                 'cache_provenance_count': sum(m.get('provenance', {}).get('source') == 'cache' for m in raw),
                  'baseline_test_counts': tests, 'diagnostics': report.get('diagnostics', []),
                  'mutation_summary': report['summary'],
                  'selection_mode_counts': dict(collections.Counter(
@@ -296,6 +297,8 @@ def command(args, tool, fixture, project, report, mode, cache=False, force=False
     if cache:
         result.extend(['--cache', '--cache-inputs-complete', '--cache-env', 'OXIMUT_FIXTURE_MODE',
                        '--cache-env', 'OXIMUT_BENCH_INPUT'])
+        if getattr(args, 'cache_policy', None) not in (None, 'legacy'):
+            result.extend(['--cache-policy', args.cache_policy])
     else:
         result.append('--no-cache')
     if force:
@@ -305,12 +308,23 @@ def command(args, tool, fixture, project, report, mode, cache=False, force=False
     return result
 
 
-def validate_oximut_cache(row, project, force):
+def validate_oximut_cache(row, project, force, policy=None):
     cache = row.get('cache') or {}
     hits = cache.get('outcomeHits', 0)
     if force:
         if hits:
             raise ValueError('forced run reused outcome cache entries')
+        return
+    if (policy == 'auto' and row.get('role') == 'incremental'
+            and cache.get('reason') == 'outcome-cache-cost-exceeds-fresh-work'):
+        if (not row.get('cache_prime_validated') or cache.get('enabled') is not True
+                or cache.get('outcomesEnabled') is not False or hits != 0
+                or cache.get('fingerprintProfiles') != []
+                or row.get('cache_provenance_count') != 0):
+            raise ValueError('adaptive bypass lacks primed, entirely fresh execution evidence')
+        row['cache_policy_bypass_verified'] = True
+        # Fresh execution proves agreement, rather than a cache-invalidation policy.
+        row['cache_invalidation_verified'] = None
         return
     if cache.get('outcomesEnabled') is not True:
         raise ValueError('outcome cache disabled; zero hits cannot prove invalidation')
@@ -357,21 +371,29 @@ def measured_run(args, tool, fixture, project, run_dir, mode, env, *, cache=Fals
                                   args.sample_interval, args.output_limit, process_env)
     if execution_report != report and execution_report.is_file():
         shutil.copy2(execution_report, report)
+    if tool == 'oximut' and cache and getattr(args, 'cache_policy', None) == 'auto':
+        # Preserve the advisory observations before the fixture is removed.
+        # This happens outside the measured command and contains no raw inputs.
+        history = {path.name: measurement.read_json(path)
+                   for path in sorted((project / '.oximut/cache/policy').glob('*.json'))
+                   if path.stat().st_size <= 8192}
+        write_json(run_dir / 'policy-history.json', history)
     row.update(schema_version=SCHEMA_VERSION, tool=tool, fixture=fixture, mode=mode,
-               report_file=str(report), seed=seed, **labels)
+               report_file=str(report), seed=seed, cache_policy=getattr(args, 'cache_policy', None), **labels)
     config_inputs = {str(p.relative_to(project)): measurement.file_hash(p)
                      for p in project.rglob('*') if p.is_file()
                      and 'node_modules' not in p.relative_to(project).parts and '.oximut' not in p.relative_to(project).parts
                      and not any(part.startswith('.stryker-tmp') for part in p.relative_to(project).parts)}
     row['configuration_sha256'] = digest({'inputs': config_inputs, 'tool': tool, 'mode': mode,
                                           'cache': cache, 'force': force, 'workers': args.workers,
+                                          'cache_policy': getattr(args, 'cache_policy', None),
                                           'memory_budget_mib': args.memory_budget_mib,
                                           'declared_environment': {k: env[k] for k in
                                               ('OXIMUT_FIXTURE_MODE', 'OXIMUT_BENCH_INPUT')}})
     try:
         row.update(artifact(tool, report, project, row))
         if tool == 'oximut' and cache:
-            validate_oximut_cache(row, project, force)
+            validate_oximut_cache(row, project, force, getattr(args, 'cache_policy', None))
         row['success'] = True  # Oximut exit 1 is a complete surviving-mutant result.
     except (OSError, ValueError, TypeError, KeyError) as error:
         row.update(success=False, validation_error=str(error))
@@ -493,6 +515,8 @@ def main(argv=None):
     parser.add_argument('--repetitions', type=int, default=5)
     parser.add_argument('--warmups', type=int, default=1)
     parser.add_argument('--workers', type=int, default=1)
+    parser.add_argument('--cache-policy', choices=['auto', 'always', 'legacy'], default='always',
+                        help='always measures actual reuse (default); auto measures adaptive decisions; legacy omits the flag for old binaries')
     parser.add_argument('--memory-budget-mib', type=int)
     parser.add_argument('--timeout', type=float, default=180)
     parser.add_argument('--sample-interval', type=float, default=.02)
@@ -533,7 +557,7 @@ def main(argv=None):
                     'cross_tool_ratio': 'suppressed unless exact full measured mutation sets and classifications agree; explicitly configured ignored operators published separately as scope exclusions',
                     'scope': 'checked-in deterministic fixtures only; no real projects, generated scaling, memory stress, cancellation or alpha release decision',
                     'changed_inputs': 'deterministic behavior-preserving edits; helper imported by a test (unused export), snapshot inert',
-                    'cache_evidence': 'Oximut requires enabled outcome cache, persisted prime and changed-input zero hits; Stryker unchanged requires explicit reuse, changed-input agreement does not prove invalidation under its narrower reuse policy',
+                    'cache_evidence': 'Oximut always/legacy requires enabled outcome cache, persisted prime and changed-input zero hits; explicit auto cost bypass requires primed entirely fresh execution and is not invalidation evidence; Stryker unchanged requires explicit reuse, changed-input agreement does not prove invalidation under its narrower reuse policy',
                     'declared_environment': {'CI': 'true', 'NO_COLOR': '1', 'OXIMUT_FIXTURE_MODE': 'fixture', 'OXIMUT_BENCH_INPUT': 'original'}})
     write_json(output / 'metadata.json', meta)
     rows = []

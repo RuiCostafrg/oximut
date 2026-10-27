@@ -1,0 +1,260 @@
+{
+  "schemaVersion": 1,
+  "runId": "16426-1793104955467715184",
+  "baseline": {
+    "protocol": 1,
+    "runId": "16426-1793104955467715184",
+    "jobId": "baseline",
+    "generation": 0,
+    "outcome": "passed",
+    "tests": {
+      "passed": 2,
+      "failed": 0,
+      "skipped": 0
+    },
+    "errors": [],
+    "coverage": {
+      "complete": true,
+      "tests": [
+        {
+          "id": "785083164_0",
+          "file": "/root/oximut/.oximut/cache-resolution/measured-04-before/measured-01-m1-oximut-incremental-unchanged/project/test/subject.test.ts",
+          "name": "enables the feature"
+        },
+        {
+          "id": "785083164_1",
+          "file": "/root/oximut/.oximut/cache-resolution/measured-04-before/measured-01-m1-oximut-incremental-unchanged/project/test/subject.test.ts",
+          "name": "excludes the exact limit"
+        }
+      ],
+      "hits": [
+        {
+          "mutantId": "641c30d54b8db3f4d8d1212ac1bb3a4f0b65044421a93240a2bd8fac98aabcc7",
+          "tests": [
+            "785083164_0"
+          ],
+          "outsideTest": false
+        },
+        {
+          "mutantId": "e1cb6842d8b4c350fb8db06adcbb32c8aee2fad0b81f0a816bd10b7455b315c0",
+          "tests": [
+            "785083164_1"
+          ],
+          "outsideTest": false
+        },
+        {
+          "mutantId": "c6b0a1eacb6302f1a93a386334d6b06ebbd26bfddb6ee024539082a895a335b9",
+          "tests": [],
+          "outsideTest": false
+        }
+      ],
+      "reasons": []
+    }
+  },
+  "mutants": [
+    {
+      "id": "e1cb6842d8b4c350fb8db06adcbb32c8aee2fad0b81f0a816bd10b7455b315c0",
+      "file": "/root/oximut/.oximut/cache-resolution/measured-04-before/measured-01-m1-oximut-incremental-unchanged/project/src/subject.ts",
+      "operator": "comparison-boundary",
+      "original": "<",
+      "replacement": "<=",
+      "location": {
+        "start": {
+          "offset": 123,
+          "line": 6,
+          "column": 16
+        },
+        "end": {
+          "offset": 124,
+          "line": 6,
+          "column": 17
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 1,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected true to be false // Object.is equality"
+      ],
+      "selection": {
+        "mode": "files",
+        "files": [
+          "/root/oximut/.oximut/cache-resolution/measured-04-before/measured-01-m1-oximut-incremental-unchanged/project/test/subject.test.ts"
+        ],
+        "selectedTests": 2,
+        "totalTests": 2,
+        "expectedSkipped": 0,
+        "reasons": [
+          "whole-file-preserves-sequential-state-and-hooks"
+        ]
+      },
+      "provenance": {
+        "source": "executed",
+        "reason": "entry-not-found",
+        "fingerprint": "059b27928a1e8f0a43cc2c83e7bd9baa70b14310abdee10481f660893d384188"
+      }
+    },
+    {
+      "id": "641c30d54b8db3f4d8d1212ac1bb3a4f0b65044421a93240a2bd8fac98aabcc7",
+      "file": "/root/oximut/.oximut/cache-resolution/measured-04-before/measured-01-m1-oximut-incremental-unchanged/project/src/subject.ts",
+      "operator": "boolean-literal",
+      "original": "true",
+      "replacement": "false",
+      "location": {
+        "start": {
+          "offset": 46,
+          "line": 2,
+          "column": 10
+        },
+        "end": {
+          "offset": 50,
+          "line": 2,
+          "column": 14
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 1,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected false to be true // Object.is equality"
+      ],
+      "selection": {
+        "mode": "files",
+        "files": [
+          "/root/oximut/.oximut/cache-resolution/measured-04-before/measured-01-m1-oximut-incremental-unchanged/project/test/subject.test.ts"
+        ],
+        "selectedTests": 2,
+        "totalTests": 2,
+        "expectedSkipped": 0,
+        "reasons": [
+          "whole-file-preserves-sequential-state-and-hooks"
+        ]
+      },
+      "provenance": {
+        "source": "executed",
+        "reason": "entry-not-found",
+        "fingerprint": "059b27928a1e8f0a43cc2c83e7bd9baa70b14310abdee10481f660893d384188"
+      }
+    },
+    {
+      "id": "c6b0a1eacb6302f1a93a386334d6b06ebbd26bfddb6ee024539082a895a335b9",
+      "file": "/root/oximut/.oximut/cache-resolution/measured-04-before/measured-01-m1-oximut-incremental-unchanged/project/src/subject.ts",
+      "operator": "boolean-literal",
+      "original": "false",
+      "replacement": "true",
+      "location": {
+        "start": {
+          "offset": 258,
+          "line": 11,
+          "column": 10
+        },
+        "end": {
+          "offset": 263,
+          "line": 11,
+          "column": 15
+        }
+      },
+      "outcome": "no-coverage",
+      "tests": {
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0
+      },
+      "errors": [],
+      "selection": {
+        "mode": "none",
+        "files": [],
+        "selectedTests": 0,
+        "totalTests": 2,
+        "expectedSkipped": 0,
+        "reasons": [
+          "complete-baseline-without-hits"
+        ]
+      },
+      "provenance": {
+        "source": "baseline-coverage",
+        "reason": "entry-not-found",
+        "fingerprint": "059b27928a1e8f0a43cc2c83e7bd9baa70b14310abdee10481f660893d384188"
+      }
+    }
+  ],
+  "diagnostics": [
+    "execution=persistent; isolation=fresh-test-forks; controller reuse only; baseline=original-and-disabled-switches",
+    "disabled switching validation: /root/oximut/.oximut/cache-resolution/measured-04-before/measured-01-m1-oximut-incremental-unchanged/project/src/subject.ts: Passed",
+    "adapter observed reuse boundary: controller"
+  ],
+  "summary": {
+    "total": 3,
+    "killed": 2,
+    "survived": 0,
+    "noCoverage": 1,
+    "invalid": 0,
+    "timeout": 0,
+    "infrastructureError": 0,
+    "resourceExhausted": 0,
+    "skipped": 0,
+    "scoreDenominator": 3,
+    "score": 66.66666666666667,
+    "complete": true
+  },
+  "cache": {
+    "enabled": true,
+    "outcomesEnabled": true,
+    "fingerprint": "059b27928a1e8f0a43cc2c83e7bd9baa70b14310abdee10481f660893d384188",
+    "reason": "entry-not-found",
+    "instrumentationHits": 0,
+    "instrumentationMisses": 1,
+    "outcomeHits": 0,
+    "outcomeMisses": 3,
+    "persistence": "complete-run-staged-for-commit-after-report",
+    "runnerHashMs": 16,
+    "fingerprintProfiles": [
+      {
+        "phase": "prepare",
+        "completed": true,
+        "elapsedMs": 3956,
+        "runtimeIdentityMs": 64,
+        "resourcePolicyMs": 4,
+        "inputsMs": 3887,
+        "filesHashed": 10078,
+        "bytesHashed": 294701233
+      },
+      {
+        "phase": "pre-publication",
+        "completed": true,
+        "elapsedMs": 4994,
+        "runtimeIdentityMs": 172,
+        "resourcePolicyMs": 10,
+        "inputsMs": 4811,
+        "filesHashed": 10078,
+        "bytesHashed": 294701233
+      }
+    ]
+  },
+  "resources": {
+    "admissionPauses": 1,
+    "admissionWorkerCostBytes": 302950400,
+    "budgetBytes": 12115951616,
+    "cgroups": [],
+    "configuredBudgetBytes": null,
+    "configuredWorkers": 1,
+    "cpuLimitWorkers": 8,
+    "effectiveWorkers": 1,
+    "enforcement": "best-effort sampled admission and process-tree cancellation; existing cgroup limits are OS-enforced; no new hard cap installed",
+    "exhaustion": null,
+    "maxActiveJobs": 1,
+    "measuredWorkerPeakBytes": 242360320,
+    "measurement": "Linux /proc RSS sum: main CLI and all worker/adapter/controller/test descendants; shared pages counted per process",
+    "peakAggregateRssBytes": 247365632,
+    "recycledIdleWorkers": 0,
+    "reserveBytes": 67108864,
+    "sampleIntervalMs": 50,
+    "samples": 90
+  }
+}

@@ -213,6 +213,39 @@ class GateTests(unittest.TestCase):
 
 
 class CacheEvidenceTests(unittest.TestCase):
+    def test_policy_arguments_distinguish_legacy_and_explicit_reuse(self):
+        args = SimpleNamespace(binary=Path('/binary'), workers=1, memory_budget_mib=None,
+                               cache_policy='legacy')
+        legacy = m6.command(args, 'oximut', 'm1', Path('/project'), Path('/report'),
+                            'selection', cache=True)
+        self.assertNotIn('--cache-policy', legacy)
+        args.cache_policy = 'always'
+        explicit = m6.command(args, 'oximut', 'm1', Path('/project'), Path('/report'),
+                              'selection', cache=True)
+        self.assertEqual(explicit[explicit.index('--cache-policy') + 1], 'always')
+
+    def test_adaptive_bypass_requires_explicit_policy_and_entirely_fresh_evidence(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            cached = row(role='incremental', mutant_count=2, cache_prime_validated=True,
+                         cache_provenance_count=0, change={'kind': 'unchanged'},
+                         cache={'enabled': True, 'outcomesEnabled': False, 'outcomeHits': 0,
+                                'reason': 'outcome-cache-cost-exceeds-fresh-work',
+                                'fingerprintProfiles': []})
+            with self.assertRaises(ValueError):
+                m6.validate_oximut_cache(cached, Path(temporary), False, 'always')
+            m6.validate_oximut_cache(cached, Path(temporary), False, 'auto')
+            self.assertTrue(cached['cache_policy_bypass_verified'])
+            self.assertIsNone(cached['cache_invalidation_verified'])
+            for field, value in [('cache_prime_validated', False), ('cache_provenance_count', 1)]:
+                altered = dict(cached, **{field: value})
+                with self.assertRaises(ValueError):
+                    m6.validate_oximut_cache(altered, Path(temporary), False, 'auto')
+            for field, value in [('outcomeHits', 1), ('outcomesEnabled', True),
+                                 ('fingerprintProfiles', [{'phase': 'prepare'}])]:
+                altered = dict(cached, cache={**cached['cache'], field: value})
+                with self.assertRaises(ValueError):
+                    m6.validate_oximut_cache(altered, Path(temporary), False, 'auto')
+
     def test_disabled_or_unprimed_cache_cannot_prove_invalidation(self):
         with tempfile.TemporaryDirectory() as temporary:
             project = Path(temporary)

@@ -1,0 +1,10 @@
+{
+  "134a3b9d9a8faa030b2a05282d55f8ea55038329ec03e942686fd0cf1aaeb978.json": {
+    "bypassOutcomes": true,
+    "fingerprintCostMs": 9366,
+    "freshWorkMs": 1598,
+    "key": "134a3b9d9a8faa030b2a05282d55f8ea55038329ec03e942686fd0cf1aaeb978",
+    "schemaVersion": 1,
+    "successfulBypasses": 1
+  }
+}

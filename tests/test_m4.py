@@ -39,7 +39,23 @@ if (request.collectCoverage) {
     reasons: [],
   };
 }
-if (request.kind === 'baseline' && command === 'fail-baseline-once') {
+if (request.kind === 'baseline' && command.startsWith('edit-baseline-once|')) {
+  const [, relativePath, contents] = command.split('|');
+  writeFileSync(`${request.root}/${relativePath}`, contents);
+  unlinkSync(control);
+} else if (request.kind === 'baseline' && command.startsWith('edit-baseline-twice|')) {
+  const [, relativePath, first, second] = command.split('|');
+  writeFileSync(`${request.root}/${relativePath}`, first);
+  writeFileSync(control, `edit-baseline-second|${relativePath}|${second}`);
+} else if (request.kind === 'baseline' && command.startsWith('edit-baseline-second|')) {
+  const [, relativePath, contents] = command.split('|');
+  writeFileSync(`${request.root}/${relativePath}`, contents);
+  unlinkSync(control);
+} else if (request.kind === 'baseline' && command.startsWith('delete-baseline-input-once|')) {
+  const [, inputPath] = command.split('|');
+  unlinkSync(inputPath);
+  unlinkSync(control);
+} else if (request.kind === 'baseline' && command === 'fail-baseline-once') {
   unlinkSync(control);
   response.outcome = 'failed';
   response.tests = { passed: 1, failed: 1, skipped: 0 };
@@ -55,6 +71,44 @@ if (request.kind === 'baseline' && command === 'fail-baseline-once') {
   response.errors = ['injected failing test'];
 }
 writeFileSync(output, JSON.stringify(response));
+"""
+
+
+FAKE_PERSISTENT_ADAPTER = r"""
+import { appendFileSync, existsSync, readFileSync, renameSync, unlinkSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+const session = process.argv[2];
+const control = process.env.OXIMUT_PERSISTENT_CONTROL;
+let sequence = 0;
+for (;;) {
+  if (existsSync(join(session, 'stop'))) {
+    const command = control && existsSync(control) ? readFileSync(control, 'utf8').trim() : '';
+    if (command === 'shutdown-fail') process.exit(23);
+    if (command.startsWith('edit-on-stop|')) {
+      const [, relativePath, contents] = command.split('|');
+      writeFileSync(`${process.env.OXIMUT_PERSISTENT_ROOT}/${relativePath}`, contents);
+      unlinkSync(control);
+    }
+    process.exit(0);
+  }
+  const input = join(session, `request-${sequence}.json`);
+  if (!existsSync(input)) { await new Promise(r => setTimeout(r, 5)); continue; }
+  const request = JSON.parse(readFileSync(input, 'utf8'));
+  if (process.env.OXIMUT_CACHE_CALLS) {
+    appendFileSync(process.env.OXIMUT_CACHE_CALLS, `${request.kind}:${request.jobId}\n`);
+  }
+  const requestCommand = control && existsSync(control) ? readFileSync(control, 'utf8').trim() : '';
+  const failBaseline = request.kind === 'baseline' && requestCommand === 'baseline-fail-once';
+  const response = { protocol: request.protocol, runId: request.runId,
+    jobId: request.jobId, generation: request.generation,
+    outcome: failBaseline ? 'failed' : 'passed',
+    tests: failBaseline ? { passed: 1, failed: 1, skipped: 0 } : { passed: 2, failed: 0, skipped: 0 },
+    errors: failBaseline ? ['injected baseline failure'] : [] };
+  if (failBaseline) unlinkSync(control);
+  const output = join(session, `response-${sequence++}.json`);
+  writeFileSync(output + '.tmp', JSON.stringify(response));
+  renameSync(output + '.tmp', output);
+}
 """
 
 
@@ -74,11 +128,12 @@ class IncrementalCache(unittest.TestCase):
         self.control = self.base / "control.txt"
         self.report_path = self.base / "report.json"
 
-    def run_oximut(self, *extra, env=None, success=True):
+    def run_oximut(self, *extra, env=None, success=True, cache_policy="always"):
         command = [
             str(BINARY), "--root", str(self.root), "--config", "vitest.config.ts",
             "--source", "src/subject.ts", "--adapter", str(self.adapter),
             "--report", str(self.report_path), "--cache", "--cache-inputs-complete",
+            "--cache-policy", cache_policy,
             *map(str, extra),
         ]
         process_env = {**os.environ, "OXIMUT_CACHE_CALLS": str(self.calls),
@@ -96,6 +151,18 @@ class IncrementalCache(unittest.TestCase):
     def read_calls(self):
         return self.calls.read_text().splitlines() if self.calls.exists() else []
 
+    def policy_history_files(self):
+        return list((self.root / ".oximut/cache/policy").glob("*.json"))
+
+    def tamper_policy_history(self, **changes):
+        files = self.policy_history_files()
+        self.assertTrue(files, "a complete auto-policy run should write advisory history")
+        path = files[0]
+        history = json.loads(path.read_text())
+        history.update(changes)
+        path.write_text(json.dumps(history))
+        return path
+
     @staticmethod
     def outcomes(report):
         return {item["id"]: item["outcome"] for item in report["mutants"]}
@@ -111,7 +178,7 @@ class IncrementalCache(unittest.TestCase):
         def run(*extra):
             command = [str(BINARY), "--root", str(root), "--config", "vitest.config.ts",
                        "--source", "src/subject.ts", "--report", str(self.base / "vitest-report.json"),
-                       "--cache", "--cache-inputs-complete", *extra]
+                       "--cache", "--cache-inputs-complete", "--cache-policy", "always", *extra]
             result = subprocess.run(command, cwd=REPO, text=True, capture_output=True,
                                     timeout=180, env=os.environ.copy())
             self.assertIn(result.returncode, (0, 1), result.stdout + result.stderr)
@@ -157,8 +224,12 @@ class IncrementalCache(unittest.TestCase):
         calls_after_first = len(self.read_calls())
         self.assertGreater(calls_after_first, 1, self.read_calls())
         self.assertTrue(first["summary"]["complete"], first)
+        self.assertEqual(len(first["cache"]["fingerprintProfiles"]), 2,
+                         first["cache"]["fingerprintProfiles"])
 
         second = self.run_oximut("--test-selection")
+        self.assertEqual(len(second["cache"]["fingerprintProfiles"]), 2,
+                         second["cache"]["fingerprintProfiles"])
         self.assertEqual(second["baseline"]["outcome"], "passed")
         self.assertEqual(self.read_calls().count("baseline:baseline"), 2,
                          "baseline validation must run for each invocation")
@@ -172,6 +243,124 @@ class IncrementalCache(unittest.TestCase):
         self.assertEqual(self.outcomes(first), self.outcomes(forced))
         self.assertEqual(forced["cache"]["outcomeHits"], 0, forced["cache"])
         self.assertEqual(forced["cache"]["instrumentationHits"], 0, forced["cache"])
+
+    def test_baseline_input_change_retries_once_with_fresh_inventory(self):
+        initial = self.run_oximut()
+        initial_ids = set(self.outcomes(initial))
+        added_source = (
+            self.root / "src/subject.ts"
+        ).read_text() + "\nexport function added(value: number): boolean { return value === 0; }\n"
+        self.control.write_text(
+            f"edit-baseline-once|src/subject.ts|{added_source}"
+        )
+        calls_before = len(self.read_calls())
+        retried = self.run_oximut()
+        current_calls = self.read_calls()[calls_before:]
+        self.assertEqual(current_calls.count("baseline:baseline"), 2, current_calls)
+        self.assertEqual(retried["baseline"]["outcome"], "passed", retried)
+        self.assertEqual(retried["cache"]["outcomeHits"], 0, retried["cache"])
+        self.assertTrue(retried["summary"]["complete"], retried)
+        self.assertTrue(all(m.get("provenance", {}).get("source") != "cache"
+                            for m in retried["mutants"]), retried["mutants"])
+        self.assertNotEqual(set(self.outcomes(retried)), initial_ids,
+                            "retry must regenerate mutants from the changed source")
+
+        forced = self.run_oximut("--force")
+        self.assertEqual(self.outcomes(retried), self.outcomes(forced))
+        self.assertEqual(retried["baseline"]["tests"], forced["baseline"]["tests"])
+
+    def test_declared_input_read_failure_fails_closed_without_retry_or_publication(self):
+        declared = self.base / "declared-input.fixture"
+        declared.write_text("stable-input")
+        first = self.run_oximut("--cache-input", declared)
+        warm = self.run_oximut("--cache-input", declared)
+        self.assertGreater(warm["cache"]["outcomeHits"], 0, warm["cache"])
+        old_records = {path.name: path.read_bytes() for path in
+                       (self.root / ".oximut/cache/outcomes").glob("*.json")}
+        self.assertTrue(old_records, first)
+
+        self.control.write_text(f"delete-baseline-input-once|{declared}")
+        calls_before = len(self.read_calls())
+        report = self.run_oximut("--cache-input", declared, success=False)
+        current_calls = self.read_calls()[calls_before:]
+        self.assertEqual(current_calls.count("baseline:baseline"), 1, current_calls)
+        self.assertFalse(report["summary"]["complete"], report)
+        self.assertFalse(report["cache"]["fingerprintProfiles"][-1]["completed"],
+                         report["cache"]["fingerprintProfiles"])
+        self.assertEqual(old_records, {path.name: path.read_bytes() for path in
+                                       (self.root / ".oximut/cache/outcomes").glob("*.json")})
+
+    def test_second_baseline_input_change_fails_closed_without_third_attempt(self):
+        self.run_oximut()
+        old_records = {path.name: path.read_bytes() for path in
+                       (self.root / ".oximut/cache/outcomes").glob("*.json")}
+        self.assertTrue(old_records)
+        source = (self.root / "src/subject.ts").read_text()
+        first = source + "\n// first race edit\n"
+        second = source + "\n// second race edit\n"
+        self.control.write_text(
+            f"edit-baseline-twice|src/subject.ts|{first}|{second}"
+        )
+        calls_before = len(self.read_calls())
+        report = self.run_oximut(success=False)
+        current_calls = self.read_calls()[calls_before:]
+        self.assertEqual(current_calls.count("baseline:baseline"), 2, current_calls)
+        self.assertFalse(report["summary"]["complete"], report)
+        self.assertEqual(report["cache"]["outcomeHits"], 0, report["cache"])
+        self.assertTrue(all(m.get("provenance", {}).get("source") != "cache"
+                            for m in report["mutants"]), report["mutants"])
+        self.assertEqual(old_records, {path.name: path.read_bytes() for path in
+                                       (self.root / ".oximut/cache/outcomes").glob("*.json")})
+
+    def test_persistent_shutdown_failure_prevents_retry_and_publication(self):
+        self.adapter.write_text(FAKE_PERSISTENT_ADAPTER)
+        args = ("--execution", "persistent")
+        self.control.write_text("")
+        base_env = {"OXIMUT_PERSISTENT_ROOT": str(self.root),
+                    "OXIMUT_PERSISTENT_CONTROL": str(self.control)}
+        self.run_oximut(*args, env=base_env)
+        old_records = {path.name: path.read_bytes() for path in
+                       (self.root / ".oximut/cache/outcomes").glob("*.json")}
+        self.assertTrue(old_records)
+
+        self.control.write_text("shutdown-fail")
+        calls_before = len(self.read_calls())
+        report = self.run_oximut(*args, env=base_env, success=False)
+        current_calls = self.read_calls()[calls_before:]
+        self.assertEqual(current_calls.count("baseline:baseline"), 1, current_calls)
+        self.assertFalse(report["summary"]["complete"], report)
+        self.assertFalse(any("retrying once" in d for d in report["diagnostics"]),
+                         report["diagnostics"])
+        self.assertEqual(old_records, {path.name: path.read_bytes() for path in
+                                       (self.root / ".oximut/cache/outcomes").glob("*.json")})
+
+    def test_persistent_shutdown_edit_runs_one_fresh_retry_after_cleanup(self):
+        self.adapter.write_text(FAKE_PERSISTENT_ADAPTER)
+        args = ("--execution", "persistent")
+        self.control.write_text("")
+        base_env = {"OXIMUT_PERSISTENT_ROOT": str(self.root),
+                    "OXIMUT_PERSISTENT_CONTROL": str(self.control)}
+        initial = self.run_oximut(*args, env=base_env)
+        initial_ids = set(self.outcomes(initial))
+        added_source = (
+            self.root / "src/subject.ts"
+        ).read_text() + "\nexport function added(value: number): boolean { return value === 0; }\n"
+        self.control.write_text(f"edit-on-stop|src/subject.ts|{added_source}")
+        calls_before = len(self.read_calls())
+        retried = self.run_oximut(*args, env=base_env)
+        current_calls = self.read_calls()[calls_before:]
+        self.assertEqual(current_calls.count("baseline:baseline"), 2, current_calls)
+        self.assertTrue(any("retrying once" in d for d in retried["diagnostics"]),
+                        retried["diagnostics"])
+        self.assertTrue(retried["summary"]["complete"], retried)
+        self.assertEqual(retried["cache"]["outcomeHits"], 0, retried["cache"])
+        self.assertTrue(all(m.get("provenance", {}).get("source") != "cache"
+                            for m in retried["mutants"]), retried["mutants"])
+        self.assertNotEqual(set(self.outcomes(retried)), initial_ids,
+                            "post-cleanup retry must regenerate the changed mutant inventory")
+
+        forced = self.run_oximut(*args, "--force", env=base_env)
+        self.assertEqual(self.outcomes(retried), self.outcomes(forced))
 
     def test_project_and_declared_inputs_invalidate_warm_entries(self):
         # These are all part of the project-wide execution fingerprint. Each
@@ -223,6 +412,134 @@ class IncrementalCache(unittest.TestCase):
                               (self.root / ".oximut/cache").rglob("*.json"))
         self.assertNotIn(b"alpha", persisted)
         self.assertNotIn(b"beta", persisted)
+
+    def test_auto_policy_bypasses_expensive_history_and_always_overrides_it(self):
+        prime = self.run_oximut(cache_policy="auto")
+        self.assertTrue(prime["summary"]["complete"], prime)
+        self.tamper_policy_history(fingerprintCostMs=1_000_000,
+                                  freshWorkMs=1, successfulBypasses=0,
+                                  bypassOutcomes=True)
+        calls_before = len(self.read_calls())
+        auto = self.run_oximut(cache_policy="auto")
+        current_calls = self.read_calls()[calls_before:]
+        self.assertEqual(current_calls.count("baseline:baseline"), 1, current_calls)
+        self.assertEqual(auto["cache"]["reason"],
+                         "outcome-cache-cost-exceeds-fresh-work", auto["cache"])
+        self.assertFalse(auto["cache"]["outcomesEnabled"], auto["cache"])
+        self.assertEqual(auto["cache"]["outcomeHits"], 0, auto["cache"])
+        self.assertIsNone(auto["cache"].get("fingerprint"), auto["cache"])
+        self.assertEqual(auto["cache"]["fingerprintProfiles"], [], auto["cache"])
+        self.assertTrue(all(m.get("provenance", {}).get("source") != "cache"
+                            for m in auto["mutants"]), auto["mutants"])
+        forced = self.run_oximut("--force", cache_policy="always")
+        self.assertEqual(self.outcomes(auto), self.outcomes(forced))
+
+        always = self.run_oximut(cache_policy="always")
+        self.assertGreater(always["cache"]["outcomeHits"], 0, always["cache"])
+        self.assertEqual(len(always["cache"]["fingerprintProfiles"]), 2,
+                         always["cache"]["fingerprintProfiles"])
+        self.assertEqual(self.outcomes(prime), self.outcomes(always))
+
+    def test_auto_policy_corrupt_history_falls_back_to_full_validation(self):
+        prime = self.run_oximut(cache_policy="auto")
+        history = self.policy_history_files()[0]
+        history.write_text('{"schemaVersion":999}\n')
+        report = self.run_oximut(cache_policy="auto")
+        self.assertTrue(report["summary"]["complete"], report)
+        self.assertEqual(len(report["cache"]["fingerprintProfiles"]), 2,
+                         report["cache"]["fingerprintProfiles"])
+        self.assertEqual(report["cache"]["reason"], "outcome-cache-cost-probe",
+                         report["cache"])
+        self.assertEqual(report["cache"]["outcomeHits"], 0, report["cache"])
+        self.assertTrue(all(m.get("provenance", {}).get("source") != "cache"
+                            for m in report["mutants"]), report["mutants"])
+        self.assertEqual(self.outcomes(prime), self.outcomes(report))
+
+    def test_auto_policy_source_change_uses_new_history_key_and_reprobes(self):
+        self.run_oximut(cache_policy="auto")
+        old_history = {path.name for path in self.policy_history_files()}
+        source = self.root / "src/subject.ts"
+        source.write_bytes(source.read_bytes().replace(b"< 10", b"< 11", 1))
+        report = self.run_oximut(cache_policy="auto")
+        self.assertEqual(report["cache"]["outcomeHits"], 0, report["cache"])
+        self.assertEqual(len(report["cache"]["fingerprintProfiles"]), 2,
+                         report["cache"]["fingerprintProfiles"])
+        self.assertTrue(set(path.name for path in self.policy_history_files()) - old_history,
+                        self.policy_history_files())
+
+    def test_auto_policy_reprobes_after_eight_successful_bypasses(self):
+        self.run_oximut(cache_policy="auto")
+        self.tamper_policy_history(fingerprintCostMs=1_000_000,
+                                  freshWorkMs=1, successfulBypasses=8,
+                                  bypassOutcomes=True)
+        calls_before = len(self.read_calls())
+        report = self.run_oximut(cache_policy="auto")
+        self.assertEqual(self.read_calls()[calls_before:].count("baseline:baseline"), 1)
+        self.assertEqual(report["cache"]["reason"], "outcome-cache-cost-probe",
+                         report["cache"])
+        self.assertEqual(report["cache"]["outcomeHits"], 0, report["cache"])
+        self.assertGreaterEqual(len(report["cache"]["fingerprintProfiles"]), 2,
+                                report["cache"]["fingerprintProfiles"])
+
+    def test_auto_policy_does_not_publish_history_for_failed_baseline_or_cleanup(self):
+        self.adapter.write_text(FAKE_PERSISTENT_ADAPTER)
+        self.control.write_text("")
+        env = {"OXIMUT_PERSISTENT_ROOT": str(self.root),
+               "OXIMUT_PERSISTENT_CONTROL": str(self.control)}
+        args = ("--execution", "persistent")
+        initial = self.run_oximut(*args, env=env, cache_policy="auto")
+        self.assertTrue(initial["summary"]["complete"], initial)
+        old_history = {path.name: path.read_bytes() for path in self.policy_history_files()}
+        self.assertTrue(old_history)
+
+        self.control.write_text("baseline-fail-once")
+        baseline_failed = self.run_oximut(*args, env=env, cache_policy="auto", success=False)
+        self.assertFalse(baseline_failed["summary"]["complete"], baseline_failed)
+        self.assertEqual(old_history, {path.name: path.read_bytes()
+                                      for path in self.policy_history_files()})
+
+        self.control.write_text("shutdown-fail")
+        cleanup_failed = self.run_oximut(*args, env=env, cache_policy="auto", success=False)
+        self.assertFalse(cleanup_failed["summary"]["complete"], cleanup_failed)
+        self.assertEqual(old_history, {path.name: path.read_bytes()
+                                      for path in self.policy_history_files()})
+
+    def test_content_mode_and_inherited_environment_changes_invalidate_then_warm(self):
+        source = self.root / "src/subject.ts"
+        env_name = "OXIMUT_M4_INHERITED_CACHE_FIXTURE"
+        env = {env_name: "first"}
+        original_bytes = source.read_bytes()
+        original_stat = source.stat()
+        self.run_oximut(env=env)
+        warm = self.run_oximut(env=env)
+        self.assertGreater(warm["cache"]["outcomeHits"], 0, warm["cache"])
+
+        # A metadata-only fingerprint would miss this equal-length byte edit.
+        changed_bytes = original_bytes.replace(b"< 10", b"< 11", 1)
+        self.assertEqual(len(changed_bytes), len(original_bytes))
+        self.assertNotEqual(changed_bytes, original_bytes)
+        source.write_bytes(changed_bytes)
+        os.utime(source, ns=(original_stat.st_atime_ns, original_stat.st_mtime_ns))
+        changed_content = self.run_oximut(env=env)
+        self.assertEqual(changed_content["cache"]["outcomeHits"], 0,
+                         changed_content["cache"])
+        self.assertGreater(self.run_oximut(env=env)["cache"]["outcomeHits"], 0)
+
+        # Unix mode bits affect executable behavior and are part of the input tree.
+        mode = source.stat().st_mode
+        source.chmod(mode ^ 0o100)
+        changed_mode = self.run_oximut(env=env)
+        self.assertEqual(changed_mode["cache"]["outcomeHits"], 0,
+                         changed_mode["cache"])
+        self.assertGreater(self.run_oximut(env=env)["cache"]["outcomeHits"], 0)
+
+        # Inherited environment is part of the fingerprint even without --cache-env.
+        changed_env = self.run_oximut(env={env_name: "second"})
+        self.assertEqual(changed_env["cache"]["outcomeHits"], 0,
+                         changed_env["cache"])
+        stable_env = self.run_oximut(env={env_name: "second"})
+        self.assertGreater(stable_env["cache"]["outcomeHits"], 0,
+                           stable_env["cache"])
 
     def test_incomplete_or_undeclared_inputs_never_publish_reusable_outcomes(self):
         no_assertion = subprocess.run(
@@ -293,7 +610,6 @@ class IncrementalCache(unittest.TestCase):
         report = self.run_oximut(
             "--timeout-ms", "1000", env={"PATH": search_path}
         )
-        self.assertFalse(report["cache"]["outcomesEnabled"], report["cache"])
         self.assertEqual(
             report["cache"]["reason"],
             "unsafe-or-incomplete-fingerprint: node runtime identity deadline exceeded",

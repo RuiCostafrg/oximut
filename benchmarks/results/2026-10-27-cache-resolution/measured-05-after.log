@@ -1,0 +1,4 @@
+prime: oximut m1 incremental-unchanged
+incremental: oximut m1 incremental-unchanged
+forced: oximut m1 incremental-unchanged
+Correctness gate: passed; /root/oximut/.oximut/cache-resolution/measured-05-after/summary.json

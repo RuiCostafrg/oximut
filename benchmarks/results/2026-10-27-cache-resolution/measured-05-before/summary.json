@@ -1,0 +1,108 @@
+{
+  "correctness_gate": {
+    "failures": [],
+    "passed": true
+  },
+  "groups": [
+    {
+      "all_runs_successful": true,
+      "cpu_seconds": {
+        "max": 8.830468,
+        "median": 8.830468,
+        "min": 8.830468,
+        "samples": [
+          8.830468
+        ]
+      },
+      "fixture": "m1",
+      "measured_attempts": 1,
+      "measured_successes": 1,
+      "mutation_status_counts": [
+        {
+          "killed": 2,
+          "no-coverage": 1
+        }
+      ],
+      "outcomes_stable": true,
+      "peak_aggregate_rss_bytes": {
+        "max": 276660224,
+        "median": 276660224,
+        "min": 276660224,
+        "samples": [
+          276660224
+        ]
+      },
+      "peak_process_count": {
+        "max": 6,
+        "median": 6,
+        "min": 6,
+        "samples": [
+          6
+        ]
+      },
+      "role": "forced",
+      "scenario": "incremental-unchanged",
+      "tool": "oximut",
+      "wall_seconds": {
+        "max": 8.275179788004607,
+        "median": 8.275179788004607,
+        "min": 8.275179788004607,
+        "samples": [
+          8.275179788004607
+        ]
+      },
+      "warmup_attempts": 0
+    },
+    {
+      "all_runs_successful": true,
+      "cpu_seconds": {
+        "max": 12.692506,
+        "median": 12.692506,
+        "min": 12.692506,
+        "samples": [
+          12.692506
+        ]
+      },
+      "fixture": "m1",
+      "measured_attempts": 1,
+      "measured_successes": 1,
+      "mutation_status_counts": [
+        {
+          "killed": 2,
+          "no-coverage": 1
+        }
+      ],
+      "outcomes_stable": true,
+      "peak_aggregate_rss_bytes": {
+        "max": 238333952,
+        "median": 238333952,
+        "min": 238333952,
+        "samples": [
+          238333952
+        ]
+      },
+      "peak_process_count": {
+        "max": 6,
+        "median": 6,
+        "min": 6,
+        "samples": [
+          6
+        ]
+      },
+      "role": "incremental",
+      "scenario": "incremental-unchanged",
+      "tool": "oximut",
+      "wall_seconds": {
+        "max": 18.68157223192975,
+        "median": 18.68157223192975,
+        "min": 18.68157223192975,
+        "samples": [
+          18.68157223192975
+        ]
+      },
+      "warmup_attempts": 0
+    }
+  ],
+  "ratios": [],
+  "raw_measurement_count": 3
+}

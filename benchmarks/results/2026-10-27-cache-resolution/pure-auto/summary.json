@@ -1,0 +1,172 @@
+{
+  "correctness_gate": {
+    "failures": [],
+    "passed": true
+  },
+  "groups": [
+    {
+      "all_runs_successful": true,
+      "cpu_seconds": {
+        "max": 20.867835999999997,
+        "median": 20.568949,
+        "min": 20.403565,
+        "samples": [
+          20.403565,
+          20.867835999999997,
+          20.456271,
+          20.568949,
+          20.728866
+        ]
+      },
+      "fixture": "pure",
+      "measured_attempts": 5,
+      "measured_successes": 5,
+      "mutation_status_counts": [
+        {
+          "killed": 13,
+          "survived": 5
+        },
+        {
+          "killed": 13,
+          "survived": 5
+        },
+        {
+          "killed": 13,
+          "survived": 5
+        },
+        {
+          "killed": 13,
+          "survived": 5
+        },
+        {
+          "killed": 13,
+          "survived": 5
+        }
+      ],
+      "outcomes_stable": true,
+      "peak_aggregate_rss_bytes": {
+        "max": 297521152,
+        "median": 289726464,
+        "min": 281665536,
+        "samples": [
+          297521152,
+          281665536,
+          287186944,
+          293871616,
+          289726464
+        ]
+      },
+      "peak_process_count": {
+        "max": 6,
+        "median": 6,
+        "min": 6,
+        "samples": [
+          6,
+          6,
+          6,
+          6,
+          6
+        ]
+      },
+      "role": "forced",
+      "scenario": "incremental-unchanged",
+      "tool": "oximut",
+      "wall_seconds": {
+        "max": 17.696067962097004,
+        "median": 17.252792702056468,
+        "min": 17.234049056190997,
+        "samples": [
+          17.24976473301649,
+          17.696067962097004,
+          17.252792702056468,
+          17.234049056190997,
+          17.544387025060132
+        ]
+      },
+      "warmup_attempts": 1
+    },
+    {
+      "all_runs_successful": true,
+      "cpu_seconds": {
+        "max": 9.609917,
+        "median": 8.802439,
+        "min": 8.162644,
+        "samples": [
+          9.609917,
+          8.162644,
+          8.336253,
+          8.86755,
+          8.802439
+        ]
+      },
+      "fixture": "pure",
+      "measured_attempts": 5,
+      "measured_successes": 5,
+      "mutation_status_counts": [
+        {
+          "killed": 13,
+          "survived": 5
+        },
+        {
+          "killed": 13,
+          "survived": 5
+        },
+        {
+          "killed": 13,
+          "survived": 5
+        },
+        {
+          "killed": 13,
+          "survived": 5
+        },
+        {
+          "killed": 13,
+          "survived": 5
+        }
+      ],
+      "outcomes_stable": true,
+      "peak_aggregate_rss_bytes": {
+        "max": 262045696,
+        "median": 254410752,
+        "min": 250368000,
+        "samples": [
+          254410752,
+          250368000,
+          262045696,
+          257228800,
+          250941440
+        ]
+      },
+      "peak_process_count": {
+        "max": 6,
+        "median": 6,
+        "min": 6,
+        "samples": [
+          6,
+          6,
+          6,
+          6,
+          6
+        ]
+      },
+      "role": "incremental",
+      "scenario": "incremental-unchanged",
+      "tool": "oximut",
+      "wall_seconds": {
+        "max": 15.46207759808749,
+        "median": 13.68989541195333,
+        "min": 12.336442131083459,
+        "samples": [
+          15.46207759808749,
+          12.336442131083459,
+          13.081869629910216,
+          14.416404369054362,
+          13.68989541195333
+        ]
+      },
+      "warmup_attempts": 1
+    }
+  ],
+  "ratios": [],
+  "raw_measurement_count": 18
+}

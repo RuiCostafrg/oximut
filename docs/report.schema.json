@@ -202,7 +202,7 @@
             "additionalProperties": false,
             "required": ["phase", "completed", "elapsedMs", "runtimeIdentityMs", "resourcePolicyMs", "inputsMs", "filesHashed", "bytesHashed"],
             "properties": {
-              "phase": { "enum": ["prepare", "post-baseline", "pre-publication"] },
+              "phase": { "enum": ["prepare", "post-baseline", "pre-publication", "post-baseline-and-pre-publication"] },
               "completed": { "type": "boolean" },
               "elapsedMs": { "type": "integer", "minimum": 0 },
               "runtimeIdentityMs": { "type": "integer", "minimum": 0 },

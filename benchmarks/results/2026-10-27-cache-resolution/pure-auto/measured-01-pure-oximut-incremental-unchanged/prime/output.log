@@ -1,0 +1,56 @@
+Baseline: Passed (7 passed, 0 failed, 0 skipped)
+killed a5b8eaf60ac6 /root/oximut/.oximut/cache-resolution/pure-auto/measured-01-pure-oximut-incremental-unchanged/project/src/logic.ts:22:23 <= -> <
+  expected 10 to be 5 // Object.is equality
+  Selected tests: 7/7 (files); reasons: whole-file-preserves-sequential-state-and-hooks
+killed 7815ea750e08 /root/oximut/.oximut/cache-resolution/pure-auto/measured-01-pure-oximut-incremental-unchanged/project/src/logic.ts:35:13 < -> <=
+  expected 'small' to be 'medium' // Object.is equality
+  Selected tests: 7/7 (files); reasons: whole-file-preserves-sequential-state-and-hooks
+killed b2ed210b22d2 /root/oximut/.oximut/cache-resolution/pure-auto/measured-01-pure-oximut-incremental-unchanged/project/src/logic.ts:36:13 <= -> <
+  expected 'large' to be 'medium' // Object.is equality
+  Selected tests: 7/7 (files); reasons: whole-file-preserves-sequential-state-and-hooks
+killed 8bb8fc3ae53a /root/oximut/.oximut/cache-resolution/pure-auto/measured-01-pure-oximut-incremental-unchanged/project/src/logic.ts:10:13 >= -> >
+  expected 'failing' to be 'passing' // Object.is equality
+  Selected tests: 7/7 (files); reasons: whole-file-preserves-sequential-state-and-hooks
+killed 7c788a9b1144 /root/oximut/.oximut/cache-resolution/pure-auto/measured-01-pure-oximut-incremental-unchanged/project/src/logic.ts:17:36 / -> *
+  expected -249900 to be 75 // Object.is equality
+  Selected tests: 7/7 (files); reasons: whole-file-preserves-sequential-state-and-hooks
+killed 6782302801eb /root/oximut/.oximut/cache-resolution/pure-auto/measured-01-pure-oximut-incremental-unchanged/project/src/logic.ts:31:14 >= -> >
+  expected false to be true // Object.is equality
+  Selected tests: 7/7 (files); reasons: whole-file-preserves-sequential-state-and-hooks
+survived ce8815bd79b8 /root/oximut/.oximut/cache-resolution/pure-auto/measured-01-pure-oximut-incremental-unchanged/project/src/logic.ts:16:15 >= -> >
+  Selected tests: 7/7 (files); reasons: whole-file-preserves-sequential-state-and-hooks
+killed efc803a4c100 /root/oximut/.oximut/cache-resolution/pure-auto/measured-01-pure-oximut-incremental-unchanged/project/src/logic.ts:8:13 < -> <=
+  expected 'negative' to be 'failing' // Object.is equality
+  Selected tests: 7/7 (files); reasons: whole-file-preserves-sequential-state-and-hooks
+killed 8bb2fcb9d12e /root/oximut/.oximut/cache-resolution/pure-auto/measured-01-pure-oximut-incremental-unchanged/project/src/logic.ts:9:13 >= -> >
+  expected 'passing' to be 'excellent' // Object.is equality
+  Selected tests: 7/7 (files); reasons: whole-file-preserves-sequential-state-and-hooks
+killed 149dd3d23ef6 /root/oximut/.oximut/cache-resolution/pure-auto/measured-01-pure-oximut-incremental-unchanged/project/src/logic.ts:23:27 + -> -
+  expected 3 to be 17 // Object.is equality
+  Selected tests: 7/7 (files); reasons: whole-file-preserves-sequential-state-and-hooks
+killed 18e80836cf0d /root/oximut/.oximut/cache-resolution/pure-auto/measured-01-pure-oximut-incremental-unchanged/project/src/logic.ts:17:25 * -> /
+  expected 99.96 to be 75 // Object.is equality
+  Selected tests: 7/7 (files); reasons: whole-file-preserves-sequential-state-and-hooks
+survived f30bfebb7fd1 /root/oximut/.oximut/cache-resolution/pure-auto/measured-01-pure-oximut-incremental-unchanged/project/src/logic.ts:15:13 <= -> <
+  Selected tests: 7/7 (files); reasons: whole-file-preserves-sequential-state-and-hooks
+survived 8bcc660efd8f /root/oximut/.oximut/cache-resolution/pure-auto/measured-01-pure-oximut-incremental-unchanged/project/src/logic.ts:2:13 < -> <=
+  Selected tests: 7/7 (files); reasons: whole-file-preserves-sequential-state-and-hooks
+killed fcadb7193882 /root/oximut/.oximut/cache-resolution/pure-auto/measured-01-pure-oximut-incremental-unchanged/project/src/logic.ts:21:14 <= -> <
+  expected 5 to be +0 // Object.is equality
+  Selected tests: 7/7 (files); reasons: whole-file-preserves-sequential-state-and-hooks
+survived b644dd2e2f8c /root/oximut/.oximut/cache-resolution/pure-auto/measured-01-pure-oximut-incremental-unchanged/project/src/logic.ts:3:13 > -> >=
+  Selected tests: 7/7 (files); reasons: whole-file-preserves-sequential-state-and-hooks
+killed ab303175fb07 /root/oximut/.oximut/cache-resolution/pure-auto/measured-01-pure-oximut-incremental-unchanged/project/src/logic.ts:22:41 <= -> <
+  expected 25 to be 17 // Object.is equality
+  Selected tests: 7/7 (files); reasons: whole-file-preserves-sequential-state-and-hooks
+survived 72e9646275a7 /root/oximut/.oximut/cache-resolution/pure-auto/measured-01-pure-oximut-incremental-unchanged/project/src/logic.ts:15:29 <= -> <
+  Selected tests: 7/7 (files); reasons: whole-file-preserves-sequential-state-and-hooks
+killed ad43fe222226 /root/oximut/.oximut/cache-resolution/pure-auto/measured-01-pure-oximut-incremental-unchanged/project/src/logic.ts:17:16 - -> +
+  expected 125 to be 75 // Object.is equality
+  Selected tests: 7/7 (files); reasons: whole-file-preserves-sequential-state-and-hooks
+Mutants: 18 total, 13 killed, 5 survived, 0 no-coverage, 0 invalid, 0 timeout, 0 infrastructure-error, 0 resource-exhausted, 0 skipped
+Score: 72.22% (13/18); complete: true
+Cache: outcome-cache-cost-probe; instrumentation hits/misses: 0/1; outcome hits/misses: 0/18; complete-run-persisted
+Diagnostic: execution=persistent; isolation=fresh-test-forks; controller reuse only; baseline=original-and-disabled-switches
+Diagnostic: disabled switching validation: /root/oximut/.oximut/cache-resolution/pure-auto/measured-01-pure-oximut-incremental-unchanged/project/src/logic.ts: Passed
+Diagnostic: adapter observed reuse boundary: controller

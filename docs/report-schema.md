@@ -85,10 +85,39 @@ the staged outcome transaction is committed. The later text output reports
 `complete-run-persisted` or `outcome-commit-failed: ...`; the JSON staged state
 alone does not prove that publication succeeded.
 
+`--cache-policy auto` (the default) uses advisory local timing history to decide
+whether to attempt outcome caching. Instrumentation caching stays enabled when
+outcome caching is bypassed. A bypass records reason
+`outcome-cache-cost-exceeds-fresh-work`, `outcomesEnabled: false`, zero outcome
+hits, no fingerprint, and an empty `fingerprintProfiles` array. Baselines and
+mutation jobs execute normally. `--cache-policy always` ignores this history and
+performs the full outcome validation/reuse path. `--no-cache` bypasses both caches
+and policy history.
+
+Policy history lives separately at `.oximut/cache/policy/<key>.json`. Its key
+covers the runner, serialized options, source-content artifact identities, and an
+inherited-environment digest; it stores no environment values. Schema 1 records
+`schemaVersion`, `key`, `fingerprintCostMs`, `freshWorkMs`, `successfulBypasses`,
+and `bypassOutcomes`. History is advisory: it can only select fresh execution,
+never authorize reuse or replace input validation. Missing, malformed, oversized,
+or incompatible history triggers a full probe with outcome reuse disabled.
+
+Calibration compares the full fingerprint attempts' elapsed time, including
+runtime and resource-policy checks, against actual scheduled mutation-job wall
+time, excluding baseline and cleanup. Only complete runs with no outcome hits
+and successful report emission update history. Auto bypasses future outcome
+lookups and scans when fingerprint cost is at least 125% of fresh mutation work.
+Once bypassed, it re-enables probing when fresh work costs at least the prior
+fingerprint estimate; this gap prevents switching around a single threshold.
+After eight successful bypasses it forces a fresh calibration probe. Source or
+settings changes produce a new policy key. Failures do not advance the bypass
+count or write history. Policy writes are atomic and independent of outcome
+publication; a failed advisory write leaves future validation requirements intact.
+
 Cache profiling adds `runnerHashMs` (runner executable hashing) and
 `fingerprintProfiles` (ordered full fingerprint attempts). These fields are optional
 in the schema so earlier reports remain valid. Each attempt records `phase`
-(`prepare`, `post-baseline`, or `pre-publication`), `completed`, `elapsedMs`,
+(`prepare`, `post-baseline`, `pre-publication`, or `post-baseline-and-pre-publication`), `completed`, `elapsedMs`,
 `runtimeIdentityMs`, `resourcePolicyMs`, `inputsMs`, `filesHashed`, and `bytesHashed`.
 Elapsed values are monotonic wall time in whole milliseconds, rounded down;
 `inputsMs` includes path discovery, environment hashing, tree traversal, and full
@@ -101,6 +130,23 @@ not include the separately timed runner hash. Disabled outcome caching emits an
 empty array; disabled cache hashing reports zero runner time. Profiling does not
 change cache keys, baseline validation, input coverage, or reserved report identity,
 and records no paths or environment values.
+
+A fully validated, nonempty warm run with every outcome reused performs its final
+full fingerprint after worker cleanup, combining post-baseline and pre-publication
+validation. A changed fingerprint on an otherwise clean, passing attempt discards
+all reused evidence and retries once with newly read sources, regenerated
+transforms, fresh baselines, and outcome reuse disabled. A fingerprint read error,
+baseline failure, cleanup failure, or resource exhaustion never triggers retry.
+The retry retains separate post-baseline and pre-publication scans; a change or
+read failure during either scan makes its report incomplete and prevents outcome
+publication. Mixed hits, misses, empty inventories, and baseline-only runs retain
+the ordinary validation path.
+
+After retry, diagnostics preserve the discarded attempt's resource report and
+explain the retry. Baseline, mutation results, cache hit/miss counters, and resource
+configuration describe the final attempt. Resource peak observations take the
+maximum across attempts; sample, admission-pause, and recycled-worker counters
+are summed. Fingerprint profiles retain both attempts in chronological order, and `runnerHashMs` sums both executable hashes.
 
 Current `resources` fields are `configuredWorkers`, `effectiveWorkers`,
 `cpuLimitWorkers`, `configuredBudgetBytes` (nullable), `budgetBytes`,
@@ -150,3 +196,31 @@ The JSON Schema captures the serialized structure, enums, and required fields.
 It cannot establish semantic conditions such as score arithmetic, consistency
 between summary counts and entries, or cache provenance validity; those are
 enforced by the runner and its validation paths.
+
+## Interface versioning policy
+
+Normal reports and `--list` are separate interfaces. Consumers must check the
+integer `schemaVersion` before interpreting either. For normal reports, adding
+optional fields is compatible within version 1; consumers should ignore unknown
+fields. Removing or renaming fields, changing their types or meanings, changing
+required fields, or changing outcome/score/exit semantics requires a new schema
+version and migration notes. Diagnostic text and timing values are observations,
+not stable identifiers. Consumers should tolerate new diagnostic reasons and
+profiling phase names; the checked-in schema is updated when these are added.
+
+`--list` version 1 emits an object containing `schemaVersion`, `mutants`, and
+`diagnostics`, without running a baseline or mutation jobs. Each mutant contains
+`id`, `file`, `operator`, `original`, `replacement`, `location`, `code`, and `map`.
+Locations use zero-based UTF-8 byte offsets and one-based line/UTF-16 columns.
+IDs are deterministic for the same source and instrumenter, but are opaque:
+consumers must not derive locations or ordering from them, or assume stability
+across instrumenter versions. Source maps are JSON values. Optional additions
+are compatible; changes to these fields or their meaning require a new list
+schema version. The normal-report validator does not validate list output.
+
+For a supported release, removing CLI options, changing defaults or exit-code
+meanings, and tightening accepted configurations require explicit release notes
+and a compatibility review. The prototype's `0.0.0` package version is not a
+promise of a frozen 1.0.0 interface. Protocol and on-disk cache versions are
+independent of report/list schema versions; cache entries may be invalidated by
+an implementation or dependency change without migrating user data.

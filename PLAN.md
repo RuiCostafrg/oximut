@@ -205,16 +205,18 @@ not completed evidence. No public package has been released.
 ## Next implementation task
 
 The [1.0.0 roadmap](docs/release-roadmap.md) defines the remaining contract,
-cache, validation, distribution, and maintenance gates. Work has started on
-additive cache fingerprint profiling and an equivalent traversal refactor;
-release-build measurements do not establish a speedup, so the cache performance
-decision remains open. CI now validates all three normal M6 smoke reports against
-the checked-in JSON Schema.
+validation, distribution, and maintenance gates. The cache follow-up implements
+accelerated full hashing, safe all-hit scan consolidation, and automatic
+cost-based outcome-cache bypass without weakening baseline/input validation.
+See the [cache performance decision](docs/cache-performance.md) for repeatable
+measurements, calibration costs, and the retained explicit reuse mode.
 
-Profile the cache-enabled path without weakening complete-input hashing or fresh
-baseline validation. Establish equivalent Stryker mutation scope and expand the
-protocol to pinned real projects, generated scaling, and native Linux budget
-measurements before reconsidering an alpha. Preserve M1–M5 correctness safeguards.
+Continue R1's CLI/unsupported-case contract audit, then validate the exact release
+candidate and distribution (R3–R4) and define support/update policy (R5).
+CI validates normal M6 smoke reports against the checked-in JSON Schema;
+report and list versioning are documented separately. Equivalent Stryker scope,
+real-project/scaling workloads, and native Linux budget measurements remain
+necessary before making broader comparative performance claims.
 
 ## Decisions still open
 

@@ -208,6 +208,43 @@ fn meminfo(key: &str) -> Option<u64> {
         })
 }
 fn rss(pid: u32) -> Result<Option<u64>, String> {
+    // stat's RSS counter can lag resident allocations by tens of MiB. A rollup
+    // walks the mappings and gives admission a current resident working set.
+    // Older/restricted kernels retain the documented approximate fallback.
+    match fs::read_to_string(format!("/proc/{pid}/smaps_rollup")) {
+        Ok(rollup) => {
+            return match rollup_rss(&rollup) {
+                Ok(bytes) => Ok(Some(bytes)),
+                Err(error) => {
+                    // A task can lose its memory map between open and read.
+                    // An empty rollup is safe only after confirming its exit.
+                    let stat = fs::read_to_string(format!("/proc/{pid}/stat"));
+                    let exited = match &stat {
+                        Ok(stat) => stat
+                            .rsplit_once(')')
+                            .and_then(|(_, fields)| fields.split_whitespace().next())
+                            .is_some_and(|state| matches!(state, "Z" | "X" | "x")),
+                        Err(error) => {
+                            error.kind() == std::io::ErrorKind::NotFound
+                                || error.raw_os_error() == Some(libc::ESRCH)
+                        }
+                    };
+                    if exited {
+                        Ok(None)
+                    } else {
+                        Err(format!("RSS rollup invalid for PID {pid}: {error}"))
+                    }
+                }
+            };
+        }
+        Err(error) if error.raw_os_error() == Some(libc::ESRCH) => return Ok(None),
+        Err(error)
+            if matches!(
+                error.kind(),
+                std::io::ErrorKind::NotFound | std::io::ErrorKind::PermissionDenied
+            ) => {}
+        Err(error) => return Err(format!("RSS rollup unavailable for PID {pid}: {error}")),
+    }
     let stat = match fs::read_to_string(format!("/proc/{pid}/stat")) {
         Ok(stat) => stat,
         Err(error)
@@ -228,6 +265,22 @@ fn rss(pid: u32) -> Result<Option<u64>, String> {
         return Err("could not determine RSS page size".into());
     }
     Ok(Some(pages.saturating_mul(page_size as u64)))
+}
+fn rollup_rss(rollup: &str) -> Result<u64, String> {
+    let mut fields = rollup
+        .lines()
+        .find_map(|line| line.strip_prefix("Rss:"))
+        .ok_or("RSS rollup is missing Rss")?
+        .split_whitespace();
+    let kib: u64 = fields
+        .next()
+        .and_then(|value| value.parse().ok())
+        .ok_or("RSS rollup has invalid Rss")?;
+    if fields.next() != Some("kB") || fields.next().is_some() {
+        return Err("RSS rollup has invalid Rss units".into());
+    }
+    kib.checked_mul(1024)
+        .ok_or_else(|| "RSS rollup Rss overflow".into())
 }
 fn tree_rss(pid: u32, tree: &BTreeMap<u32, u64>) -> Result<u64, String> {
     let mut total = rss(pid)?.unwrap_or(0);
@@ -290,7 +343,7 @@ impl Budget {
             budget_bytes: budget,
             reserve_bytes: reserve,
             cgroups,
-            measurement: "Linux /proc RSS sum: main CLI and all worker/adapter/controller/test descendants; shared pages counted per process",
+            measurement: "Linux /proc smaps_rollup Rss sum, approximate stat RSS fallback on older/restricted kernels: main CLI and all worker/adapter/controller/test descendants; shared pages counted per process",
             enforcement: "best-effort sampled admission and process-tree cancellation; existing cgroup limits are OS-enforced; no new hard cap installed",
             sample_interval_ms: SAMPLE_MS,
             peak_aggregate_rss_bytes: 0,
@@ -416,6 +469,47 @@ impl Budget {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn rollup_uses_resident_rss_and_rejects_invalid_accounting() {
+        assert_eq!(
+            rollup_rss("Pss: 1 kB\nRss: 65536 kB\nAnonymous: 2 kB\n").unwrap(),
+            64 * MIB
+        );
+        for invalid in [
+            "Pss: 10 kB\n",
+            "Rss: not-a-number kB\n",
+            "Rss: 10 MB\n",
+            "Rss: 10 kB extra\n",
+            "Rss: 18446744073709551615 kB\n",
+        ] {
+            assert!(rollup_rss(invalid).is_err(), "{invalid}");
+        }
+    }
+    #[test]
+    fn exited_process_without_memory_map_has_no_resident_working_set() {
+        let mut child = std::process::Command::new(std::env::current_exe().unwrap())
+            .arg("--list")
+            .stdout(std::process::Stdio::null())
+            .spawn()
+            .unwrap();
+        let mut exited = false;
+        for _ in 0..200 {
+            let stat = fs::read_to_string(format!("/proc/{}/stat", child.id())).unwrap();
+            if stat
+                .rsplit_once(')')
+                .and_then(|(_, fields)| fields.split_whitespace().next())
+                == Some("Z")
+            {
+                exited = true;
+                break;
+            }
+            std::thread::sleep(Duration::from_millis(5));
+        }
+        let observed = rss(child.id());
+        child.wait().unwrap();
+        assert!(exited, "child must exit before checking its memory map");
+        assert_eq!(observed.unwrap().unwrap_or(0), 0);
+    }
     #[test]
     fn resolves_namespaced_cgroup_mounts_and_every_ancestor() {
         let unified = parse_hierarchy_paths(

@@ -1,0 +1,24 @@
+[
+  {
+    "equal_mutation_scope": true,
+    "explained_no_coverage_refinements": [],
+    "fixture": "m1",
+    "kind": "cache-forced",
+    "left_count": 3,
+    "left_only": {},
+    "left_run": "measured-01-m1-oximut-incremental-unchanged-forced",
+    "mismatches": [],
+    "ratio_eligible": true,
+    "right_count": 3,
+    "right_only": {},
+    "right_run": "measured-01-m1-oximut-incremental-unchanged-incremental",
+    "round_index": 0,
+    "shared": [
+      "src/subject.ts:542843bf1ce29e9c14c6e8627bfe9309cdacc24d35d19a711a6f44e316e68c68",
+      "src/subject.ts:86b839ed7071a0d703563e048729e6f4ac8741fb3747dcb1c1cb19e4cb23540d",
+      "src/subject.ts:ead20166c6c2075b6cf1c57077547a719a8544efea1e873703a2f914ecad2ff8"
+    ],
+    "shared_classifications_agree": true,
+    "shared_count": 3
+  }
+]

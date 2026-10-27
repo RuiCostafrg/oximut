@@ -1,0 +1,20 @@
+CHILD 16431 {"pid":16431,"start":31727616,"external":69259585}
+0 status ['VmRSS:\t   30984 kB']
+0 smaps_rollup ['Rss:              119888 kB', 'Pss:              118794 kB', 'Anonymous:         75544 kB']
+1 status ['VmRSS:\t   30984 kB']
+1 smaps_rollup ['Rss:              119920 kB', 'Pss:              118826 kB', 'Anonymous:         75576 kB']
+2 status ['VmRSS:\t   30984 kB']
+2 smaps_rollup ['Rss:              119964 kB', 'Pss:              118870 kB', 'Anonymous:         75620 kB']
+3 status ['VmRSS:\t   30984 kB']
+3 smaps_rollup ['Rss:              119992 kB', 'Pss:              118898 kB', 'Anonymous:         75648 kB']
+4 status ['VmRSS:\t   30984 kB']
+4 smaps_rollup ['Rss:              120032 kB', 'Pss:              118938 kB', 'Anonymous:         75688 kB']
+EXIT 1 file:///data/data/com.termux/files/usr/tmp/tmpe6rl763i/adapter.mjs:23
+    if (Date.now() >= deadline) throw new Error('steady fixture RSS did not become observable');
+                                      ^
+
+Error: steady fixture RSS did not become observable
+    at file:///data/data/com.termux/files/usr/tmp/tmpe6rl763i/adapter.mjs:23:39
+
+Node.js v26.3.1
+

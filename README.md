@@ -11,6 +11,9 @@ Opt-in test selection collects baseline mutant hits and retains covering test fi
 with full-suite fallbacks when attribution is uncertain.
 Opt-in caching separates instrumentation from outcomes and validates the baseline
 on every run. Outcome reuse requires an explicit declaration of complete inputs.
+The automatic cache policy learns when outcome validation costs more than fresh
+mutation work and selects fresh execution; `--cache-policy always` requests full
+validation/reuse. See the [cache decision](docs/cache-performance.md).
 Resource admission accounts for the complete owned process tree, reserves memory
 headroom, and reports resource exhaustion separately from mutation kills.
 It also retains the M0 lifecycle experiments and baseline benchmarks.

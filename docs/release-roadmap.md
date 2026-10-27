@@ -1,10 +1,11 @@
 # Roadmap to Oximut 1.0.0
 
 Oximut has completed M0–M6 as a feasibility prototype, but it is not yet a
-supported public release. M6 explicitly holds public alpha performance claims:
-the unchanged-cache run measured 22.37 s warm versus 6.12 s forced on the small
-M1 fixture, the Stryker mutation scopes were unequal, and real-project, scaling,
-and native-host resource-budget evidence is absent. The roadmap below separates
+supported public release. M6 held public alpha performance claims: its original
+cache run regressed, Stryker mutation scopes were unequal, and real-project,
+scaling, and native-host resource-budget evidence was absent. The subsequent
+[cache decision](cache-performance.md) resolves the default cache policy;
+broader performance and release evidence remain open. The roadmap below separates
 what is needed to support one deliberately narrow 1.0.0 configuration from
 optional expansion. It does not assume that 1.0.0 must beat Stryker or support
 every environment.
@@ -43,19 +44,19 @@ the versioning notes.
 
 ### R2 — Resolve the cache release policy
 
-Profile the full cache-enabled path, including hashing, baseline validation,
-lookup, execution, and report output, while preserving M4's safety checks. The
-current 22.37 s versus 6.12 s result is a material regression for the tested
-unchanged-cache workload. Decide from measurements whether to improve it, make
-outcome caching experimental/opt-in with the cost documented, or omit it from
-the initial supported workflow. Do not weaken fingerprint completeness or
-baseline validation to improve timing.
+The implemented policy is `--cache-policy auto`: calibrate full fingerprint cost
+against fresh mutation work, then bypass outcome caching when validation costs
+more. Instrumentation caching remains enabled. `--cache-policy always` exposes
+explicit full validation/reuse for users and correctness measurements. Both
+retain complete-input opt-in, fresh baselines, and fail-closed publication.
+Hardware-accelerated SHA-256 with a software fallback and safe all-hit scan
+consolidation reduce validation overhead. See the [cache decision and measured
+evidence](cache-performance.md) for the results and calibration limits.
 
-**Acceptance:** A release-candidate decision is recorded with repeatable
-unchanged and changed-input measurements on the supported environment, paired
-forced results, matching outcomes, and cache invalidation checks. Any shipped
-cache mode has a clear supported status and published observed cost; no speedup
-is claimed unless those measurements establish one.
+**Status:** Implementation and local regression evidence complete. Repeat the
+recorded unchanged/changed-input protocol on the final release candidate and
+each host claimed as supported. This resolves the prototype's default cache
+policy; it does not establish general workload or cross-tool speed claims.
 
 ### R3 — Complete release-candidate correctness and failure evidence
 
@@ -128,29 +129,22 @@ met and not prerequisites invented for a narrow correctness-focused release.
 If performance is included in 1.0.0 positioning, the equivalent-scope,
 representative-workload evidence above becomes a release gate for that claim.
 
-## Implementation started
+## Implementation and remaining work
 
-The first R2 slice adds per-attempt fingerprint timing and actual file/byte read
-counters to the report, including failed attempts and validation passes. It
-preserves complete hashing, inherited inputs, and fresh baseline validation.
-This diagnoses part of the overhead; it does not complete R2 or establish a
-speedup. The M6 harness archives the new cache fields without changing workload
-identity. The [first diagnostic](../benchmarks/results/2026-10-26-cache-profile/README.md)
-passed cache/forced agreement and located most fingerprint time in full-input
-processing; repeated release-build measurements and safe optimization remain.
-The next slice precomputes lexical cache exclusions and combines component
-checks, with differential coverage against the previous predicate. The
-[release-build comparison](../benchmarks/results/2026-10-27-cache-scan/README.md)
-preserves correctness but does **not** establish a speedup: warm medians were
-20.07 s before and 22.39 s after, with forced medians also moving from 5.75 s to
-7.39 s. Cache performance remains an open gate; no validation pass or input read
-was removed.
+R2 now has an adaptive policy, measured validation acceleration, and archived
+cache/forced agreement and invalidation evidence. The earlier
+[profiling](../benchmarks/results/2026-10-26-cache-profile/README.md) and
+[traversal comparison](../benchmarks/results/2026-10-27-cache-scan/README.md)
+remain historical diagnostics; the traversal comparison alone did not establish
+a speedup. The [cache follow-up](cache-performance.md) records the final decision.
 
-R1 now includes a CI validator for all three emitted M6 smoke reports and tests
-that reject missing/malformed/schema-invalid reports, with `--list` explicitly
-separate. This closes the automated normal-report schema-check gap. CLI/list
-versioning, complete exit-code policy coverage, unsupported-case coverage, and
-release-candidate evidence remain open.
+R1 includes a CI validator for all three normal M6 smoke reports and validator
+failure tests, with `--list` explicitly separate. The report reference now defines
+report/list compatibility and versioning rules. Finish the unsupported-case and
+exit-code coverage audit before declaring the contract frozen. R3 still requires
+the exact release revision and distribution; R4 packaging/provenance and R5
+support/update policy remain open. The current local acceptance evidence is not
+a claim of native-host or final-artifact validation.
 
 ## Release order
 
