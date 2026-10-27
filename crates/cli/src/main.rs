@@ -1335,7 +1335,7 @@ mod tests {
     fn coverage_inventory_is_validated_before_subset_projection() {
         use oximut_core::{Hit, TestIdentity};
         let root = std::env::current_dir().unwrap();
-        let file = root.join("crates/cli/src/main.rs");
+        let file = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/main.rs");
         let inventory = vec!["a".to_string(), "b".to_string()];
         let tests = Tests {
             passed: 1,
