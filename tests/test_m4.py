@@ -219,6 +219,22 @@ class IncrementalCache(unittest.TestCase):
         self.assertEqual(changed_inventory["cache"]["outcomeHits"], 0,
                          changed_inventory["cache"])
 
+    def test_requested_mutator_families_have_separate_outcome_caches(self):
+        first = self.run_oximut('--mutators', 'boolean-literal')
+        self.assertEqual(first['summary']['total'], 2)
+        self.assertEqual(first['cache']['outcomeHits'], 0)
+        warm = self.run_oximut('--mutators', 'boolean-literal')
+        self.assertEqual(warm['cache']['outcomeHits'], 2)
+        boundary = self.run_oximut('--mutators', 'comparison-boundary')
+        self.assertEqual(boundary['summary']['total'], 1)
+        self.assertEqual(boundary['cache']['outcomeHits'], 0)
+        self.assertNotEqual(first['cache']['fingerprint'], boundary['cache']['fingerprint'])
+        boundary_warm = self.run_oximut('--mutators', 'comparison-boundary')
+        self.assertEqual(boundary_warm['cache']['outcomeHits'], 1)
+        original_scope = self.run_oximut('--mutators', 'boolean-literal')
+        self.assertEqual(original_scope['cache']['outcomeHits'], 2)
+        self.assertEqual(self.outcomes(first), self.outcomes(original_scope))
+
     def test_warm_cache_reuses_mutants_but_always_runs_baseline_and_force_agrees(self):
         first = self.run_oximut("--test-selection")
         calls_after_first = len(self.read_calls())
