@@ -43,10 +43,8 @@ response SLA or release cadence.
 
 Users should use the repository's public issue tracker for reproducible,
 non-sensitive defects. Security reports must remain private; see
-[SECURITY.md](../SECURITY.md). Private vulnerability reporting was verified as
-disabled on 2026-10-27. Until it is enabled, the security policy directs users
-to an already established private channel with the repository owner and does
-not invent a contact address.
+[SECURITY.md](../SECURITY.md). Private vulnerability reporting was enabled and verified on 2026-10-27;
+the security policy links to GitHub's private advisory form.
 
 ## Compatibility and versioning
 

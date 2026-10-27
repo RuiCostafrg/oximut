@@ -2,16 +2,15 @@
 
 ## Reporting a vulnerability
 
-GitHub private vulnerability reporting is currently disabled for this repository
-(verified on 2026-10-27). Please do not post vulnerability details, exploit
-steps, credentials, tokens, or other secrets in a public issue or discussion.
-Until private reporting is enabled, use a private channel already established
-with the repository owner. This document does not publish or imply a new email
-address or other reporting endpoint.
+Report vulnerabilities using [GitHub private vulnerability reporting](https://github.com/RuiCostafrg/oximut/security/advisories/new).
+This repository's private reporting route was enabled and verified on
+2026-10-27. Please do not post vulnerability details, exploit steps,
+credentials, tokens, or other secrets in a public issue or discussion.
 
-If no such private channel is available, do not include sensitive details in a
-public report. You may ask publicly for a private way to contact the owner, but
-keep the vulnerability details private until one is established.
+If GitHub's private reporting route is unavailable, use a private channel
+already established with the repository owner, or ask publicly for a private
+contact without disclosing vulnerability details. This policy does not invent
+an email address or promise a response time.
 
 ## Scope and support
 
