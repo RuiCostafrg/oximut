@@ -25,4 +25,5 @@ Release status is **blocked** until the separate R3 gate builds and installs the
 exact archive, verifies a fresh installation and relocation with external-project
 fresh/persistent smoke tests, and records successful evidence bound to that
 archive's SHA-256. Source-format checks and mocked installer tests do not satisfy
-that gate. No publishing or stable promotion is implemented here.
+that gate. The manual provenance workflow now requires that R3 validation before signing the
+source and its evidence. No publishing or stable promotion is implemented here.

@@ -35,8 +35,8 @@ fields remain `NOASSERTION`; missing data stays missing. It does not assert a
 resolved dependency-edge graph, installed-platform completeness, dependency
 license clearance, or vendored third-party notices. See [NOTICE.md](../NOTICE.md).
 
-`actions/attest-build-provenance` attests only the archive and the two JSON
-sidecars. No compiled binaries are built or attested. The job grants only
+`actions/attest-build-provenance` attests the archive, the two source metadata JSON
+sidecars, and the successful R3 evidence JSON. No compiled binaries are built or attested. The job grants only
 `contents: read`, `id-token: write`, and `attestations: write`; storage-record
 creation is disabled, so artifact-metadata permission is unnecessary. The
 attestation service may require Enterprise Cloud for private repositories. The
@@ -75,19 +75,24 @@ gh attestation verify oximut-1.0.0-rc.1-source.tar.gz.evidence.json \
   --repo OWNER/REPO --signer-workflow OWNER/REPO/.github/workflows/source-candidate.yml
 ```
 
-## Parent integration still required: R3
+## Exact artifact validation before attestation
 
-This workflow intentionally does not call an invented validation script API. The
-parent must integrate the separate R3 implementation against the **same uploaded
-archive bytes**, bind its successful evidence to the inner archive SHA-256, and
-require the full exact-artifact build/install/relocation validation before any
-release attachment or publication. Download by immutable artifact ID and verify
-the digests/provenance before consuming it. Do not rebuild another archive and
-reuse this candidate's results. R3 should run without signing credentials when
-executing extracted candidate build/test code. Keep this source-only evidence's
-`NOT_RUN` result intact; attach separate R3 evidence rather than rewriting an
-attested statement. Source provenance and R3 success are both prerequisites,
-followed by explicit release review. No release publication path exists here.
+The workflow uploads the source once, then a separate job downloads it by immutable
+artifact ID with digest mismatch treated as an error. That job runs the trusted
+`scripts/validate-source.py` against the same archive and expected candidate tree.
+It compiles/installs once, removes extracted source, validates fresh/persistent
+execution and cache behavior, and repeats after relocation. This job has read-only
+repository permission and no signing credentials.
+
+A final signing job downloads the original source artifact and successful R3
+evidence by their immutable IDs. `scripts/check-source-evidence.py` verifies the
+archive SHA-256, candidate commit, version, one-build record, source removal,
+binary digest, and both successful lifecycle phases before attestation. No
+candidate build code executes in that job. The earlier source-format sidecar's
+`NOT_RUN` value remains an accurate point-in-time record; the separately attested
+`r3-validation.evidence.json` supplies subsequent evidence for those exact bytes.
+A failed validation blocks signing. No release publication path exists here;
+success still requires explicit release review before any attachment/promotion.
 
 ## Action pin evidence
 
@@ -95,6 +100,8 @@ Checked against official upstream Git refs and action definitions on 2026-10-27:
 
 - [checkout v7.0.1](https://github.com/actions/checkout/tree/3d3c42e5aac5ba805825da76410c181273ba90b1):
   `3d3c42e5aac5ba805825da76410c181273ba90b1`.
+- [download-artifact v8.0.2](https://github.com/actions/download-artifact/tree/9000827ccba6bdab643e8b6fd33ac0654aef8333):
+  `9000827ccba6bdab643e8b6fd33ac0654aef8333`; digest mismatch fails the download.
 - [upload-artifact v7.0.2](https://github.com/actions/upload-artifact/tree/cf430e030ddbb5b0abf93d22962f4752f3646cd9):
   `cf430e030ddbb5b0abf93d22962f4752f3646cd9`.
 - [attest-build-provenance v4.2.2](https://github.com/actions/attest-build-provenance/tree/4d101475d8b20a2381f78447822ac1eab6504dd8):
