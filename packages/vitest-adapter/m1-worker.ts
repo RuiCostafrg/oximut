@@ -79,11 +79,13 @@ async function command(name: string, args: Request): Promise<unknown> {
           project.config.pool !== 'forks' ||
           project.config.isolate !== true ||
           project.config.maxWorkers !== 1 ||
-          project.config.maxConcurrency !== 1,
+          project.config.maxConcurrency !== 1 ||
+          project.config.environment !== 'node' ||
+          project.config.browser?.enabled === true,
       )
     )
       throw new Error(
-        'Unsupported resource configuration: one project, one fork, sequential files and tests, and isolation are required',
+        'Unsupported resource configuration: one Node project, one fork, sequential files and tests, and isolation are required',
       );
     return { versions: { node: process.version, vitest: version }, controllerPid: process.pid };
   }

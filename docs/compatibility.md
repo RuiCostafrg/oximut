@@ -40,9 +40,12 @@ limit. A container's visible cgroup limits may further constrain it.
 The adapter targets one Vitest project using the Node environment, one isolated
 fork, one worker per execution slot, sequential test files/tests, and the pinned
 Vitest lifecycle APIs. Resolved settings outside required isolation/resource
-constraints fail explicitly. Persistent mode falls back to a fresh controller
-for unsupported project features such as custom Vite plugins, global setup,
-multiple projects, or symlinked project inputs. It still uses fresh test forks. A controller fallback does not bypass M5
+constraints, including non-Node environments, fail explicitly. The runner sets
+sequential-file execution at the root and validates resolved project pool,
+isolation, worker count, concurrency, environment, and single-project scope.
+Persistent mode falls back to a fresh controller for project features such as
+custom Vite plugins, global setup, or symlinked project inputs. It still uses
+fresh test forks. A controller fallback does not bypass M5
 configuration validation: a multi-project configuration remains unsupported in
 either execution mode.
 
@@ -65,3 +68,6 @@ Concurrent workers require tests with isolated external inputs and outputs.
 For milestone behavior and known limitations, see [M1](m1.md), [M2](m2.md),
 [M3](m3.md), [M4](m4.md), and [M5](m5.md). The schema and command-line outcomes
 are described in [the report reference](report-schema.md).
+
+The [R1 contract audit](contract-audit.md) maps the supported behavior, rejected
+settings, and conservative fallbacks to repository acceptance checks.

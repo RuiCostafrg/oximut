@@ -1,6 +1,8 @@
 # Install from source
 
-Oximut is currently distributed as a source checkout. There is no supported
+Oximut supports source checkout installation. The initial **1.0.0-rc.1**
+candidate source archive format and its prerequisites are described in
+[Source distribution](distribution.md). There is no supported
 public npm or crates.io installation yet. The workspace packages remain private.
 The `oximut` npm name returned HTTP 404 on 2026-10-26; this is an availability
 observation, not a reservation or a published package.
@@ -69,4 +71,4 @@ for inspection; remove its temporary parent directory when finished.
 
 The repository uses the MIT license in [LICENSE](../LICENSE). Bundled dependencies
 retain their own licenses in the installed dependency tree. Publishing packages,
-release archives, and binary provenance are not part of this source installer.
+GitHub release attachments, and binary provenance are not part of this source installer.

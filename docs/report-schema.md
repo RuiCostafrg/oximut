@@ -6,7 +6,8 @@ the serialized report fields. It allows extra keys only inside `resources`,
 which is serialized from the scheduler's resource-accounting structure and can
 grow independently. The schema applies to invocation reports, including runs with
 `summary.complete: false`; `--list`
-has a separate `{schemaVersion, mutants, diagnostics}` output and is not this
+has a separate [list JSON Schema](list.schema.json) for its
+`{schemaVersion, mutants, diagnostics}` output and is not this
 report format. This describes the current pre-alpha schema-1 emitter; historical
 M1/M2 schema-1 artifacts predate the cache/resource fields and do not satisfy
 this schema. Backward compatibility with those experimental reports is not claimed.
@@ -199,6 +200,10 @@ It cannot establish semantic conditions such as score arithmetic, consistency
 between summary counts and entries, or cache provenance validity; those are
 enforced by the runner and its validation paths.
 
+The CLI supports `--version` (or `-V`), which prints `oximut <version>` from
+the Cargo package metadata and exits 0 without project validation or execution.
+See the [R1 contract audit](contract-audit.md) for behavior-to-test mappings.
+
 ## Interface versioning policy
 
 Normal reports and `--list` are separate interfaces. Consumers must check the
@@ -218,7 +223,17 @@ IDs are deterministic for the same source and instrumenter, but are opaque:
 consumers must not derive locations or ordering from them, or assume stability
 across instrumenter versions. Source maps are JSON values. Optional additions
 are compatible; changes to these fields or their meaning require a new list
-schema version. The normal-report validator does not validate list output.
+schema version. Validate a captured list independently:
+
+```sh
+mkdir -p .oximut
+target/debug/oximut --root fixtures/m1 --source src/subject.ts --list > .oximut/list.json
+node scripts/validate-list.mjs .oximut/list.json
+```
+
+The list validator accepts explicit files, checks every supplied file, and exits
+1 for malformed JSON or schema violations. It does not discover normal reports.
+The normal-report validator does not validate list output.
 
 For a supported release, removing CLI options, changing defaults or exit-code
 meanings, and tightening accepted configurations require explicit release notes
