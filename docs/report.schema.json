@@ -35,7 +35,8 @@
         "recycledIdleWorkers": { "type": "integer", "minimum": 0 },
         "samples": { "type": "integer", "minimum": 0 },
         "exhaustion": { "type": ["string", "null"] }
-      }
+      },
+      "required": ["configuredWorkers", "effectiveWorkers", "cpuLimitWorkers", "configuredBudgetBytes", "budgetBytes", "reserveBytes", "cgroups", "measurement", "enforcement", "sampleIntervalMs", "peakAggregateRssBytes", "measuredWorkerPeakBytes", "admissionWorkerCostBytes", "maxActiveJobs", "admissionPauses", "recycledIdleWorkers", "samples", "exhaustion"]
     }
   },
   "$defs": {

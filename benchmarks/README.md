@@ -105,7 +105,7 @@ python3 benchmarks/m6.py --binary target/release/oximut \
   --fixtures pure stateful --scenarios clean --repetitions 5 --warmups 1 \
   --output .oximut/m6-clean
 python3 benchmarks/m6.py --binary target/release/oximut \
-  --fixtures m1 --tools oximut stryker --scenarios incremental --changes \
+  --fixtures m1 --tools oximut stryker --scenarios incremental --changes source test \
   --repetitions 5 --warmups 1 --output .oximut/m6-incremental
 ```
 
@@ -136,7 +136,8 @@ Each invocation starts fresh processes and uses isolated fixture copies with
 shared installed dependencies. Setup is excluded and recorded; OS filesystem
 caches are left untouched. Scenario/fixture order and forced/incremental pair
 order alternate. The default is five measured repetitions after one warmup.
-`--workers` sets outer concurrency; `--memory-budget-mib` sets Oximut's soft
+`--workers` sets Oximut worker concurrency and Stryker concurrency; ordinary
+Vitest stays fixed at `--maxWorkers=1`. `--memory-budget-mib` sets Oximut's soft
 admission budget only. Separate runs can explore budgets without implying that
 Stryker implements an equivalent cap.
 

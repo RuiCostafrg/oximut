@@ -34,6 +34,34 @@ test('allows an incomplete invocation report', async t => {
   assert.equal(result.status, 0, result.stderr);
 });
 
+test('requires emitted resource accounting while allowing future resource fields', async t => {
+  const directory = await mkdtemp(join(tmpdir(), 'oximut-resource-schema-'));
+  t.after(() => rm(directory, { recursive: true, force: true }));
+
+  const empty = structuredClone(sample);
+  empty.resources = {};
+  const missing = structuredClone(sample);
+  delete missing.resources.admissionWorkerCostBytes;
+  const extended = structuredClone(sample);
+  extended.resources.futureSchedulerObservation = { source: 'test' };
+
+  for (const [name, report, valid] of [
+    ['empty-resources.json', empty, false],
+    ['missing-resource-field.json', missing, false],
+    ['extended-resources.json', extended, true],
+  ]) {
+    const file = join(directory, name);
+    await writeFile(file, JSON.stringify(report));
+    const result = run(file);
+    assert.equal(result.status, valid ? 0 : 1, `${name}: ${result.stderr}`);
+    if (valid) assert.match(result.stdout, /Validated 1 report/);
+    else {
+      assert.ok(result.stderr.includes(file), result.stderr);
+      assert.match(result.stderr, /resources/);
+    }
+  }
+});
+
 test('rejects missing fields, wrong field types, malformed JSON, and list output', async t => {
   const directory = await mkdtemp(join(tmpdir(), 'oximut-schema-'));
   t.after(() => rm(directory, { recursive: true, force: true }));

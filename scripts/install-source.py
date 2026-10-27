@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 """Build a locked source installation; never publish to a registry."""
 import argparse
+import json
 import os
 from pathlib import Path
 import shutil
 import subprocess
+import sys
 import tempfile
 
 
@@ -17,12 +19,33 @@ def install(prefix):
         raise SystemExit(f"Refusing to replace existing installation: {prefix}")
     (prefix / "lib").mkdir(parents=True, exist_ok=True)
     (prefix / "bin").mkdir(parents=True, exist_ok=True)
-    # Explicit target-dir keeps artifact lookup deterministic even with Cargo config.
+    # Cargo reports the actual executable even when build.target is configured.
     target = repo / "target"
-    subprocess.run([
+    build = subprocess.run([
         "cargo", "build", "--locked", "--release", "-p", "oximut-cli",
         "--bin", "oximut", "--target-dir", str(target),
-    ], cwd=repo, check=True)
+        "--message-format=json-render-diagnostics",
+    ], cwd=repo, stdout=subprocess.PIPE, text=True)
+    executables = set()
+    for line in build.stdout.splitlines():
+        message = json.loads(line)
+        if message.get("reason") == "compiler-message":
+            rendered = message.get("message", {}).get("rendered")
+            if rendered:
+                print(rendered, end="", file=sys.stderr)
+        if (message.get("reason") == "compiler-artifact"
+                and message.get("target", {}).get("name") == "oximut"
+                and "bin" in message.get("target", {}).get("kind", [])
+                and message.get("executable")):
+            executables.add(Path(message["executable"]))
+    build.check_returncode()
+    if len(executables) != 1:
+        raise SystemExit("Cargo did not report exactly one oximut executable")
+    executable = executables.pop()
+    if not executable.is_absolute():
+        executable = repo / executable
+    if not executable.is_file():
+        raise SystemExit(f"Cargo executable does not exist: {executable}")
     with tempfile.TemporaryDirectory(prefix=".oximut-install-", dir=prefix / "lib") as temporary:
         stage = Path(temporary) / "bundle"
         stage.mkdir()
@@ -34,7 +57,7 @@ def install(prefix):
         # adapter package is released. Never silently reuse checkout node_modules.
         subprocess.run(["npm", "ci", "--include=dev", "--ignore-scripts", "--no-audit", "--no-fund"],
                        cwd=stage, check=True)
-        shutil.copy2(target / "release" / "oximut", stage / "oximut")
+        shutil.copy2(executable, stage / "oximut")
         staged_launcher = Path(temporary) / "launcher"
         shutil.copy2(repo / "scripts" / "oximut-launcher.py", staged_launcher)
         staged_launcher.chmod(0o755)

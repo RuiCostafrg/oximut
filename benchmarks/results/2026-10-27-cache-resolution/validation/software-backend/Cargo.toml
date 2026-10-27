@@ -2,5 +2,8 @@
 name = "oximut-sha-soft-check"
 version = "0.0.0"
 edition = "2024"
+
+[workspace]
+
 [dependencies]
 sha2 = "=0.11.1"

@@ -25,7 +25,9 @@ committed npm lockfile into a temporary staging directory using `npm ci
 and npm dependencies into `PREFIX/lib/oximut`, then installs a Python launcher
 at `PREFIX/bin/oximut`. The launcher supplies the installed fresh or persistent
 adapter, while preserving an explicit `--adapter` argument. The complete prefix
-can be moved together; the original checkout is not required at runtime.
+can be moved together; the original checkout is not required at runtime. The native
+executable comes from Cargo’s artifact report, including when `CARGO_BUILD_TARGET`
+or Cargo’s `build.target` configuration selects a target-specific output directory.
 
 The npm bundle currently includes developer tools from the root lockfile as well
 as Vitest. This deliberately uses the existing tested dependency graph; a smaller

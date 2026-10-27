@@ -102,3 +102,22 @@ cross-tool speed claim. The historical M6 scope mismatch with Stryker and the
 real-project/scaling/distribution release gates remain open. See the
 [cache decision](../../../docs/cache-performance.md) and
 [1.0.0 roadmap](../../../docs/release-roadmap.md).
+
+## Reproduction helper corrections after review
+
+PR #13 review corrected two reproduction-only setup issues after measurement:
+`campaign.py` now creates missing output parents while still rejecting an
+existing campaign directory; the software-backend manifest declares its own
+workspace so it runs directly inside this checkout. The originally measured
+helper sources remain available in commit `1b8b8bb`. Commands, raw measurements,
+reports, and original validation logs are unchanged. `SHA256SUMS` tracks the
+current checked-in helper files and this explanation.
+
+To rerun the archived software-backend known answers without adding build
+artifacts to this archive:
+
+```sh
+RUSTFLAGS='--cfg sha2_backend="soft"' cargo run --locked \
+  --manifest-path benchmarks/results/2026-10-27-cache-resolution/validation/software-backend/Cargo.toml \
+  --target-dir /tmp/oximut-software-backend-target
+```

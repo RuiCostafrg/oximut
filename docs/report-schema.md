@@ -224,3 +224,10 @@ and a compatibility review. The prototype's `0.0.0` package version is not a
 promise of a frozen 1.0.0 interface. Protocol and on-disk cache versions are
 independent of report/list schema versions; cache entries may be invalidated by
 an implementation or dependency change without migrating user data.
+
+The schema requires every currently emitted `resources` field, including on
+incomplete reports. Correcting a schema that accidentally accepted an empty or
+partial `resources` object does not change the emitted schema-1 report contract
+and does not require a schema-version bump. Consumers may see previously
+accepted malformed reports rejected by the validator; future resource fields
+remain allowed as optional extensions.
