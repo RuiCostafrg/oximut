@@ -14,6 +14,7 @@ sys.path.insert(0, str(BENCHMARKS))
 SPEC = importlib.util.spec_from_file_location('m6_benchmark', BENCHMARKS / 'm6.py')
 m6 = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(m6)
+REPORT_FIXTURE = json.loads((BENCHMARKS.parent / 'scripts/tests/fixtures/report.json').read_text())
 
 
 def location(start, end):
@@ -71,11 +72,19 @@ class ArtifactTests(unittest.TestCase):
         self.report = self.project / 'report.json'
         (self.project / 'subject.ts').write_text('true;\n')
         self.result = {'exit_code': 1, 'timed_out': False}
-        self.value = {'schemaVersion': 1, 'baseline': {'outcome': 'passed', 'tests': {'passed': 1, 'failed': 0}},
-                      'summary': {'complete': True, 'total': 1}, 'mutants': [
-                          {'id': 'x', 'file': str(self.project / 'subject.ts'), 'location': location(1, 5),
-                           'replacement': 'false', 'outcome': 'survived', 'tests': {'passed': 1},
-                           'operator': 'boolean', 'provenance': {'source': 'executed'}}]}
+        self.value = json.loads(json.dumps(REPORT_FIXTURE))
+        self.value['runId'] = 'benchmark-test-run'
+        self.value['baseline']['runId'] = self.value['runId']
+        mutant = self.value['mutants'][2]
+        mutant.update(file=str(self.project / 'subject.ts'), original='true', replacement='false',
+                      location={'start': {'offset': 0, 'line': 1, 'column': 1},
+                                'end': {'offset': 4, 'line': 1, 'column': 5}},
+                      outcome='survived', tests={'passed': 1, 'failed': 0, 'skipped': 0}, errors=[])
+        self.value['mutants'] = [mutant]
+        self.value['summary'].update(total=1, killed=0, survived=1, noCoverage=0,
+                                     invalid=0, timeout=0, infrastructureError=0,
+                                     resourceExhausted=0, skipped=0, scoreDenominator=1, score=0.0,
+                                     complete=True)
 
     def validate(self):
         self.report.write_text(json.dumps(self.value))
@@ -99,10 +108,10 @@ class ArtifactTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.validate()
         self.value['summary']['complete'] = True
-        self.value['mutants'][0]['tests'] = {}
+        self.value['mutants'][0]['tests'] = {'passed': 0, 'failed': 0, 'skipped': 0}
         with self.assertRaises(ValueError):
             self.validate()
-        self.value['mutants'][0]['tests'] = {'passed': 1}
+        self.value['mutants'][0]['tests'] = {'passed': 1, 'failed': 0, 'skipped': 0}
         self.value['mutants'].append(dict(self.value['mutants'][0], id='different-id'))
         self.value['summary']['total'] = 2
         with self.assertRaises(ValueError):
@@ -115,6 +124,62 @@ class ArtifactTests(unittest.TestCase):
         self.value['mutants'][0]['outcome'] = 'no-coverage'
         with self.assertRaises(ValueError):
             self.validate()
+
+    def test_oximut_reports_must_match_published_schema(self):
+        invalid_reports = []
+        for field in ('runId', 'cache', 'resources', 'diagnostics'):
+            invalid = json.loads(json.dumps(self.value))
+            del invalid[field]
+            invalid_reports.append((f'missing {field}', invalid))
+        for field in ('original', 'provenance'):
+            invalid = json.loads(json.dumps(self.value))
+            del invalid['mutants'][0][field]
+            invalid_reports.append((f'missing mutant {field}', invalid))
+        for path, wrong_value in (
+                (('runId',), 7), (('cache',), []), (('resources',), []),
+                (('diagnostics',), {}),
+                (('mutants', 0, 'original'), 7), (('mutants', 0, 'provenance'), [])):
+            invalid = json.loads(json.dumps(self.value))
+            target = invalid
+            for part in path[:-1]:
+                target = target[part]
+            target[path[-1]] = wrong_value
+            invalid_reports.append((f'invalid type {path}', invalid))
+
+        valid_extension = json.loads(json.dumps(self.value))
+        valid_extension['resources']['futureSchedulerField'] = {'sample': 1}
+        self.value = valid_extension
+        self.assertEqual(self.validate()['mutant_count'], 1)
+
+        for label, invalid in invalid_reports:
+            with self.subTest(case=label):
+                self.value = invalid
+                with self.assertRaises(ValueError):
+                    self.validate()
+
+    def test_schema_validation_uses_the_report_snapshot_not_a_later_file_version(self):
+        valid_later_version = json.loads(json.dumps(self.value))
+        self.value.pop('runId')
+        invalid_snapshot = json.loads(json.dumps(self.value))
+        real_run = m6.subprocess.run
+        submitted = []
+
+        def replace_file_then_run(command, **kwargs):
+            submitted.append(json.loads(kwargs['input']))
+            self.report.write_text(json.dumps(valid_later_version))
+            return real_run(command, **kwargs)
+
+        with mock.patch.object(m6.subprocess, 'run', side_effect=replace_file_then_run):
+            with self.assertRaisesRegex(ValueError, 'schema validation failed'):
+                self.validate()
+
+        self.assertEqual(submitted, [invalid_snapshot])
+        self.assertEqual(json.loads(self.report.read_text()), valid_later_version)
+
+    def test_schema_validation_fails_closed_when_node_is_unavailable(self):
+        with mock.patch.object(m6.subprocess, 'run', side_effect=FileNotFoundError('node')):
+            with self.assertRaisesRegex(ValueError, 'schema validation unavailable'):
+                self.validate()
 
     def test_ordinary_identities_ignore_private_project_directory(self):
         identities = []
@@ -156,12 +221,17 @@ class ArtifactTests(unittest.TestCase):
         line = source.read_text().splitlines()[5]
         column = line.index('<') + 1
         self.value['baseline']['tests']['passed'] = 2
-        self.value['mutants'][0].update(file=str(source), replacement='<=',
-            location={'start': {'line': 6, 'column': column}, 'end': {'line': 6, 'column': column + 1}})
+        self.value['mutants'][0].update(file=str(source), original='<', replacement='<=',
+            location={'start': {'offset': sum(len(line) + 1 for line in source.read_text().splitlines()[:5]) + column - 1,
+                                'line': 6, 'column': column},
+                      'end': {'offset': sum(len(line) + 1 for line in source.read_text().splitlines()[:5]) + column,
+                              'line': 6, 'column': column + 1}})
+        self.value['summary'].update(killed=0, survived=1, score=0.0)
         self.report.write_text(json.dumps(self.value))
         with self.assertRaisesRegex(ValueError, 'sentinel was not killed'):
             m6.artifact('oximut', self.report, project, {'exit_code': 1, 'fixture': 'm1'})
-        self.value['mutants'][0].update(outcome='killed', tests={'passed': 1, 'failed': 1})
+        self.value['mutants'][0].update(outcome='killed', tests={'passed': 1, 'failed': 1, 'skipped': 0})
+        self.value['summary'].update(killed=1, survived=0, score=100.0)
         self.report.write_text(json.dumps(self.value))
         validated = m6.artifact('oximut', self.report, project, {'exit_code': 0, 'fixture': 'm1'})
         self.assertIn(validated['known_killed_sentinel_identity'], validated['mutations'])

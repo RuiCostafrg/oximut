@@ -8,6 +8,10 @@ const schema = JSON.parse(await readFile(new URL('../docs/report.schema.json', i
 const ajv = new Ajv2020({ allErrors: true });
 const validate = ajv.compile(schema);
 
+export function validateReport(report, label = 'report') {
+  if (!validate(report)) throw new Error(`${label}: ${ajv.errorsText(validate.errors, { separator: '; ' })}`);
+}
+
 // Explicit files are always validated, regardless of their names or contents.
 // Directories recursively select report.json and *-report.json only.
 async function collect(input) {
@@ -33,7 +37,7 @@ export async function validateReports(inputs) {
       let report;
       try { report = JSON.parse(await readFile(file, 'utf8')); }
       catch (error) { throw new Error(`${file}: cannot read JSON: ${error.message}`); }
-      if (!validate(report)) throw new Error(`${file}: ${ajv.errorsText(validate.errors, { separator: '; ' })}`);
+      validateReport(report, file);
       count++;
     }
   }

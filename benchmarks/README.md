@@ -148,6 +148,10 @@ methods as if an accounting change were a change in actual memory use.
 `metadata.json`, `measurements.jsonl`, `measurements.csv`, `summary.json`, and
 `comparisons.json` retain commands, configuration hashes, environment, medians,
 min/max spread, warmups, failures, overlap/exclusions, and correctness gates.
+Every Oximut report is validated against the published schema before comparison,
+using the shared Node validator on the exact report snapshot consumed by the
+harness. Validation runs after the measured command, outside its timing window;
+missing Node/dependencies or validator errors fail the comparison closed.
 Raw reports and bounded logs are retained per invocation. Fixture copies are
 archived as `project-inputs.json` and removed; `--keep-projects` retains them for
 debugging. Reproduction uses the harness command, not stale absolute paths in a

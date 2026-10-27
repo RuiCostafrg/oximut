@@ -213,19 +213,23 @@ pub struct Cache {
 }
 impl Cache {
     pub fn new(options: &Options) -> Self {
-        let enabled = options.cache && !options.no_cache && !options.list;
-        let runner_started = Instant::now();
-        let tool = if enabled {
-            env::current_exe()
+        Self::with_runner_hash(options, || {
+            let started = Instant::now();
+            let tool = env::current_exe()
                 .map_err(|e| e.to_string())
-                .and_then(|p| file_hash(&p))
+                .and_then(|p| file_hash(&p));
+            (tool, elapsed_ms(started))
+        })
+    }
+    fn with_runner_hash(
+        options: &Options,
+        hash_runner: impl FnOnce() -> (Result<String, String>, u64),
+    ) -> Self {
+        let enabled = options.cache && !options.no_cache && !options.list;
+        let (tool, runner_hash_ms) = if enabled {
+            hash_runner()
         } else {
-            Ok(String::new())
-        };
-        let runner_hash_ms = if enabled {
-            elapsed_ms(runner_started)
-        } else {
-            0
+            (Ok(String::new()), 0)
         };
         let reason = if options.no_cache {
             "forced-no-cache"
@@ -255,9 +259,17 @@ impl Cache {
         if enabled && tool.is_err() {
             cache.report.enabled = false;
             cache.report.outcomes_enabled = false;
+            cache.report.runner_hash_ms = 0;
             cache.report.reason = "runner-executable-unreadable".into();
         }
         cache
+    }
+    pub fn add_previous_runner_hash_ms(&mut self, previous: u64) {
+        self.report.runner_hash_ms = if self.report.enabled {
+            self.report.runner_hash_ms.saturating_add(previous)
+        } else {
+            0
+        };
     }
     pub fn artifact(
         &mut self,
@@ -1022,6 +1034,31 @@ mod tests {
             memory_budget_mib: None,
             memory_reserve_mib: 64,
         }
+    }
+    #[test]
+    fn runner_hash_failure_disables_cache_and_discards_measured_time() {
+        let root = tempfile::tempdir().unwrap();
+        let cache = Cache::with_runner_hash(&options(root.path()), || {
+            (Err("injected executable read failure".into()), 47)
+        });
+        assert!(!cache.report.enabled);
+        assert!(!cache.report.outcomes_enabled);
+        assert_eq!(cache.report.reason, "runner-executable-unreadable");
+        assert_eq!(cache.report.runner_hash_ms, 0);
+    }
+    #[test]
+    fn retry_runner_hash_time_depends_on_final_cache_enabled_state() {
+        let root = tempfile::tempdir().unwrap();
+        let options = options(root.path());
+        let mut enabled = Cache::with_runner_hash(&options, || (Ok("tool".into()), 47));
+        enabled.add_previous_runner_hash_ms(29);
+        assert_eq!(enabled.report.runner_hash_ms, 76);
+        enabled.add_previous_runner_hash_ms(u64::MAX);
+        assert_eq!(enabled.report.runner_hash_ms, u64::MAX);
+
+        let mut disabled = Cache::with_runner_hash(&options, || (Err("unreadable".into()), 47));
+        disabled.add_previous_runner_hash_ms(29);
+        assert_eq!(disabled.report.runner_hash_ms, 0);
     }
     fn cache(root: &Path) -> Cache {
         Cache {

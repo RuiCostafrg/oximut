@@ -1121,10 +1121,7 @@ fn run_attempt(options: &Options, previous: Option<RetryEvidence>) -> Result<Att
                 resources[field] = old.saturating_add(current).into();
             }
         }
-        cache.report.runner_hash_ms = cache
-            .report
-            .runner_hash_ms
-            .saturating_add(previous_runner_hash_ms);
+        cache.add_previous_runner_hash_ms(previous_runner_hash_ms);
         let mut profiles = previous_profiles;
         profiles.append(&mut cache.report.fingerprint_profiles);
         cache.report.fingerprint_profiles = profiles;

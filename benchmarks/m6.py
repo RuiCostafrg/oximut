@@ -17,6 +17,7 @@ import re
 from pathlib import Path
 import shutil
 import statistics
+import subprocess
 import sys
 import time
 
@@ -82,6 +83,26 @@ def mutation_identity(filename, source, location, replacement):
     return filename + ':' + hashlib.sha256(edited.encode()).hexdigest()
 
 
+def validate_oximut_report(report, path):
+    """Validate the consumed snapshot with the shared schema, outside timings."""
+    validator = (ROOT / 'scripts/validate-reports.mjs').as_uri()
+    script = (
+        'import { readFileSync } from "node:fs"; '
+        f'import {{ validateReport }} from {json.dumps(validator)}; '
+        'try { validateReport(JSON.parse(readFileSync(0, "utf8")), process.argv[1]); } '
+        'catch (error) { console.error(error.message); process.exitCode = 1; }'
+    )
+    try:
+        result = subprocess.run(
+            ['node', '--input-type=module', '-e', script, '--', str(path)],
+            input=json.dumps(report), capture_output=True, text=True, timeout=30,
+        )
+    except (OSError, subprocess.TimeoutExpired) as error:
+        raise ValueError(f'Oximut report schema validation unavailable: {error}') from error
+    if result.returncode != 0:
+        raise ValueError(f'Oximut report schema validation failed: {result.stderr.strip()}')
+
+
 def artifact(tool, path, project, row):
     """Validate reports independently of exit status; expose reproducible identities."""
     allowed_exit = (0, 1) if tool == 'oximut' else (0,)
@@ -108,6 +129,7 @@ def artifact(tool, path, project, row):
             raise ValueError('ordinary test count/files differ from fixture scope')
         return validated
     if tool == 'oximut':
+        validate_oximut_report(report, path)
         baseline = report.get('baseline', {})
         tests = baseline.get('tests', {})
         if (report.get('schemaVersion') != 1 or baseline.get('outcome') != 'passed'
@@ -539,7 +561,8 @@ def main(argv=None):
     meta['input_sha256'].update({str(p.relative_to(ROOT)): measurement.file_hash(p)
         for p in [Path(__file__), *sorted((ROOT / 'crates').rglob('*.rs')),
                   *sorted((ROOT / 'packages/vitest-adapter').glob('*.mjs')),
-                  ROOT / 'packages/vitest-adapter/supervisor.py']})
+                  ROOT / 'packages/vitest-adapter/supervisor.py',
+                  ROOT / 'scripts/validate-reports.mjs', ROOT / 'docs/report.schema.json']})
     meta.update(schema_version=SCHEMA_VERSION, created_utc=time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()),
                 binary={'path': str(args.binary), 'sha256': measurement.file_hash(args.binary)
                         if args.binary.exists() else None, 'profile': 'user-supplied; default debug'},

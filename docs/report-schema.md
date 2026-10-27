@@ -146,7 +146,9 @@ After retry, diagnostics preserve the discarded attempt's resource report and
 explain the retry. Baseline, mutation results, cache hit/miss counters, and resource
 configuration describe the final attempt. Resource peak observations take the
 maximum across attempts; sample, admission-pause, and recycled-worker counters
-are summed. Fingerprint profiles retain both attempts in chronological order, and `runnerHashMs` sums both executable hashes.
+are summed. Fingerprint profiles retain both attempts in chronological order.
+`runnerHashMs` sums both executable hashes when the final cache remains enabled;
+disabled final cache reports always keep it at zero, including runner-read failures.
 
 Current `resources` fields are `configuredWorkers`, `effectiveWorkers`,
 `cpuLimitWorkers`, `configuredBudgetBytes` (nullable), `budgetBytes`,

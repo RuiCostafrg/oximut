@@ -31,7 +31,8 @@ warm, then forced. Its internal `warmup` field is false even in the discarded
 when calculating the paired result. Auto campaigns use the harness's ordinary
 one warmup and five repetitions, alternating warm/forced order. Projects and
 policy history start fresh for each repetition. `campaign.py` records exact
-commands and order; it uses absolute paths that must be adjusted when reproducing.
+commands and order; binary/toolchain paths must be adjusted when reproducing.
+The helper resolves the containing checkout from its own location.
 All binaries/builds/acceptance tests finished before these timings; no concurrent
 builds or test suites ran during the campaign.
 
@@ -105,9 +106,10 @@ real-project/scaling/distribution release gates remain open. See the
 
 ## Reproduction helper corrections after review
 
-PR #13 review corrected two reproduction-only setup issues after measurement:
-`campaign.py` now creates missing output parents while still rejecting an
-existing campaign directory; the software-backend manifest declares its own
+PR #13 review corrected reproduction-helper setup issues after measurement:
+`campaign.py` now resolves its containing checkout and creates missing output
+parents while still rejecting an existing campaign directory; the
+software-backend manifest declares its own
 workspace so it runs directly inside this checkout. The originally measured
 helper sources remain available in commit `1b8b8bb`. Commands, raw measurements,
 reports, and original validation logs are unchanged. `SHA256SUMS` tracks the

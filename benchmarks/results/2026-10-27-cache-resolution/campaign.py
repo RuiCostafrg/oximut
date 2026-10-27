@@ -1,6 +1,6 @@
 import os,subprocess,time
 from pathlib import Path
-root=Path('/root/oximut'); out=root/'.oximut/cache-resolution';out.mkdir(parents=True, exist_ok=False)
+root=Path(__file__).resolve().parents[3]; out=root/'.oximut/cache-resolution';out.mkdir(parents=True, exist_ok=False)
 env=os.environ.copy();env['PATH']='/root/.local/share/oximut/toolchains/node-v26.3.1-linux-arm64/bin:'+env['PATH']
 def run(label,binary,policy,fixture='m1',repetitions=1,warmups=0,changes=()):
  cmd=['python3','benchmarks/m6.py','--binary',binary,'--fixtures',fixture,'--tools','oximut','--scenarios','incremental','--cache-policy',policy,'--changes',*changes,'--repetitions',str(repetitions),'--warmups',str(warmups),'--output',str(out/label)]
