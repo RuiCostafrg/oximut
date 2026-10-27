@@ -1,0 +1,28 @@
+Baseline: InfrastructureError (0 passed, 0 failed, 0 skipped)
+  persistent adapter exited before response: exit status: 1
+skipped cf4748d0c363 /root/.t3/worktrees/oximut/t3-d296c14c/benchmarks/results/2026-10-27-colord-diagnostic/00-oximut/project/src/manipulate/saturate.ts:10:30 * -> /
+  baseline did not pass; mutant was not executed
+skipped c88a30c6f5f3 /root/.t3/worktrees/oximut/t3-d296c14c/benchmarks/results/2026-10-27-colord-diagnostic/00-oximut/project/src/manipulate/invert.ts:4:10 - -> +
+  baseline did not pass; mutant was not executed
+skipped c59a734f77d7 /root/.t3/worktrees/oximut/t3-d296c14c/benchmarks/results/2026-10-27-colord-diagnostic/00-oximut/project/src/manipulate/mix.ts:12:76 - -> +
+  baseline did not pass; mutant was not executed
+skipped d608232f1dad /root/.t3/worktrees/oximut/t3-d296c14c/benchmarks/results/2026-10-27-colord-diagnostic/00-oximut/project/src/manipulate/invert.ts:5:10 - -> +
+  baseline did not pass; mutant was not executed
+skipped 8a49a888d6e6 /root/.t3/worktrees/oximut/t3-d296c14c/benchmarks/results/2026-10-27-colord-diagnostic/00-oximut/project/src/manipulate/lighten.ts:11:30 * -> /
+  baseline did not pass; mutant was not executed
+skipped b115f5372f2e /root/.t3/worktrees/oximut/t3-d296c14c/benchmarks/results/2026-10-27-colord-diagnostic/00-oximut/project/src/manipulate/mix.ts:12:69 + -> -
+  baseline did not pass; mutant was not executed
+skipped 9fd7cd8a8c7b /root/.t3/worktrees/oximut/t3-d296c14c/benchmarks/results/2026-10-27-colord-diagnostic/00-oximut/project/src/manipulate/mix.ts:12:85 * -> /
+  baseline did not pass; mutant was not executed
+skipped 82b44c30bb77 /root/.t3/worktrees/oximut/t3-d296c14c/benchmarks/results/2026-10-27-colord-diagnostic/00-oximut/project/src/manipulate/saturate.ts:10:21 + -> -
+  baseline did not pass; mutant was not executed
+skipped 211c64945c6e /root/.t3/worktrees/oximut/t3-d296c14c/benchmarks/results/2026-10-27-colord-diagnostic/00-oximut/project/src/manipulate/lighten.ts:11:21 + -> -
+  baseline did not pass; mutant was not executed
+skipped ef47eb079678 /root/.t3/worktrees/oximut/t3-d296c14c/benchmarks/results/2026-10-27-colord-diagnostic/00-oximut/project/src/extend.ts:11:39 < -> <=
+  baseline did not pass; mutant was not executed
+skipped c8fb72bec90d /root/.t3/worktrees/oximut/t3-d296c14c/benchmarks/results/2026-10-27-colord-diagnostic/00-oximut/project/src/manipulate/invert.ts:6:10 - -> +
+  baseline did not pass; mutant was not executed
+Mutants: 11 total, 0 killed, 0 survived, 0 no-coverage, 0 invalid, 0 timeout, 0 infrastructure-error, 0 resource-exhausted, 11 skipped
+Score: n/a (0/0); complete: false
+Cache: forced-no-cache; instrumentation hits/misses: 0/0; outcome hits/misses: 0/0; not-written
+Diagnostic: execution=persistent; isolation=fresh-test-forks; controller reuse only; baseline=original-and-disabled-switches

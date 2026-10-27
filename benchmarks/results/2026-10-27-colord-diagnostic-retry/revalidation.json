@@ -1,0 +1,2235 @@
+{
+  "comparisons": [
+    {
+      "declared_families_agree": false,
+      "equal_mutation_scope": false,
+      "explained_no_coverage_refinements": [],
+      "left_count": 11,
+      "left_only": {
+        "src/extend.ts:75d915560e777f387b00b7b06cb8e79085c69b91dea5a4c22b3a1da7369a225f": {
+          "file": "src/extend.ts",
+          "id": "ef47eb079678fe3394e670f75553d1ed95568788dcfd52c8c2685e0500e889fc",
+          "location": {
+            "end": {
+              "column": 40,
+              "line": 11,
+              "offset": 345
+            },
+            "start": {
+              "column": 39,
+              "line": 11,
+              "offset": 344
+            }
+          },
+          "operator": "comparison-boundary",
+          "outcome": "survived",
+          "replacement": "<=",
+          "selection": {
+            "expectedSkipped": 0,
+            "files": [],
+            "mode": "full",
+            "reasons": [
+              "outside-test-execution"
+            ],
+            "selectedTests": 102,
+            "totalTests": 102
+          }
+        }
+      },
+      "mismatches": [],
+      "ratio_eligible": false,
+      "right_count": 10,
+      "right_only": {},
+      "round": 0,
+      "shared": [
+        "src/manipulate/invert.ts:5a4b1a49db3370f35595a4c9f791f764cf85c8d609e144ef3caa133c9896b2de",
+        "src/manipulate/invert.ts:5fbed2307807aa5a74d7e636be307eea6129cb2e3fb98fe273d18f5367cfb507",
+        "src/manipulate/invert.ts:a8ebfc39040c2547f2c900fd8332e6ec4656ff3f03e3125c61521db95a26110e",
+        "src/manipulate/lighten.ts:1b86c71dcb16950d4140a02f181952714eeaa2549a61fccb24494783677d8d7f",
+        "src/manipulate/lighten.ts:ca564f0146f4da53ffd01272fbf916cb6f91c02062790b38e6a65e6bf690b5b5",
+        "src/manipulate/mix.ts:ab7c2717dd32bfe6cda2204d18311a44304c4eeca230406aee89fd71af11c33e",
+        "src/manipulate/mix.ts:ad93e4a21051eb6120c994d143461e770aa3a500740e3e8ae581e5f50489a328",
+        "src/manipulate/mix.ts:f44c37dfacc4fe424faf13618c63ac5e20f597149d89e9c6a8ab1fd20a2003d2",
+        "src/manipulate/saturate.ts:00c84cea49566ce0605592dd88efdea80232ffbb26674daa80c51bc17926bcf8",
+        "src/manipulate/saturate.ts:1f8641db24336a5d61f4c26107390fcde9987081b5d1e8196e929f239d2499df"
+      ],
+      "shared_classifications_agree": true,
+      "shared_count": 10
+    }
+  ],
+  "explanation": "Read-only revalidation after pinning exact Oximut coverage names derived from ordinary Vitest ancestorTitles/title. Original measurements/summary unchanged; no mutant/source edits or test drops. Explicit family labels added from original commands.",
+  "ratios": [],
+  "rows": [
+    {
+      "artifact_phase_metrics": {
+        "source": "sum of Vitest assertion duration; excludes discovery/transform/startup",
+        "test_execution_sum_ms": 211.34071599999913
+      },
+      "captured_output_bytes": 138,
+      "command": [
+        "node",
+        "/root/.t3/worktrees/oximut/t3-d296c14c/node_modules/vitest/vitest.mjs",
+        "run",
+        "--config",
+        "vitest.config.ts",
+        "--reporter=json",
+        "--outputFile=/root/.t3/worktrees/oximut/t3-d296c14c/benchmarks/results/2026-10-27-colord-diagnostic-retry/00-vitest/report.json"
+      ],
+      "cpu_seconds": 3.5402959999999997,
+      "cpu_system_seconds": 0.7955749999999999,
+      "cpu_user_seconds": 2.7447209999999997,
+      "cwd": "/root/.t3/worktrees/oximut/t3-d296c14c/benchmarks/results/2026-10-27-colord-diagnostic-retry/00-vitest/project",
+      "declared_test_identity_sha256": "3fa4823cc6cd2edda5cb41e6fbe411e20a6857b0a3081ae59ae7d6b1ee05651b",
+      "descendant_cleanup_required": false,
+      "exit_code": 0,
+      "log_file": "/root/.t3/worktrees/oximut/t3-d296c14c/benchmarks/results/2026-10-27-colord-diagnostic-retry/00-vitest/output.log",
+      "max_memory_sample_seconds": 0.017656562151387334,
+      "max_sample_gap_seconds": 0.09173635486513376,
+      "memory_errors": [],
+      "memory_method": "sum-live-smaps_rollup-rss",
+      "mutator_families": [
+        "arithmetic",
+        "boolean-literal"
+      ],
+      "observed_process_count": 5,
+      "output_bytes": 138,
+      "output_truncated": false,
+      "peak_aggregate_rss_bytes": 227659776,
+      "peak_process_count": 2,
+      "report_file": "/root/.t3/worktrees/oximut/t3-d296c14c/benchmarks/results/2026-10-27-colord-diagnostic-retry/00-vitest/report.json",
+      "round": 0,
+      "sample_interval_seconds": 0.02,
+      "samples": 99,
+      "spawn_error": null,
+      "success": true,
+      "test_counts": {
+        "numFailedTests": 0,
+        "numPassedTests": 102,
+        "numPendingTests": 0,
+        "numTotalTests": 102
+      },
+      "test_identity_sha256": "df99a2baba49b4043a5f9120eb488cf64bc334947145e90a3844484d1f85e3ba",
+      "timed_out": false,
+      "timeout_seconds": 600,
+      "tool": "vitest",
+      "wall_seconds": 4.36092176893726,
+      "warmup": false,
+      "workload_sha256": "53447261f4e0424734fd0530208753b544492685c71803a5983dfde28fc736b6"
+    },
+    {
+      "baseline_test_counts": {
+        "failed": 0,
+        "passed": 102,
+        "skipped": 0
+      },
+      "cache": {
+        "enabled": false,
+        "fingerprintProfiles": [],
+        "instrumentationHits": 0,
+        "instrumentationMisses": 0,
+        "outcomeHits": 0,
+        "outcomeMisses": 0,
+        "outcomesEnabled": false,
+        "persistence": "not-written",
+        "reason": "forced-no-cache",
+        "runnerHashMs": 0
+      },
+      "cache_provenance_count": 0,
+      "captured_output_bytes": 6433,
+      "command": [
+        "/root/oximut/target/release/oximut",
+        "--root",
+        "/root/.t3/worktrees/oximut/t3-d296c14c/benchmarks/results/2026-10-27-colord-diagnostic-retry/00-oximut/project",
+        "--config",
+        "vitest.config.ts",
+        "--adapter",
+        "/root/.t3/worktrees/oximut/t3-d296c14c/packages/vitest-adapter/m2-runner.mjs",
+        "--report",
+        "/root/.t3/worktrees/oximut/t3-d296c14c/benchmarks/results/2026-10-27-colord-diagnostic-retry/00-oximut/report.json",
+        "--workers",
+        "1",
+        "--execution",
+        "persistent",
+        "--test-selection",
+        "--no-cache",
+        "--order-seed",
+        "100",
+        "--source",
+        "src/manipulate/invert.ts",
+        "--source",
+        "src/manipulate/lighten.ts",
+        "--source",
+        "src/manipulate/mix.ts",
+        "--source",
+        "src/manipulate/saturate.ts",
+        "--source",
+        "src/extend.ts"
+      ],
+      "cpu_seconds": 63.572197,
+      "cpu_system_seconds": 35.553064,
+      "cpu_user_seconds": 28.019133,
+      "cwd": "/root/.t3/worktrees/oximut/t3-d296c14c/benchmarks/results/2026-10-27-colord-diagnostic-retry/00-oximut/project",
+      "declared_test_identity_sha256": "3fa4823cc6cd2edda5cb41e6fbe411e20a6857b0a3081ae59ae7d6b1ee05651b",
+      "descendant_cleanup_required": false,
+      "diagnostics": [
+        "execution=persistent; isolation=fresh-test-forks; controller reuse only; baseline=original-and-disabled-switches",
+        "disabled switching validation: /root/.t3/worktrees/oximut/t3-d296c14c/benchmarks/results/2026-10-27-colord-diagnostic-retry/00-oximut/project/src/extend.ts: Passed",
+        "disabled switching validation: /root/.t3/worktrees/oximut/t3-d296c14c/benchmarks/results/2026-10-27-colord-diagnostic-retry/00-oximut/project/src/manipulate/invert.ts: Passed",
+        "disabled switching validation: /root/.t3/worktrees/oximut/t3-d296c14c/benchmarks/results/2026-10-27-colord-diagnostic-retry/00-oximut/project/src/manipulate/lighten.ts: Passed",
+        "disabled switching validation: /root/.t3/worktrees/oximut/t3-d296c14c/benchmarks/results/2026-10-27-colord-diagnostic-retry/00-oximut/project/src/manipulate/mix.ts: Passed",
+        "disabled switching validation: /root/.t3/worktrees/oximut/t3-d296c14c/benchmarks/results/2026-10-27-colord-diagnostic-retry/00-oximut/project/src/manipulate/saturate.ts: Passed",
+        "adapter observed reuse boundary: controller"
+      ],
+      "exit_code": 1,
+      "explicitly_excluded_mutant_count": 0,
+      "generated_mutant_count": 11,
+      "generated_mutation_status_counts": null,
+      "known_killed_sentinel_identity": "src/manipulate/invert.ts:5fbed2307807aa5a74d7e636be307eea6129cb2e3fb98fe273d18f5367cfb507",
+      "log_file": "/root/.t3/worktrees/oximut/t3-d296c14c/benchmarks/results/2026-10-27-colord-diagnostic-retry/00-oximut/output.log",
+      "max_memory_sample_seconds": 0.18702406203374267,
+      "max_sample_gap_seconds": 0.44394291704520583,
+      "memory_errors": [],
+      "memory_method": "sum-live-smaps_rollup-rss",
+      "mutant_count": 11,
+      "mutation_identity_outcome_sha256": "7cb1bab5aadcdc7196c0bcecf62dc0881ebb2d81bcf3ba46d9e43e5c17fc659c",
+      "mutation_status_counts": {
+        "killed": 10,
+        "survived": 1
+      },
+      "mutation_summary": {
+        "complete": true,
+        "infrastructureError": 0,
+        "invalid": 0,
+        "killed": 10,
+        "noCoverage": 0,
+        "resourceExhausted": 0,
+        "score": 90.9090909090909,
+        "scoreDenominator": 11,
+        "skipped": 0,
+        "survived": 1,
+        "timeout": 0,
+        "total": 11
+      },
+      "mutations": {
+        "src/extend.ts:75d915560e777f387b00b7b06cb8e79085c69b91dea5a4c22b3a1da7369a225f": {
+          "file": "src/extend.ts",
+          "id": "ef47eb079678fe3394e670f75553d1ed95568788dcfd52c8c2685e0500e889fc",
+          "location": {
+            "end": {
+              "column": 40,
+              "line": 11,
+              "offset": 345
+            },
+            "start": {
+              "column": 39,
+              "line": 11,
+              "offset": 344
+            }
+          },
+          "operator": "comparison-boundary",
+          "outcome": "survived",
+          "replacement": "<=",
+          "selection": {
+            "expectedSkipped": 0,
+            "files": [],
+            "mode": "full",
+            "reasons": [
+              "outside-test-execution"
+            ],
+            "selectedTests": 102,
+            "totalTests": 102
+          }
+        },
+        "src/manipulate/invert.ts:5a4b1a49db3370f35595a4c9f791f764cf85c8d609e144ef3caa133c9896b2de": {
+          "file": "src/manipulate/invert.ts",
+          "id": "d608232f1dad0bf6337abb58c011a8da27269951d412bc352dacf25828e209d3",
+          "location": {
+            "end": {
+              "column": 11,
+              "line": 5,
+              "offset": 125
+            },
+            "start": {
+              "column": 10,
+              "line": 5,
+              "offset": 124
+            }
+          },
+          "operator": "arithmetic",
+          "outcome": "killed",
+          "replacement": "+",
+          "selection": {
+            "expectedSkipped": 0,
+            "files": [
+              "/root/.t3/worktrees/oximut/t3-d296c14c/benchmarks/results/2026-10-27-colord-diagnostic-retry/00-oximut/project/tests/colord.test.ts"
+            ],
+            "mode": "files",
+            "reasons": [
+              "whole-file-preserves-sequential-state-and-hooks"
+            ],
+            "selectedTests": 38,
+            "totalTests": 102
+          }
+        },
+        "src/manipulate/invert.ts:5fbed2307807aa5a74d7e636be307eea6129cb2e3fb98fe273d18f5367cfb507": {
+          "file": "src/manipulate/invert.ts",
+          "id": "c88a30c6f5f3ccc6db4c6c87bf61459c5b328fc5b7df59aa03dde1ca099aa3db",
+          "location": {
+            "end": {
+              "column": 11,
+              "line": 4,
+              "offset": 106
+            },
+            "start": {
+              "column": 10,
+              "line": 4,
+              "offset": 105
+            }
+          },
+          "operator": "arithmetic",
+          "outcome": "killed",
+          "replacement": "+",
+          "selection": {
+            "expectedSkipped": 0,
+            "files": [
+              "/root/.t3/worktrees/oximut/t3-d296c14c/benchmarks/results/2026-10-27-colord-diagnostic-retry/00-oximut/project/tests/colord.test.ts"
+            ],
+            "mode": "files",
+            "reasons": [
+              "whole-file-preserves-sequential-state-and-hooks"
+            ],
+            "selectedTests": 38,
+            "totalTests": 102
+          }
+        },
+        "src/manipulate/invert.ts:a8ebfc39040c2547f2c900fd8332e6ec4656ff3f03e3125c61521db95a26110e": {
+          "file": "src/manipulate/invert.ts",
+          "id": "c8fb72bec90d9a783caf7ef8479772865cadc5338cbace358a9a173db7fcf175",
+          "location": {
+            "end": {
+              "column": 11,
+              "line": 6,
+              "offset": 144
+            },
+            "start": {
+              "column": 10,
+              "line": 6,
+              "offset": 143
+            }
+          },
+          "operator": "arithmetic",
+          "outcome": "killed",
+          "replacement": "+",
+          "selection": {
+            "expectedSkipped": 0,
+            "files": [
+              "/root/.t3/worktrees/oximut/t3-d296c14c/benchmarks/results/2026-10-27-colord-diagnostic-retry/00-oximut/project/tests/colord.test.ts"
+            ],
+            "mode": "files",
+            "reasons": [
+              "whole-file-preserves-sequential-state-and-hooks"
+            ],
+            "selectedTests": 38,
+            "totalTests": 102
+          }
+        },
+        "src/manipulate/lighten.ts:1b86c71dcb16950d4140a02f181952714eeaa2549a61fccb24494783677d8d7f": {
+          "file": "src/manipulate/lighten.ts",
+          "id": "211c64945c6ed85c7fe4073b36288ffc39e3697f07c009e14edcf98b8d0f84b0",
+          "location": {
+            "end": {
+              "column": 22,
+              "line": 11,
+              "offset": 304
+            },
+            "start": {
+              "column": 21,
+              "line": 11,
+              "offset": 303
+            }
+          },
+          "operator": "arithmetic",
+          "outcome": "killed",
+          "replacement": "-",
+          "selection": {
+            "expectedSkipped": 0,
+            "files": [
+              "/root/.t3/worktrees/oximut/t3-d296c14c/benchmarks/results/2026-10-27-colord-diagnostic-retry/00-oximut/project/tests/colord.test.ts"
+            ],
+            "mode": "files",
+            "reasons": [
+              "whole-file-preserves-sequential-state-and-hooks"
+            ],
+            "selectedTests": 38,
+            "totalTests": 102
+          }
+        },
+        "src/manipulate/lighten.ts:ca564f0146f4da53ffd01272fbf916cb6f91c02062790b38e6a65e6bf690b5b5": {
+          "file": "src/manipulate/lighten.ts",
+          "id": "8a49a888d6e614ce683525b9bd586b4271285324ddac088829d4a8beec90c2a5",
+          "location": {
+            "end": {
+              "column": 31,
+              "line": 11,
+              "offset": 313
+            },
+            "start": {
+              "column": 30,
+              "line": 11,
+              "offset": 312
+            }
+          },
+          "operator": "arithmetic",
+          "outcome": "killed",
+          "replacement": "/",
+          "selection": {
+            "expectedSkipped": 0,
+            "files": [
+              "/root/.t3/worktrees/oximut/t3-d296c14c/benchmarks/results/2026-10-27-colord-diagnostic-retry/00-oximut/project/tests/colord.test.ts"
+            ],
+            "mode": "files",
+            "reasons": [
+              "whole-file-preserves-sequential-state-and-hooks"
+            ],
+            "selectedTests": 38,
+            "totalTests": 102
+          }
+        },
+        "src/manipulate/mix.ts:ab7c2717dd32bfe6cda2204d18311a44304c4eeca230406aee89fd71af11c33e": {
+          "file": "src/manipulate/mix.ts",
+          "id": "b115f5372f2edf03e51a8f712460addaed3513a89703cc1fe8500eee367aba65",
+          "location": {
+            "end": {
+              "column": 70,
+              "line": 12,
+              "offset": 350
+            },
+            "start": {
+              "column": 69,
+              "line": 12,
+              "offset": 349
+            }
+          },
+          "operator": "arithmetic",
+          "outcome": "killed",
+          "replacement": "-",
+          "selection": {
+            "expectedSkipped": 0,
+            "files": [
+              "/root/.t3/worktrees/oximut/t3-d296c14c/benchmarks/results/2026-10-27-colord-diagnostic-retry/00-oximut/project/tests/plugins.test.ts"
+            ],
+            "mode": "files",
+            "reasons": [
+              "whole-file-preserves-sequential-state-and-hooks"
+            ],
+            "selectedTests": 55,
+            "totalTests": 102
+          }
+        },
+        "src/manipulate/mix.ts:ad93e4a21051eb6120c994d143461e770aa3a500740e3e8ae581e5f50489a328": {
+          "file": "src/manipulate/mix.ts",
+          "id": "9fd7cd8a8c7b265bb46410e0ca0429f59067d4a2e458cd743941c88ea05ee378",
+          "location": {
+            "end": {
+              "column": 86,
+              "line": 12,
+              "offset": 366
+            },
+            "start": {
+              "column": 85,
+              "line": 12,
+              "offset": 365
+            }
+          },
+          "operator": "arithmetic",
+          "outcome": "killed",
+          "replacement": "/",
+          "selection": {
+            "expectedSkipped": 0,
+            "files": [
+              "/root/.t3/worktrees/oximut/t3-d296c14c/benchmarks/results/2026-10-27-colord-diagnostic-retry/00-oximut/project/tests/plugins.test.ts"
+            ],
+            "mode": "files",
+            "reasons": [
+              "whole-file-preserves-sequential-state-and-hooks"
+            ],
+            "selectedTests": 55,
+            "totalTests": 102
+          }
+        },
+        "src/manipulate/mix.ts:f44c37dfacc4fe424faf13618c63ac5e20f597149d89e9c6a8ab1fd20a2003d2": {
+          "file": "src/manipulate/mix.ts",
+          "id": "c59a734f77d74a37da696a4904f169a3a119a78a22d2732ca87f3c08b0a3cebd",
+          "location": {
+            "end": {
+              "column": 77,
+              "line": 12,
+              "offset": 357
+            },
+            "start": {
+              "column": 76,
+              "line": 12,
+              "offset": 356
+            }
+          },
+          "operator": "arithmetic",
+          "outcome": "killed",
+          "replacement": "+",
+          "selection": {
+            "expectedSkipped": 0,
+            "files": [
+              "/root/.t3/worktrees/oximut/t3-d296c14c/benchmarks/results/2026-10-27-colord-diagnostic-retry/00-oximut/project/tests/plugins.test.ts"
+            ],
+            "mode": "files",
+            "reasons": [
+              "whole-file-preserves-sequential-state-and-hooks"
+            ],
+            "selectedTests": 55,
+            "totalTests": 102
+          }
+        },
+        "src/manipulate/saturate.ts:00c84cea49566ce0605592dd88efdea80232ffbb26674daa80c51bc17926bcf8": {
+          "file": "src/manipulate/saturate.ts",
+          "id": "cf4748d0c363684160adae8ce709b2c871449b782017d3e7ad704525d7b51154",
+          "location": {
+            "end": {
+              "column": 31,
+              "line": 10,
+              "offset": 299
+            },
+            "start": {
+              "column": 30,
+              "line": 10,
+              "offset": 298
+            }
+          },
+          "operator": "arithmetic",
+          "outcome": "killed",
+          "replacement": "/",
+          "selection": {
+            "expectedSkipped": 0,
+            "files": [
+              "/root/.t3/worktrees/oximut/t3-d296c14c/benchmarks/results/2026-10-27-colord-diagnostic-retry/00-oximut/project/tests/colord.test.ts"
+            ],
+            "mode": "files",
+            "reasons": [
+              "whole-file-preserves-sequential-state-and-hooks"
+            ],
+            "selectedTests": 38,
+            "totalTests": 102
+          }
+        },
+        "src/manipulate/saturate.ts:1f8641db24336a5d61f4c26107390fcde9987081b5d1e8196e929f239d2499df": {
+          "file": "src/manipulate/saturate.ts",
+          "id": "82b44c30bb77459ea1aa962c8f328ae2ee1aedcdd0ef3982cef07e398229385e",
+          "location": {
+            "end": {
+              "column": 22,
+              "line": 10,
+              "offset": 290
+            },
+            "start": {
+              "column": 21,
+              "line": 10,
+              "offset": 289
+            }
+          },
+          "operator": "arithmetic",
+          "outcome": "killed",
+          "replacement": "-",
+          "selection": {
+            "expectedSkipped": 0,
+            "files": [
+              "/root/.t3/worktrees/oximut/t3-d296c14c/benchmarks/results/2026-10-27-colord-diagnostic-retry/00-oximut/project/tests/colord.test.ts"
+            ],
+            "mode": "files",
+            "reasons": [
+              "whole-file-preserves-sequential-state-and-hooks"
+            ],
+            "selectedTests": 38,
+            "totalTests": 102
+          }
+        }
+      },
+      "mutator_families": [
+        "unrestricted"
+      ],
+      "observed_process_count": 47,
+      "output_bytes": 6433,
+      "output_truncated": false,
+      "peak_aggregate_rss_bytes": 437374976,
+      "peak_process_count": 6,
+      "report_file": "/root/.t3/worktrees/oximut/t3-d296c14c/benchmarks/results/2026-10-27-colord-diagnostic-retry/00-oximut/report.json",
+      "report_run_id": "21068-1793140504598899436",
+      "reported_tests_sum_including_cached": 533,
+      "resources": {
+        "admissionPauses": 10,
+        "admissionWorkerCostBytes": 540728320,
+        "budgetBytes": 12115951616,
+        "cgroups": [],
+        "configuredBudgetBytes": null,
+        "configuredWorkers": 1,
+        "cpuLimitWorkers": 8,
+        "effectiveWorkers": 1,
+        "enforcement": "best-effort sampled admission and process-tree cancellation; existing cgroup limits are OS-enforced; no new hard cap installed",
+        "exhaustion": null,
+        "maxActiveJobs": 1,
+        "measuredWorkerPeakBytes": 432582656,
+        "measurement": "Linux /proc smaps_rollup Rss sum, approximate stat RSS fallback on older/restricted kernels: main CLI and all worker/adapter/controller/test descendants; shared pages counted per process",
+        "peakAggregateRssBytes": 437485568,
+        "recycledIdleWorkers": 0,
+        "reserveBytes": 67108864,
+        "sampleIntervalMs": 50,
+        "samples": 602
+      },
+      "round": 0,
+      "sample_interval_seconds": 0.02,
+      "samples": 596,
+      "scope_exclusions": [],
+      "selected_tests_sum": 533,
+      "selection_fallback_counts": {
+        "outside-test-execution": 1,
+        "whole-file-preserves-sequential-state-and-hooks": 10
+      },
+      "selection_mode_counts": {
+        "files": 10,
+        "full": 1
+      },
+      "spawn_error": null,
+      "success": true,
+      "timed_out": false,
+      "timeout_seconds": 600,
+      "tool": "oximut",
+      "wall_seconds": 58.18911695713177,
+      "warmup": false,
+      "workload_sha256": "53447261f4e0424734fd0530208753b544492685c71803a5983dfde28fc736b6"
+    },
+    {
+      "captured_output_bytes": 1394,
+      "command": [
+        "node",
+        "/root/.t3/worktrees/oximut/t3-d296c14c/node_modules/@stryker-mutator/core/bin/stryker.js",
+        "run",
+        "stryker.config.mjs"
+      ],
+      "cpu_seconds": 13.80461,
+      "cpu_system_seconds": 2.486007,
+      "cpu_user_seconds": 11.318603,
+      "cwd": "/root/.t3/worktrees/oximut/t3-d296c14c/benchmarks/results/2026-10-27-colord-diagnostic-retry/00-stryker/project",
+      "declared_test_identity_sha256": "3fa4823cc6cd2edda5cb41e6fbe411e20a6857b0a3081ae59ae7d6b1ee05651b",
+      "descendant_cleanup_required": false,
+      "exit_code": 0,
+      "explicitly_excluded_mutant_count": 26,
+      "generated_mutant_count": 36,
+      "generated_mutation_status_counts": {
+        "Ignored": 26,
+        "Killed": 10
+      },
+      "known_killed_sentinel_identity": "src/manipulate/invert.ts:5fbed2307807aa5a74d7e636be307eea6129cb2e3fb98fe273d18f5367cfb507",
+      "log_file": "/root/.t3/worktrees/oximut/t3-d296c14c/benchmarks/results/2026-10-27-colord-diagnostic-retry/00-stryker/output.log",
+      "max_memory_sample_seconds": 0.13449942716397345,
+      "max_sample_gap_seconds": 0.3371293740347028,
+      "memory_errors": [],
+      "memory_method": "sum-live-smaps_rollup-rss",
+      "mutant_count": 10,
+      "mutation_identity_outcome_sha256": "73c26ba6f052d2c7fc3dc1cc48d4da8dbe84b3139aaf1ee8e627081e4d34403f",
+      "mutation_outcome_sha256": "e10fefbe2c393b2549309bf2b83b889a4e273e6b680f59aa8c6575b4ba6d1003",
+      "mutation_status_counts": {
+        "killed": 10
+      },
+      "mutations": {
+        "src/manipulate/invert.ts:5a4b1a49db3370f35595a4c9f791f764cf85c8d609e144ef3caa133c9896b2de": {
+          "file": "src/manipulate/invert.ts",
+          "id": "14",
+          "location": {
+            "end": {
+              "column": 18,
+              "line": 5
+            },
+            "start": {
+              "column": 6,
+              "line": 5
+            }
+          },
+          "operator": "ArithmeticOperator",
+          "outcome": "killed",
+          "replacement": "255 + rgba.g",
+          "selection": null
+        },
+        "src/manipulate/invert.ts:5fbed2307807aa5a74d7e636be307eea6129cb2e3fb98fe273d18f5367cfb507": {
+          "file": "src/manipulate/invert.ts",
+          "id": "13",
+          "location": {
+            "end": {
+              "column": 18,
+              "line": 4
+            },
+            "start": {
+              "column": 6,
+              "line": 4
+            }
+          },
+          "operator": "ArithmeticOperator",
+          "outcome": "killed",
+          "replacement": "255 + rgba.r",
+          "selection": null
+        },
+        "src/manipulate/invert.ts:a8ebfc39040c2547f2c900fd8332e6ec4656ff3f03e3125c61521db95a26110e": {
+          "file": "src/manipulate/invert.ts",
+          "id": "15",
+          "location": {
+            "end": {
+              "column": 18,
+              "line": 6
+            },
+            "start": {
+              "column": 6,
+              "line": 6
+            }
+          },
+          "operator": "ArithmeticOperator",
+          "outcome": "killed",
+          "replacement": "255 + rgba.b",
+          "selection": null
+        },
+        "src/manipulate/lighten.ts:1b86c71dcb16950d4140a02f181952714eeaa2549a61fccb24494783677d8d7f": {
+          "file": "src/manipulate/lighten.ts",
+          "id": "18",
+          "location": {
+            "end": {
+              "column": 35,
+              "line": 11
+            },
+            "start": {
+              "column": 14,
+              "line": 11
+            }
+          },
+          "operator": "ArithmeticOperator",
+          "outcome": "killed",
+          "replacement": "hsla.l - amount * 100",
+          "selection": null
+        },
+        "src/manipulate/lighten.ts:ca564f0146f4da53ffd01272fbf916cb6f91c02062790b38e6a65e6bf690b5b5": {
+          "file": "src/manipulate/lighten.ts",
+          "id": "19",
+          "location": {
+            "end": {
+              "column": 35,
+              "line": 11
+            },
+            "start": {
+              "column": 23,
+              "line": 11
+            }
+          },
+          "operator": "ArithmeticOperator",
+          "outcome": "killed",
+          "replacement": "amount / 100",
+          "selection": null
+        },
+        "src/manipulate/mix.ts:ab7c2717dd32bfe6cda2204d18311a44304c4eeca230406aee89fd71af11c33e": {
+          "file": "src/manipulate/mix.ts",
+          "id": "22",
+          "location": {
+            "end": {
+              "column": 92,
+              "line": 12
+            },
+            "start": {
+              "column": 63,
+              "line": 12
+            }
+          },
+          "operator": "ArithmeticOperator",
+          "outcome": "killed",
+          "replacement": "start - (end - start) * ratio",
+          "selection": null
+        },
+        "src/manipulate/mix.ts:ad93e4a21051eb6120c994d143461e770aa3a500740e3e8ae581e5f50489a328": {
+          "file": "src/manipulate/mix.ts",
+          "id": "23",
+          "location": {
+            "end": {
+              "column": 92,
+              "line": 12
+            },
+            "start": {
+              "column": 71,
+              "line": 12
+            }
+          },
+          "operator": "ArithmeticOperator",
+          "outcome": "killed",
+          "replacement": "(end - start) / ratio",
+          "selection": null
+        },
+        "src/manipulate/mix.ts:f44c37dfacc4fe424faf13618c63ac5e20f597149d89e9c6a8ab1fd20a2003d2": {
+          "file": "src/manipulate/mix.ts",
+          "id": "24",
+          "location": {
+            "end": {
+              "column": 83,
+              "line": 12
+            },
+            "start": {
+              "column": 72,
+              "line": 12
+            }
+          },
+          "operator": "ArithmeticOperator",
+          "outcome": "killed",
+          "replacement": "end + start",
+          "selection": null
+        },
+        "src/manipulate/saturate.ts:00c84cea49566ce0605592dd88efdea80232ffbb26674daa80c51bc17926bcf8": {
+          "file": "src/manipulate/saturate.ts",
+          "id": "35",
+          "location": {
+            "end": {
+              "column": 35,
+              "line": 10
+            },
+            "start": {
+              "column": 23,
+              "line": 10
+            }
+          },
+          "operator": "ArithmeticOperator",
+          "outcome": "killed",
+          "replacement": "amount / 100",
+          "selection": null
+        },
+        "src/manipulate/saturate.ts:1f8641db24336a5d61f4c26107390fcde9987081b5d1e8196e929f239d2499df": {
+          "file": "src/manipulate/saturate.ts",
+          "id": "34",
+          "location": {
+            "end": {
+              "column": 35,
+              "line": 10
+            },
+            "start": {
+              "column": 14,
+              "line": 10
+            }
+          },
+          "operator": "ArithmeticOperator",
+          "outcome": "killed",
+          "replacement": "hsla.s - amount * 100",
+          "selection": null
+        }
+      },
+      "mutator_families": [
+        "arithmetic",
+        "boolean-literal"
+      ],
+      "observed_process_count": 5,
+      "output_bytes": 1394,
+      "output_truncated": false,
+      "peak_aggregate_rss_bytes": 516128768,
+      "peak_process_count": 4,
+      "report_file": "/root/.t3/worktrees/oximut/t3-d296c14c/benchmarks/results/2026-10-27-colord-diagnostic-retry/00-stryker/report.json",
+      "report_schema_version": "1.0",
+      "round": 0,
+      "sample_interval_seconds": 0.02,
+      "samples": 330,
+      "scope_exclusions": [
+        {
+          "file": "src/extend.ts",
+          "id": "0",
+          "identity": "src/extend.ts:d9c51772207e2b04d97e9ac98650c788702fec4b73da21c1d9a545614960fa18",
+          "location": {
+            "end": {
+              "column": 35,
+              "line": 7
+            },
+            "start": {
+              "column": 33,
+              "line": 7
+            }
+          },
+          "operator": "ArrayDeclaration",
+          "reason": "Ignored because of excluded mutation \"ArrayDeclaration\"",
+          "replacement": "[\"Stryker was here\"]",
+          "status": "Ignored"
+        },
+        {
+          "file": "src/extend.ts",
+          "id": "1",
+          "identity": "src/extend.ts:0734f68e2a4bb089131eb52b8dfdef8726b506f325192b87df45e6633325cd8a",
+          "location": {
+            "end": {
+              "column": 2,
+              "line": 16
+            },
+            "start": {
+              "column": 52,
+              "line": 9
+            }
+          },
+          "operator": "BlockStatement",
+          "reason": "Ignored because of excluded mutation \"BlockStatement\"",
+          "replacement": "{}",
+          "status": "Ignored"
+        },
+        {
+          "file": "src/extend.ts",
+          "id": "2",
+          "identity": "src/extend.ts:aedd2ace605e2370e0375ed23ce128d13c7247fd0ee3f61e11398c5a5885cf6e",
+          "location": {
+            "end": {
+              "column": 6,
+              "line": 15
+            },
+            "start": {
+              "column": 3,
+              "line": 10
+            }
+          },
+          "operator": "CallExpression",
+          "reason": "Ignored because of excluded mutation \"CallExpression\"",
+          "replacement": ";",
+          "status": "Ignored"
+        },
+        {
+          "file": "src/extend.ts",
+          "id": "3",
+          "identity": "src/extend.ts:f1356f511e03049387e6d9d382c02ec7b5b7817053a087ca96a1b1ce51dd1d2c",
+          "location": {
+            "end": {
+              "column": 4,
+              "line": 15
+            },
+            "start": {
+              "column": 31,
+              "line": 10
+            }
+          },
+          "operator": "BlockStatement",
+          "reason": "Ignored because of excluded mutation \"BlockStatement\"",
+          "replacement": "{}",
+          "status": "Ignored"
+        },
+        {
+          "file": "src/extend.ts",
+          "id": "4",
+          "identity": "src/extend.ts:c16c26ef42566bb8c744f5143d7ef71966f8b761ba5dd3789714841d447fed45",
+          "location": {
+            "end": {
+              "column": 42,
+              "line": 11
+            },
+            "start": {
+              "column": 9,
+              "line": 11
+            }
+          },
+          "operator": "ConditionalExpression",
+          "reason": "Ignored because of excluded mutation \"ConditionalExpression\"",
+          "replacement": "true",
+          "status": "Ignored"
+        },
+        {
+          "file": "src/extend.ts",
+          "id": "5",
+          "identity": "src/extend.ts:8e71abdd24a27dee1e35d8d3ea4d384073d153055404ddddf69eb273c0c898a9",
+          "location": {
+            "end": {
+              "column": 42,
+              "line": 11
+            },
+            "start": {
+              "column": 9,
+              "line": 11
+            }
+          },
+          "operator": "ConditionalExpression",
+          "reason": "Ignored because of excluded mutation \"ConditionalExpression\"",
+          "replacement": "false",
+          "status": "Ignored"
+        },
+        {
+          "file": "src/extend.ts",
+          "id": "6",
+          "identity": "src/extend.ts:75d915560e777f387b00b7b06cb8e79085c69b91dea5a4c22b3a1da7369a225f",
+          "location": {
+            "end": {
+              "column": 42,
+              "line": 11
+            },
+            "start": {
+              "column": 9,
+              "line": 11
+            }
+          },
+          "operator": "EqualityOperator",
+          "reason": "Ignored because of excluded mutation \"EqualityOperator\"",
+          "replacement": "activePlugins.indexOf(plugin) <= 0",
+          "status": "Ignored"
+        },
+        {
+          "file": "src/extend.ts",
+          "id": "7",
+          "identity": "src/extend.ts:4d218498d4657034ea32158b819c053e4b54e738b9af16cbe37bc9d5a62b8601",
+          "location": {
+            "end": {
+              "column": 42,
+              "line": 11
+            },
+            "start": {
+              "column": 9,
+              "line": 11
+            }
+          },
+          "operator": "EqualityOperator",
+          "reason": "Ignored because of excluded mutation \"EqualityOperator\"",
+          "replacement": "activePlugins.indexOf(plugin) >= 0",
+          "status": "Ignored"
+        },
+        {
+          "file": "src/extend.ts",
+          "id": "8",
+          "identity": "src/extend.ts:e3bf1f832e73b86ebff03298295bf16218d090dfe6a7ac007d11af6c3490b0a3",
+          "location": {
+            "end": {
+              "column": 6,
+              "line": 14
+            },
+            "start": {
+              "column": 44,
+              "line": 11
+            }
+          },
+          "operator": "BlockStatement",
+          "reason": "Ignored because of excluded mutation \"BlockStatement\"",
+          "replacement": "{}",
+          "status": "Ignored"
+        },
+        {
+          "file": "src/extend.ts",
+          "id": "9",
+          "identity": "src/extend.ts:03cb4651f127678c01a0eb843a89c0ba2db2434937d6bf6702aadcc7025ac700",
+          "location": {
+            "end": {
+              "column": 31,
+              "line": 12
+            },
+            "start": {
+              "column": 7,
+              "line": 12
+            }
+          },
+          "operator": "CallExpression",
+          "reason": "Ignored because of excluded mutation \"CallExpression\"",
+          "replacement": ";",
+          "status": "Ignored"
+        },
+        {
+          "file": "src/extend.ts",
+          "id": "10",
+          "identity": "src/extend.ts:98654b3b104425fb71f6cf361ea481694ad7d00751a22a0234d31bac1722eb97",
+          "location": {
+            "end": {
+              "column": 34,
+              "line": 13
+            },
+            "start": {
+              "column": 7,
+              "line": 13
+            }
+          },
+          "operator": "CallExpression",
+          "reason": "Ignored because of excluded mutation \"CallExpression\"",
+          "replacement": ";",
+          "status": "Ignored"
+        },
+        {
+          "file": "src/manipulate/invert.ts",
+          "id": "11",
+          "identity": "src/manipulate/invert.ts:8f72b5dfff28a9b06d40d179bbb7b660b16813042204692bfa8236dd8bb6d847",
+          "location": {
+            "end": {
+              "column": 3,
+              "line": 8
+            },
+            "start": {
+              "column": 23,
+              "line": 3
+            }
+          },
+          "operator": "ArrowFunction",
+          "reason": "Ignored because of excluded mutation \"ArrowFunction\"",
+          "replacement": "() => undefined",
+          "status": "Ignored"
+        },
+        {
+          "file": "src/manipulate/invert.ts",
+          "id": "12",
+          "identity": "src/manipulate/invert.ts:ee14a6a2d09a8ff9d8295f51c4fd5ccc7de539159bd17e2ff6cf822dcafa9442",
+          "location": {
+            "end": {
+              "column": 2,
+              "line": 8
+            },
+            "start": {
+              "column": 56,
+              "line": 3
+            }
+          },
+          "operator": "ObjectLiteral",
+          "reason": "Ignored because of excluded mutation \"ObjectLiteral\"",
+          "replacement": "{}",
+          "status": "Ignored"
+        },
+        {
+          "file": "src/manipulate/lighten.ts",
+          "id": "16",
+          "identity": "src/manipulate/lighten.ts:5d39b2ccabe23fe2e228d7e17d9bbb847e66c38210cfccd9498bcf761282104a",
+          "location": {
+            "end": {
+              "column": 2,
+              "line": 14
+            },
+            "start": {
+              "column": 72,
+              "line": 5
+            }
+          },
+          "operator": "BlockStatement",
+          "reason": "Ignored because of excluded mutation \"BlockStatement\"",
+          "replacement": "{}",
+          "status": "Ignored"
+        },
+        {
+          "file": "src/manipulate/lighten.ts",
+          "id": "17",
+          "identity": "src/manipulate/lighten.ts:7d930492611b018832332f26ca4d36eb4105f2c114dc6120bc3f6c123d32eb52",
+          "location": {
+            "end": {
+              "column": 4,
+              "line": 13
+            },
+            "start": {
+              "column": 10,
+              "line": 8
+            }
+          },
+          "operator": "ObjectLiteral",
+          "reason": "Ignored because of excluded mutation \"ObjectLiteral\"",
+          "replacement": "{}",
+          "status": "Ignored"
+        },
+        {
+          "file": "src/manipulate/mix.ts",
+          "id": "20",
+          "identity": "src/manipulate/mix.ts:829fb832ff9ad317fe6fd60fa315666f8f7bf4c244616471d85df51681ba151a",
+          "location": {
+            "end": {
+              "column": 2,
+              "line": 36
+            },
+            "start": {
+              "column": 17,
+              "line": 11
+            }
+          },
+          "operator": "BlockStatement",
+          "reason": "Ignored because of excluded mutation \"BlockStatement\"",
+          "replacement": "{}",
+          "status": "Ignored"
+        },
+        {
+          "file": "src/manipulate/mix.ts",
+          "id": "21",
+          "identity": "src/manipulate/mix.ts:85414e059dca02128338992697ecb67a9bae2a93bb155054a547df188f135f0a",
+          "location": {
+            "end": {
+              "column": 92,
+              "line": 12
+            },
+            "start": {
+              "column": 23,
+              "line": 12
+            }
+          },
+          "operator": "ArrowFunction",
+          "reason": "Ignored because of excluded mutation \"ArrowFunction\"",
+          "replacement": "() => undefined",
+          "status": "Ignored"
+        },
+        {
+          "file": "src/manipulate/mix.ts",
+          "id": "25",
+          "identity": "src/manipulate/mix.ts:07e8d4a85a84c4430e24b7830618961ff6219160aae779b8e41123c859ebe3b6",
+          "location": {
+            "end": {
+              "column": 22,
+              "line": 16
+            },
+            "start": {
+              "column": 7,
+              "line": 16
+            }
+          },
+          "operator": "ConditionalExpression",
+          "reason": "Ignored because of excluded mutation \"ConditionalExpression\"",
+          "replacement": "true",
+          "status": "Ignored"
+        },
+        {
+          "file": "src/manipulate/mix.ts",
+          "id": "26",
+          "identity": "src/manipulate/mix.ts:5a26b1710a659e078d52e52a7073e736c61c36d306f2981ec90850d4445c7ced",
+          "location": {
+            "end": {
+              "column": 22,
+              "line": 16
+            },
+            "start": {
+              "column": 7,
+              "line": 16
+            }
+          },
+          "operator": "ConditionalExpression",
+          "reason": "Ignored because of excluded mutation \"ConditionalExpression\"",
+          "replacement": "false",
+          "status": "Ignored"
+        },
+        {
+          "file": "src/manipulate/mix.ts",
+          "id": "27",
+          "identity": "src/manipulate/mix.ts:6b5030d316df975e7ed6d36ff654a24848686587ec0285a5ec49c70e52a7cc40",
+          "location": {
+            "end": {
+              "column": 22,
+              "line": 16
+            },
+            "start": {
+              "column": 7,
+              "line": 16
+            }
+          },
+          "operator": "EqualityOperator",
+          "reason": "Ignored because of excluded mutation \"EqualityOperator\"",
+          "replacement": "space !== \"rgb\"",
+          "status": "Ignored"
+        },
+        {
+          "file": "src/manipulate/mix.ts",
+          "id": "28",
+          "identity": "src/manipulate/mix.ts:a09449106f357f7097510e609d1bc6ff1149597b9cef517ac2823148c738f2d3",
+          "location": {
+            "end": {
+              "column": 22,
+              "line": 16
+            },
+            "start": {
+              "column": 17,
+              "line": 16
+            }
+          },
+          "operator": "StringLiteral",
+          "reason": "Ignored because of excluded mutation \"StringLiteral\"",
+          "replacement": "\"\"",
+          "status": "Ignored"
+        },
+        {
+          "file": "src/manipulate/mix.ts",
+          "id": "29",
+          "identity": "src/manipulate/mix.ts:b99f320ca722e689d7bdf820e756ee01bc6c64a6b585fb3503aae69c15efbcc4",
+          "location": {
+            "end": {
+              "column": 4,
+              "line": 23
+            },
+            "start": {
+              "column": 24,
+              "line": 16
+            }
+          },
+          "operator": "BlockStatement",
+          "reason": "Ignored because of excluded mutation \"BlockStatement\"",
+          "replacement": "{}",
+          "status": "Ignored"
+        },
+        {
+          "file": "src/manipulate/mix.ts",
+          "id": "30",
+          "identity": "src/manipulate/mix.ts:0a53f1d11daf4994df7fe57b14c265e01f7f158db192a402fd5f0f8744de155e",
+          "location": {
+            "end": {
+              "column": 6,
+              "line": 22
+            },
+            "start": {
+              "column": 12,
+              "line": 17
+            }
+          },
+          "operator": "ObjectLiteral",
+          "reason": "Ignored because of excluded mutation \"ObjectLiteral\"",
+          "replacement": "{}",
+          "status": "Ignored"
+        },
+        {
+          "file": "src/manipulate/mix.ts",
+          "id": "31",
+          "identity": "src/manipulate/mix.ts:3ca09ab4124579e94c87d84d2e724085773d70904c7759c97070f2a5d29dc18d",
+          "location": {
+            "end": {
+              "column": 4,
+              "line": 33
+            },
+            "start": {
+              "column": 29,
+              "line": 28
+            }
+          },
+          "operator": "ObjectLiteral",
+          "reason": "Ignored because of excluded mutation \"ObjectLiteral\"",
+          "replacement": "{}",
+          "status": "Ignored"
+        },
+        {
+          "file": "src/manipulate/saturate.ts",
+          "id": "32",
+          "identity": "src/manipulate/saturate.ts:1f424c2cec3a46c62b4b94edde157d92e97b6d73cc14e2c0ff6a1a3cbcb0aaf4",
+          "location": {
+            "end": {
+              "column": 2,
+              "line": 14
+            },
+            "start": {
+              "column": 73,
+              "line": 5
+            }
+          },
+          "operator": "BlockStatement",
+          "reason": "Ignored because of excluded mutation \"BlockStatement\"",
+          "replacement": "{}",
+          "status": "Ignored"
+        },
+        {
+          "file": "src/manipulate/saturate.ts",
+          "id": "33",
+          "identity": "src/manipulate/saturate.ts:d4d57278046da1624200926d0e05648c5ccda823ce130ac5c3ead1b976269fd4",
+          "location": {
+            "end": {
+              "column": 4,
+              "line": 13
+            },
+            "start": {
+              "column": 10,
+              "line": 8
+            }
+          },
+          "operator": "ObjectLiteral",
+          "reason": "Ignored because of excluded mutation \"ObjectLiteral\"",
+          "replacement": "{}",
+          "status": "Ignored"
+        }
+      ],
+      "spawn_error": null,
+      "success": true,
+      "test_counts": {
+        "numTotalTests": 102
+      },
+      "test_identity_sha256": "3fa4823cc6cd2edda5cb41e6fbe411e20a6857b0a3081ae59ae7d6b1ee05651b",
+      "timed_out": false,
+      "timeout_seconds": 600,
+      "tool": "stryker",
+      "wall_seconds": 21.599791501881555,
+      "warmup": false,
+      "workload_sha256": "53447261f4e0424734fd0530208753b544492685c71803a5983dfde28fc736b6"
+    }
+  ],
+  "workload": {
+    "commit": "1404cfe80cf8fe6df1a876ea3b12aa8eccc7feff",
+    "expectedOximutTests": [
+      [
+        "tests/colord.test.ts",
+        "Accepts a colord instance as an input"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Accepts a hue of 360 on input and reports it as 0"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Adds alpha number to RGB and HSL strings only if the color has an opacity"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Changes a hue value"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Changes an alpha channel value"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Checks colors for equality"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Clamps a hue into [0, 360)"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Clamps hue (angle) value properly"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Clamps input numbers"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Converts between HEX, RGB, HSL and HSV color models properly"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Does not crash when input has an invalid format"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Does not crash when input has an invalid type"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Generates a random color"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Gets a hue value"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Gets an alpha channel value"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Gets an input color format"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Gets color brightness"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Ignores a case and extra whitespace"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Ignores invalid color formats"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Inverts a color"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Keeps the hue within [0, 360) so HSL/HSV round-trips are stable"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Makes a color lighter and darker"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Parses and converts a color"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Parses and serializes every HEX digit exactly"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Parses modern HSL functional notations"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Parses modern RGB functional notations"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Parses numbers with an omitted integer part"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Parses shorthand alpha values"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Preserves a color with a non-integer hue while rotating"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Produces alpha values with up to 3 digits after the decimal point"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Reports the same hue through every accessor"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Rotates a hue circle"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Rotates across the 0/360 boundary"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Rounds a hue into [0, 360)"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Saturates and desaturates a color"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Supports HEX4 and HEX8 color models"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Supports all valid CSS angle units"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Validates an input value"
+      ],
+      [
+        "tests/delta-e00.test.ts",
+        "Is symmetric"
+      ],
+      [
+        "tests/delta-e00.test.ts",
+        "Matches the CIEDE2000 reference data set"
+      ],
+      [
+        "tests/parse-complexity.test.ts",
+        "Rejects oversized malformed colors in linear time > device-cmyk"
+      ],
+      [
+        "tests/parse-complexity.test.ts",
+        "Rejects oversized malformed colors in linear time > hsl"
+      ],
+      [
+        "tests/parse-complexity.test.ts",
+        "Rejects oversized malformed colors in linear time > hsl, alpha position"
+      ],
+      [
+        "tests/parse-complexity.test.ts",
+        "Rejects oversized malformed colors in linear time > hwb"
+      ],
+      [
+        "tests/parse-complexity.test.ts",
+        "Rejects oversized malformed colors in linear time > lch"
+      ],
+      [
+        "tests/parse-complexity.test.ts",
+        "Rejects oversized malformed colors in linear time > rgb"
+      ],
+      [
+        "tests/parse-complexity.test.ts",
+        "Rejects oversized malformed colors in linear time > rgb, alpha position"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "a11y > Calculates a contrast ratio for a color pair"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "a11y > Check readability"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "a11y > Returns the perceived luminance of a color"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "cmyk > Converts a color to CMYK object"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "cmyk > Converts a color to CMYK string"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "cmyk > Parses CMYK color object"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "cmyk > Parses CMYK color string"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "cmyk > Supported by `getFormat`"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "harmonies > Generates harmony colors"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "harmonies > Preserves an input color with a non-integer hue"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "hwb > Converts a color to HWB object"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "hwb > Converts a color to HWB string"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "hwb > Ignores invalid syntax"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "hwb > Normalizes whiteness + blackness over 100% to an achromatic gray"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "hwb > Parses HWB color object"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "hwb > Parses HWB color string"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "hwb > Supported by `getFormat`"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "hwb > Supports all valid CSS angle units"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "lab > Calculates the the perceived color difference"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "lab > Converts a color to CIE LAB object"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "lab > Parses CIE LAB color object"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "lab > Supported by `getFormat`"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "lch > Converts a color to CIE LCH object"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "lch > Converts a color to CIE LCH string (CSS functional notation)"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "lch > Keeps the LCH hue within [0, 360)"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "lch > Parses CIE LCH color object"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "lch > Parses CIE LCH color string"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "lch > Supported by `getFormat`"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "lch > Supports all valid CSS angle units"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "minify > Minifies a color"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "minify > Performs lossless minification (handles alpha hex issues)"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "minify > Supports `transparent` keyword"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "minify > Supports alpha hexes"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "minify > Supports names"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "mix > Generates a shades palette"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "mix > Generates a tints palette"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "mix > Generates a tones palette"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "mix > Generates palettes through RGB color space"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "mix > Interpolates alpha channel in RGB color space"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "mix > Mixes through LAB when the space is set explicitly"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "mix > Mixes two colors"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "mix > Mixes two colors through RGB color space"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "mix > Return the color if both values are equal"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "mix > Returns the same color if ratio is 0 or 1"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "names > Converts a color to CSS name"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "names > Does not crash when name is not found"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "names > Gets the closest CSS color keyword"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "names > Ignores the case and extra whitespaces"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "names > Parses valid CSS color names"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "names > Processes 'transparent' color properly"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "names > Supported by `getFormat`"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "names > Works properly in pair with the built-in validation"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "xyz > Converts a color to CIE XYZ object"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "xyz > Parses XYZ color object"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "xyz > Supported by `getFormat`"
+      ]
+    ],
+    "expectedTests": [
+      [
+        "tests/colord.test.ts",
+        "Accepts a colord instance as an input"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Accepts a hue of 360 on input and reports it as 0"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Adds alpha number to RGB and HSL strings only if the color has an opacity"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Changes a hue value"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Changes an alpha channel value"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Checks colors for equality"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Clamps a hue into [0, 360)"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Clamps hue (angle) value properly"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Clamps input numbers"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Converts between HEX, RGB, HSL and HSV color models properly"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Does not crash when input has an invalid format"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Does not crash when input has an invalid type"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Generates a random color"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Gets a hue value"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Gets an alpha channel value"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Gets an input color format"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Gets color brightness"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Ignores a case and extra whitespace"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Ignores invalid color formats"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Inverts a color"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Keeps the hue within [0, 360) so HSL/HSV round-trips are stable"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Makes a color lighter and darker"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Parses and converts a color"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Parses and serializes every HEX digit exactly"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Parses modern HSL functional notations"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Parses modern RGB functional notations"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Parses numbers with an omitted integer part"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Parses shorthand alpha values"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Preserves a color with a non-integer hue while rotating"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Produces alpha values with up to 3 digits after the decimal point"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Reports the same hue through every accessor"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Rotates a hue circle"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Rotates across the 0/360 boundary"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Rounds a hue into [0, 360)"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Saturates and desaturates a color"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Supports HEX4 and HEX8 color models"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Supports all valid CSS angle units"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Validates an input value"
+      ],
+      [
+        "tests/delta-e00.test.ts",
+        "Is symmetric"
+      ],
+      [
+        "tests/delta-e00.test.ts",
+        "Matches the CIEDE2000 reference data set"
+      ],
+      [
+        "tests/parse-complexity.test.ts",
+        "Rejects oversized malformed colors in linear time device-cmyk"
+      ],
+      [
+        "tests/parse-complexity.test.ts",
+        "Rejects oversized malformed colors in linear time hsl"
+      ],
+      [
+        "tests/parse-complexity.test.ts",
+        "Rejects oversized malformed colors in linear time hsl, alpha position"
+      ],
+      [
+        "tests/parse-complexity.test.ts",
+        "Rejects oversized malformed colors in linear time hwb"
+      ],
+      [
+        "tests/parse-complexity.test.ts",
+        "Rejects oversized malformed colors in linear time lch"
+      ],
+      [
+        "tests/parse-complexity.test.ts",
+        "Rejects oversized malformed colors in linear time rgb"
+      ],
+      [
+        "tests/parse-complexity.test.ts",
+        "Rejects oversized malformed colors in linear time rgb, alpha position"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "a11y Calculates a contrast ratio for a color pair"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "a11y Check readability"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "a11y Returns the perceived luminance of a color"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "cmyk Converts a color to CMYK object"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "cmyk Converts a color to CMYK string"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "cmyk Parses CMYK color object"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "cmyk Parses CMYK color string"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "cmyk Supported by `getFormat`"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "harmonies Generates harmony colors"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "harmonies Preserves an input color with a non-integer hue"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "hwb Converts a color to HWB object"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "hwb Converts a color to HWB string"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "hwb Ignores invalid syntax"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "hwb Normalizes whiteness + blackness over 100% to an achromatic gray"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "hwb Parses HWB color object"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "hwb Parses HWB color string"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "hwb Supported by `getFormat`"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "hwb Supports all valid CSS angle units"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "lab Calculates the the perceived color difference"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "lab Converts a color to CIE LAB object"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "lab Parses CIE LAB color object"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "lab Supported by `getFormat`"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "lch Converts a color to CIE LCH object"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "lch Converts a color to CIE LCH string (CSS functional notation)"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "lch Keeps the LCH hue within [0, 360)"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "lch Parses CIE LCH color object"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "lch Parses CIE LCH color string"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "lch Supported by `getFormat`"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "lch Supports all valid CSS angle units"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "minify Minifies a color"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "minify Performs lossless minification (handles alpha hex issues)"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "minify Supports `transparent` keyword"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "minify Supports alpha hexes"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "minify Supports names"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "mix Generates a shades palette"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "mix Generates a tints palette"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "mix Generates a tones palette"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "mix Generates palettes through RGB color space"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "mix Interpolates alpha channel in RGB color space"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "mix Mixes through LAB when the space is set explicitly"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "mix Mixes two colors"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "mix Mixes two colors through RGB color space"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "mix Return the color if both values are equal"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "mix Returns the same color if ratio is 0 or 1"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "names Converts a color to CSS name"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "names Does not crash when name is not found"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "names Gets the closest CSS color keyword"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "names Ignores the case and extra whitespaces"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "names Parses valid CSS color names"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "names Processes 'transparent' color properly"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "names Supported by `getFormat`"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "names Works properly in pair with the built-in validation"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "xyz Converts a color to CIE XYZ object"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "xyz Parses XYZ color object"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "xyz Supported by `getFormat`"
+      ]
+    ],
+    "families": [
+      "arithmetic",
+      "boolean-literal"
+    ],
+    "license": "MIT",
+    "mutate": [
+      "src/manipulate/invert.ts",
+      "src/manipulate/lighten.ts",
+      "src/manipulate/mix.ts",
+      "src/manipulate/saturate.ts",
+      "src/extend.ts"
+    ],
+    "packageVersion": "2.10.0",
+    "repository": "https://github.com/omgovich/colord",
+    "upstreamMetadataSha256": {
+      "LICENSE.md": "7613d4594ee8b6163926af3435dae61c9e3d5a27cd137bd76a543ba40002d8fc",
+      "upstream-package.json": "a6ddea1d9c81c569142beb089a8143c07b7a4eed3740fffb63a03c826fbe21c9"
+    },
+    "upstreamSha256": {
+      "src/colorModels/cmyk.ts": "3285e84020bbcacf7de2c58a3ff7821368cd0446f2f10e8549bae78abe73071b",
+      "src/colorModels/cmykString.ts": "3b6445d6dd6b4931239217b75c230a9943537a1851ee417013eb3d3fbfa61086",
+      "src/colorModels/hex.ts": "849fa36a950ccdc8dd1be5e385dbbeb048c67b6d5a9b36dab000a3b81e17d32c",
+      "src/colorModels/hsl.ts": "40f4352795c4bbfb0347095d12604d7fef946527338f2e572b5098c220ddb7f7",
+      "src/colorModels/hslString.ts": "6cdda23b921dc6c897b021467ea181c99e7af8cc0e4b64ec3810bcabdbc98538",
+      "src/colorModels/hsv.ts": "c0110aa65e4c9465183f78015cd0af8ac24b89a88f21b0b013fcb9bfb14ef821",
+      "src/colorModels/hwb.ts": "72261c7eabd81bf33b140b4f3a4b9a849fa100144a97ec49e660af8473be1b37",
+      "src/colorModels/hwbString.ts": "e46ac62d45ab05f288e673b3149df4f2845d1f14f91003ac615b961201bdb78c",
+      "src/colorModels/lab.ts": "e20a646fd254ef812eaf7861f62b9625f88cde6988cf658a00b701bf1f5661a6",
+      "src/colorModels/lch.ts": "33051bdc22ee1c9c22ba987d4622f0d25ee8553589941ae394b03adf5e833511",
+      "src/colorModels/lchString.ts": "7639a373633b012c7ce4582c12236d5d63c666cf915eaa15dc5460c236e3be23",
+      "src/colorModels/rgb.ts": "6040aa6cf101c8fa963739e74c9e5b5bcbf1bdbd9898deefdcd21e455dcc7269",
+      "src/colorModels/rgbString.ts": "dc74339feff95f9c9cdfb027fdd8f61a59c702690581ee1f01bb584fbc19915c",
+      "src/colorModels/xyz.ts": "47812abb2b6671eaf84bf2aff41956efeb3a4b028a97bff1cf57c75fddc92af5",
+      "src/colord.ts": "61d464a894f6a626b6b29c9ab676497b76abbe6394d54cfca7f94d372e1027cd",
+      "src/constants.ts": "3fc3b4485f87d603a535a9337a5b3d743f9bbdef3bac3795261105cb2538ddae",
+      "src/extend.ts": "f737b30230d7f0072cdda74d097795cf7f80dbddc13ff6b0a8b5d7a1047116f5",
+      "src/get/getBrightness.ts": "85ed9bc043edbd254af1d4dba74f4f051d03438ae97d9deff0b6336d047def70",
+      "src/get/getContrast.ts": "a2ded8d89380db55c676ee199894a15a94cac8c0eff0139baa532ca6f395bab1",
+      "src/get/getLuminance.ts": "38b2e18889c8c47f1020936bc9d38774322dd3741fa40045edbc29a73fccf6ce",
+      "src/get/getPerceivedDifference.ts": "64d43d0967a18435402d63f3526823e546119db73c4bc2f8433877b72fc2d2bb",
+      "src/helpers.ts": "44340f8316b7bfcb53e5bbdeda1e8fed7aaec2b156a2cb30dccd29569b0ec30b",
+      "src/index.ts": "872f382da0dd6729bd89b0f30dcb974a797e2952e5920747a3c3b5f86b03554d",
+      "src/manipulate/changeAlpha.ts": "d7011b465cc15705149a8637ba773e28f60e6d35ea0d338efb3734f59556020d",
+      "src/manipulate/invert.ts": "09696bf35f4d9d855e83859e962ba9aa198ef395e4be60833109cd17906aaf75",
+      "src/manipulate/lighten.ts": "f0fa9ff9e4fb45caf88bac25d28e9eb06563d9b6e8a29eb2331bafe04fb40bb6",
+      "src/manipulate/mix.ts": "9ae4295eea21e7128ae84f1bf68ac940c30aa6f006c8ea6cae78314f8d573039",
+      "src/manipulate/saturate.ts": "993216b67a0a8685f41da56da0812d8399537ab0033cf10dfb7c737c0ff3bb25",
+      "src/parse.ts": "ad7a21121b6340ae45f1ccbd9ce6712a7856721418f24c2f36613a5bd7b0acb0",
+      "src/plugins/a11y.ts": "d7e44473c9c4e9ae3b84ae6ae233ecf057c776cafde5c2e253d0f7b36b4ccae5",
+      "src/plugins/cmyk.ts": "29a21dbfa57bbc2072b95001e7cc2c61af6fe83cd378612a3c8e56356ec1e97b",
+      "src/plugins/harmonies.ts": "8043e3a2402007eef9fc94dce04ec34b7598f476c23e7e88b5d12b34d1cd342c",
+      "src/plugins/hwb.ts": "b4cdfa4eee8d68d408de55fc650325a1b1c09c532e1b1edc2c902914e43d96a3",
+      "src/plugins/lab.ts": "2464ed7cec69aa46e5b467afce36068bfe17db99e625d6395f1b244411d9a700",
+      "src/plugins/lch.ts": "5dfee66585a3529a0061bcca39df80e9076628df20dee9c5d085c1bd12a5c733",
+      "src/plugins/minify.ts": "7267187c43ebb489ce1bb28af2cabc9b404912cc7ab912c28519a518f390d6a4",
+      "src/plugins/mix.ts": "5d18265de095e1cb5f6de2df4745b8068390bd8e6679e0029bf8f39cfa919ef7",
+      "src/plugins/names.ts": "2db1fdc2da69775b8f60af83ed3202388d61ce00c38919075831f2c4ed3c0637",
+      "src/plugins/xyz.ts": "9470b16046d7a5e2b3106a5350aa574832fa14cad883bc3d1365805436f30eaa",
+      "src/random.ts": "ec6e13cf59c128b7b1d7c358d0a681002c4f2db8e0232aa2eb24b0ab7cd3c76c",
+      "src/types.ts": "73dfb041446985b3d68d1edafff0cbc0a2d3ee4d1f9b95538c762975007504c5",
+      "tests/colord.test.ts": "7c4a4c901b2c07a1b3fd6545e7cf8d86a8cecb6e460e6705aef2a053c9726af3",
+      "tests/delta-e00.test.ts": "62ab4a18994e53043a87bdbf18e9b14d84db74f69729c2c87c95337b4dd77e98",
+      "tests/fixtures.ts": "4137b9da219a40abb9e37f4c521a8ecd679f2b8abd6d8869a4200bf97358e278",
+      "tests/parse-complexity.test.ts": "0d72fb1c743a8f6368d31c811a9afaf855ea270d6a4b6e058d5e8942af64e460",
+      "tests/plugins.test.ts": "32e1caf6c951e791467d3dfaa5aee2503a9d816bd95919b0caa70eb7ab71cefd"
+    }
+  }
+}
