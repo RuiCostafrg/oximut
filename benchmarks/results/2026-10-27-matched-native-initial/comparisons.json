@@ -1,0 +1,4330 @@
+[
+  {
+    "equal_mutation_scope": true,
+    "explained_no_coverage_refinements": [],
+    "fixture": "matched-scale",
+    "kind": "optimized-reference",
+    "left_count": 64,
+    "left_only": {},
+    "left_run": "warmup-01-matched-scale-oximut-clean-fresh",
+    "mismatches": [],
+    "ratio_eligible": true,
+    "right_count": 64,
+    "right_only": {},
+    "right_run": "warmup-01-matched-scale-oximut-clean-selection",
+    "round_index": 0,
+    "shared": [
+      "src/arithmetic-0.ts:0bb63f17da1dd236b01338caabde3f8cc767295c8ce125b989122f59513cb1e1",
+      "src/arithmetic-0.ts:4e8a255c26188ab501b83c6af904e9dac6e987d72a47f23c6f551d6037007ed3",
+      "src/arithmetic-0.ts:6700b3f61d697676383dad2c4395f347b295e1bd99e9df3d0daf90600d257e49",
+      "src/arithmetic-0.ts:6fe07c06b3d0e085507d88e6d87547264b11c09b7ab4b756c71890e9dbfc31ce",
+      "src/arithmetic-0.ts:9c0452ef08e78cc2cec2b552f6ef1def6849a9f8eb5d703ae5bf70df1a6aef26",
+      "src/arithmetic-0.ts:bf77d9fdd48beef089bb33024c367cebc07321bc7b1e5d9338bf3db474a29876",
+      "src/arithmetic-0.ts:daaed3439168d1cbf76e8d93dee9ed35abe2ca2e57679989036c9acab38136d7",
+      "src/arithmetic-0.ts:e00212e8e3cf9dee7cadd53205a9c4af87eb74fd44975cf1827761b7f4c4b214",
+      "src/arithmetic-1.ts:11fbdbff4022e8f2713cf8bdb45eca8c387318fbedc7a645bf8eba017afce66a",
+      "src/arithmetic-1.ts:1c2c9364d1e6ee4feada808d64e2b42795eb286976576c1fa988416c64633f27",
+      "src/arithmetic-1.ts:4094c599c99a744438bd1f9b20f730d339f04d3f6e8dd447bbe921e989b9b479",
+      "src/arithmetic-1.ts:45033d379301bdc4da1f4074eafb5aa69395c2d968d10ad66c2758d89dbe2610",
+      "src/arithmetic-1.ts:73909d8d79c080aa32842ec804fc44dad404594a65d16d0d7122b3b2136365b6",
+      "src/arithmetic-1.ts:8026913c32f804dface12c352e6d4a9fb7bb61b66d66889b8e11f92a0ace16c6",
+      "src/arithmetic-1.ts:bb4b9d15172445147c4c71424bbc5b6d0843aeeed9d94f9bb36db5923ee7613e",
+      "src/arithmetic-1.ts:feb7fc3c7334528679c850dac15eaad6d3a2545ecc08336719ca491bf35b1b35",
+      "src/arithmetic-2.ts:2a4fe83dd41363804742859c73c5992b3b69d7880c96675254be1244b65e6ed6",
+      "src/arithmetic-2.ts:5e1c271edcd6ec54a71b4c5d68d0e190ea4d95234795d11acfde3132f8bddd58",
+      "src/arithmetic-2.ts:81bff629ec4902cef5f5783fa114a1f7e4ac431e962eb20c64dd6c20b873fde5",
+      "src/arithmetic-2.ts:82c88c64a289c8503994568241e9e829fd89c539458244bf1e6f069a30bdb1a1",
+      "src/arithmetic-2.ts:846750fffc1ea745a5d52b4dc5ff9c63a831bd6a74cf881d79004e898ff4e0fb",
+      "src/arithmetic-2.ts:956745c8f16382b3a068ae6be498fbacf8e1233b89a91f89d3876e25efcf19a1",
+      "src/arithmetic-2.ts:b6811d08512fefd33f0e70e9d39aa29e1266694bc3f27331b14ba3f69da8a40f",
+      "src/arithmetic-2.ts:cf760ef105568b89a7583b16b2cc026b65407ac138dd5674d909c031c996eb39",
+      "src/arithmetic-3.ts:215aa72a1418c088491b650cceb7984ee33f722fc3a0f04df6165ff111240ab8",
+      "src/arithmetic-3.ts:28d564fc5b02ff5f959f64aeb2a4baa7a3a3aaa90950d95bdd8c300732471d34",
+      "src/arithmetic-3.ts:3008230ac5ac6c4f4eebd207170cf069307a3634636f7d30da2f6330a45e3ee0",
+      "src/arithmetic-3.ts:6604c90740a3b336ab572ac4c61f5b197398501298300a18676a1cb97af140a5",
+      "src/arithmetic-3.ts:962112ca9da9e024dbfd70ff02f36c861a566971a35130ef277882aac7b328f3",
+      "src/arithmetic-3.ts:9f2c275c792e839aa288799b7ab0b17f8d3e01a9415df64994e68279c33c022c",
+      "src/arithmetic-3.ts:cf39b5037e1ac84e09009fd83ce08adb0bf274f2f2b384776536252065731e83",
+      "src/arithmetic-3.ts:dedf10eb55b3aa87bbbeeaa2fb84cdd8637e7bec6db9837ddc02e14870fd4126",
+      "src/arithmetic-4.ts:21604bf19fc8db188ee61fea6263f9415f2794705cdf16a5c81655682af331fc",
+      "src/arithmetic-4.ts:5cab78a4400e1b20770f8892255b6fd0c5d2882e13610d0b55136353303145c8",
+      "src/arithmetic-4.ts:663bc8b1f8086449f55ae96a22516a0ba4bf4eeadc8fc5ad74264a6351d6b13a",
+      "src/arithmetic-4.ts:6d6a15a7cf535f303354d45f021ababb58762548232cd4b02a7ca471e865eece",
+      "src/arithmetic-4.ts:7e7c53ddab9b1a2acb0518baa510f985f47831abdb09547dc1d10f55a8e8f7df",
+      "src/arithmetic-4.ts:9f22be8f3c271594adc9cd7aaf30509ee40a7265cbb779472d6f4e262053f6ae",
+      "src/arithmetic-4.ts:dbfd4ba051649076939898d05d3c7def3385907eaf43f5f1000fa392a3a83a42",
+      "src/arithmetic-4.ts:e6ff61af7c655253b6d565f7977910abf01c5aeb03a97ea251b1f9d3612e9db6",
+      "src/arithmetic-5.ts:189650a6b4d233fbfd9edc8c9cf9550795637cbbced6a7781406b9bb0e783853",
+      "src/arithmetic-5.ts:3ad846b6ca17ba93ff120385558108287c27a0e1ae1d49239828a8f78b356391",
+      "src/arithmetic-5.ts:5e4cd8e84b048fd49d3d6f409f0fac714f48753be2261761c7a43eaa8ea41174",
+      "src/arithmetic-5.ts:5f03924a2f3823d1fdb27d9ed3f4df93418d9df94c42a5c2f0dacae20870e486",
+      "src/arithmetic-5.ts:9003ab72f9ffe52738a72d8dbf6c7ab51ee30994892af4fabdb82dd74b4ba5b8",
+      "src/arithmetic-5.ts:b7849819c74dd8467a0f4387cf92e2ff66cae78ce4f152834db96c44890176cf",
+      "src/arithmetic-5.ts:c0f543ea8dce77377b55ee9d166ec13f44bae928d4d828895647d2e7a0963364",
+      "src/arithmetic-5.ts:f37d95b3326b1576630cf5967e3a6e8ae0c0aea083728d2fbf435610aff51fdf",
+      "src/arithmetic-6.ts:0cdc9c690ae73beb2d8b23c33a1d82d0c4265b0fb96ddda6e2e54083609bff12",
+      "src/arithmetic-6.ts:15c12e5f72a40e9e21a6c036fdfb72a78ea4e5dc32b39bea911eacec52e179f2",
+      "src/arithmetic-6.ts:2b98be31ba3e2cf1550bcca2c6e071df0a5807648c9f10c48dfc59d489547425",
+      "src/arithmetic-6.ts:3a081d5713df99d2c8c4a348a6498f4993e8a51430f777864386953987838f2b",
+      "src/arithmetic-6.ts:454424e8b99d8b197a6586e3efecbb01a9e6efa7d41d7637a896eefac572d78f",
+      "src/arithmetic-6.ts:4e5ddfd78b1a02e0c7a56ff652666a8842ae34a28242c1c5fcd62a8302b53f75",
+      "src/arithmetic-6.ts:f0b9cca9e35d77f2525c8e218743696dfe718bdd6a07388276cea1d1bb086d39",
+      "src/arithmetic-6.ts:fef0a7a641e518f2648255554c1bc36b9fdd8f13e884b6cc290731dd0a5b9f73",
+      "src/arithmetic-7.ts:5fa13b31f9b6756a4f14a975976fc8099bb8973eff1f282ac79a48f9d8bb0d41",
+      "src/arithmetic-7.ts:709a33d41168cb348c3ee67635b0d6ca5e19ab5baca2f2d76e400254f32096fc",
+      "src/arithmetic-7.ts:86dc212628d613109a8e756e6b9d5d2d5f7ed06545a6db150a1c1aaa2b1f7cf2",
+      "src/arithmetic-7.ts:9e5ae845c89abcd230c6f9a3d60e626fefd63f38a5cb55b17871df6e101ba0df",
+      "src/arithmetic-7.ts:a32965f96531eb5a7e2e7514e802cc53350fb79813c7556a2938dbf6ccc72f6d",
+      "src/arithmetic-7.ts:a6af620d652cc808cadcff02a32bf367726a320dcc0c5a10cda1022600230b93",
+      "src/arithmetic-7.ts:bb9e068fc260661aa72add4614436ec3342ec612634cd34789af4f0243b3cd7d",
+      "src/arithmetic-7.ts:dbe5adacf8fbb900db11cf75d5b8fa9409878eb357a5bb5b3aea8b2fa14a4b66"
+    ],
+    "shared_classifications_agree": true,
+    "shared_count": 64
+  },
+  {
+    "equal_mutation_scope": true,
+    "explained_no_coverage_refinements": [],
+    "fixture": "matched-scale",
+    "kind": "cross-tool",
+    "left_count": 64,
+    "left_only": {},
+    "left_run": "warmup-01-matched-scale-oximut-clean-fresh",
+    "mismatches": [],
+    "ratio_eligible": true,
+    "right_count": 64,
+    "right_only": {},
+    "right_run": "warmup-01-matched-scale-stryker-clean-stryker",
+    "round_index": 0,
+    "shared": [
+      "src/arithmetic-0.ts:0bb63f17da1dd236b01338caabde3f8cc767295c8ce125b989122f59513cb1e1",
+      "src/arithmetic-0.ts:4e8a255c26188ab501b83c6af904e9dac6e987d72a47f23c6f551d6037007ed3",
+      "src/arithmetic-0.ts:6700b3f61d697676383dad2c4395f347b295e1bd99e9df3d0daf90600d257e49",
+      "src/arithmetic-0.ts:6fe07c06b3d0e085507d88e6d87547264b11c09b7ab4b756c71890e9dbfc31ce",
+      "src/arithmetic-0.ts:9c0452ef08e78cc2cec2b552f6ef1def6849a9f8eb5d703ae5bf70df1a6aef26",
+      "src/arithmetic-0.ts:bf77d9fdd48beef089bb33024c367cebc07321bc7b1e5d9338bf3db474a29876",
+      "src/arithmetic-0.ts:daaed3439168d1cbf76e8d93dee9ed35abe2ca2e57679989036c9acab38136d7",
+      "src/arithmetic-0.ts:e00212e8e3cf9dee7cadd53205a9c4af87eb74fd44975cf1827761b7f4c4b214",
+      "src/arithmetic-1.ts:11fbdbff4022e8f2713cf8bdb45eca8c387318fbedc7a645bf8eba017afce66a",
+      "src/arithmetic-1.ts:1c2c9364d1e6ee4feada808d64e2b42795eb286976576c1fa988416c64633f27",
+      "src/arithmetic-1.ts:4094c599c99a744438bd1f9b20f730d339f04d3f6e8dd447bbe921e989b9b479",
+      "src/arithmetic-1.ts:45033d379301bdc4da1f4074eafb5aa69395c2d968d10ad66c2758d89dbe2610",
+      "src/arithmetic-1.ts:73909d8d79c080aa32842ec804fc44dad404594a65d16d0d7122b3b2136365b6",
+      "src/arithmetic-1.ts:8026913c32f804dface12c352e6d4a9fb7bb61b66d66889b8e11f92a0ace16c6",
+      "src/arithmetic-1.ts:bb4b9d15172445147c4c71424bbc5b6d0843aeeed9d94f9bb36db5923ee7613e",
+      "src/arithmetic-1.ts:feb7fc3c7334528679c850dac15eaad6d3a2545ecc08336719ca491bf35b1b35",
+      "src/arithmetic-2.ts:2a4fe83dd41363804742859c73c5992b3b69d7880c96675254be1244b65e6ed6",
+      "src/arithmetic-2.ts:5e1c271edcd6ec54a71b4c5d68d0e190ea4d95234795d11acfde3132f8bddd58",
+      "src/arithmetic-2.ts:81bff629ec4902cef5f5783fa114a1f7e4ac431e962eb20c64dd6c20b873fde5",
+      "src/arithmetic-2.ts:82c88c64a289c8503994568241e9e829fd89c539458244bf1e6f069a30bdb1a1",
+      "src/arithmetic-2.ts:846750fffc1ea745a5d52b4dc5ff9c63a831bd6a74cf881d79004e898ff4e0fb",
+      "src/arithmetic-2.ts:956745c8f16382b3a068ae6be498fbacf8e1233b89a91f89d3876e25efcf19a1",
+      "src/arithmetic-2.ts:b6811d08512fefd33f0e70e9d39aa29e1266694bc3f27331b14ba3f69da8a40f",
+      "src/arithmetic-2.ts:cf760ef105568b89a7583b16b2cc026b65407ac138dd5674d909c031c996eb39",
+      "src/arithmetic-3.ts:215aa72a1418c088491b650cceb7984ee33f722fc3a0f04df6165ff111240ab8",
+      "src/arithmetic-3.ts:28d564fc5b02ff5f959f64aeb2a4baa7a3a3aaa90950d95bdd8c300732471d34",
+      "src/arithmetic-3.ts:3008230ac5ac6c4f4eebd207170cf069307a3634636f7d30da2f6330a45e3ee0",
+      "src/arithmetic-3.ts:6604c90740a3b336ab572ac4c61f5b197398501298300a18676a1cb97af140a5",
+      "src/arithmetic-3.ts:962112ca9da9e024dbfd70ff02f36c861a566971a35130ef277882aac7b328f3",
+      "src/arithmetic-3.ts:9f2c275c792e839aa288799b7ab0b17f8d3e01a9415df64994e68279c33c022c",
+      "src/arithmetic-3.ts:cf39b5037e1ac84e09009fd83ce08adb0bf274f2f2b384776536252065731e83",
+      "src/arithmetic-3.ts:dedf10eb55b3aa87bbbeeaa2fb84cdd8637e7bec6db9837ddc02e14870fd4126",
+      "src/arithmetic-4.ts:21604bf19fc8db188ee61fea6263f9415f2794705cdf16a5c81655682af331fc",
+      "src/arithmetic-4.ts:5cab78a4400e1b20770f8892255b6fd0c5d2882e13610d0b55136353303145c8",
+      "src/arithmetic-4.ts:663bc8b1f8086449f55ae96a22516a0ba4bf4eeadc8fc5ad74264a6351d6b13a",
+      "src/arithmetic-4.ts:6d6a15a7cf535f303354d45f021ababb58762548232cd4b02a7ca471e865eece",
+      "src/arithmetic-4.ts:7e7c53ddab9b1a2acb0518baa510f985f47831abdb09547dc1d10f55a8e8f7df",
+      "src/arithmetic-4.ts:9f22be8f3c271594adc9cd7aaf30509ee40a7265cbb779472d6f4e262053f6ae",
+      "src/arithmetic-4.ts:dbfd4ba051649076939898d05d3c7def3385907eaf43f5f1000fa392a3a83a42",
+      "src/arithmetic-4.ts:e6ff61af7c655253b6d565f7977910abf01c5aeb03a97ea251b1f9d3612e9db6",
+      "src/arithmetic-5.ts:189650a6b4d233fbfd9edc8c9cf9550795637cbbced6a7781406b9bb0e783853",
+      "src/arithmetic-5.ts:3ad846b6ca17ba93ff120385558108287c27a0e1ae1d49239828a8f78b356391",
+      "src/arithmetic-5.ts:5e4cd8e84b048fd49d3d6f409f0fac714f48753be2261761c7a43eaa8ea41174",
+      "src/arithmetic-5.ts:5f03924a2f3823d1fdb27d9ed3f4df93418d9df94c42a5c2f0dacae20870e486",
+      "src/arithmetic-5.ts:9003ab72f9ffe52738a72d8dbf6c7ab51ee30994892af4fabdb82dd74b4ba5b8",
+      "src/arithmetic-5.ts:b7849819c74dd8467a0f4387cf92e2ff66cae78ce4f152834db96c44890176cf",
+      "src/arithmetic-5.ts:c0f543ea8dce77377b55ee9d166ec13f44bae928d4d828895647d2e7a0963364",
+      "src/arithmetic-5.ts:f37d95b3326b1576630cf5967e3a6e8ae0c0aea083728d2fbf435610aff51fdf",
+      "src/arithmetic-6.ts:0cdc9c690ae73beb2d8b23c33a1d82d0c4265b0fb96ddda6e2e54083609bff12",
+      "src/arithmetic-6.ts:15c12e5f72a40e9e21a6c036fdfb72a78ea4e5dc32b39bea911eacec52e179f2",
+      "src/arithmetic-6.ts:2b98be31ba3e2cf1550bcca2c6e071df0a5807648c9f10c48dfc59d489547425",
+      "src/arithmetic-6.ts:3a081d5713df99d2c8c4a348a6498f4993e8a51430f777864386953987838f2b",
+      "src/arithmetic-6.ts:454424e8b99d8b197a6586e3efecbb01a9e6efa7d41d7637a896eefac572d78f",
+      "src/arithmetic-6.ts:4e5ddfd78b1a02e0c7a56ff652666a8842ae34a28242c1c5fcd62a8302b53f75",
+      "src/arithmetic-6.ts:f0b9cca9e35d77f2525c8e218743696dfe718bdd6a07388276cea1d1bb086d39",
+      "src/arithmetic-6.ts:fef0a7a641e518f2648255554c1bc36b9fdd8f13e884b6cc290731dd0a5b9f73",
+      "src/arithmetic-7.ts:5fa13b31f9b6756a4f14a975976fc8099bb8973eff1f282ac79a48f9d8bb0d41",
+      "src/arithmetic-7.ts:709a33d41168cb348c3ee67635b0d6ca5e19ab5baca2f2d76e400254f32096fc",
+      "src/arithmetic-7.ts:86dc212628d613109a8e756e6b9d5d2d5f7ed06545a6db150a1c1aaa2b1f7cf2",
+      "src/arithmetic-7.ts:9e5ae845c89abcd230c6f9a3d60e626fefd63f38a5cb55b17871df6e101ba0df",
+      "src/arithmetic-7.ts:a32965f96531eb5a7e2e7514e802cc53350fb79813c7556a2938dbf6ccc72f6d",
+      "src/arithmetic-7.ts:a6af620d652cc808cadcff02a32bf367726a320dcc0c5a10cda1022600230b93",
+      "src/arithmetic-7.ts:bb9e068fc260661aa72add4614436ec3342ec612634cd34789af4f0243b3cd7d",
+      "src/arithmetic-7.ts:dbe5adacf8fbb900db11cf75d5b8fa9409878eb357a5bb5b3aea8b2fa14a4b66"
+    ],
+    "shared_classifications_agree": true,
+    "shared_count": 64
+  },
+  {
+    "equal_mutation_scope": true,
+    "explained_no_coverage_refinements": [],
+    "fixture": "matched-scale",
+    "kind": "cross-tool",
+    "left_count": 64,
+    "left_only": {},
+    "left_run": "measured-01-matched-scale-oximut-clean-fresh",
+    "mismatches": [],
+    "ratio_eligible": true,
+    "right_count": 64,
+    "right_only": {},
+    "right_run": "measured-01-matched-scale-stryker-clean-stryker",
+    "round_index": 1,
+    "shared": [
+      "src/arithmetic-0.ts:0bb63f17da1dd236b01338caabde3f8cc767295c8ce125b989122f59513cb1e1",
+      "src/arithmetic-0.ts:4e8a255c26188ab501b83c6af904e9dac6e987d72a47f23c6f551d6037007ed3",
+      "src/arithmetic-0.ts:6700b3f61d697676383dad2c4395f347b295e1bd99e9df3d0daf90600d257e49",
+      "src/arithmetic-0.ts:6fe07c06b3d0e085507d88e6d87547264b11c09b7ab4b756c71890e9dbfc31ce",
+      "src/arithmetic-0.ts:9c0452ef08e78cc2cec2b552f6ef1def6849a9f8eb5d703ae5bf70df1a6aef26",
+      "src/arithmetic-0.ts:bf77d9fdd48beef089bb33024c367cebc07321bc7b1e5d9338bf3db474a29876",
+      "src/arithmetic-0.ts:daaed3439168d1cbf76e8d93dee9ed35abe2ca2e57679989036c9acab38136d7",
+      "src/arithmetic-0.ts:e00212e8e3cf9dee7cadd53205a9c4af87eb74fd44975cf1827761b7f4c4b214",
+      "src/arithmetic-1.ts:11fbdbff4022e8f2713cf8bdb45eca8c387318fbedc7a645bf8eba017afce66a",
+      "src/arithmetic-1.ts:1c2c9364d1e6ee4feada808d64e2b42795eb286976576c1fa988416c64633f27",
+      "src/arithmetic-1.ts:4094c599c99a744438bd1f9b20f730d339f04d3f6e8dd447bbe921e989b9b479",
+      "src/arithmetic-1.ts:45033d379301bdc4da1f4074eafb5aa69395c2d968d10ad66c2758d89dbe2610",
+      "src/arithmetic-1.ts:73909d8d79c080aa32842ec804fc44dad404594a65d16d0d7122b3b2136365b6",
+      "src/arithmetic-1.ts:8026913c32f804dface12c352e6d4a9fb7bb61b66d66889b8e11f92a0ace16c6",
+      "src/arithmetic-1.ts:bb4b9d15172445147c4c71424bbc5b6d0843aeeed9d94f9bb36db5923ee7613e",
+      "src/arithmetic-1.ts:feb7fc3c7334528679c850dac15eaad6d3a2545ecc08336719ca491bf35b1b35",
+      "src/arithmetic-2.ts:2a4fe83dd41363804742859c73c5992b3b69d7880c96675254be1244b65e6ed6",
+      "src/arithmetic-2.ts:5e1c271edcd6ec54a71b4c5d68d0e190ea4d95234795d11acfde3132f8bddd58",
+      "src/arithmetic-2.ts:81bff629ec4902cef5f5783fa114a1f7e4ac431e962eb20c64dd6c20b873fde5",
+      "src/arithmetic-2.ts:82c88c64a289c8503994568241e9e829fd89c539458244bf1e6f069a30bdb1a1",
+      "src/arithmetic-2.ts:846750fffc1ea745a5d52b4dc5ff9c63a831bd6a74cf881d79004e898ff4e0fb",
+      "src/arithmetic-2.ts:956745c8f16382b3a068ae6be498fbacf8e1233b89a91f89d3876e25efcf19a1",
+      "src/arithmetic-2.ts:b6811d08512fefd33f0e70e9d39aa29e1266694bc3f27331b14ba3f69da8a40f",
+      "src/arithmetic-2.ts:cf760ef105568b89a7583b16b2cc026b65407ac138dd5674d909c031c996eb39",
+      "src/arithmetic-3.ts:215aa72a1418c088491b650cceb7984ee33f722fc3a0f04df6165ff111240ab8",
+      "src/arithmetic-3.ts:28d564fc5b02ff5f959f64aeb2a4baa7a3a3aaa90950d95bdd8c300732471d34",
+      "src/arithmetic-3.ts:3008230ac5ac6c4f4eebd207170cf069307a3634636f7d30da2f6330a45e3ee0",
+      "src/arithmetic-3.ts:6604c90740a3b336ab572ac4c61f5b197398501298300a18676a1cb97af140a5",
+      "src/arithmetic-3.ts:962112ca9da9e024dbfd70ff02f36c861a566971a35130ef277882aac7b328f3",
+      "src/arithmetic-3.ts:9f2c275c792e839aa288799b7ab0b17f8d3e01a9415df64994e68279c33c022c",
+      "src/arithmetic-3.ts:cf39b5037e1ac84e09009fd83ce08adb0bf274f2f2b384776536252065731e83",
+      "src/arithmetic-3.ts:dedf10eb55b3aa87bbbeeaa2fb84cdd8637e7bec6db9837ddc02e14870fd4126",
+      "src/arithmetic-4.ts:21604bf19fc8db188ee61fea6263f9415f2794705cdf16a5c81655682af331fc",
+      "src/arithmetic-4.ts:5cab78a4400e1b20770f8892255b6fd0c5d2882e13610d0b55136353303145c8",
+      "src/arithmetic-4.ts:663bc8b1f8086449f55ae96a22516a0ba4bf4eeadc8fc5ad74264a6351d6b13a",
+      "src/arithmetic-4.ts:6d6a15a7cf535f303354d45f021ababb58762548232cd4b02a7ca471e865eece",
+      "src/arithmetic-4.ts:7e7c53ddab9b1a2acb0518baa510f985f47831abdb09547dc1d10f55a8e8f7df",
+      "src/arithmetic-4.ts:9f22be8f3c271594adc9cd7aaf30509ee40a7265cbb779472d6f4e262053f6ae",
+      "src/arithmetic-4.ts:dbfd4ba051649076939898d05d3c7def3385907eaf43f5f1000fa392a3a83a42",
+      "src/arithmetic-4.ts:e6ff61af7c655253b6d565f7977910abf01c5aeb03a97ea251b1f9d3612e9db6",
+      "src/arithmetic-5.ts:189650a6b4d233fbfd9edc8c9cf9550795637cbbced6a7781406b9bb0e783853",
+      "src/arithmetic-5.ts:3ad846b6ca17ba93ff120385558108287c27a0e1ae1d49239828a8f78b356391",
+      "src/arithmetic-5.ts:5e4cd8e84b048fd49d3d6f409f0fac714f48753be2261761c7a43eaa8ea41174",
+      "src/arithmetic-5.ts:5f03924a2f3823d1fdb27d9ed3f4df93418d9df94c42a5c2f0dacae20870e486",
+      "src/arithmetic-5.ts:9003ab72f9ffe52738a72d8dbf6c7ab51ee30994892af4fabdb82dd74b4ba5b8",
+      "src/arithmetic-5.ts:b7849819c74dd8467a0f4387cf92e2ff66cae78ce4f152834db96c44890176cf",
+      "src/arithmetic-5.ts:c0f543ea8dce77377b55ee9d166ec13f44bae928d4d828895647d2e7a0963364",
+      "src/arithmetic-5.ts:f37d95b3326b1576630cf5967e3a6e8ae0c0aea083728d2fbf435610aff51fdf",
+      "src/arithmetic-6.ts:0cdc9c690ae73beb2d8b23c33a1d82d0c4265b0fb96ddda6e2e54083609bff12",
+      "src/arithmetic-6.ts:15c12e5f72a40e9e21a6c036fdfb72a78ea4e5dc32b39bea911eacec52e179f2",
+      "src/arithmetic-6.ts:2b98be31ba3e2cf1550bcca2c6e071df0a5807648c9f10c48dfc59d489547425",
+      "src/arithmetic-6.ts:3a081d5713df99d2c8c4a348a6498f4993e8a51430f777864386953987838f2b",
+      "src/arithmetic-6.ts:454424e8b99d8b197a6586e3efecbb01a9e6efa7d41d7637a896eefac572d78f",
+      "src/arithmetic-6.ts:4e5ddfd78b1a02e0c7a56ff652666a8842ae34a28242c1c5fcd62a8302b53f75",
+      "src/arithmetic-6.ts:f0b9cca9e35d77f2525c8e218743696dfe718bdd6a07388276cea1d1bb086d39",
+      "src/arithmetic-6.ts:fef0a7a641e518f2648255554c1bc36b9fdd8f13e884b6cc290731dd0a5b9f73",
+      "src/arithmetic-7.ts:5fa13b31f9b6756a4f14a975976fc8099bb8973eff1f282ac79a48f9d8bb0d41",
+      "src/arithmetic-7.ts:709a33d41168cb348c3ee67635b0d6ca5e19ab5baca2f2d76e400254f32096fc",
+      "src/arithmetic-7.ts:86dc212628d613109a8e756e6b9d5d2d5f7ed06545a6db150a1c1aaa2b1f7cf2",
+      "src/arithmetic-7.ts:9e5ae845c89abcd230c6f9a3d60e626fefd63f38a5cb55b17871df6e101ba0df",
+      "src/arithmetic-7.ts:a32965f96531eb5a7e2e7514e802cc53350fb79813c7556a2938dbf6ccc72f6d",
+      "src/arithmetic-7.ts:a6af620d652cc808cadcff02a32bf367726a320dcc0c5a10cda1022600230b93",
+      "src/arithmetic-7.ts:bb9e068fc260661aa72add4614436ec3342ec612634cd34789af4f0243b3cd7d",
+      "src/arithmetic-7.ts:dbe5adacf8fbb900db11cf75d5b8fa9409878eb357a5bb5b3aea8b2fa14a4b66"
+    ],
+    "shared_classifications_agree": true,
+    "shared_count": 64
+  },
+  {
+    "equal_mutation_scope": true,
+    "explained_no_coverage_refinements": [],
+    "fixture": "matched-scale",
+    "kind": "optimized-reference",
+    "left_count": 64,
+    "left_only": {},
+    "left_run": "measured-01-matched-scale-oximut-clean-fresh",
+    "mismatches": [],
+    "ratio_eligible": true,
+    "right_count": 64,
+    "right_only": {},
+    "right_run": "measured-01-matched-scale-oximut-clean-selection",
+    "round_index": 1,
+    "shared": [
+      "src/arithmetic-0.ts:0bb63f17da1dd236b01338caabde3f8cc767295c8ce125b989122f59513cb1e1",
+      "src/arithmetic-0.ts:4e8a255c26188ab501b83c6af904e9dac6e987d72a47f23c6f551d6037007ed3",
+      "src/arithmetic-0.ts:6700b3f61d697676383dad2c4395f347b295e1bd99e9df3d0daf90600d257e49",
+      "src/arithmetic-0.ts:6fe07c06b3d0e085507d88e6d87547264b11c09b7ab4b756c71890e9dbfc31ce",
+      "src/arithmetic-0.ts:9c0452ef08e78cc2cec2b552f6ef1def6849a9f8eb5d703ae5bf70df1a6aef26",
+      "src/arithmetic-0.ts:bf77d9fdd48beef089bb33024c367cebc07321bc7b1e5d9338bf3db474a29876",
+      "src/arithmetic-0.ts:daaed3439168d1cbf76e8d93dee9ed35abe2ca2e57679989036c9acab38136d7",
+      "src/arithmetic-0.ts:e00212e8e3cf9dee7cadd53205a9c4af87eb74fd44975cf1827761b7f4c4b214",
+      "src/arithmetic-1.ts:11fbdbff4022e8f2713cf8bdb45eca8c387318fbedc7a645bf8eba017afce66a",
+      "src/arithmetic-1.ts:1c2c9364d1e6ee4feada808d64e2b42795eb286976576c1fa988416c64633f27",
+      "src/arithmetic-1.ts:4094c599c99a744438bd1f9b20f730d339f04d3f6e8dd447bbe921e989b9b479",
+      "src/arithmetic-1.ts:45033d379301bdc4da1f4074eafb5aa69395c2d968d10ad66c2758d89dbe2610",
+      "src/arithmetic-1.ts:73909d8d79c080aa32842ec804fc44dad404594a65d16d0d7122b3b2136365b6",
+      "src/arithmetic-1.ts:8026913c32f804dface12c352e6d4a9fb7bb61b66d66889b8e11f92a0ace16c6",
+      "src/arithmetic-1.ts:bb4b9d15172445147c4c71424bbc5b6d0843aeeed9d94f9bb36db5923ee7613e",
+      "src/arithmetic-1.ts:feb7fc3c7334528679c850dac15eaad6d3a2545ecc08336719ca491bf35b1b35",
+      "src/arithmetic-2.ts:2a4fe83dd41363804742859c73c5992b3b69d7880c96675254be1244b65e6ed6",
+      "src/arithmetic-2.ts:5e1c271edcd6ec54a71b4c5d68d0e190ea4d95234795d11acfde3132f8bddd58",
+      "src/arithmetic-2.ts:81bff629ec4902cef5f5783fa114a1f7e4ac431e962eb20c64dd6c20b873fde5",
+      "src/arithmetic-2.ts:82c88c64a289c8503994568241e9e829fd89c539458244bf1e6f069a30bdb1a1",
+      "src/arithmetic-2.ts:846750fffc1ea745a5d52b4dc5ff9c63a831bd6a74cf881d79004e898ff4e0fb",
+      "src/arithmetic-2.ts:956745c8f16382b3a068ae6be498fbacf8e1233b89a91f89d3876e25efcf19a1",
+      "src/arithmetic-2.ts:b6811d08512fefd33f0e70e9d39aa29e1266694bc3f27331b14ba3f69da8a40f",
+      "src/arithmetic-2.ts:cf760ef105568b89a7583b16b2cc026b65407ac138dd5674d909c031c996eb39",
+      "src/arithmetic-3.ts:215aa72a1418c088491b650cceb7984ee33f722fc3a0f04df6165ff111240ab8",
+      "src/arithmetic-3.ts:28d564fc5b02ff5f959f64aeb2a4baa7a3a3aaa90950d95bdd8c300732471d34",
+      "src/arithmetic-3.ts:3008230ac5ac6c4f4eebd207170cf069307a3634636f7d30da2f6330a45e3ee0",
+      "src/arithmetic-3.ts:6604c90740a3b336ab572ac4c61f5b197398501298300a18676a1cb97af140a5",
+      "src/arithmetic-3.ts:962112ca9da9e024dbfd70ff02f36c861a566971a35130ef277882aac7b328f3",
+      "src/arithmetic-3.ts:9f2c275c792e839aa288799b7ab0b17f8d3e01a9415df64994e68279c33c022c",
+      "src/arithmetic-3.ts:cf39b5037e1ac84e09009fd83ce08adb0bf274f2f2b384776536252065731e83",
+      "src/arithmetic-3.ts:dedf10eb55b3aa87bbbeeaa2fb84cdd8637e7bec6db9837ddc02e14870fd4126",
+      "src/arithmetic-4.ts:21604bf19fc8db188ee61fea6263f9415f2794705cdf16a5c81655682af331fc",
+      "src/arithmetic-4.ts:5cab78a4400e1b20770f8892255b6fd0c5d2882e13610d0b55136353303145c8",
+      "src/arithmetic-4.ts:663bc8b1f8086449f55ae96a22516a0ba4bf4eeadc8fc5ad74264a6351d6b13a",
+      "src/arithmetic-4.ts:6d6a15a7cf535f303354d45f021ababb58762548232cd4b02a7ca471e865eece",
+      "src/arithmetic-4.ts:7e7c53ddab9b1a2acb0518baa510f985f47831abdb09547dc1d10f55a8e8f7df",
+      "src/arithmetic-4.ts:9f22be8f3c271594adc9cd7aaf30509ee40a7265cbb779472d6f4e262053f6ae",
+      "src/arithmetic-4.ts:dbfd4ba051649076939898d05d3c7def3385907eaf43f5f1000fa392a3a83a42",
+      "src/arithmetic-4.ts:e6ff61af7c655253b6d565f7977910abf01c5aeb03a97ea251b1f9d3612e9db6",
+      "src/arithmetic-5.ts:189650a6b4d233fbfd9edc8c9cf9550795637cbbced6a7781406b9bb0e783853",
+      "src/arithmetic-5.ts:3ad846b6ca17ba93ff120385558108287c27a0e1ae1d49239828a8f78b356391",
+      "src/arithmetic-5.ts:5e4cd8e84b048fd49d3d6f409f0fac714f48753be2261761c7a43eaa8ea41174",
+      "src/arithmetic-5.ts:5f03924a2f3823d1fdb27d9ed3f4df93418d9df94c42a5c2f0dacae20870e486",
+      "src/arithmetic-5.ts:9003ab72f9ffe52738a72d8dbf6c7ab51ee30994892af4fabdb82dd74b4ba5b8",
+      "src/arithmetic-5.ts:b7849819c74dd8467a0f4387cf92e2ff66cae78ce4f152834db96c44890176cf",
+      "src/arithmetic-5.ts:c0f543ea8dce77377b55ee9d166ec13f44bae928d4d828895647d2e7a0963364",
+      "src/arithmetic-5.ts:f37d95b3326b1576630cf5967e3a6e8ae0c0aea083728d2fbf435610aff51fdf",
+      "src/arithmetic-6.ts:0cdc9c690ae73beb2d8b23c33a1d82d0c4265b0fb96ddda6e2e54083609bff12",
+      "src/arithmetic-6.ts:15c12e5f72a40e9e21a6c036fdfb72a78ea4e5dc32b39bea911eacec52e179f2",
+      "src/arithmetic-6.ts:2b98be31ba3e2cf1550bcca2c6e071df0a5807648c9f10c48dfc59d489547425",
+      "src/arithmetic-6.ts:3a081d5713df99d2c8c4a348a6498f4993e8a51430f777864386953987838f2b",
+      "src/arithmetic-6.ts:454424e8b99d8b197a6586e3efecbb01a9e6efa7d41d7637a896eefac572d78f",
+      "src/arithmetic-6.ts:4e5ddfd78b1a02e0c7a56ff652666a8842ae34a28242c1c5fcd62a8302b53f75",
+      "src/arithmetic-6.ts:f0b9cca9e35d77f2525c8e218743696dfe718bdd6a07388276cea1d1bb086d39",
+      "src/arithmetic-6.ts:fef0a7a641e518f2648255554c1bc36b9fdd8f13e884b6cc290731dd0a5b9f73",
+      "src/arithmetic-7.ts:5fa13b31f9b6756a4f14a975976fc8099bb8973eff1f282ac79a48f9d8bb0d41",
+      "src/arithmetic-7.ts:709a33d41168cb348c3ee67635b0d6ca5e19ab5baca2f2d76e400254f32096fc",
+      "src/arithmetic-7.ts:86dc212628d613109a8e756e6b9d5d2d5f7ed06545a6db150a1c1aaa2b1f7cf2",
+      "src/arithmetic-7.ts:9e5ae845c89abcd230c6f9a3d60e626fefd63f38a5cb55b17871df6e101ba0df",
+      "src/arithmetic-7.ts:a32965f96531eb5a7e2e7514e802cc53350fb79813c7556a2938dbf6ccc72f6d",
+      "src/arithmetic-7.ts:a6af620d652cc808cadcff02a32bf367726a320dcc0c5a10cda1022600230b93",
+      "src/arithmetic-7.ts:bb9e068fc260661aa72add4614436ec3342ec612634cd34789af4f0243b3cd7d",
+      "src/arithmetic-7.ts:dbe5adacf8fbb900db11cf75d5b8fa9409878eb357a5bb5b3aea8b2fa14a4b66"
+    ],
+    "shared_classifications_agree": true,
+    "shared_count": 64
+  },
+  {
+    "equal_mutation_scope": false,
+    "explained_no_coverage_refinements": [],
+    "fixture": "matched-scale",
+    "kind": "optimized-reference",
+    "left_count": 0,
+    "left_only": {},
+    "left_run": "measured-02-matched-scale-oximut-clean-fresh",
+    "mismatches": [],
+    "ratio_eligible": false,
+    "right_count": 64,
+    "right_only": {
+      "src/arithmetic-0.ts:0bb63f17da1dd236b01338caabde3f8cc767295c8ce125b989122f59513cb1e1": {
+        "file": "src/arithmetic-0.ts",
+        "id": "5fb588b7244724ad8a25697f6dd1951246dbf2b5d72fca7eaa70b70b1f8f6e00",
+        "location": {
+          "end": {
+            "column": 17,
+            "line": 30,
+            "offset": 593
+          },
+          "start": {
+            "column": 16,
+            "line": 30,
+            "offset": 592
+          }
+        },
+        "operator": "arithmetic",
+        "outcome": "killed",
+        "replacement": "*",
+        "selection": {
+          "expectedSkipped": 0,
+          "files": [
+            "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-02-matched-scale-oximut-clean-selection/project/test/arithmetic-0.test.ts"
+          ],
+          "mode": "files",
+          "reasons": [
+            "whole-file-preserves-sequential-state-and-hooks"
+          ],
+          "selectedTests": 8,
+          "totalTests": 64
+        }
+      },
+      "src/arithmetic-0.ts:4e8a255c26188ab501b83c6af904e9dac6e987d72a47f23c6f551d6037007ed3": {
+        "file": "src/arithmetic-0.ts",
+        "id": "ca51ce2c1333c344ad66fffb5c8924465058f52ca5c477a506bfd3a453b21646",
+        "location": {
+          "end": {
+            "column": 17,
+            "line": 10,
+            "offset": 218
+          },
+          "start": {
+            "column": 16,
+            "line": 10,
+            "offset": 217
+          }
+        },
+        "operator": "arithmetic",
+        "outcome": "killed",
+        "replacement": "/",
+        "selection": {
+          "expectedSkipped": 0,
+          "files": [
+            "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-02-matched-scale-oximut-clean-selection/project/test/arithmetic-0.test.ts"
+          ],
+          "mode": "files",
+          "reasons": [
+            "whole-file-preserves-sequential-state-and-hooks"
+          ],
+          "selectedTests": 8,
+          "totalTests": 64
+        }
+      },
+      "src/arithmetic-0.ts:6700b3f61d697676383dad2c4395f347b295e1bd99e9df3d0daf90600d257e49": {
+        "file": "src/arithmetic-0.ts",
+        "id": "492240cc0f719346f3333d13d076a49dec7a4c62e55d139309074755d2b1e7dc",
+        "location": {
+          "end": {
+            "column": 17,
+            "line": 6,
+            "offset": 143
+          },
+          "start": {
+            "column": 16,
+            "line": 6,
+            "offset": 142
+          }
+        },
+        "operator": "arithmetic",
+        "outcome": "killed",
+        "replacement": "+",
+        "selection": {
+          "expectedSkipped": 0,
+          "files": [
+            "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-02-matched-scale-oximut-clean-selection/project/test/arithmetic-0.test.ts"
+          ],
+          "mode": "files",
+          "reasons": [
+            "whole-file-preserves-sequential-state-and-hooks"
+          ],
+          "selectedTests": 8,
+          "totalTests": 64
+        }
+      },
+      "src/arithmetic-0.ts:6fe07c06b3d0e085507d88e6d87547264b11c09b7ab4b756c71890e9dbfc31ce": {
+        "file": "src/arithmetic-0.ts",
+        "id": "7fbffe41cec327686f701880c1df59d6fc1aecf67b06c218a5924aa92fb8e740",
+        "location": {
+          "end": {
+            "column": 17,
+            "line": 14,
+            "offset": 293
+          },
+          "start": {
+            "column": 16,
+            "line": 14,
+            "offset": 292
+          }
+        },
+        "operator": "arithmetic",
+        "outcome": "killed",
+        "replacement": "*",
+        "selection": {
+          "expectedSkipped": 0,
+          "files": [
+            "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-02-matched-scale-oximut-clean-selection/project/test/arithmetic-0.test.ts"
+          ],
+          "mode": "files",
+          "reasons": [
+            "whole-file-preserves-sequential-state-and-hooks"
+          ],
+          "selectedTests": 8,
+          "totalTests": 64
+        }
+      },
+      "src/arithmetic-0.ts:9c0452ef08e78cc2cec2b552f6ef1def6849a9f8eb5d703ae5bf70df1a6aef26": {
+        "file": "src/arithmetic-0.ts",
+        "id": "b3e84551fbce63be5eb8552a893005f4bd412cb1d8698d3f147bb4ce19fc9125",
+        "location": {
+          "end": {
+            "column": 17,
+            "line": 18,
+            "offset": 368
+          },
+          "start": {
+            "column": 16,
+            "line": 18,
+            "offset": 367
+          }
+        },
+        "operator": "arithmetic",
+        "outcome": "killed",
+        "replacement": "-",
+        "selection": {
+          "expectedSkipped": 0,
+          "files": [
+            "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-02-matched-scale-oximut-clean-selection/project/test/arithmetic-0.test.ts"
+          ],
+          "mode": "files",
+          "reasons": [
+            "whole-file-preserves-sequential-state-and-hooks"
+          ],
+          "selectedTests": 8,
+          "totalTests": 64
+        }
+      },
+      "src/arithmetic-0.ts:bf77d9fdd48beef089bb33024c367cebc07321bc7b1e5d9338bf3db474a29876": {
+        "file": "src/arithmetic-0.ts",
+        "id": "ee6ab18bca003a4369799645163467da36bd8cdffdbdcd2dafacb491c7e37a39",
+        "location": {
+          "end": {
+            "column": 17,
+            "line": 22,
+            "offset": 443
+          },
+          "start": {
+            "column": 16,
+            "line": 22,
+            "offset": 442
+          }
+        },
+        "operator": "arithmetic",
+        "outcome": "killed",
+        "replacement": "+",
+        "selection": {
+          "expectedSkipped": 0,
+          "files": [
+            "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-02-matched-scale-oximut-clean-selection/project/test/arithmetic-0.test.ts"
+          ],
+          "mode": "files",
+          "reasons": [
+            "whole-file-preserves-sequential-state-and-hooks"
+          ],
+          "selectedTests": 8,
+          "totalTests": 64
+        }
+      },
+      "src/arithmetic-0.ts:daaed3439168d1cbf76e8d93dee9ed35abe2ca2e57679989036c9acab38136d7": {
+        "file": "src/arithmetic-0.ts",
+        "id": "e43bbd7efcd90e4928415a41e83067582a3a2cd97422599a77a90427f9e97587",
+        "location": {
+          "end": {
+            "column": 17,
+            "line": 26,
+            "offset": 518
+          },
+          "start": {
+            "column": 16,
+            "line": 26,
+            "offset": 517
+          }
+        },
+        "operator": "arithmetic",
+        "outcome": "killed",
+        "replacement": "/",
+        "selection": {
+          "expectedSkipped": 0,
+          "files": [
+            "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-02-matched-scale-oximut-clean-selection/project/test/arithmetic-0.test.ts"
+          ],
+          "mode": "files",
+          "reasons": [
+            "whole-file-preserves-sequential-state-and-hooks"
+          ],
+          "selectedTests": 8,
+          "totalTests": 64
+        }
+      },
+      "src/arithmetic-0.ts:e00212e8e3cf9dee7cadd53205a9c4af87eb74fd44975cf1827761b7f4c4b214": {
+        "file": "src/arithmetic-0.ts",
+        "id": "fe49b03ed8cdc2753ab9a94036103baebf444390d7e9eb1b17dfdc5cb71039db",
+        "location": {
+          "end": {
+            "column": 17,
+            "line": 2,
+            "offset": 68
+          },
+          "start": {
+            "column": 16,
+            "line": 2,
+            "offset": 67
+          }
+        },
+        "operator": "arithmetic",
+        "outcome": "killed",
+        "replacement": "-",
+        "selection": {
+          "expectedSkipped": 0,
+          "files": [
+            "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-02-matched-scale-oximut-clean-selection/project/test/arithmetic-0.test.ts"
+          ],
+          "mode": "files",
+          "reasons": [
+            "whole-file-preserves-sequential-state-and-hooks"
+          ],
+          "selectedTests": 8,
+          "totalTests": 64
+        }
+      },
+      "src/arithmetic-1.ts:11fbdbff4022e8f2713cf8bdb45eca8c387318fbedc7a645bf8eba017afce66a": {
+        "file": "src/arithmetic-1.ts",
+        "id": "c1a8652dcbc20364977805b339f941ddf1d9b1f12487ecca1947bc9795e0bdbd",
+        "location": {
+          "end": {
+            "column": 17,
+            "line": 6,
+            "offset": 144
+          },
+          "start": {
+            "column": 16,
+            "line": 6,
+            "offset": 143
+          }
+        },
+        "operator": "arithmetic",
+        "outcome": "killed",
+        "replacement": "+",
+        "selection": {
+          "expectedSkipped": 0,
+          "files": [
+            "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-02-matched-scale-oximut-clean-selection/project/test/arithmetic-1.test.ts"
+          ],
+          "mode": "files",
+          "reasons": [
+            "whole-file-preserves-sequential-state-and-hooks"
+          ],
+          "selectedTests": 8,
+          "totalTests": 64
+        }
+      },
+      "src/arithmetic-1.ts:1c2c9364d1e6ee4feada808d64e2b42795eb286976576c1fa988416c64633f27": {
+        "file": "src/arithmetic-1.ts",
+        "id": "26e29767c11bf41308324f5ae43c7ea238bb37bc57454a7b0f38951228ecac88",
+        "location": {
+          "end": {
+            "column": 17,
+            "line": 18,
+            "offset": 372
+          },
+          "start": {
+            "column": 16,
+            "line": 18,
+            "offset": 371
+          }
+        },
+        "operator": "arithmetic",
+        "outcome": "killed",
+        "replacement": "-",
+        "selection": {
+          "expectedSkipped": 0,
+          "files": [
+            "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-02-matched-scale-oximut-clean-selection/project/test/arithmetic-1.test.ts"
+          ],
+          "mode": "files",
+          "reasons": [
+            "whole-file-preserves-sequential-state-and-hooks"
+          ],
+          "selectedTests": 8,
+          "totalTests": 64
+        }
+      },
+      "src/arithmetic-1.ts:4094c599c99a744438bd1f9b20f730d339f04d3f6e8dd447bbe921e989b9b479": {
+        "file": "src/arithmetic-1.ts",
+        "id": "65157bf86996bbf93b6edb9f0a77ca7489aea17797282bcdf046b44bbe233b21",
+        "location": {
+          "end": {
+            "column": 17,
+            "line": 30,
+            "offset": 600
+          },
+          "start": {
+            "column": 16,
+            "line": 30,
+            "offset": 599
+          }
+        },
+        "operator": "arithmetic",
+        "outcome": "killed",
+        "replacement": "*",
+        "selection": {
+          "expectedSkipped": 0,
+          "files": [
+            "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-02-matched-scale-oximut-clean-selection/project/test/arithmetic-1.test.ts"
+          ],
+          "mode": "files",
+          "reasons": [
+            "whole-file-preserves-sequential-state-and-hooks"
+          ],
+          "selectedTests": 8,
+          "totalTests": 64
+        }
+      },
+      "src/arithmetic-1.ts:45033d379301bdc4da1f4074eafb5aa69395c2d968d10ad66c2758d89dbe2610": {
+        "file": "src/arithmetic-1.ts",
+        "id": "5eac3305ae664ced8f6eeb31e5a01520affd2d550137873538600fd50105be07",
+        "location": {
+          "end": {
+            "column": 17,
+            "line": 2,
+            "offset": 68
+          },
+          "start": {
+            "column": 16,
+            "line": 2,
+            "offset": 67
+          }
+        },
+        "operator": "arithmetic",
+        "outcome": "killed",
+        "replacement": "-",
+        "selection": {
+          "expectedSkipped": 0,
+          "files": [
+            "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-02-matched-scale-oximut-clean-selection/project/test/arithmetic-1.test.ts"
+          ],
+          "mode": "files",
+          "reasons": [
+            "whole-file-preserves-sequential-state-and-hooks"
+          ],
+          "selectedTests": 8,
+          "totalTests": 64
+        }
+      },
+      "src/arithmetic-1.ts:73909d8d79c080aa32842ec804fc44dad404594a65d16d0d7122b3b2136365b6": {
+        "file": "src/arithmetic-1.ts",
+        "id": "d607c7ed50e02f199f30f1e1115b188426a5c746ba1356cfe936c079b0920287",
+        "location": {
+          "end": {
+            "column": 17,
+            "line": 14,
+            "offset": 296
+          },
+          "start": {
+            "column": 16,
+            "line": 14,
+            "offset": 295
+          }
+        },
+        "operator": "arithmetic",
+        "outcome": "killed",
+        "replacement": "*",
+        "selection": {
+          "expectedSkipped": 0,
+          "files": [
+            "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-02-matched-scale-oximut-clean-selection/project/test/arithmetic-1.test.ts"
+          ],
+          "mode": "files",
+          "reasons": [
+            "whole-file-preserves-sequential-state-and-hooks"
+          ],
+          "selectedTests": 8,
+          "totalTests": 64
+        }
+      },
+      "src/arithmetic-1.ts:8026913c32f804dface12c352e6d4a9fb7bb61b66d66889b8e11f92a0ace16c6": {
+        "file": "src/arithmetic-1.ts",
+        "id": "06cd4070ba6fcc8ccd25586d08cadbebaae2a84edcab41c0305261349b12cf31",
+        "location": {
+          "end": {
+            "column": 17,
+            "line": 26,
+            "offset": 524
+          },
+          "start": {
+            "column": 16,
+            "line": 26,
+            "offset": 523
+          }
+        },
+        "operator": "arithmetic",
+        "outcome": "killed",
+        "replacement": "/",
+        "selection": {
+          "expectedSkipped": 0,
+          "files": [
+            "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-02-matched-scale-oximut-clean-selection/project/test/arithmetic-1.test.ts"
+          ],
+          "mode": "files",
+          "reasons": [
+            "whole-file-preserves-sequential-state-and-hooks"
+          ],
+          "selectedTests": 8,
+          "totalTests": 64
+        }
+      },
+      "src/arithmetic-1.ts:bb4b9d15172445147c4c71424bbc5b6d0843aeeed9d94f9bb36db5923ee7613e": {
+        "file": "src/arithmetic-1.ts",
+        "id": "dae9e83bec9e53d8d605dca3e87a82c54c9d29a1b70fc3834daf8052b82b25cd",
+        "location": {
+          "end": {
+            "column": 17,
+            "line": 22,
+            "offset": 448
+          },
+          "start": {
+            "column": 16,
+            "line": 22,
+            "offset": 447
+          }
+        },
+        "operator": "arithmetic",
+        "outcome": "killed",
+        "replacement": "+",
+        "selection": {
+          "expectedSkipped": 0,
+          "files": [
+            "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-02-matched-scale-oximut-clean-selection/project/test/arithmetic-1.test.ts"
+          ],
+          "mode": "files",
+          "reasons": [
+            "whole-file-preserves-sequential-state-and-hooks"
+          ],
+          "selectedTests": 8,
+          "totalTests": 64
+        }
+      },
+      "src/arithmetic-1.ts:feb7fc3c7334528679c850dac15eaad6d3a2545ecc08336719ca491bf35b1b35": {
+        "file": "src/arithmetic-1.ts",
+        "id": "4c432dc35d5bb66e8d9874eed1f41f1f7691412359e817580972e2971e675c1f",
+        "location": {
+          "end": {
+            "column": 17,
+            "line": 10,
+            "offset": 220
+          },
+          "start": {
+            "column": 16,
+            "line": 10,
+            "offset": 219
+          }
+        },
+        "operator": "arithmetic",
+        "outcome": "killed",
+        "replacement": "/",
+        "selection": {
+          "expectedSkipped": 0,
+          "files": [
+            "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-02-matched-scale-oximut-clean-selection/project/test/arithmetic-1.test.ts"
+          ],
+          "mode": "files",
+          "reasons": [
+            "whole-file-preserves-sequential-state-and-hooks"
+          ],
+          "selectedTests": 8,
+          "totalTests": 64
+        }
+      },
+      "src/arithmetic-2.ts:2a4fe83dd41363804742859c73c5992b3b69d7880c96675254be1244b65e6ed6": {
+        "file": "src/arithmetic-2.ts",
+        "id": "cab6e7f1d166b711316a901be7351aff3071ad1b3e8651dcd6749a11404c7c41",
+        "location": {
+          "end": {
+            "column": 17,
+            "line": 22,
+            "offset": 448
+          },
+          "start": {
+            "column": 16,
+            "line": 22,
+            "offset": 447
+          }
+        },
+        "operator": "arithmetic",
+        "outcome": "killed",
+        "replacement": "+",
+        "selection": {
+          "expectedSkipped": 0,
+          "files": [
+            "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-02-matched-scale-oximut-clean-selection/project/test/arithmetic-2.test.ts"
+          ],
+          "mode": "files",
+          "reasons": [
+            "whole-file-preserves-sequential-state-and-hooks"
+          ],
+          "selectedTests": 8,
+          "totalTests": 64
+        }
+      },
+      "src/arithmetic-2.ts:5e1c271edcd6ec54a71b4c5d68d0e190ea4d95234795d11acfde3132f8bddd58": {
+        "file": "src/arithmetic-2.ts",
+        "id": "5fc8dde4c65be4fa9075cfd8aff0a93c9c5d808cfb65f69734d32300172c29cf",
+        "location": {
+          "end": {
+            "column": 17,
+            "line": 30,
+            "offset": 600
+          },
+          "start": {
+            "column": 16,
+            "line": 30,
+            "offset": 599
+          }
+        },
+        "operator": "arithmetic",
+        "outcome": "killed",
+        "replacement": "*",
+        "selection": {
+          "expectedSkipped": 0,
+          "files": [
+            "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-02-matched-scale-oximut-clean-selection/project/test/arithmetic-2.test.ts"
+          ],
+          "mode": "files",
+          "reasons": [
+            "whole-file-preserves-sequential-state-and-hooks"
+          ],
+          "selectedTests": 8,
+          "totalTests": 64
+        }
+      },
+      "src/arithmetic-2.ts:81bff629ec4902cef5f5783fa114a1f7e4ac431e962eb20c64dd6c20b873fde5": {
+        "file": "src/arithmetic-2.ts",
+        "id": "5d4f824d619cb7498e76145955f8e54aa3b0e2f9b2ed4ab7194808d78312471e",
+        "location": {
+          "end": {
+            "column": 17,
+            "line": 14,
+            "offset": 296
+          },
+          "start": {
+            "column": 16,
+            "line": 14,
+            "offset": 295
+          }
+        },
+        "operator": "arithmetic",
+        "outcome": "killed",
+        "replacement": "*",
+        "selection": {
+          "expectedSkipped": 0,
+          "files": [
+            "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-02-matched-scale-oximut-clean-selection/project/test/arithmetic-2.test.ts"
+          ],
+          "mode": "files",
+          "reasons": [
+            "whole-file-preserves-sequential-state-and-hooks"
+          ],
+          "selectedTests": 8,
+          "totalTests": 64
+        }
+      },
+      "src/arithmetic-2.ts:82c88c64a289c8503994568241e9e829fd89c539458244bf1e6f069a30bdb1a1": {
+        "file": "src/arithmetic-2.ts",
+        "id": "804662d7973534fa984afd9989c769d28191eb3725213d6ef733bdc54e43834c",
+        "location": {
+          "end": {
+            "column": 17,
+            "line": 6,
+            "offset": 144
+          },
+          "start": {
+            "column": 16,
+            "line": 6,
+            "offset": 143
+          }
+        },
+        "operator": "arithmetic",
+        "outcome": "killed",
+        "replacement": "+",
+        "selection": {
+          "expectedSkipped": 0,
+          "files": [
+            "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-02-matched-scale-oximut-clean-selection/project/test/arithmetic-2.test.ts"
+          ],
+          "mode": "files",
+          "reasons": [
+            "whole-file-preserves-sequential-state-and-hooks"
+          ],
+          "selectedTests": 8,
+          "totalTests": 64
+        }
+      },
+      "src/arithmetic-2.ts:846750fffc1ea745a5d52b4dc5ff9c63a831bd6a74cf881d79004e898ff4e0fb": {
+        "file": "src/arithmetic-2.ts",
+        "id": "f6dda74723b19f76d7bb633e120f8ff2c196a21873180fbcc0a64476763f11a4",
+        "location": {
+          "end": {
+            "column": 17,
+            "line": 26,
+            "offset": 524
+          },
+          "start": {
+            "column": 16,
+            "line": 26,
+            "offset": 523
+          }
+        },
+        "operator": "arithmetic",
+        "outcome": "killed",
+        "replacement": "/",
+        "selection": {
+          "expectedSkipped": 0,
+          "files": [
+            "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-02-matched-scale-oximut-clean-selection/project/test/arithmetic-2.test.ts"
+          ],
+          "mode": "files",
+          "reasons": [
+            "whole-file-preserves-sequential-state-and-hooks"
+          ],
+          "selectedTests": 8,
+          "totalTests": 64
+        }
+      },
+      "src/arithmetic-2.ts:956745c8f16382b3a068ae6be498fbacf8e1233b89a91f89d3876e25efcf19a1": {
+        "file": "src/arithmetic-2.ts",
+        "id": "62ab979af16f70f0a92b3bf83411effedfaac79038eeba429d524f5ba403b6ac",
+        "location": {
+          "end": {
+            "column": 17,
+            "line": 10,
+            "offset": 220
+          },
+          "start": {
+            "column": 16,
+            "line": 10,
+            "offset": 219
+          }
+        },
+        "operator": "arithmetic",
+        "outcome": "killed",
+        "replacement": "/",
+        "selection": {
+          "expectedSkipped": 0,
+          "files": [
+            "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-02-matched-scale-oximut-clean-selection/project/test/arithmetic-2.test.ts"
+          ],
+          "mode": "files",
+          "reasons": [
+            "whole-file-preserves-sequential-state-and-hooks"
+          ],
+          "selectedTests": 8,
+          "totalTests": 64
+        }
+      },
+      "src/arithmetic-2.ts:b6811d08512fefd33f0e70e9d39aa29e1266694bc3f27331b14ba3f69da8a40f": {
+        "file": "src/arithmetic-2.ts",
+        "id": "d64c82eb1aff58b2b61970935dbb11311bbf7c3c1933287d54471ed24841d03a",
+        "location": {
+          "end": {
+            "column": 17,
+            "line": 2,
+            "offset": 68
+          },
+          "start": {
+            "column": 16,
+            "line": 2,
+            "offset": 67
+          }
+        },
+        "operator": "arithmetic",
+        "outcome": "killed",
+        "replacement": "-",
+        "selection": {
+          "expectedSkipped": 0,
+          "files": [
+            "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-02-matched-scale-oximut-clean-selection/project/test/arithmetic-2.test.ts"
+          ],
+          "mode": "files",
+          "reasons": [
+            "whole-file-preserves-sequential-state-and-hooks"
+          ],
+          "selectedTests": 8,
+          "totalTests": 64
+        }
+      },
+      "src/arithmetic-2.ts:cf760ef105568b89a7583b16b2cc026b65407ac138dd5674d909c031c996eb39": {
+        "file": "src/arithmetic-2.ts",
+        "id": "339447f51dcd844a66d00763d8ea2988eb9a509332167c115c882982699a593e",
+        "location": {
+          "end": {
+            "column": 17,
+            "line": 18,
+            "offset": 372
+          },
+          "start": {
+            "column": 16,
+            "line": 18,
+            "offset": 371
+          }
+        },
+        "operator": "arithmetic",
+        "outcome": "killed",
+        "replacement": "-",
+        "selection": {
+          "expectedSkipped": 0,
+          "files": [
+            "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-02-matched-scale-oximut-clean-selection/project/test/arithmetic-2.test.ts"
+          ],
+          "mode": "files",
+          "reasons": [
+            "whole-file-preserves-sequential-state-and-hooks"
+          ],
+          "selectedTests": 8,
+          "totalTests": 64
+        }
+      },
+      "src/arithmetic-3.ts:215aa72a1418c088491b650cceb7984ee33f722fc3a0f04df6165ff111240ab8": {
+        "file": "src/arithmetic-3.ts",
+        "id": "0bb58e64ca8733e728768a33b635d1dc46944ac1f7e98e96d7a9a10112ff9a20",
+        "location": {
+          "end": {
+            "column": 17,
+            "line": 10,
+            "offset": 220
+          },
+          "start": {
+            "column": 16,
+            "line": 10,
+            "offset": 219
+          }
+        },
+        "operator": "arithmetic",
+        "outcome": "killed",
+        "replacement": "/",
+        "selection": {
+          "expectedSkipped": 0,
+          "files": [
+            "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-02-matched-scale-oximut-clean-selection/project/test/arithmetic-3.test.ts"
+          ],
+          "mode": "files",
+          "reasons": [
+            "whole-file-preserves-sequential-state-and-hooks"
+          ],
+          "selectedTests": 8,
+          "totalTests": 64
+        }
+      },
+      "src/arithmetic-3.ts:28d564fc5b02ff5f959f64aeb2a4baa7a3a3aaa90950d95bdd8c300732471d34": {
+        "file": "src/arithmetic-3.ts",
+        "id": "934987fc0a40893e5d7a7f84952a3eef0c204c818c4e673fa33a305c60bab424",
+        "location": {
+          "end": {
+            "column": 17,
+            "line": 14,
+            "offset": 296
+          },
+          "start": {
+            "column": 16,
+            "line": 14,
+            "offset": 295
+          }
+        },
+        "operator": "arithmetic",
+        "outcome": "killed",
+        "replacement": "*",
+        "selection": {
+          "expectedSkipped": 0,
+          "files": [
+            "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-02-matched-scale-oximut-clean-selection/project/test/arithmetic-3.test.ts"
+          ],
+          "mode": "files",
+          "reasons": [
+            "whole-file-preserves-sequential-state-and-hooks"
+          ],
+          "selectedTests": 8,
+          "totalTests": 64
+        }
+      },
+      "src/arithmetic-3.ts:3008230ac5ac6c4f4eebd207170cf069307a3634636f7d30da2f6330a45e3ee0": {
+        "file": "src/arithmetic-3.ts",
+        "id": "28f376231f01573349c74188a4db0ef3de00bb18c8bb4037e271d0f27c70c9a4",
+        "location": {
+          "end": {
+            "column": 17,
+            "line": 18,
+            "offset": 372
+          },
+          "start": {
+            "column": 16,
+            "line": 18,
+            "offset": 371
+          }
+        },
+        "operator": "arithmetic",
+        "outcome": "killed",
+        "replacement": "-",
+        "selection": {
+          "expectedSkipped": 0,
+          "files": [
+            "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-02-matched-scale-oximut-clean-selection/project/test/arithmetic-3.test.ts"
+          ],
+          "mode": "files",
+          "reasons": [
+            "whole-file-preserves-sequential-state-and-hooks"
+          ],
+          "selectedTests": 8,
+          "totalTests": 64
+        }
+      },
+      "src/arithmetic-3.ts:6604c90740a3b336ab572ac4c61f5b197398501298300a18676a1cb97af140a5": {
+        "file": "src/arithmetic-3.ts",
+        "id": "c788a146b01069a97ef23de4202547975d711d3a14ac227f6558b5cedc43a745",
+        "location": {
+          "end": {
+            "column": 17,
+            "line": 2,
+            "offset": 68
+          },
+          "start": {
+            "column": 16,
+            "line": 2,
+            "offset": 67
+          }
+        },
+        "operator": "arithmetic",
+        "outcome": "killed",
+        "replacement": "-",
+        "selection": {
+          "expectedSkipped": 0,
+          "files": [
+            "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-02-matched-scale-oximut-clean-selection/project/test/arithmetic-3.test.ts"
+          ],
+          "mode": "files",
+          "reasons": [
+            "whole-file-preserves-sequential-state-and-hooks"
+          ],
+          "selectedTests": 8,
+          "totalTests": 64
+        }
+      },
+      "src/arithmetic-3.ts:962112ca9da9e024dbfd70ff02f36c861a566971a35130ef277882aac7b328f3": {
+        "file": "src/arithmetic-3.ts",
+        "id": "7b9b3ed4dcc64d7afba2814705ded0afb6636d4bf680c2207f29b31492da2245",
+        "location": {
+          "end": {
+            "column": 17,
+            "line": 30,
+            "offset": 600
+          },
+          "start": {
+            "column": 16,
+            "line": 30,
+            "offset": 599
+          }
+        },
+        "operator": "arithmetic",
+        "outcome": "killed",
+        "replacement": "*",
+        "selection": {
+          "expectedSkipped": 0,
+          "files": [
+            "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-02-matched-scale-oximut-clean-selection/project/test/arithmetic-3.test.ts"
+          ],
+          "mode": "files",
+          "reasons": [
+            "whole-file-preserves-sequential-state-and-hooks"
+          ],
+          "selectedTests": 8,
+          "totalTests": 64
+        }
+      },
+      "src/arithmetic-3.ts:9f2c275c792e839aa288799b7ab0b17f8d3e01a9415df64994e68279c33c022c": {
+        "file": "src/arithmetic-3.ts",
+        "id": "9ef652b122f72549e265f1031e75cd16ad8404d6ebd28eb98ee3d9885a76ad3a",
+        "location": {
+          "end": {
+            "column": 17,
+            "line": 6,
+            "offset": 144
+          },
+          "start": {
+            "column": 16,
+            "line": 6,
+            "offset": 143
+          }
+        },
+        "operator": "arithmetic",
+        "outcome": "killed",
+        "replacement": "+",
+        "selection": {
+          "expectedSkipped": 0,
+          "files": [
+            "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-02-matched-scale-oximut-clean-selection/project/test/arithmetic-3.test.ts"
+          ],
+          "mode": "files",
+          "reasons": [
+            "whole-file-preserves-sequential-state-and-hooks"
+          ],
+          "selectedTests": 8,
+          "totalTests": 64
+        }
+      },
+      "src/arithmetic-3.ts:cf39b5037e1ac84e09009fd83ce08adb0bf274f2f2b384776536252065731e83": {
+        "file": "src/arithmetic-3.ts",
+        "id": "9b3c2b324f5fc0047aba667c7abdebfc72a21509e8ddd40da27c734341703cb5",
+        "location": {
+          "end": {
+            "column": 17,
+            "line": 26,
+            "offset": 524
+          },
+          "start": {
+            "column": 16,
+            "line": 26,
+            "offset": 523
+          }
+        },
+        "operator": "arithmetic",
+        "outcome": "killed",
+        "replacement": "/",
+        "selection": {
+          "expectedSkipped": 0,
+          "files": [
+            "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-02-matched-scale-oximut-clean-selection/project/test/arithmetic-3.test.ts"
+          ],
+          "mode": "files",
+          "reasons": [
+            "whole-file-preserves-sequential-state-and-hooks"
+          ],
+          "selectedTests": 8,
+          "totalTests": 64
+        }
+      },
+      "src/arithmetic-3.ts:dedf10eb55b3aa87bbbeeaa2fb84cdd8637e7bec6db9837ddc02e14870fd4126": {
+        "file": "src/arithmetic-3.ts",
+        "id": "18308b064ab58b0d4e55898a9b8db4084783dd80fd5ecfd9471699170b3f3efd",
+        "location": {
+          "end": {
+            "column": 17,
+            "line": 22,
+            "offset": 448
+          },
+          "start": {
+            "column": 16,
+            "line": 22,
+            "offset": 447
+          }
+        },
+        "operator": "arithmetic",
+        "outcome": "killed",
+        "replacement": "+",
+        "selection": {
+          "expectedSkipped": 0,
+          "files": [
+            "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-02-matched-scale-oximut-clean-selection/project/test/arithmetic-3.test.ts"
+          ],
+          "mode": "files",
+          "reasons": [
+            "whole-file-preserves-sequential-state-and-hooks"
+          ],
+          "selectedTests": 8,
+          "totalTests": 64
+        }
+      },
+      "src/arithmetic-4.ts:21604bf19fc8db188ee61fea6263f9415f2794705cdf16a5c81655682af331fc": {
+        "file": "src/arithmetic-4.ts",
+        "id": "71333257bd89f9a7dc7cd5ec4a1690ba442d55ec6dd31e3b79369d1af5208a57",
+        "location": {
+          "end": {
+            "column": 17,
+            "line": 22,
+            "offset": 448
+          },
+          "start": {
+            "column": 16,
+            "line": 22,
+            "offset": 447
+          }
+        },
+        "operator": "arithmetic",
+        "outcome": "killed",
+        "replacement": "+",
+        "selection": {
+          "expectedSkipped": 0,
+          "files": [
+            "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-02-matched-scale-oximut-clean-selection/project/test/arithmetic-4.test.ts"
+          ],
+          "mode": "files",
+          "reasons": [
+            "whole-file-preserves-sequential-state-and-hooks"
+          ],
+          "selectedTests": 8,
+          "totalTests": 64
+        }
+      },
+      "src/arithmetic-4.ts:5cab78a4400e1b20770f8892255b6fd0c5d2882e13610d0b55136353303145c8": {
+        "file": "src/arithmetic-4.ts",
+        "id": "20d55c8856a715a9d637b6518b00a71f9ca82f9d9e2300c3a53b223175069b78",
+        "location": {
+          "end": {
+            "column": 17,
+            "line": 30,
+            "offset": 600
+          },
+          "start": {
+            "column": 16,
+            "line": 30,
+            "offset": 599
+          }
+        },
+        "operator": "arithmetic",
+        "outcome": "killed",
+        "replacement": "*",
+        "selection": {
+          "expectedSkipped": 0,
+          "files": [
+            "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-02-matched-scale-oximut-clean-selection/project/test/arithmetic-4.test.ts"
+          ],
+          "mode": "files",
+          "reasons": [
+            "whole-file-preserves-sequential-state-and-hooks"
+          ],
+          "selectedTests": 8,
+          "totalTests": 64
+        }
+      },
+      "src/arithmetic-4.ts:663bc8b1f8086449f55ae96a22516a0ba4bf4eeadc8fc5ad74264a6351d6b13a": {
+        "file": "src/arithmetic-4.ts",
+        "id": "e92aa478c84d8598c8731debbe5f7c21950ca20fa2967174d2c152d8c20cce3c",
+        "location": {
+          "end": {
+            "column": 17,
+            "line": 10,
+            "offset": 220
+          },
+          "start": {
+            "column": 16,
+            "line": 10,
+            "offset": 219
+          }
+        },
+        "operator": "arithmetic",
+        "outcome": "killed",
+        "replacement": "/",
+        "selection": {
+          "expectedSkipped": 0,
+          "files": [
+            "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-02-matched-scale-oximut-clean-selection/project/test/arithmetic-4.test.ts"
+          ],
+          "mode": "files",
+          "reasons": [
+            "whole-file-preserves-sequential-state-and-hooks"
+          ],
+          "selectedTests": 8,
+          "totalTests": 64
+        }
+      },
+      "src/arithmetic-4.ts:6d6a15a7cf535f303354d45f021ababb58762548232cd4b02a7ca471e865eece": {
+        "file": "src/arithmetic-4.ts",
+        "id": "d9b9e79fe3f4617ec0e1637b17e11be71582a0bfe04312c294b5176536dbcc40",
+        "location": {
+          "end": {
+            "column": 17,
+            "line": 18,
+            "offset": 372
+          },
+          "start": {
+            "column": 16,
+            "line": 18,
+            "offset": 371
+          }
+        },
+        "operator": "arithmetic",
+        "outcome": "killed",
+        "replacement": "-",
+        "selection": {
+          "expectedSkipped": 0,
+          "files": [
+            "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-02-matched-scale-oximut-clean-selection/project/test/arithmetic-4.test.ts"
+          ],
+          "mode": "files",
+          "reasons": [
+            "whole-file-preserves-sequential-state-and-hooks"
+          ],
+          "selectedTests": 8,
+          "totalTests": 64
+        }
+      },
+      "src/arithmetic-4.ts:7e7c53ddab9b1a2acb0518baa510f985f47831abdb09547dc1d10f55a8e8f7df": {
+        "file": "src/arithmetic-4.ts",
+        "id": "e232e307be4341fa22c5f595b2239c05e47e3e52d9211745f5fb8872649c43be",
+        "location": {
+          "end": {
+            "column": 17,
+            "line": 14,
+            "offset": 296
+          },
+          "start": {
+            "column": 16,
+            "line": 14,
+            "offset": 295
+          }
+        },
+        "operator": "arithmetic",
+        "outcome": "killed",
+        "replacement": "*",
+        "selection": {
+          "expectedSkipped": 0,
+          "files": [
+            "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-02-matched-scale-oximut-clean-selection/project/test/arithmetic-4.test.ts"
+          ],
+          "mode": "files",
+          "reasons": [
+            "whole-file-preserves-sequential-state-and-hooks"
+          ],
+          "selectedTests": 8,
+          "totalTests": 64
+        }
+      },
+      "src/arithmetic-4.ts:9f22be8f3c271594adc9cd7aaf30509ee40a7265cbb779472d6f4e262053f6ae": {
+        "file": "src/arithmetic-4.ts",
+        "id": "d3af601d536c2c045c7fe64037ed70310513d457d0411813fcafb244db943659",
+        "location": {
+          "end": {
+            "column": 17,
+            "line": 26,
+            "offset": 524
+          },
+          "start": {
+            "column": 16,
+            "line": 26,
+            "offset": 523
+          }
+        },
+        "operator": "arithmetic",
+        "outcome": "killed",
+        "replacement": "/",
+        "selection": {
+          "expectedSkipped": 0,
+          "files": [
+            "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-02-matched-scale-oximut-clean-selection/project/test/arithmetic-4.test.ts"
+          ],
+          "mode": "files",
+          "reasons": [
+            "whole-file-preserves-sequential-state-and-hooks"
+          ],
+          "selectedTests": 8,
+          "totalTests": 64
+        }
+      },
+      "src/arithmetic-4.ts:dbfd4ba051649076939898d05d3c7def3385907eaf43f5f1000fa392a3a83a42": {
+        "file": "src/arithmetic-4.ts",
+        "id": "6dbd60062b680ea8f5bd7e211c701be08423f8cbd3c89eed2a2077aba6958d19",
+        "location": {
+          "end": {
+            "column": 17,
+            "line": 6,
+            "offset": 144
+          },
+          "start": {
+            "column": 16,
+            "line": 6,
+            "offset": 143
+          }
+        },
+        "operator": "arithmetic",
+        "outcome": "killed",
+        "replacement": "+",
+        "selection": {
+          "expectedSkipped": 0,
+          "files": [
+            "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-02-matched-scale-oximut-clean-selection/project/test/arithmetic-4.test.ts"
+          ],
+          "mode": "files",
+          "reasons": [
+            "whole-file-preserves-sequential-state-and-hooks"
+          ],
+          "selectedTests": 8,
+          "totalTests": 64
+        }
+      },
+      "src/arithmetic-4.ts:e6ff61af7c655253b6d565f7977910abf01c5aeb03a97ea251b1f9d3612e9db6": {
+        "file": "src/arithmetic-4.ts",
+        "id": "937610a4446c8a3752186c181bddf62347f49928d2210f95b5243b4358af4123",
+        "location": {
+          "end": {
+            "column": 17,
+            "line": 2,
+            "offset": 68
+          },
+          "start": {
+            "column": 16,
+            "line": 2,
+            "offset": 67
+          }
+        },
+        "operator": "arithmetic",
+        "outcome": "killed",
+        "replacement": "-",
+        "selection": {
+          "expectedSkipped": 0,
+          "files": [
+            "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-02-matched-scale-oximut-clean-selection/project/test/arithmetic-4.test.ts"
+          ],
+          "mode": "files",
+          "reasons": [
+            "whole-file-preserves-sequential-state-and-hooks"
+          ],
+          "selectedTests": 8,
+          "totalTests": 64
+        }
+      },
+      "src/arithmetic-5.ts:189650a6b4d233fbfd9edc8c9cf9550795637cbbced6a7781406b9bb0e783853": {
+        "file": "src/arithmetic-5.ts",
+        "id": "5d3dfadaa8cad2494a3b1d927f6bb19cb7d1e7381ef174de636b31d39f22e282",
+        "location": {
+          "end": {
+            "column": 17,
+            "line": 30,
+            "offset": 600
+          },
+          "start": {
+            "column": 16,
+            "line": 30,
+            "offset": 599
+          }
+        },
+        "operator": "arithmetic",
+        "outcome": "killed",
+        "replacement": "*",
+        "selection": {
+          "expectedSkipped": 0,
+          "files": [
+            "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-02-matched-scale-oximut-clean-selection/project/test/arithmetic-5.test.ts"
+          ],
+          "mode": "files",
+          "reasons": [
+            "whole-file-preserves-sequential-state-and-hooks"
+          ],
+          "selectedTests": 8,
+          "totalTests": 64
+        }
+      },
+      "src/arithmetic-5.ts:3ad846b6ca17ba93ff120385558108287c27a0e1ae1d49239828a8f78b356391": {
+        "file": "src/arithmetic-5.ts",
+        "id": "2cddfe21116e6935cb8e699ee0cfa2e82507de466625708b9a9af6d396cc497f",
+        "location": {
+          "end": {
+            "column": 17,
+            "line": 14,
+            "offset": 296
+          },
+          "start": {
+            "column": 16,
+            "line": 14,
+            "offset": 295
+          }
+        },
+        "operator": "arithmetic",
+        "outcome": "killed",
+        "replacement": "*",
+        "selection": {
+          "expectedSkipped": 0,
+          "files": [
+            "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-02-matched-scale-oximut-clean-selection/project/test/arithmetic-5.test.ts"
+          ],
+          "mode": "files",
+          "reasons": [
+            "whole-file-preserves-sequential-state-and-hooks"
+          ],
+          "selectedTests": 8,
+          "totalTests": 64
+        }
+      },
+      "src/arithmetic-5.ts:5e4cd8e84b048fd49d3d6f409f0fac714f48753be2261761c7a43eaa8ea41174": {
+        "file": "src/arithmetic-5.ts",
+        "id": "ea3597690c512c0b23c62e9df8a0a26336503c7266409c76f232722b5c18bc62",
+        "location": {
+          "end": {
+            "column": 17,
+            "line": 10,
+            "offset": 220
+          },
+          "start": {
+            "column": 16,
+            "line": 10,
+            "offset": 219
+          }
+        },
+        "operator": "arithmetic",
+        "outcome": "killed",
+        "replacement": "/",
+        "selection": {
+          "expectedSkipped": 0,
+          "files": [
+            "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-02-matched-scale-oximut-clean-selection/project/test/arithmetic-5.test.ts"
+          ],
+          "mode": "files",
+          "reasons": [
+            "whole-file-preserves-sequential-state-and-hooks"
+          ],
+          "selectedTests": 8,
+          "totalTests": 64
+        }
+      },
+      "src/arithmetic-5.ts:5f03924a2f3823d1fdb27d9ed3f4df93418d9df94c42a5c2f0dacae20870e486": {
+        "file": "src/arithmetic-5.ts",
+        "id": "781a7cadaacc514a612ae00f1392e597cb34e59eb9bc8ccad0979352ac2e6b24",
+        "location": {
+          "end": {
+            "column": 17,
+            "line": 6,
+            "offset": 144
+          },
+          "start": {
+            "column": 16,
+            "line": 6,
+            "offset": 143
+          }
+        },
+        "operator": "arithmetic",
+        "outcome": "killed",
+        "replacement": "+",
+        "selection": {
+          "expectedSkipped": 0,
+          "files": [
+            "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-02-matched-scale-oximut-clean-selection/project/test/arithmetic-5.test.ts"
+          ],
+          "mode": "files",
+          "reasons": [
+            "whole-file-preserves-sequential-state-and-hooks"
+          ],
+          "selectedTests": 8,
+          "totalTests": 64
+        }
+      },
+      "src/arithmetic-5.ts:9003ab72f9ffe52738a72d8dbf6c7ab51ee30994892af4fabdb82dd74b4ba5b8": {
+        "file": "src/arithmetic-5.ts",
+        "id": "6decdb2102ce3f4fa002935bd4df1c0e5e1fd82ca4bbf49a1baca655c408cb27",
+        "location": {
+          "end": {
+            "column": 17,
+            "line": 18,
+            "offset": 372
+          },
+          "start": {
+            "column": 16,
+            "line": 18,
+            "offset": 371
+          }
+        },
+        "operator": "arithmetic",
+        "outcome": "killed",
+        "replacement": "-",
+        "selection": {
+          "expectedSkipped": 0,
+          "files": [
+            "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-02-matched-scale-oximut-clean-selection/project/test/arithmetic-5.test.ts"
+          ],
+          "mode": "files",
+          "reasons": [
+            "whole-file-preserves-sequential-state-and-hooks"
+          ],
+          "selectedTests": 8,
+          "totalTests": 64
+        }
+      },
+      "src/arithmetic-5.ts:b7849819c74dd8467a0f4387cf92e2ff66cae78ce4f152834db96c44890176cf": {
+        "file": "src/arithmetic-5.ts",
+        "id": "161125390f79207279ee35e91ab49e5ece03fd07901c466ca84bfbc1cbd62a47",
+        "location": {
+          "end": {
+            "column": 17,
+            "line": 2,
+            "offset": 68
+          },
+          "start": {
+            "column": 16,
+            "line": 2,
+            "offset": 67
+          }
+        },
+        "operator": "arithmetic",
+        "outcome": "killed",
+        "replacement": "-",
+        "selection": {
+          "expectedSkipped": 0,
+          "files": [
+            "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-02-matched-scale-oximut-clean-selection/project/test/arithmetic-5.test.ts"
+          ],
+          "mode": "files",
+          "reasons": [
+            "whole-file-preserves-sequential-state-and-hooks"
+          ],
+          "selectedTests": 8,
+          "totalTests": 64
+        }
+      },
+      "src/arithmetic-5.ts:c0f543ea8dce77377b55ee9d166ec13f44bae928d4d828895647d2e7a0963364": {
+        "file": "src/arithmetic-5.ts",
+        "id": "9342f8a6bdfd0926537c90c323ad3798cc066f4dcc23236f243223c28b899bdb",
+        "location": {
+          "end": {
+            "column": 17,
+            "line": 26,
+            "offset": 524
+          },
+          "start": {
+            "column": 16,
+            "line": 26,
+            "offset": 523
+          }
+        },
+        "operator": "arithmetic",
+        "outcome": "killed",
+        "replacement": "/",
+        "selection": {
+          "expectedSkipped": 0,
+          "files": [
+            "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-02-matched-scale-oximut-clean-selection/project/test/arithmetic-5.test.ts"
+          ],
+          "mode": "files",
+          "reasons": [
+            "whole-file-preserves-sequential-state-and-hooks"
+          ],
+          "selectedTests": 8,
+          "totalTests": 64
+        }
+      },
+      "src/arithmetic-5.ts:f37d95b3326b1576630cf5967e3a6e8ae0c0aea083728d2fbf435610aff51fdf": {
+        "file": "src/arithmetic-5.ts",
+        "id": "fff937ef5106c639c9d1d4acfd9ba2fd3dbfa8c0372b7927d2d0426977458e95",
+        "location": {
+          "end": {
+            "column": 17,
+            "line": 22,
+            "offset": 448
+          },
+          "start": {
+            "column": 16,
+            "line": 22,
+            "offset": 447
+          }
+        },
+        "operator": "arithmetic",
+        "outcome": "killed",
+        "replacement": "+",
+        "selection": {
+          "expectedSkipped": 0,
+          "files": [
+            "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-02-matched-scale-oximut-clean-selection/project/test/arithmetic-5.test.ts"
+          ],
+          "mode": "files",
+          "reasons": [
+            "whole-file-preserves-sequential-state-and-hooks"
+          ],
+          "selectedTests": 8,
+          "totalTests": 64
+        }
+      },
+      "src/arithmetic-6.ts:0cdc9c690ae73beb2d8b23c33a1d82d0c4265b0fb96ddda6e2e54083609bff12": {
+        "file": "src/arithmetic-6.ts",
+        "id": "258d2b786aa8401977cfb76ae5eabd3b0087ae6acdfbb7145f35b3458adc5063",
+        "location": {
+          "end": {
+            "column": 17,
+            "line": 30,
+            "offset": 600
+          },
+          "start": {
+            "column": 16,
+            "line": 30,
+            "offset": 599
+          }
+        },
+        "operator": "arithmetic",
+        "outcome": "killed",
+        "replacement": "*",
+        "selection": {
+          "expectedSkipped": 0,
+          "files": [
+            "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-02-matched-scale-oximut-clean-selection/project/test/arithmetic-6.test.ts"
+          ],
+          "mode": "files",
+          "reasons": [
+            "whole-file-preserves-sequential-state-and-hooks"
+          ],
+          "selectedTests": 8,
+          "totalTests": 64
+        }
+      },
+      "src/arithmetic-6.ts:15c12e5f72a40e9e21a6c036fdfb72a78ea4e5dc32b39bea911eacec52e179f2": {
+        "file": "src/arithmetic-6.ts",
+        "id": "58d659fcd554ad1003f4a8c477d4c39ce7bb7f1c556fea8e485f37cf4ce2eb1e",
+        "location": {
+          "end": {
+            "column": 17,
+            "line": 14,
+            "offset": 296
+          },
+          "start": {
+            "column": 16,
+            "line": 14,
+            "offset": 295
+          }
+        },
+        "operator": "arithmetic",
+        "outcome": "killed",
+        "replacement": "*",
+        "selection": {
+          "expectedSkipped": 0,
+          "files": [
+            "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-02-matched-scale-oximut-clean-selection/project/test/arithmetic-6.test.ts"
+          ],
+          "mode": "files",
+          "reasons": [
+            "whole-file-preserves-sequential-state-and-hooks"
+          ],
+          "selectedTests": 8,
+          "totalTests": 64
+        }
+      },
+      "src/arithmetic-6.ts:2b98be31ba3e2cf1550bcca2c6e071df0a5807648c9f10c48dfc59d489547425": {
+        "file": "src/arithmetic-6.ts",
+        "id": "005eb9ea7ffc16af1a937bf267bfb0b87c2dfbcd0989b17f36a6a9b29d97abb4",
+        "location": {
+          "end": {
+            "column": 17,
+            "line": 6,
+            "offset": 144
+          },
+          "start": {
+            "column": 16,
+            "line": 6,
+            "offset": 143
+          }
+        },
+        "operator": "arithmetic",
+        "outcome": "killed",
+        "replacement": "+",
+        "selection": {
+          "expectedSkipped": 0,
+          "files": [
+            "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-02-matched-scale-oximut-clean-selection/project/test/arithmetic-6.test.ts"
+          ],
+          "mode": "files",
+          "reasons": [
+            "whole-file-preserves-sequential-state-and-hooks"
+          ],
+          "selectedTests": 8,
+          "totalTests": 64
+        }
+      },
+      "src/arithmetic-6.ts:3a081d5713df99d2c8c4a348a6498f4993e8a51430f777864386953987838f2b": {
+        "file": "src/arithmetic-6.ts",
+        "id": "284bcd276e2200d7651f3c6664ce793c0840ec455dbfa708d9525047768dd7dd",
+        "location": {
+          "end": {
+            "column": 17,
+            "line": 2,
+            "offset": 68
+          },
+          "start": {
+            "column": 16,
+            "line": 2,
+            "offset": 67
+          }
+        },
+        "operator": "arithmetic",
+        "outcome": "killed",
+        "replacement": "-",
+        "selection": {
+          "expectedSkipped": 0,
+          "files": [
+            "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-02-matched-scale-oximut-clean-selection/project/test/arithmetic-6.test.ts"
+          ],
+          "mode": "files",
+          "reasons": [
+            "whole-file-preserves-sequential-state-and-hooks"
+          ],
+          "selectedTests": 8,
+          "totalTests": 64
+        }
+      },
+      "src/arithmetic-6.ts:454424e8b99d8b197a6586e3efecbb01a9e6efa7d41d7637a896eefac572d78f": {
+        "file": "src/arithmetic-6.ts",
+        "id": "27ea1cbc9d7f0c177090686f82cd0b66d043c34c9ae1ab165996eb1927d511c0",
+        "location": {
+          "end": {
+            "column": 17,
+            "line": 18,
+            "offset": 372
+          },
+          "start": {
+            "column": 16,
+            "line": 18,
+            "offset": 371
+          }
+        },
+        "operator": "arithmetic",
+        "outcome": "killed",
+        "replacement": "-",
+        "selection": {
+          "expectedSkipped": 0,
+          "files": [
+            "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-02-matched-scale-oximut-clean-selection/project/test/arithmetic-6.test.ts"
+          ],
+          "mode": "files",
+          "reasons": [
+            "whole-file-preserves-sequential-state-and-hooks"
+          ],
+          "selectedTests": 8,
+          "totalTests": 64
+        }
+      },
+      "src/arithmetic-6.ts:4e5ddfd78b1a02e0c7a56ff652666a8842ae34a28242c1c5fcd62a8302b53f75": {
+        "file": "src/arithmetic-6.ts",
+        "id": "e082e169fc7cf1fefc75edb9bf669223cfd1f9ad554a3bc7969141eef6dc1cb6",
+        "location": {
+          "end": {
+            "column": 17,
+            "line": 26,
+            "offset": 524
+          },
+          "start": {
+            "column": 16,
+            "line": 26,
+            "offset": 523
+          }
+        },
+        "operator": "arithmetic",
+        "outcome": "killed",
+        "replacement": "/",
+        "selection": {
+          "expectedSkipped": 0,
+          "files": [
+            "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-02-matched-scale-oximut-clean-selection/project/test/arithmetic-6.test.ts"
+          ],
+          "mode": "files",
+          "reasons": [
+            "whole-file-preserves-sequential-state-and-hooks"
+          ],
+          "selectedTests": 8,
+          "totalTests": 64
+        }
+      },
+      "src/arithmetic-6.ts:f0b9cca9e35d77f2525c8e218743696dfe718bdd6a07388276cea1d1bb086d39": {
+        "file": "src/arithmetic-6.ts",
+        "id": "7519b5955171402d1a8edfbd69023855689699ebe071b97438bc67ce1f97e3e7",
+        "location": {
+          "end": {
+            "column": 17,
+            "line": 10,
+            "offset": 220
+          },
+          "start": {
+            "column": 16,
+            "line": 10,
+            "offset": 219
+          }
+        },
+        "operator": "arithmetic",
+        "outcome": "killed",
+        "replacement": "/",
+        "selection": {
+          "expectedSkipped": 0,
+          "files": [
+            "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-02-matched-scale-oximut-clean-selection/project/test/arithmetic-6.test.ts"
+          ],
+          "mode": "files",
+          "reasons": [
+            "whole-file-preserves-sequential-state-and-hooks"
+          ],
+          "selectedTests": 8,
+          "totalTests": 64
+        }
+      },
+      "src/arithmetic-6.ts:fef0a7a641e518f2648255554c1bc36b9fdd8f13e884b6cc290731dd0a5b9f73": {
+        "file": "src/arithmetic-6.ts",
+        "id": "6fc6f1e50bc7758ddc77ec9cba98d6890f0c79c8822a033d4adbeb487405cf84",
+        "location": {
+          "end": {
+            "column": 17,
+            "line": 22,
+            "offset": 448
+          },
+          "start": {
+            "column": 16,
+            "line": 22,
+            "offset": 447
+          }
+        },
+        "operator": "arithmetic",
+        "outcome": "killed",
+        "replacement": "+",
+        "selection": {
+          "expectedSkipped": 0,
+          "files": [
+            "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-02-matched-scale-oximut-clean-selection/project/test/arithmetic-6.test.ts"
+          ],
+          "mode": "files",
+          "reasons": [
+            "whole-file-preserves-sequential-state-and-hooks"
+          ],
+          "selectedTests": 8,
+          "totalTests": 64
+        }
+      },
+      "src/arithmetic-7.ts:5fa13b31f9b6756a4f14a975976fc8099bb8973eff1f282ac79a48f9d8bb0d41": {
+        "file": "src/arithmetic-7.ts",
+        "id": "d7b1dab91a4a689f2a0ae60af61f5e2cc4ae7c8a6e43404f80b6ae4fbb561e5d",
+        "location": {
+          "end": {
+            "column": 17,
+            "line": 6,
+            "offset": 144
+          },
+          "start": {
+            "column": 16,
+            "line": 6,
+            "offset": 143
+          }
+        },
+        "operator": "arithmetic",
+        "outcome": "killed",
+        "replacement": "+",
+        "selection": {
+          "expectedSkipped": 0,
+          "files": [
+            "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-02-matched-scale-oximut-clean-selection/project/test/arithmetic-7.test.ts"
+          ],
+          "mode": "files",
+          "reasons": [
+            "whole-file-preserves-sequential-state-and-hooks"
+          ],
+          "selectedTests": 8,
+          "totalTests": 64
+        }
+      },
+      "src/arithmetic-7.ts:709a33d41168cb348c3ee67635b0d6ca5e19ab5baca2f2d76e400254f32096fc": {
+        "file": "src/arithmetic-7.ts",
+        "id": "80e12edd15e5b8af79a8ffc277f6b2ee8aa456e880de4c7b94d4f274546feb89",
+        "location": {
+          "end": {
+            "column": 17,
+            "line": 30,
+            "offset": 600
+          },
+          "start": {
+            "column": 16,
+            "line": 30,
+            "offset": 599
+          }
+        },
+        "operator": "arithmetic",
+        "outcome": "killed",
+        "replacement": "*",
+        "selection": {
+          "expectedSkipped": 0,
+          "files": [
+            "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-02-matched-scale-oximut-clean-selection/project/test/arithmetic-7.test.ts"
+          ],
+          "mode": "files",
+          "reasons": [
+            "whole-file-preserves-sequential-state-and-hooks"
+          ],
+          "selectedTests": 8,
+          "totalTests": 64
+        }
+      },
+      "src/arithmetic-7.ts:86dc212628d613109a8e756e6b9d5d2d5f7ed06545a6db150a1c1aaa2b1f7cf2": {
+        "file": "src/arithmetic-7.ts",
+        "id": "fa58c889a15b553ae01c6c1478cf98635e1f9116b12d800343a30a19decbbaf6",
+        "location": {
+          "end": {
+            "column": 17,
+            "line": 26,
+            "offset": 524
+          },
+          "start": {
+            "column": 16,
+            "line": 26,
+            "offset": 523
+          }
+        },
+        "operator": "arithmetic",
+        "outcome": "killed",
+        "replacement": "/",
+        "selection": {
+          "expectedSkipped": 0,
+          "files": [
+            "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-02-matched-scale-oximut-clean-selection/project/test/arithmetic-7.test.ts"
+          ],
+          "mode": "files",
+          "reasons": [
+            "whole-file-preserves-sequential-state-and-hooks"
+          ],
+          "selectedTests": 8,
+          "totalTests": 64
+        }
+      },
+      "src/arithmetic-7.ts:9e5ae845c89abcd230c6f9a3d60e626fefd63f38a5cb55b17871df6e101ba0df": {
+        "file": "src/arithmetic-7.ts",
+        "id": "78b07836a084443b2d59b7b9a5a5f8110b418303a3c90356e7edfa6edbd93f44",
+        "location": {
+          "end": {
+            "column": 17,
+            "line": 14,
+            "offset": 296
+          },
+          "start": {
+            "column": 16,
+            "line": 14,
+            "offset": 295
+          }
+        },
+        "operator": "arithmetic",
+        "outcome": "killed",
+        "replacement": "*",
+        "selection": {
+          "expectedSkipped": 0,
+          "files": [
+            "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-02-matched-scale-oximut-clean-selection/project/test/arithmetic-7.test.ts"
+          ],
+          "mode": "files",
+          "reasons": [
+            "whole-file-preserves-sequential-state-and-hooks"
+          ],
+          "selectedTests": 8,
+          "totalTests": 64
+        }
+      },
+      "src/arithmetic-7.ts:a32965f96531eb5a7e2e7514e802cc53350fb79813c7556a2938dbf6ccc72f6d": {
+        "file": "src/arithmetic-7.ts",
+        "id": "b63083b51b0c61e46b4c6ca069936791df410af595f0f110d5f45de82b9be887",
+        "location": {
+          "end": {
+            "column": 17,
+            "line": 2,
+            "offset": 68
+          },
+          "start": {
+            "column": 16,
+            "line": 2,
+            "offset": 67
+          }
+        },
+        "operator": "arithmetic",
+        "outcome": "killed",
+        "replacement": "-",
+        "selection": {
+          "expectedSkipped": 0,
+          "files": [
+            "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-02-matched-scale-oximut-clean-selection/project/test/arithmetic-7.test.ts"
+          ],
+          "mode": "files",
+          "reasons": [
+            "whole-file-preserves-sequential-state-and-hooks"
+          ],
+          "selectedTests": 8,
+          "totalTests": 64
+        }
+      },
+      "src/arithmetic-7.ts:a6af620d652cc808cadcff02a32bf367726a320dcc0c5a10cda1022600230b93": {
+        "file": "src/arithmetic-7.ts",
+        "id": "0fc6f48f9715b1c161ae088e88798e2642fb509bbe94d8501d2f48c9b45a89ee",
+        "location": {
+          "end": {
+            "column": 17,
+            "line": 22,
+            "offset": 448
+          },
+          "start": {
+            "column": 16,
+            "line": 22,
+            "offset": 447
+          }
+        },
+        "operator": "arithmetic",
+        "outcome": "killed",
+        "replacement": "+",
+        "selection": {
+          "expectedSkipped": 0,
+          "files": [
+            "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-02-matched-scale-oximut-clean-selection/project/test/arithmetic-7.test.ts"
+          ],
+          "mode": "files",
+          "reasons": [
+            "whole-file-preserves-sequential-state-and-hooks"
+          ],
+          "selectedTests": 8,
+          "totalTests": 64
+        }
+      },
+      "src/arithmetic-7.ts:bb9e068fc260661aa72add4614436ec3342ec612634cd34789af4f0243b3cd7d": {
+        "file": "src/arithmetic-7.ts",
+        "id": "c36738c2434338e6d80ab416ebf678bdad4e3be3a3a7578cdc9d9d47b08cbdb8",
+        "location": {
+          "end": {
+            "column": 17,
+            "line": 18,
+            "offset": 372
+          },
+          "start": {
+            "column": 16,
+            "line": 18,
+            "offset": 371
+          }
+        },
+        "operator": "arithmetic",
+        "outcome": "killed",
+        "replacement": "-",
+        "selection": {
+          "expectedSkipped": 0,
+          "files": [
+            "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-02-matched-scale-oximut-clean-selection/project/test/arithmetic-7.test.ts"
+          ],
+          "mode": "files",
+          "reasons": [
+            "whole-file-preserves-sequential-state-and-hooks"
+          ],
+          "selectedTests": 8,
+          "totalTests": 64
+        }
+      },
+      "src/arithmetic-7.ts:dbe5adacf8fbb900db11cf75d5b8fa9409878eb357a5bb5b3aea8b2fa14a4b66": {
+        "file": "src/arithmetic-7.ts",
+        "id": "2626af7777b9fc3331421c4e6ab2e469095023aa1286d89fda87b8f0da430cb6",
+        "location": {
+          "end": {
+            "column": 17,
+            "line": 10,
+            "offset": 220
+          },
+          "start": {
+            "column": 16,
+            "line": 10,
+            "offset": 219
+          }
+        },
+        "operator": "arithmetic",
+        "outcome": "killed",
+        "replacement": "/",
+        "selection": {
+          "expectedSkipped": 0,
+          "files": [
+            "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-02-matched-scale-oximut-clean-selection/project/test/arithmetic-7.test.ts"
+          ],
+          "mode": "files",
+          "reasons": [
+            "whole-file-preserves-sequential-state-and-hooks"
+          ],
+          "selectedTests": 8,
+          "totalTests": 64
+        }
+      }
+    },
+    "right_run": "measured-02-matched-scale-oximut-clean-selection",
+    "round_index": 2,
+    "shared": [],
+    "shared_classifications_agree": false,
+    "shared_count": 0
+  },
+  {
+    "equal_mutation_scope": false,
+    "explained_no_coverage_refinements": [],
+    "fixture": "matched-scale",
+    "kind": "cross-tool",
+    "left_count": 0,
+    "left_only": {},
+    "left_run": "measured-02-matched-scale-oximut-clean-fresh",
+    "mismatches": [],
+    "ratio_eligible": false,
+    "right_count": 64,
+    "right_only": {
+      "src/arithmetic-0.ts:0bb63f17da1dd236b01338caabde3f8cc767295c8ce125b989122f59513cb1e1": {
+        "file": "src/arithmetic-0.ts",
+        "id": "15",
+        "location": {
+          "end": {
+            "column": 19,
+            "line": 30
+          },
+          "start": {
+            "column": 10,
+            "line": 30
+          }
+        },
+        "operator": "ArithmeticOperator",
+        "outcome": "killed",
+        "replacement": "value * 8",
+        "selection": null
+      },
+      "src/arithmetic-0.ts:4e8a255c26188ab501b83c6af904e9dac6e987d72a47f23c6f551d6037007ed3": {
+        "file": "src/arithmetic-0.ts",
+        "id": "5",
+        "location": {
+          "end": {
+            "column": 19,
+            "line": 10
+          },
+          "start": {
+            "column": 10,
+            "line": 10
+          }
+        },
+        "operator": "ArithmeticOperator",
+        "outcome": "killed",
+        "replacement": "value / 7",
+        "selection": null
+      },
+      "src/arithmetic-0.ts:6700b3f61d697676383dad2c4395f347b295e1bd99e9df3d0daf90600d257e49": {
+        "file": "src/arithmetic-0.ts",
+        "id": "3",
+        "location": {
+          "end": {
+            "column": 19,
+            "line": 6
+          },
+          "start": {
+            "column": 10,
+            "line": 6
+          }
+        },
+        "operator": "ArithmeticOperator",
+        "outcome": "killed",
+        "replacement": "value + 7",
+        "selection": null
+      },
+      "src/arithmetic-0.ts:6fe07c06b3d0e085507d88e6d87547264b11c09b7ab4b756c71890e9dbfc31ce": {
+        "file": "src/arithmetic-0.ts",
+        "id": "7",
+        "location": {
+          "end": {
+            "column": 19,
+            "line": 14
+          },
+          "start": {
+            "column": 10,
+            "line": 14
+          }
+        },
+        "operator": "ArithmeticOperator",
+        "outcome": "killed",
+        "replacement": "value * 7",
+        "selection": null
+      },
+      "src/arithmetic-0.ts:9c0452ef08e78cc2cec2b552f6ef1def6849a9f8eb5d703ae5bf70df1a6aef26": {
+        "file": "src/arithmetic-0.ts",
+        "id": "9",
+        "location": {
+          "end": {
+            "column": 19,
+            "line": 18
+          },
+          "start": {
+            "column": 10,
+            "line": 18
+          }
+        },
+        "operator": "ArithmeticOperator",
+        "outcome": "killed",
+        "replacement": "value - 8",
+        "selection": null
+      },
+      "src/arithmetic-0.ts:bf77d9fdd48beef089bb33024c367cebc07321bc7b1e5d9338bf3db474a29876": {
+        "file": "src/arithmetic-0.ts",
+        "id": "11",
+        "location": {
+          "end": {
+            "column": 19,
+            "line": 22
+          },
+          "start": {
+            "column": 10,
+            "line": 22
+          }
+        },
+        "operator": "ArithmeticOperator",
+        "outcome": "killed",
+        "replacement": "value + 8",
+        "selection": null
+      },
+      "src/arithmetic-0.ts:daaed3439168d1cbf76e8d93dee9ed35abe2ca2e57679989036c9acab38136d7": {
+        "file": "src/arithmetic-0.ts",
+        "id": "13",
+        "location": {
+          "end": {
+            "column": 19,
+            "line": 26
+          },
+          "start": {
+            "column": 10,
+            "line": 26
+          }
+        },
+        "operator": "ArithmeticOperator",
+        "outcome": "killed",
+        "replacement": "value / 8",
+        "selection": null
+      },
+      "src/arithmetic-0.ts:e00212e8e3cf9dee7cadd53205a9c4af87eb74fd44975cf1827761b7f4c4b214": {
+        "file": "src/arithmetic-0.ts",
+        "id": "1",
+        "location": {
+          "end": {
+            "column": 19,
+            "line": 2
+          },
+          "start": {
+            "column": 10,
+            "line": 2
+          }
+        },
+        "operator": "ArithmeticOperator",
+        "outcome": "killed",
+        "replacement": "value - 7",
+        "selection": null
+      },
+      "src/arithmetic-1.ts:11fbdbff4022e8f2713cf8bdb45eca8c387318fbedc7a645bf8eba017afce66a": {
+        "file": "src/arithmetic-1.ts",
+        "id": "19",
+        "location": {
+          "end": {
+            "column": 20,
+            "line": 6
+          },
+          "start": {
+            "column": 10,
+            "line": 6
+          }
+        },
+        "operator": "ArithmeticOperator",
+        "outcome": "killed",
+        "replacement": "value + 15",
+        "selection": null
+      },
+      "src/arithmetic-1.ts:1c2c9364d1e6ee4feada808d64e2b42795eb286976576c1fa988416c64633f27": {
+        "file": "src/arithmetic-1.ts",
+        "id": "25",
+        "location": {
+          "end": {
+            "column": 20,
+            "line": 18
+          },
+          "start": {
+            "column": 10,
+            "line": 18
+          }
+        },
+        "operator": "ArithmeticOperator",
+        "outcome": "killed",
+        "replacement": "value - 16",
+        "selection": null
+      },
+      "src/arithmetic-1.ts:4094c599c99a744438bd1f9b20f730d339f04d3f6e8dd447bbe921e989b9b479": {
+        "file": "src/arithmetic-1.ts",
+        "id": "31",
+        "location": {
+          "end": {
+            "column": 20,
+            "line": 30
+          },
+          "start": {
+            "column": 10,
+            "line": 30
+          }
+        },
+        "operator": "ArithmeticOperator",
+        "outcome": "killed",
+        "replacement": "value * 16",
+        "selection": null
+      },
+      "src/arithmetic-1.ts:45033d379301bdc4da1f4074eafb5aa69395c2d968d10ad66c2758d89dbe2610": {
+        "file": "src/arithmetic-1.ts",
+        "id": "17",
+        "location": {
+          "end": {
+            "column": 20,
+            "line": 2
+          },
+          "start": {
+            "column": 10,
+            "line": 2
+          }
+        },
+        "operator": "ArithmeticOperator",
+        "outcome": "killed",
+        "replacement": "value - 15",
+        "selection": null
+      },
+      "src/arithmetic-1.ts:73909d8d79c080aa32842ec804fc44dad404594a65d16d0d7122b3b2136365b6": {
+        "file": "src/arithmetic-1.ts",
+        "id": "23",
+        "location": {
+          "end": {
+            "column": 20,
+            "line": 14
+          },
+          "start": {
+            "column": 10,
+            "line": 14
+          }
+        },
+        "operator": "ArithmeticOperator",
+        "outcome": "killed",
+        "replacement": "value * 15",
+        "selection": null
+      },
+      "src/arithmetic-1.ts:8026913c32f804dface12c352e6d4a9fb7bb61b66d66889b8e11f92a0ace16c6": {
+        "file": "src/arithmetic-1.ts",
+        "id": "29",
+        "location": {
+          "end": {
+            "column": 20,
+            "line": 26
+          },
+          "start": {
+            "column": 10,
+            "line": 26
+          }
+        },
+        "operator": "ArithmeticOperator",
+        "outcome": "killed",
+        "replacement": "value / 16",
+        "selection": null
+      },
+      "src/arithmetic-1.ts:bb4b9d15172445147c4c71424bbc5b6d0843aeeed9d94f9bb36db5923ee7613e": {
+        "file": "src/arithmetic-1.ts",
+        "id": "27",
+        "location": {
+          "end": {
+            "column": 20,
+            "line": 22
+          },
+          "start": {
+            "column": 10,
+            "line": 22
+          }
+        },
+        "operator": "ArithmeticOperator",
+        "outcome": "killed",
+        "replacement": "value + 16",
+        "selection": null
+      },
+      "src/arithmetic-1.ts:feb7fc3c7334528679c850dac15eaad6d3a2545ecc08336719ca491bf35b1b35": {
+        "file": "src/arithmetic-1.ts",
+        "id": "21",
+        "location": {
+          "end": {
+            "column": 20,
+            "line": 10
+          },
+          "start": {
+            "column": 10,
+            "line": 10
+          }
+        },
+        "operator": "ArithmeticOperator",
+        "outcome": "killed",
+        "replacement": "value / 15",
+        "selection": null
+      },
+      "src/arithmetic-2.ts:2a4fe83dd41363804742859c73c5992b3b69d7880c96675254be1244b65e6ed6": {
+        "file": "src/arithmetic-2.ts",
+        "id": "43",
+        "location": {
+          "end": {
+            "column": 20,
+            "line": 22
+          },
+          "start": {
+            "column": 10,
+            "line": 22
+          }
+        },
+        "operator": "ArithmeticOperator",
+        "outcome": "killed",
+        "replacement": "value + 24",
+        "selection": null
+      },
+      "src/arithmetic-2.ts:5e1c271edcd6ec54a71b4c5d68d0e190ea4d95234795d11acfde3132f8bddd58": {
+        "file": "src/arithmetic-2.ts",
+        "id": "47",
+        "location": {
+          "end": {
+            "column": 20,
+            "line": 30
+          },
+          "start": {
+            "column": 10,
+            "line": 30
+          }
+        },
+        "operator": "ArithmeticOperator",
+        "outcome": "killed",
+        "replacement": "value * 24",
+        "selection": null
+      },
+      "src/arithmetic-2.ts:81bff629ec4902cef5f5783fa114a1f7e4ac431e962eb20c64dd6c20b873fde5": {
+        "file": "src/arithmetic-2.ts",
+        "id": "39",
+        "location": {
+          "end": {
+            "column": 20,
+            "line": 14
+          },
+          "start": {
+            "column": 10,
+            "line": 14
+          }
+        },
+        "operator": "ArithmeticOperator",
+        "outcome": "killed",
+        "replacement": "value * 23",
+        "selection": null
+      },
+      "src/arithmetic-2.ts:82c88c64a289c8503994568241e9e829fd89c539458244bf1e6f069a30bdb1a1": {
+        "file": "src/arithmetic-2.ts",
+        "id": "35",
+        "location": {
+          "end": {
+            "column": 20,
+            "line": 6
+          },
+          "start": {
+            "column": 10,
+            "line": 6
+          }
+        },
+        "operator": "ArithmeticOperator",
+        "outcome": "killed",
+        "replacement": "value + 23",
+        "selection": null
+      },
+      "src/arithmetic-2.ts:846750fffc1ea745a5d52b4dc5ff9c63a831bd6a74cf881d79004e898ff4e0fb": {
+        "file": "src/arithmetic-2.ts",
+        "id": "45",
+        "location": {
+          "end": {
+            "column": 20,
+            "line": 26
+          },
+          "start": {
+            "column": 10,
+            "line": 26
+          }
+        },
+        "operator": "ArithmeticOperator",
+        "outcome": "killed",
+        "replacement": "value / 24",
+        "selection": null
+      },
+      "src/arithmetic-2.ts:956745c8f16382b3a068ae6be498fbacf8e1233b89a91f89d3876e25efcf19a1": {
+        "file": "src/arithmetic-2.ts",
+        "id": "37",
+        "location": {
+          "end": {
+            "column": 20,
+            "line": 10
+          },
+          "start": {
+            "column": 10,
+            "line": 10
+          }
+        },
+        "operator": "ArithmeticOperator",
+        "outcome": "killed",
+        "replacement": "value / 23",
+        "selection": null
+      },
+      "src/arithmetic-2.ts:b6811d08512fefd33f0e70e9d39aa29e1266694bc3f27331b14ba3f69da8a40f": {
+        "file": "src/arithmetic-2.ts",
+        "id": "33",
+        "location": {
+          "end": {
+            "column": 20,
+            "line": 2
+          },
+          "start": {
+            "column": 10,
+            "line": 2
+          }
+        },
+        "operator": "ArithmeticOperator",
+        "outcome": "killed",
+        "replacement": "value - 23",
+        "selection": null
+      },
+      "src/arithmetic-2.ts:cf760ef105568b89a7583b16b2cc026b65407ac138dd5674d909c031c996eb39": {
+        "file": "src/arithmetic-2.ts",
+        "id": "41",
+        "location": {
+          "end": {
+            "column": 20,
+            "line": 18
+          },
+          "start": {
+            "column": 10,
+            "line": 18
+          }
+        },
+        "operator": "ArithmeticOperator",
+        "outcome": "killed",
+        "replacement": "value - 24",
+        "selection": null
+      },
+      "src/arithmetic-3.ts:215aa72a1418c088491b650cceb7984ee33f722fc3a0f04df6165ff111240ab8": {
+        "file": "src/arithmetic-3.ts",
+        "id": "53",
+        "location": {
+          "end": {
+            "column": 20,
+            "line": 10
+          },
+          "start": {
+            "column": 10,
+            "line": 10
+          }
+        },
+        "operator": "ArithmeticOperator",
+        "outcome": "killed",
+        "replacement": "value / 31",
+        "selection": null
+      },
+      "src/arithmetic-3.ts:28d564fc5b02ff5f959f64aeb2a4baa7a3a3aaa90950d95bdd8c300732471d34": {
+        "file": "src/arithmetic-3.ts",
+        "id": "55",
+        "location": {
+          "end": {
+            "column": 20,
+            "line": 14
+          },
+          "start": {
+            "column": 10,
+            "line": 14
+          }
+        },
+        "operator": "ArithmeticOperator",
+        "outcome": "killed",
+        "replacement": "value * 31",
+        "selection": null
+      },
+      "src/arithmetic-3.ts:3008230ac5ac6c4f4eebd207170cf069307a3634636f7d30da2f6330a45e3ee0": {
+        "file": "src/arithmetic-3.ts",
+        "id": "57",
+        "location": {
+          "end": {
+            "column": 20,
+            "line": 18
+          },
+          "start": {
+            "column": 10,
+            "line": 18
+          }
+        },
+        "operator": "ArithmeticOperator",
+        "outcome": "killed",
+        "replacement": "value - 32",
+        "selection": null
+      },
+      "src/arithmetic-3.ts:6604c90740a3b336ab572ac4c61f5b197398501298300a18676a1cb97af140a5": {
+        "file": "src/arithmetic-3.ts",
+        "id": "49",
+        "location": {
+          "end": {
+            "column": 20,
+            "line": 2
+          },
+          "start": {
+            "column": 10,
+            "line": 2
+          }
+        },
+        "operator": "ArithmeticOperator",
+        "outcome": "killed",
+        "replacement": "value - 31",
+        "selection": null
+      },
+      "src/arithmetic-3.ts:962112ca9da9e024dbfd70ff02f36c861a566971a35130ef277882aac7b328f3": {
+        "file": "src/arithmetic-3.ts",
+        "id": "63",
+        "location": {
+          "end": {
+            "column": 20,
+            "line": 30
+          },
+          "start": {
+            "column": 10,
+            "line": 30
+          }
+        },
+        "operator": "ArithmeticOperator",
+        "outcome": "killed",
+        "replacement": "value * 32",
+        "selection": null
+      },
+      "src/arithmetic-3.ts:9f2c275c792e839aa288799b7ab0b17f8d3e01a9415df64994e68279c33c022c": {
+        "file": "src/arithmetic-3.ts",
+        "id": "51",
+        "location": {
+          "end": {
+            "column": 20,
+            "line": 6
+          },
+          "start": {
+            "column": 10,
+            "line": 6
+          }
+        },
+        "operator": "ArithmeticOperator",
+        "outcome": "killed",
+        "replacement": "value + 31",
+        "selection": null
+      },
+      "src/arithmetic-3.ts:cf39b5037e1ac84e09009fd83ce08adb0bf274f2f2b384776536252065731e83": {
+        "file": "src/arithmetic-3.ts",
+        "id": "61",
+        "location": {
+          "end": {
+            "column": 20,
+            "line": 26
+          },
+          "start": {
+            "column": 10,
+            "line": 26
+          }
+        },
+        "operator": "ArithmeticOperator",
+        "outcome": "killed",
+        "replacement": "value / 32",
+        "selection": null
+      },
+      "src/arithmetic-3.ts:dedf10eb55b3aa87bbbeeaa2fb84cdd8637e7bec6db9837ddc02e14870fd4126": {
+        "file": "src/arithmetic-3.ts",
+        "id": "59",
+        "location": {
+          "end": {
+            "column": 20,
+            "line": 22
+          },
+          "start": {
+            "column": 10,
+            "line": 22
+          }
+        },
+        "operator": "ArithmeticOperator",
+        "outcome": "killed",
+        "replacement": "value + 32",
+        "selection": null
+      },
+      "src/arithmetic-4.ts:21604bf19fc8db188ee61fea6263f9415f2794705cdf16a5c81655682af331fc": {
+        "file": "src/arithmetic-4.ts",
+        "id": "75",
+        "location": {
+          "end": {
+            "column": 20,
+            "line": 22
+          },
+          "start": {
+            "column": 10,
+            "line": 22
+          }
+        },
+        "operator": "ArithmeticOperator",
+        "outcome": "killed",
+        "replacement": "value + 40",
+        "selection": null
+      },
+      "src/arithmetic-4.ts:5cab78a4400e1b20770f8892255b6fd0c5d2882e13610d0b55136353303145c8": {
+        "file": "src/arithmetic-4.ts",
+        "id": "79",
+        "location": {
+          "end": {
+            "column": 20,
+            "line": 30
+          },
+          "start": {
+            "column": 10,
+            "line": 30
+          }
+        },
+        "operator": "ArithmeticOperator",
+        "outcome": "killed",
+        "replacement": "value * 40",
+        "selection": null
+      },
+      "src/arithmetic-4.ts:663bc8b1f8086449f55ae96a22516a0ba4bf4eeadc8fc5ad74264a6351d6b13a": {
+        "file": "src/arithmetic-4.ts",
+        "id": "69",
+        "location": {
+          "end": {
+            "column": 20,
+            "line": 10
+          },
+          "start": {
+            "column": 10,
+            "line": 10
+          }
+        },
+        "operator": "ArithmeticOperator",
+        "outcome": "killed",
+        "replacement": "value / 39",
+        "selection": null
+      },
+      "src/arithmetic-4.ts:6d6a15a7cf535f303354d45f021ababb58762548232cd4b02a7ca471e865eece": {
+        "file": "src/arithmetic-4.ts",
+        "id": "73",
+        "location": {
+          "end": {
+            "column": 20,
+            "line": 18
+          },
+          "start": {
+            "column": 10,
+            "line": 18
+          }
+        },
+        "operator": "ArithmeticOperator",
+        "outcome": "killed",
+        "replacement": "value - 40",
+        "selection": null
+      },
+      "src/arithmetic-4.ts:7e7c53ddab9b1a2acb0518baa510f985f47831abdb09547dc1d10f55a8e8f7df": {
+        "file": "src/arithmetic-4.ts",
+        "id": "71",
+        "location": {
+          "end": {
+            "column": 20,
+            "line": 14
+          },
+          "start": {
+            "column": 10,
+            "line": 14
+          }
+        },
+        "operator": "ArithmeticOperator",
+        "outcome": "killed",
+        "replacement": "value * 39",
+        "selection": null
+      },
+      "src/arithmetic-4.ts:9f22be8f3c271594adc9cd7aaf30509ee40a7265cbb779472d6f4e262053f6ae": {
+        "file": "src/arithmetic-4.ts",
+        "id": "77",
+        "location": {
+          "end": {
+            "column": 20,
+            "line": 26
+          },
+          "start": {
+            "column": 10,
+            "line": 26
+          }
+        },
+        "operator": "ArithmeticOperator",
+        "outcome": "killed",
+        "replacement": "value / 40",
+        "selection": null
+      },
+      "src/arithmetic-4.ts:dbfd4ba051649076939898d05d3c7def3385907eaf43f5f1000fa392a3a83a42": {
+        "file": "src/arithmetic-4.ts",
+        "id": "67",
+        "location": {
+          "end": {
+            "column": 20,
+            "line": 6
+          },
+          "start": {
+            "column": 10,
+            "line": 6
+          }
+        },
+        "operator": "ArithmeticOperator",
+        "outcome": "killed",
+        "replacement": "value + 39",
+        "selection": null
+      },
+      "src/arithmetic-4.ts:e6ff61af7c655253b6d565f7977910abf01c5aeb03a97ea251b1f9d3612e9db6": {
+        "file": "src/arithmetic-4.ts",
+        "id": "65",
+        "location": {
+          "end": {
+            "column": 20,
+            "line": 2
+          },
+          "start": {
+            "column": 10,
+            "line": 2
+          }
+        },
+        "operator": "ArithmeticOperator",
+        "outcome": "killed",
+        "replacement": "value - 39",
+        "selection": null
+      },
+      "src/arithmetic-5.ts:189650a6b4d233fbfd9edc8c9cf9550795637cbbced6a7781406b9bb0e783853": {
+        "file": "src/arithmetic-5.ts",
+        "id": "95",
+        "location": {
+          "end": {
+            "column": 20,
+            "line": 30
+          },
+          "start": {
+            "column": 10,
+            "line": 30
+          }
+        },
+        "operator": "ArithmeticOperator",
+        "outcome": "killed",
+        "replacement": "value * 48",
+        "selection": null
+      },
+      "src/arithmetic-5.ts:3ad846b6ca17ba93ff120385558108287c27a0e1ae1d49239828a8f78b356391": {
+        "file": "src/arithmetic-5.ts",
+        "id": "87",
+        "location": {
+          "end": {
+            "column": 20,
+            "line": 14
+          },
+          "start": {
+            "column": 10,
+            "line": 14
+          }
+        },
+        "operator": "ArithmeticOperator",
+        "outcome": "killed",
+        "replacement": "value * 47",
+        "selection": null
+      },
+      "src/arithmetic-5.ts:5e4cd8e84b048fd49d3d6f409f0fac714f48753be2261761c7a43eaa8ea41174": {
+        "file": "src/arithmetic-5.ts",
+        "id": "85",
+        "location": {
+          "end": {
+            "column": 20,
+            "line": 10
+          },
+          "start": {
+            "column": 10,
+            "line": 10
+          }
+        },
+        "operator": "ArithmeticOperator",
+        "outcome": "killed",
+        "replacement": "value / 47",
+        "selection": null
+      },
+      "src/arithmetic-5.ts:5f03924a2f3823d1fdb27d9ed3f4df93418d9df94c42a5c2f0dacae20870e486": {
+        "file": "src/arithmetic-5.ts",
+        "id": "83",
+        "location": {
+          "end": {
+            "column": 20,
+            "line": 6
+          },
+          "start": {
+            "column": 10,
+            "line": 6
+          }
+        },
+        "operator": "ArithmeticOperator",
+        "outcome": "killed",
+        "replacement": "value + 47",
+        "selection": null
+      },
+      "src/arithmetic-5.ts:9003ab72f9ffe52738a72d8dbf6c7ab51ee30994892af4fabdb82dd74b4ba5b8": {
+        "file": "src/arithmetic-5.ts",
+        "id": "89",
+        "location": {
+          "end": {
+            "column": 20,
+            "line": 18
+          },
+          "start": {
+            "column": 10,
+            "line": 18
+          }
+        },
+        "operator": "ArithmeticOperator",
+        "outcome": "killed",
+        "replacement": "value - 48",
+        "selection": null
+      },
+      "src/arithmetic-5.ts:b7849819c74dd8467a0f4387cf92e2ff66cae78ce4f152834db96c44890176cf": {
+        "file": "src/arithmetic-5.ts",
+        "id": "81",
+        "location": {
+          "end": {
+            "column": 20,
+            "line": 2
+          },
+          "start": {
+            "column": 10,
+            "line": 2
+          }
+        },
+        "operator": "ArithmeticOperator",
+        "outcome": "killed",
+        "replacement": "value - 47",
+        "selection": null
+      },
+      "src/arithmetic-5.ts:c0f543ea8dce77377b55ee9d166ec13f44bae928d4d828895647d2e7a0963364": {
+        "file": "src/arithmetic-5.ts",
+        "id": "93",
+        "location": {
+          "end": {
+            "column": 20,
+            "line": 26
+          },
+          "start": {
+            "column": 10,
+            "line": 26
+          }
+        },
+        "operator": "ArithmeticOperator",
+        "outcome": "killed",
+        "replacement": "value / 48",
+        "selection": null
+      },
+      "src/arithmetic-5.ts:f37d95b3326b1576630cf5967e3a6e8ae0c0aea083728d2fbf435610aff51fdf": {
+        "file": "src/arithmetic-5.ts",
+        "id": "91",
+        "location": {
+          "end": {
+            "column": 20,
+            "line": 22
+          },
+          "start": {
+            "column": 10,
+            "line": 22
+          }
+        },
+        "operator": "ArithmeticOperator",
+        "outcome": "killed",
+        "replacement": "value + 48",
+        "selection": null
+      },
+      "src/arithmetic-6.ts:0cdc9c690ae73beb2d8b23c33a1d82d0c4265b0fb96ddda6e2e54083609bff12": {
+        "file": "src/arithmetic-6.ts",
+        "id": "111",
+        "location": {
+          "end": {
+            "column": 20,
+            "line": 30
+          },
+          "start": {
+            "column": 10,
+            "line": 30
+          }
+        },
+        "operator": "ArithmeticOperator",
+        "outcome": "killed",
+        "replacement": "value * 56",
+        "selection": null
+      },
+      "src/arithmetic-6.ts:15c12e5f72a40e9e21a6c036fdfb72a78ea4e5dc32b39bea911eacec52e179f2": {
+        "file": "src/arithmetic-6.ts",
+        "id": "103",
+        "location": {
+          "end": {
+            "column": 20,
+            "line": 14
+          },
+          "start": {
+            "column": 10,
+            "line": 14
+          }
+        },
+        "operator": "ArithmeticOperator",
+        "outcome": "killed",
+        "replacement": "value * 55",
+        "selection": null
+      },
+      "src/arithmetic-6.ts:2b98be31ba3e2cf1550bcca2c6e071df0a5807648c9f10c48dfc59d489547425": {
+        "file": "src/arithmetic-6.ts",
+        "id": "99",
+        "location": {
+          "end": {
+            "column": 20,
+            "line": 6
+          },
+          "start": {
+            "column": 10,
+            "line": 6
+          }
+        },
+        "operator": "ArithmeticOperator",
+        "outcome": "killed",
+        "replacement": "value + 55",
+        "selection": null
+      },
+      "src/arithmetic-6.ts:3a081d5713df99d2c8c4a348a6498f4993e8a51430f777864386953987838f2b": {
+        "file": "src/arithmetic-6.ts",
+        "id": "97",
+        "location": {
+          "end": {
+            "column": 20,
+            "line": 2
+          },
+          "start": {
+            "column": 10,
+            "line": 2
+          }
+        },
+        "operator": "ArithmeticOperator",
+        "outcome": "killed",
+        "replacement": "value - 55",
+        "selection": null
+      },
+      "src/arithmetic-6.ts:454424e8b99d8b197a6586e3efecbb01a9e6efa7d41d7637a896eefac572d78f": {
+        "file": "src/arithmetic-6.ts",
+        "id": "105",
+        "location": {
+          "end": {
+            "column": 20,
+            "line": 18
+          },
+          "start": {
+            "column": 10,
+            "line": 18
+          }
+        },
+        "operator": "ArithmeticOperator",
+        "outcome": "killed",
+        "replacement": "value - 56",
+        "selection": null
+      },
+      "src/arithmetic-6.ts:4e5ddfd78b1a02e0c7a56ff652666a8842ae34a28242c1c5fcd62a8302b53f75": {
+        "file": "src/arithmetic-6.ts",
+        "id": "109",
+        "location": {
+          "end": {
+            "column": 20,
+            "line": 26
+          },
+          "start": {
+            "column": 10,
+            "line": 26
+          }
+        },
+        "operator": "ArithmeticOperator",
+        "outcome": "killed",
+        "replacement": "value / 56",
+        "selection": null
+      },
+      "src/arithmetic-6.ts:f0b9cca9e35d77f2525c8e218743696dfe718bdd6a07388276cea1d1bb086d39": {
+        "file": "src/arithmetic-6.ts",
+        "id": "101",
+        "location": {
+          "end": {
+            "column": 20,
+            "line": 10
+          },
+          "start": {
+            "column": 10,
+            "line": 10
+          }
+        },
+        "operator": "ArithmeticOperator",
+        "outcome": "killed",
+        "replacement": "value / 55",
+        "selection": null
+      },
+      "src/arithmetic-6.ts:fef0a7a641e518f2648255554c1bc36b9fdd8f13e884b6cc290731dd0a5b9f73": {
+        "file": "src/arithmetic-6.ts",
+        "id": "107",
+        "location": {
+          "end": {
+            "column": 20,
+            "line": 22
+          },
+          "start": {
+            "column": 10,
+            "line": 22
+          }
+        },
+        "operator": "ArithmeticOperator",
+        "outcome": "killed",
+        "replacement": "value + 56",
+        "selection": null
+      },
+      "src/arithmetic-7.ts:5fa13b31f9b6756a4f14a975976fc8099bb8973eff1f282ac79a48f9d8bb0d41": {
+        "file": "src/arithmetic-7.ts",
+        "id": "115",
+        "location": {
+          "end": {
+            "column": 20,
+            "line": 6
+          },
+          "start": {
+            "column": 10,
+            "line": 6
+          }
+        },
+        "operator": "ArithmeticOperator",
+        "outcome": "killed",
+        "replacement": "value + 63",
+        "selection": null
+      },
+      "src/arithmetic-7.ts:709a33d41168cb348c3ee67635b0d6ca5e19ab5baca2f2d76e400254f32096fc": {
+        "file": "src/arithmetic-7.ts",
+        "id": "127",
+        "location": {
+          "end": {
+            "column": 20,
+            "line": 30
+          },
+          "start": {
+            "column": 10,
+            "line": 30
+          }
+        },
+        "operator": "ArithmeticOperator",
+        "outcome": "killed",
+        "replacement": "value * 64",
+        "selection": null
+      },
+      "src/arithmetic-7.ts:86dc212628d613109a8e756e6b9d5d2d5f7ed06545a6db150a1c1aaa2b1f7cf2": {
+        "file": "src/arithmetic-7.ts",
+        "id": "125",
+        "location": {
+          "end": {
+            "column": 20,
+            "line": 26
+          },
+          "start": {
+            "column": 10,
+            "line": 26
+          }
+        },
+        "operator": "ArithmeticOperator",
+        "outcome": "killed",
+        "replacement": "value / 64",
+        "selection": null
+      },
+      "src/arithmetic-7.ts:9e5ae845c89abcd230c6f9a3d60e626fefd63f38a5cb55b17871df6e101ba0df": {
+        "file": "src/arithmetic-7.ts",
+        "id": "119",
+        "location": {
+          "end": {
+            "column": 20,
+            "line": 14
+          },
+          "start": {
+            "column": 10,
+            "line": 14
+          }
+        },
+        "operator": "ArithmeticOperator",
+        "outcome": "killed",
+        "replacement": "value * 63",
+        "selection": null
+      },
+      "src/arithmetic-7.ts:a32965f96531eb5a7e2e7514e802cc53350fb79813c7556a2938dbf6ccc72f6d": {
+        "file": "src/arithmetic-7.ts",
+        "id": "113",
+        "location": {
+          "end": {
+            "column": 20,
+            "line": 2
+          },
+          "start": {
+            "column": 10,
+            "line": 2
+          }
+        },
+        "operator": "ArithmeticOperator",
+        "outcome": "killed",
+        "replacement": "value - 63",
+        "selection": null
+      },
+      "src/arithmetic-7.ts:a6af620d652cc808cadcff02a32bf367726a320dcc0c5a10cda1022600230b93": {
+        "file": "src/arithmetic-7.ts",
+        "id": "123",
+        "location": {
+          "end": {
+            "column": 20,
+            "line": 22
+          },
+          "start": {
+            "column": 10,
+            "line": 22
+          }
+        },
+        "operator": "ArithmeticOperator",
+        "outcome": "killed",
+        "replacement": "value + 64",
+        "selection": null
+      },
+      "src/arithmetic-7.ts:bb9e068fc260661aa72add4614436ec3342ec612634cd34789af4f0243b3cd7d": {
+        "file": "src/arithmetic-7.ts",
+        "id": "121",
+        "location": {
+          "end": {
+            "column": 20,
+            "line": 18
+          },
+          "start": {
+            "column": 10,
+            "line": 18
+          }
+        },
+        "operator": "ArithmeticOperator",
+        "outcome": "killed",
+        "replacement": "value - 64",
+        "selection": null
+      },
+      "src/arithmetic-7.ts:dbe5adacf8fbb900db11cf75d5b8fa9409878eb357a5bb5b3aea8b2fa14a4b66": {
+        "file": "src/arithmetic-7.ts",
+        "id": "117",
+        "location": {
+          "end": {
+            "column": 20,
+            "line": 10
+          },
+          "start": {
+            "column": 10,
+            "line": 10
+          }
+        },
+        "operator": "ArithmeticOperator",
+        "outcome": "killed",
+        "replacement": "value / 63",
+        "selection": null
+      }
+    },
+    "right_run": "measured-02-matched-scale-stryker-clean-stryker",
+    "round_index": 2,
+    "shared": [],
+    "shared_classifications_agree": false,
+    "shared_count": 0
+  },
+  {
+    "equal_mutation_scope": true,
+    "explained_no_coverage_refinements": [],
+    "fixture": "matched-scale",
+    "kind": "cross-tool",
+    "left_count": 64,
+    "left_only": {},
+    "left_run": "measured-03-matched-scale-oximut-clean-fresh",
+    "mismatches": [],
+    "ratio_eligible": true,
+    "right_count": 64,
+    "right_only": {},
+    "right_run": "measured-03-matched-scale-stryker-clean-stryker",
+    "round_index": 3,
+    "shared": [
+      "src/arithmetic-0.ts:0bb63f17da1dd236b01338caabde3f8cc767295c8ce125b989122f59513cb1e1",
+      "src/arithmetic-0.ts:4e8a255c26188ab501b83c6af904e9dac6e987d72a47f23c6f551d6037007ed3",
+      "src/arithmetic-0.ts:6700b3f61d697676383dad2c4395f347b295e1bd99e9df3d0daf90600d257e49",
+      "src/arithmetic-0.ts:6fe07c06b3d0e085507d88e6d87547264b11c09b7ab4b756c71890e9dbfc31ce",
+      "src/arithmetic-0.ts:9c0452ef08e78cc2cec2b552f6ef1def6849a9f8eb5d703ae5bf70df1a6aef26",
+      "src/arithmetic-0.ts:bf77d9fdd48beef089bb33024c367cebc07321bc7b1e5d9338bf3db474a29876",
+      "src/arithmetic-0.ts:daaed3439168d1cbf76e8d93dee9ed35abe2ca2e57679989036c9acab38136d7",
+      "src/arithmetic-0.ts:e00212e8e3cf9dee7cadd53205a9c4af87eb74fd44975cf1827761b7f4c4b214",
+      "src/arithmetic-1.ts:11fbdbff4022e8f2713cf8bdb45eca8c387318fbedc7a645bf8eba017afce66a",
+      "src/arithmetic-1.ts:1c2c9364d1e6ee4feada808d64e2b42795eb286976576c1fa988416c64633f27",
+      "src/arithmetic-1.ts:4094c599c99a744438bd1f9b20f730d339f04d3f6e8dd447bbe921e989b9b479",
+      "src/arithmetic-1.ts:45033d379301bdc4da1f4074eafb5aa69395c2d968d10ad66c2758d89dbe2610",
+      "src/arithmetic-1.ts:73909d8d79c080aa32842ec804fc44dad404594a65d16d0d7122b3b2136365b6",
+      "src/arithmetic-1.ts:8026913c32f804dface12c352e6d4a9fb7bb61b66d66889b8e11f92a0ace16c6",
+      "src/arithmetic-1.ts:bb4b9d15172445147c4c71424bbc5b6d0843aeeed9d94f9bb36db5923ee7613e",
+      "src/arithmetic-1.ts:feb7fc3c7334528679c850dac15eaad6d3a2545ecc08336719ca491bf35b1b35",
+      "src/arithmetic-2.ts:2a4fe83dd41363804742859c73c5992b3b69d7880c96675254be1244b65e6ed6",
+      "src/arithmetic-2.ts:5e1c271edcd6ec54a71b4c5d68d0e190ea4d95234795d11acfde3132f8bddd58",
+      "src/arithmetic-2.ts:81bff629ec4902cef5f5783fa114a1f7e4ac431e962eb20c64dd6c20b873fde5",
+      "src/arithmetic-2.ts:82c88c64a289c8503994568241e9e829fd89c539458244bf1e6f069a30bdb1a1",
+      "src/arithmetic-2.ts:846750fffc1ea745a5d52b4dc5ff9c63a831bd6a74cf881d79004e898ff4e0fb",
+      "src/arithmetic-2.ts:956745c8f16382b3a068ae6be498fbacf8e1233b89a91f89d3876e25efcf19a1",
+      "src/arithmetic-2.ts:b6811d08512fefd33f0e70e9d39aa29e1266694bc3f27331b14ba3f69da8a40f",
+      "src/arithmetic-2.ts:cf760ef105568b89a7583b16b2cc026b65407ac138dd5674d909c031c996eb39",
+      "src/arithmetic-3.ts:215aa72a1418c088491b650cceb7984ee33f722fc3a0f04df6165ff111240ab8",
+      "src/arithmetic-3.ts:28d564fc5b02ff5f959f64aeb2a4baa7a3a3aaa90950d95bdd8c300732471d34",
+      "src/arithmetic-3.ts:3008230ac5ac6c4f4eebd207170cf069307a3634636f7d30da2f6330a45e3ee0",
+      "src/arithmetic-3.ts:6604c90740a3b336ab572ac4c61f5b197398501298300a18676a1cb97af140a5",
+      "src/arithmetic-3.ts:962112ca9da9e024dbfd70ff02f36c861a566971a35130ef277882aac7b328f3",
+      "src/arithmetic-3.ts:9f2c275c792e839aa288799b7ab0b17f8d3e01a9415df64994e68279c33c022c",
+      "src/arithmetic-3.ts:cf39b5037e1ac84e09009fd83ce08adb0bf274f2f2b384776536252065731e83",
+      "src/arithmetic-3.ts:dedf10eb55b3aa87bbbeeaa2fb84cdd8637e7bec6db9837ddc02e14870fd4126",
+      "src/arithmetic-4.ts:21604bf19fc8db188ee61fea6263f9415f2794705cdf16a5c81655682af331fc",
+      "src/arithmetic-4.ts:5cab78a4400e1b20770f8892255b6fd0c5d2882e13610d0b55136353303145c8",
+      "src/arithmetic-4.ts:663bc8b1f8086449f55ae96a22516a0ba4bf4eeadc8fc5ad74264a6351d6b13a",
+      "src/arithmetic-4.ts:6d6a15a7cf535f303354d45f021ababb58762548232cd4b02a7ca471e865eece",
+      "src/arithmetic-4.ts:7e7c53ddab9b1a2acb0518baa510f985f47831abdb09547dc1d10f55a8e8f7df",
+      "src/arithmetic-4.ts:9f22be8f3c271594adc9cd7aaf30509ee40a7265cbb779472d6f4e262053f6ae",
+      "src/arithmetic-4.ts:dbfd4ba051649076939898d05d3c7def3385907eaf43f5f1000fa392a3a83a42",
+      "src/arithmetic-4.ts:e6ff61af7c655253b6d565f7977910abf01c5aeb03a97ea251b1f9d3612e9db6",
+      "src/arithmetic-5.ts:189650a6b4d233fbfd9edc8c9cf9550795637cbbced6a7781406b9bb0e783853",
+      "src/arithmetic-5.ts:3ad846b6ca17ba93ff120385558108287c27a0e1ae1d49239828a8f78b356391",
+      "src/arithmetic-5.ts:5e4cd8e84b048fd49d3d6f409f0fac714f48753be2261761c7a43eaa8ea41174",
+      "src/arithmetic-5.ts:5f03924a2f3823d1fdb27d9ed3f4df93418d9df94c42a5c2f0dacae20870e486",
+      "src/arithmetic-5.ts:9003ab72f9ffe52738a72d8dbf6c7ab51ee30994892af4fabdb82dd74b4ba5b8",
+      "src/arithmetic-5.ts:b7849819c74dd8467a0f4387cf92e2ff66cae78ce4f152834db96c44890176cf",
+      "src/arithmetic-5.ts:c0f543ea8dce77377b55ee9d166ec13f44bae928d4d828895647d2e7a0963364",
+      "src/arithmetic-5.ts:f37d95b3326b1576630cf5967e3a6e8ae0c0aea083728d2fbf435610aff51fdf",
+      "src/arithmetic-6.ts:0cdc9c690ae73beb2d8b23c33a1d82d0c4265b0fb96ddda6e2e54083609bff12",
+      "src/arithmetic-6.ts:15c12e5f72a40e9e21a6c036fdfb72a78ea4e5dc32b39bea911eacec52e179f2",
+      "src/arithmetic-6.ts:2b98be31ba3e2cf1550bcca2c6e071df0a5807648c9f10c48dfc59d489547425",
+      "src/arithmetic-6.ts:3a081d5713df99d2c8c4a348a6498f4993e8a51430f777864386953987838f2b",
+      "src/arithmetic-6.ts:454424e8b99d8b197a6586e3efecbb01a9e6efa7d41d7637a896eefac572d78f",
+      "src/arithmetic-6.ts:4e5ddfd78b1a02e0c7a56ff652666a8842ae34a28242c1c5fcd62a8302b53f75",
+      "src/arithmetic-6.ts:f0b9cca9e35d77f2525c8e218743696dfe718bdd6a07388276cea1d1bb086d39",
+      "src/arithmetic-6.ts:fef0a7a641e518f2648255554c1bc36b9fdd8f13e884b6cc290731dd0a5b9f73",
+      "src/arithmetic-7.ts:5fa13b31f9b6756a4f14a975976fc8099bb8973eff1f282ac79a48f9d8bb0d41",
+      "src/arithmetic-7.ts:709a33d41168cb348c3ee67635b0d6ca5e19ab5baca2f2d76e400254f32096fc",
+      "src/arithmetic-7.ts:86dc212628d613109a8e756e6b9d5d2d5f7ed06545a6db150a1c1aaa2b1f7cf2",
+      "src/arithmetic-7.ts:9e5ae845c89abcd230c6f9a3d60e626fefd63f38a5cb55b17871df6e101ba0df",
+      "src/arithmetic-7.ts:a32965f96531eb5a7e2e7514e802cc53350fb79813c7556a2938dbf6ccc72f6d",
+      "src/arithmetic-7.ts:a6af620d652cc808cadcff02a32bf367726a320dcc0c5a10cda1022600230b93",
+      "src/arithmetic-7.ts:bb9e068fc260661aa72add4614436ec3342ec612634cd34789af4f0243b3cd7d",
+      "src/arithmetic-7.ts:dbe5adacf8fbb900db11cf75d5b8fa9409878eb357a5bb5b3aea8b2fa14a4b66"
+    ],
+    "shared_classifications_agree": true,
+    "shared_count": 64
+  },
+  {
+    "equal_mutation_scope": true,
+    "explained_no_coverage_refinements": [],
+    "fixture": "matched-scale",
+    "kind": "optimized-reference",
+    "left_count": 64,
+    "left_only": {},
+    "left_run": "measured-03-matched-scale-oximut-clean-fresh",
+    "mismatches": [],
+    "ratio_eligible": true,
+    "right_count": 64,
+    "right_only": {},
+    "right_run": "measured-03-matched-scale-oximut-clean-selection",
+    "round_index": 3,
+    "shared": [
+      "src/arithmetic-0.ts:0bb63f17da1dd236b01338caabde3f8cc767295c8ce125b989122f59513cb1e1",
+      "src/arithmetic-0.ts:4e8a255c26188ab501b83c6af904e9dac6e987d72a47f23c6f551d6037007ed3",
+      "src/arithmetic-0.ts:6700b3f61d697676383dad2c4395f347b295e1bd99e9df3d0daf90600d257e49",
+      "src/arithmetic-0.ts:6fe07c06b3d0e085507d88e6d87547264b11c09b7ab4b756c71890e9dbfc31ce",
+      "src/arithmetic-0.ts:9c0452ef08e78cc2cec2b552f6ef1def6849a9f8eb5d703ae5bf70df1a6aef26",
+      "src/arithmetic-0.ts:bf77d9fdd48beef089bb33024c367cebc07321bc7b1e5d9338bf3db474a29876",
+      "src/arithmetic-0.ts:daaed3439168d1cbf76e8d93dee9ed35abe2ca2e57679989036c9acab38136d7",
+      "src/arithmetic-0.ts:e00212e8e3cf9dee7cadd53205a9c4af87eb74fd44975cf1827761b7f4c4b214",
+      "src/arithmetic-1.ts:11fbdbff4022e8f2713cf8bdb45eca8c387318fbedc7a645bf8eba017afce66a",
+      "src/arithmetic-1.ts:1c2c9364d1e6ee4feada808d64e2b42795eb286976576c1fa988416c64633f27",
+      "src/arithmetic-1.ts:4094c599c99a744438bd1f9b20f730d339f04d3f6e8dd447bbe921e989b9b479",
+      "src/arithmetic-1.ts:45033d379301bdc4da1f4074eafb5aa69395c2d968d10ad66c2758d89dbe2610",
+      "src/arithmetic-1.ts:73909d8d79c080aa32842ec804fc44dad404594a65d16d0d7122b3b2136365b6",
+      "src/arithmetic-1.ts:8026913c32f804dface12c352e6d4a9fb7bb61b66d66889b8e11f92a0ace16c6",
+      "src/arithmetic-1.ts:bb4b9d15172445147c4c71424bbc5b6d0843aeeed9d94f9bb36db5923ee7613e",
+      "src/arithmetic-1.ts:feb7fc3c7334528679c850dac15eaad6d3a2545ecc08336719ca491bf35b1b35",
+      "src/arithmetic-2.ts:2a4fe83dd41363804742859c73c5992b3b69d7880c96675254be1244b65e6ed6",
+      "src/arithmetic-2.ts:5e1c271edcd6ec54a71b4c5d68d0e190ea4d95234795d11acfde3132f8bddd58",
+      "src/arithmetic-2.ts:81bff629ec4902cef5f5783fa114a1f7e4ac431e962eb20c64dd6c20b873fde5",
+      "src/arithmetic-2.ts:82c88c64a289c8503994568241e9e829fd89c539458244bf1e6f069a30bdb1a1",
+      "src/arithmetic-2.ts:846750fffc1ea745a5d52b4dc5ff9c63a831bd6a74cf881d79004e898ff4e0fb",
+      "src/arithmetic-2.ts:956745c8f16382b3a068ae6be498fbacf8e1233b89a91f89d3876e25efcf19a1",
+      "src/arithmetic-2.ts:b6811d08512fefd33f0e70e9d39aa29e1266694bc3f27331b14ba3f69da8a40f",
+      "src/arithmetic-2.ts:cf760ef105568b89a7583b16b2cc026b65407ac138dd5674d909c031c996eb39",
+      "src/arithmetic-3.ts:215aa72a1418c088491b650cceb7984ee33f722fc3a0f04df6165ff111240ab8",
+      "src/arithmetic-3.ts:28d564fc5b02ff5f959f64aeb2a4baa7a3a3aaa90950d95bdd8c300732471d34",
+      "src/arithmetic-3.ts:3008230ac5ac6c4f4eebd207170cf069307a3634636f7d30da2f6330a45e3ee0",
+      "src/arithmetic-3.ts:6604c90740a3b336ab572ac4c61f5b197398501298300a18676a1cb97af140a5",
+      "src/arithmetic-3.ts:962112ca9da9e024dbfd70ff02f36c861a566971a35130ef277882aac7b328f3",
+      "src/arithmetic-3.ts:9f2c275c792e839aa288799b7ab0b17f8d3e01a9415df64994e68279c33c022c",
+      "src/arithmetic-3.ts:cf39b5037e1ac84e09009fd83ce08adb0bf274f2f2b384776536252065731e83",
+      "src/arithmetic-3.ts:dedf10eb55b3aa87bbbeeaa2fb84cdd8637e7bec6db9837ddc02e14870fd4126",
+      "src/arithmetic-4.ts:21604bf19fc8db188ee61fea6263f9415f2794705cdf16a5c81655682af331fc",
+      "src/arithmetic-4.ts:5cab78a4400e1b20770f8892255b6fd0c5d2882e13610d0b55136353303145c8",
+      "src/arithmetic-4.ts:663bc8b1f8086449f55ae96a22516a0ba4bf4eeadc8fc5ad74264a6351d6b13a",
+      "src/arithmetic-4.ts:6d6a15a7cf535f303354d45f021ababb58762548232cd4b02a7ca471e865eece",
+      "src/arithmetic-4.ts:7e7c53ddab9b1a2acb0518baa510f985f47831abdb09547dc1d10f55a8e8f7df",
+      "src/arithmetic-4.ts:9f22be8f3c271594adc9cd7aaf30509ee40a7265cbb779472d6f4e262053f6ae",
+      "src/arithmetic-4.ts:dbfd4ba051649076939898d05d3c7def3385907eaf43f5f1000fa392a3a83a42",
+      "src/arithmetic-4.ts:e6ff61af7c655253b6d565f7977910abf01c5aeb03a97ea251b1f9d3612e9db6",
+      "src/arithmetic-5.ts:189650a6b4d233fbfd9edc8c9cf9550795637cbbced6a7781406b9bb0e783853",
+      "src/arithmetic-5.ts:3ad846b6ca17ba93ff120385558108287c27a0e1ae1d49239828a8f78b356391",
+      "src/arithmetic-5.ts:5e4cd8e84b048fd49d3d6f409f0fac714f48753be2261761c7a43eaa8ea41174",
+      "src/arithmetic-5.ts:5f03924a2f3823d1fdb27d9ed3f4df93418d9df94c42a5c2f0dacae20870e486",
+      "src/arithmetic-5.ts:9003ab72f9ffe52738a72d8dbf6c7ab51ee30994892af4fabdb82dd74b4ba5b8",
+      "src/arithmetic-5.ts:b7849819c74dd8467a0f4387cf92e2ff66cae78ce4f152834db96c44890176cf",
+      "src/arithmetic-5.ts:c0f543ea8dce77377b55ee9d166ec13f44bae928d4d828895647d2e7a0963364",
+      "src/arithmetic-5.ts:f37d95b3326b1576630cf5967e3a6e8ae0c0aea083728d2fbf435610aff51fdf",
+      "src/arithmetic-6.ts:0cdc9c690ae73beb2d8b23c33a1d82d0c4265b0fb96ddda6e2e54083609bff12",
+      "src/arithmetic-6.ts:15c12e5f72a40e9e21a6c036fdfb72a78ea4e5dc32b39bea911eacec52e179f2",
+      "src/arithmetic-6.ts:2b98be31ba3e2cf1550bcca2c6e071df0a5807648c9f10c48dfc59d489547425",
+      "src/arithmetic-6.ts:3a081d5713df99d2c8c4a348a6498f4993e8a51430f777864386953987838f2b",
+      "src/arithmetic-6.ts:454424e8b99d8b197a6586e3efecbb01a9e6efa7d41d7637a896eefac572d78f",
+      "src/arithmetic-6.ts:4e5ddfd78b1a02e0c7a56ff652666a8842ae34a28242c1c5fcd62a8302b53f75",
+      "src/arithmetic-6.ts:f0b9cca9e35d77f2525c8e218743696dfe718bdd6a07388276cea1d1bb086d39",
+      "src/arithmetic-6.ts:fef0a7a641e518f2648255554c1bc36b9fdd8f13e884b6cc290731dd0a5b9f73",
+      "src/arithmetic-7.ts:5fa13b31f9b6756a4f14a975976fc8099bb8973eff1f282ac79a48f9d8bb0d41",
+      "src/arithmetic-7.ts:709a33d41168cb348c3ee67635b0d6ca5e19ab5baca2f2d76e400254f32096fc",
+      "src/arithmetic-7.ts:86dc212628d613109a8e756e6b9d5d2d5f7ed06545a6db150a1c1aaa2b1f7cf2",
+      "src/arithmetic-7.ts:9e5ae845c89abcd230c6f9a3d60e626fefd63f38a5cb55b17871df6e101ba0df",
+      "src/arithmetic-7.ts:a32965f96531eb5a7e2e7514e802cc53350fb79813c7556a2938dbf6ccc72f6d",
+      "src/arithmetic-7.ts:a6af620d652cc808cadcff02a32bf367726a320dcc0c5a10cda1022600230b93",
+      "src/arithmetic-7.ts:bb9e068fc260661aa72add4614436ec3342ec612634cd34789af4f0243b3cd7d",
+      "src/arithmetic-7.ts:dbe5adacf8fbb900db11cf75d5b8fa9409878eb357a5bb5b3aea8b2fa14a4b66"
+    ],
+    "shared_classifications_agree": true,
+    "shared_count": 64
+  },
+  {
+    "equal_mutation_scope": true,
+    "explained_no_coverage_refinements": [],
+    "fixture": "matched-scale",
+    "kind": "optimized-reference",
+    "left_count": 64,
+    "left_only": {},
+    "left_run": "measured-04-matched-scale-oximut-clean-fresh",
+    "mismatches": [],
+    "ratio_eligible": true,
+    "right_count": 64,
+    "right_only": {},
+    "right_run": "measured-04-matched-scale-oximut-clean-selection",
+    "round_index": 4,
+    "shared": [
+      "src/arithmetic-0.ts:0bb63f17da1dd236b01338caabde3f8cc767295c8ce125b989122f59513cb1e1",
+      "src/arithmetic-0.ts:4e8a255c26188ab501b83c6af904e9dac6e987d72a47f23c6f551d6037007ed3",
+      "src/arithmetic-0.ts:6700b3f61d697676383dad2c4395f347b295e1bd99e9df3d0daf90600d257e49",
+      "src/arithmetic-0.ts:6fe07c06b3d0e085507d88e6d87547264b11c09b7ab4b756c71890e9dbfc31ce",
+      "src/arithmetic-0.ts:9c0452ef08e78cc2cec2b552f6ef1def6849a9f8eb5d703ae5bf70df1a6aef26",
+      "src/arithmetic-0.ts:bf77d9fdd48beef089bb33024c367cebc07321bc7b1e5d9338bf3db474a29876",
+      "src/arithmetic-0.ts:daaed3439168d1cbf76e8d93dee9ed35abe2ca2e57679989036c9acab38136d7",
+      "src/arithmetic-0.ts:e00212e8e3cf9dee7cadd53205a9c4af87eb74fd44975cf1827761b7f4c4b214",
+      "src/arithmetic-1.ts:11fbdbff4022e8f2713cf8bdb45eca8c387318fbedc7a645bf8eba017afce66a",
+      "src/arithmetic-1.ts:1c2c9364d1e6ee4feada808d64e2b42795eb286976576c1fa988416c64633f27",
+      "src/arithmetic-1.ts:4094c599c99a744438bd1f9b20f730d339f04d3f6e8dd447bbe921e989b9b479",
+      "src/arithmetic-1.ts:45033d379301bdc4da1f4074eafb5aa69395c2d968d10ad66c2758d89dbe2610",
+      "src/arithmetic-1.ts:73909d8d79c080aa32842ec804fc44dad404594a65d16d0d7122b3b2136365b6",
+      "src/arithmetic-1.ts:8026913c32f804dface12c352e6d4a9fb7bb61b66d66889b8e11f92a0ace16c6",
+      "src/arithmetic-1.ts:bb4b9d15172445147c4c71424bbc5b6d0843aeeed9d94f9bb36db5923ee7613e",
+      "src/arithmetic-1.ts:feb7fc3c7334528679c850dac15eaad6d3a2545ecc08336719ca491bf35b1b35",
+      "src/arithmetic-2.ts:2a4fe83dd41363804742859c73c5992b3b69d7880c96675254be1244b65e6ed6",
+      "src/arithmetic-2.ts:5e1c271edcd6ec54a71b4c5d68d0e190ea4d95234795d11acfde3132f8bddd58",
+      "src/arithmetic-2.ts:81bff629ec4902cef5f5783fa114a1f7e4ac431e962eb20c64dd6c20b873fde5",
+      "src/arithmetic-2.ts:82c88c64a289c8503994568241e9e829fd89c539458244bf1e6f069a30bdb1a1",
+      "src/arithmetic-2.ts:846750fffc1ea745a5d52b4dc5ff9c63a831bd6a74cf881d79004e898ff4e0fb",
+      "src/arithmetic-2.ts:956745c8f16382b3a068ae6be498fbacf8e1233b89a91f89d3876e25efcf19a1",
+      "src/arithmetic-2.ts:b6811d08512fefd33f0e70e9d39aa29e1266694bc3f27331b14ba3f69da8a40f",
+      "src/arithmetic-2.ts:cf760ef105568b89a7583b16b2cc026b65407ac138dd5674d909c031c996eb39",
+      "src/arithmetic-3.ts:215aa72a1418c088491b650cceb7984ee33f722fc3a0f04df6165ff111240ab8",
+      "src/arithmetic-3.ts:28d564fc5b02ff5f959f64aeb2a4baa7a3a3aaa90950d95bdd8c300732471d34",
+      "src/arithmetic-3.ts:3008230ac5ac6c4f4eebd207170cf069307a3634636f7d30da2f6330a45e3ee0",
+      "src/arithmetic-3.ts:6604c90740a3b336ab572ac4c61f5b197398501298300a18676a1cb97af140a5",
+      "src/arithmetic-3.ts:962112ca9da9e024dbfd70ff02f36c861a566971a35130ef277882aac7b328f3",
+      "src/arithmetic-3.ts:9f2c275c792e839aa288799b7ab0b17f8d3e01a9415df64994e68279c33c022c",
+      "src/arithmetic-3.ts:cf39b5037e1ac84e09009fd83ce08adb0bf274f2f2b384776536252065731e83",
+      "src/arithmetic-3.ts:dedf10eb55b3aa87bbbeeaa2fb84cdd8637e7bec6db9837ddc02e14870fd4126",
+      "src/arithmetic-4.ts:21604bf19fc8db188ee61fea6263f9415f2794705cdf16a5c81655682af331fc",
+      "src/arithmetic-4.ts:5cab78a4400e1b20770f8892255b6fd0c5d2882e13610d0b55136353303145c8",
+      "src/arithmetic-4.ts:663bc8b1f8086449f55ae96a22516a0ba4bf4eeadc8fc5ad74264a6351d6b13a",
+      "src/arithmetic-4.ts:6d6a15a7cf535f303354d45f021ababb58762548232cd4b02a7ca471e865eece",
+      "src/arithmetic-4.ts:7e7c53ddab9b1a2acb0518baa510f985f47831abdb09547dc1d10f55a8e8f7df",
+      "src/arithmetic-4.ts:9f22be8f3c271594adc9cd7aaf30509ee40a7265cbb779472d6f4e262053f6ae",
+      "src/arithmetic-4.ts:dbfd4ba051649076939898d05d3c7def3385907eaf43f5f1000fa392a3a83a42",
+      "src/arithmetic-4.ts:e6ff61af7c655253b6d565f7977910abf01c5aeb03a97ea251b1f9d3612e9db6",
+      "src/arithmetic-5.ts:189650a6b4d233fbfd9edc8c9cf9550795637cbbced6a7781406b9bb0e783853",
+      "src/arithmetic-5.ts:3ad846b6ca17ba93ff120385558108287c27a0e1ae1d49239828a8f78b356391",
+      "src/arithmetic-5.ts:5e4cd8e84b048fd49d3d6f409f0fac714f48753be2261761c7a43eaa8ea41174",
+      "src/arithmetic-5.ts:5f03924a2f3823d1fdb27d9ed3f4df93418d9df94c42a5c2f0dacae20870e486",
+      "src/arithmetic-5.ts:9003ab72f9ffe52738a72d8dbf6c7ab51ee30994892af4fabdb82dd74b4ba5b8",
+      "src/arithmetic-5.ts:b7849819c74dd8467a0f4387cf92e2ff66cae78ce4f152834db96c44890176cf",
+      "src/arithmetic-5.ts:c0f543ea8dce77377b55ee9d166ec13f44bae928d4d828895647d2e7a0963364",
+      "src/arithmetic-5.ts:f37d95b3326b1576630cf5967e3a6e8ae0c0aea083728d2fbf435610aff51fdf",
+      "src/arithmetic-6.ts:0cdc9c690ae73beb2d8b23c33a1d82d0c4265b0fb96ddda6e2e54083609bff12",
+      "src/arithmetic-6.ts:15c12e5f72a40e9e21a6c036fdfb72a78ea4e5dc32b39bea911eacec52e179f2",
+      "src/arithmetic-6.ts:2b98be31ba3e2cf1550bcca2c6e071df0a5807648c9f10c48dfc59d489547425",
+      "src/arithmetic-6.ts:3a081d5713df99d2c8c4a348a6498f4993e8a51430f777864386953987838f2b",
+      "src/arithmetic-6.ts:454424e8b99d8b197a6586e3efecbb01a9e6efa7d41d7637a896eefac572d78f",
+      "src/arithmetic-6.ts:4e5ddfd78b1a02e0c7a56ff652666a8842ae34a28242c1c5fcd62a8302b53f75",
+      "src/arithmetic-6.ts:f0b9cca9e35d77f2525c8e218743696dfe718bdd6a07388276cea1d1bb086d39",
+      "src/arithmetic-6.ts:fef0a7a641e518f2648255554c1bc36b9fdd8f13e884b6cc290731dd0a5b9f73",
+      "src/arithmetic-7.ts:5fa13b31f9b6756a4f14a975976fc8099bb8973eff1f282ac79a48f9d8bb0d41",
+      "src/arithmetic-7.ts:709a33d41168cb348c3ee67635b0d6ca5e19ab5baca2f2d76e400254f32096fc",
+      "src/arithmetic-7.ts:86dc212628d613109a8e756e6b9d5d2d5f7ed06545a6db150a1c1aaa2b1f7cf2",
+      "src/arithmetic-7.ts:9e5ae845c89abcd230c6f9a3d60e626fefd63f38a5cb55b17871df6e101ba0df",
+      "src/arithmetic-7.ts:a32965f96531eb5a7e2e7514e802cc53350fb79813c7556a2938dbf6ccc72f6d",
+      "src/arithmetic-7.ts:a6af620d652cc808cadcff02a32bf367726a320dcc0c5a10cda1022600230b93",
+      "src/arithmetic-7.ts:bb9e068fc260661aa72add4614436ec3342ec612634cd34789af4f0243b3cd7d",
+      "src/arithmetic-7.ts:dbe5adacf8fbb900db11cf75d5b8fa9409878eb357a5bb5b3aea8b2fa14a4b66"
+    ],
+    "shared_classifications_agree": true,
+    "shared_count": 64
+  },
+  {
+    "equal_mutation_scope": true,
+    "explained_no_coverage_refinements": [],
+    "fixture": "matched-scale",
+    "kind": "cross-tool",
+    "left_count": 64,
+    "left_only": {},
+    "left_run": "measured-04-matched-scale-oximut-clean-fresh",
+    "mismatches": [],
+    "ratio_eligible": true,
+    "right_count": 64,
+    "right_only": {},
+    "right_run": "measured-04-matched-scale-stryker-clean-stryker",
+    "round_index": 4,
+    "shared": [
+      "src/arithmetic-0.ts:0bb63f17da1dd236b01338caabde3f8cc767295c8ce125b989122f59513cb1e1",
+      "src/arithmetic-0.ts:4e8a255c26188ab501b83c6af904e9dac6e987d72a47f23c6f551d6037007ed3",
+      "src/arithmetic-0.ts:6700b3f61d697676383dad2c4395f347b295e1bd99e9df3d0daf90600d257e49",
+      "src/arithmetic-0.ts:6fe07c06b3d0e085507d88e6d87547264b11c09b7ab4b756c71890e9dbfc31ce",
+      "src/arithmetic-0.ts:9c0452ef08e78cc2cec2b552f6ef1def6849a9f8eb5d703ae5bf70df1a6aef26",
+      "src/arithmetic-0.ts:bf77d9fdd48beef089bb33024c367cebc07321bc7b1e5d9338bf3db474a29876",
+      "src/arithmetic-0.ts:daaed3439168d1cbf76e8d93dee9ed35abe2ca2e57679989036c9acab38136d7",
+      "src/arithmetic-0.ts:e00212e8e3cf9dee7cadd53205a9c4af87eb74fd44975cf1827761b7f4c4b214",
+      "src/arithmetic-1.ts:11fbdbff4022e8f2713cf8bdb45eca8c387318fbedc7a645bf8eba017afce66a",
+      "src/arithmetic-1.ts:1c2c9364d1e6ee4feada808d64e2b42795eb286976576c1fa988416c64633f27",
+      "src/arithmetic-1.ts:4094c599c99a744438bd1f9b20f730d339f04d3f6e8dd447bbe921e989b9b479",
+      "src/arithmetic-1.ts:45033d379301bdc4da1f4074eafb5aa69395c2d968d10ad66c2758d89dbe2610",
+      "src/arithmetic-1.ts:73909d8d79c080aa32842ec804fc44dad404594a65d16d0d7122b3b2136365b6",
+      "src/arithmetic-1.ts:8026913c32f804dface12c352e6d4a9fb7bb61b66d66889b8e11f92a0ace16c6",
+      "src/arithmetic-1.ts:bb4b9d15172445147c4c71424bbc5b6d0843aeeed9d94f9bb36db5923ee7613e",
+      "src/arithmetic-1.ts:feb7fc3c7334528679c850dac15eaad6d3a2545ecc08336719ca491bf35b1b35",
+      "src/arithmetic-2.ts:2a4fe83dd41363804742859c73c5992b3b69d7880c96675254be1244b65e6ed6",
+      "src/arithmetic-2.ts:5e1c271edcd6ec54a71b4c5d68d0e190ea4d95234795d11acfde3132f8bddd58",
+      "src/arithmetic-2.ts:81bff629ec4902cef5f5783fa114a1f7e4ac431e962eb20c64dd6c20b873fde5",
+      "src/arithmetic-2.ts:82c88c64a289c8503994568241e9e829fd89c539458244bf1e6f069a30bdb1a1",
+      "src/arithmetic-2.ts:846750fffc1ea745a5d52b4dc5ff9c63a831bd6a74cf881d79004e898ff4e0fb",
+      "src/arithmetic-2.ts:956745c8f16382b3a068ae6be498fbacf8e1233b89a91f89d3876e25efcf19a1",
+      "src/arithmetic-2.ts:b6811d08512fefd33f0e70e9d39aa29e1266694bc3f27331b14ba3f69da8a40f",
+      "src/arithmetic-2.ts:cf760ef105568b89a7583b16b2cc026b65407ac138dd5674d909c031c996eb39",
+      "src/arithmetic-3.ts:215aa72a1418c088491b650cceb7984ee33f722fc3a0f04df6165ff111240ab8",
+      "src/arithmetic-3.ts:28d564fc5b02ff5f959f64aeb2a4baa7a3a3aaa90950d95bdd8c300732471d34",
+      "src/arithmetic-3.ts:3008230ac5ac6c4f4eebd207170cf069307a3634636f7d30da2f6330a45e3ee0",
+      "src/arithmetic-3.ts:6604c90740a3b336ab572ac4c61f5b197398501298300a18676a1cb97af140a5",
+      "src/arithmetic-3.ts:962112ca9da9e024dbfd70ff02f36c861a566971a35130ef277882aac7b328f3",
+      "src/arithmetic-3.ts:9f2c275c792e839aa288799b7ab0b17f8d3e01a9415df64994e68279c33c022c",
+      "src/arithmetic-3.ts:cf39b5037e1ac84e09009fd83ce08adb0bf274f2f2b384776536252065731e83",
+      "src/arithmetic-3.ts:dedf10eb55b3aa87bbbeeaa2fb84cdd8637e7bec6db9837ddc02e14870fd4126",
+      "src/arithmetic-4.ts:21604bf19fc8db188ee61fea6263f9415f2794705cdf16a5c81655682af331fc",
+      "src/arithmetic-4.ts:5cab78a4400e1b20770f8892255b6fd0c5d2882e13610d0b55136353303145c8",
+      "src/arithmetic-4.ts:663bc8b1f8086449f55ae96a22516a0ba4bf4eeadc8fc5ad74264a6351d6b13a",
+      "src/arithmetic-4.ts:6d6a15a7cf535f303354d45f021ababb58762548232cd4b02a7ca471e865eece",
+      "src/arithmetic-4.ts:7e7c53ddab9b1a2acb0518baa510f985f47831abdb09547dc1d10f55a8e8f7df",
+      "src/arithmetic-4.ts:9f22be8f3c271594adc9cd7aaf30509ee40a7265cbb779472d6f4e262053f6ae",
+      "src/arithmetic-4.ts:dbfd4ba051649076939898d05d3c7def3385907eaf43f5f1000fa392a3a83a42",
+      "src/arithmetic-4.ts:e6ff61af7c655253b6d565f7977910abf01c5aeb03a97ea251b1f9d3612e9db6",
+      "src/arithmetic-5.ts:189650a6b4d233fbfd9edc8c9cf9550795637cbbced6a7781406b9bb0e783853",
+      "src/arithmetic-5.ts:3ad846b6ca17ba93ff120385558108287c27a0e1ae1d49239828a8f78b356391",
+      "src/arithmetic-5.ts:5e4cd8e84b048fd49d3d6f409f0fac714f48753be2261761c7a43eaa8ea41174",
+      "src/arithmetic-5.ts:5f03924a2f3823d1fdb27d9ed3f4df93418d9df94c42a5c2f0dacae20870e486",
+      "src/arithmetic-5.ts:9003ab72f9ffe52738a72d8dbf6c7ab51ee30994892af4fabdb82dd74b4ba5b8",
+      "src/arithmetic-5.ts:b7849819c74dd8467a0f4387cf92e2ff66cae78ce4f152834db96c44890176cf",
+      "src/arithmetic-5.ts:c0f543ea8dce77377b55ee9d166ec13f44bae928d4d828895647d2e7a0963364",
+      "src/arithmetic-5.ts:f37d95b3326b1576630cf5967e3a6e8ae0c0aea083728d2fbf435610aff51fdf",
+      "src/arithmetic-6.ts:0cdc9c690ae73beb2d8b23c33a1d82d0c4265b0fb96ddda6e2e54083609bff12",
+      "src/arithmetic-6.ts:15c12e5f72a40e9e21a6c036fdfb72a78ea4e5dc32b39bea911eacec52e179f2",
+      "src/arithmetic-6.ts:2b98be31ba3e2cf1550bcca2c6e071df0a5807648c9f10c48dfc59d489547425",
+      "src/arithmetic-6.ts:3a081d5713df99d2c8c4a348a6498f4993e8a51430f777864386953987838f2b",
+      "src/arithmetic-6.ts:454424e8b99d8b197a6586e3efecbb01a9e6efa7d41d7637a896eefac572d78f",
+      "src/arithmetic-6.ts:4e5ddfd78b1a02e0c7a56ff652666a8842ae34a28242c1c5fcd62a8302b53f75",
+      "src/arithmetic-6.ts:f0b9cca9e35d77f2525c8e218743696dfe718bdd6a07388276cea1d1bb086d39",
+      "src/arithmetic-6.ts:fef0a7a641e518f2648255554c1bc36b9fdd8f13e884b6cc290731dd0a5b9f73",
+      "src/arithmetic-7.ts:5fa13b31f9b6756a4f14a975976fc8099bb8973eff1f282ac79a48f9d8bb0d41",
+      "src/arithmetic-7.ts:709a33d41168cb348c3ee67635b0d6ca5e19ab5baca2f2d76e400254f32096fc",
+      "src/arithmetic-7.ts:86dc212628d613109a8e756e6b9d5d2d5f7ed06545a6db150a1c1aaa2b1f7cf2",
+      "src/arithmetic-7.ts:9e5ae845c89abcd230c6f9a3d60e626fefd63f38a5cb55b17871df6e101ba0df",
+      "src/arithmetic-7.ts:a32965f96531eb5a7e2e7514e802cc53350fb79813c7556a2938dbf6ccc72f6d",
+      "src/arithmetic-7.ts:a6af620d652cc808cadcff02a32bf367726a320dcc0c5a10cda1022600230b93",
+      "src/arithmetic-7.ts:bb9e068fc260661aa72add4614436ec3342ec612634cd34789af4f0243b3cd7d",
+      "src/arithmetic-7.ts:dbe5adacf8fbb900db11cf75d5b8fa9409878eb357a5bb5b3aea8b2fa14a4b66"
+    ],
+    "shared_classifications_agree": true,
+    "shared_count": 64
+  },
+  {
+    "equal_mutation_scope": true,
+    "explained_no_coverage_refinements": [],
+    "fixture": "matched-scale",
+    "kind": "cross-tool",
+    "left_count": 64,
+    "left_only": {},
+    "left_run": "measured-05-matched-scale-oximut-clean-fresh",
+    "mismatches": [],
+    "ratio_eligible": true,
+    "right_count": 64,
+    "right_only": {},
+    "right_run": "measured-05-matched-scale-stryker-clean-stryker",
+    "round_index": 5,
+    "shared": [
+      "src/arithmetic-0.ts:0bb63f17da1dd236b01338caabde3f8cc767295c8ce125b989122f59513cb1e1",
+      "src/arithmetic-0.ts:4e8a255c26188ab501b83c6af904e9dac6e987d72a47f23c6f551d6037007ed3",
+      "src/arithmetic-0.ts:6700b3f61d697676383dad2c4395f347b295e1bd99e9df3d0daf90600d257e49",
+      "src/arithmetic-0.ts:6fe07c06b3d0e085507d88e6d87547264b11c09b7ab4b756c71890e9dbfc31ce",
+      "src/arithmetic-0.ts:9c0452ef08e78cc2cec2b552f6ef1def6849a9f8eb5d703ae5bf70df1a6aef26",
+      "src/arithmetic-0.ts:bf77d9fdd48beef089bb33024c367cebc07321bc7b1e5d9338bf3db474a29876",
+      "src/arithmetic-0.ts:daaed3439168d1cbf76e8d93dee9ed35abe2ca2e57679989036c9acab38136d7",
+      "src/arithmetic-0.ts:e00212e8e3cf9dee7cadd53205a9c4af87eb74fd44975cf1827761b7f4c4b214",
+      "src/arithmetic-1.ts:11fbdbff4022e8f2713cf8bdb45eca8c387318fbedc7a645bf8eba017afce66a",
+      "src/arithmetic-1.ts:1c2c9364d1e6ee4feada808d64e2b42795eb286976576c1fa988416c64633f27",
+      "src/arithmetic-1.ts:4094c599c99a744438bd1f9b20f730d339f04d3f6e8dd447bbe921e989b9b479",
+      "src/arithmetic-1.ts:45033d379301bdc4da1f4074eafb5aa69395c2d968d10ad66c2758d89dbe2610",
+      "src/arithmetic-1.ts:73909d8d79c080aa32842ec804fc44dad404594a65d16d0d7122b3b2136365b6",
+      "src/arithmetic-1.ts:8026913c32f804dface12c352e6d4a9fb7bb61b66d66889b8e11f92a0ace16c6",
+      "src/arithmetic-1.ts:bb4b9d15172445147c4c71424bbc5b6d0843aeeed9d94f9bb36db5923ee7613e",
+      "src/arithmetic-1.ts:feb7fc3c7334528679c850dac15eaad6d3a2545ecc08336719ca491bf35b1b35",
+      "src/arithmetic-2.ts:2a4fe83dd41363804742859c73c5992b3b69d7880c96675254be1244b65e6ed6",
+      "src/arithmetic-2.ts:5e1c271edcd6ec54a71b4c5d68d0e190ea4d95234795d11acfde3132f8bddd58",
+      "src/arithmetic-2.ts:81bff629ec4902cef5f5783fa114a1f7e4ac431e962eb20c64dd6c20b873fde5",
+      "src/arithmetic-2.ts:82c88c64a289c8503994568241e9e829fd89c539458244bf1e6f069a30bdb1a1",
+      "src/arithmetic-2.ts:846750fffc1ea745a5d52b4dc5ff9c63a831bd6a74cf881d79004e898ff4e0fb",
+      "src/arithmetic-2.ts:956745c8f16382b3a068ae6be498fbacf8e1233b89a91f89d3876e25efcf19a1",
+      "src/arithmetic-2.ts:b6811d08512fefd33f0e70e9d39aa29e1266694bc3f27331b14ba3f69da8a40f",
+      "src/arithmetic-2.ts:cf760ef105568b89a7583b16b2cc026b65407ac138dd5674d909c031c996eb39",
+      "src/arithmetic-3.ts:215aa72a1418c088491b650cceb7984ee33f722fc3a0f04df6165ff111240ab8",
+      "src/arithmetic-3.ts:28d564fc5b02ff5f959f64aeb2a4baa7a3a3aaa90950d95bdd8c300732471d34",
+      "src/arithmetic-3.ts:3008230ac5ac6c4f4eebd207170cf069307a3634636f7d30da2f6330a45e3ee0",
+      "src/arithmetic-3.ts:6604c90740a3b336ab572ac4c61f5b197398501298300a18676a1cb97af140a5",
+      "src/arithmetic-3.ts:962112ca9da9e024dbfd70ff02f36c861a566971a35130ef277882aac7b328f3",
+      "src/arithmetic-3.ts:9f2c275c792e839aa288799b7ab0b17f8d3e01a9415df64994e68279c33c022c",
+      "src/arithmetic-3.ts:cf39b5037e1ac84e09009fd83ce08adb0bf274f2f2b384776536252065731e83",
+      "src/arithmetic-3.ts:dedf10eb55b3aa87bbbeeaa2fb84cdd8637e7bec6db9837ddc02e14870fd4126",
+      "src/arithmetic-4.ts:21604bf19fc8db188ee61fea6263f9415f2794705cdf16a5c81655682af331fc",
+      "src/arithmetic-4.ts:5cab78a4400e1b20770f8892255b6fd0c5d2882e13610d0b55136353303145c8",
+      "src/arithmetic-4.ts:663bc8b1f8086449f55ae96a22516a0ba4bf4eeadc8fc5ad74264a6351d6b13a",
+      "src/arithmetic-4.ts:6d6a15a7cf535f303354d45f021ababb58762548232cd4b02a7ca471e865eece",
+      "src/arithmetic-4.ts:7e7c53ddab9b1a2acb0518baa510f985f47831abdb09547dc1d10f55a8e8f7df",
+      "src/arithmetic-4.ts:9f22be8f3c271594adc9cd7aaf30509ee40a7265cbb779472d6f4e262053f6ae",
+      "src/arithmetic-4.ts:dbfd4ba051649076939898d05d3c7def3385907eaf43f5f1000fa392a3a83a42",
+      "src/arithmetic-4.ts:e6ff61af7c655253b6d565f7977910abf01c5aeb03a97ea251b1f9d3612e9db6",
+      "src/arithmetic-5.ts:189650a6b4d233fbfd9edc8c9cf9550795637cbbced6a7781406b9bb0e783853",
+      "src/arithmetic-5.ts:3ad846b6ca17ba93ff120385558108287c27a0e1ae1d49239828a8f78b356391",
+      "src/arithmetic-5.ts:5e4cd8e84b048fd49d3d6f409f0fac714f48753be2261761c7a43eaa8ea41174",
+      "src/arithmetic-5.ts:5f03924a2f3823d1fdb27d9ed3f4df93418d9df94c42a5c2f0dacae20870e486",
+      "src/arithmetic-5.ts:9003ab72f9ffe52738a72d8dbf6c7ab51ee30994892af4fabdb82dd74b4ba5b8",
+      "src/arithmetic-5.ts:b7849819c74dd8467a0f4387cf92e2ff66cae78ce4f152834db96c44890176cf",
+      "src/arithmetic-5.ts:c0f543ea8dce77377b55ee9d166ec13f44bae928d4d828895647d2e7a0963364",
+      "src/arithmetic-5.ts:f37d95b3326b1576630cf5967e3a6e8ae0c0aea083728d2fbf435610aff51fdf",
+      "src/arithmetic-6.ts:0cdc9c690ae73beb2d8b23c33a1d82d0c4265b0fb96ddda6e2e54083609bff12",
+      "src/arithmetic-6.ts:15c12e5f72a40e9e21a6c036fdfb72a78ea4e5dc32b39bea911eacec52e179f2",
+      "src/arithmetic-6.ts:2b98be31ba3e2cf1550bcca2c6e071df0a5807648c9f10c48dfc59d489547425",
+      "src/arithmetic-6.ts:3a081d5713df99d2c8c4a348a6498f4993e8a51430f777864386953987838f2b",
+      "src/arithmetic-6.ts:454424e8b99d8b197a6586e3efecbb01a9e6efa7d41d7637a896eefac572d78f",
+      "src/arithmetic-6.ts:4e5ddfd78b1a02e0c7a56ff652666a8842ae34a28242c1c5fcd62a8302b53f75",
+      "src/arithmetic-6.ts:f0b9cca9e35d77f2525c8e218743696dfe718bdd6a07388276cea1d1bb086d39",
+      "src/arithmetic-6.ts:fef0a7a641e518f2648255554c1bc36b9fdd8f13e884b6cc290731dd0a5b9f73",
+      "src/arithmetic-7.ts:5fa13b31f9b6756a4f14a975976fc8099bb8973eff1f282ac79a48f9d8bb0d41",
+      "src/arithmetic-7.ts:709a33d41168cb348c3ee67635b0d6ca5e19ab5baca2f2d76e400254f32096fc",
+      "src/arithmetic-7.ts:86dc212628d613109a8e756e6b9d5d2d5f7ed06545a6db150a1c1aaa2b1f7cf2",
+      "src/arithmetic-7.ts:9e5ae845c89abcd230c6f9a3d60e626fefd63f38a5cb55b17871df6e101ba0df",
+      "src/arithmetic-7.ts:a32965f96531eb5a7e2e7514e802cc53350fb79813c7556a2938dbf6ccc72f6d",
+      "src/arithmetic-7.ts:a6af620d652cc808cadcff02a32bf367726a320dcc0c5a10cda1022600230b93",
+      "src/arithmetic-7.ts:bb9e068fc260661aa72add4614436ec3342ec612634cd34789af4f0243b3cd7d",
+      "src/arithmetic-7.ts:dbe5adacf8fbb900db11cf75d5b8fa9409878eb357a5bb5b3aea8b2fa14a4b66"
+    ],
+    "shared_classifications_agree": true,
+    "shared_count": 64
+  },
+  {
+    "equal_mutation_scope": true,
+    "explained_no_coverage_refinements": [],
+    "fixture": "matched-scale",
+    "kind": "optimized-reference",
+    "left_count": 64,
+    "left_only": {},
+    "left_run": "measured-05-matched-scale-oximut-clean-fresh",
+    "mismatches": [],
+    "ratio_eligible": true,
+    "right_count": 64,
+    "right_only": {},
+    "right_run": "measured-05-matched-scale-oximut-clean-selection",
+    "round_index": 5,
+    "shared": [
+      "src/arithmetic-0.ts:0bb63f17da1dd236b01338caabde3f8cc767295c8ce125b989122f59513cb1e1",
+      "src/arithmetic-0.ts:4e8a255c26188ab501b83c6af904e9dac6e987d72a47f23c6f551d6037007ed3",
+      "src/arithmetic-0.ts:6700b3f61d697676383dad2c4395f347b295e1bd99e9df3d0daf90600d257e49",
+      "src/arithmetic-0.ts:6fe07c06b3d0e085507d88e6d87547264b11c09b7ab4b756c71890e9dbfc31ce",
+      "src/arithmetic-0.ts:9c0452ef08e78cc2cec2b552f6ef1def6849a9f8eb5d703ae5bf70df1a6aef26",
+      "src/arithmetic-0.ts:bf77d9fdd48beef089bb33024c367cebc07321bc7b1e5d9338bf3db474a29876",
+      "src/arithmetic-0.ts:daaed3439168d1cbf76e8d93dee9ed35abe2ca2e57679989036c9acab38136d7",
+      "src/arithmetic-0.ts:e00212e8e3cf9dee7cadd53205a9c4af87eb74fd44975cf1827761b7f4c4b214",
+      "src/arithmetic-1.ts:11fbdbff4022e8f2713cf8bdb45eca8c387318fbedc7a645bf8eba017afce66a",
+      "src/arithmetic-1.ts:1c2c9364d1e6ee4feada808d64e2b42795eb286976576c1fa988416c64633f27",
+      "src/arithmetic-1.ts:4094c599c99a744438bd1f9b20f730d339f04d3f6e8dd447bbe921e989b9b479",
+      "src/arithmetic-1.ts:45033d379301bdc4da1f4074eafb5aa69395c2d968d10ad66c2758d89dbe2610",
+      "src/arithmetic-1.ts:73909d8d79c080aa32842ec804fc44dad404594a65d16d0d7122b3b2136365b6",
+      "src/arithmetic-1.ts:8026913c32f804dface12c352e6d4a9fb7bb61b66d66889b8e11f92a0ace16c6",
+      "src/arithmetic-1.ts:bb4b9d15172445147c4c71424bbc5b6d0843aeeed9d94f9bb36db5923ee7613e",
+      "src/arithmetic-1.ts:feb7fc3c7334528679c850dac15eaad6d3a2545ecc08336719ca491bf35b1b35",
+      "src/arithmetic-2.ts:2a4fe83dd41363804742859c73c5992b3b69d7880c96675254be1244b65e6ed6",
+      "src/arithmetic-2.ts:5e1c271edcd6ec54a71b4c5d68d0e190ea4d95234795d11acfde3132f8bddd58",
+      "src/arithmetic-2.ts:81bff629ec4902cef5f5783fa114a1f7e4ac431e962eb20c64dd6c20b873fde5",
+      "src/arithmetic-2.ts:82c88c64a289c8503994568241e9e829fd89c539458244bf1e6f069a30bdb1a1",
+      "src/arithmetic-2.ts:846750fffc1ea745a5d52b4dc5ff9c63a831bd6a74cf881d79004e898ff4e0fb",
+      "src/arithmetic-2.ts:956745c8f16382b3a068ae6be498fbacf8e1233b89a91f89d3876e25efcf19a1",
+      "src/arithmetic-2.ts:b6811d08512fefd33f0e70e9d39aa29e1266694bc3f27331b14ba3f69da8a40f",
+      "src/arithmetic-2.ts:cf760ef105568b89a7583b16b2cc026b65407ac138dd5674d909c031c996eb39",
+      "src/arithmetic-3.ts:215aa72a1418c088491b650cceb7984ee33f722fc3a0f04df6165ff111240ab8",
+      "src/arithmetic-3.ts:28d564fc5b02ff5f959f64aeb2a4baa7a3a3aaa90950d95bdd8c300732471d34",
+      "src/arithmetic-3.ts:3008230ac5ac6c4f4eebd207170cf069307a3634636f7d30da2f6330a45e3ee0",
+      "src/arithmetic-3.ts:6604c90740a3b336ab572ac4c61f5b197398501298300a18676a1cb97af140a5",
+      "src/arithmetic-3.ts:962112ca9da9e024dbfd70ff02f36c861a566971a35130ef277882aac7b328f3",
+      "src/arithmetic-3.ts:9f2c275c792e839aa288799b7ab0b17f8d3e01a9415df64994e68279c33c022c",
+      "src/arithmetic-3.ts:cf39b5037e1ac84e09009fd83ce08adb0bf274f2f2b384776536252065731e83",
+      "src/arithmetic-3.ts:dedf10eb55b3aa87bbbeeaa2fb84cdd8637e7bec6db9837ddc02e14870fd4126",
+      "src/arithmetic-4.ts:21604bf19fc8db188ee61fea6263f9415f2794705cdf16a5c81655682af331fc",
+      "src/arithmetic-4.ts:5cab78a4400e1b20770f8892255b6fd0c5d2882e13610d0b55136353303145c8",
+      "src/arithmetic-4.ts:663bc8b1f8086449f55ae96a22516a0ba4bf4eeadc8fc5ad74264a6351d6b13a",
+      "src/arithmetic-4.ts:6d6a15a7cf535f303354d45f021ababb58762548232cd4b02a7ca471e865eece",
+      "src/arithmetic-4.ts:7e7c53ddab9b1a2acb0518baa510f985f47831abdb09547dc1d10f55a8e8f7df",
+      "src/arithmetic-4.ts:9f22be8f3c271594adc9cd7aaf30509ee40a7265cbb779472d6f4e262053f6ae",
+      "src/arithmetic-4.ts:dbfd4ba051649076939898d05d3c7def3385907eaf43f5f1000fa392a3a83a42",
+      "src/arithmetic-4.ts:e6ff61af7c655253b6d565f7977910abf01c5aeb03a97ea251b1f9d3612e9db6",
+      "src/arithmetic-5.ts:189650a6b4d233fbfd9edc8c9cf9550795637cbbced6a7781406b9bb0e783853",
+      "src/arithmetic-5.ts:3ad846b6ca17ba93ff120385558108287c27a0e1ae1d49239828a8f78b356391",
+      "src/arithmetic-5.ts:5e4cd8e84b048fd49d3d6f409f0fac714f48753be2261761c7a43eaa8ea41174",
+      "src/arithmetic-5.ts:5f03924a2f3823d1fdb27d9ed3f4df93418d9df94c42a5c2f0dacae20870e486",
+      "src/arithmetic-5.ts:9003ab72f9ffe52738a72d8dbf6c7ab51ee30994892af4fabdb82dd74b4ba5b8",
+      "src/arithmetic-5.ts:b7849819c74dd8467a0f4387cf92e2ff66cae78ce4f152834db96c44890176cf",
+      "src/arithmetic-5.ts:c0f543ea8dce77377b55ee9d166ec13f44bae928d4d828895647d2e7a0963364",
+      "src/arithmetic-5.ts:f37d95b3326b1576630cf5967e3a6e8ae0c0aea083728d2fbf435610aff51fdf",
+      "src/arithmetic-6.ts:0cdc9c690ae73beb2d8b23c33a1d82d0c4265b0fb96ddda6e2e54083609bff12",
+      "src/arithmetic-6.ts:15c12e5f72a40e9e21a6c036fdfb72a78ea4e5dc32b39bea911eacec52e179f2",
+      "src/arithmetic-6.ts:2b98be31ba3e2cf1550bcca2c6e071df0a5807648c9f10c48dfc59d489547425",
+      "src/arithmetic-6.ts:3a081d5713df99d2c8c4a348a6498f4993e8a51430f777864386953987838f2b",
+      "src/arithmetic-6.ts:454424e8b99d8b197a6586e3efecbb01a9e6efa7d41d7637a896eefac572d78f",
+      "src/arithmetic-6.ts:4e5ddfd78b1a02e0c7a56ff652666a8842ae34a28242c1c5fcd62a8302b53f75",
+      "src/arithmetic-6.ts:f0b9cca9e35d77f2525c8e218743696dfe718bdd6a07388276cea1d1bb086d39",
+      "src/arithmetic-6.ts:fef0a7a641e518f2648255554c1bc36b9fdd8f13e884b6cc290731dd0a5b9f73",
+      "src/arithmetic-7.ts:5fa13b31f9b6756a4f14a975976fc8099bb8973eff1f282ac79a48f9d8bb0d41",
+      "src/arithmetic-7.ts:709a33d41168cb348c3ee67635b0d6ca5e19ab5baca2f2d76e400254f32096fc",
+      "src/arithmetic-7.ts:86dc212628d613109a8e756e6b9d5d2d5f7ed06545a6db150a1c1aaa2b1f7cf2",
+      "src/arithmetic-7.ts:9e5ae845c89abcd230c6f9a3d60e626fefd63f38a5cb55b17871df6e101ba0df",
+      "src/arithmetic-7.ts:a32965f96531eb5a7e2e7514e802cc53350fb79813c7556a2938dbf6ccc72f6d",
+      "src/arithmetic-7.ts:a6af620d652cc808cadcff02a32bf367726a320dcc0c5a10cda1022600230b93",
+      "src/arithmetic-7.ts:bb9e068fc260661aa72add4614436ec3342ec612634cd34789af4f0243b3cd7d",
+      "src/arithmetic-7.ts:dbe5adacf8fbb900db11cf75d5b8fa9409878eb357a5bb5b3aea8b2fa14a4b66"
+    ],
+    "shared_classifications_agree": true,
+    "shared_count": 64
+  },
+  {
+    "equal_mutation_scope": true,
+    "explained_no_coverage_refinements": [],
+    "fixture": "matched-small",
+    "kind": "optimized-reference",
+    "left_count": 8,
+    "left_only": {},
+    "left_run": "warmup-01-matched-small-oximut-clean-fresh",
+    "mismatches": [],
+    "ratio_eligible": true,
+    "right_count": 8,
+    "right_only": {},
+    "right_run": "warmup-01-matched-small-oximut-clean-selection",
+    "round_index": 0,
+    "shared": [
+      "src/arithmetic.ts:0bb63f17da1dd236b01338caabde3f8cc767295c8ce125b989122f59513cb1e1",
+      "src/arithmetic.ts:4e8a255c26188ab501b83c6af904e9dac6e987d72a47f23c6f551d6037007ed3",
+      "src/arithmetic.ts:6700b3f61d697676383dad2c4395f347b295e1bd99e9df3d0daf90600d257e49",
+      "src/arithmetic.ts:6fe07c06b3d0e085507d88e6d87547264b11c09b7ab4b756c71890e9dbfc31ce",
+      "src/arithmetic.ts:9c0452ef08e78cc2cec2b552f6ef1def6849a9f8eb5d703ae5bf70df1a6aef26",
+      "src/arithmetic.ts:bf77d9fdd48beef089bb33024c367cebc07321bc7b1e5d9338bf3db474a29876",
+      "src/arithmetic.ts:daaed3439168d1cbf76e8d93dee9ed35abe2ca2e57679989036c9acab38136d7",
+      "src/arithmetic.ts:e00212e8e3cf9dee7cadd53205a9c4af87eb74fd44975cf1827761b7f4c4b214"
+    ],
+    "shared_classifications_agree": true,
+    "shared_count": 8
+  },
+  {
+    "equal_mutation_scope": true,
+    "explained_no_coverage_refinements": [],
+    "fixture": "matched-small",
+    "kind": "cross-tool",
+    "left_count": 8,
+    "left_only": {},
+    "left_run": "warmup-01-matched-small-oximut-clean-fresh",
+    "mismatches": [],
+    "ratio_eligible": true,
+    "right_count": 8,
+    "right_only": {},
+    "right_run": "warmup-01-matched-small-stryker-clean-stryker",
+    "round_index": 0,
+    "shared": [
+      "src/arithmetic.ts:0bb63f17da1dd236b01338caabde3f8cc767295c8ce125b989122f59513cb1e1",
+      "src/arithmetic.ts:4e8a255c26188ab501b83c6af904e9dac6e987d72a47f23c6f551d6037007ed3",
+      "src/arithmetic.ts:6700b3f61d697676383dad2c4395f347b295e1bd99e9df3d0daf90600d257e49",
+      "src/arithmetic.ts:6fe07c06b3d0e085507d88e6d87547264b11c09b7ab4b756c71890e9dbfc31ce",
+      "src/arithmetic.ts:9c0452ef08e78cc2cec2b552f6ef1def6849a9f8eb5d703ae5bf70df1a6aef26",
+      "src/arithmetic.ts:bf77d9fdd48beef089bb33024c367cebc07321bc7b1e5d9338bf3db474a29876",
+      "src/arithmetic.ts:daaed3439168d1cbf76e8d93dee9ed35abe2ca2e57679989036c9acab38136d7",
+      "src/arithmetic.ts:e00212e8e3cf9dee7cadd53205a9c4af87eb74fd44975cf1827761b7f4c4b214"
+    ],
+    "shared_classifications_agree": true,
+    "shared_count": 8
+  },
+  {
+    "equal_mutation_scope": true,
+    "explained_no_coverage_refinements": [],
+    "fixture": "matched-small",
+    "kind": "cross-tool",
+    "left_count": 8,
+    "left_only": {},
+    "left_run": "measured-01-matched-small-oximut-clean-fresh",
+    "mismatches": [],
+    "ratio_eligible": true,
+    "right_count": 8,
+    "right_only": {},
+    "right_run": "measured-01-matched-small-stryker-clean-stryker",
+    "round_index": 1,
+    "shared": [
+      "src/arithmetic.ts:0bb63f17da1dd236b01338caabde3f8cc767295c8ce125b989122f59513cb1e1",
+      "src/arithmetic.ts:4e8a255c26188ab501b83c6af904e9dac6e987d72a47f23c6f551d6037007ed3",
+      "src/arithmetic.ts:6700b3f61d697676383dad2c4395f347b295e1bd99e9df3d0daf90600d257e49",
+      "src/arithmetic.ts:6fe07c06b3d0e085507d88e6d87547264b11c09b7ab4b756c71890e9dbfc31ce",
+      "src/arithmetic.ts:9c0452ef08e78cc2cec2b552f6ef1def6849a9f8eb5d703ae5bf70df1a6aef26",
+      "src/arithmetic.ts:bf77d9fdd48beef089bb33024c367cebc07321bc7b1e5d9338bf3db474a29876",
+      "src/arithmetic.ts:daaed3439168d1cbf76e8d93dee9ed35abe2ca2e57679989036c9acab38136d7",
+      "src/arithmetic.ts:e00212e8e3cf9dee7cadd53205a9c4af87eb74fd44975cf1827761b7f4c4b214"
+    ],
+    "shared_classifications_agree": true,
+    "shared_count": 8
+  },
+  {
+    "equal_mutation_scope": true,
+    "explained_no_coverage_refinements": [],
+    "fixture": "matched-small",
+    "kind": "optimized-reference",
+    "left_count": 8,
+    "left_only": {},
+    "left_run": "measured-01-matched-small-oximut-clean-fresh",
+    "mismatches": [],
+    "ratio_eligible": true,
+    "right_count": 8,
+    "right_only": {},
+    "right_run": "measured-01-matched-small-oximut-clean-selection",
+    "round_index": 1,
+    "shared": [
+      "src/arithmetic.ts:0bb63f17da1dd236b01338caabde3f8cc767295c8ce125b989122f59513cb1e1",
+      "src/arithmetic.ts:4e8a255c26188ab501b83c6af904e9dac6e987d72a47f23c6f551d6037007ed3",
+      "src/arithmetic.ts:6700b3f61d697676383dad2c4395f347b295e1bd99e9df3d0daf90600d257e49",
+      "src/arithmetic.ts:6fe07c06b3d0e085507d88e6d87547264b11c09b7ab4b756c71890e9dbfc31ce",
+      "src/arithmetic.ts:9c0452ef08e78cc2cec2b552f6ef1def6849a9f8eb5d703ae5bf70df1a6aef26",
+      "src/arithmetic.ts:bf77d9fdd48beef089bb33024c367cebc07321bc7b1e5d9338bf3db474a29876",
+      "src/arithmetic.ts:daaed3439168d1cbf76e8d93dee9ed35abe2ca2e57679989036c9acab38136d7",
+      "src/arithmetic.ts:e00212e8e3cf9dee7cadd53205a9c4af87eb74fd44975cf1827761b7f4c4b214"
+    ],
+    "shared_classifications_agree": true,
+    "shared_count": 8
+  },
+  {
+    "equal_mutation_scope": true,
+    "explained_no_coverage_refinements": [],
+    "fixture": "matched-small",
+    "kind": "optimized-reference",
+    "left_count": 8,
+    "left_only": {},
+    "left_run": "measured-02-matched-small-oximut-clean-fresh",
+    "mismatches": [],
+    "ratio_eligible": true,
+    "right_count": 8,
+    "right_only": {},
+    "right_run": "measured-02-matched-small-oximut-clean-selection",
+    "round_index": 2,
+    "shared": [
+      "src/arithmetic.ts:0bb63f17da1dd236b01338caabde3f8cc767295c8ce125b989122f59513cb1e1",
+      "src/arithmetic.ts:4e8a255c26188ab501b83c6af904e9dac6e987d72a47f23c6f551d6037007ed3",
+      "src/arithmetic.ts:6700b3f61d697676383dad2c4395f347b295e1bd99e9df3d0daf90600d257e49",
+      "src/arithmetic.ts:6fe07c06b3d0e085507d88e6d87547264b11c09b7ab4b756c71890e9dbfc31ce",
+      "src/arithmetic.ts:9c0452ef08e78cc2cec2b552f6ef1def6849a9f8eb5d703ae5bf70df1a6aef26",
+      "src/arithmetic.ts:bf77d9fdd48beef089bb33024c367cebc07321bc7b1e5d9338bf3db474a29876",
+      "src/arithmetic.ts:daaed3439168d1cbf76e8d93dee9ed35abe2ca2e57679989036c9acab38136d7",
+      "src/arithmetic.ts:e00212e8e3cf9dee7cadd53205a9c4af87eb74fd44975cf1827761b7f4c4b214"
+    ],
+    "shared_classifications_agree": true,
+    "shared_count": 8
+  },
+  {
+    "equal_mutation_scope": true,
+    "explained_no_coverage_refinements": [],
+    "fixture": "matched-small",
+    "kind": "cross-tool",
+    "left_count": 8,
+    "left_only": {},
+    "left_run": "measured-02-matched-small-oximut-clean-fresh",
+    "mismatches": [],
+    "ratio_eligible": true,
+    "right_count": 8,
+    "right_only": {},
+    "right_run": "measured-02-matched-small-stryker-clean-stryker",
+    "round_index": 2,
+    "shared": [
+      "src/arithmetic.ts:0bb63f17da1dd236b01338caabde3f8cc767295c8ce125b989122f59513cb1e1",
+      "src/arithmetic.ts:4e8a255c26188ab501b83c6af904e9dac6e987d72a47f23c6f551d6037007ed3",
+      "src/arithmetic.ts:6700b3f61d697676383dad2c4395f347b295e1bd99e9df3d0daf90600d257e49",
+      "src/arithmetic.ts:6fe07c06b3d0e085507d88e6d87547264b11c09b7ab4b756c71890e9dbfc31ce",
+      "src/arithmetic.ts:9c0452ef08e78cc2cec2b552f6ef1def6849a9f8eb5d703ae5bf70df1a6aef26",
+      "src/arithmetic.ts:bf77d9fdd48beef089bb33024c367cebc07321bc7b1e5d9338bf3db474a29876",
+      "src/arithmetic.ts:daaed3439168d1cbf76e8d93dee9ed35abe2ca2e57679989036c9acab38136d7",
+      "src/arithmetic.ts:e00212e8e3cf9dee7cadd53205a9c4af87eb74fd44975cf1827761b7f4c4b214"
+    ],
+    "shared_classifications_agree": true,
+    "shared_count": 8
+  },
+  {
+    "equal_mutation_scope": true,
+    "explained_no_coverage_refinements": [],
+    "fixture": "matched-small",
+    "kind": "cross-tool",
+    "left_count": 8,
+    "left_only": {},
+    "left_run": "measured-03-matched-small-oximut-clean-fresh",
+    "mismatches": [],
+    "ratio_eligible": true,
+    "right_count": 8,
+    "right_only": {},
+    "right_run": "measured-03-matched-small-stryker-clean-stryker",
+    "round_index": 3,
+    "shared": [
+      "src/arithmetic.ts:0bb63f17da1dd236b01338caabde3f8cc767295c8ce125b989122f59513cb1e1",
+      "src/arithmetic.ts:4e8a255c26188ab501b83c6af904e9dac6e987d72a47f23c6f551d6037007ed3",
+      "src/arithmetic.ts:6700b3f61d697676383dad2c4395f347b295e1bd99e9df3d0daf90600d257e49",
+      "src/arithmetic.ts:6fe07c06b3d0e085507d88e6d87547264b11c09b7ab4b756c71890e9dbfc31ce",
+      "src/arithmetic.ts:9c0452ef08e78cc2cec2b552f6ef1def6849a9f8eb5d703ae5bf70df1a6aef26",
+      "src/arithmetic.ts:bf77d9fdd48beef089bb33024c367cebc07321bc7b1e5d9338bf3db474a29876",
+      "src/arithmetic.ts:daaed3439168d1cbf76e8d93dee9ed35abe2ca2e57679989036c9acab38136d7",
+      "src/arithmetic.ts:e00212e8e3cf9dee7cadd53205a9c4af87eb74fd44975cf1827761b7f4c4b214"
+    ],
+    "shared_classifications_agree": true,
+    "shared_count": 8
+  },
+  {
+    "equal_mutation_scope": true,
+    "explained_no_coverage_refinements": [],
+    "fixture": "matched-small",
+    "kind": "optimized-reference",
+    "left_count": 8,
+    "left_only": {},
+    "left_run": "measured-03-matched-small-oximut-clean-fresh",
+    "mismatches": [],
+    "ratio_eligible": true,
+    "right_count": 8,
+    "right_only": {},
+    "right_run": "measured-03-matched-small-oximut-clean-selection",
+    "round_index": 3,
+    "shared": [
+      "src/arithmetic.ts:0bb63f17da1dd236b01338caabde3f8cc767295c8ce125b989122f59513cb1e1",
+      "src/arithmetic.ts:4e8a255c26188ab501b83c6af904e9dac6e987d72a47f23c6f551d6037007ed3",
+      "src/arithmetic.ts:6700b3f61d697676383dad2c4395f347b295e1bd99e9df3d0daf90600d257e49",
+      "src/arithmetic.ts:6fe07c06b3d0e085507d88e6d87547264b11c09b7ab4b756c71890e9dbfc31ce",
+      "src/arithmetic.ts:9c0452ef08e78cc2cec2b552f6ef1def6849a9f8eb5d703ae5bf70df1a6aef26",
+      "src/arithmetic.ts:bf77d9fdd48beef089bb33024c367cebc07321bc7b1e5d9338bf3db474a29876",
+      "src/arithmetic.ts:daaed3439168d1cbf76e8d93dee9ed35abe2ca2e57679989036c9acab38136d7",
+      "src/arithmetic.ts:e00212e8e3cf9dee7cadd53205a9c4af87eb74fd44975cf1827761b7f4c4b214"
+    ],
+    "shared_classifications_agree": true,
+    "shared_count": 8
+  },
+  {
+    "equal_mutation_scope": true,
+    "explained_no_coverage_refinements": [],
+    "fixture": "matched-small",
+    "kind": "optimized-reference",
+    "left_count": 8,
+    "left_only": {},
+    "left_run": "measured-04-matched-small-oximut-clean-fresh",
+    "mismatches": [],
+    "ratio_eligible": true,
+    "right_count": 8,
+    "right_only": {},
+    "right_run": "measured-04-matched-small-oximut-clean-selection",
+    "round_index": 4,
+    "shared": [
+      "src/arithmetic.ts:0bb63f17da1dd236b01338caabde3f8cc767295c8ce125b989122f59513cb1e1",
+      "src/arithmetic.ts:4e8a255c26188ab501b83c6af904e9dac6e987d72a47f23c6f551d6037007ed3",
+      "src/arithmetic.ts:6700b3f61d697676383dad2c4395f347b295e1bd99e9df3d0daf90600d257e49",
+      "src/arithmetic.ts:6fe07c06b3d0e085507d88e6d87547264b11c09b7ab4b756c71890e9dbfc31ce",
+      "src/arithmetic.ts:9c0452ef08e78cc2cec2b552f6ef1def6849a9f8eb5d703ae5bf70df1a6aef26",
+      "src/arithmetic.ts:bf77d9fdd48beef089bb33024c367cebc07321bc7b1e5d9338bf3db474a29876",
+      "src/arithmetic.ts:daaed3439168d1cbf76e8d93dee9ed35abe2ca2e57679989036c9acab38136d7",
+      "src/arithmetic.ts:e00212e8e3cf9dee7cadd53205a9c4af87eb74fd44975cf1827761b7f4c4b214"
+    ],
+    "shared_classifications_agree": true,
+    "shared_count": 8
+  },
+  {
+    "equal_mutation_scope": true,
+    "explained_no_coverage_refinements": [],
+    "fixture": "matched-small",
+    "kind": "cross-tool",
+    "left_count": 8,
+    "left_only": {},
+    "left_run": "measured-04-matched-small-oximut-clean-fresh",
+    "mismatches": [],
+    "ratio_eligible": true,
+    "right_count": 8,
+    "right_only": {},
+    "right_run": "measured-04-matched-small-stryker-clean-stryker",
+    "round_index": 4,
+    "shared": [
+      "src/arithmetic.ts:0bb63f17da1dd236b01338caabde3f8cc767295c8ce125b989122f59513cb1e1",
+      "src/arithmetic.ts:4e8a255c26188ab501b83c6af904e9dac6e987d72a47f23c6f551d6037007ed3",
+      "src/arithmetic.ts:6700b3f61d697676383dad2c4395f347b295e1bd99e9df3d0daf90600d257e49",
+      "src/arithmetic.ts:6fe07c06b3d0e085507d88e6d87547264b11c09b7ab4b756c71890e9dbfc31ce",
+      "src/arithmetic.ts:9c0452ef08e78cc2cec2b552f6ef1def6849a9f8eb5d703ae5bf70df1a6aef26",
+      "src/arithmetic.ts:bf77d9fdd48beef089bb33024c367cebc07321bc7b1e5d9338bf3db474a29876",
+      "src/arithmetic.ts:daaed3439168d1cbf76e8d93dee9ed35abe2ca2e57679989036c9acab38136d7",
+      "src/arithmetic.ts:e00212e8e3cf9dee7cadd53205a9c4af87eb74fd44975cf1827761b7f4c4b214"
+    ],
+    "shared_classifications_agree": true,
+    "shared_count": 8
+  },
+  {
+    "equal_mutation_scope": true,
+    "explained_no_coverage_refinements": [],
+    "fixture": "matched-small",
+    "kind": "cross-tool",
+    "left_count": 8,
+    "left_only": {},
+    "left_run": "measured-05-matched-small-oximut-clean-fresh",
+    "mismatches": [],
+    "ratio_eligible": true,
+    "right_count": 8,
+    "right_only": {},
+    "right_run": "measured-05-matched-small-stryker-clean-stryker",
+    "round_index": 5,
+    "shared": [
+      "src/arithmetic.ts:0bb63f17da1dd236b01338caabde3f8cc767295c8ce125b989122f59513cb1e1",
+      "src/arithmetic.ts:4e8a255c26188ab501b83c6af904e9dac6e987d72a47f23c6f551d6037007ed3",
+      "src/arithmetic.ts:6700b3f61d697676383dad2c4395f347b295e1bd99e9df3d0daf90600d257e49",
+      "src/arithmetic.ts:6fe07c06b3d0e085507d88e6d87547264b11c09b7ab4b756c71890e9dbfc31ce",
+      "src/arithmetic.ts:9c0452ef08e78cc2cec2b552f6ef1def6849a9f8eb5d703ae5bf70df1a6aef26",
+      "src/arithmetic.ts:bf77d9fdd48beef089bb33024c367cebc07321bc7b1e5d9338bf3db474a29876",
+      "src/arithmetic.ts:daaed3439168d1cbf76e8d93dee9ed35abe2ca2e57679989036c9acab38136d7",
+      "src/arithmetic.ts:e00212e8e3cf9dee7cadd53205a9c4af87eb74fd44975cf1827761b7f4c4b214"
+    ],
+    "shared_classifications_agree": true,
+    "shared_count": 8
+  },
+  {
+    "equal_mutation_scope": true,
+    "explained_no_coverage_refinements": [],
+    "fixture": "matched-small",
+    "kind": "optimized-reference",
+    "left_count": 8,
+    "left_only": {},
+    "left_run": "measured-05-matched-small-oximut-clean-fresh",
+    "mismatches": [],
+    "ratio_eligible": true,
+    "right_count": 8,
+    "right_only": {},
+    "right_run": "measured-05-matched-small-oximut-clean-selection",
+    "round_index": 5,
+    "shared": [
+      "src/arithmetic.ts:0bb63f17da1dd236b01338caabde3f8cc767295c8ce125b989122f59513cb1e1",
+      "src/arithmetic.ts:4e8a255c26188ab501b83c6af904e9dac6e987d72a47f23c6f551d6037007ed3",
+      "src/arithmetic.ts:6700b3f61d697676383dad2c4395f347b295e1bd99e9df3d0daf90600d257e49",
+      "src/arithmetic.ts:6fe07c06b3d0e085507d88e6d87547264b11c09b7ab4b756c71890e9dbfc31ce",
+      "src/arithmetic.ts:9c0452ef08e78cc2cec2b552f6ef1def6849a9f8eb5d703ae5bf70df1a6aef26",
+      "src/arithmetic.ts:bf77d9fdd48beef089bb33024c367cebc07321bc7b1e5d9338bf3db474a29876",
+      "src/arithmetic.ts:daaed3439168d1cbf76e8d93dee9ed35abe2ca2e57679989036c9acab38136d7",
+      "src/arithmetic.ts:e00212e8e3cf9dee7cadd53205a9c4af87eb74fd44975cf1827761b7f4c4b214"
+    ],
+    "shared_classifications_agree": true,
+    "shared_count": 8
+  }
+]

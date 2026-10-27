@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 from pathlib import Path
 import random
 import statistics
@@ -60,7 +61,11 @@ def evaluate(rows):
                 warmups += 1
                 continue
             for metric in pairs:
-                if a.get(metric, -1) < 0 or b.get(metric, 0) <= 0:
+                numerator, denominator = a.get(metric), b.get(metric)
+                valid = all(type(v) in (int, float) and math.isfinite(v)
+                            for v in (numerator, denominator))
+                if (not valid or denominator <= 0 or numerator < 0
+                        or (metric != 'cpu_seconds' and numerator == 0)):
                     errors.append(f'round {index}: unavailable {metric}')
                 else:
                     pairs[metric].append((a[metric], b[metric]))

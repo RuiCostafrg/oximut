@@ -98,7 +98,7 @@ def aggregate_rollup_rss(tree: dict[int, dict]) -> tuple[int, list[str]]:
             failure = error
         try:
             current = parse_proc_stat((path / 'stat').read_text())
-        except FileNotFoundError:
+        except (FileNotFoundError, ProcessLookupError):
             continue
         except (OSError, ValueError, IndexError) as error:
             errors.append(f'{pid}: identity unavailable: {error}')
@@ -469,7 +469,7 @@ def main(argv=None) -> int:
                         'coverage_analysis': 'perTest for Stryker',
                         'declared_environment': {'CI': 'true', 'NO_COLOR': '1', 'OXIMUT_FIXTURE_MODE': 'fixture'},
                         'cpu_accounting': 'sum wait4 rusage for direct child and adopted children; includes descendants reaped by them; un-reaped/lost descendants may be missing',
-                        'memory_accounting': 'sampled sum /proc/PID/stat RSS of observed process tree; shared pages double counted; short-lived processes/peaks between samples can be missed; excludes harness',
+                        'memory_accounting': 'sampled sum /proc/PID/smaps_rollup Rss of observed process tree; shared pages double counted; short-lived processes/peaks between samples can be missed; excludes harness',
                         'process_count': 'observed non-zombie process count; includes controller and test workers, not thread count',
                         'phase_metrics': 'only explicit lines emitted by installed tool; unavailable phases remain unavailable',
                         'background_load': 'recorded, not controlled; affinity/cgroup are recorded, not configured'})

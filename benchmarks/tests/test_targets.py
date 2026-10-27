@@ -24,6 +24,15 @@ def evidence(wall=.7, memory=.4, cpu=.6, repetitions=5):
 
 
 class TargetTests(unittest.TestCase):
+    def test_impossible_nonfinite_and_nonnumeric_measurements_cannot_certify(self):
+        for value in (0, -1, float('inf'), float('nan'), None, '1', True):
+            for metric in ('wall_seconds', 'peak_aggregate_rss_bytes'):
+                for index in (4, 5):
+                    rows = evidence()
+                    rows[index][metric] = value
+                    with self.subTest(value=value, metric=metric, index=index):
+                        self.assertFalse(targets.evaluate(rows)['targets_met'])
+
     def test_both_targets_at_every_scale_and_cpu_are_reported(self):
         result = targets.evaluate(evidence())
         self.assertTrue(result['targets_met'])

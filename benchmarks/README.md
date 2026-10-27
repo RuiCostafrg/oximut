@@ -60,12 +60,13 @@ summed. This avoids counting sampled cumulative CPU multiple times. Descendants
 that escape observation or are not reaped can undercount usage. Metadata gathering
 and the Python harness itself are excluded from workload CPU and memory.
 
-Memory is the maximum sampled sum of `/proc/PID/stat` resident page counts across
+Memory is the maximum sampled sum of `/proc/PID/smaps_rollup` Rss across
 the observed process tree, sampled every 20 ms by default. Shared pages count in
 each process's RSS, and short-lived processes or peaks between samples can be
-missed. On the recorded host, stat RSS also lagged a live allocation by several
-seconds while a smaps rollup already showed the resident pages. Stat-only peaks
-therefore do not establish precise memory savings. This is an observed aggregate RSS peak, not a PSS/unique-memory figure or
+missed. Missing or malformed live-process memory accounting invalidates a run.
+Historical campaigns recorded approximate stat RSS, which can lag live allocations;
+those immutable results do not establish precise memory savings.
+This is an observed aggregate RSS peak, not a PSS/unique-memory figure or
 an enforced memory cap. Process count includes the tool controller and workers,
 excludes zombie processes, and is not a count of worker threads. Cgroup/affinity
 values are recorded, not changed; missing or virtualized counters remain a host
@@ -142,9 +143,9 @@ admission budget only. Separate runs can explore budgets without implying that
 Stryker implements an equivalent cap.
 
 The M0 process-tree CPU/RSS sampler described above supplies the measurements.
-Its approximate stat RSS is distinct from current Oximut admission accounting,
-which prefers accurate smaps rollups. Do not compare those two internal memory
-methods as if an accounting change were a change in actual memory use.
+Current campaigns use smaps rollups, as does Oximut admission accounting. Earlier
+archives retain their original stat RSS method. Do not interpret a difference
+between accounting methods as a change in actual memory use.
 `metadata.json`, `measurements.jsonl`, `measurements.csv`, `summary.json`, and
 `comparisons.json` retain commands, configuration hashes, environment, medians,
 min/max spread, warmups, failures, overlap/exclusions, and correctness gates.

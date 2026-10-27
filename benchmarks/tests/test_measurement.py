@@ -33,6 +33,7 @@ class ProcessStatsTests(unittest.TestCase):
     def test_exit_or_reused_pid_during_memory_sample_is_ignored(self):
         tail = ['S', '12', '34'] + ['0'] * 16 + ['9877', '1234', '7']
         for values in ([FileNotFoundError(), FileNotFoundError()],
+                       ['Rss: 123 kB', ProcessLookupError()],
                        [ProcessLookupError()],
                        ['Rss: 123 kB', '99 (worker) ' + ' '.join(tail)]):
             with mock.patch.object(Path, 'read_text', side_effect=values):
