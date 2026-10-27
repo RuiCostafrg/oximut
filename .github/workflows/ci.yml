@@ -15,7 +15,8 @@ concurrency:
 jobs:
   feasibility:
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    # Acceptance alone can take 18 minutes; retain time for setup and smoke runs.
+    timeout-minutes: 35
     permissions:
       contents: read
     steps:
