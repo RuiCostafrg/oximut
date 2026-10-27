@@ -1,0 +1,85 @@
+name: Source candidate provenance (not release approval)
+
+on:
+  workflow_dispatch:
+    inputs:
+      revision:
+        description: Full 40-character candidate commit SHA, already in trusted default-branch history
+        required: true
+        type: string
+
+permissions: {}
+
+jobs:
+  source-candidate:
+    # A dispatch from any other ref must not get signing credentials.
+    if: >-
+      github.ref == format('refs/heads/{0}', github.event.repository.default_branch) &&
+      github.workflow_sha == github.sha
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    env:
+      CANDIDATE_REVISION: ${{ inputs.revision }}
+      WORKFLOW_COMMIT: ${{ github.workflow_sha }}
+    steps:
+      - name: Choose candidate output directory
+        run: echo "CANDIDATE_DIR=$RUNNER_TEMP/source-candidate" >> "$GITHUB_ENV"
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.workflow_sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Build with trusted scripts; validate source format; record pending release gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$CANDIDATE_REVISION" =~ ^[0-9a-f]{40}$ ]]
+          test "$(git rev-parse HEAD)" = "$WORKFLOW_COMMIT"
+          git merge-base --is-ancestor "$CANDIDATE_REVISION" "$WORKFLOW_COMMIT"
+          python3 scripts/build-source.py --revision "$CANDIDATE_REVISION" \
+            --version 1.0.0-rc.1 --output-dir "$CANDIDATE_DIR"
+          python3 scripts/source-release-metadata.py --revision "$CANDIDATE_REVISION" \
+            --workflow-commit "$WORKFLOW_COMMIT" \
+            --archive "$CANDIDATE_DIR/oximut-1.0.0-rc.1-source.tar.gz"
+          (cd "$CANDIDATE_DIR" && sha256sum --check oximut-1.0.0-rc.1-source.tar.gz.sha256)
+      - name: Attest source archive and its metadata only
+        id: attest
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-path: |
+            ${{ runner.temp }}/source-candidate/oximut-1.0.0-rc.1-source.tar.gz
+            ${{ runner.temp }}/source-candidate/oximut-1.0.0-rc.1-source.tar.gz.spdx.json
+            ${{ runner.temp }}/source-candidate/oximut-1.0.0-rc.1-source.tar.gz.evidence.json
+          create-storage-record: false
+      - name: Retain attestation verification bundle
+        env:
+          BUNDLE_PATH: ${{ steps.attest.outputs.bundle-path }}
+        run: cp -- "$BUNDLE_PATH" "$CANDIDATE_DIR/provenance.sigstore.json"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        id: upload
+        with:
+          name: source-candidate-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/source-candidate/*
+          if-no-files-found: error
+          retention-days: 30
+          compression-level: 0
+          overwrite: false
+      - name: Record immutable artifact identity and outstanding gate
+        env:
+          ARTIFACT_ID: ${{ steps.upload.outputs.artifact-id }}
+          ARTIFACT_DIGEST: ${{ steps.upload.outputs.artifact-digest }}
+          ARTIFACT_URL: ${{ steps.upload.outputs.artifact-url }}
+        run: |
+          {
+            echo 'Source provenance only. Exact-artifact build/install/relocation: NOT RUN. Release approval: BLOCKED.'
+            echo "Candidate commit: $CANDIDATE_REVISION"
+            echo "Trusted workflow commit: $WORKFLOW_COMMIT"
+            echo "Artifact ID: $ARTIFACT_ID"
+            echo "Artifact ZIP SHA-256: $ARTIFACT_DIGEST"
+            echo "Artifact URL: $ARTIFACT_URL"
+            cat "$CANDIDATE_DIR/oximut-1.0.0-rc.1-source.tar.gz.sha256"
+          } >> "$GITHUB_STEP_SUMMARY"

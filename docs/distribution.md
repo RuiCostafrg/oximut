@@ -110,3 +110,7 @@ Focused format and installer checks (no dependency install or performance runs):
 python3 -m unittest discover -s tests -p 'test_distribution.py' -v
 python3 -m unittest discover -s tests -p 'test_install.py' -v
 ```
+
+For unpublished RC1 notes, third-party licensing scope, and the manual source
+provenance gate, see [draft release notes](release-notes-1.0.0-rc.1.md),
+[notices](../NOTICE.md), and [source provenance](source-provenance.md).
