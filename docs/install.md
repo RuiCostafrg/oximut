@@ -29,6 +29,13 @@ can be moved together; the original checkout is not required at runtime. The nat
 executable comes from Cargo’s artifact report, including when `CARGO_BUILD_TARGET`
 or Cargo’s `build.target` configuration selects a target-specific output directory.
 
+The Cargo build has a 3600-second deadline and `npm ci` has a 900-second deadline.
+Override them with `--build-timeout-seconds SECONDS` and
+`--npm-timeout-seconds SECONDS`; both require positive finite numbers. If a phase
+expires, the installer kills its process group (including foreground descendants),
+reaps the command, removes staging, and exits with the phase and deadline. No
+launcher or bundle is installed.
+
 The npm bundle currently includes developer tools from the root lockfile as well
 as Vitest. This deliberately uses the existing tested dependency graph; a smaller
 standalone runtime package is future release work. Dependency lifecycle scripts
