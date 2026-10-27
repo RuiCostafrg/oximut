@@ -134,3 +134,83 @@ this branch changes the experiment, not the execution engine. The parent is
 preparing an additive family-filter binary and will run matched qualification
 after its coordinated build/test completes. No timed commands were started after
 the parent requested a build hold.
+
+## Before/after campaign orchestration
+
+`benchmarks/compare_candidates.py` runs one warmup pair and five measured pairs
+by default. Build both binaries **before** invoking it. The baseline is pinned to
+`4a6993b564758d15d976cd0998ba490fbf64e1e1`, which has the mutation-family filter
+and predates the allocation/invalidation optimization. The candidate includes the
+optimization under evaluation; pass its full commit SHA. Both use the same
+arithmetic/boolean-literal declaration (the five-file scope has no Boolean
+literals), the same 41 available source files and all 102 upstream tests.
+
+The wrapper alternates before/after order each round. Each variant subcampaign
+serializes ordinary Vitest, Oximut and Stryker; tool order reverses on alternate
+rounds. Warmups use `real_project.py --warmups 1 --repetitions 0`; measured
+subcampaigns use `--warmups 0 --repetitions 1`. No installation, compilation,
+parallel benchmarks or automatic retries occur in the wrapper. Keep the host free
+of other work during the campaign. Each adapter entrypoint is explicitly chosen
+from its matching source directory and its entire package hash inventory must
+remain identical across every round of that variant. Binary hashes must also stay
+fixed. The wrapper records source commit declarations, build flags, tool versions,
+binary/adapter hashes, optional build metadata, attempted commands and exit codes.
+Local commit/build declarations are supplied by the caller; they are not a
+reconstruction of a binary's build provenance.
+
+Every raw subcampaign, failed attempt and partial report is retained. Subcampaign
+ratio publication is deferred. No campaign ratio is published unless every
+warmup and measured run qualifies individually, each variant is stable across
+rounds, and both variants and Stryker have the same complete exact mutation
+identities, outcomes and declared test inventory. An invalid run is not discarded
+or replaced by a later success. If retrying manually, use a new output directory
+and keep the old directory as evidence.
+
+The summary reports paired **Oximut/Stryker** wall, CPU and sampled aggregate RSS
+ratios for each variant, plus paired **after/before Oximut** ratios. Pairing uses
+the same outer round. Deterministic 10,000-draw bootstrap intervals reuse
+`targets.paired_interval`; warmups never contribute ratios. At least one warmup
+and five measured pairs are required. Candidate/Stryker targets are wall <= 0.80
+and RSS <= 0.50. A target is met only when the interval's upper bound meets the
+threshold, missed when its lower bound exceeds it, and otherwise inconclusive.
+CPU is reported without an invented target. Before/Stryker results provide
+context; after/before measures the change without applying an extra threshold.
+Invalid gates fail the command. Missed or inconclusive performance targets remain
+published evidence and return success unless `--require-targets` is supplied.
+Neither target is promised by the harness or the optimization.
+
+The summary also retains each Oximut report's `resources.phaseWallMs` and
+`resources.disabledValidationRuns` as phase evidence, with its round and raw report
+path. Fields absent from older binaries remain null; they are never inferred
+from wall time or logs. The original report and complete resources remain in raw
+subcampaign evidence, including failed campaigns.
+
+For the parent's local comparison after both matching binaries are ready:
+
+```sh
+export PATH=/root/.local/share/oximut/toolchains/node-v26.3.1-linux-arm64/bin:$PATH
+python3 benchmarks/compare_candidates.py \
+  --before-binary /root/.t3/worktrees/oximut/t3-52f2b967/target/release/oximut \
+  --before-adapter-dir /root/.t3/worktrees/oximut/t3-52f2b967/packages/vitest-adapter \
+  --after-binary /root/oximut/target/release/oximut \
+  --after-adapter-dir /root/oximut/packages/vitest-adapter \
+  --after-commit "$(git -C /root/oximut rev-parse HEAD)" \
+  --output .oximut/colord-before-after
+```
+
+Run from the checkout containing this harness and installed locked dependencies.
+Use `real_project.py` directly for a smaller local qualification; the wrapper
+requires the full minimum campaign. The command above is documentation only; this
+implementation follow-up did not execute benchmarks or builds.
+
+The `Real project before-after benchmark` workflow runs natively on Ubuntu 24.04
+x86_64 with a 90-minute job limit, on relevant pull-request paths or manual
+dispatch. It creates the baseline worktree in RUNNER_TEMP at the full pinned SHA,
+uses a shared CARGO_TARGET_DIR for dependency reuse, and copies the baseline
+binary before compiling and copying the candidate. Matching adapters remain in
+their respective checkout directories. Both builds and gate tests finish before
+timing starts. Runtime paths are set through GITHUB_ENV, not a job-level runner
+context. Build metadata records both commits, tool versions, flags, host and
+copied binary hashes. The workflow uploads raw projects/reports/logs, all attempts
+and summaries even after a failure; dependency symlinks are removed only after
+timing to keep artifacts bounded. Hosted runner noise still limits conclusions.

@@ -188,11 +188,13 @@ def main(argv=None):
     parser.add_argument('--warmups', type=int, default=1)
     parser.add_argument('--repetitions', type=int, default=5)
     parser.add_argument('--timeout', type=float, default=600)
+    parser.add_argument('--defer-ratios', action='store_true',
+                        help='Retain gates/raw evidence; orchestration publishes ratios after all rounds qualify')
     parser.add_argument('--diagnostic-unrestricted', action='store_true',
                         help='Oximut full operator set; mismatches remain ineligible for ratios')
     args = parser.parse_args(argv)
-    if args.warmups < 0 or args.repetitions < 1:
-        parser.error('require warmups >= 0 and repetitions >= 1')
+    if args.warmups < 0 or args.repetitions < 0 or args.warmups + args.repetitions < 1:
+        parser.error('require nonnegative warmups/repetitions and at least one round')
     args.binary = args.binary.resolve()
     if args.adapter is not None:
         args.adapter = args.adapter.resolve()
@@ -271,6 +273,8 @@ def main(argv=None):
                 print(f"  success={row['success']} wall={row['wall_seconds']:.3f}s "
                       f"cpu={row['cpu_seconds']:.3f}s rss={row['peak_aggregate_rss_bytes']}", flush=True)
     comparisons, ratios = compare_rows(rows)
+    if args.defer_ratios:
+        ratios = []
     passed = (all(row['success'] for row in rows) and bool(comparisons)
               and all(item['ratio_eligible'] for item in comparisons))
     m6.write_json(output / 'comparisons.json', comparisons)
@@ -279,7 +283,8 @@ def main(argv=None):
         measured = [row for row in rows if row['tool'] == tool and not row['warmup']]
         groups.append({'tool': tool, 'runs': len(measured),
                        'successes': sum(row['success'] for row in measured),
-                       'raw_medians': {metric: statistics.median(row[metric] for row in measured)
+                       'raw_medians': {metric: (statistics.median(row[metric] for row in measured)
+                                               if measured else None)
                                        for metric in METRICS}})
     m6.write_json(output / 'summary.json', {'correctness_gate': passed, 'groups': groups,
                                           'ratios': ratios, 'raw_measurement_count': len(rows)})

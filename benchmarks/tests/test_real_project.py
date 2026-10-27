@@ -6,6 +6,7 @@ import sys
 import tempfile
 from types import SimpleNamespace
 import unittest
+from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import real_project as benchmark
@@ -66,6 +67,34 @@ class CorpusTests(unittest.TestCase):
         report = {'baseline': {'tests': {'passed': 102}, 'coverage': {'complete': False}}}
         with self.assertRaisesRegex(ValueError, 'attribution incomplete'):
             benchmark.validate_tests('oximut', report, benchmark.CORPUS, self.manifest)
+
+
+class WarmupOnlyTests(unittest.TestCase):
+    def test_warmup_only_keeps_raw_evidence_without_measured_medians(self):
+        # Exercise orchestration only: no child process or timed command runs.
+        def prepare(project, manifest):
+            project.mkdir()
+            for name in ('vitest.config.ts', 'stryker.config.mjs', 'package.json'):
+                (project / name).write_text('{}')
+        versions = {'node': 'v26.3.1', 'vitest': '4.1.12',
+                    '@stryker-mutator/core': '10.0.0', '@stryker-mutator/vitest-runner': '10.0.0'}
+        with tempfile.TemporaryDirectory() as tmp:
+            output = Path(tmp) / 'warmup'
+            with mock.patch.object(benchmark.measurement, 'metadata', return_value={'versions': versions}), \
+                 mock.patch.object(benchmark, 'prepare', side_effect=prepare), \
+                 mock.patch.object(benchmark.measurement, 'run_command', return_value={
+                     'wall_seconds': 1., 'cpu_seconds': 1., 'peak_aggregate_rss_bytes': 1.,
+                     'peak_process_count': 1}), \
+                 mock.patch.object(benchmark, 'validate', return_value={}):
+                code = benchmark.main(['--tools', 'vitest', '--warmups', '1', '--repetitions', '0',
+                                       '--output', str(output)])
+            self.assertEqual(code, 1)  # Ordinary-only does not claim a comparative gate.
+            summary = json.loads((output / 'summary.json').read_text())
+            self.assertEqual(summary['raw_measurement_count'], 1)
+            self.assertEqual(summary['ratios'], [])
+            self.assertEqual(summary['groups'][0]['runs'], 0)
+            self.assertIsNone(summary['groups'][0]['raw_medians']['wall_seconds'])
+            self.assertTrue(json.loads((output / 'measurements.jsonl').read_text())['warmup'])
 
 
 class AdapterProvenanceTests(unittest.TestCase):
