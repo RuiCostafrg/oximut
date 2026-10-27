@@ -33,6 +33,8 @@ Oximut is a working name.
 
 - [Implementation plan](PLAN.md): milestones, dependencies, and acceptance gates.
 - [Roadmap to 1.0.0](docs/release-roadmap.md): remaining release gates and implementation order.
+- [Maintenance and release checklist](docs/maintenance.md): pending candidate gates, versioning, and evidence policy.
+- [Support policy](SUPPORT.md) and [security reporting](SECURITY.md).
 - [M1 runner](docs/m1.md): commands, report semantics, exit codes, and limitations.
 - [M2 execution](docs/m2.md): switching, persistent controllers, isolation, and validation.
 - [M3 selection](docs/m3.md): baseline attribution, conservative selection, and fallbacks.
