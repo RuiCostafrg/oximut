@@ -27,6 +27,8 @@ class PreciseSelection(unittest.TestCase):
             payload = json.loads(report.read_text())
             self.assertEqual(payload['baseline']['outcome'], 'passed', payload)
             self.assertTrue(payload['summary']['complete'], payload)
+            expected_exit = 1 if (payload['summary']['survived'] or payload['summary']['noCoverage']) else 0
+            self.assertEqual(result.returncode, expected_exit, payload)
             return payload
 
     @staticmethod

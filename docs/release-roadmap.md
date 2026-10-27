@@ -140,9 +140,12 @@ a speedup. The [cache follow-up](cache-performance.md) records the final decisio
 
 R1 includes a CI validator for all three normal M6 smoke reports and validator
 failure tests, with `--list` explicitly separate. The report reference now defines
-report/list compatibility and versioning rules. Finish the unsupported-case and
-exit-code coverage audit before declaring the contract frozen. R3 still requires
-the exact release revision and distribution; R4 packaging/provenance and R5
+report/list compatibility and versioning rules. The
+[R1 contract audit](contract-audit.md) now maps exit codes and unsupported-setting/
+fallback behavior to acceptance checks; a separate list schema
+and Cargo-derived `--version` are checked as public CLI interfaces. Run these
+checks on the final release candidate before declaring the contract frozen. R3
+still requires the exact release revision and distribution; R4 packaging/provenance and R5
 support/update policy remain open. The current local acceptance evidence is not
 a claim of native-host or final-artifact validation.
 
