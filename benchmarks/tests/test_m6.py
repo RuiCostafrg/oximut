@@ -349,6 +349,9 @@ class WorkflowTests(unittest.TestCase):
     def test_fake_workflow_records_primes_pairs_order_changes_and_cleans_projects(self):
         with tempfile.TemporaryDirectory() as temporary:
             output = Path(temporary) / '.oximut' / 'result'
+            binary = Path(temporary) / 'fake-oximut'
+            binary.write_text('#!/bin/sh\n# mocked benchmark executable\n')
+            binary.chmod(0o755)
             calls = []
             def fake_run(args, tool, fixture, project, run_dir, mode, env, **labels):
                 calls.append((labels['round_index'], labels['scenario'], labels['role'], env['OXIMUT_BENCH_INPUT']))
@@ -357,7 +360,8 @@ class WorkflowTests(unittest.TestCase):
                 return row(**labels, tool=tool, fixture=fixture, mutation_identity_outcome_sha256='stable')
             with mock.patch.object(m6.measurement, 'metadata', return_value={'input_sha256': {}}), \
                  mock.patch.object(m6, 'measured_run', side_effect=fake_run):
-                code = m6.main(['--output', str(output), '--fixtures', 'm1', '--tools', 'oximut',
+                code = m6.main(['--output', str(output), '--binary', str(binary),
+                                '--fixtures', 'm1', '--tools', 'oximut',
                                 '--scenarios', 'incremental', '--changes', 'source', 'environment',
                                 '--repetitions', '2', '--warmups', '1'])
             self.assertEqual(code, 0)

@@ -1,0 +1,12 @@
+# Keep generated measurement artifacts out of the review file limit.
+# Source, tests, schemas, campaign scripts, and methodology READMEs stay in scope.
+# https://docs.coderabbit.ai/reference/configuration#reviews-path-filters
+reviews:
+  path_filters:
+    - "!benchmarks/results/**/*.json"
+    - "!benchmarks/results/**/*.jsonl"
+    - "!benchmarks/results/**/*.csv"
+    - "!benchmarks/results/**/*.log"
+    - "!benchmarks/results/**/*.txt"
+    - "!benchmarks/results/**/*.patch"
+    - "!benchmarks/results/**/SHA256SUMS"
