@@ -68,6 +68,50 @@ def process_tree(snapshot: dict[int, dict], root: int, known: dict[int, int],
     return selected
 
 
+def parse_rollup_rss(value: str) -> int:
+    """Use the kernel's page-table RSS sum, not approximate stat counters."""
+    rows = [line.split() for line in value.splitlines() if line.startswith('Rss:')]
+    if (len(rows) != 1 or len(rows[0]) != 3 or rows[0][2] != 'kB'
+            or not rows[0][1].isascii() or not rows[0][1].isdigit()):
+        raise ValueError('missing, duplicate, or malformed smaps_rollup Rss')
+    return int(rows[0][1]) * 1024
+
+
+def aggregate_rollup_rss(tree: dict[int, dict]) -> tuple[int, list[str]]:
+    """Sample owned live processes; reject unavailable live-process accounting.
+
+    PID identity is checked after reading so a reused PID cannot contribute.
+    Exits between discovery and sampling are normal. No approximate fallback is
+    used: a restricted kernel cannot establish a memory performance claim.
+    """
+    total, errors = 0, []
+    for pid, expected in tree.items():
+        path = Path(f'/proc/{pid}')
+        failure = None
+        try:
+            rss = parse_rollup_rss((path / 'smaps_rollup').read_text())
+        except ProcessLookupError:
+            # The kernel drops mm before marking a task zombie. smaps_rollup
+            # returns ESRCH in that exit window even if stat still says live.
+            continue
+        except (OSError, ValueError) as error:
+            failure = error
+        try:
+            current = parse_proc_stat((path / 'stat').read_text())
+        except FileNotFoundError:
+            continue
+        except (OSError, ValueError, IndexError) as error:
+            errors.append(f'{pid}: identity unavailable: {error}')
+            continue
+        if current['starttime'] != expected['starttime'] or current['state'] in ('Z', 'X'):
+            continue
+        if failure is not None:
+            errors.append(f'{pid}: RSS unavailable: {failure}')
+        else:
+            total += rss
+    return total, errors
+
+
 def enable_subreaper() -> None:
     # PR_SET_CHILD_SUBREAPER: reap orphaned grandchildren, including timeout jobs.
     libc = ctypes.CDLL(None, use_errno=True)
@@ -104,6 +148,9 @@ def run_command(command: list[str], cwd: Path, log_path: Path,
         'cpu_user_seconds': 0., 'cpu_system_seconds': 0.,
         'peak_aggregate_rss_bytes': 0, 'peak_process_count': 0,
         'observed_process_count': 0, 'samples': 0,
+        'memory_method': 'sum-live-smaps_rollup-rss',
+        'memory_errors': [],
+        'max_sample_gap_seconds': 0., 'max_memory_sample_seconds': 0.,
         'output_bytes': 0, 'captured_output_bytes': 0, 'output_truncated': False,
         'log_file': str(log_path), 'spawn_error': None,
     }
@@ -124,14 +171,24 @@ def run_command(command: list[str], cwd: Path, log_path: Path,
     terminating_at = None
     root_done = False
     eof = False
+    previous_sample = None
     with log_path.open('wb') as output:
         while True:
             now = time.monotonic()
+            if previous_sample is not None:
+                result['max_sample_gap_seconds'] = max(result['max_sample_gap_seconds'], now - previous_sample)
+            previous_sample = now
             tree = process_tree(process_snapshot(), proc.pid, known, os.getpid())
             live = {pid: stat for pid, stat in tree.items() if stat['state'] != 'Z'}
             result['samples'] += 1
+            memory_started = time.monotonic()
+            rss, memory_errors = aggregate_rollup_rss(live)
+            result['max_memory_sample_seconds'] = max(
+                result['max_memory_sample_seconds'], time.monotonic() - memory_started)
+            # Bound diagnostics without accepting an incomplete memory sample.
+            result['memory_errors'] = (result['memory_errors'] + memory_errors)[:20]
             result['peak_aggregate_rss_bytes'] = max(
-                result['peak_aggregate_rss_bytes'], sum(x['rss_bytes'] for x in live.values()))
+                result['peak_aggregate_rss_bytes'], rss)
             result['peak_process_count'] = max(result['peak_process_count'], len(live))
             # wait4 returns each child once. Its rusage includes descendants it reaped;
             # adopted children contribute their own subtree once, with no RSS/CPU sampling sum.
@@ -192,6 +249,7 @@ def run_command(command: list[str], cwd: Path, log_path: Path,
     )
     result['success'] = (result['exit_code'] == 0 and not result['timed_out']
                          and not result['descendant_cleanup_required']
+                         and not result['memory_errors']
                          and 'cleanup_error' not in result)
     return result
 
