@@ -16,7 +16,7 @@ use std::{
     time::{Duration, Instant, SystemTime, UNIX_EPOCH},
 };
 
-const HELP: &str = "Usage: oximut [--root DIR] [--config FILE] --source FILE [--source FILE ...]\n  --version           Print the Cargo package version\n  --report FILE       JSON report (- for stdout)\n  --timeout-ms N      Per-job deadline, default 30000 ms\n  --workers N         Maximum simultaneous mutation jobs (default 1; bounded by CPU limits)\n  --memory-budget-mib N Aggregate sampled RSS budget in MiB (1 MiB = 1048576 bytes); default host/container limit\n  --memory-reserve-mib N Reserved admission headroom in MiB (default 64)\n  --execution MODE   fresh (default) or persistent controller with fresh test forks\n  --test-selection    Collect baseline hits and conservatively select hit test files\n  --order-seed N     Deterministically shuffle mutant execution order\n  --adapter FILE      Node adapter entry point override\n  --cache             Cache instrumentation; outcomes require --cache-inputs-complete\n  --cache-policy MODE  auto (default) learns whether outcome caching saves work; always validates/reuses eligible outcomes\n  --cache-inputs-complete Assert all nondeterministic/external inputs are declared\n  --cache-input FILE  Additional input file/directory (repeatable)\n  --cache-env NAME    Additional environment input (repeatable; values stay private)\n  --no-cache, --force Bypass all cache reads and writes\n  --list              Generate mutants as JSON without executing tests\n  --baseline-only     Run original sources without mutants\nExit: 0 complete/no survivors; 1 survivors/no coverage; 2 incomplete/error.\nScore: killed/(killed+survived+no-coverage)*100; empty denominator => null.\nInvalid/timeout/infrastructure-error/resource-exhausted/skipped are excluded and make a run incomplete.";
+const HELP: &str = "Usage: oximut [--root DIR] [--config FILE] --source FILE [--source FILE ...]\n  --version           Print the Cargo package version\n  --report FILE       JSON report (- for stdout)\n  --timeout-ms N      Per-job deadline, default 30000 ms\n  --workers N         Maximum simultaneous mutation jobs (default 1; bounded by CPU limits)\n  --memory-budget-mib N Aggregate sampled RSS budget in MiB (1 MiB = 1048576 bytes); default host/container limit\n  --memory-reserve-mib N Reserved admission headroom in MiB (default 64)\n  --execution MODE   fresh (default) or persistent controller with fresh test forks\n  --test-selection    Collect baseline hits and conservatively select hit test files\n  --mutators FAMILIES Repeatable comma-separated union: arithmetic,boolean-literal,comparison-boundary (default: all)\n  --order-seed N     Deterministically shuffle mutant execution order\n  --adapter FILE      Node adapter entry point override\n  --cache             Cache instrumentation; outcomes require --cache-inputs-complete\n  --cache-policy MODE  auto (default) learns whether outcome caching saves work; always validates/reuses eligible outcomes\n  --cache-inputs-complete Assert all nondeterministic/external inputs are declared\n  --cache-input FILE  Additional input file/directory (repeatable)\n  --cache-env NAME    Additional environment input (repeatable; values stay private)\n  --no-cache, --force Bypass all cache reads and writes\n  --list              Generate mutants as JSON without executing tests\n  --baseline-only     Run original sources without mutants\nExit: 0 complete/no survivors; 1 survivors/no coverage; 2 incomplete/error.\nScore: killed/(killed+survived+no-coverage)*100; empty denominator => null.\nInvalid/timeout/infrastructure-error/resource-exhausted/skipped are excluded and make a run incomplete.";
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 enum Execution {
@@ -55,6 +55,8 @@ struct Options {
     workers: usize,
     memory_budget_mib: Option<u64>,
     memory_reserve_mib: u64,
+    #[serde(default)]
+    mutators: BTreeSet<String>,
 }
 
 fn options() -> Result<Option<Options>, String> {
@@ -81,6 +83,7 @@ fn options() -> Result<Option<Options>, String> {
     let mut workers = 1;
     let mut memory_budget_mib = None;
     let mut memory_reserve_mib = 64;
+    let mut mutators = BTreeSet::new();
     while let Some(arg) = args.next() {
         match arg.as_str() {
             "--help" | "-h" => {
@@ -92,6 +95,22 @@ fn options() -> Result<Option<Options>, String> {
                 return Ok(None);
             }
             "--list" => list = true,
+            "--mutators" => {
+                let value = args
+                    .next()
+                    .ok_or_else(|| "missing value for --mutators".to_string())?;
+                for family in value.split(',') {
+                    if family.is_empty()
+                        || !["arithmetic", "boolean-literal", "comparison-boundary"]
+                            .contains(&family)
+                    {
+                        return Err(format!(
+                            "unknown or empty mutator family {family:?}; expected arithmetic, boolean-literal, comparison-boundary"
+                        ));
+                    }
+                    mutators.insert(family.to_string());
+                }
+            }
             "--baseline-only" => baseline_only = true,
             "--test-selection" => test_selection = true,
             "--cache" => cache = true,
@@ -269,6 +288,7 @@ fn options() -> Result<Option<Options>, String> {
         workers,
         memory_budget_mib,
         memory_reserve_mib,
+        mutators,
     }))
 }
 
@@ -667,17 +687,18 @@ fn execute_local(options: &Options, request: &Request, session: &mut Option<Sess
 
 fn validate_coverage(
     coverage: &Coverage,
-    mutants: &[Mutant],
+    inventory: &[String],
     root: &Path,
     tests: &Tests,
 ) -> Result<(), String> {
     let ids: BTreeSet<_> = coverage.tests.iter().map(|test| &test.id).collect();
     let hits: BTreeSet<_> = coverage.hits.iter().map(|hit| &hit.mutant_id).collect();
-    let expected: BTreeSet<_> = mutants.iter().map(|mutant| &mutant.id).collect();
+    let expected: BTreeSet<_> = inventory.iter().collect();
     if ids.len() != coverage.tests.len()
         || ids.iter().any(|id| id.is_empty())
         || coverage.tests.len() as u64 != tests.passed + tests.failed + tests.skipped
         || hits.len() != coverage.hits.len()
+        || inventory.len() != expected.len()
         || hits != expected
         || coverage.hits.iter().any(|hit| {
             let unique: BTreeSet<_> = hit.tests.iter().collect();
@@ -766,6 +787,7 @@ fn run_attempt(options: &Options, previous: Option<RetryEvidence>) -> Result<Att
     let mut disabled_checks = vec![];
     let mut probe_transforms = vec![];
     let mut probe_reasons = vec![];
+    let mut inventory = vec![];
     for path in &options.sources {
         let source = fs::read_to_string(path).map_err(|e| format!("{}: {e}", path.display()))?;
         let identity = path
@@ -773,6 +795,7 @@ fn run_attempt(options: &Options, previous: Option<RetryEvidence>) -> Result<Att
             .map_err(|e| e.to_string())?
             .to_string_lossy();
         let (generated, probe) = cache.artifact(options, &identity, path, &source)?;
+        inventory.extend(generated.mutants.iter().map(|mutant| mutant.id.clone()));
         if let Some(probe) = probe {
             match probe {
                 Ok(probe) => probe_transforms.push(probe),
@@ -793,7 +816,9 @@ fn run_attempt(options: &Options, previous: Option<RetryEvidence>) -> Result<Att
                 map: first.map.clone(),
             });
         }
-        mutants.extend(generated.mutants);
+        mutants.extend(generated.mutants.into_iter().filter(|mutant| {
+            options.mutators.is_empty() || options.mutators.contains(&mutant.operator)
+        }));
         diagnostics.extend(
             generated
                 .diagnostics
@@ -807,6 +832,19 @@ fn run_attempt(options: &Options, previous: Option<RetryEvidence>) -> Result<Att
     diagnostics.push(match options.execution {
         Execution::Fresh => "execution=fresh; isolation=fresh-controller-and-test-process".into(),
         Execution::Persistent => "execution=persistent; isolation=fresh-test-forks; controller reuse only; baseline=original-and-disabled-switches".into(),
+    });
+    diagnostics.push(if options.mutators.is_empty() {
+        "mutator families=all".into()
+    } else {
+        format!(
+            "mutator families={}; exclusions are not part of this run",
+            options
+                .mutators
+                .iter()
+                .cloned()
+                .collect::<Vec<_>>()
+                .join(",")
+        )
     });
     if options.list {
         println!(
@@ -919,10 +957,17 @@ fn run_attempt(options: &Options, previous: Option<RetryEvidence>) -> Result<Att
             });
             coverage.reasons.extend(probe_reasons);
             if let Err(reason) =
-                validate_coverage(&coverage, &mutants, &options.root, &baseline.tests)
+                validate_coverage(&coverage, &inventory, &options.root, &baseline.tests)
             {
                 coverage.complete = false;
                 coverage.reasons.push(reason);
+            }
+            if coverage.complete {
+                let requested: BTreeSet<_> =
+                    mutants.iter().map(|mutant| mutant.id.as_str()).collect();
+                coverage
+                    .hits
+                    .retain(|hit| requested.contains(hit.mutant_id.as_str()));
             }
             if !coverage.reasons.is_empty() {
                 coverage.complete = false;
@@ -1338,6 +1383,57 @@ fn main() -> ExitCode {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn coverage_inventory_is_validated_before_subset_projection() {
+        use oximut_core::{Hit, TestIdentity};
+        let root = std::env::current_dir().unwrap();
+        let file = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/main.rs");
+        let inventory = vec!["a".to_string(), "b".to_string()];
+        let tests = Tests {
+            passed: 1,
+            failed: 0,
+            skipped: 0,
+        };
+        let mut coverage = Coverage {
+            complete: true,
+            tests: vec![TestIdentity {
+                id: "t".into(),
+                file: file.to_string_lossy().into_owned(),
+                name: "test".into(),
+            }],
+            hits: vec![
+                Hit {
+                    mutant_id: "a".into(),
+                    tests: vec!["t".into()],
+                    outside_test: false,
+                },
+                Hit {
+                    mutant_id: "b".into(),
+                    tests: vec![],
+                    outside_test: false,
+                },
+            ],
+            reasons: vec![],
+        };
+        validate_coverage(&coverage, &inventory, &root, &tests).unwrap();
+        let selected = BTreeSet::from(["a"]);
+        coverage
+            .hits
+            .retain(|hit| selected.contains(hit.mutant_id.as_str()));
+        assert_eq!(coverage.hits.len(), 1);
+        assert_eq!(
+            validate_coverage(&coverage, &inventory, &root, &tests).unwrap_err(),
+            "invalid-coverage-inventory"
+        );
+        coverage.hits.push(oximut_core::Hit {
+            mutant_id: "bogus".into(),
+            tests: vec![],
+            outside_test: false,
+        });
+        assert!(validate_coverage(&coverage, &inventory, &root, &tests).is_err());
+        assert!(validate_coverage(&coverage, &["a".into(), "a".into()], &root, &tests).is_err());
+    }
 
     #[test]
     fn seeded_shuffle_is_reproducible_and_preserves_every_item() {

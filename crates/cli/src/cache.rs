@@ -957,6 +957,7 @@ fn fingerprint_inputs(
             options.memory_reserve_mib,
             super::resources::cpu_limit(),
             options.order_seed,
+            &options.mutators,
             &options.sources,
             &options.config,
             &options.adapter,
@@ -1033,6 +1034,7 @@ mod tests {
             workers: 1,
             memory_budget_mib: None,
             memory_reserve_mib: 64,
+            mutators: BTreeSet::new(),
         }
     }
     #[test]
@@ -1231,6 +1233,12 @@ mod tests {
     fn project_fingerprint_tracks_settings_tool_operators_and_runtime() {
         let (root, mut options, runtime) = project();
         let key = fingerprint_with_runtime(&options, "tool-and-operators-a", &runtime).unwrap();
+        options.mutators.insert("arithmetic".into());
+        assert_ne!(
+            key,
+            fingerprint_with_runtime(&options, "tool-and-operators-a", &runtime).unwrap()
+        );
+        options.mutators.clear();
         assert_eq!(
             key,
             fingerprint_with_runtime(&options, "tool-and-operators-a", &runtime).unwrap()
