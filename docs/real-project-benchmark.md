@@ -33,7 +33,8 @@ Sources and binary must remain unchanged during each timed command. These hashes
 are provenance of observed files, not proof of how an arbitrary binary was built.
 
 ```sh
-export PATH=/root/.local/share/oximut/toolchains/node-v26.3.1-linux-arm64/bin:$PATH
+NODE_BIN=/absolute/path/to/node-v26.3.1/bin
+export PATH="$NODE_BIN:$PATH"
 npm ci
 # Build separately, outside measurement; serialize builds and benchmarks.
 cargo build --release -p oximut-cli
@@ -190,16 +191,22 @@ requires complete after-candidate phase evidence, including every warmup, via
 `--require-build-integrity`. The before candidate may omit those fields. The original report and complete resources remain in raw
 subcampaign evidence, including failed campaigns.
 
-For the parent's local comparison after both matching binaries are ready:
+For a local comparison after both matching binaries are ready, set these
+checkout paths to the exact revisions being compared. `NODE_BIN` must contain
+the pinned Linux Node executable for your host architecture:
 
 ```sh
-export PATH=/root/.local/share/oximut/toolchains/node-v26.3.1-linux-arm64/bin:$PATH
+NODE_BIN=/absolute/path/to/node-v26.3.1/bin
+export PATH="$NODE_BIN:$PATH"
+BEFORE_CHECKOUT=/absolute/path/to/before-checkout
+AFTER_CHECKOUT=/absolute/path/to/after-checkout
 python3 benchmarks/compare_candidates.py \
-  --before-binary /root/.t3/worktrees/oximut/t3-52f2b967/target/release/oximut \
-  --before-adapter-dir /root/.t3/worktrees/oximut/t3-52f2b967/packages/vitest-adapter \
-  --after-binary /root/oximut/target/release/oximut \
-  --after-adapter-dir /root/oximut/packages/vitest-adapter \
-  --after-commit "$(git -C /root/oximut rev-parse HEAD)" \
+  --before-binary "$BEFORE_CHECKOUT/target/release/oximut" \
+  --before-adapter-dir "$BEFORE_CHECKOUT/packages/vitest-adapter" \
+  --before-commit "$(git -C "$BEFORE_CHECKOUT" rev-parse HEAD)" \
+  --after-binary "$AFTER_CHECKOUT/target/release/oximut" \
+  --after-adapter-dir "$AFTER_CHECKOUT/packages/vitest-adapter" \
+  --after-commit "$(git -C "$AFTER_CHECKOUT" rev-parse HEAD)" \
   --output .oximut/colord-before-after
 ```
 
