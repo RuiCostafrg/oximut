@@ -1,0 +1,70 @@
+name: R3 source artifact validation
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: source-artifact-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  source-artifact:
+    # This gate claims this native host only. arm64 PRoot is developer evidence.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version-file: .node-version
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: '3.13'
+      - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # stable
+        with:
+          toolchain: '1.96.0'
+      - name: Confirm claimed native host
+        run: |
+          test "$(uname -s)" = Linux
+          test "$(uname -m)" = x86_64
+      - name: Lightweight source and artifact gate tests
+        run: |
+          python3 -m unittest discover -s tests -p 'test_distribution.py' -v
+          python3 -m unittest discover -s tests -p 'test_install.py' -v
+          python3 -m unittest discover -s tests -p 'test_artifact_validation.py' -v
+      - name: Build exact committed source candidate
+        shell: bash
+        run: |
+          revision=$(git rev-parse HEAD)
+          version=$(python3 -c 'import json; print(json.load(open("package.json"))["version"])')
+          python3 scripts/build-source.py --revision "$revision" --version "$version" --output-dir "$RUNNER_TEMP/source-candidate"
+      - name: Install candidate once and validate outside checkout
+        shell: bash
+        run: |
+          revision=$(git rev-parse HEAD)
+          tree=$(git rev-parse 'HEAD^{tree}')
+          version=$(python3 -c 'import json; print(json.load(open("package.json"))["version"])')
+          python3 scripts/validate-source.py --archive "$RUNNER_TEMP/source-candidate/oximut-$version-source.tar.gz" --version "$version" --revision "$revision" --tree "$tree" --output-dir "$RUNNER_TEMP/source-validation"
+      - name: Preserve exact installed candidate for later provenance
+        # No second compiler invocation or npm install in provenance steps.
+        run: |
+          tar -C "$RUNNER_TEMP/source-validation" -czf "$RUNNER_TEMP/source-candidate/validated-prefix.tar.gz" 'relocated prefix with spaces'
+          cd "$RUNNER_TEMP/source-candidate"
+          sha256sum validated-prefix.tar.gz > validated-prefix.tar.gz.sha256
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: source-candidate-linux-x86_64
+          path: |
+            ${{ runner.temp }}/source-candidate/*
+            ${{ runner.temp }}/source-validation/evidence.json
+            ${{ runner.temp }}/source-validation/installed/*.json
+            ${{ runner.temp }}/source-validation/relocated/*.json
+          if-no-files-found: error
+          retention-days: 14
