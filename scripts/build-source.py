@@ -67,7 +67,7 @@ def json_bytes(value):
 
 def validate_metadata(files, version):
     required = set(REQUIRED)
-    for runner in ("m1-runner.mjs", "m2-runner.mjs"):
+    for runner in ("m1-runner.mjs", "m2-runner.mjs", "protocol.ts"):
         source = files.get(f"packages/vitest-adapter/{runner}")
         if source:
             # Inspect selected Git blobs, never the current checkout's runners.

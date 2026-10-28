@@ -147,15 +147,32 @@ class SourceDistribution(unittest.TestCase):
         self.git("rm", "packages/vitest-adapter/protocol.mjs")
         self.commit()
         old = self.git("rev-parse", "HEAD").strip()
+        runtime.write_bytes(runtime.with_suffix(".ts").read_bytes() + b"\n// newer runtime\n")
+        for runner in ("m1-runner.mjs", "m2-runner.mjs"):
+            path = self.repo / "packages/vitest-adapter" / runner
+            path.write_text(path.read_text().replace("./protocol.ts", "./protocol.mjs"))
         (self.repo / "README.md").write_text("newer checkout")
         self.commit()
         files = self.contents(self.build(revision=old))
         self.assertNotIn("packages/vitest-adapter/protocol.mjs", files)
         self.assertIn("packages/vitest-adapter/protocol.ts", files)
 
+    def test_typescript_shim_requires_its_reexported_runtime(self):
+        for runner in ("m1-runner.mjs", "m2-runner.mjs"):
+            path = self.repo / "packages/vitest-adapter" / runner
+            path.write_text(path.read_text().replace("./protocol.mjs", "./protocol.ts"))
+        self.commit()
+        valid = self.git("rev-parse", "HEAD").strip()
+        self.assertIn("packages/vitest-adapter/protocol.mjs", self.contents(self.build(revision=valid)))
+        self.git("rm", "packages/vitest-adapter/protocol.mjs")
+        self.commit()
+        with self.assertRaisesRegex(ValueError, "missing required source files.*protocol.mjs"):
+            self.build("missing-shim-runtime", revision=self.git("rev-parse", "HEAD").strip())
+
     def test_either_runner_import_requires_the_runtime_protocol(self):
         runtime = self.repo / "packages/vitest-adapter/protocol.mjs"
         data = runtime.read_bytes()
+        runtime.with_suffix(".ts").write_bytes(data)
         for changed in ("m1-runner.mjs", "m2-runner.mjs"):
             with self.subTest(changed=changed):
                 runtime.write_bytes(data)
