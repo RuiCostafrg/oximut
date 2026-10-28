@@ -29,17 +29,26 @@ try {
   fs.writeFileSync(file, JSON.stringify(record, null, 2));
   initialWriteSucceeded = true;
 } catch (error) {
+  record.initialIdentityWriteFailed = true;
   try { fs.writeSync(2, `Diagnostic Node identity write failed: ${error.message}\n`); }
   catch { /* Diagnostic output must not replace the workload's exit status. */ }
 }
 if (process.env.OXIMUT_PROFILE_SEGMENTS === '1' && startTime !== null) {
-  require('./node-segments.cjs')(record);
+  try {
+    require('./node-segments.cjs')(record);
+  } catch (error) {
+    try {
+      record.segmentCaptureError = String(error?.message ?? error) || 'Unknown segment helper failure';
+      fs.writeSync(2, `Diagnostic segment capture failed: ${record.segmentCaptureError}\n`);
+    } catch { /* Preserve workload status even if diagnostic output fails. */ }
+  }
 }
 process.on('exit', (code) => {
-  if (!initialWriteSucceeded) return;
-  record.exitCode = code;
-  record.selfCpuAtExitUs = process.cpuUsage();
-  record.exitObserved = new Date().toISOString();
+  if (initialWriteSucceeded) {
+    record.exitCode = code;
+    record.selfCpuAtExitUs = process.cpuUsage();
+    record.exitObserved = new Date().toISOString();
+  }
   try {
     // Keep the initial incomplete identity if the final write cannot complete.
     fs.writeFileSync(`${file}.tmp`, JSON.stringify(record, null, 2));

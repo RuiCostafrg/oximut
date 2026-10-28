@@ -1,5 +1,6 @@
 """Lightweight diagnostic fixtures only: no builds or real mutation timings."""
 import copy
+from itertools import product
 import json
 import os
 from pathlib import Path
@@ -86,7 +87,7 @@ class ShimTests(unittest.TestCase):
     def test_initial_python_identity_failures_do_not_replace_supervisor_exit(self):
         """Missing identity evidence must fail capture without preventing execution."""
         self.supervisor.write_text("print('supervisor ran'); raise SystemExit(23)")
-        for failure in ('write', 'read', 'malformed', 'unicode'):
+        for failure in ('write', 'write-permanent', 'read', 'malformed', 'unicode'):
             for stderr_error in ('none', 'OSError', 'ValueError'):
                 with self.subTest(failure=failure, stderr_error=stderr_error), tempfile.TemporaryDirectory() as tmp:
                     output = Path(tmp)
@@ -97,7 +98,7 @@ original_read = pathlib.Path.read_text
 failed = False
 def write(path, *args, **kwargs):
     global failed
-    if {failure!r} == 'write' and path.name.startswith('python-') and path.suffix == '.json' and not failed:
+    if {failure!r} in ('write', 'write-permanent') and path.name.startswith('python-') and path.suffix == '.json' and (not failed or {failure!r} == 'write-permanent'):
         failed = True
         raise OSError('initial identity fixture')
     return original_write(path, *args, **kwargs)
@@ -127,6 +128,12 @@ runpy.run_path({str(self.shim)!r}, run_name='__main__')
                     self.assertTrue(list(output.glob('*.pstats')))
                     if failure == 'write':
                         # Even if later writes could succeed, initial failure stays visible.
+                        record = json.loads(next(output.glob('python-*.json')).read_text())
+                        self.assertTrue(record['initialIdentityWriteFailed'])
+                        self.assertFalse(record['completed'])
+                        self.assertFalse(inventory['observed'][0]['capture_present_and_finalized'])
+                        self.assertEqual(inventory['orphan_profiles'], [])
+                    elif failure == 'write-permanent':
                         self.assertEqual(list(output.glob('python-*.json')), [])
                         self.assertTrue(inventory['orphan_profiles'])
                     else:
@@ -218,6 +225,37 @@ sys.exit(9)
 
 
 class NodeFixtureTests(unittest.TestCase):
+    def test_segment_helper_load_and_invocation_failures_preserve_workload_exit(self):
+        """A missing, invalid or throwing diagnostic module must not abort Node."""
+        node = shutil.which('node')
+        if not node:
+            self.skipTest('Node unavailable')
+        implementations = [None, 'const = ;', "throw Error('load fixture');",
+                           "module.exports=()=>{ throw Error('invoke fixture'); };"]
+        for helper, fail_stderr in product(implementations, (False, True)):
+            with self.subTest(helper=helper, fail_stderr=fail_stderr), tempfile.TemporaryDirectory() as tmp:
+                root = Path(tmp)
+                preload = root / 'node-identity.cjs'
+                shutil.copyfile(diagnostic.SUPPORT / 'node-identity.cjs', preload)
+                if helper is not None:
+                    (root / 'node-segments.cjs').write_text(helper)
+                sabotage = root / 'bad-stderr.cjs'
+                sabotage.write_text("const fs=require('node:fs'); const raw=fs.writeSync;\n"
+                                    + ("fs.writeSync=(fd,...args)=>{if(fd===2) throw Error('stderr fixture'); return raw(fd,...args);};"
+                                       if fail_stderr else ''))
+                child = root / 'workload.cjs'
+                child.write_text("console.log('workload ran'); process.exitCode=23;")
+                env = {**os.environ, 'OXIMUT_PROFILE_DIR': str(root), 'OXIMUT_PROFILE_SEGMENTS': '1',
+                       'NODE_OPTIONS': f'--require="{sabotage}" --require="{preload}"'}
+                result = subprocess.run([node, str(child)], env=env, capture_output=True, timeout=5)
+                self.assertEqual(result.returncode, 23, result.stderr)
+                self.assertIn(b'workload ran', result.stdout)
+                record = json.loads(next(root.glob('node-*.json')).read_text())
+                self.assertTrue(record['segmentCaptureError'])
+                inventory = diagnostic.capture_inventory(root)
+                self.assertTrue(any('segment helper failed' in error for error in inventory['errors']))
+                self.assertFalse(inventory['observed'][0]['capture_present_and_finalized'])
+
     def test_node_proc_identity_failures_preserve_workload_and_remain_incomplete(self):
         """An unreadable or malformed stat never aborts preload or binds a segment."""
         node = shutil.which('node')
@@ -251,8 +289,8 @@ class NodeFixtureTests(unittest.TestCase):
         node = shutil.which('node')
         if not node:
             self.skipTest('Node unavailable')
-        for first_only, fail_stderr in ((False, False), (False, True), (True, False), (True, True)):
-            with self.subTest(first_only=first_only, fail_stderr=fail_stderr), tempfile.TemporaryDirectory() as tmp:
+        for first_only, fail_stderr, full_profile in product((False, True), repeat=3):
+            with self.subTest(first_only=first_only, fail_stderr=fail_stderr, full_profile=full_profile), tempfile.TemporaryDirectory() as tmp:
                 root = Path(tmp)
                 sabotage = root / 'bad-fs.cjs'
                 sabotage.write_text("const fs = require('node:fs'); const path = require('node:path');\n"
@@ -263,18 +301,30 @@ class NodeFixtureTests(unittest.TestCase):
                                     + ("const raw = fs.writeSync; fs.writeSync = (fd,...args) => { if(fd===2) throw Error('stderr fixture'); return raw(fd,...args); };\n"
                                        if fail_stderr else ''))
                 child = root / 'workload.cjs'
-                child.write_text("console.log('workload ran'); process.exitCode = 23;")
+                child.write_text("require('node:fs').writeSync(1, 'workload ran\\n'); process.exit(23);")
+                options = (f'--cpu-prof --cpu-prof-dir="{root}" ' if full_profile else '')
+                options += f'--require="{sabotage}" --require="{diagnostic.SUPPORT / "node-identity.cjs"}"'
                 env = {**os.environ, 'OXIMUT_PROFILE_DIR': str(root),
-                       'NODE_OPTIONS': f'--cpu-prof --cpu-prof-dir="{root}" --require="{sabotage}" --require="{diagnostic.SUPPORT / "node-identity.cjs"}"'}
+                       'OXIMUT_PROFILE_SEGMENTS': '0' if full_profile else '1', 'NODE_OPTIONS': options}
                 result = subprocess.run([node, str(child)], env=env, capture_output=True, timeout=5)
                 self.assertEqual(result.returncode, 23, result.stderr)
                 self.assertIn(b'workload ran', result.stdout)
                 if not fail_stderr:
                     self.assertIn(b'Diagnostic Node identity write failed', result.stderr)
-                self.assertEqual(list(root.glob('node-*.json')), [])
                 inventory = diagnostic.capture_inventory(root)
                 self.assertTrue(inventory['errors'])
-                self.assertTrue(inventory['orphan_profiles'])
+                if first_only:
+                    record = json.loads(next(root.glob('node-*.json')).read_text())
+                    self.assertTrue(record['initialIdentityWriteFailed'])
+                    self.assertNotIn('exitObserved', record)
+                    self.assertFalse(inventory['observed'][0]['capture_present_and_finalized'])
+                    self.assertEqual(inventory['orphan_profiles'], [])
+                else:
+                    self.assertEqual(list(root.glob('node-*.json')), [])
+                    if full_profile:
+                        self.assertTrue(inventory['orphan_profiles'])
+                if not full_profile:
+                    self.assertEqual(list(root.glob('*.cpuprofile')), [])
 
     def test_segment_timer_starvation_and_kill_before_checkpoint_stay_incomplete(self):
         """Do not infer capture completeness from a requested checkpoint interval."""
@@ -440,6 +490,27 @@ class NodeFixtureTests(unittest.TestCase):
 
 
 class MinimumCaptureTests(unittest.TestCase):
+    def test_explicit_capture_failures_quarantine_even_readable_partial_segments(self):
+        """Retained raw segments cannot satisfy role evidence after a known failure."""
+        for marker, value in [('initialIdentityWriteFailed', True), ('segmentCaptureError', 'fixture')]:
+            with self.subTest(marker=marker), tempfile.TemporaryDirectory() as tmp:
+                profiles, qualification = self.fixture(Path(tmp))
+                identity = profiles / 'node-6.json'
+                record = json.loads(identity.read_text())
+                del record['exitObserved']
+                record[marker] = value
+                identity.write_text(json.dumps(record))
+                raw = profiles / 'Segment.6.0.1.0.cpuprofile'
+                (profiles / 'CPU.20261028.000000.6.0.001.cpuprofile').rename(raw)
+                inventory = diagnostic.capture_inventory(profiles, qualification)
+                observed = next(r for r in inventory['observed'] if r['identity'] == identity.name)
+                self.assertTrue(inventory['errors'])
+                self.assertFalse(observed['partial_segments_finalized'])
+                self.assertFalse(observed['capture_present_and_finalized'])
+                self.assertEqual(inventory['minimum_role_evidence']['oximut_test_fork'], [])
+                self.assertEqual(inventory['orphan_profiles'], [])
+                self.assertTrue(diagnostic.node_profile_finalized(json.loads(raw.read_text())))
+
     def test_thousands_of_segments_keep_metadata_bounded_and_raw_files_intact(self):
         """Checkpoint names are summarized by count and chronological endpoints."""
         with tempfile.TemporaryDirectory() as tmp:

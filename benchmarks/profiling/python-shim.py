@@ -44,6 +44,7 @@ def main():
         identity.write_text(json.dumps(record, indent=2))
         initial_identity_written = True
     except Exception as error:
+        record['initialIdentityWriteFailed'] = True
         report_failure('identity write', error)
     sys.argv = sys.argv[1:]
     sys.path[0] = str(target.parent)
@@ -58,9 +59,13 @@ def main():
             profiler.dump_stats(str(stem.with_suffix('.pstats')))
             if initial_identity_written:
                 record['completed'] = True  # Dump completed, not a workload success claim.
-                identity.write_text(json.dumps(record, indent=2))
         except Exception as error:
             report_failure('profile write', error)
+        try:
+            # Retry metadata even after a transient initial failure, keeping it incomplete.
+            identity.write_text(json.dumps(record, indent=2))
+        except Exception as error:
+            report_failure('identity write', error)
 
 
 if __name__ == '__main__':

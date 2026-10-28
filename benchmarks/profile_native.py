@@ -102,6 +102,14 @@ def capture_inventory(directory, qualification=None):
                 complete = record['completed'] and profiles[0].is_file()
                 if complete:
                     pstats.Stats(str(profiles[0]))
+            if record.get('initialIdentityWriteFailed'):
+                complete = False
+                partial = False
+                errors.append(f'initial identity write failed: {identity.name}')
+            if record.get('segmentCaptureError'):
+                complete = False
+                partial = False
+                errors.append(f'segment helper failed: {identity.name}')
             if (complete or partial) and not (
                     type(record.get('pid')) is int and record['pid'] > 0
                     and type(record.get('ppid')) is int and record['ppid'] > 0

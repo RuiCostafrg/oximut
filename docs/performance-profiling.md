@@ -163,6 +163,12 @@ a capture; Node skips startup sampling without that identity. A failed initial
 identity write in either interpreter remains incomplete even if later writes would
 succeed. The supervisor still runs, and diagnostic stderr failures cannot replace
 its exit.
+Exit-time metadata writes retry transient initial failures as explicitly incomplete
+records; they do not add exit/completion evidence that could hide the failure. This
+also exposes short-lived processes with no profile. Segment helper loading and
+invocation failures are guarded and retained as capture errors.
+Explicit identity/helper failure markers also exclude any retained segments from
+usable-role evidence; raw profile files remain available for inspection.
 
 
 ### Short-lived worker checkpoints and the first native capture
