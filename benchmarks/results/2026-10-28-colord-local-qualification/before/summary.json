@@ -1,0 +1,49 @@
+{
+  "correctness_gate": true,
+  "groups": [
+    {
+      "raw_medians": {
+        "cpu_seconds": 5.478977,
+        "peak_aggregate_rss_bytes": 228081664,
+        "peak_process_count": 2,
+        "wall_seconds": 6.0021649450063705
+      },
+      "runs": 1,
+      "successes": 1,
+      "tool": "vitest"
+    },
+    {
+      "raw_medians": {
+        "cpu_seconds": 120.60632000000001,
+        "peak_aggregate_rss_bytes": 431792128,
+        "peak_process_count": 6,
+        "wall_seconds": 85.6718038727995
+      },
+      "runs": 1,
+      "successes": 1,
+      "tool": "oximut"
+    },
+    {
+      "raw_medians": {
+        "cpu_seconds": 19.459975,
+        "peak_aggregate_rss_bytes": 514039808,
+        "peak_process_count": 4,
+        "wall_seconds": 19.302744888933375
+      },
+      "runs": 1,
+      "successes": 1,
+      "tool": "stryker"
+    }
+  ],
+  "ratios": [
+    {
+      "cpu_seconds": 0.16135120448082652,
+      "direction": "stryker/oximut",
+      "peak_aggregate_rss_bytes": 1.19047980420801,
+      "peak_process_count": 0.6666666666666666,
+      "round": 0,
+      "wall_seconds": 0.22531035902539143
+    }
+  ],
+  "raw_measurement_count": 3
+}

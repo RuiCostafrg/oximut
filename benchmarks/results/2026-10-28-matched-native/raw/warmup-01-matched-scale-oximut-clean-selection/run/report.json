@@ -1,0 +1,3684 @@
+{
+  "schemaVersion": 1,
+  "runId": "10518-1793140506232196256",
+  "baseline": {
+    "protocol": 1,
+    "runId": "10518-1793140506232196256",
+    "jobId": "baseline",
+    "generation": 0,
+    "outcome": "passed",
+    "tests": {
+      "passed": 64,
+      "failed": 0,
+      "skipped": 0
+    },
+    "errors": [],
+    "coverage": {
+      "complete": true,
+      "tests": [
+        {
+          "id": "1471922583_0",
+          "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-0.test.ts",
+          "name": "operation 0 at three inputs"
+        },
+        {
+          "id": "1471922583_1",
+          "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-0.test.ts",
+          "name": "operation 1 at three inputs"
+        },
+        {
+          "id": "1471922583_2",
+          "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-0.test.ts",
+          "name": "operation 2 at three inputs"
+        },
+        {
+          "id": "1471922583_3",
+          "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-0.test.ts",
+          "name": "operation 3 at three inputs"
+        },
+        {
+          "id": "1471922583_4",
+          "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-0.test.ts",
+          "name": "operation 4 at three inputs"
+        },
+        {
+          "id": "1471922583_5",
+          "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-0.test.ts",
+          "name": "operation 5 at three inputs"
+        },
+        {
+          "id": "1471922583_6",
+          "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-0.test.ts",
+          "name": "operation 6 at three inputs"
+        },
+        {
+          "id": "1471922583_7",
+          "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-0.test.ts",
+          "name": "operation 7 at three inputs"
+        },
+        {
+          "id": "-335531880_0",
+          "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-1.test.ts",
+          "name": "operation 0 at three inputs"
+        },
+        {
+          "id": "-335531880_1",
+          "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-1.test.ts",
+          "name": "operation 1 at three inputs"
+        },
+        {
+          "id": "-335531880_2",
+          "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-1.test.ts",
+          "name": "operation 2 at three inputs"
+        },
+        {
+          "id": "-335531880_3",
+          "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-1.test.ts",
+          "name": "operation 3 at three inputs"
+        },
+        {
+          "id": "-335531880_4",
+          "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-1.test.ts",
+          "name": "operation 4 at three inputs"
+        },
+        {
+          "id": "-335531880_5",
+          "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-1.test.ts",
+          "name": "operation 5 at three inputs"
+        },
+        {
+          "id": "-335531880_6",
+          "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-1.test.ts",
+          "name": "operation 6 at three inputs"
+        },
+        {
+          "id": "-335531880_7",
+          "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-1.test.ts",
+          "name": "operation 7 at three inputs"
+        },
+        {
+          "id": "-2142986343_0",
+          "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-2.test.ts",
+          "name": "operation 0 at three inputs"
+        },
+        {
+          "id": "-2142986343_1",
+          "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-2.test.ts",
+          "name": "operation 1 at three inputs"
+        },
+        {
+          "id": "-2142986343_2",
+          "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-2.test.ts",
+          "name": "operation 2 at three inputs"
+        },
+        {
+          "id": "-2142986343_3",
+          "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-2.test.ts",
+          "name": "operation 3 at three inputs"
+        },
+        {
+          "id": "-2142986343_4",
+          "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-2.test.ts",
+          "name": "operation 4 at three inputs"
+        },
+        {
+          "id": "-2142986343_5",
+          "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-2.test.ts",
+          "name": "operation 5 at three inputs"
+        },
+        {
+          "id": "-2142986343_6",
+          "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-2.test.ts",
+          "name": "operation 6 at three inputs"
+        },
+        {
+          "id": "-2142986343_7",
+          "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-2.test.ts",
+          "name": "operation 7 at three inputs"
+        },
+        {
+          "id": "344526490_0",
+          "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-3.test.ts",
+          "name": "operation 0 at three inputs"
+        },
+        {
+          "id": "344526490_1",
+          "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-3.test.ts",
+          "name": "operation 1 at three inputs"
+        },
+        {
+          "id": "344526490_2",
+          "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-3.test.ts",
+          "name": "operation 2 at three inputs"
+        },
+        {
+          "id": "344526490_3",
+          "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-3.test.ts",
+          "name": "operation 3 at three inputs"
+        },
+        {
+          "id": "344526490_4",
+          "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-3.test.ts",
+          "name": "operation 4 at three inputs"
+        },
+        {
+          "id": "344526490_5",
+          "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-3.test.ts",
+          "name": "operation 5 at three inputs"
+        },
+        {
+          "id": "344526490_6",
+          "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-3.test.ts",
+          "name": "operation 6 at three inputs"
+        },
+        {
+          "id": "344526490_7",
+          "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-3.test.ts",
+          "name": "operation 7 at three inputs"
+        },
+        {
+          "id": "-1462927973_0",
+          "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-4.test.ts",
+          "name": "operation 0 at three inputs"
+        },
+        {
+          "id": "-1462927973_1",
+          "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-4.test.ts",
+          "name": "operation 1 at three inputs"
+        },
+        {
+          "id": "-1462927973_2",
+          "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-4.test.ts",
+          "name": "operation 2 at three inputs"
+        },
+        {
+          "id": "-1462927973_3",
+          "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-4.test.ts",
+          "name": "operation 3 at three inputs"
+        },
+        {
+          "id": "-1462927973_4",
+          "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-4.test.ts",
+          "name": "operation 4 at three inputs"
+        },
+        {
+          "id": "-1462927973_5",
+          "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-4.test.ts",
+          "name": "operation 5 at three inputs"
+        },
+        {
+          "id": "-1462927973_6",
+          "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-4.test.ts",
+          "name": "operation 6 at three inputs"
+        },
+        {
+          "id": "-1462927973_7",
+          "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-4.test.ts",
+          "name": "operation 7 at three inputs"
+        },
+        {
+          "id": "1024584860_0",
+          "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-5.test.ts",
+          "name": "operation 0 at three inputs"
+        },
+        {
+          "id": "1024584860_1",
+          "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-5.test.ts",
+          "name": "operation 1 at three inputs"
+        },
+        {
+          "id": "1024584860_2",
+          "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-5.test.ts",
+          "name": "operation 2 at three inputs"
+        },
+        {
+          "id": "1024584860_3",
+          "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-5.test.ts",
+          "name": "operation 3 at three inputs"
+        },
+        {
+          "id": "1024584860_4",
+          "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-5.test.ts",
+          "name": "operation 4 at three inputs"
+        },
+        {
+          "id": "1024584860_5",
+          "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-5.test.ts",
+          "name": "operation 5 at three inputs"
+        },
+        {
+          "id": "1024584860_6",
+          "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-5.test.ts",
+          "name": "operation 6 at three inputs"
+        },
+        {
+          "id": "1024584860_7",
+          "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-5.test.ts",
+          "name": "operation 7 at three inputs"
+        },
+        {
+          "id": "-782869603_0",
+          "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-6.test.ts",
+          "name": "operation 0 at three inputs"
+        },
+        {
+          "id": "-782869603_1",
+          "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-6.test.ts",
+          "name": "operation 1 at three inputs"
+        },
+        {
+          "id": "-782869603_2",
+          "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-6.test.ts",
+          "name": "operation 2 at three inputs"
+        },
+        {
+          "id": "-782869603_3",
+          "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-6.test.ts",
+          "name": "operation 3 at three inputs"
+        },
+        {
+          "id": "-782869603_4",
+          "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-6.test.ts",
+          "name": "operation 4 at three inputs"
+        },
+        {
+          "id": "-782869603_5",
+          "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-6.test.ts",
+          "name": "operation 5 at three inputs"
+        },
+        {
+          "id": "-782869603_6",
+          "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-6.test.ts",
+          "name": "operation 6 at three inputs"
+        },
+        {
+          "id": "-782869603_7",
+          "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-6.test.ts",
+          "name": "operation 7 at three inputs"
+        },
+        {
+          "id": "1704643230_0",
+          "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-7.test.ts",
+          "name": "operation 0 at three inputs"
+        },
+        {
+          "id": "1704643230_1",
+          "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-7.test.ts",
+          "name": "operation 1 at three inputs"
+        },
+        {
+          "id": "1704643230_2",
+          "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-7.test.ts",
+          "name": "operation 2 at three inputs"
+        },
+        {
+          "id": "1704643230_3",
+          "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-7.test.ts",
+          "name": "operation 3 at three inputs"
+        },
+        {
+          "id": "1704643230_4",
+          "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-7.test.ts",
+          "name": "operation 4 at three inputs"
+        },
+        {
+          "id": "1704643230_5",
+          "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-7.test.ts",
+          "name": "operation 5 at three inputs"
+        },
+        {
+          "id": "1704643230_6",
+          "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-7.test.ts",
+          "name": "operation 6 at three inputs"
+        },
+        {
+          "id": "1704643230_7",
+          "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-7.test.ts",
+          "name": "operation 7 at three inputs"
+        }
+      ],
+      "hits": [
+        {
+          "mutantId": "fe49b03ed8cdc2753ab9a94036103baebf444390d7e9eb1b17dfdc5cb71039db",
+          "tests": [
+            "1471922583_0"
+          ],
+          "outsideTest": false
+        },
+        {
+          "mutantId": "492240cc0f719346f3333d13d076a49dec7a4c62e55d139309074755d2b1e7dc",
+          "tests": [
+            "1471922583_1"
+          ],
+          "outsideTest": false
+        },
+        {
+          "mutantId": "ca51ce2c1333c344ad66fffb5c8924465058f52ca5c477a506bfd3a453b21646",
+          "tests": [
+            "1471922583_2"
+          ],
+          "outsideTest": false
+        },
+        {
+          "mutantId": "7fbffe41cec327686f701880c1df59d6fc1aecf67b06c218a5924aa92fb8e740",
+          "tests": [
+            "1471922583_3"
+          ],
+          "outsideTest": false
+        },
+        {
+          "mutantId": "b3e84551fbce63be5eb8552a893005f4bd412cb1d8698d3f147bb4ce19fc9125",
+          "tests": [
+            "1471922583_4"
+          ],
+          "outsideTest": false
+        },
+        {
+          "mutantId": "ee6ab18bca003a4369799645163467da36bd8cdffdbdcd2dafacb491c7e37a39",
+          "tests": [
+            "1471922583_5"
+          ],
+          "outsideTest": false
+        },
+        {
+          "mutantId": "e43bbd7efcd90e4928415a41e83067582a3a2cd97422599a77a90427f9e97587",
+          "tests": [
+            "1471922583_6"
+          ],
+          "outsideTest": false
+        },
+        {
+          "mutantId": "5fb588b7244724ad8a25697f6dd1951246dbf2b5d72fca7eaa70b70b1f8f6e00",
+          "tests": [
+            "1471922583_7"
+          ],
+          "outsideTest": false
+        },
+        {
+          "mutantId": "5eac3305ae664ced8f6eeb31e5a01520affd2d550137873538600fd50105be07",
+          "tests": [
+            "-335531880_0"
+          ],
+          "outsideTest": false
+        },
+        {
+          "mutantId": "c1a8652dcbc20364977805b339f941ddf1d9b1f12487ecca1947bc9795e0bdbd",
+          "tests": [
+            "-335531880_1"
+          ],
+          "outsideTest": false
+        },
+        {
+          "mutantId": "4c432dc35d5bb66e8d9874eed1f41f1f7691412359e817580972e2971e675c1f",
+          "tests": [
+            "-335531880_2"
+          ],
+          "outsideTest": false
+        },
+        {
+          "mutantId": "d607c7ed50e02f199f30f1e1115b188426a5c746ba1356cfe936c079b0920287",
+          "tests": [
+            "-335531880_3"
+          ],
+          "outsideTest": false
+        },
+        {
+          "mutantId": "26e29767c11bf41308324f5ae43c7ea238bb37bc57454a7b0f38951228ecac88",
+          "tests": [
+            "-335531880_4"
+          ],
+          "outsideTest": false
+        },
+        {
+          "mutantId": "dae9e83bec9e53d8d605dca3e87a82c54c9d29a1b70fc3834daf8052b82b25cd",
+          "tests": [
+            "-335531880_5"
+          ],
+          "outsideTest": false
+        },
+        {
+          "mutantId": "06cd4070ba6fcc8ccd25586d08cadbebaae2a84edcab41c0305261349b12cf31",
+          "tests": [
+            "-335531880_6"
+          ],
+          "outsideTest": false
+        },
+        {
+          "mutantId": "65157bf86996bbf93b6edb9f0a77ca7489aea17797282bcdf046b44bbe233b21",
+          "tests": [
+            "-335531880_7"
+          ],
+          "outsideTest": false
+        },
+        {
+          "mutantId": "d64c82eb1aff58b2b61970935dbb11311bbf7c3c1933287d54471ed24841d03a",
+          "tests": [
+            "-2142986343_0"
+          ],
+          "outsideTest": false
+        },
+        {
+          "mutantId": "804662d7973534fa984afd9989c769d28191eb3725213d6ef733bdc54e43834c",
+          "tests": [
+            "-2142986343_1"
+          ],
+          "outsideTest": false
+        },
+        {
+          "mutantId": "62ab979af16f70f0a92b3bf83411effedfaac79038eeba429d524f5ba403b6ac",
+          "tests": [
+            "-2142986343_2"
+          ],
+          "outsideTest": false
+        },
+        {
+          "mutantId": "5d4f824d619cb7498e76145955f8e54aa3b0e2f9b2ed4ab7194808d78312471e",
+          "tests": [
+            "-2142986343_3"
+          ],
+          "outsideTest": false
+        },
+        {
+          "mutantId": "339447f51dcd844a66d00763d8ea2988eb9a509332167c115c882982699a593e",
+          "tests": [
+            "-2142986343_4"
+          ],
+          "outsideTest": false
+        },
+        {
+          "mutantId": "cab6e7f1d166b711316a901be7351aff3071ad1b3e8651dcd6749a11404c7c41",
+          "tests": [
+            "-2142986343_5"
+          ],
+          "outsideTest": false
+        },
+        {
+          "mutantId": "f6dda74723b19f76d7bb633e120f8ff2c196a21873180fbcc0a64476763f11a4",
+          "tests": [
+            "-2142986343_6"
+          ],
+          "outsideTest": false
+        },
+        {
+          "mutantId": "5fc8dde4c65be4fa9075cfd8aff0a93c9c5d808cfb65f69734d32300172c29cf",
+          "tests": [
+            "-2142986343_7"
+          ],
+          "outsideTest": false
+        },
+        {
+          "mutantId": "c788a146b01069a97ef23de4202547975d711d3a14ac227f6558b5cedc43a745",
+          "tests": [
+            "344526490_0"
+          ],
+          "outsideTest": false
+        },
+        {
+          "mutantId": "9ef652b122f72549e265f1031e75cd16ad8404d6ebd28eb98ee3d9885a76ad3a",
+          "tests": [
+            "344526490_1"
+          ],
+          "outsideTest": false
+        },
+        {
+          "mutantId": "0bb58e64ca8733e728768a33b635d1dc46944ac1f7e98e96d7a9a10112ff9a20",
+          "tests": [
+            "344526490_2"
+          ],
+          "outsideTest": false
+        },
+        {
+          "mutantId": "934987fc0a40893e5d7a7f84952a3eef0c204c818c4e673fa33a305c60bab424",
+          "tests": [
+            "344526490_3"
+          ],
+          "outsideTest": false
+        },
+        {
+          "mutantId": "28f376231f01573349c74188a4db0ef3de00bb18c8bb4037e271d0f27c70c9a4",
+          "tests": [
+            "344526490_4"
+          ],
+          "outsideTest": false
+        },
+        {
+          "mutantId": "18308b064ab58b0d4e55898a9b8db4084783dd80fd5ecfd9471699170b3f3efd",
+          "tests": [
+            "344526490_5"
+          ],
+          "outsideTest": false
+        },
+        {
+          "mutantId": "9b3c2b324f5fc0047aba667c7abdebfc72a21509e8ddd40da27c734341703cb5",
+          "tests": [
+            "344526490_6"
+          ],
+          "outsideTest": false
+        },
+        {
+          "mutantId": "7b9b3ed4dcc64d7afba2814705ded0afb6636d4bf680c2207f29b31492da2245",
+          "tests": [
+            "344526490_7"
+          ],
+          "outsideTest": false
+        },
+        {
+          "mutantId": "937610a4446c8a3752186c181bddf62347f49928d2210f95b5243b4358af4123",
+          "tests": [
+            "-1462927973_0"
+          ],
+          "outsideTest": false
+        },
+        {
+          "mutantId": "6dbd60062b680ea8f5bd7e211c701be08423f8cbd3c89eed2a2077aba6958d19",
+          "tests": [
+            "-1462927973_1"
+          ],
+          "outsideTest": false
+        },
+        {
+          "mutantId": "e92aa478c84d8598c8731debbe5f7c21950ca20fa2967174d2c152d8c20cce3c",
+          "tests": [
+            "-1462927973_2"
+          ],
+          "outsideTest": false
+        },
+        {
+          "mutantId": "e232e307be4341fa22c5f595b2239c05e47e3e52d9211745f5fb8872649c43be",
+          "tests": [
+            "-1462927973_3"
+          ],
+          "outsideTest": false
+        },
+        {
+          "mutantId": "d9b9e79fe3f4617ec0e1637b17e11be71582a0bfe04312c294b5176536dbcc40",
+          "tests": [
+            "-1462927973_4"
+          ],
+          "outsideTest": false
+        },
+        {
+          "mutantId": "71333257bd89f9a7dc7cd5ec4a1690ba442d55ec6dd31e3b79369d1af5208a57",
+          "tests": [
+            "-1462927973_5"
+          ],
+          "outsideTest": false
+        },
+        {
+          "mutantId": "d3af601d536c2c045c7fe64037ed70310513d457d0411813fcafb244db943659",
+          "tests": [
+            "-1462927973_6"
+          ],
+          "outsideTest": false
+        },
+        {
+          "mutantId": "20d55c8856a715a9d637b6518b00a71f9ca82f9d9e2300c3a53b223175069b78",
+          "tests": [
+            "-1462927973_7"
+          ],
+          "outsideTest": false
+        },
+        {
+          "mutantId": "161125390f79207279ee35e91ab49e5ece03fd07901c466ca84bfbc1cbd62a47",
+          "tests": [
+            "1024584860_0"
+          ],
+          "outsideTest": false
+        },
+        {
+          "mutantId": "781a7cadaacc514a612ae00f1392e597cb34e59eb9bc8ccad0979352ac2e6b24",
+          "tests": [
+            "1024584860_1"
+          ],
+          "outsideTest": false
+        },
+        {
+          "mutantId": "ea3597690c512c0b23c62e9df8a0a26336503c7266409c76f232722b5c18bc62",
+          "tests": [
+            "1024584860_2"
+          ],
+          "outsideTest": false
+        },
+        {
+          "mutantId": "2cddfe21116e6935cb8e699ee0cfa2e82507de466625708b9a9af6d396cc497f",
+          "tests": [
+            "1024584860_3"
+          ],
+          "outsideTest": false
+        },
+        {
+          "mutantId": "6decdb2102ce3f4fa002935bd4df1c0e5e1fd82ca4bbf49a1baca655c408cb27",
+          "tests": [
+            "1024584860_4"
+          ],
+          "outsideTest": false
+        },
+        {
+          "mutantId": "fff937ef5106c639c9d1d4acfd9ba2fd3dbfa8c0372b7927d2d0426977458e95",
+          "tests": [
+            "1024584860_5"
+          ],
+          "outsideTest": false
+        },
+        {
+          "mutantId": "9342f8a6bdfd0926537c90c323ad3798cc066f4dcc23236f243223c28b899bdb",
+          "tests": [
+            "1024584860_6"
+          ],
+          "outsideTest": false
+        },
+        {
+          "mutantId": "5d3dfadaa8cad2494a3b1d927f6bb19cb7d1e7381ef174de636b31d39f22e282",
+          "tests": [
+            "1024584860_7"
+          ],
+          "outsideTest": false
+        },
+        {
+          "mutantId": "284bcd276e2200d7651f3c6664ce793c0840ec455dbfa708d9525047768dd7dd",
+          "tests": [
+            "-782869603_0"
+          ],
+          "outsideTest": false
+        },
+        {
+          "mutantId": "005eb9ea7ffc16af1a937bf267bfb0b87c2dfbcd0989b17f36a6a9b29d97abb4",
+          "tests": [
+            "-782869603_1"
+          ],
+          "outsideTest": false
+        },
+        {
+          "mutantId": "7519b5955171402d1a8edfbd69023855689699ebe071b97438bc67ce1f97e3e7",
+          "tests": [
+            "-782869603_2"
+          ],
+          "outsideTest": false
+        },
+        {
+          "mutantId": "58d659fcd554ad1003f4a8c477d4c39ce7bb7f1c556fea8e485f37cf4ce2eb1e",
+          "tests": [
+            "-782869603_3"
+          ],
+          "outsideTest": false
+        },
+        {
+          "mutantId": "27ea1cbc9d7f0c177090686f82cd0b66d043c34c9ae1ab165996eb1927d511c0",
+          "tests": [
+            "-782869603_4"
+          ],
+          "outsideTest": false
+        },
+        {
+          "mutantId": "6fc6f1e50bc7758ddc77ec9cba98d6890f0c79c8822a033d4adbeb487405cf84",
+          "tests": [
+            "-782869603_5"
+          ],
+          "outsideTest": false
+        },
+        {
+          "mutantId": "e082e169fc7cf1fefc75edb9bf669223cfd1f9ad554a3bc7969141eef6dc1cb6",
+          "tests": [
+            "-782869603_6"
+          ],
+          "outsideTest": false
+        },
+        {
+          "mutantId": "258d2b786aa8401977cfb76ae5eabd3b0087ae6acdfbb7145f35b3458adc5063",
+          "tests": [
+            "-782869603_7"
+          ],
+          "outsideTest": false
+        },
+        {
+          "mutantId": "b63083b51b0c61e46b4c6ca069936791df410af595f0f110d5f45de82b9be887",
+          "tests": [
+            "1704643230_0"
+          ],
+          "outsideTest": false
+        },
+        {
+          "mutantId": "d7b1dab91a4a689f2a0ae60af61f5e2cc4ae7c8a6e43404f80b6ae4fbb561e5d",
+          "tests": [
+            "1704643230_1"
+          ],
+          "outsideTest": false
+        },
+        {
+          "mutantId": "2626af7777b9fc3331421c4e6ab2e469095023aa1286d89fda87b8f0da430cb6",
+          "tests": [
+            "1704643230_2"
+          ],
+          "outsideTest": false
+        },
+        {
+          "mutantId": "78b07836a084443b2d59b7b9a5a5f8110b418303a3c90356e7edfa6edbd93f44",
+          "tests": [
+            "1704643230_3"
+          ],
+          "outsideTest": false
+        },
+        {
+          "mutantId": "c36738c2434338e6d80ab416ebf678bdad4e3be3a3a7578cdc9d9d47b08cbdb8",
+          "tests": [
+            "1704643230_4"
+          ],
+          "outsideTest": false
+        },
+        {
+          "mutantId": "0fc6f48f9715b1c161ae088e88798e2642fb509bbe94d8501d2f48c9b45a89ee",
+          "tests": [
+            "1704643230_5"
+          ],
+          "outsideTest": false
+        },
+        {
+          "mutantId": "fa58c889a15b553ae01c6c1478cf98635e1f9116b12d800343a30a19decbbaf6",
+          "tests": [
+            "1704643230_6"
+          ],
+          "outsideTest": false
+        },
+        {
+          "mutantId": "80e12edd15e5b8af79a8ffc277f6b2ee8aa456e880de4c7b94d4f274546feb89",
+          "tests": [
+            "1704643230_7"
+          ],
+          "outsideTest": false
+        }
+      ],
+      "reasons": []
+    }
+  },
+  "mutants": [
+    {
+      "id": "fe49b03ed8cdc2753ab9a94036103baebf444390d7e9eb1b17dfdc5cb71039db",
+      "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/src/arithmetic-0.ts",
+      "operator": "arithmetic",
+      "original": "+",
+      "replacement": "-",
+      "location": {
+        "start": {
+          "offset": 67,
+          "line": 2,
+          "column": 16
+        },
+        "end": {
+          "offset": 68,
+          "line": 2,
+          "column": 17
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 7,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected -15 to be close to -1, received difference is 14, but expected 5e-11"
+      ],
+      "selection": {
+        "mode": "files",
+        "files": [
+          "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-0.test.ts"
+        ],
+        "selectedTests": 8,
+        "totalTests": 64,
+        "expectedSkipped": 0,
+        "reasons": [
+          "whole-file-preserves-sequential-state-and-hooks"
+        ]
+      },
+      "provenance": {
+        "source": "executed",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "d64c82eb1aff58b2b61970935dbb11311bbf7c3c1933287d54471ed24841d03a",
+      "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/src/arithmetic-2.ts",
+      "operator": "arithmetic",
+      "original": "+",
+      "replacement": "-",
+      "location": {
+        "start": {
+          "offset": 67,
+          "line": 2,
+          "column": 16
+        },
+        "end": {
+          "offset": 68,
+          "line": 2,
+          "column": 17
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 7,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected -31 to be close to 15, received difference is 46, but expected 5e-11"
+      ],
+      "selection": {
+        "mode": "files",
+        "files": [
+          "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-2.test.ts"
+        ],
+        "selectedTests": 8,
+        "totalTests": 64,
+        "expectedSkipped": 0,
+        "reasons": [
+          "whole-file-preserves-sequential-state-and-hooks"
+        ]
+      },
+      "provenance": {
+        "source": "executed",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "58d659fcd554ad1003f4a8c477d4c39ce7bb7f1c556fea8e485f37cf4ce2eb1e",
+      "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/src/arithmetic-6.ts",
+      "operator": "arithmetic",
+      "original": "/",
+      "replacement": "*",
+      "location": {
+        "start": {
+          "offset": 295,
+          "line": 14,
+          "column": 16
+        },
+        "end": {
+          "offset": 296,
+          "line": 14,
+          "column": 17
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 7,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected -440 to be close to -0.14545454545454545, received difference is 439.8545454545455, but expected 5e-11"
+      ],
+      "selection": {
+        "mode": "files",
+        "files": [
+          "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-6.test.ts"
+        ],
+        "selectedTests": 8,
+        "totalTests": 64,
+        "expectedSkipped": 0,
+        "reasons": [
+          "whole-file-preserves-sequential-state-and-hooks"
+        ]
+      },
+      "provenance": {
+        "source": "executed",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "d7b1dab91a4a689f2a0ae60af61f5e2cc4ae7c8a6e43404f80b6ae4fbb561e5d",
+      "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/src/arithmetic-7.ts",
+      "operator": "arithmetic",
+      "original": "-",
+      "replacement": "+",
+      "location": {
+        "start": {
+          "offset": 143,
+          "line": 6,
+          "column": 16
+        },
+        "end": {
+          "offset": 144,
+          "line": 6,
+          "column": 17
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 7,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected 55 to be close to -71, received difference is 126, but expected 5e-11"
+      ],
+      "selection": {
+        "mode": "files",
+        "files": [
+          "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-7.test.ts"
+        ],
+        "selectedTests": 8,
+        "totalTests": 64,
+        "expectedSkipped": 0,
+        "reasons": [
+          "whole-file-preserves-sequential-state-and-hooks"
+        ]
+      },
+      "provenance": {
+        "source": "executed",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "c36738c2434338e6d80ab416ebf678bdad4e3be3a3a7578cdc9d9d47b08cbdb8",
+      "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/src/arithmetic-7.ts",
+      "operator": "arithmetic",
+      "original": "+",
+      "replacement": "-",
+      "location": {
+        "start": {
+          "offset": 371,
+          "line": 18,
+          "column": 16
+        },
+        "end": {
+          "offset": 372,
+          "line": 18,
+          "column": 17
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 7,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected -72 to be close to 56, received difference is 128, but expected 5e-11"
+      ],
+      "selection": {
+        "mode": "files",
+        "files": [
+          "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-7.test.ts"
+        ],
+        "selectedTests": 8,
+        "totalTests": 64,
+        "expectedSkipped": 0,
+        "reasons": [
+          "whole-file-preserves-sequential-state-and-hooks"
+        ]
+      },
+      "provenance": {
+        "source": "executed",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "804662d7973534fa984afd9989c769d28191eb3725213d6ef733bdc54e43834c",
+      "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/src/arithmetic-2.ts",
+      "operator": "arithmetic",
+      "original": "-",
+      "replacement": "+",
+      "location": {
+        "start": {
+          "offset": 143,
+          "line": 6,
+          "column": 16
+        },
+        "end": {
+          "offset": 144,
+          "line": 6,
+          "column": 17
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 7,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected 15 to be close to -31, received difference is 46, but expected 5e-11"
+      ],
+      "selection": {
+        "mode": "files",
+        "files": [
+          "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-2.test.ts"
+        ],
+        "selectedTests": 8,
+        "totalTests": 64,
+        "expectedSkipped": 0,
+        "reasons": [
+          "whole-file-preserves-sequential-state-and-hooks"
+        ]
+      },
+      "provenance": {
+        "source": "executed",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "7b9b3ed4dcc64d7afba2814705ded0afb6636d4bf680c2207f29b31492da2245",
+      "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/src/arithmetic-3.ts",
+      "operator": "arithmetic",
+      "original": "/",
+      "replacement": "*",
+      "location": {
+        "start": {
+          "offset": 599,
+          "line": 30,
+          "column": 16
+        },
+        "end": {
+          "offset": 600,
+          "line": 30,
+          "column": 17
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 7,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected -256 to be close to -0.25, received difference is 255.75, but expected 5e-11"
+      ],
+      "selection": {
+        "mode": "files",
+        "files": [
+          "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-3.test.ts"
+        ],
+        "selectedTests": 8,
+        "totalTests": 64,
+        "expectedSkipped": 0,
+        "reasons": [
+          "whole-file-preserves-sequential-state-and-hooks"
+        ]
+      },
+      "provenance": {
+        "source": "executed",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "284bcd276e2200d7651f3c6664ce793c0840ec455dbfa708d9525047768dd7dd",
+      "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/src/arithmetic-6.ts",
+      "operator": "arithmetic",
+      "original": "+",
+      "replacement": "-",
+      "location": {
+        "start": {
+          "offset": 67,
+          "line": 2,
+          "column": 16
+        },
+        "end": {
+          "offset": 68,
+          "line": 2,
+          "column": 17
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 7,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected -63 to be close to 47, received difference is 110, but expected 5e-11"
+      ],
+      "selection": {
+        "mode": "files",
+        "files": [
+          "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-6.test.ts"
+        ],
+        "selectedTests": 8,
+        "totalTests": 64,
+        "expectedSkipped": 0,
+        "reasons": [
+          "whole-file-preserves-sequential-state-and-hooks"
+        ]
+      },
+      "provenance": {
+        "source": "executed",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "6decdb2102ce3f4fa002935bd4df1c0e5e1fd82ca4bbf49a1baca655c408cb27",
+      "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/src/arithmetic-5.ts",
+      "operator": "arithmetic",
+      "original": "+",
+      "replacement": "-",
+      "location": {
+        "start": {
+          "offset": 371,
+          "line": 18,
+          "column": 16
+        },
+        "end": {
+          "offset": 372,
+          "line": 18,
+          "column": 17
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 7,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected -56 to be close to 40, received difference is 96, but expected 5e-11"
+      ],
+      "selection": {
+        "mode": "files",
+        "files": [
+          "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-5.test.ts"
+        ],
+        "selectedTests": 8,
+        "totalTests": 64,
+        "expectedSkipped": 0,
+        "reasons": [
+          "whole-file-preserves-sequential-state-and-hooks"
+        ]
+      },
+      "provenance": {
+        "source": "executed",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "0bb58e64ca8733e728768a33b635d1dc46944ac1f7e98e96d7a9a10112ff9a20",
+      "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/src/arithmetic-3.ts",
+      "operator": "arithmetic",
+      "original": "*",
+      "replacement": "/",
+      "location": {
+        "start": {
+          "offset": 219,
+          "line": 10,
+          "column": 16
+        },
+        "end": {
+          "offset": 220,
+          "line": 10,
+          "column": 17
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 7,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected -0.25806451612903225 to be close to -248, received difference is 247.74193548387098, but expected 5e-11"
+      ],
+      "selection": {
+        "mode": "files",
+        "files": [
+          "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-3.test.ts"
+        ],
+        "selectedTests": 8,
+        "totalTests": 64,
+        "expectedSkipped": 0,
+        "reasons": [
+          "whole-file-preserves-sequential-state-and-hooks"
+        ]
+      },
+      "provenance": {
+        "source": "executed",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "339447f51dcd844a66d00763d8ea2988eb9a509332167c115c882982699a593e",
+      "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/src/arithmetic-2.ts",
+      "operator": "arithmetic",
+      "original": "+",
+      "replacement": "-",
+      "location": {
+        "start": {
+          "offset": 371,
+          "line": 18,
+          "column": 16
+        },
+        "end": {
+          "offset": 372,
+          "line": 18,
+          "column": 17
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 7,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected -32 to be close to 16, received difference is 48, but expected 5e-11"
+      ],
+      "selection": {
+        "mode": "files",
+        "files": [
+          "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-2.test.ts"
+        ],
+        "selectedTests": 8,
+        "totalTests": 64,
+        "expectedSkipped": 0,
+        "reasons": [
+          "whole-file-preserves-sequential-state-and-hooks"
+        ]
+      },
+      "provenance": {
+        "source": "executed",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "ca51ce2c1333c344ad66fffb5c8924465058f52ca5c477a506bfd3a453b21646",
+      "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/src/arithmetic-0.ts",
+      "operator": "arithmetic",
+      "original": "*",
+      "replacement": "/",
+      "location": {
+        "start": {
+          "offset": 217,
+          "line": 10,
+          "column": 16
+        },
+        "end": {
+          "offset": 218,
+          "line": 10,
+          "column": 17
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 7,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected -1.1428571428571428 to be close to -56, received difference is 54.857142857142854, but expected 5e-11"
+      ],
+      "selection": {
+        "mode": "files",
+        "files": [
+          "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-0.test.ts"
+        ],
+        "selectedTests": 8,
+        "totalTests": 64,
+        "expectedSkipped": 0,
+        "reasons": [
+          "whole-file-preserves-sequential-state-and-hooks"
+        ]
+      },
+      "provenance": {
+        "source": "executed",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "27ea1cbc9d7f0c177090686f82cd0b66d043c34c9ae1ab165996eb1927d511c0",
+      "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/src/arithmetic-6.ts",
+      "operator": "arithmetic",
+      "original": "+",
+      "replacement": "-",
+      "location": {
+        "start": {
+          "offset": 371,
+          "line": 18,
+          "column": 16
+        },
+        "end": {
+          "offset": 372,
+          "line": 18,
+          "column": 17
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 7,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected -64 to be close to 48, received difference is 112, but expected 5e-11"
+      ],
+      "selection": {
+        "mode": "files",
+        "files": [
+          "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-6.test.ts"
+        ],
+        "selectedTests": 8,
+        "totalTests": 64,
+        "expectedSkipped": 0,
+        "reasons": [
+          "whole-file-preserves-sequential-state-and-hooks"
+        ]
+      },
+      "provenance": {
+        "source": "executed",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "d3af601d536c2c045c7fe64037ed70310513d457d0411813fcafb244db943659",
+      "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/src/arithmetic-4.ts",
+      "operator": "arithmetic",
+      "original": "*",
+      "replacement": "/",
+      "location": {
+        "start": {
+          "offset": 523,
+          "line": 26,
+          "column": 16
+        },
+        "end": {
+          "offset": 524,
+          "line": 26,
+          "column": 17
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 7,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected -0.2 to be close to -320, received difference is 319.8, but expected 5e-11"
+      ],
+      "selection": {
+        "mode": "files",
+        "files": [
+          "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-4.test.ts"
+        ],
+        "selectedTests": 8,
+        "totalTests": 64,
+        "expectedSkipped": 0,
+        "reasons": [
+          "whole-file-preserves-sequential-state-and-hooks"
+        ]
+      },
+      "provenance": {
+        "source": "executed",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "937610a4446c8a3752186c181bddf62347f49928d2210f95b5243b4358af4123",
+      "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/src/arithmetic-4.ts",
+      "operator": "arithmetic",
+      "original": "+",
+      "replacement": "-",
+      "location": {
+        "start": {
+          "offset": 67,
+          "line": 2,
+          "column": 16
+        },
+        "end": {
+          "offset": 68,
+          "line": 2,
+          "column": 17
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 7,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected -47 to be close to 31, received difference is 78, but expected 5e-11"
+      ],
+      "selection": {
+        "mode": "files",
+        "files": [
+          "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-4.test.ts"
+        ],
+        "selectedTests": 8,
+        "totalTests": 64,
+        "expectedSkipped": 0,
+        "reasons": [
+          "whole-file-preserves-sequential-state-and-hooks"
+        ]
+      },
+      "provenance": {
+        "source": "executed",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "65157bf86996bbf93b6edb9f0a77ca7489aea17797282bcdf046b44bbe233b21",
+      "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/src/arithmetic-1.ts",
+      "operator": "arithmetic",
+      "original": "/",
+      "replacement": "*",
+      "location": {
+        "start": {
+          "offset": 599,
+          "line": 30,
+          "column": 16
+        },
+        "end": {
+          "offset": 600,
+          "line": 30,
+          "column": 17
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 7,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected -128 to be close to -0.5, received difference is 127.5, but expected 5e-11"
+      ],
+      "selection": {
+        "mode": "files",
+        "files": [
+          "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-1.test.ts"
+        ],
+        "selectedTests": 8,
+        "totalTests": 64,
+        "expectedSkipped": 0,
+        "reasons": [
+          "whole-file-preserves-sequential-state-and-hooks"
+        ]
+      },
+      "provenance": {
+        "source": "executed",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "2cddfe21116e6935cb8e699ee0cfa2e82507de466625708b9a9af6d396cc497f",
+      "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/src/arithmetic-5.ts",
+      "operator": "arithmetic",
+      "original": "/",
+      "replacement": "*",
+      "location": {
+        "start": {
+          "offset": 295,
+          "line": 14,
+          "column": 16
+        },
+        "end": {
+          "offset": 296,
+          "line": 14,
+          "column": 17
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 7,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected -376 to be close to -0.1702127659574468, received difference is 375.82978723404256, but expected 5e-11"
+      ],
+      "selection": {
+        "mode": "files",
+        "files": [
+          "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-5.test.ts"
+        ],
+        "selectedTests": 8,
+        "totalTests": 64,
+        "expectedSkipped": 0,
+        "reasons": [
+          "whole-file-preserves-sequential-state-and-hooks"
+        ]
+      },
+      "provenance": {
+        "source": "executed",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "dae9e83bec9e53d8d605dca3e87a82c54c9d29a1b70fc3834daf8052b82b25cd",
+      "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/src/arithmetic-1.ts",
+      "operator": "arithmetic",
+      "original": "-",
+      "replacement": "+",
+      "location": {
+        "start": {
+          "offset": 447,
+          "line": 22,
+          "column": 16
+        },
+        "end": {
+          "offset": 448,
+          "line": 22,
+          "column": 17
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 7,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected 8 to be close to -24, received difference is 32, but expected 5e-11"
+      ],
+      "selection": {
+        "mode": "files",
+        "files": [
+          "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-1.test.ts"
+        ],
+        "selectedTests": 8,
+        "totalTests": 64,
+        "expectedSkipped": 0,
+        "reasons": [
+          "whole-file-preserves-sequential-state-and-hooks"
+        ]
+      },
+      "provenance": {
+        "source": "executed",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "28f376231f01573349c74188a4db0ef3de00bb18c8bb4037e271d0f27c70c9a4",
+      "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/src/arithmetic-3.ts",
+      "operator": "arithmetic",
+      "original": "+",
+      "replacement": "-",
+      "location": {
+        "start": {
+          "offset": 371,
+          "line": 18,
+          "column": 16
+        },
+        "end": {
+          "offset": 372,
+          "line": 18,
+          "column": 17
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 7,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected -40 to be close to 24, received difference is 64, but expected 5e-11"
+      ],
+      "selection": {
+        "mode": "files",
+        "files": [
+          "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-3.test.ts"
+        ],
+        "selectedTests": 8,
+        "totalTests": 64,
+        "expectedSkipped": 0,
+        "reasons": [
+          "whole-file-preserves-sequential-state-and-hooks"
+        ]
+      },
+      "provenance": {
+        "source": "executed",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "6dbd60062b680ea8f5bd7e211c701be08423f8cbd3c89eed2a2077aba6958d19",
+      "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/src/arithmetic-4.ts",
+      "operator": "arithmetic",
+      "original": "-",
+      "replacement": "+",
+      "location": {
+        "start": {
+          "offset": 143,
+          "line": 6,
+          "column": 16
+        },
+        "end": {
+          "offset": 144,
+          "line": 6,
+          "column": 17
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 7,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected 31 to be close to -47, received difference is 78, but expected 5e-11"
+      ],
+      "selection": {
+        "mode": "files",
+        "files": [
+          "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-4.test.ts"
+        ],
+        "selectedTests": 8,
+        "totalTests": 64,
+        "expectedSkipped": 0,
+        "reasons": [
+          "whole-file-preserves-sequential-state-and-hooks"
+        ]
+      },
+      "provenance": {
+        "source": "executed",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "492240cc0f719346f3333d13d076a49dec7a4c62e55d139309074755d2b1e7dc",
+      "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/src/arithmetic-0.ts",
+      "operator": "arithmetic",
+      "original": "-",
+      "replacement": "+",
+      "location": {
+        "start": {
+          "offset": 142,
+          "line": 6,
+          "column": 16
+        },
+        "end": {
+          "offset": 143,
+          "line": 6,
+          "column": 17
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 7,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected -1 to be close to -15, received difference is 14, but expected 5e-11"
+      ],
+      "selection": {
+        "mode": "files",
+        "files": [
+          "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-0.test.ts"
+        ],
+        "selectedTests": 8,
+        "totalTests": 64,
+        "expectedSkipped": 0,
+        "reasons": [
+          "whole-file-preserves-sequential-state-and-hooks"
+        ]
+      },
+      "provenance": {
+        "source": "executed",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "0fc6f48f9715b1c161ae088e88798e2642fb509bbe94d8501d2f48c9b45a89ee",
+      "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/src/arithmetic-7.ts",
+      "operator": "arithmetic",
+      "original": "-",
+      "replacement": "+",
+      "location": {
+        "start": {
+          "offset": 447,
+          "line": 22,
+          "column": 16
+        },
+        "end": {
+          "offset": 448,
+          "line": 22,
+          "column": 17
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 7,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected 56 to be close to -72, received difference is 128, but expected 5e-11"
+      ],
+      "selection": {
+        "mode": "files",
+        "files": [
+          "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-7.test.ts"
+        ],
+        "selectedTests": 8,
+        "totalTests": 64,
+        "expectedSkipped": 0,
+        "reasons": [
+          "whole-file-preserves-sequential-state-and-hooks"
+        ]
+      },
+      "provenance": {
+        "source": "executed",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "06cd4070ba6fcc8ccd25586d08cadbebaae2a84edcab41c0305261349b12cf31",
+      "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/src/arithmetic-1.ts",
+      "operator": "arithmetic",
+      "original": "*",
+      "replacement": "/",
+      "location": {
+        "start": {
+          "offset": 523,
+          "line": 26,
+          "column": 16
+        },
+        "end": {
+          "offset": 524,
+          "line": 26,
+          "column": 17
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 7,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected -0.5 to be close to -128, received difference is 127.5, but expected 5e-11"
+      ],
+      "selection": {
+        "mode": "files",
+        "files": [
+          "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-1.test.ts"
+        ],
+        "selectedTests": 8,
+        "totalTests": 64,
+        "expectedSkipped": 0,
+        "reasons": [
+          "whole-file-preserves-sequential-state-and-hooks"
+        ]
+      },
+      "provenance": {
+        "source": "executed",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "fa58c889a15b553ae01c6c1478cf98635e1f9116b12d800343a30a19decbbaf6",
+      "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/src/arithmetic-7.ts",
+      "operator": "arithmetic",
+      "original": "*",
+      "replacement": "/",
+      "location": {
+        "start": {
+          "offset": 523,
+          "line": 26,
+          "column": 16
+        },
+        "end": {
+          "offset": 524,
+          "line": 26,
+          "column": 17
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 7,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected -0.125 to be close to -512, received difference is 511.875, but expected 5e-11"
+      ],
+      "selection": {
+        "mode": "files",
+        "files": [
+          "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-7.test.ts"
+        ],
+        "selectedTests": 8,
+        "totalTests": 64,
+        "expectedSkipped": 0,
+        "reasons": [
+          "whole-file-preserves-sequential-state-and-hooks"
+        ]
+      },
+      "provenance": {
+        "source": "executed",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "2626af7777b9fc3331421c4e6ab2e469095023aa1286d89fda87b8f0da430cb6",
+      "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/src/arithmetic-7.ts",
+      "operator": "arithmetic",
+      "original": "*",
+      "replacement": "/",
+      "location": {
+        "start": {
+          "offset": 219,
+          "line": 10,
+          "column": 16
+        },
+        "end": {
+          "offset": 220,
+          "line": 10,
+          "column": 17
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 7,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected -0.12698412698412698 to be close to -504, received difference is 503.87301587301585, but expected 5e-11"
+      ],
+      "selection": {
+        "mode": "files",
+        "files": [
+          "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-7.test.ts"
+        ],
+        "selectedTests": 8,
+        "totalTests": 64,
+        "expectedSkipped": 0,
+        "reasons": [
+          "whole-file-preserves-sequential-state-and-hooks"
+        ]
+      },
+      "provenance": {
+        "source": "executed",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "c788a146b01069a97ef23de4202547975d711d3a14ac227f6558b5cedc43a745",
+      "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/src/arithmetic-3.ts",
+      "operator": "arithmetic",
+      "original": "+",
+      "replacement": "-",
+      "location": {
+        "start": {
+          "offset": 67,
+          "line": 2,
+          "column": 16
+        },
+        "end": {
+          "offset": 68,
+          "line": 2,
+          "column": 17
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 7,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected -39 to be close to 23, received difference is 62, but expected 5e-11"
+      ],
+      "selection": {
+        "mode": "files",
+        "files": [
+          "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-3.test.ts"
+        ],
+        "selectedTests": 8,
+        "totalTests": 64,
+        "expectedSkipped": 0,
+        "reasons": [
+          "whole-file-preserves-sequential-state-and-hooks"
+        ]
+      },
+      "provenance": {
+        "source": "executed",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "934987fc0a40893e5d7a7f84952a3eef0c204c818c4e673fa33a305c60bab424",
+      "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/src/arithmetic-3.ts",
+      "operator": "arithmetic",
+      "original": "/",
+      "replacement": "*",
+      "location": {
+        "start": {
+          "offset": 295,
+          "line": 14,
+          "column": 16
+        },
+        "end": {
+          "offset": 296,
+          "line": 14,
+          "column": 17
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 7,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected -248 to be close to -0.25806451612903225, received difference is 247.74193548387098, but expected 5e-11"
+      ],
+      "selection": {
+        "mode": "files",
+        "files": [
+          "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-3.test.ts"
+        ],
+        "selectedTests": 8,
+        "totalTests": 64,
+        "expectedSkipped": 0,
+        "reasons": [
+          "whole-file-preserves-sequential-state-and-hooks"
+        ]
+      },
+      "provenance": {
+        "source": "executed",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "9b3c2b324f5fc0047aba667c7abdebfc72a21509e8ddd40da27c734341703cb5",
+      "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/src/arithmetic-3.ts",
+      "operator": "arithmetic",
+      "original": "*",
+      "replacement": "/",
+      "location": {
+        "start": {
+          "offset": 523,
+          "line": 26,
+          "column": 16
+        },
+        "end": {
+          "offset": 524,
+          "line": 26,
+          "column": 17
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 7,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected -0.25 to be close to -256, received difference is 255.75, but expected 5e-11"
+      ],
+      "selection": {
+        "mode": "files",
+        "files": [
+          "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-3.test.ts"
+        ],
+        "selectedTests": 8,
+        "totalTests": 64,
+        "expectedSkipped": 0,
+        "reasons": [
+          "whole-file-preserves-sequential-state-and-hooks"
+        ]
+      },
+      "provenance": {
+        "source": "executed",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "9342f8a6bdfd0926537c90c323ad3798cc066f4dcc23236f243223c28b899bdb",
+      "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/src/arithmetic-5.ts",
+      "operator": "arithmetic",
+      "original": "*",
+      "replacement": "/",
+      "location": {
+        "start": {
+          "offset": 523,
+          "line": 26,
+          "column": 16
+        },
+        "end": {
+          "offset": 524,
+          "line": 26,
+          "column": 17
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 7,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected -0.16666666666666666 to be close to -384, received difference is 383.8333333333333, but expected 5e-11"
+      ],
+      "selection": {
+        "mode": "files",
+        "files": [
+          "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-5.test.ts"
+        ],
+        "selectedTests": 8,
+        "totalTests": 64,
+        "expectedSkipped": 0,
+        "reasons": [
+          "whole-file-preserves-sequential-state-and-hooks"
+        ]
+      },
+      "provenance": {
+        "source": "executed",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "161125390f79207279ee35e91ab49e5ece03fd07901c466ca84bfbc1cbd62a47",
+      "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/src/arithmetic-5.ts",
+      "operator": "arithmetic",
+      "original": "+",
+      "replacement": "-",
+      "location": {
+        "start": {
+          "offset": 67,
+          "line": 2,
+          "column": 16
+        },
+        "end": {
+          "offset": 68,
+          "line": 2,
+          "column": 17
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 7,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected -55 to be close to 39, received difference is 94, but expected 5e-11"
+      ],
+      "selection": {
+        "mode": "files",
+        "files": [
+          "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-5.test.ts"
+        ],
+        "selectedTests": 8,
+        "totalTests": 64,
+        "expectedSkipped": 0,
+        "reasons": [
+          "whole-file-preserves-sequential-state-and-hooks"
+        ]
+      },
+      "provenance": {
+        "source": "executed",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "5eac3305ae664ced8f6eeb31e5a01520affd2d550137873538600fd50105be07",
+      "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/src/arithmetic-1.ts",
+      "operator": "arithmetic",
+      "original": "+",
+      "replacement": "-",
+      "location": {
+        "start": {
+          "offset": 67,
+          "line": 2,
+          "column": 16
+        },
+        "end": {
+          "offset": 68,
+          "line": 2,
+          "column": 17
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 7,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected -23 to be close to 7, received difference is 30, but expected 5e-11"
+      ],
+      "selection": {
+        "mode": "files",
+        "files": [
+          "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-1.test.ts"
+        ],
+        "selectedTests": 8,
+        "totalTests": 64,
+        "expectedSkipped": 0,
+        "reasons": [
+          "whole-file-preserves-sequential-state-and-hooks"
+        ]
+      },
+      "provenance": {
+        "source": "executed",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "781a7cadaacc514a612ae00f1392e597cb34e59eb9bc8ccad0979352ac2e6b24",
+      "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/src/arithmetic-5.ts",
+      "operator": "arithmetic",
+      "original": "-",
+      "replacement": "+",
+      "location": {
+        "start": {
+          "offset": 143,
+          "line": 6,
+          "column": 16
+        },
+        "end": {
+          "offset": 144,
+          "line": 6,
+          "column": 17
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 7,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected 39 to be close to -55, received difference is 94, but expected 5e-11"
+      ],
+      "selection": {
+        "mode": "files",
+        "files": [
+          "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-5.test.ts"
+        ],
+        "selectedTests": 8,
+        "totalTests": 64,
+        "expectedSkipped": 0,
+        "reasons": [
+          "whole-file-preserves-sequential-state-and-hooks"
+        ]
+      },
+      "provenance": {
+        "source": "executed",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "c1a8652dcbc20364977805b339f941ddf1d9b1f12487ecca1947bc9795e0bdbd",
+      "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/src/arithmetic-1.ts",
+      "operator": "arithmetic",
+      "original": "-",
+      "replacement": "+",
+      "location": {
+        "start": {
+          "offset": 143,
+          "line": 6,
+          "column": 16
+        },
+        "end": {
+          "offset": 144,
+          "line": 6,
+          "column": 17
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 7,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected 7 to be close to -23, received difference is 30, but expected 5e-11"
+      ],
+      "selection": {
+        "mode": "files",
+        "files": [
+          "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-1.test.ts"
+        ],
+        "selectedTests": 8,
+        "totalTests": 64,
+        "expectedSkipped": 0,
+        "reasons": [
+          "whole-file-preserves-sequential-state-and-hooks"
+        ]
+      },
+      "provenance": {
+        "source": "executed",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "6fc6f1e50bc7758ddc77ec9cba98d6890f0c79c8822a033d4adbeb487405cf84",
+      "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/src/arithmetic-6.ts",
+      "operator": "arithmetic",
+      "original": "-",
+      "replacement": "+",
+      "location": {
+        "start": {
+          "offset": 447,
+          "line": 22,
+          "column": 16
+        },
+        "end": {
+          "offset": 448,
+          "line": 22,
+          "column": 17
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 7,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected 48 to be close to -64, received difference is 112, but expected 5e-11"
+      ],
+      "selection": {
+        "mode": "files",
+        "files": [
+          "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-6.test.ts"
+        ],
+        "selectedTests": 8,
+        "totalTests": 64,
+        "expectedSkipped": 0,
+        "reasons": [
+          "whole-file-preserves-sequential-state-and-hooks"
+        ]
+      },
+      "provenance": {
+        "source": "executed",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "f6dda74723b19f76d7bb633e120f8ff2c196a21873180fbcc0a64476763f11a4",
+      "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/src/arithmetic-2.ts",
+      "operator": "arithmetic",
+      "original": "*",
+      "replacement": "/",
+      "location": {
+        "start": {
+          "offset": 523,
+          "line": 26,
+          "column": 16
+        },
+        "end": {
+          "offset": 524,
+          "line": 26,
+          "column": 17
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 7,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected -0.3333333333333333 to be close to -192, received difference is 191.66666666666666, but expected 5e-11"
+      ],
+      "selection": {
+        "mode": "files",
+        "files": [
+          "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-2.test.ts"
+        ],
+        "selectedTests": 8,
+        "totalTests": 64,
+        "expectedSkipped": 0,
+        "reasons": [
+          "whole-file-preserves-sequential-state-and-hooks"
+        ]
+      },
+      "provenance": {
+        "source": "executed",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "b63083b51b0c61e46b4c6ca069936791df410af595f0f110d5f45de82b9be887",
+      "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/src/arithmetic-7.ts",
+      "operator": "arithmetic",
+      "original": "+",
+      "replacement": "-",
+      "location": {
+        "start": {
+          "offset": 67,
+          "line": 2,
+          "column": 16
+        },
+        "end": {
+          "offset": 68,
+          "line": 2,
+          "column": 17
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 7,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected -71 to be close to 55, received difference is 126, but expected 5e-11"
+      ],
+      "selection": {
+        "mode": "files",
+        "files": [
+          "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-7.test.ts"
+        ],
+        "selectedTests": 8,
+        "totalTests": 64,
+        "expectedSkipped": 0,
+        "reasons": [
+          "whole-file-preserves-sequential-state-and-hooks"
+        ]
+      },
+      "provenance": {
+        "source": "executed",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "5fc8dde4c65be4fa9075cfd8aff0a93c9c5d808cfb65f69734d32300172c29cf",
+      "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/src/arithmetic-2.ts",
+      "operator": "arithmetic",
+      "original": "/",
+      "replacement": "*",
+      "location": {
+        "start": {
+          "offset": 599,
+          "line": 30,
+          "column": 16
+        },
+        "end": {
+          "offset": 600,
+          "line": 30,
+          "column": 17
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 7,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected -192 to be close to -0.3333333333333333, received difference is 191.66666666666666, but expected 5e-11"
+      ],
+      "selection": {
+        "mode": "files",
+        "files": [
+          "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-2.test.ts"
+        ],
+        "selectedTests": 8,
+        "totalTests": 64,
+        "expectedSkipped": 0,
+        "reasons": [
+          "whole-file-preserves-sequential-state-and-hooks"
+        ]
+      },
+      "provenance": {
+        "source": "executed",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "e082e169fc7cf1fefc75edb9bf669223cfd1f9ad554a3bc7969141eef6dc1cb6",
+      "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/src/arithmetic-6.ts",
+      "operator": "arithmetic",
+      "original": "*",
+      "replacement": "/",
+      "location": {
+        "start": {
+          "offset": 523,
+          "line": 26,
+          "column": 16
+        },
+        "end": {
+          "offset": 524,
+          "line": 26,
+          "column": 17
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 7,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected -0.14285714285714285 to be close to -448, received difference is 447.85714285714283, but expected 5e-11"
+      ],
+      "selection": {
+        "mode": "files",
+        "files": [
+          "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-6.test.ts"
+        ],
+        "selectedTests": 8,
+        "totalTests": 64,
+        "expectedSkipped": 0,
+        "reasons": [
+          "whole-file-preserves-sequential-state-and-hooks"
+        ]
+      },
+      "provenance": {
+        "source": "executed",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "258d2b786aa8401977cfb76ae5eabd3b0087ae6acdfbb7145f35b3458adc5063",
+      "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/src/arithmetic-6.ts",
+      "operator": "arithmetic",
+      "original": "/",
+      "replacement": "*",
+      "location": {
+        "start": {
+          "offset": 599,
+          "line": 30,
+          "column": 16
+        },
+        "end": {
+          "offset": 600,
+          "line": 30,
+          "column": 17
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 7,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected -448 to be close to -0.14285714285714285, received difference is 447.85714285714283, but expected 5e-11"
+      ],
+      "selection": {
+        "mode": "files",
+        "files": [
+          "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-6.test.ts"
+        ],
+        "selectedTests": 8,
+        "totalTests": 64,
+        "expectedSkipped": 0,
+        "reasons": [
+          "whole-file-preserves-sequential-state-and-hooks"
+        ]
+      },
+      "provenance": {
+        "source": "executed",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "e92aa478c84d8598c8731debbe5f7c21950ca20fa2967174d2c152d8c20cce3c",
+      "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/src/arithmetic-4.ts",
+      "operator": "arithmetic",
+      "original": "*",
+      "replacement": "/",
+      "location": {
+        "start": {
+          "offset": 219,
+          "line": 10,
+          "column": 16
+        },
+        "end": {
+          "offset": 220,
+          "line": 10,
+          "column": 17
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 7,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected -0.20512820512820512 to be close to -312, received difference is 311.79487179487177, but expected 5e-11"
+      ],
+      "selection": {
+        "mode": "files",
+        "files": [
+          "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-4.test.ts"
+        ],
+        "selectedTests": 8,
+        "totalTests": 64,
+        "expectedSkipped": 0,
+        "reasons": [
+          "whole-file-preserves-sequential-state-and-hooks"
+        ]
+      },
+      "provenance": {
+        "source": "executed",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "5d3dfadaa8cad2494a3b1d927f6bb19cb7d1e7381ef174de636b31d39f22e282",
+      "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/src/arithmetic-5.ts",
+      "operator": "arithmetic",
+      "original": "/",
+      "replacement": "*",
+      "location": {
+        "start": {
+          "offset": 599,
+          "line": 30,
+          "column": 16
+        },
+        "end": {
+          "offset": 600,
+          "line": 30,
+          "column": 17
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 7,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected -384 to be close to -0.16666666666666666, received difference is 383.8333333333333, but expected 5e-11"
+      ],
+      "selection": {
+        "mode": "files",
+        "files": [
+          "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-5.test.ts"
+        ],
+        "selectedTests": 8,
+        "totalTests": 64,
+        "expectedSkipped": 0,
+        "reasons": [
+          "whole-file-preserves-sequential-state-and-hooks"
+        ]
+      },
+      "provenance": {
+        "source": "executed",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "9ef652b122f72549e265f1031e75cd16ad8404d6ebd28eb98ee3d9885a76ad3a",
+      "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/src/arithmetic-3.ts",
+      "operator": "arithmetic",
+      "original": "-",
+      "replacement": "+",
+      "location": {
+        "start": {
+          "offset": 143,
+          "line": 6,
+          "column": 16
+        },
+        "end": {
+          "offset": 144,
+          "line": 6,
+          "column": 17
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 7,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected 23 to be close to -39, received difference is 62, but expected 5e-11"
+      ],
+      "selection": {
+        "mode": "files",
+        "files": [
+          "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-3.test.ts"
+        ],
+        "selectedTests": 8,
+        "totalTests": 64,
+        "expectedSkipped": 0,
+        "reasons": [
+          "whole-file-preserves-sequential-state-and-hooks"
+        ]
+      },
+      "provenance": {
+        "source": "executed",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "26e29767c11bf41308324f5ae43c7ea238bb37bc57454a7b0f38951228ecac88",
+      "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/src/arithmetic-1.ts",
+      "operator": "arithmetic",
+      "original": "+",
+      "replacement": "-",
+      "location": {
+        "start": {
+          "offset": 371,
+          "line": 18,
+          "column": 16
+        },
+        "end": {
+          "offset": 372,
+          "line": 18,
+          "column": 17
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 7,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected -24 to be close to 8, received difference is 32, but expected 5e-11"
+      ],
+      "selection": {
+        "mode": "files",
+        "files": [
+          "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-1.test.ts"
+        ],
+        "selectedTests": 8,
+        "totalTests": 64,
+        "expectedSkipped": 0,
+        "reasons": [
+          "whole-file-preserves-sequential-state-and-hooks"
+        ]
+      },
+      "provenance": {
+        "source": "executed",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "62ab979af16f70f0a92b3bf83411effedfaac79038eeba429d524f5ba403b6ac",
+      "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/src/arithmetic-2.ts",
+      "operator": "arithmetic",
+      "original": "*",
+      "replacement": "/",
+      "location": {
+        "start": {
+          "offset": 219,
+          "line": 10,
+          "column": 16
+        },
+        "end": {
+          "offset": 220,
+          "line": 10,
+          "column": 17
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 7,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected -0.34782608695652173 to be close to -184, received difference is 183.65217391304347, but expected 5e-11"
+      ],
+      "selection": {
+        "mode": "files",
+        "files": [
+          "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-2.test.ts"
+        ],
+        "selectedTests": 8,
+        "totalTests": 64,
+        "expectedSkipped": 0,
+        "reasons": [
+          "whole-file-preserves-sequential-state-and-hooks"
+        ]
+      },
+      "provenance": {
+        "source": "executed",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "5fb588b7244724ad8a25697f6dd1951246dbf2b5d72fca7eaa70b70b1f8f6e00",
+      "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/src/arithmetic-0.ts",
+      "operator": "arithmetic",
+      "original": "/",
+      "replacement": "*",
+      "location": {
+        "start": {
+          "offset": 592,
+          "line": 30,
+          "column": 16
+        },
+        "end": {
+          "offset": 593,
+          "line": 30,
+          "column": 17
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 7,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected -64 to be close to -1, received difference is 63, but expected 5e-11"
+      ],
+      "selection": {
+        "mode": "files",
+        "files": [
+          "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-0.test.ts"
+        ],
+        "selectedTests": 8,
+        "totalTests": 64,
+        "expectedSkipped": 0,
+        "reasons": [
+          "whole-file-preserves-sequential-state-and-hooks"
+        ]
+      },
+      "provenance": {
+        "source": "executed",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "7519b5955171402d1a8edfbd69023855689699ebe071b97438bc67ce1f97e3e7",
+      "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/src/arithmetic-6.ts",
+      "operator": "arithmetic",
+      "original": "*",
+      "replacement": "/",
+      "location": {
+        "start": {
+          "offset": 219,
+          "line": 10,
+          "column": 16
+        },
+        "end": {
+          "offset": 220,
+          "line": 10,
+          "column": 17
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 7,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected -0.14545454545454545 to be close to -440, received difference is 439.8545454545455, but expected 5e-11"
+      ],
+      "selection": {
+        "mode": "files",
+        "files": [
+          "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-6.test.ts"
+        ],
+        "selectedTests": 8,
+        "totalTests": 64,
+        "expectedSkipped": 0,
+        "reasons": [
+          "whole-file-preserves-sequential-state-and-hooks"
+        ]
+      },
+      "provenance": {
+        "source": "executed",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "e232e307be4341fa22c5f595b2239c05e47e3e52d9211745f5fb8872649c43be",
+      "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/src/arithmetic-4.ts",
+      "operator": "arithmetic",
+      "original": "/",
+      "replacement": "*",
+      "location": {
+        "start": {
+          "offset": 295,
+          "line": 14,
+          "column": 16
+        },
+        "end": {
+          "offset": 296,
+          "line": 14,
+          "column": 17
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 7,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected -312 to be close to -0.20512820512820512, received difference is 311.79487179487177, but expected 5e-11"
+      ],
+      "selection": {
+        "mode": "files",
+        "files": [
+          "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-4.test.ts"
+        ],
+        "selectedTests": 8,
+        "totalTests": 64,
+        "expectedSkipped": 0,
+        "reasons": [
+          "whole-file-preserves-sequential-state-and-hooks"
+        ]
+      },
+      "provenance": {
+        "source": "executed",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "18308b064ab58b0d4e55898a9b8db4084783dd80fd5ecfd9471699170b3f3efd",
+      "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/src/arithmetic-3.ts",
+      "operator": "arithmetic",
+      "original": "-",
+      "replacement": "+",
+      "location": {
+        "start": {
+          "offset": 447,
+          "line": 22,
+          "column": 16
+        },
+        "end": {
+          "offset": 448,
+          "line": 22,
+          "column": 17
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 7,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected 24 to be close to -40, received difference is 64, but expected 5e-11"
+      ],
+      "selection": {
+        "mode": "files",
+        "files": [
+          "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-3.test.ts"
+        ],
+        "selectedTests": 8,
+        "totalTests": 64,
+        "expectedSkipped": 0,
+        "reasons": [
+          "whole-file-preserves-sequential-state-and-hooks"
+        ]
+      },
+      "provenance": {
+        "source": "executed",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "005eb9ea7ffc16af1a937bf267bfb0b87c2dfbcd0989b17f36a6a9b29d97abb4",
+      "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/src/arithmetic-6.ts",
+      "operator": "arithmetic",
+      "original": "-",
+      "replacement": "+",
+      "location": {
+        "start": {
+          "offset": 143,
+          "line": 6,
+          "column": 16
+        },
+        "end": {
+          "offset": 144,
+          "line": 6,
+          "column": 17
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 7,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected 47 to be close to -63, received difference is 110, but expected 5e-11"
+      ],
+      "selection": {
+        "mode": "files",
+        "files": [
+          "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-6.test.ts"
+        ],
+        "selectedTests": 8,
+        "totalTests": 64,
+        "expectedSkipped": 0,
+        "reasons": [
+          "whole-file-preserves-sequential-state-and-hooks"
+        ]
+      },
+      "provenance": {
+        "source": "executed",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "71333257bd89f9a7dc7cd5ec4a1690ba442d55ec6dd31e3b79369d1af5208a57",
+      "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/src/arithmetic-4.ts",
+      "operator": "arithmetic",
+      "original": "-",
+      "replacement": "+",
+      "location": {
+        "start": {
+          "offset": 447,
+          "line": 22,
+          "column": 16
+        },
+        "end": {
+          "offset": 448,
+          "line": 22,
+          "column": 17
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 7,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected 32 to be close to -48, received difference is 80, but expected 5e-11"
+      ],
+      "selection": {
+        "mode": "files",
+        "files": [
+          "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-4.test.ts"
+        ],
+        "selectedTests": 8,
+        "totalTests": 64,
+        "expectedSkipped": 0,
+        "reasons": [
+          "whole-file-preserves-sequential-state-and-hooks"
+        ]
+      },
+      "provenance": {
+        "source": "executed",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "78b07836a084443b2d59b7b9a5a5f8110b418303a3c90356e7edfa6edbd93f44",
+      "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/src/arithmetic-7.ts",
+      "operator": "arithmetic",
+      "original": "/",
+      "replacement": "*",
+      "location": {
+        "start": {
+          "offset": 295,
+          "line": 14,
+          "column": 16
+        },
+        "end": {
+          "offset": 296,
+          "line": 14,
+          "column": 17
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 7,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected -504 to be close to -0.12698412698412698, received difference is 503.87301587301585, but expected 5e-11"
+      ],
+      "selection": {
+        "mode": "files",
+        "files": [
+          "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-7.test.ts"
+        ],
+        "selectedTests": 8,
+        "totalTests": 64,
+        "expectedSkipped": 0,
+        "reasons": [
+          "whole-file-preserves-sequential-state-and-hooks"
+        ]
+      },
+      "provenance": {
+        "source": "executed",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "20d55c8856a715a9d637b6518b00a71f9ca82f9d9e2300c3a53b223175069b78",
+      "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/src/arithmetic-4.ts",
+      "operator": "arithmetic",
+      "original": "/",
+      "replacement": "*",
+      "location": {
+        "start": {
+          "offset": 599,
+          "line": 30,
+          "column": 16
+        },
+        "end": {
+          "offset": 600,
+          "line": 30,
+          "column": 17
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 7,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected -320 to be close to -0.2, received difference is 319.8, but expected 5e-11"
+      ],
+      "selection": {
+        "mode": "files",
+        "files": [
+          "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-4.test.ts"
+        ],
+        "selectedTests": 8,
+        "totalTests": 64,
+        "expectedSkipped": 0,
+        "reasons": [
+          "whole-file-preserves-sequential-state-and-hooks"
+        ]
+      },
+      "provenance": {
+        "source": "executed",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "5d4f824d619cb7498e76145955f8e54aa3b0e2f9b2ed4ab7194808d78312471e",
+      "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/src/arithmetic-2.ts",
+      "operator": "arithmetic",
+      "original": "/",
+      "replacement": "*",
+      "location": {
+        "start": {
+          "offset": 295,
+          "line": 14,
+          "column": 16
+        },
+        "end": {
+          "offset": 296,
+          "line": 14,
+          "column": 17
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 7,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected -184 to be close to -0.34782608695652173, received difference is 183.65217391304347, but expected 5e-11"
+      ],
+      "selection": {
+        "mode": "files",
+        "files": [
+          "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-2.test.ts"
+        ],
+        "selectedTests": 8,
+        "totalTests": 64,
+        "expectedSkipped": 0,
+        "reasons": [
+          "whole-file-preserves-sequential-state-and-hooks"
+        ]
+      },
+      "provenance": {
+        "source": "executed",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "e43bbd7efcd90e4928415a41e83067582a3a2cd97422599a77a90427f9e97587",
+      "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/src/arithmetic-0.ts",
+      "operator": "arithmetic",
+      "original": "*",
+      "replacement": "/",
+      "location": {
+        "start": {
+          "offset": 517,
+          "line": 26,
+          "column": 16
+        },
+        "end": {
+          "offset": 518,
+          "line": 26,
+          "column": 17
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 7,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected -1 to be close to -64, received difference is 63, but expected 5e-11"
+      ],
+      "selection": {
+        "mode": "files",
+        "files": [
+          "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-0.test.ts"
+        ],
+        "selectedTests": 8,
+        "totalTests": 64,
+        "expectedSkipped": 0,
+        "reasons": [
+          "whole-file-preserves-sequential-state-and-hooks"
+        ]
+      },
+      "provenance": {
+        "source": "executed",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "d607c7ed50e02f199f30f1e1115b188426a5c746ba1356cfe936c079b0920287",
+      "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/src/arithmetic-1.ts",
+      "operator": "arithmetic",
+      "original": "/",
+      "replacement": "*",
+      "location": {
+        "start": {
+          "offset": 295,
+          "line": 14,
+          "column": 16
+        },
+        "end": {
+          "offset": 296,
+          "line": 14,
+          "column": 17
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 7,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected -120 to be close to -0.5333333333333333, received difference is 119.46666666666667, but expected 5e-11"
+      ],
+      "selection": {
+        "mode": "files",
+        "files": [
+          "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-1.test.ts"
+        ],
+        "selectedTests": 8,
+        "totalTests": 64,
+        "expectedSkipped": 0,
+        "reasons": [
+          "whole-file-preserves-sequential-state-and-hooks"
+        ]
+      },
+      "provenance": {
+        "source": "executed",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "ee6ab18bca003a4369799645163467da36bd8cdffdbdcd2dafacb491c7e37a39",
+      "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/src/arithmetic-0.ts",
+      "operator": "arithmetic",
+      "original": "-",
+      "replacement": "+",
+      "location": {
+        "start": {
+          "offset": 442,
+          "line": 22,
+          "column": 16
+        },
+        "end": {
+          "offset": 443,
+          "line": 22,
+          "column": 17
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 7,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected +0 to be close to -16, received difference is 16, but expected 5e-11"
+      ],
+      "selection": {
+        "mode": "files",
+        "files": [
+          "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-0.test.ts"
+        ],
+        "selectedTests": 8,
+        "totalTests": 64,
+        "expectedSkipped": 0,
+        "reasons": [
+          "whole-file-preserves-sequential-state-and-hooks"
+        ]
+      },
+      "provenance": {
+        "source": "executed",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "ea3597690c512c0b23c62e9df8a0a26336503c7266409c76f232722b5c18bc62",
+      "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/src/arithmetic-5.ts",
+      "operator": "arithmetic",
+      "original": "*",
+      "replacement": "/",
+      "location": {
+        "start": {
+          "offset": 219,
+          "line": 10,
+          "column": 16
+        },
+        "end": {
+          "offset": 220,
+          "line": 10,
+          "column": 17
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 7,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected -0.1702127659574468 to be close to -376, received difference is 375.82978723404256, but expected 5e-11"
+      ],
+      "selection": {
+        "mode": "files",
+        "files": [
+          "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-5.test.ts"
+        ],
+        "selectedTests": 8,
+        "totalTests": 64,
+        "expectedSkipped": 0,
+        "reasons": [
+          "whole-file-preserves-sequential-state-and-hooks"
+        ]
+      },
+      "provenance": {
+        "source": "executed",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "cab6e7f1d166b711316a901be7351aff3071ad1b3e8651dcd6749a11404c7c41",
+      "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/src/arithmetic-2.ts",
+      "operator": "arithmetic",
+      "original": "-",
+      "replacement": "+",
+      "location": {
+        "start": {
+          "offset": 447,
+          "line": 22,
+          "column": 16
+        },
+        "end": {
+          "offset": 448,
+          "line": 22,
+          "column": 17
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 7,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected 16 to be close to -32, received difference is 48, but expected 5e-11"
+      ],
+      "selection": {
+        "mode": "files",
+        "files": [
+          "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-2.test.ts"
+        ],
+        "selectedTests": 8,
+        "totalTests": 64,
+        "expectedSkipped": 0,
+        "reasons": [
+          "whole-file-preserves-sequential-state-and-hooks"
+        ]
+      },
+      "provenance": {
+        "source": "executed",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "4c432dc35d5bb66e8d9874eed1f41f1f7691412359e817580972e2971e675c1f",
+      "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/src/arithmetic-1.ts",
+      "operator": "arithmetic",
+      "original": "*",
+      "replacement": "/",
+      "location": {
+        "start": {
+          "offset": 219,
+          "line": 10,
+          "column": 16
+        },
+        "end": {
+          "offset": 220,
+          "line": 10,
+          "column": 17
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 7,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected -0.5333333333333333 to be close to -120, received difference is 119.46666666666667, but expected 5e-11"
+      ],
+      "selection": {
+        "mode": "files",
+        "files": [
+          "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-1.test.ts"
+        ],
+        "selectedTests": 8,
+        "totalTests": 64,
+        "expectedSkipped": 0,
+        "reasons": [
+          "whole-file-preserves-sequential-state-and-hooks"
+        ]
+      },
+      "provenance": {
+        "source": "executed",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "7fbffe41cec327686f701880c1df59d6fc1aecf67b06c218a5924aa92fb8e740",
+      "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/src/arithmetic-0.ts",
+      "operator": "arithmetic",
+      "original": "/",
+      "replacement": "*",
+      "location": {
+        "start": {
+          "offset": 292,
+          "line": 14,
+          "column": 16
+        },
+        "end": {
+          "offset": 293,
+          "line": 14,
+          "column": 17
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 7,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected -56 to be close to -1.1428571428571428, received difference is 54.857142857142854, but expected 5e-11"
+      ],
+      "selection": {
+        "mode": "files",
+        "files": [
+          "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-0.test.ts"
+        ],
+        "selectedTests": 8,
+        "totalTests": 64,
+        "expectedSkipped": 0,
+        "reasons": [
+          "whole-file-preserves-sequential-state-and-hooks"
+        ]
+      },
+      "provenance": {
+        "source": "executed",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "80e12edd15e5b8af79a8ffc277f6b2ee8aa456e880de4c7b94d4f274546feb89",
+      "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/src/arithmetic-7.ts",
+      "operator": "arithmetic",
+      "original": "/",
+      "replacement": "*",
+      "location": {
+        "start": {
+          "offset": 599,
+          "line": 30,
+          "column": 16
+        },
+        "end": {
+          "offset": 600,
+          "line": 30,
+          "column": 17
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 7,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected -512 to be close to -0.125, received difference is 511.875, but expected 5e-11"
+      ],
+      "selection": {
+        "mode": "files",
+        "files": [
+          "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-7.test.ts"
+        ],
+        "selectedTests": 8,
+        "totalTests": 64,
+        "expectedSkipped": 0,
+        "reasons": [
+          "whole-file-preserves-sequential-state-and-hooks"
+        ]
+      },
+      "provenance": {
+        "source": "executed",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "fff937ef5106c639c9d1d4acfd9ba2fd3dbfa8c0372b7927d2d0426977458e95",
+      "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/src/arithmetic-5.ts",
+      "operator": "arithmetic",
+      "original": "-",
+      "replacement": "+",
+      "location": {
+        "start": {
+          "offset": 447,
+          "line": 22,
+          "column": 16
+        },
+        "end": {
+          "offset": 448,
+          "line": 22,
+          "column": 17
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 7,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected 40 to be close to -56, received difference is 96, but expected 5e-11"
+      ],
+      "selection": {
+        "mode": "files",
+        "files": [
+          "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-5.test.ts"
+        ],
+        "selectedTests": 8,
+        "totalTests": 64,
+        "expectedSkipped": 0,
+        "reasons": [
+          "whole-file-preserves-sequential-state-and-hooks"
+        ]
+      },
+      "provenance": {
+        "source": "executed",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "d9b9e79fe3f4617ec0e1637b17e11be71582a0bfe04312c294b5176536dbcc40",
+      "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/src/arithmetic-4.ts",
+      "operator": "arithmetic",
+      "original": "+",
+      "replacement": "-",
+      "location": {
+        "start": {
+          "offset": 371,
+          "line": 18,
+          "column": 16
+        },
+        "end": {
+          "offset": 372,
+          "line": 18,
+          "column": 17
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 7,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected -48 to be close to 32, received difference is 80, but expected 5e-11"
+      ],
+      "selection": {
+        "mode": "files",
+        "files": [
+          "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-4.test.ts"
+        ],
+        "selectedTests": 8,
+        "totalTests": 64,
+        "expectedSkipped": 0,
+        "reasons": [
+          "whole-file-preserves-sequential-state-and-hooks"
+        ]
+      },
+      "provenance": {
+        "source": "executed",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "b3e84551fbce63be5eb8552a893005f4bd412cb1d8698d3f147bb4ce19fc9125",
+      "file": "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/src/arithmetic-0.ts",
+      "operator": "arithmetic",
+      "original": "+",
+      "replacement": "-",
+      "location": {
+        "start": {
+          "offset": 367,
+          "line": 18,
+          "column": 16
+        },
+        "end": {
+          "offset": 368,
+          "line": 18,
+          "column": 17
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 7,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected -16 to be close to +0, received difference is 16, but expected 5e-11"
+      ],
+      "selection": {
+        "mode": "files",
+        "files": [
+          "/home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/test/arithmetic-0.test.ts"
+        ],
+        "selectedTests": 8,
+        "totalTests": 64,
+        "expectedSkipped": 0,
+        "reasons": [
+          "whole-file-preserves-sequential-state-and-hooks"
+        ]
+      },
+      "provenance": {
+        "source": "executed",
+        "reason": "forced-no-cache"
+      }
+    }
+  ],
+  "diagnostics": [
+    "execution=persistent; isolation=fresh-test-forks; controller reuse only; baseline=original-and-disabled-switches",
+    "disabled switching validation: /home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/src/arithmetic-0.ts: Passed",
+    "disabled switching validation: /home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/src/arithmetic-1.ts: Passed",
+    "disabled switching validation: /home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/src/arithmetic-2.ts: Passed",
+    "disabled switching validation: /home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/src/arithmetic-3.ts: Passed",
+    "disabled switching validation: /home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/src/arithmetic-4.ts: Passed",
+    "disabled switching validation: /home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/src/arithmetic-5.ts: Passed",
+    "disabled switching validation: /home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/src/arithmetic-6.ts: Passed",
+    "disabled switching validation: /home/runner/work/oximut/oximut/.oximut/matched-benchmark/warmup-01-matched-scale-oximut-clean-selection/project/src/arithmetic-7.ts: Passed",
+    "adapter observed reuse boundary: controller"
+  ],
+  "summary": {
+    "total": 64,
+    "killed": 64,
+    "survived": 0,
+    "noCoverage": 0,
+    "invalid": 0,
+    "timeout": 0,
+    "infrastructureError": 0,
+    "resourceExhausted": 0,
+    "skipped": 0,
+    "scoreDenominator": 64,
+    "score": 100.0,
+    "complete": true
+  },
+  "cache": {
+    "enabled": false,
+    "outcomesEnabled": false,
+    "reason": "forced-no-cache",
+    "instrumentationHits": 0,
+    "instrumentationMisses": 0,
+    "outcomeHits": 0,
+    "outcomeMisses": 0,
+    "persistence": "not-written",
+    "runnerHashMs": 0,
+    "fingerprintProfiles": []
+  },
+  "resources": {
+    "admissionPauses": 63,
+    "admissionWorkerCostBytes": 523356160,
+    "budgetBytes": 16766410752,
+    "cgroups": [
+      {
+        "initialOomEvents": 0,
+        "limitBytes": null,
+        "limitPath": "/sys/fs/cgroup/system.slice/memory.max",
+        "oomEventsPath": "/sys/fs/cgroup/system.slice/memory.events",
+        "usagePath": "/sys/fs/cgroup/system.slice/memory.current"
+      },
+      {
+        "initialOomEvents": 0,
+        "limitBytes": null,
+        "limitPath": "/sys/fs/cgroup/system.slice/hosted-compute-agent.service/memory.max",
+        "oomEventsPath": "/sys/fs/cgroup/system.slice/hosted-compute-agent.service/memory.events",
+        "usagePath": "/sys/fs/cgroup/system.slice/hosted-compute-agent.service/memory.current"
+      }
+    ],
+    "configuredBudgetBytes": null,
+    "configuredWorkers": 1,
+    "cpuLimitWorkers": 4,
+    "effectiveWorkers": 1,
+    "enforcement": "best-effort sampled admission and process-tree cancellation; existing cgroup limits are OS-enforced; no new hard cap installed",
+    "exhaustion": null,
+    "maxActiveJobs": 1,
+    "measuredWorkerPeakBytes": 418684928,
+    "measurement": "Linux /proc smaps_rollup Rss sum, approximate stat RSS fallback on older/restricted kernels: main CLI and all worker/adapter/controller/test descendants; shared pages counted per process",
+    "peakAggregateRssBytes": 427040768,
+    "recycledIdleWorkers": 0,
+    "reserveBytes": 67108864,
+    "sampleIntervalMs": 50,
+    "samples": 995
+  }
+}

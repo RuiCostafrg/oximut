@@ -214,3 +214,17 @@ context. Build metadata records both commits, tool versions, flags, host and
 copied binary hashes. The workflow uploads raw projects/reports/logs, all attempts
 and summaries even after a failure; dependency symlinks are removed only after
 timing to keep artifacts bounded. Hosted runner noise still limits conclusions.
+
+## Local matched qualification, 2026-10-28
+
+[Retained qualification evidence](../benchmarks/results/2026-10-28-colord-local-qualification/README.md)
+now includes one matched run for each built candidate. Both passed all exact
+workload gates, with 102 tests and the same 10 killed arithmetic edits. The local
+sample used less Oximut RSS after the runtime change but more elapsed time and
+CPU. It is not a repeated native performance result or target achievement.
+
+[The corrected native synthetic campaign](../benchmarks/results/2026-10-28-matched-native/README.md)
+passed its global correctness gate and missed both performance targets at both
+scales. It predates the runner optimization. Raw reports, measurements and hashes
+are retained alongside the prior invalid campaign. The native colord workflow
+must establish its own complete repeated evidence.

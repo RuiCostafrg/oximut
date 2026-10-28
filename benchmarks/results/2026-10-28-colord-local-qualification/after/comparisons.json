@@ -1,0 +1,28 @@
+[
+  {
+    "declared_families_agree": true,
+    "equal_mutation_scope": true,
+    "explained_no_coverage_refinements": [],
+    "left_count": 10,
+    "left_only": {},
+    "mismatches": [],
+    "ratio_eligible": true,
+    "right_count": 10,
+    "right_only": {},
+    "round": 0,
+    "shared": [
+      "src/manipulate/invert.ts:5a4b1a49db3370f35595a4c9f791f764cf85c8d609e144ef3caa133c9896b2de",
+      "src/manipulate/invert.ts:5fbed2307807aa5a74d7e636be307eea6129cb2e3fb98fe273d18f5367cfb507",
+      "src/manipulate/invert.ts:a8ebfc39040c2547f2c900fd8332e6ec4656ff3f03e3125c61521db95a26110e",
+      "src/manipulate/lighten.ts:1b86c71dcb16950d4140a02f181952714eeaa2549a61fccb24494783677d8d7f",
+      "src/manipulate/lighten.ts:ca564f0146f4da53ffd01272fbf916cb6f91c02062790b38e6a65e6bf690b5b5",
+      "src/manipulate/mix.ts:ab7c2717dd32bfe6cda2204d18311a44304c4eeca230406aee89fd71af11c33e",
+      "src/manipulate/mix.ts:ad93e4a21051eb6120c994d143461e770aa3a500740e3e8ae581e5f50489a328",
+      "src/manipulate/mix.ts:f44c37dfacc4fe424faf13618c63ac5e20f597149d89e9c6a8ab1fd20a2003d2",
+      "src/manipulate/saturate.ts:00c84cea49566ce0605592dd88efdea80232ffbb26674daa80c51bc17926bcf8",
+      "src/manipulate/saturate.ts:1f8641db24336a5d61f4c26107390fcde9987081b5d1e8196e929f239d2499df"
+    ],
+    "shared_classifications_agree": true,
+    "shared_count": 10
+  }
+]
