@@ -15,6 +15,19 @@ import profile_native as diagnostic
 
 
 class QualificationTests(unittest.TestCase):
+    def test_display_summary_is_bounded_without_changing_raw_errors(self):
+        """Large inventories and errors belong in artifacts rather than step summaries."""
+        errors = ['x' * 2000 for _ in range(10000)]
+        result = dict(passed=False, failure='failure' * 1000, captures=dict(
+            errors=errors, observed=[{}] * 10000, orphan_profiles=[{}] * 10000))
+        summary = diagnostic.compact_summary(result)
+        self.assertEqual(summary['error_count'], 10000)
+        self.assertEqual(summary['observed_identity_count'], 10000)
+        self.assertEqual(summary['orphan_profile_count'], 10000)
+        self.assertEqual(len(summary['first_errors']), 5)
+        self.assertLess(len(json.dumps(summary)), 4000)
+        self.assertEqual(result['captures']['errors'], errors)
+
     def rows(self):
         """Build one equivalent three-tool result group for qualification fixtures."""
         return [dict(tool=tool, round=0, warmup=False, success=True,
@@ -155,6 +168,34 @@ sys.exit(9)
 
 
 class NodeFixtureTests(unittest.TestCase):
+    def test_initial_identity_and_stderr_write_failures_preserve_workload_exit(self):
+        """A failing preload diagnostic must still allow the target to run and exit."""
+        node = shutil.which('node')
+        if not node:
+            self.skipTest('Node unavailable')
+        for fail_stderr in (False, True):
+            with self.subTest(fail_stderr=fail_stderr), tempfile.TemporaryDirectory() as tmp:
+                root = Path(tmp)
+                sabotage = root / 'bad-fs.cjs'
+                sabotage.write_text("const fs = require('node:fs'); const path = require('node:path');\n"
+                                    "const write = fs.writeFileSync; fs.writeFileSync = (p,...args) => {\n"
+                                    "if (path.basename(String(p)).startsWith('node-')) throw Error('initial fixture'); return write(p,...args); };\n"
+                                    + ("const raw = fs.writeSync; fs.writeSync = (fd,...args) => { if(fd===2) throw Error('stderr fixture'); return raw(fd,...args); };\n"
+                                       if fail_stderr else ''))
+                child = root / 'workload.cjs'
+                child.write_text("console.log('workload ran'); process.exitCode = 23;")
+                env = {**os.environ, 'OXIMUT_PROFILE_DIR': str(root),
+                       'NODE_OPTIONS': f'--cpu-prof --cpu-prof-dir="{root}" --require="{sabotage}" --require="{diagnostic.SUPPORT / "node-identity.cjs"}"'}
+                result = subprocess.run([node, str(child)], env=env, capture_output=True, timeout=5)
+                self.assertEqual(result.returncode, 23, result.stderr)
+                self.assertIn(b'workload ran', result.stdout)
+                if not fail_stderr:
+                    self.assertIn(b'Diagnostic Node identity write failed', result.stderr)
+                self.assertEqual(list(root.glob('node-*.json')), [])
+                inventory = diagnostic.capture_inventory(root)
+                self.assertTrue(inventory['errors'])
+                self.assertTrue(inventory['orphan_profiles'])
+
     def test_segment_timer_starvation_and_kill_before_checkpoint_stay_incomplete(self):
         """Do not infer capture completeness from a requested checkpoint interval."""
         node = shutil.which('node')
@@ -313,6 +354,27 @@ class NodeFixtureTests(unittest.TestCase):
 
 
 class MinimumCaptureTests(unittest.TestCase):
+    def test_thousands_of_segments_keep_metadata_bounded_and_raw_files_intact(self):
+        """Checkpoint names are summarized by count and chronological endpoints."""
+        with tempfile.TemporaryDirectory() as tmp:
+            profiles, qualification = self.fixture(Path(tmp))
+            initial = diagnostic.capture_inventory(profiles, qualification)
+            empty = next(r for r in initial['observed'] if r['identity'] == 'node-6.json')
+            self.assertEqual(empty['partial_segment_count'], 0)
+            self.assertEqual(empty['partial_segment_range'], [])
+            raw = json.dumps({'nodes': [{'id': 1}], 'startTime': 1, 'endTime': 2})
+            for index in range(2000):
+                (profiles / f'Segment.6.0.1.{index}.cpuprofile').write_text(raw)
+            inventory = diagnostic.capture_inventory(profiles, qualification)
+            observed = next(r for r in inventory['observed'] if r['identity'] == 'node-6.json')
+            self.assertEqual(observed['partial_segment_count'], 2000)
+            self.assertEqual(observed['partial_segment_range'],
+                             ['Segment.6.0.1.0.cpuprofile', 'Segment.6.0.1.1999.cpuprofile'])
+            self.assertNotIn('partial_segments', observed)
+            self.assertLess(len(json.dumps(observed)), 600)
+            self.assertEqual(inventory['errors'], [])
+            self.assertEqual(len(list(profiles.glob('Segment.*.cpuprofile'))), 2000)
+
     def fixture(self, root):
         """Create finalized evidence for each required tool and Oximut role."""
         import cProfile

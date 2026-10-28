@@ -153,6 +153,10 @@ cwd. This is minimum role evidence, not proof of complete process coverage.
 Unmatched Node/Python profiles are listed as orphans and fail capture validation;
 all raw files remain available. Node exit-record writes are atomic and guarded so
 a profiler write failure cannot replace the workload's original exit status.
+Initial Node identity writes are also guarded; missing identities remain capture
+errors. Segment metadata records a count and first/last sequence names instead of
+listing every checkpoint. The workflow displays only bounded status/counter/error
+details; full diagnostics and raw profiles remain in the uploaded artifact.
 
 
 ### Short-lived worker checkpoints and the first native capture

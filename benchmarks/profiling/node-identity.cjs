@@ -14,7 +14,12 @@ const record = {
   selfCpuAtPreloadUs: process.cpuUsage(),
   startTime: fs.readFileSync('/proc/self/stat', 'utf8').split(') ').pop().split(' ')[19],
 };
-fs.writeFileSync(file, JSON.stringify(record, null, 2));
+try {
+  fs.writeFileSync(file, JSON.stringify(record, null, 2));
+} catch (error) {
+  try { fs.writeSync(2, `Diagnostic Node identity write failed: ${error.message}\n`); }
+  catch { /* Diagnostic output must not replace the workload's exit status. */ }
+}
 if (process.env.OXIMUT_PROFILE_SEGMENTS === '1') {
   require('./node-segments.cjs')(record);
 }

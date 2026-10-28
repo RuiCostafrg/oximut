@@ -55,6 +55,23 @@ def node_profile_finalized(data):
         return False
 
 
+def compact_summary(result):
+    """Bound displayed diagnostics while retaining the full inventory in artifacts."""
+    captures = result.get('captures', {})
+    errors = [*result.get('qualification_errors', []), *captures.get('errors', [])]
+    return {
+        'diagnostic_only': True,
+        'passed': result.get('passed', False),
+        'node_capture_mode': result.get('node_capture_mode'),
+        'failure': str(result['failure'])[:500] if result.get('failure') else None,
+        'observed_identity_count': len(captures.get('observed', [])),
+        'orphan_profile_count': len(captures.get('orphan_profiles', [])),
+        'error_count': len(errors),
+        'first_errors': [str(error)[:500] for error in errors[:5]],
+        'full_evidence': 'capture/diagnostic.json and raw files in the uploaded artifact',
+    }
+
+
 def capture_inventory(directory, qualification=None):
     """Report observed captures only. Absence cannot establish process completeness."""
     records, errors, identities, matched = [], [], [], set()
@@ -66,7 +83,9 @@ def capture_inventory(directory, qualification=None):
             if identity.name.startswith('node-'):
                 profiles = sorted(directory.glob(f'CPU.*.{record["pid"]}.{record["threadId"]}.*.cpuprofile'))
                 matched.update(profiles)
-                segments = sorted(directory.glob(f'Segment.{record["pid"]}.{record["threadId"]}.{record.get("startTime")}.*.cpuprofile'))
+                segments = sorted(
+                    directory.glob(f'Segment.{record["pid"]}.{record["threadId"]}.{record.get("startTime")}.*.cpuprofile'),
+                    key=lambda path: int(path.name.rsplit('.', 2)[1]))
                 matched.update(segments)
                 partial = bool(segments)
                 for path in segments:
@@ -99,7 +118,8 @@ def capture_inventory(directory, qualification=None):
                 partial = False
                 errors.append(f'invalid Node thread identity: {identity.name}')
             records.append({'identity': identity.name, 'profiles': [p.name for p in profiles],
-                            'partial_segments': [p.name for p in segments],
+                            'partial_segment_count': len(segments),
+                            'partial_segment_range': [segments[0].name, segments[-1].name] if segments else [],
                             'partial_segments_finalized': partial,
                             'exit_observed': 'exitObserved' in record if identity.name.startswith('node-') else None,
                             'capture_present_and_finalized': complete})

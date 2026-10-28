@@ -86,7 +86,13 @@ jobs:
             echo 'Node sampling and Python self CPU do not partition whole product CPU; Rust resource sampler CPU remains unattributed.'
             if test -f "$RUNNER_TEMP/native-diagnostic/capture/diagnostic.json"; then
               echo '```json'
-              cat "$RUNNER_TEMP/native-diagnostic/capture/diagnostic.json"
+              python3 - <<'PY'
+          import json, os, pathlib, sys
+          sys.path.insert(0, 'benchmarks')
+          from profile_native import compact_summary
+          source = pathlib.Path(os.environ['RUNNER_TEMP']) / 'native-diagnostic/capture/diagnostic.json'
+          print(json.dumps(compact_summary(json.loads(source.read_text())), indent=2))
+          PY
               echo '```'
             else
               echo 'FAILED/INCOMPLETE: capture summary absent; inspect setup/build/job logs.'
