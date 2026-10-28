@@ -115,9 +115,24 @@ async function run(request) {
           ? { outcome: 'timeout', termination: await controller.terminate() }
           : await controller.run({ request, deadlineMs: remaining() });
       jobs++;
-      const leaked = [...(await tree(controller.supervisorPid))].some(
-        (pid) => !descendants.has(pid),
-      );
+      const unexpectedDescendants = async () =>
+        [...(await tree(controller.supervisorPid))].filter((pid) => !descendants.has(pid));
+      const observed = await unexpectedDescendants();
+      let leaked = observed.length > 0;
+      // A completed test fork can exit while /proc is being enumerated. Confirm
+      // disappearance independently; an empty second tree can miss reparenting.
+      if (leaked && (await unexpectedDescendants()).length === 0) {
+        leaked = false;
+        for (const pid of observed) {
+          try {
+            await stat(`/proc/${pid}/stat`);
+            leaked = true;
+          } catch (error) {
+            if (!['ENOENT', 'ESRCH'].includes(error.code)) leaked = true;
+          }
+          if (leaked) break;
+        }
+      }
       // The supervisor reaps even detached descendants before another job starts.
       if (
         result.outcome === 'timeout' ||
