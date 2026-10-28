@@ -94,6 +94,43 @@ candidate build code executes in that job. The earlier source-format sidecar's
 A failed validation blocks signing. No release publication path exists here;
 success still requires explicit release review before any attachment/promotion.
 
+### Candidate execution boundary
+
+On native Ubuntu 24.04, `candidate-sandbox.py` requires bubblewrap user, mount,
+PID, IPC and UTS namespaces. Installation can write only extracted source and
+its new prefix. Each installed/relocated invocation gets a writable disposable
+project and a read-only prefix; trusted harness, schema, validator dependencies,
+archived reports and evidence are not mounted. The validator uses the trusted
+checkout's locked npm dependencies, never candidate-installed JavaScript.
+Only system tools, CA certificates and standalone Node/Rust toolchains are
+mounted read-only. The environment is cleared; host homes, checkout credentials,
+runner tokens, `/run`, and Docker sockets are absent. Capabilities are dropped
+and bubblewrap sets no-new-privileges, including for setuid tools.
+
+Installation retains network access for locked Cargo/npm downloads. Runtime
+smokes use a separate network namespace. This is a filesystem/process isolation
+boundary, not an installation egress firewall or protection against kernel
+vulnerabilities. Run only on the dedicated, disposable GitHub-hosted validation
+runner, never a credential-bearing development machine or shared host service.
+
+Bubblewrap's PID namespace init exits before successful command return, killing
+and reaping remaining descendants, including detached sessions. Timeouts kill
+the process group and fail validation; output is never accepted on timeout.
+Only after successful teardown does trusted code inspect prefix links/types,
+read bounded regular report files without following links, copy reports, validate
+schemas, or hash the exact binary. Prefix files remain read-only for both smoke
+phases. File size, descriptor and process-count limits supplement command and
+job timeouts; they are not a total disk or memory quota. Failed evidence remains
+failed, and signing rejects evidence without the new isolation identity.
+
+CI requires real hostile installer/runtime tests, read-only asset enforcement,
+detached-process cleanup, failure/timeout checks, and the ordinary installed and
+relocated smoke using the built CLI. A missing/unusable sandbox fails CI rather
+than skipping. PRoot cannot enforce these mounts and is explicitly rejected.
+Local work in PRoot validates format/lifecycle unit tests only; **native Ubuntu
+CI must pass before this boundary is considered validated**. No attestation or
+release dispatch is needed for the PR regression job.
+
 ## Action pin evidence
 
 Checked against official upstream Git refs and action definitions on 2026-10-27:

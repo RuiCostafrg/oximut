@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Smoke an installed prefix from a separate temporary project and working directory."""
 import argparse
+import importlib.util
 import json
 import os
 from pathlib import Path
@@ -9,7 +10,12 @@ import shutil
 import tempfile
 
 
-def smoke(prefix, *, reports_dir=None, validator=None):
+SPEC = importlib.util.spec_from_file_location("candidate_sandbox", Path(__file__).with_name("candidate-sandbox.py"))
+SANDBOX = importlib.util.module_from_spec(SPEC)
+SPEC.loader.exec_module(SANDBOX)
+
+
+def smoke(prefix, *, reports_dir=None, validator=None, isolated=False):
     if (reports_dir is None) != (validator is None):
         raise ValueError("reports-dir and validator must be supplied together")
     if reports_dir is not None:
@@ -60,19 +66,27 @@ def smoke(prefix, *, reports_dir=None, validator=None):
                 arguments = ["--cache", "--cache-inputs-complete", "--cache-policy", "always"] if reports_dir else []
                 if case == "force":
                     arguments.append("--force")
-                result = subprocess.run([
+                command = [
                     str(prefix / "bin" / "oximut"), "--root", str(root),
                     "--config", "vitest.config.mjs", "--source", "subject.js",
                     "--execution", execution, "--report", str(report), *arguments,
-                ], cwd=root, env=environment, capture_output=True, text=True, timeout=300)
-                if result.returncode != 0:
-                    raise RuntimeError(f"{execution}/{case} exited {result.returncode}: {result.stdout}\n{result.stderr}")
+                ]
+                if isolated:
+                    SANDBOX.run(command, cwd=root, writable=[Path(temporary)],
+                                readonly=[prefix], node_options=f"--import={hook.as_uri()}")
+                    # Namespace has exited and all descendants are dead before any reads/writes.
+                    SANDBOX.safe_tree(Path(temporary), external_links=[(root / "node_modules", prefix / "lib/oximut/node_modules")])
+                else:
+                    result = subprocess.run(command, cwd=root, env=environment,
+                                            capture_output=True, text=True, timeout=300)
+                    if result.returncode != 0:
+                        raise RuntimeError(f"{execution}/{case} exited {result.returncode}: {result.stdout}\n{result.stderr}")
                 runner = "m2-runner.mjs" if execution == "persistent" else "m1-runner.mjs"
                 expected = str(prefix / "lib/oximut/packages/vitest-adapter" / runner)
-                paths = [json.loads(line) for line in observed.read_text().splitlines()]
+                paths = [json.loads(line) for line in SANDBOX.read_regular(observed).decode().splitlines()]
                 if not paths or any(path != expected for path in paths):
                     raise RuntimeError(f"{execution} used unexpected adapter paths: {paths}")
-                data = json.loads(report.read_text())
+                data = json.loads(SANDBOX.read_regular(report))
                 if data["baseline"]["outcome"] != "passed" or not data["summary"]["complete"]:
                     raise RuntimeError(f"{execution}/{case} incomplete: {data}")
                 if data["summary"]["killed"] < 1:
@@ -86,8 +100,8 @@ def smoke(prefix, *, reports_dir=None, validator=None):
                     if (case == "warm" and hits < 1) or (case != "warm" and hits != 0):
                         raise RuntimeError(f"unexpected {execution}/{case} cache hits: {hits}")
                     archived = reports_dir / f"{execution}-{case}-report.json"
-                    shutil.copy2(report, archived)
-                    subprocess.run(["node", str(validator), str(archived)], cwd=root,
+                    archived.write_bytes(SANDBOX.read_regular(report))
+                    subprocess.run(["node", str(validator), str(archived)], cwd=validator.parent,
                                    check=True, timeout=30)
                 results.append({"execution": execution, "case": case, "summary": summary,
                                 "cache": data.get("cache"), "report": str(archived if reports_dir else report)})
@@ -102,5 +116,6 @@ if __name__ == "__main__":
     parser.add_argument("--prefix", required=True, type=Path)
     parser.add_argument("--reports-dir", type=Path)
     parser.add_argument("--validator", type=Path, help="strict validate-reports.mjs entrypoint")
+    parser.add_argument("--isolated", action="store_true", help="require Linux bubblewrap boundary")
     args = parser.parse_args()
-    smoke(args.prefix, reports_dir=args.reports_dir, validator=args.validator)
+    smoke(args.prefix, reports_dir=args.reports_dir, validator=args.validator, isolated=args.isolated)

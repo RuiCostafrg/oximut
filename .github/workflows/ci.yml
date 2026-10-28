@@ -34,6 +34,11 @@ jobs:
         with:
           toolchain: '1.96.0'
           components: rustfmt, clippy
+      - name: Require candidate isolation and hostile-candidate regressions
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y bubblewrap
+          OXIMUT_REQUIRE_SANDBOX=1 python3 -m unittest discover -s tests -p test_candidate_sandbox.py -v
       - run: npm ci
       - name: Audit npm advisories (registry advisory data required)
         run: npm audit --audit-level=moderate
@@ -49,6 +54,8 @@ jobs:
       - run: cargo clippy --workspace --all-targets --locked -- -D warnings
       - run: cargo test --workspace --locked
       - run: cargo build -p oximut-cli --locked
+      - name: Real installed and relocated smoke across the candidate boundary
+        run: OXIMUT_REQUIRE_SANDBOX=1 OXIMUT_TEST_BINARY="$PWD/target/debug/oximut" python3 -m unittest discover -s tests -p test_candidate_sandbox.py -v
       - name: M1 correctness, M2 isolation, M3 selection, M4 cache, and M5 acceptance
         run: python3 -m unittest discover -s tests -v
       - name: Verify Oxc parses the fixture sources

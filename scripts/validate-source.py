@@ -19,6 +19,9 @@ import tempfile
 SPEC = importlib.util.spec_from_file_location("source_builder", Path(__file__).with_name("build-source.py"))
 BUILDER = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(BUILDER)
+SANDBOX_SPEC = importlib.util.spec_from_file_location("candidate_sandbox", Path(__file__).with_name("candidate-sandbox.py"))
+SANDBOX = importlib.util.module_from_spec(SANDBOX_SPEC)
+SANDBOX_SPEC.loader.exec_module(SANDBOX)
 MAX_COMPRESSED = 64 * 1024 * 1024
 MAX_EXPANDED = 256 * 1024 * 1024
 MAX_FILE = 16 * 1024 * 1024
@@ -146,7 +149,8 @@ def validate(archive, version, revision, tree, output):
                 "version": version, "source": manifest["source"],
                 "host": {"system": platform.system(), "machine": platform.machine(),
                          "platform": platform.platform()},
-                "tests": [], "toolVersions": {}, "buildCount": 0}
+                "tests": [], "toolVersions": {}, "buildCount": 0,
+                "isolation": "bubblewrap-pid-mount-v1"}
     try:
         for tool in ("rustc", "cargo", "node", "npm", "python3"):
             evidence["toolVersions"][tool] = run([tool, "--version"], output)
@@ -159,17 +163,20 @@ def validate(archive, version, revision, tree, output):
             (harness / "scripts").mkdir(parents=True)
             (harness / "docs").mkdir()
             trusted = Path(__file__).resolve().parents[1]
-            for name in ("scripts/smoke-install.py", "scripts/validate-reports.mjs", "docs/report.schema.json"):
+            for name in ("scripts/smoke-install.py", "scripts/candidate-sandbox.py", "scripts/validate-reports.mjs", "docs/report.schema.json"):
                 shutil.copy2(trusted / name, harness / name)
             prefix = output / "original prefix with spaces"
+            prefix.mkdir()
+            # Validator modules come from the trusted checkout, never the installed candidate.
+            (harness / "node_modules").symlink_to(trusted / "node_modules", target_is_directory=True)
             # One compilation, outside any benchmark; preserve exactly this installed binary.
-            evidence["installationLog"] = run([
-                sys.executable, source / "scripts/install-source.py", "--prefix", prefix],
-                work, timeout=4800)
+            evidence["installationLog"] = SANDBOX.run([
+                "/usr/bin/python3", source / "scripts/install-source.py", "--prefix", prefix],
+                cwd=source, writable=[source, prefix], timeout=4800, network=True)
+            SANDBOX.safe_tree(prefix)
             evidence["buildCount"] = 1
             binary = prefix / "lib/oximut/oximut"
             evidence["binarySha256"] = BUILDER.sha(binary.read_bytes())
-            (harness / "node_modules").symlink_to(prefix / "lib/oximut/node_modules", target_is_directory=True)
             shutil.rmtree(source)
             require(not source.exists(), "extracted source still available")
             evidence["extractedSourceRemoved"] = True
@@ -178,11 +185,9 @@ def validate(archive, version, revision, tree, output):
                     relocated = output / "relocated prefix with spaces"
                     prefix.rename(relocated)
                     prefix = relocated
-                    (harness / "node_modules").unlink()
-                    (harness / "node_modules").symlink_to(prefix / "lib/oximut/node_modules", target_is_directory=True)
                 reports = output / phase
                 log = run([sys.executable, harness / "scripts/smoke-install.py", "--prefix", prefix,
-                           "--reports-dir", reports, "--validator", harness / "scripts/validate-reports.mjs"],
+                           "--reports-dir", reports, "--validator", harness / "scripts/validate-reports.mjs", "--isolated"],
                           harness, timeout=1200)
                 evidence["tests"].append({"phase": phase, "passed": True, "log": log})
                 require(BUILDER.sha((prefix / "lib/oximut/oximut").read_bytes()) == evidence["binarySha256"],
