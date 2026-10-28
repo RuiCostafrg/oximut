@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 from pathlib import Path
 import re
 import subprocess
@@ -20,6 +21,70 @@ import targets
 BASELINE = '4a6993b564758d15d976cd0998ba490fbf64e1e1'
 METRICS = ('wall_seconds', 'cpu_seconds', 'peak_aggregate_rss_bytes')
 VARIANTS = ('before', 'after')
+PHASES = ('inputAndSchedulerPreparation', 'originalBaseline', 'disabledSwitchValidation',
+          'coverageBaseline', 'postBaselineValidation', 'mutationPlanning',
+          'mutationExecution', 'teardown', 'finalInputValidation')
+
+
+def build_errors(provenance, metadata, commits, required):
+    errors = []
+    if required and provenance['before']['binary_sha256'] == provenance['after']['binary_sha256']:
+        errors.append('expected distinct candidate executables but binary hashes are identical')
+    if metadata is None and not required:
+        return errors
+    if not isinstance(metadata, dict):
+        return errors + ['missing or malformed build metadata']
+    for variant in VARIANTS:
+        if metadata.get(f'{variant}_commit') != commits.get(variant):
+            errors.append(f'{variant}: build commit does not match requested candidate')
+        hashes = metadata.get('binary_sha256')
+        if not isinstance(hashes, dict) or hashes.get(variant) != provenance[variant]['binary_sha256']:
+            errors.append(f'{variant}: build hash does not match observed executable')
+    if required:
+        directories = metadata.get('cargo_target_dirs')
+        if not isinstance(directories, dict) or any(
+                not isinstance(directories.get(v), str) or not Path(directories[v]).is_absolute()
+                for v in VARIANTS):
+            errors.append('missing absolute isolated Cargo target directories')
+        else:
+            before, after = (Path(directories[v]).resolve() for v in VARIANTS)
+            if before.is_relative_to(after) or after.is_relative_to(before):
+                errors.append('candidate Cargo target directories overlap')
+    return errors
+
+
+def valid_duration(value):
+    try:
+        return type(value) in (int, float) and math.isfinite(value) and value >= 0
+    except OverflowError:
+        return False
+
+
+def phase_errors(row, manifest):
+    resources = row.get('resources')
+    if not isinstance(resources, dict):
+        return ['missing or malformed after resources']
+    phases = resources.get('phaseWallMs')
+    errors = []
+    if not isinstance(phases, dict) or any(not valid_duration(phases.get(key)) for key in PHASES):
+        errors.append('missing, incomplete or invalid after phase timings')
+    runs = resources.get('disabledValidationRuns')
+    if not isinstance(runs, list):
+        return errors + ['missing or malformed disabled validation records']
+    files = []
+    for run in runs:
+        if not isinstance(run, dict) or not valid_duration(run.get('wallMs')):
+            errors.append('invalid disabled validation duration')
+            continue
+        try:
+            file = Path(run['file']).relative_to(Path(row['cwd'])).as_posix()
+        except (KeyError, TypeError, ValueError):
+            errors.append('invalid disabled validation file')
+            continue
+        files.append(file)
+    if sorted(files) != sorted(manifest['mutate']):
+        errors.append('missing, duplicate or unexpected disabled validation files')
+    return errors
 
 
 def plan(warmups, repetitions):
@@ -30,9 +95,12 @@ def plan(warmups, repetitions):
                 ['stryker', 'oximut', 'vitest'])
 
 
-def evaluate(rows, warmups, repetitions, provenance, failures=()):
+def evaluate(rows, warmups, repetitions, provenance, failures=(), *,
+             require_build_integrity=False, build_metadata=None, candidate_commits=None):
     """No ratios until the entire campaign, including every warmup, qualifies."""
-    errors = list(failures)
+    integrity_errors = build_errors(provenance, build_metadata, candidate_commits or {},
+                                   require_build_integrity)
+    errors = list(failures) + integrity_errors
     manifest = workload.measurement.read_json(workload.CORPUS / 'workload.json')
     expected_inventory = m6.digest(sorted(manifest['expectedTests']))
     indexed = {}
@@ -70,6 +138,8 @@ def evaluate(rows, warmups, repetitions, provenance, failures=()):
                     errors.append(f'{label}: changed declared mutant families')
                 if row.get('execution_inputs') != provenance[variant]:
                     errors.append(f'{label}: binary or adapter provenance changed')
+                if require_build_integrity and variant == 'after' and row['tool'] == 'oximut':
+                    errors.extend(f'{label}: {error}' for error in phase_errors(row, manifest))
                 if row['tool'] != 'vitest':
                     if reference is None:
                         reference = row
@@ -78,11 +148,13 @@ def evaluate(rows, warmups, repetitions, provenance, failures=()):
     phases = {variant: [
         {'round': row.get('campaign_round'), 'warmup': row.get('warmup'),
          'report_file': row.get('report_file'),
-         'phaseWallMs': (row.get('resources') or {}).get('phaseWallMs'),
-         'disabledValidationRuns': (row.get('resources') or {}).get('disabledValidationRuns')}
+         'phaseWallMs': (row['resources'] if isinstance(row.get('resources'), dict) else {}).get('phaseWallMs'),
+         'disabledValidationRuns': (row['resources'] if isinstance(row.get('resources'), dict) else {}).get('disabledValidationRuns')}
         for row in rows if row.get('variant') == variant and row.get('tool') == 'oximut']
         for variant in VARIANTS}
     result = {'phase_evidence': phases, 'correctness_gate': {'passed': not errors, 'errors': errors},
+              'build_integrity': {'required': require_build_integrity,
+                                  'passed': not integrity_errors, 'errors': integrity_errors},
               'warmup_pairs': warmups, 'measured_pairs': repetitions,
               'thresholds': targets.THRESHOLDS, 'targets_met': False, 'comparisons': {},
               'scope': 'Five declared production mutation files, all 41 source files available, '
@@ -143,6 +215,8 @@ def main(argv=None):
     parser.add_argument('--repetitions', type=int, default=5)
     parser.add_argument('--timeout', type=float, default=600)
     parser.add_argument('--require-targets', action='store_true')
+    parser.add_argument('--require-build-integrity', action='store_true',
+                        help='Pinned CI comparison: isolated builds, distinct binaries and complete after phase evidence')
     args = parser.parse_args(argv)
     if args.warmups < 1 or args.repetitions < 5:
         parser.error('require at least one warmup and five measured rounds')
@@ -161,19 +235,41 @@ def main(argv=None):
             binary=binary, adapter=adapter / 'm2-runner.mjs', adapter_source_dir=adapter))
     output = args.output.resolve()
     output.mkdir(parents=True, exist_ok=False)
+    build_metadata, build_metadata_error = None, None
+    if args.build_metadata:
+        try:
+            build_metadata = workload.measurement.read_json(args.build_metadata)
+        except (OSError, ValueError) as error:
+            build_metadata_error = f'cannot read supplied build metadata: {error}'
     metadata = workload.measurement.metadata()
     metadata.update(before_commit=args.before_commit, after_commit=args.after_commit,
                     build_flags=args.build_flags, runtime_provenance=provenance,
-                    build_metadata=workload.measurement.read_json(args.build_metadata)
-                                   if args.build_metadata else None,
+                    build_metadata=build_metadata, build_metadata_error=build_metadata_error,
+                    build_metadata_path=str(args.build_metadata) if args.build_metadata else None,
                     policy='Both binaries built before timing; serial subcampaigns; no installs, builds '
                            'or automatic retries. Matching adapters must remain unchanged. '
                            'Caller must keep this host free of other benchmark/build work.',
                     warmups=args.warmups, repetitions=args.repetitions,
+                    require_build_integrity=args.require_build_integrity,
                     harness_sha256={name: workload.measurement.file_hash(workload.ROOT / 'benchmarks' / name)
                                     for name in ('compare_candidates.py', 'real_project.py', 'targets.py', 'm6.py', 'run.py')})
     m6.write_json(output / 'metadata.json', metadata)
     failures, rows, attempts = [], [], []
+    integrity = dict(require_build_integrity=args.require_build_integrity,
+                     build_metadata=metadata['build_metadata'],
+                     candidate_commits={'before': args.before_commit, 'after': args.after_commit})
+    preflight = build_errors(provenance, metadata['build_metadata'], integrity['candidate_commits'],
+                             args.require_build_integrity)
+    if build_metadata_error:
+        preflight.append(build_metadata_error)
+    if preflight:
+        (output / 'measurements.jsonl').touch()
+        m6.write_json(output / 'attempts.json', [])
+        m6.write_json(output / 'summary.json', evaluate([], args.warmups, args.repetitions,
+                                                      provenance, [build_metadata_error] if build_metadata_error else [],
+                                                      **integrity))
+        print('Build integrity preflight failed: ' + '; '.join(preflight), file=sys.stderr)
+        return 1
     with (output / 'measurements.jsonl').open('w') as stream:
         for index, warmup, variant, tools in plan(args.warmups, args.repetitions):
             directory = output / f'{index:02d}-{variant}'
@@ -201,7 +297,7 @@ def main(argv=None):
                 failures.append(f'round {index} {variant}: {error}')
             attempts.append(attempt)
             m6.write_json(output / 'attempts.json', attempts)
-    result = evaluate(rows, args.warmups, args.repetitions, provenance, failures)
+    result = evaluate(rows, args.warmups, args.repetitions, provenance, failures, **integrity)
     m6.write_json(output / 'summary.json', result)
     print(json.dumps(result, indent=2))
     return 1 if not result['correctness_gate']['passed'] or (args.require_targets and not result['targets_met']) else 0

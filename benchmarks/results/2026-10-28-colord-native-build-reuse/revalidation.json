@@ -1,0 +1,129 @@
+{
+  "build_integrity": {
+    "errors": [
+      "expected distinct candidate executables but binary hashes are identical",
+      "missing absolute isolated Cargo target directories"
+    ],
+    "passed": false,
+    "required": true
+  },
+  "comparisons": {},
+  "confidence": "Deterministic paired median percentile bootstrap, 10000 draws; host/corpus-specific exploratory evidence.",
+  "correctness_gate": {
+    "errors": [
+      "expected distinct candidate executables but binary hashes are identical",
+      "missing absolute isolated Cargo target directories",
+      "round 0 after: missing, incomplete or invalid after phase timings",
+      "round 0 after: missing or malformed disabled validation records",
+      "round 1 after: missing, incomplete or invalid after phase timings",
+      "round 1 after: missing or malformed disabled validation records",
+      "round 2 after: missing, incomplete or invalid after phase timings",
+      "round 2 after: missing or malformed disabled validation records",
+      "round 3 after: missing, incomplete or invalid after phase timings",
+      "round 3 after: missing or malformed disabled validation records",
+      "round 4 after: missing, incomplete or invalid after phase timings",
+      "round 4 after: missing or malformed disabled validation records",
+      "round 5 after: missing, incomplete or invalid after phase timings",
+      "round 5 after: missing or malformed disabled validation records"
+    ],
+    "passed": false
+  },
+  "measured_pairs": 5,
+  "phase_evidence": {
+    "after": [
+      {
+        "disabledValidationRuns": null,
+        "phaseWallMs": null,
+        "report_file": "/home/runner/work/_temp/real-project-comparison/00-after/00-oximut/report.json",
+        "round": 0,
+        "warmup": true
+      },
+      {
+        "disabledValidationRuns": null,
+        "phaseWallMs": null,
+        "report_file": "/home/runner/work/_temp/real-project-comparison/01-after/00-oximut/report.json",
+        "round": 1,
+        "warmup": false
+      },
+      {
+        "disabledValidationRuns": null,
+        "phaseWallMs": null,
+        "report_file": "/home/runner/work/_temp/real-project-comparison/02-after/00-oximut/report.json",
+        "round": 2,
+        "warmup": false
+      },
+      {
+        "disabledValidationRuns": null,
+        "phaseWallMs": null,
+        "report_file": "/home/runner/work/_temp/real-project-comparison/03-after/00-oximut/report.json",
+        "round": 3,
+        "warmup": false
+      },
+      {
+        "disabledValidationRuns": null,
+        "phaseWallMs": null,
+        "report_file": "/home/runner/work/_temp/real-project-comparison/04-after/00-oximut/report.json",
+        "round": 4,
+        "warmup": false
+      },
+      {
+        "disabledValidationRuns": null,
+        "phaseWallMs": null,
+        "report_file": "/home/runner/work/_temp/real-project-comparison/05-after/00-oximut/report.json",
+        "round": 5,
+        "warmup": false
+      }
+    ],
+    "before": [
+      {
+        "disabledValidationRuns": null,
+        "phaseWallMs": null,
+        "report_file": "/home/runner/work/_temp/real-project-comparison/00-before/00-oximut/report.json",
+        "round": 0,
+        "warmup": true
+      },
+      {
+        "disabledValidationRuns": null,
+        "phaseWallMs": null,
+        "report_file": "/home/runner/work/_temp/real-project-comparison/01-before/00-oximut/report.json",
+        "round": 1,
+        "warmup": false
+      },
+      {
+        "disabledValidationRuns": null,
+        "phaseWallMs": null,
+        "report_file": "/home/runner/work/_temp/real-project-comparison/02-before/00-oximut/report.json",
+        "round": 2,
+        "warmup": false
+      },
+      {
+        "disabledValidationRuns": null,
+        "phaseWallMs": null,
+        "report_file": "/home/runner/work/_temp/real-project-comparison/03-before/00-oximut/report.json",
+        "round": 3,
+        "warmup": false
+      },
+      {
+        "disabledValidationRuns": null,
+        "phaseWallMs": null,
+        "report_file": "/home/runner/work/_temp/real-project-comparison/04-before/00-oximut/report.json",
+        "round": 4,
+        "warmup": false
+      },
+      {
+        "disabledValidationRuns": null,
+        "phaseWallMs": null,
+        "report_file": "/home/runner/work/_temp/real-project-comparison/05-before/00-oximut/report.json",
+        "round": 5,
+        "warmup": false
+      }
+    ]
+  },
+  "scope": "Five declared production mutation files, all 41 source files available, all 102 upstream tests; not the full colord mutation scope.",
+  "targets_met": false,
+  "thresholds": {
+    "peak_aggregate_rss_bytes": 0.5,
+    "wall_seconds": 0.8
+  },
+  "warmup_pairs": 1
+}

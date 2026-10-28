@@ -181,8 +181,10 @@ Neither target is promised by the harness or the optimization.
 
 The summary also retains each Oximut report's `resources.phaseWallMs` and
 `resources.disabledValidationRuns` as phase evidence, with its round and raw report
-path. Fields absent from older binaries remain null; they are never inferred
-from wall time or logs. The original report and complete resources remain in raw
+path. In generic comparisons, fields absent from older binaries remain null;
+they are never inferred from wall time or logs. The pinned native CI campaign
+requires complete after-candidate phase evidence, including every warmup, via
+`--require-build-integrity`. The before candidate may omit those fields. The original report and complete resources remain in raw
 subcampaign evidence, including failed campaigns.
 
 For the parent's local comparison after both matching binaries are ready:
@@ -206,8 +208,9 @@ implementation follow-up did not execute benchmarks or builds.
 The `Real project before-after benchmark` workflow runs natively on Ubuntu 24.04
 x86_64 with a 90-minute job limit, on relevant pull-request paths or manual
 dispatch. It creates the baseline worktree in RUNNER_TEMP at the full pinned SHA,
-uses a shared CARGO_TARGET_DIR for dependency reuse, and copies the baseline
-binary before compiling and copying the candidate. Matching adapters remain in
+uses separate Cargo target directories for the two candidates, and copies each
+binary from its corresponding build. Registry downloads may be shared; compiled
+workspace artifacts are isolated. Matching adapters remain in
 their respective checkout directories. Both builds and gate tests finish before
 timing starts. Runtime paths are set through GITHUB_ENV, not a job-level runner
 context. Build metadata records both commits, tool versions, flags, host and
@@ -234,3 +237,23 @@ raw CPU/wall time relative to the previous local sample, while still trailing
 Stryker and missing the targets. Its raw evidence is retained in the same result
 directory. The native workflow now evaluates the complete candidate including
 that change; single local qualifications are not repeated performance evidence.
+
+## Native build integrity gate
+
+The pinned native workflow requires distinct executable hashes, build metadata
+binding the requested commits and observed executable hashes, separate absolute
+Cargo target directories, and all nine after-candidate phase timings. It also
+requires finite nonnegative durations and exactly one disabled-validation record
+for each of the five declared source files. Missing, duplicated, malformed or
+nonfinite evidence invalidates the whole comparison and suppresses all ratios.
+Build preflight failures retain metadata and an invalid summary without starting
+any timed command. Generic adapter-only comparisons can omit the strict flag
+because identical executables and absent older phase data may be intentional.
+
+[The first native colord campaign](../benchmarks/results/2026-10-28-colord-native-build-reuse/README.md)
+passed the older workload gate but is invalid as a declared before/after candidate
+comparison. Its shared target directory reused the baseline executable for the
+after candidate; identical hashes and absent after phase fields exposed this.
+The full raw artifact and original summary are preserved separately from strict
+revalidation. Its generated ratios establish no candidate or performance target
+claim. The corrected workflow must produce fresh valid evidence.

@@ -48,7 +48,8 @@ jobs:
           test "$(uname -m)" = x86_64
           echo "BEFORE_WORKTREE=$RUNNER_TEMP/real-project-before" >> "$GITHUB_ENV"
           echo "BINARY_DIR=$RUNNER_TEMP/real-project-binaries" >> "$GITHUB_ENV"
-          echo "CARGO_TARGET_DIR=$RUNNER_TEMP/real-project-target" >> "$GITHUB_ENV"
+          echo "BEFORE_CARGO_TARGET_DIR=$RUNNER_TEMP/real-project-before-target" >> "$GITHUB_ENV"
+          echo "AFTER_CARGO_TARGET_DIR=$RUNNER_TEMP/real-project-after-target" >> "$GITHUB_ENV"
           echo "CAMPAIGN_DIR=$RUNNER_TEMP/real-project-comparison" >> "$GITHUB_ENV"
           echo "AFTER_COMMIT=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
       - run: npm ci --ignore-scripts
@@ -62,21 +63,22 @@ jobs:
           git worktree add --detach "$BEFORE_WORKTREE" "$BEFORE_COMMIT"
           ln -s "$GITHUB_WORKSPACE/node_modules" "$BEFORE_WORKTREE/node_modules"
           mkdir -p "$BINARY_DIR"
-          cargo build --manifest-path "$BEFORE_WORKTREE/Cargo.toml" --locked --release -p oximut-cli
-          cp "$CARGO_TARGET_DIR/release/oximut" "$BINARY_DIR/before-oximut"
-          cargo build --locked --release -p oximut-cli
-          cp "$CARGO_TARGET_DIR/release/oximut" "$BINARY_DIR/after-oximut"
+          cargo build --target-dir "$BEFORE_CARGO_TARGET_DIR" --manifest-path "$BEFORE_WORKTREE/Cargo.toml" --locked --release -p oximut-cli
+          cp "$BEFORE_CARGO_TARGET_DIR/release/oximut" "$BINARY_DIR/before-oximut"
+          cargo build --target-dir "$AFTER_CARGO_TARGET_DIR" --locked --release -p oximut-cli
+          cp "$AFTER_CARGO_TARGET_DIR/release/oximut" "$BINARY_DIR/after-oximut"
           python3 - <<'PY'
           import hashlib, json, os, pathlib, subprocess
           binaries = pathlib.Path(os.environ['BINARY_DIR'])
           capture = lambda *cmd: subprocess.check_output(cmd, text=True).strip()
           record = {
-              'before_commit': os.environ['BEFORE_COMMIT'],
-              'after_commit': os.environ['AFTER_COMMIT'],
+              'before_commit': capture('git', '-C', os.environ['BEFORE_WORKTREE'], 'rev-parse', 'HEAD'),
+              'after_commit': capture('git', 'rev-parse', 'HEAD'),
               'build_flags': os.environ['BUILD_FLAGS'],
               'rustflags': os.environ.get('RUSTFLAGS'),
               'cargo_encoded_rustflags': os.environ.get('CARGO_ENCODED_RUSTFLAGS'),
-              'cargo_target_dir': os.environ['CARGO_TARGET_DIR'],
+              'cargo_target_dirs': {variant: os.environ[f'{variant.upper()}_CARGO_TARGET_DIR']
+                                    for variant in ['before', 'after']},
               'before_source': os.environ['BEFORE_WORKTREE'],
               'after_source': os.environ['GITHUB_WORKSPACE'],
               'tool_versions': {name: capture(name, '--version')
@@ -84,7 +86,7 @@ jobs:
               'binary_sha256': {name: hashlib.sha256((binaries / f'{name}-oximut').read_bytes()).hexdigest()
                                 for name in ['before', 'after']},
               'host': capture('uname', '-a'),
-              'timing_policy': 'Both copied binaries built before timing; shared Cargo dependency artifacts; no rebuilds during campaign',
+              'timing_policy': 'Both copied binaries built before timing; isolated compiled artifacts; registry downloads may be shared; no rebuilds during campaign',
           }
           (binaries / 'build-metadata.json').write_text(json.dumps(record, indent=2) + '\n')
           PY
@@ -98,7 +100,7 @@ jobs:
             --after-adapter-dir "$GITHUB_WORKSPACE/packages/vitest-adapter" \
             --after-commit "$AFTER_COMMIT" \
             --build-flags="$BUILD_FLAGS" --build-metadata "$BINARY_DIR/build-metadata.json" \
-            --warmups 1 --repetitions 5 --timeout 600 --output "$CAMPAIGN_DIR"
+            --require-build-integrity --warmups 1 --repetitions 5 --timeout 600 --output "$CAMPAIGN_DIR"
       - name: Publish results, including missed targets and invalid campaigns
         if: ${{ !cancelled() }}
         run: |
