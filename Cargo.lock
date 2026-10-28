@@ -522,7 +522,7 @@ dependencies = [
 
 [[package]]
 name = "oximut-cli"
-version = "0.0.0"
+version = "1.0.0-rc.1"
 dependencies = [
  "libc",
  "oximut-core",
@@ -535,7 +535,7 @@ dependencies = [
 
 [[package]]
 name = "oximut-core"
-version = "0.0.0"
+version = "1.0.0-rc.1"
 dependencies = [
  "serde",
  "serde_json",
@@ -543,7 +543,7 @@ dependencies = [
 
 [[package]]
 name = "oximut-instrument"
-version = "0.0.0"
+version = "1.0.0-rc.1"
 dependencies = [
  "oxc_allocator",
  "oxc_ast",
@@ -559,7 +559,7 @@ dependencies = [
 
 [[package]]
 name = "oximut-oxc-smoke"
-version = "0.0.0"
+version = "1.0.0-rc.1"
 dependencies = [
  "oxc_allocator",
  "oxc_parser",
