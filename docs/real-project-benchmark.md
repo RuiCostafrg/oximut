@@ -284,3 +284,8 @@ transforms, test execution and process accounting; phase wall times alone cannot
 identify the CPU owner. Profiler measurements must stay separate from scored
 comparisons. The benchmark parent's own CPU is excluded from the product-tree
 CPU measurement, though its activity can affect elapsed time.
+
+The before/after wrapper bounds each subcampaign by the number of tool commands
+times `--timeout`, plus 300 seconds for preparation and validation. A timeout
+retains the attempt error and raw subcampaign directory, stops further
+measurements, and writes a failed global summary with no comparative ratios.

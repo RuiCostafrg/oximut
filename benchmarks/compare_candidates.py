@@ -218,6 +218,8 @@ def main(argv=None):
     parser.add_argument('--require-build-integrity', action='store_true',
                         help='Pinned CI comparison: isolated builds, distinct binaries and complete after phase evidence')
     args = parser.parse_args(argv)
+    if not math.isfinite(args.timeout) or args.timeout <= 0:
+        parser.error('--timeout must be positive and finite')
     if args.warmups < 1 or args.repetitions < 5:
         parser.error('require at least one warmup and five measured rounds')
     provenance = {}
@@ -279,7 +281,8 @@ def main(argv=None):
             try:
                 # The orchestration process is deliberately outside run.py timing/accounting.
                 with (output / f'{index:02d}-{variant}.log').open('w') as log:
-                    completed = subprocess.run(cmd, cwd=workload.ROOT, stdout=log, stderr=subprocess.STDOUT)
+                    completed = subprocess.run(cmd, cwd=workload.ROOT, stdout=log, stderr=subprocess.STDOUT,
+                                               timeout=len(tools) * args.timeout + 300)
                 attempt['exit_code'] = completed.returncode
                 if completed.returncode:
                     failures.append(f'round {index} {variant}: subcampaign exited {completed.returncode}')
@@ -292,11 +295,15 @@ def main(argv=None):
                     rows.append(row)
                     stream.write(json.dumps(row, sort_keys=True) + '\n')
                     stream.flush()
-            except (OSError, ValueError, KeyError) as error:
+            except (OSError, ValueError, KeyError, subprocess.SubprocessError) as error:
                 attempt['error'] = str(error)
+                if isinstance(error, subprocess.TimeoutExpired):
+                    attempt['timed_out'] = True
                 failures.append(f'round {index} {variant}: {error}')
             attempts.append(attempt)
             m6.write_json(output / 'attempts.json', attempts)
+            if attempt.get('timed_out'):
+                break
     result = evaluate(rows, args.warmups, args.repetitions, provenance, failures, **integrity)
     m6.write_json(output / 'summary.json', result)
     print(json.dumps(result, indent=2))

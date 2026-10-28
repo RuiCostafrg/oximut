@@ -266,5 +266,39 @@ class CampaignTests(unittest.TestCase):
                 self.assertEqual(invalid['comparisons'], {})
 
 
+class SubcampaignFailureTests(unittest.TestCase):
+    def test_timeout_retains_attempt_and_summary_and_stops_campaign(self):
+        import subprocess
+        from tempfile import TemporaryDirectory
+        from unittest.mock import patch
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            binary = root / 'binary'
+            binary.write_bytes(b'executable')
+            adapter = root / 'adapter'
+            adapter.mkdir()
+            (adapter / 'm2-runner.mjs').write_text('// unused')
+            output = root / 'output'
+            provenance = {'binary_sha256': 'binary', 'adapter_source_sha256': {}}
+            with (patch.object(campaign.workload.measurement, 'metadata', return_value={'versions': {}}),
+                  patch.object(campaign.workload, 'execution_inputs', return_value=provenance),
+                  patch.object(campaign.subprocess, 'run',
+                               side_effect=subprocess.TimeoutExpired(['subcampaign'], 330)) as command):
+                result = campaign.main(['--before-binary', str(binary), '--after-binary', str(binary),
+                                        '--before-adapter-dir', str(adapter), '--after-adapter-dir', str(adapter),
+                                        '--after-commit', 'a' * 40, '--timeout', '10', '--output', str(output)])
+            self.assertEqual(result, 1)
+            command.assert_called_once()
+            self.assertEqual(command.call_args.kwargs['timeout'], 330)
+            attempts = json.loads((output / 'attempts.json').read_text())
+            self.assertTrue(attempts[0]['timed_out'])
+            self.assertIn('timed out', attempts[0]['error'])
+            self.assertTrue((output / '00-before.log').exists())
+            summary = json.loads((output / 'summary.json').read_text())
+            self.assertFalse(summary['correctness_gate']['passed'])
+            self.assertFalse(summary['targets_met'])
+            self.assertEqual(summary['comparisons'], {})
+
+
 if __name__ == '__main__':
     unittest.main()
