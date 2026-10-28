@@ -228,3 +228,9 @@ passed its global correctness gate and missed both performance targets at both
 scales. It predates the runner optimization. Raw reports, measurements and hashes
 are retained alongside the prior invalid campaign. The native colord workflow
 must establish its own complete repeated evidence.
+
+A subsequent supervisor candidate also passed the local exact gate. It reduced
+raw CPU/wall time relative to the previous local sample, while still trailing
+Stryker and missing the targets. Its raw evidence is retained in the same result
+directory. The native workflow now evaluates the complete candidate including
+that change; single local qualifications are not repeated performance evidence.

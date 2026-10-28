@@ -36,3 +36,20 @@ Private per-run project copies are omitted from git; the complete unmodified
 corpus, configuration, input hashes and generated reports remain available in
 the harness and retained output directories. Raw report/log/measurement files
 are unchanged. No full repeated local campaign has run.
+
+## Supervisor scan candidate
+
+Candidate `1d7d839` keeps the same Rust binary and uses the matching updated
+adapter source (all observed hashes retained). Its exact gate passed with the
+same 102 tests and 10 killed edits. Raw Oximut wall/CPU/aggregate RSS were
+83.278s / 104.759s / 365850624 bytes; Stryker 24.862s / 21.965s / 504688640 bytes.
+This is another single sequential qualification, without warmup or repeats.
+It suggests reduced supervisor overhead relative to the previous candidate,
+but supports no confidence interval or general improvement claim. Oximut is
+still slower and uses more CPU than Stryker here; the memory target is unmet.
+
+Safety checks passed separately before timing: three Python supervisor tests
+and 16 lifecycle/M1/M2 adapter tests, including process-tree cleanup, startup
+deadlines, crash recovery, fresh forks and transform restoration. No build or
+test suite ran alongside this timing. The source-only supervisor change requires
+no Rust rebuild; exact native CI rebuilds the final complete candidate anyway.
