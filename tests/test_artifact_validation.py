@@ -30,12 +30,13 @@ class ArtifactValidation(unittest.TestCase):
     def inspect(self, archive):
         return GATE.inspect_archive(archive, VERSION, self.revision, self.tree)
 
-    def rewrite(self, archive, change):
+    def rewrite(self, archive, change, *, pax_headers=None):
         with tarfile.open(archive) as tar:
             entries = [(entry, tar.extractfile(entry).read()) for entry in tar]
         change(entries)
         buffer = io.BytesIO()
-        with tarfile.open(fileobj=buffer, mode="w", format=tarfile.PAX_FORMAT) as tar:
+        with tarfile.open(fileobj=buffer, mode="w", format=tarfile.PAX_FORMAT,
+                          pax_headers=pax_headers) as tar:
             for entry, data in entries:
                 entry.size = len(data)
                 tar.addfile(entry, io.BytesIO(data))
@@ -87,6 +88,52 @@ class ArtifactValidation(unittest.TestCase):
                 archive.write_bytes(original)
                 self.rewrite(archive, change)
                 with self.assertRaisesRegex(ValueError, error):
+                    self.inspect(archive)
+
+    def test_pax_ownership_and_timestamps_are_rejected(self):
+        archive = self.candidate()
+        original = archive.read_bytes()
+        self.rewrite(archive, lambda entries: None, pax_headers={"path": ""})
+        with self.assertRaisesRegex(ValueError, "extended archive headers forbidden"):
+            self.inspect(archive)
+        for field, value, error in (
+            ("uid", 1, "unexpected archive ownership"),
+            ("uname", "owner", "unexpected archive ownership"),
+            ("mtime", 1, "commit timestamp mismatch"),
+        ):
+            with self.subTest(field=field):
+                archive.write_bytes(original)
+                self.rewrite(archive, lambda entries: setattr(entries[0][0], field, value))
+                with self.assertRaisesRegex(ValueError, error):
+                    self.inspect(archive)
+
+    def test_builder_digest_is_bound_to_archived_bytes(self):
+        archive = self.candidate()
+        original = archive.read_bytes()
+        for alter_builder in (False, True):
+            def change(entries):
+                by_name = {entry.name.split("/", 1)[1]: (entry, data) for entry, data in entries}
+                manifest = json.loads(by_name[GATE.MANIFEST][1])
+                if alter_builder:
+                    entry, data = by_name["scripts/build-source.py"]
+                    by_name["scripts/build-source.py"] = (entry, data + b"\n# changed builder\n")
+                    # Keep inventory and all checksums consistent so the stale
+                    # builder digest is the only integrity discrepancy.
+                    for item in manifest["inventory"]:
+                        if item["path"] == "scripts/build-source.py":
+                            data = by_name[item["path"]][1]
+                            item.update(size=len(data), sha256=GATE.BUILDER.sha(data))
+                else:
+                    manifest["builderSha256"] = "0" * 64
+                by_name[GATE.MANIFEST] = (by_name[GATE.MANIFEST][0], GATE.BUILDER.json_bytes(manifest))
+                sums = "".join(f"{GATE.BUILDER.sha(data)}  {name}\n"
+                               for name, (_, data) in sorted(by_name.items()) if name != GATE.SUMS)
+                by_name[GATE.SUMS] = (by_name[GATE.SUMS][0], sums.encode())
+                entries[:] = list(by_name.values())
+            with self.subTest(alter_builder=alter_builder):
+                archive.write_bytes(original)
+                self.rewrite(archive, change)
+                with self.assertRaisesRegex(ValueError, "builder digest mismatch"):
                     self.inspect(archive)
 
     def test_bounded_compressed_expanded_members_and_count(self):
