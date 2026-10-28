@@ -33,6 +33,10 @@ jobs:
         run: |
           test "$(uname -s)" = Linux
           test "$(uname -m)" = x86_64
+      - name: Require candidate isolation and hostile-candidate regressions
+        run: |
+          bash scripts/setup-candidate-sandbox.sh
+          OXIMUT_REQUIRE_SANDBOX=1 python3 -m unittest discover -s tests -p test_candidate_sandbox.py -v
       - name: Lightweight source and artifact gate tests
         run: |
           python3 -m unittest discover -s tests -p 'test_distribution.py' -v

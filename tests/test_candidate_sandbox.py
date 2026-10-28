@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 import subprocess
 import shutil
+import socket
 import tempfile
 import time
 import unittest
@@ -61,9 +62,28 @@ assert not Path('/var/run/docker.sock').exists()
 assert not Path('/run').exists()
 status = Path('/proc/self/status').read_text()
 assert 'NoNewPrivs:\t1' in status
-assert 'CapEff:\t0000000000000000' in status
+assert os.geteuid() != 0
+for cap in ('CapEff', 'CapPrm', 'CapAmb'):
+    assert cap + ':\t0000000000000000' in status
+import subprocess
+assert subprocess.run(['/usr/bin/unshare', '--user', '--map-root-user', '/bin/true'],
+                      capture_output=True).returncode != 0
 print('DENIED_BOTH')
 '''
+
+    def test_smoke_network_namespace_cannot_reach_host_loopback(self):
+        with socket.socket() as listener:
+            listener.bind(('127.0.0.1', 0))
+            listener.listen()
+            port = listener.getsockname()[1]
+            code = f"""import socket
+s = socket.socket()
+s.settimeout(1)
+assert s.connect_ex(('127.0.0.1', {port})) != 0
+print('ISOLATED')
+"""
+            self.assertEqual(SANDBOX.run(['/usr/bin/python3', '-c', code],
+                                        cwd=self.work, writable=[self.work]), 'ISOLATED')
 
     def test_hostile_install_cannot_forge_trusted_files(self):
         script = self.work / 'install-source.py'
@@ -121,10 +141,14 @@ if os.fork() == 0:
 else:
     {{parent}}
 '''
-        for parent in ('pass', 'time.sleep(10)'):
+        for parent in ('pass', 'os._exit(7)', 'time.sleep(10)'):
             if parent == 'pass':
                 SANDBOX.run(['/usr/bin/python3', '-c', code.replace('{parent}', parent)],
                             cwd=self.work, writable=[self.work])
+            elif parent == 'os._exit(7)':
+                with self.assertRaisesRegex(RuntimeError, 'exited 7'):
+                    SANDBOX.run(['/usr/bin/python3', '-c', code.replace('{parent}', parent)],
+                                cwd=self.work, writable=[self.work])
             else:
                 with self.assertRaises(subprocess.TimeoutExpired):
                     SANDBOX.run(['/usr/bin/python3', '-c', code.replace('{parent}', parent)],
@@ -172,3 +196,33 @@ else:
         os.mkfifo(report)
         with self.assertRaises(ValueError):
             SANDBOX.read_regular(report)
+
+
+class SandboxConstruction(unittest.TestCase):
+    def test_namespace_and_privilege_contract(self):
+        for network in (False, True):
+            with self.subTest(network=network), \
+                    mock.patch.object(SANDBOX.platform, 'release', return_value='native'), \
+                    mock.patch.object(Path, 'is_file', return_value=True), \
+                    mock.patch.object(SANDBOX.os, 'geteuid', return_value=1001), \
+                    mock.patch.object(SANDBOX.shutil, 'which', side_effect=lambda name: '/usr/bin/' + name if name != 'rustup' else None), \
+                    mock.patch.object(SANDBOX.subprocess, 'Popen') as popen, \
+                    mock.patch.object(SANDBOX.os, 'killpg'):
+                popen.return_value.returncode = 0
+                SANDBOX.run(['/bin/true'], cwd='/tmp', writable=[], network=network)
+                args = popen.call_args.args[0]
+                for option in ('--unshare-all', '--unshare-user', '--disable-userns',
+                               '--die-with-parent', '--new-session', '--clearenv'):
+                    self.assertIn(option, args)
+                self.assertEqual(args[args.index('--cap-drop') + 1], 'ALL')
+                self.assertNotIn('--cap-add', args)
+                self.assertEqual('--share-net' in args, network)
+                self.assertEqual(args[-2:], ['--', '/bin/true'])
+                self.assertEqual(popen.call_args.kwargs['env'], {'PATH': '/usr/bin:/bin'})
+
+    def test_root_execution_rejected(self):
+        with mock.patch.object(SANDBOX.platform, 'release', return_value='native'), \
+                mock.patch.object(Path, 'is_file', return_value=True), \
+                mock.patch.object(SANDBOX.os, 'geteuid', return_value=0):
+            with self.assertRaisesRegex(RuntimeError, 'unprivileged host UID'):
+                SANDBOX.run(['/bin/true'], cwd='/tmp', writable=[])

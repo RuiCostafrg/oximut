@@ -36,8 +36,7 @@ jobs:
           components: rustfmt, clippy
       - name: Require candidate isolation and hostile-candidate regressions
         run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y bubblewrap
+          bash scripts/setup-candidate-sandbox.sh
           OXIMUT_REQUIRE_SANDBOX=1 python3 -m unittest discover -s tests -p test_candidate_sandbox.py -v
       - run: npm ci
       - name: Audit npm advisories (registry advisory data required)

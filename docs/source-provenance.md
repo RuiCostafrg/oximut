@@ -97,7 +97,21 @@ success still requires explicit release review before any attachment/promotion.
 ### Candidate execution boundary
 
 On native Ubuntu 24.04, `candidate-sandbox.py` requires bubblewrap user, mount,
-PID, IPC and UTS namespaces. Installation can write only extracted source and
+PID, IPC, network and UTS namespaces. CI provisions Ubuntu's archive bubblewrap (0.9.0 on Noble) using
+`scripts/setup-candidate-sandbox.sh`. Ubuntu 24.04's default AppArmor userns
+policy denies namespace capabilities, which can fail loopback setup with
+`Failed RTM_NEWADDR: Operation not permitted`. Following the
+[Ubuntu release notes](https://documentation.ubuntu.com/release-notes/24.04/#unprivileged-user-namespace-restrictions),
+the setup loads an executable-scoped `/usr/bin/bwrap` profile with `userns`
+permission and `flags=(unconfined)`. This profile permits bubblewrap's own
+sandbox construction; it is not an additional candidate confinement policy.
+The global AppArmor/userns restrictions remain enabled. Only provisioning uses
+sudo; the harness rejects host UID 0 and never launches candidates through sudo.
+Explicit `--unshare-user --disable-userns` requires a user namespace and prevents
+candidates creating nested user namespaces to regain namespace capabilities.
+Missing profile support or namespace permissions fail the required native tests.
+
+Installation can write only extracted source and
 its new prefix. Each installed/relocated invocation gets a writable disposable
 project and a read-only prefix; trusted harness, schema, validator dependencies,
 archived reports and evidence are not mounted. The validator uses the trusted

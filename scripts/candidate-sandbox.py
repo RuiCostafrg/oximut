@@ -44,10 +44,12 @@ def run(command, *, cwd, writable, readonly=(), timeout=300, network=False,
         node_options=None):
     if 'proot' in platform.release().lower() or not Path('/usr/bin/python3').is_file():
         raise RuntimeError('native Linux with system Python required; PRoot is unsupported')
+    if os.geteuid() == 0:
+        raise RuntimeError('candidate execution requires an unprivileged host UID')
     bwrap = shutil.which('bwrap')
     if not bwrap:
         raise RuntimeError('bubblewrap required for candidate execution (no unsafe fallback)')
-    args = [bwrap, '--unshare-all', '--die-with-parent', '--new-session',
+    args = [bwrap, '--unshare-all', '--unshare-user', '--disable-userns', '--die-with-parent', '--new-session',
             '--cap-drop', 'ALL', '--clearenv', '--proc', '/proc', '--dev', '/dev',
             '--dir', '/tmp', '--tmpfs', '/home', '--dir', '/home/candidate',
             '--setenv', 'HOME', '/home/candidate', '--setenv', 'LANG', 'C.UTF-8']
