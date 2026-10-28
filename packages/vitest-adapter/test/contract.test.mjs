@@ -1,10 +1,12 @@
 import assert from 'node:assert/strict';
-import { fork } from 'node:child_process';
+import { execFile, fork } from 'node:child_process';
 import { once } from 'node:events';
-import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { cp, mkdir, mkdtemp, readFile, rm, symlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test from 'node:test';
+import { fileURLToPath } from 'node:url';
+import { promisify } from 'node:util';
 
 // Exercise each entrypoint's early version gate with a stub, without installing
 // or claiming compatibility with another Vitest version.
@@ -49,7 +51,7 @@ test(
   'both workers reject selected non-Node file pragmas before test execution',
   { timeout: 60000 },
   async (t) => {
-    const repository = new URL('../../../', import.meta.url).pathname;
+    const repository = fileURLToPath(new URL('../../../', import.meta.url));
     const directory = await mkdtemp(join(repository, '.oximut-contract-'));
     t.after(() => rm(directory, { recursive: true, force: true }));
     const config = join(directory, 'vitest.config.mjs');
@@ -106,5 +108,35 @@ writeFileSync(${JSON.stringify(marker)}, 'executed'); test('sample', () => {});`
         await exited;
       }
     }
+  },
+);
+
+test(
+  'environment contract runs from a checkout path containing spaces',
+  { timeout: 60000 },
+  async (t) => {
+    const directory = await mkdtemp(join(tmpdir(), 'oximut checkout with spaces '));
+    t.after(() => rm(directory, { recursive: true, force: true }));
+    const repository = fileURLToPath(new URL('../../../', import.meta.url));
+    const adapter = join(directory, 'packages/vitest-adapter');
+    await mkdir(join(directory, 'packages'));
+    await cp(fileURLToPath(new URL('../', import.meta.url)), adapter, { recursive: true });
+    await symlink(join(repository, 'node_modules'), join(directory, 'node_modules'), 'dir');
+    // Restrict the nested invocation to the environment contract, excluding this
+    // portability test so it cannot recurse into another copied checkout.
+    const env = { ...process.env };
+    delete env.NODE_TEST_CONTEXT;
+    const { stdout } = await promisify(execFile)(
+      process.execPath,
+      [
+        '--test',
+        '--test-reporter=tap',
+        '--test-name-pattern=both workers reject selected non-Node file pragmas before test execution',
+        join(adapter, 'test/contract.test.mjs'),
+      ],
+      { cwd: directory, env, timeout: 45000 },
+    );
+    assert.match(stdout, /# pass 1\b/);
+    assert.match(stdout, /# fail 0\b/);
   },
 );
