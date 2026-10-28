@@ -21,8 +21,14 @@ const persistent = args.length === 1;
 const mode = process.env.OXIMUT_M5_MODE;
 const log = process.env.OXIMUT_M5_LOG;
 const steady = mode === 'steady' ? Buffer.alloc(64 * 1024 * 1024, 17) : null;
-if (steady) setInterval(() => { steady[0]++; }, 100).unref();
 const sleep = ms => new Promise(r => setTimeout(r, ms));
+const touchSteady = () => {
+  if (steady) for (let i = 0; i < steady.length; i += 4096) steady[i] = (steady[i] + 1) & 255;
+};
+if (steady) {
+  touchSteady();
+  setInterval(touchSteady, 100).unref();
+}
 const event = value => appendFileSync(log, JSON.stringify({ ...value, pid: process.pid, at: Date.now() }) + '\n');
 async function run(request, output) {
   const mutant = request.kind === 'mutant' && !request.jobId.startsWith('__oximut_disabled__');
@@ -115,10 +121,15 @@ class ResourceBudget(unittest.TestCase):
         self.assert_reaped(self.events())
 
     def test_measured_cost_limits_admission_and_recycles_idle_workers(self):
-        _, calibration = self.run_cli('--baseline-only', '--execution', 'persistent', '--memory-budget-mib', '512', mode='steady')
+        # This tests admission, with enough startup time for observable residency.
+        # Separate failure tests retain short deadlines for timeout enforcement.
+        _, calibration = self.run_cli('--baseline-only', '--execution', 'persistent', '--memory-budget-mib', '512', '--timeout-ms', '5000', mode='steady')
+        self.assertTrue(calibration['summary']['complete'], calibration)
+        self.assertEqual(calibration['baseline']['outcome'], 'passed', calibration)
         cost = calibration['resources']['measuredWorkerPeakBytes']
+        self.assertGreaterEqual(cost, 64 * MIB, calibration['resources'])
         budget = math.ceil((cost * 1.7) / MIB) + 16
-        _, report = self.run_cli('--execution', 'persistent', '--workers', '4', '--memory-budget-mib', str(budget), mode='steady')
+        _, report = self.run_cli('--execution', 'persistent', '--workers', '4', '--memory-budget-mib', str(budget), '--timeout-ms', '5000', mode='steady')
         self.assertTrue(report['summary']['complete'], report)
         self.assertEqual(report['resources']['maxActiveJobs'], 1)
         self.assertGreater(report['resources']['admissionPauses'], 0)

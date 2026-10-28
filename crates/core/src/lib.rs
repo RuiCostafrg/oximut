@@ -288,6 +288,20 @@ pub struct Provenance {
     pub original_run_id: Option<String>,
 }
 
+/// One full fingerprint attempt; counters describe actual reads, including repeats.
+#[derive(Clone, Debug, Default, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct FingerprintProfile {
+    pub phase: String,
+    pub completed: bool,
+    pub elapsed_ms: u64,
+    pub runtime_identity_ms: u64,
+    pub resource_policy_ms: u64,
+    pub inputs_ms: u64,
+    pub files_hashed: u64,
+    pub bytes_hashed: u64,
+}
+
 #[derive(Clone, Debug, Default, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CacheReport {
@@ -301,6 +315,8 @@ pub struct CacheReport {
     pub outcome_hits: usize,
     pub outcome_misses: usize,
     pub persistence: String,
+    pub runner_hash_ms: u64,
+    pub fingerprint_profiles: Vec<FingerprintProfile>,
 }
 
 #[derive(Clone, Debug, Serialize)]

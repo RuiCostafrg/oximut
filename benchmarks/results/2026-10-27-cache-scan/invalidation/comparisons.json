@@ -1,0 +1,46 @@
+[
+  {
+    "equal_mutation_scope": true,
+    "explained_no_coverage_refinements": [],
+    "fixture": "m1",
+    "kind": "cache-forced",
+    "left_count": 3,
+    "left_only": {},
+    "left_run": "measured-01-m1-oximut-incremental-unchanged-forced",
+    "mismatches": [],
+    "ratio_eligible": true,
+    "right_count": 3,
+    "right_only": {},
+    "right_run": "measured-01-m1-oximut-incremental-unchanged-incremental",
+    "round_index": 0,
+    "shared": [
+      "src/subject.ts:542843bf1ce29e9c14c6e8627bfe9309cdacc24d35d19a711a6f44e316e68c68",
+      "src/subject.ts:86b839ed7071a0d703563e048729e6f4ac8741fb3747dcb1c1cb19e4cb23540d",
+      "src/subject.ts:ead20166c6c2075b6cf1c57077547a719a8544efea1e873703a2f914ecad2ff8"
+    ],
+    "shared_classifications_agree": true,
+    "shared_count": 3
+  },
+  {
+    "equal_mutation_scope": true,
+    "explained_no_coverage_refinements": [],
+    "fixture": "m1",
+    "kind": "cache-forced",
+    "left_count": 3,
+    "left_only": {},
+    "left_run": "measured-01-m1-oximut-incremental-source-forced",
+    "mismatches": [],
+    "ratio_eligible": true,
+    "right_count": 3,
+    "right_only": {},
+    "right_run": "measured-01-m1-oximut-incremental-source-incremental",
+    "round_index": 0,
+    "shared": [
+      "src/subject.ts:0220475eab77de30519e110b8750cd63a5903e7e4de9f10306815be3c2d54d1b",
+      "src/subject.ts:0a50334044a8ee07783c4ec4a1e17132d509607b39bed5784b59c9255ca481a2",
+      "src/subject.ts:a9146b46c31ed5206ea6e5e225aa9407e9caf02b2bf9623b084b5228084ae45b"
+    ],
+    "shared_classifications_agree": true,
+    "shared_count": 3
+  }
+]

@@ -1,0 +1,833 @@
+{
+  "correctness_gate": {
+    "failures": [],
+    "passed": true
+  },
+  "groups": [
+    {
+      "all_runs_successful": true,
+      "cpu_seconds": {
+        "max": 51.868223,
+        "median": 50.965621,
+        "min": 50.527488000000005,
+        "samples": [
+          51.490781,
+          51.868223,
+          50.527488000000005,
+          50.835177,
+          50.965621
+        ]
+      },
+      "fixture": "pure",
+      "measured_attempts": 5,
+      "measured_successes": 5,
+      "mutation_status_counts": [
+        {
+          "killed": 13,
+          "survived": 5
+        },
+        {
+          "killed": 13,
+          "survived": 5
+        },
+        {
+          "killed": 13,
+          "survived": 5
+        },
+        {
+          "killed": 13,
+          "survived": 5
+        },
+        {
+          "killed": 13,
+          "survived": 5
+        }
+      ],
+      "outcomes_stable": true,
+      "peak_aggregate_rss_bytes": {
+        "max": 253530112,
+        "median": 251932672,
+        "min": 251514880,
+        "samples": [
+          253530112,
+          252940288,
+          251592704,
+          251514880,
+          251932672
+        ]
+      },
+      "peak_process_count": {
+        "max": 6,
+        "median": 6,
+        "min": 6,
+        "samples": [
+          6,
+          6,
+          6,
+          6,
+          6
+        ]
+      },
+      "role": "clean",
+      "scenario": "clean-fresh",
+      "tool": "oximut",
+      "wall_seconds": {
+        "max": 61.44014372699894,
+        "median": 46.5270862840116,
+        "min": 45.959940555971116,
+        "samples": [
+          56.28638190496713,
+          61.44014372699894,
+          45.959940555971116,
+          46.2293727430515,
+          46.5270862840116
+        ]
+      },
+      "warmup_attempts": 1
+    },
+    {
+      "all_runs_successful": true,
+      "cpu_seconds": {
+        "max": 31.591938,
+        "median": 17.377564,
+        "min": 16.911946,
+        "samples": [
+          17.550551,
+          17.377564,
+          16.911946,
+          17.196627,
+          31.591938
+        ]
+      },
+      "fixture": "pure",
+      "measured_attempts": 5,
+      "measured_successes": 5,
+      "mutation_status_counts": [
+        {
+          "killed": 13,
+          "survived": 5
+        },
+        {
+          "killed": 13,
+          "survived": 5
+        },
+        {
+          "killed": 13,
+          "survived": 5
+        },
+        {
+          "killed": 13,
+          "survived": 5
+        },
+        {
+          "killed": 13,
+          "survived": 5
+        }
+      ],
+      "outcomes_stable": true,
+      "peak_aggregate_rss_bytes": {
+        "max": 297324544,
+        "median": 286674944,
+        "min": 279760896,
+        "samples": [
+          286146560,
+          289837056,
+          297324544,
+          279760896,
+          286674944
+        ]
+      },
+      "peak_process_count": {
+        "max": 6,
+        "median": 6,
+        "min": 6,
+        "samples": [
+          6,
+          6,
+          6,
+          6,
+          6
+        ]
+      },
+      "role": "clean",
+      "scenario": "clean-persistent",
+      "tool": "oximut",
+      "wall_seconds": {
+        "max": 29.48274644720368,
+        "median": 16.858693742891774,
+        "min": 16.11320405593142,
+        "samples": [
+          17.163062128936872,
+          16.858693742891774,
+          16.11320405593142,
+          16.525006087031215,
+          29.48274644720368
+        ]
+      },
+      "warmup_attempts": 1
+    },
+    {
+      "all_runs_successful": true,
+      "cpu_seconds": {
+        "max": 33.11357700000001,
+        "median": 18.264654,
+        "min": 18.147339000000002,
+        "samples": [
+          18.317078000000002,
+          18.264654,
+          18.147339000000002,
+          18.212451,
+          33.11357700000001
+        ]
+      },
+      "fixture": "pure",
+      "measured_attempts": 5,
+      "measured_successes": 5,
+      "mutation_status_counts": [
+        {
+          "killed": 13,
+          "survived": 5
+        },
+        {
+          "killed": 13,
+          "survived": 5
+        },
+        {
+          "killed": 13,
+          "survived": 5
+        },
+        {
+          "killed": 13,
+          "survived": 5
+        },
+        {
+          "killed": 13,
+          "survived": 5
+        }
+      ],
+      "outcomes_stable": true,
+      "peak_aggregate_rss_bytes": {
+        "max": 302202880,
+        "median": 294768640,
+        "min": 286556160,
+        "samples": [
+          294768640,
+          288296960,
+          286556160,
+          296402944,
+          302202880
+        ]
+      },
+      "peak_process_count": {
+        "max": 6,
+        "median": 6,
+        "min": 6,
+        "samples": [
+          6,
+          6,
+          6,
+          6,
+          6
+        ]
+      },
+      "role": "clean",
+      "scenario": "clean-selection",
+      "tool": "oximut",
+      "wall_seconds": {
+        "max": 30.95289660198614,
+        "median": 17.913197128102183,
+        "min": 17.285877753049135,
+        "samples": [
+          17.913197128102183,
+          18.092186607886106,
+          17.285877753049135,
+          17.51171363890171,
+          30.95289660198614
+        ]
+      },
+      "warmup_attempts": 1
+    },
+    {
+      "all_runs_successful": true,
+      "cpu_seconds": {
+        "max": 32.189937,
+        "median": 27.95348,
+        "min": 23.773142,
+        "samples": [
+          23.773142,
+          26.668132999999997,
+          31.911527,
+          32.189937,
+          27.95348
+        ]
+      },
+      "fixture": "pure",
+      "measured_attempts": 5,
+      "measured_successes": 5,
+      "mutation_status_counts": [
+        {
+          "killed": 28,
+          "survived": 5
+        },
+        {
+          "killed": 28,
+          "survived": 5
+        },
+        {
+          "killed": 28,
+          "survived": 5
+        },
+        {
+          "killed": 28,
+          "survived": 5
+        },
+        {
+          "killed": 28,
+          "survived": 5
+        }
+      ],
+      "outcomes_stable": true,
+      "peak_aggregate_rss_bytes": {
+        "max": 397639680,
+        "median": 390086656,
+        "min": 388083712,
+        "samples": [
+          394108928,
+          397639680,
+          388083712,
+          389808128,
+          390086656
+        ]
+      },
+      "peak_process_count": {
+        "max": 4,
+        "median": 4,
+        "min": 4,
+        "samples": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ]
+      },
+      "role": "clean",
+      "scenario": "clean-stryker",
+      "tool": "stryker",
+      "wall_seconds": {
+        "max": 47.33949930500239,
+        "median": 38.92669238103554,
+        "min": 35.181928580161184,
+        "samples": [
+          35.181928580161184,
+          38.43541467306204,
+          47.33949930500239,
+          46.8671375347767,
+          38.92669238103554
+        ]
+      },
+      "warmup_attempts": 1
+    },
+    {
+      "all_runs_successful": true,
+      "cpu_seconds": {
+        "max": 2.242698,
+        "median": 1.632743,
+        "min": 1.188187,
+        "samples": [
+          1.210725,
+          1.188187,
+          2.179628,
+          1.632743,
+          2.242698
+        ]
+      },
+      "fixture": "pure",
+      "measured_attempts": 5,
+      "measured_successes": 5,
+      "mutation_status_counts": [
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "outcomes_stable": true,
+      "peak_aggregate_rss_bytes": {
+        "max": 160657408,
+        "median": 150835200,
+        "min": 146432000,
+        "samples": [
+          160657408,
+          146432000,
+          149327872,
+          152829952,
+          150835200
+        ]
+      },
+      "peak_process_count": {
+        "max": 2,
+        "median": 2,
+        "min": 2,
+        "samples": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ]
+      },
+      "role": "ordinary",
+      "scenario": "ordinary",
+      "tool": "vitest",
+      "wall_seconds": {
+        "max": 3.1811597391497344,
+        "median": 2.056617759168148,
+        "min": 1.534062186954543,
+        "samples": [
+          1.534062186954543,
+          1.5432514061685652,
+          2.9660686450079083,
+          2.056617759168148,
+          3.1811597391497344
+        ]
+      },
+      "warmup_attempts": 1
+    },
+    {
+      "all_runs_successful": true,
+      "cpu_seconds": {
+        "max": 16.900359,
+        "median": 16.734638,
+        "min": 16.378814,
+        "samples": [
+          16.481647,
+          16.734924,
+          16.900359,
+          16.378814,
+          16.734638
+        ]
+      },
+      "fixture": "stateful",
+      "measured_attempts": 5,
+      "measured_successes": 5,
+      "mutation_status_counts": [
+        {
+          "killed": 4
+        },
+        {
+          "killed": 4
+        },
+        {
+          "killed": 4
+        },
+        {
+          "killed": 4
+        },
+        {
+          "killed": 4
+        }
+      ],
+      "outcomes_stable": true,
+      "peak_aggregate_rss_bytes": {
+        "max": 255787008,
+        "median": 249466880,
+        "min": 248213504,
+        "samples": [
+          249266176,
+          248213504,
+          255787008,
+          249466880,
+          249634816
+        ]
+      },
+      "peak_process_count": {
+        "max": 7,
+        "median": 6,
+        "min": 6,
+        "samples": [
+          6,
+          7,
+          7,
+          6,
+          6
+        ]
+      },
+      "role": "clean",
+      "scenario": "clean-fresh",
+      "tool": "oximut",
+      "wall_seconds": {
+        "max": 15.62600160902366,
+        "median": 15.471743379952386,
+        "min": 14.966805619187653,
+        "samples": [
+          15.225214472971857,
+          15.62600160902366,
+          15.577316764974967,
+          14.966805619187653,
+          15.471743379952386
+        ]
+      },
+      "warmup_attempts": 1
+    },
+    {
+      "all_runs_successful": true,
+      "cpu_seconds": {
+        "max": 9.812961999999999,
+        "median": 9.563816,
+        "min": 9.131666,
+        "samples": [
+          9.131666,
+          9.812961999999999,
+          9.563816,
+          9.456245,
+          9.571293
+        ]
+      },
+      "fixture": "stateful",
+      "measured_attempts": 5,
+      "measured_successes": 5,
+      "mutation_status_counts": [
+        {
+          "killed": 4
+        },
+        {
+          "killed": 4
+        },
+        {
+          "killed": 4
+        },
+        {
+          "killed": 4
+        },
+        {
+          "killed": 4
+        }
+      ],
+      "outcomes_stable": true,
+      "peak_aggregate_rss_bytes": {
+        "max": 280653824,
+        "median": 262402048,
+        "min": 255217664,
+        "samples": [
+          275873792,
+          255217664,
+          255459328,
+          262402048,
+          280653824
+        ]
+      },
+      "peak_process_count": {
+        "max": 7,
+        "median": 6,
+        "min": 6,
+        "samples": [
+          6,
+          6,
+          6,
+          7,
+          6
+        ]
+      },
+      "role": "clean",
+      "scenario": "clean-persistent",
+      "tool": "oximut",
+      "wall_seconds": {
+        "max": 9.478467652807012,
+        "median": 9.025194579968229,
+        "min": 8.548224943922833,
+        "samples": [
+          8.548224943922833,
+          9.478467652807012,
+          9.105637653032318,
+          9.001164007000625,
+          9.025194579968229
+        ]
+      },
+      "warmup_attempts": 1
+    },
+    {
+      "all_runs_successful": true,
+      "cpu_seconds": {
+        "max": 8.611285,
+        "median": 8.468639,
+        "min": 8.381098999999999,
+        "samples": [
+          8.459912,
+          8.611285,
+          8.468639,
+          8.381098999999999,
+          8.554611999999999
+        ]
+      },
+      "fixture": "stateful",
+      "measured_attempts": 5,
+      "measured_successes": 5,
+      "mutation_status_counts": [
+        {
+          "killed": 4
+        },
+        {
+          "killed": 4
+        },
+        {
+          "killed": 4
+        },
+        {
+          "killed": 4
+        },
+        {
+          "killed": 4
+        }
+      ],
+      "outcomes_stable": true,
+      "peak_aggregate_rss_bytes": {
+        "max": 274976768,
+        "median": 253022208,
+        "min": 249057280,
+        "samples": [
+          251609088,
+          274976768,
+          253022208,
+          249057280,
+          263487488
+        ]
+      },
+      "peak_process_count": {
+        "max": 6,
+        "median": 6,
+        "min": 6,
+        "samples": [
+          6,
+          6,
+          6,
+          6,
+          6
+        ]
+      },
+      "role": "clean",
+      "scenario": "clean-selection",
+      "tool": "oximut",
+      "wall_seconds": {
+        "max": 8.53343536099419,
+        "median": 8.228795517934486,
+        "min": 7.94474770501256,
+        "samples": [
+          8.53343536099419,
+          8.325532757211477,
+          8.102766037918627,
+          7.94474770501256,
+          8.228795517934486
+        ]
+      },
+      "warmup_attempts": 1
+    },
+    {
+      "all_runs_successful": true,
+      "cpu_seconds": {
+        "max": 16.26463,
+        "median": 14.965477,
+        "min": 13.832397,
+        "samples": [
+          14.865323,
+          13.832397,
+          15.576924,
+          14.965477,
+          16.26463
+        ]
+      },
+      "fixture": "stateful",
+      "measured_attempts": 5,
+      "measured_successes": 5,
+      "mutation_status_counts": [
+        {
+          "killed": 5
+        },
+        {
+          "killed": 5
+        },
+        {
+          "killed": 5
+        },
+        {
+          "killed": 5
+        },
+        {
+          "killed": 5
+        }
+      ],
+      "outcomes_stable": true,
+      "peak_aggregate_rss_bytes": {
+        "max": 391176192,
+        "median": 388898816,
+        "min": 386895872,
+        "samples": [
+          390184960,
+          387371008,
+          386895872,
+          391176192,
+          388898816
+        ]
+      },
+      "peak_process_count": {
+        "max": 4,
+        "median": 4,
+        "min": 3,
+        "samples": [
+          4,
+          4,
+          3,
+          4,
+          4
+        ]
+      },
+      "role": "clean",
+      "scenario": "clean-stryker",
+      "tool": "stryker",
+      "wall_seconds": {
+        "max": 25.882195822894573,
+        "median": 23.186234730063006,
+        "min": 21.316627075197175,
+        "samples": [
+          22.71113420999609,
+          21.316627075197175,
+          25.09097639704123,
+          23.186234730063006,
+          25.882195822894573
+        ]
+      },
+      "warmup_attempts": 1
+    },
+    {
+      "all_runs_successful": true,
+      "cpu_seconds": {
+        "max": 2.5589180000000002,
+        "median": 2.068857,
+        "min": 1.557095,
+        "samples": [
+          2.068857,
+          1.638269,
+          2.370665,
+          1.557095,
+          2.5589180000000002
+        ]
+      },
+      "fixture": "stateful",
+      "measured_attempts": 5,
+      "measured_successes": 5,
+      "mutation_status_counts": [
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "outcomes_stable": true,
+      "peak_aggregate_rss_bytes": {
+        "max": 153567232,
+        "median": 151683072,
+        "min": 150167552,
+        "samples": [
+          152473600,
+          150167552,
+          151683072,
+          151138304,
+          153567232
+        ]
+      },
+      "peak_process_count": {
+        "max": 3,
+        "median": 2,
+        "min": 2,
+        "samples": [
+          2,
+          3,
+          2,
+          2,
+          2
+        ]
+      },
+      "role": "ordinary",
+      "scenario": "ordinary",
+      "tool": "vitest",
+      "wall_seconds": {
+        "max": 3.3212641139980406,
+        "median": 2.8614736970048398,
+        "min": 1.7911550509743392,
+        "samples": [
+          2.8614736970048398,
+          2.4350297909695655,
+          3.1377518211957067,
+          1.7911550509743392,
+          3.3212641139980406
+        ]
+      },
+      "warmup_attempts": 1
+    }
+  ],
+  "ratios": [
+    {
+      "denominator": "oximut clean-persistent",
+      "denominator_samples": 5,
+      "eligible": true,
+      "fixture": "pure",
+      "numerator": "oximut clean-fresh",
+      "numerator_samples": 5,
+      "peak_rss_median_ratio": 0.8788095272114189,
+      "reason": "all gates pass and exact workloads agree",
+      "wall_median_ratio": 2.759827480917914
+    },
+    {
+      "denominator": "oximut clean-selection",
+      "denominator_samples": 5,
+      "eligible": true,
+      "fixture": "pure",
+      "numerator": "oximut clean-fresh",
+      "numerator_samples": 5,
+      "peak_rss_median_ratio": 0.8546793580212604,
+      "reason": "all gates pass and exact workloads agree",
+      "wall_median_ratio": 2.5973636057976504
+    },
+    {
+      "denominator": "stryker clean-stryker",
+      "denominator_samples": 5,
+      "eligible": false,
+      "fixture": "pure",
+      "numerator": "oximut clean-fresh",
+      "numerator_samples": 5,
+      "reason": "correctness gate failed or exact full mutation workloads differ"
+    },
+    {
+      "denominator": "oximut clean-persistent",
+      "denominator_samples": 5,
+      "eligible": true,
+      "fixture": "stateful",
+      "numerator": "oximut clean-fresh",
+      "numerator_samples": 5,
+      "peak_rss_median_ratio": 0.950704774987122,
+      "reason": "all gates pass and exact workloads agree",
+      "wall_median_ratio": 1.7142836359775027
+    },
+    {
+      "denominator": "oximut clean-selection",
+      "denominator_samples": 5,
+      "eligible": true,
+      "fixture": "stateful",
+      "numerator": "oximut clean-fresh",
+      "numerator_samples": 5,
+      "peak_rss_median_ratio": 0.9859485535751865,
+      "reason": "all gates pass and exact workloads agree",
+      "wall_median_ratio": 1.8801953877978919
+    },
+    {
+      "denominator": "stryker clean-stryker",
+      "denominator_samples": 5,
+      "eligible": false,
+      "fixture": "stateful",
+      "numerator": "oximut clean-fresh",
+      "numerator_samples": 5,
+      "reason": "correctness gate failed or exact full mutation workloads differ"
+    }
+  ],
+  "raw_measurement_count": 60
+}

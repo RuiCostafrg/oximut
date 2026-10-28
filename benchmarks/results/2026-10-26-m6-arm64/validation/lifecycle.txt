@@ -1,0 +1,5 @@
+
+> oximut@0.0.0 experiment
+> node packages/vitest-adapter/experiment.mjs --output .oximut/experiment.json
+
+{"output":"/root/oximut/.oximut/experiment.json","passed":true,"gates":{"repeatedFreshAndReusedResultsAgree":true,"fixturesBaselinePassed":true,"stableIdentities":true,"selectedResultsAgree":true,"coverageCollected":true,"isolatedModuleReevaluation":true,"cpuHangTerminated":true,"absoluteDeadlineEnforced":true,"cleanProbeRuns":true,"reusedEnvironmentUpdated":true,"freshEnvironmentReferencePassed":true,"normalDetachedChildReaped":true}}

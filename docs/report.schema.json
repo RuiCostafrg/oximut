@@ -1,0 +1,220 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Oximut run report, schema version 1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "runId", "baseline", "mutants", "diagnostics", "summary", "cache", "resources"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "runId": { "type": "string" },
+    "baseline": { "$ref": "#/$defs/response" },
+    "mutants": { "type": "array", "items": { "$ref": "#/$defs/mutantResult" } },
+    "diagnostics": { "type": "array", "items": { "type": "string" } },
+    "summary": { "$ref": "#/$defs/summary" },
+    "cache": { "$ref": "#/$defs/cache" },
+    "resources": {
+      "type": "object",
+      "description": "Scheduler resource data; extra keys are allowed for forward-compatible accounting details.",
+      "additionalProperties": true,
+      "properties": {
+        "configuredWorkers": { "type": "integer", "minimum": 0 },
+        "effectiveWorkers": { "type": "integer", "minimum": 0 },
+        "cpuLimitWorkers": { "type": "integer", "minimum": 0 },
+        "configuredBudgetBytes": { "type": ["integer", "null"], "minimum": 0 },
+        "budgetBytes": { "type": "integer", "minimum": 0 },
+        "reserveBytes": { "type": "integer", "minimum": 0 },
+        "cgroups": { "type": "array", "items": { "$ref": "#/$defs/cgroup" } },
+        "measurement": { "type": "string" },
+        "enforcement": { "type": "string" },
+        "sampleIntervalMs": { "type": "integer", "minimum": 0 },
+        "peakAggregateRssBytes": { "type": "integer", "minimum": 0 },
+        "measuredWorkerPeakBytes": { "type": "integer", "minimum": 0 },
+        "admissionWorkerCostBytes": { "type": "integer", "minimum": 0 },
+        "maxActiveJobs": { "type": "integer", "minimum": 0 },
+        "admissionPauses": { "type": "integer", "minimum": 0 },
+        "recycledIdleWorkers": { "type": "integer", "minimum": 0 },
+        "samples": { "type": "integer", "minimum": 0 },
+        "exhaustion": { "type": ["string", "null"] }
+      },
+      "required": ["configuredWorkers", "effectiveWorkers", "cpuLimitWorkers", "configuredBudgetBytes", "budgetBytes", "reserveBytes", "cgroups", "measurement", "enforcement", "sampleIntervalMs", "peakAggregateRssBytes", "measuredWorkerPeakBytes", "admissionWorkerCostBytes", "maxActiveJobs", "admissionPauses", "recycledIdleWorkers", "samples", "exhaustion"]
+    }
+  },
+  "$defs": {
+    "position": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["offset", "line", "column"],
+      "properties": {
+        "offset": { "type": "integer", "minimum": 0, "description": "Zero-based UTF-8 byte offset." },
+        "line": { "type": "integer", "minimum": 1 },
+        "column": { "type": "integer", "minimum": 1, "description": "One-based UTF-16 column." }
+      }
+    },
+    "location": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["start", "end"],
+      "properties": { "start": { "$ref": "#/$defs/position" }, "end": { "$ref": "#/$defs/position" } }
+    },
+    "tests": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["passed", "failed", "skipped"],
+      "properties": {
+        "passed": { "type": "integer", "minimum": 0 },
+        "failed": { "type": "integer", "minimum": 0 },
+        "skipped": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "testIdentity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "file", "name"],
+      "properties": { "id": { "type": "string" }, "file": { "type": "string" }, "name": { "type": "string" } }
+    },
+    "hit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mutantId", "tests", "outsideTest"],
+      "properties": {
+        "mutantId": { "type": "string" },
+        "tests": { "type": "array", "items": { "type": "string" } },
+        "outsideTest": { "type": "boolean" }
+      }
+    },
+    "coverage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["complete", "tests", "hits", "reasons"],
+      "properties": {
+        "complete": { "type": "boolean" },
+        "tests": { "type": "array", "items": { "$ref": "#/$defs/testIdentity" } },
+        "hits": { "type": "array", "items": { "$ref": "#/$defs/hit" } },
+        "reasons": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "cgroup": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["limitPath", "usagePath", "limitBytes", "oomEventsPath", "initialOomEvents"],
+      "properties": {
+        "limitPath": { "type": "string" },
+        "usagePath": { "type": "string" },
+        "limitBytes": { "type": ["integer", "null"], "minimum": 0 },
+        "oomEventsPath": { "type": "string" },
+        "initialOomEvents": { "type": ["integer", "null"], "minimum": 0 }
+      }
+    },
+    "response": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["protocol", "runId", "jobId", "generation", "outcome", "tests", "errors"],
+      "properties": {
+        "protocol": { "const": 1 },
+        "runId": { "type": "string" },
+        "jobId": { "type": "string" },
+        "generation": { "type": "integer", "minimum": 0 },
+        "outcome": { "enum": ["passed", "failed", "invalid", "timeout", "infrastructure-error", "resource-exhausted", "skipped"] },
+        "tests": { "$ref": "#/$defs/tests" },
+        "errors": { "type": "array", "items": { "type": "string" } },
+        "coverage": { "$ref": "#/$defs/coverage" }
+      }
+    },
+    "selection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "files", "selectedTests", "totalTests", "expectedSkipped", "reasons"],
+      "properties": {
+        "mode": { "enum": ["full", "files", "none"] },
+        "files": { "type": "array", "items": { "type": "string" } },
+        "selectedTests": { "type": "integer", "minimum": 0 },
+        "totalTests": { "type": "integer", "minimum": 0 },
+        "expectedSkipped": { "type": "integer", "minimum": 0 },
+        "reasons": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source", "reason"],
+      "properties": {
+        "source": { "enum": ["executed", "baseline-coverage", "skipped", "cache"] },
+        "reason": { "type": "string" },
+        "fingerprint": { "type": "string" },
+        "originalRunId": { "type": "string" }
+      }
+    },
+    "mutantResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "file", "operator", "original", "replacement", "location", "outcome", "tests", "errors", "provenance"],
+      "properties": {
+        "id": { "type": "string" },
+        "file": { "type": "string" },
+        "operator": { "type": "string" },
+        "original": { "type": "string" },
+        "replacement": { "type": "string" },
+        "location": { "$ref": "#/$defs/location" },
+        "outcome": { "enum": ["killed", "survived", "no-coverage", "invalid", "timeout", "infrastructure-error", "resource-exhausted", "skipped"] },
+        "tests": { "$ref": "#/$defs/tests" },
+        "errors": { "type": "array", "items": { "type": "string" } },
+        "selection": { "$ref": "#/$defs/selection" },
+        "provenance": { "$ref": "#/$defs/provenance" }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["total", "killed", "survived", "noCoverage", "invalid", "timeout", "infrastructureError", "resourceExhausted", "skipped", "scoreDenominator", "score", "complete"],
+      "properties": {
+        "total": { "type": "integer", "minimum": 0 },
+        "killed": { "type": "integer", "minimum": 0 },
+        "survived": { "type": "integer", "minimum": 0 },
+        "noCoverage": { "type": "integer", "minimum": 0 },
+        "invalid": { "type": "integer", "minimum": 0 },
+        "timeout": { "type": "integer", "minimum": 0 },
+        "infrastructureError": { "type": "integer", "minimum": 0 },
+        "resourceExhausted": { "type": "integer", "minimum": 0 },
+        "skipped": { "type": "integer", "minimum": 0 },
+        "scoreDenominator": { "type": "integer", "minimum": 0 },
+        "score": { "type": ["number", "null"], "minimum": 0, "maximum": 100 },
+        "complete": { "type": "boolean" }
+      }
+    },
+    "cache": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["enabled", "outcomesEnabled", "reason", "instrumentationHits", "instrumentationMisses", "outcomeHits", "outcomeMisses", "persistence"],
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "outcomesEnabled": { "type": "boolean" },
+        "fingerprint": { "type": "string" },
+        "reason": { "type": "string" },
+        "instrumentationHits": { "type": "integer", "minimum": 0 },
+        "instrumentationMisses": { "type": "integer", "minimum": 0 },
+        "outcomeHits": { "type": "integer", "minimum": 0 },
+        "outcomeMisses": { "type": "integer", "minimum": 0 },
+        "persistence": { "type": "string" },
+        "runnerHashMs": { "type": "integer", "minimum": 0 },
+        "fingerprintProfiles": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["phase", "completed", "elapsedMs", "runtimeIdentityMs", "resourcePolicyMs", "inputsMs", "filesHashed", "bytesHashed"],
+            "properties": {
+              "phase": { "enum": ["prepare", "post-baseline", "pre-publication", "post-baseline-and-pre-publication"] },
+              "completed": { "type": "boolean" },
+              "elapsedMs": { "type": "integer", "minimum": 0 },
+              "runtimeIdentityMs": { "type": "integer", "minimum": 0 },
+              "resourcePolicyMs": { "type": "integer", "minimum": 0 },
+              "inputsMs": { "type": "integer", "minimum": 0 },
+              "filesHashed": { "type": "integer", "minimum": 0 },
+              "bytesHashed": { "type": "integer", "minimum": 0 }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,6 +1,8 @@
 //! Conservative whole-project cache. Output paths are reserved, never inputs.
-use super::{Execution, Options};
-use oximut_core::{CacheReport, Mutant, MutantResult, Mutation, Outcome, Tests};
+use super::{CachePolicy, Execution, Options};
+use oximut_core::{
+    CacheReport, FingerprintProfile, Mutant, MutantResult, Mutation, Outcome, Tests,
+};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::{
@@ -9,6 +11,7 @@ use std::{
     io::{Read, Write},
     path::{Path, PathBuf},
     process::Command,
+    time::Instant,
 };
 
 const SCHEMA: u32 = 1;
@@ -17,13 +20,28 @@ type Probe = Option<Result<Mutation, String>>;
 type Instrumented = (oximut_instrument::Generated, Probe);
 
 pub fn digest(bytes: &[u8]) -> String {
-    format!("{:x}", Sha256::digest(bytes))
+    hex_digest(&Sha256::digest(bytes))
+}
+fn hex_digest(bytes: &[u8]) -> String {
+    const HEX: &[u8; 16] = b"0123456789abcdef";
+    bytes
+        .iter()
+        .flat_map(|byte| {
+            [
+                HEX[(byte >> 4) as usize] as char,
+                HEX[(byte & 15) as usize] as char,
+            ]
+        })
+        .collect()
 }
 fn part(hash: &mut Sha256, bytes: &[u8]) {
     hash.update((bytes.len() as u64).to_le_bytes());
     hash.update(bytes);
 }
 fn file_hash(path: &Path) -> Result<String, String> {
+    file_hash_counted(path, &mut FingerprintProfile::default())
+}
+fn file_hash_counted(path: &Path, profile: &mut FingerprintProfile) -> Result<String, String> {
     let mut file =
         fs::File::open(path).map_err(|e| format!("cache input {}: {e}", path.display()))?;
     let mut hash = Sha256::new();
@@ -33,9 +51,11 @@ fn file_hash(path: &Path) -> Result<String, String> {
         if count == 0 {
             break;
         }
+        profile.bytes_hashed += count as u64;
         hash.update(&buffer[..count]);
     }
-    Ok(format!("{:x}", hash.finalize()))
+    profile.files_hashed += 1;
+    Ok(hex_digest(&hash.finalize()))
 }
 
 pub fn atomic<T: Serialize>(path: &Path, value: &T) -> Result<(), String> {
@@ -109,7 +129,11 @@ impl Outcomes {
         }
     }
     pub fn validate(&self, mutants: &[Mutant], tests: &Tests) -> bool {
-        let ids: BTreeSet<_> = self.results.iter().map(|result| &result.id).collect();
+        let indexed: std::collections::BTreeMap<_, _> = self
+            .results
+            .iter()
+            .map(|result| (result.id.as_str(), result))
+            .collect();
         self.checksum
             == digest(
                 &serde_json::to_vec(&(
@@ -123,33 +147,30 @@ impl Outcomes {
             && self.schema_version == SCHEMA
             && self.complete
             && self.results.len() == mutants.len()
-            && ids.len() == mutants.len()
+            && indexed.len() == mutants.len()
             && same(&self.baseline_tests, tests)
             && mutants.iter().all(|mutant| {
-                self.results
-                    .iter()
-                    .find(|r| r.id == mutant.id)
-                    .is_some_and(|r| {
-                        r.file == mutant.file
-                            && r.operator == mutant.operator
-                            && r.original == mutant.original
-                            && r.replacement == mutant.replacement
-                            && same(&r.location, &mutant.location)
-                            && match r.outcome {
-                                Outcome::Killed => r.tests.failed > 0,
-                                Outcome::Survived => {
-                                    r.tests.passed > 0 && r.tests.failed == 0 && r.errors.is_empty()
-                                }
-                                Outcome::NoCoverage => {
-                                    r.tests.passed == 0
-                                        && r.tests.failed == 0
-                                        && r.tests.skipped == 0
-                                        && r.errors.is_empty()
-                                        && r.selection.as_ref().is_some_and(|s| s.mode == "none")
-                                }
-                                _ => false,
+                indexed.get(mutant.id.as_str()).is_some_and(|r| {
+                    r.file == mutant.file
+                        && r.operator == mutant.operator
+                        && r.original == mutant.original
+                        && r.replacement == mutant.replacement
+                        && same(&r.location, &mutant.location)
+                        && match r.outcome {
+                            Outcome::Killed => r.tests.failed > 0,
+                            Outcome::Survived => {
+                                r.tests.passed > 0 && r.tests.failed == 0 && r.errors.is_empty()
                             }
-                    })
+                            Outcome::NoCoverage => {
+                                r.tests.passed == 0
+                                    && r.tests.failed == 0
+                                    && r.tests.skipped == 0
+                                    && r.errors.is_empty()
+                                    && r.selection.as_ref().is_some_and(|s| s.mode == "none")
+                            }
+                            _ => false,
+                        }
+                })
             })
     }
 }
@@ -157,20 +178,58 @@ pub fn same<T: Serialize>(a: &T, b: &T) -> bool {
     serde_json::to_vec(a).ok() == serde_json::to_vec(b).ok()
 }
 
+#[derive(Debug, PartialEq, Eq)]
+pub enum InputCheck {
+    Unchanged,
+    Changed,
+    Unreadable(String),
+}
+
+// Advisory history only selects fresh execution. It never authorizes reuse.
+#[derive(Deserialize, Serialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct PolicyHistory {
+    schema_version: u32,
+    key: String,
+    fingerprint_cost_ms: u64,
+    fresh_work_ms: u64,
+    successful_bypasses: u8,
+    bypass_outcomes: bool,
+}
+
+struct PolicyState {
+    path: PathBuf,
+    key: String,
+    previous: Option<PolicyHistory>,
+    bypass: bool,
+}
+
 pub struct Cache {
     pub report: CacheReport,
     directory: PathBuf,
     tool: String,
+    source_keys: Vec<String>,
+    policy: Option<PolicyState>,
 }
 impl Cache {
     pub fn new(options: &Options) -> Self {
-        let enabled = options.cache && !options.no_cache && !options.list;
-        let tool = if enabled {
-            env::current_exe()
+        Self::with_runner_hash(options, || {
+            let started = Instant::now();
+            let tool = env::current_exe()
                 .map_err(|e| e.to_string())
-                .and_then(|p| file_hash(&p))
+                .and_then(|p| file_hash(&p));
+            (tool, elapsed_ms(started))
+        })
+    }
+    fn with_runner_hash(
+        options: &Options,
+        hash_runner: impl FnOnce() -> (Result<String, String>, u64),
+    ) -> Self {
+        let enabled = options.cache && !options.no_cache && !options.list;
+        let (tool, runner_hash_ms) = if enabled {
+            hash_runner()
         } else {
-            Ok(String::new())
+            (Ok(String::new()), 0)
         };
         let reason = if options.no_cache {
             "forced-no-cache"
@@ -186,8 +245,11 @@ impl Cache {
         let mut cache = Self {
             directory: options.root.join(".oximut/cache"),
             tool: tool.clone().unwrap_or_default(),
+            source_keys: Vec::new(),
+            policy: None,
             report: CacheReport {
                 enabled,
+                runner_hash_ms,
                 outcomes_enabled: enabled && options.cache_inputs_complete,
                 reason: reason.into(),
                 persistence: "not-written".into(),
@@ -197,9 +259,17 @@ impl Cache {
         if enabled && tool.is_err() {
             cache.report.enabled = false;
             cache.report.outcomes_enabled = false;
+            cache.report.runner_hash_ms = 0;
             cache.report.reason = "runner-executable-unreadable".into();
         }
         cache
+    }
+    pub fn add_previous_runner_hash_ms(&mut self, previous: u64) {
+        self.report.runner_hash_ms = if self.report.enabled {
+            self.report.runner_hash_ms.saturating_add(previous)
+        } else {
+            0
+        };
     }
     pub fn artifact(
         &mut self,
@@ -233,6 +303,7 @@ impl Cache {
             ))
             .map_err(|e| e.to_string())?,
         );
+        self.source_keys.push(key.clone());
         let location = self
             .directory
             .join("instrumentation")
@@ -278,12 +349,40 @@ impl Cache {
         Ok((entry.generated, entry.probe))
     }
     pub fn prepare(&mut self, options: &Options) -> Option<Outcomes> {
+        self.prepare_attempt(options, true)
+    }
+    pub fn prepare_attempt(&mut self, options: &Options, reuse: bool) -> Option<Outcomes> {
         if !self.report.outcomes_enabled {
             return None;
         }
-        match fingerprint(options, &self.tool) {
+        let adaptive = reuse && !options.baseline_only && options.cache_policy == CachePolicy::Auto;
+        if adaptive && self.prepare_policy(options) {
+            self.report.outcomes_enabled = false;
+            self.report.reason = "outcome-cache-cost-exceeds-fresh-work".into();
+            return None;
+        }
+        // New/corrupt history and periodic probes measure actual fresh jobs,
+        // even when an otherwise valid outcome entry already exists.
+        let reuse = reuse
+            && (!adaptive
+                || self.policy.as_ref().is_some_and(|policy| {
+                    policy
+                        .previous
+                        .as_ref()
+                        .is_some_and(|history| !history.bypass_outcomes)
+                }));
+        match self.fingerprint(options, "prepare") {
             Ok(key) => {
                 self.report.fingerprint = Some(key.clone());
+                if !reuse {
+                    self.report.reason = if adaptive {
+                        "outcome-cache-cost-probe"
+                    } else {
+                        "fresh-retry-after-input-change"
+                    }
+                    .into();
+                    return None;
+                }
                 match read::<Outcomes>(&self.directory.join("outcomes").join(format!("{key}.json")))
                 {
                     Ok(entry)
@@ -311,16 +410,145 @@ impl Cache {
             }
         }
     }
-    pub fn inputs_unchanged(&mut self, options: &Options) -> bool {
-        let Some(key) = &self.report.fingerprint else {
-            return true;
+    fn prepare_policy(&mut self, options: &Options) -> bool {
+        let mut environment_hash = Sha256::new();
+        hash_environment(
+            &mut environment_hash,
+            &env::vars_os().collect(),
+            &options.cache_env,
+        );
+        let Ok(bytes) = serde_json::to_vec(&(
+            1_u32,
+            &self.tool,
+            options,
+            &self.source_keys,
+            hex_digest(&environment_hash.finalize()),
+        )) else {
+            return false;
         };
-        if fingerprint(options, &self.tool).as_ref() == Ok(key) {
-            true
-        } else {
-            self.report.persistence = "inputs-changed-during-run-not-persisted".into();
-            false
+        let key = digest(&bytes);
+        let path = self.directory.join("policy").join(format!("{key}.json"));
+        let previous = fs::File::open(&path)
+            .ok()
+            .and_then(|file| {
+                let mut bytes = Vec::new();
+                file.take(8193).read_to_end(&mut bytes).ok()?;
+                (bytes.len() <= 8192)
+                    .then(|| serde_json::from_slice::<PolicyHistory>(&bytes).ok())
+                    .flatten()
+            })
+            .filter(|history| {
+                history.schema_version == 1
+                    && history.key == key
+                    && history.successful_bypasses <= 8
+            });
+        let bypass = previous
+            .as_ref()
+            .is_some_and(|history| history.bypass_outcomes && history.successful_bypasses < 8);
+        self.policy = Some(PolicyState {
+            path,
+            key,
+            previous,
+            bypass,
+        });
+        bypass
+    }
+
+    pub fn record_policy(&self, complete: bool, unchanged: bool, fresh_work_ms: u64) {
+        let Some(policy) = &self.policy else {
+            return;
+        };
+        // Reuse cannot measure the mutation work it avoided. Failed runs and
+        // fingerprint failures cannot supply calibration or bypass counts.
+        if !complete || !unchanged || self.report.outcome_hits != 0 {
+            return;
         }
+        let history = if policy.bypass {
+            let Some(previous) = &policy.previous else {
+                return;
+            };
+            PolicyHistory {
+                schema_version: 1,
+                key: policy.key.clone(),
+                fingerprint_cost_ms: previous.fingerprint_cost_ms,
+                fresh_work_ms,
+                successful_bypasses: previous.successful_bypasses.saturating_add(1),
+                // Re-enable only once fresh work costs at least the full scan
+                // estimate, giving the 125% disable threshold a hysteresis band.
+                bypass_outcomes: previous.fingerprint_cost_ms > fresh_work_ms,
+            }
+        } else {
+            if !self.report.outcomes_enabled
+                || self.report.fingerprint.is_none()
+                || self.report.fingerprint_profiles.is_empty()
+                || self
+                    .report
+                    .fingerprint_profiles
+                    .iter()
+                    .any(|profile| !profile.completed)
+            {
+                return;
+            }
+            let fingerprint_cost_ms = self
+                .report
+                .fingerprint_profiles
+                .iter()
+                .fold(0_u64, |sum, profile| sum.saturating_add(profile.elapsed_ms));
+            let was_bypassed = policy
+                .previous
+                .as_ref()
+                .is_some_and(|history| history.bypass_outcomes);
+            let bypass_outcomes = if was_bypassed {
+                fingerprint_cost_ms > fresh_work_ms
+            } else {
+                u128::from(fingerprint_cost_ms) * 4 >= u128::from(fresh_work_ms) * 5
+            };
+            PolicyHistory {
+                schema_version: 1,
+                key: policy.key.clone(),
+                fingerprint_cost_ms,
+                fresh_work_ms,
+                successful_bypasses: 0,
+                bypass_outcomes,
+            }
+        };
+        // This separate transaction follows successful report emission. A failed
+        // advisory write merely causes a later probe; it cannot affect reuse.
+        let _ = atomic(&policy.path, &history);
+    }
+
+    pub fn inputs_unchanged(&mut self, options: &Options, phase: &str) -> bool {
+        self.check_inputs(options, phase) == InputCheck::Unchanged
+    }
+    pub fn check_inputs(&mut self, options: &Options, phase: &str) -> InputCheck {
+        let Some(key) = self.report.fingerprint.clone() else {
+            return InputCheck::Unchanged;
+        };
+        let check = match self.fingerprint(options, phase) {
+            Ok(current) if current == key => InputCheck::Unchanged,
+            Ok(_) => InputCheck::Changed,
+            Err(error) => {
+                self.report.outcomes_enabled = false;
+                self.report.reason = format!("unsafe-or-incomplete-fingerprint: {error}");
+                InputCheck::Unreadable(error)
+            }
+        };
+        if check != InputCheck::Unchanged {
+            self.report.persistence = "inputs-changed-during-run-not-persisted".into();
+        }
+        check
+    }
+    fn fingerprint(&mut self, options: &Options, phase: &str) -> Result<String, String> {
+        let started = Instant::now();
+        let mut profile = FingerprintProfile {
+            phase: phase.into(),
+            ..Default::default()
+        };
+        let result = fingerprint(options, &self.tool, &mut profile);
+        profile.elapsed_ms = elapsed_ms(started);
+        profile.completed = result.is_ok();
+        self.report.fingerprint_profiles.push(profile);
+        result
     }
     pub fn stage(
         &mut self,
@@ -389,19 +617,24 @@ struct Tree<'a> {
     allowed: Vec<PathBuf>,
     seen: BTreeSet<PathBuf>,
     active: BTreeSet<PathBuf>,
-    options: &'a Options,
+    cache_directory: PathBuf,
     report: Option<PathBuf>,
+    profile: &'a mut FingerprintProfile,
 }
 impl Tree<'_> {
     fn excluded(&self, path: &Path) -> bool {
-        path.starts_with(self.options.root.join(".oximut/cache"))
-            || self.report.as_deref() == Some(path)
-            || path.components().any(|c| c.as_os_str() == ".git")
-            || (path.components().any(|c| c.as_os_str() == "node_modules")
-                && path
-                    .file_name()
-                    .is_some_and(|n| n == ".vite" || n == ".vite-temp"))
+        if path.starts_with(&self.cache_directory) || self.report.as_deref() == Some(path) {
+            return true;
+        }
+        let vite_output = path
+            .file_name()
+            .is_some_and(|name| name == ".vite" || name == ".vite-temp");
+        path.components().any(|component| {
+            let name = component.as_os_str();
+            name == ".git" || (vite_output && name == "node_modules")
+        })
     }
+
     fn visit(&mut self, path: &Path) -> Result<(), String> {
         if self.excluded(path) {
             return Ok(());
@@ -448,7 +681,10 @@ impl Tree<'_> {
             self.active.remove(path);
         } else if metadata.is_file() {
             part(&mut self.hash, b"file");
-            part(&mut self.hash, file_hash(path)?.as_bytes());
+            part(
+                &mut self.hash,
+                file_hash_counted(path, self.profile)?.as_bytes(),
+            );
             #[cfg(unix)]
             {
                 use std::os::unix::fs::PermissionsExt;
@@ -568,10 +804,28 @@ fn runtime_identity(options: &Options) -> Result<Vec<u8>, String> {
     serde_json::to_vec(&identity).map_err(|e| e.to_string())
 }
 
-fn fingerprint(options: &Options, tool: &str) -> Result<String, String> {
-    let node = runtime_identity(options)?;
-    fingerprint_with_runtime(options, tool, &node)
+fn elapsed_ms(started: Instant) -> u64 {
+    started.elapsed().as_millis().try_into().unwrap_or(u64::MAX)
 }
+fn fingerprint(
+    options: &Options,
+    tool: &str,
+    profile: &mut FingerprintProfile,
+) -> Result<String, String> {
+    let started = Instant::now();
+    let node = runtime_identity(options);
+    profile.runtime_identity_ms = elapsed_ms(started);
+    let node = node?;
+    let started = Instant::now();
+    let resources = super::resources::cache_policy(options);
+    profile.resource_policy_ms = elapsed_ms(started);
+    let resources = resources?;
+    let started = Instant::now();
+    let result = fingerprint_inputs(options, tool, &node, &resources, profile);
+    profile.inputs_ms = elapsed_ms(started);
+    result
+}
+#[cfg(test)]
 fn fingerprint_with_runtime(options: &Options, tool: &str, node: &[u8]) -> Result<String, String> {
     fingerprint_with_policy(
         options,
@@ -580,11 +834,27 @@ fn fingerprint_with_runtime(options: &Options, tool: &str, node: &[u8]) -> Resul
         &super::resources::cache_policy(options)?,
     )
 }
+#[cfg(test)]
 fn fingerprint_with_policy(
     options: &Options,
     tool: &str,
     node: &[u8],
     resources: &serde_json::Value,
+) -> Result<String, String> {
+    fingerprint_inputs(
+        options,
+        tool,
+        node,
+        resources,
+        &mut FingerprintProfile::default(),
+    )
+}
+fn fingerprint_inputs(
+    options: &Options,
+    tool: &str,
+    node: &[u8],
+    resources: &serde_json::Value,
+    profile: &mut FingerprintProfile,
 ) -> Result<String, String> {
     let mut paths = vec![
         options.root.clone(),
@@ -657,8 +927,9 @@ fn fingerprint_with_policy(
         allowed,
         seen: BTreeSet::new(),
         active: BTreeSet::new(),
-        options,
+        cache_directory: options.root.join(".oximut/cache"),
         report,
+        profile,
     };
     part(
         &mut tree.hash,
@@ -707,7 +978,7 @@ fn fingerprint_with_policy(
     for path in paths {
         tree.visit(&path)?;
     }
-    Ok(format!("{:x}", tree.hash.finalize()))
+    Ok(hex_digest(&tree.hash.finalize()))
 }
 
 fn hash_environment(
@@ -755,6 +1026,7 @@ mod tests {
             test_selection: false,
             cache: true,
             cache_inputs_complete: true,
+            cache_policy: CachePolicy::Always,
             no_cache: false,
             cache_inputs: vec![],
             cache_env: vec![],
@@ -763,10 +1035,37 @@ mod tests {
             memory_reserve_mib: 64,
         }
     }
+    #[test]
+    fn runner_hash_failure_disables_cache_and_discards_measured_time() {
+        let root = tempfile::tempdir().unwrap();
+        let cache = Cache::with_runner_hash(&options(root.path()), || {
+            (Err("injected executable read failure".into()), 47)
+        });
+        assert!(!cache.report.enabled);
+        assert!(!cache.report.outcomes_enabled);
+        assert_eq!(cache.report.reason, "runner-executable-unreadable");
+        assert_eq!(cache.report.runner_hash_ms, 0);
+    }
+    #[test]
+    fn retry_runner_hash_time_depends_on_final_cache_enabled_state() {
+        let root = tempfile::tempdir().unwrap();
+        let options = options(root.path());
+        let mut enabled = Cache::with_runner_hash(&options, || (Ok("tool".into()), 47));
+        enabled.add_previous_runner_hash_ms(29);
+        assert_eq!(enabled.report.runner_hash_ms, 76);
+        enabled.add_previous_runner_hash_ms(u64::MAX);
+        assert_eq!(enabled.report.runner_hash_ms, u64::MAX);
+
+        let mut disabled = Cache::with_runner_hash(&options, || (Err("unreadable".into()), 47));
+        disabled.add_previous_runner_hash_ms(29);
+        assert_eq!(disabled.report.runner_hash_ms, 0);
+    }
     fn cache(root: &Path) -> Cache {
         Cache {
             directory: root.join(".oximut/cache"),
             tool: "runner-and-operators-version-a".into(),
+            source_keys: Vec::new(),
+            policy: None,
             report: CacheReport {
                 enabled: true,
                 outcomes_enabled: true,
@@ -788,6 +1087,133 @@ mod tests {
         let options = options(root.path());
         let runtime = serde_json::to_vec(&serde_json::json!({"executable":root.path().join("node"),"versions":{"node":"26.3.1","v8":"a"}})).unwrap();
         (root, options, runtime)
+    }
+    #[test]
+    fn exclusions_match_legacy_lexical_path_policy() {
+        let options = options(Path::new("/project"));
+        let mut profile = FingerprintProfile::default();
+        let tree = Tree {
+            hash: Sha256::new(),
+            allowed: vec![],
+            seen: BTreeSet::new(),
+            active: BTreeSet::new(),
+            cache_directory: options.root.join(".oximut/cache"),
+            report: Some(options.root.join("report.json")),
+            profile: &mut profile,
+        };
+        let legacy = |path: &Path| {
+            path.starts_with(options.root.join(".oximut/cache"))
+                || tree.report.as_deref() == Some(path)
+                || path.components().any(|c| c.as_os_str() == ".git")
+                || (path.components().any(|c| c.as_os_str() == "node_modules")
+                    && path
+                        .file_name()
+                        .is_some_and(|n| n == ".vite" || n == ".vite-temp"))
+        };
+        for prefix in ["/project", "/elsewhere", "relative", "/project/../other"] {
+            for middle in [
+                "",
+                ".git",
+                "node_modules",
+                "node_modules/pkg",
+                "node_modules/.git",
+            ] {
+                for leaf in [
+                    "source.ts",
+                    ".git",
+                    ".vite",
+                    ".vite-temp",
+                    ".vite-other",
+                    "node_modules",
+                    ".oximut/cache",
+                    ".oximut/cache-extra",
+                    "report.json",
+                ] {
+                    let path = Path::new(prefix).join(middle).join(leaf);
+                    assert_eq!(tree.excluded(&path), legacy(&path), "{}", path.display());
+                }
+            }
+        }
+        for path in [
+            "/project/.oximut/cache",
+            "/project/.oximut/cache/input",
+            "/project/.oximut/cache/../input",
+            "/project/report.json/child",
+            "/project/node_modules/.vite/child",
+            "/project/./node_modules/pkg/.vite/",
+        ] {
+            let path = Path::new(path);
+            assert_eq!(tree.excluded(path), legacy(path), "{}", path.display());
+        }
+    }
+    #[test]
+    fn file_sha256_matches_known_answers_across_read_boundaries() {
+        let root = tempfile::tempdir().unwrap();
+        let path = root.path().join("input");
+        // FIPS 180-4 SHA-256 examples include a million ASCII 'a' bytes.
+        // This crosses both compression blocks and the file reader's chunks.
+        for (bytes, expected) in [
+            (
+                Vec::new(),
+                "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            ),
+            (
+                b"abc".to_vec(),
+                "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
+            ),
+            (
+                vec![b'a'; 1_000_000],
+                "cdc76e5c9914fb9281a1c7e284d73e67f1809a48a497200e046d39ccc7112cd0",
+            ),
+        ] {
+            fs::write(&path, &bytes).unwrap();
+            assert_eq!(file_hash(&path).unwrap(), expected);
+        }
+    }
+    #[test]
+    fn profiling_counts_actual_reads_without_changing_file_digest() {
+        let root = tempfile::tempdir().unwrap();
+        let path = root.path().join("input");
+        let bytes = vec![b'x'; 64 * 1024 + 17];
+        fs::write(&path, &bytes).unwrap();
+        let mut profile = FingerprintProfile::default();
+        assert_eq!(
+            file_hash_counted(&path, &mut profile).unwrap(),
+            digest(&bytes)
+        );
+        assert_eq!(profile.files_hashed, 1);
+        assert_eq!(profile.bytes_hashed, bytes.len() as u64);
+        file_hash_counted(&path, &mut profile).unwrap();
+        assert_eq!(profile.files_hashed, 2);
+        assert_eq!(profile.bytes_hashed, 2 * bytes.len() as u64);
+        assert!(file_hash_counted(&root.path().join("absent"), &mut profile).is_err());
+        assert_eq!(profile.files_hashed, 2);
+    }
+    #[test]
+    fn profiled_fingerprint_preserves_identity_and_failed_attempts() {
+        let (root, mut options, runtime) = project();
+        let policy = serde_json::json!({});
+        let expected = fingerprint_with_policy(&options, "tool", &runtime, &policy).unwrap();
+        let mut profile = FingerprintProfile::default();
+        assert_eq!(
+            fingerprint_inputs(&options, "tool", &runtime, &policy, &mut profile).unwrap(),
+            expected
+        );
+        assert!(profile.files_hashed >= 4);
+        assert!(profile.bytes_hashed > 0);
+        let mut cache = cache(root.path());
+        // A file cannot be the runtime subprocess's working directory.
+        options.root = root.path().join("source.ts");
+        assert!(cache.fingerprint(&options, "prepare").is_err());
+        assert_eq!(cache.report.fingerprint_profiles.len(), 1);
+        let failed = &cache.report.fingerprint_profiles[0];
+        assert_eq!(failed.phase, "prepare");
+        assert!(!failed.completed);
+        assert_eq!(failed.files_hashed, 0);
+        assert!(failed.elapsed_ms >= failed.runtime_identity_ms);
+        cache.report.fingerprint = None;
+        assert!(cache.inputs_unchanged(&options, "pre-publication"));
+        assert_eq!(cache.report.fingerprint_profiles.len(), 1);
     }
     #[test]
     fn absent_declared_environment_cannot_alias_inherited_literal_absent() {
@@ -961,6 +1387,15 @@ mod tests {
             vec![result.clone()],
         );
         assert!(entry.validate(&generated.mutants, &tests));
+        let mut other_mutant = mutant.clone();
+        other_mutant.id.push_str("-other");
+        let duplicated = Outcomes::new(
+            "key".into(),
+            "run".into(),
+            tests.clone(),
+            vec![result.clone(), result.clone()],
+        );
+        assert!(!duplicated.validate(&[mutant.clone(), other_mutant], &tests));
         entry.results[0].outcome = Outcome::Survived;
         assert!(!entry.validate(&generated.mutants, &tests));
         let mut invalid = result.clone();

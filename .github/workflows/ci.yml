@@ -15,7 +15,8 @@ concurrency:
 jobs:
   feasibility:
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    # Acceptance alone can take 18 minutes; retain time for setup and smoke runs.
+    timeout-minutes: 35
     permissions:
       contents: read
     steps:
@@ -41,6 +42,8 @@ jobs:
       - run: npm run lint
       - run: npm run typecheck
       - run: npm test
+      - name: Report schema validator contract
+        run: node --test scripts/tests/validate-reports.test.mjs
       - run: npm run experiment
       - run: cargo fmt --all -- --check
       - run: cargo clippy --workspace --all-targets --locked -- -D warnings
@@ -52,11 +55,21 @@ jobs:
         run: cargo run --locked -p oximut-oxc-smoke -- fixtures/pure/src/logic.ts fixtures/stateful/src/service.ts
       - name: Baseline smoke (not a performance comparison)
         run: python3 benchmarks/run.py --repetitions 1 --warmups 0 --timeout 180 --output .oximut/ci-baselines
+      - name: M6 benchmark harness smoke (not a performance claim)
+        run: python3 benchmarks/m6.py --fixtures m1 --tools oximut --scenarios clean --repetitions 1 --warmups 0 --output .oximut/ci-m6
+      - name: Validate emitted CLI reports against the published schema
+        run: >-
+          node scripts/validate-reports.mjs
+          .oximut/ci-m6/measured-01-m1-oximut-clean-fresh/run/report.json
+          .oximut/ci-m6/measured-01-m1-oximut-clean-persistent/run/report.json
+          .oximut/ci-m6/measured-01-m1-oximut-clean-selection/run/report.json
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
-          name: m0-feasibility-results
-          path: .oximut/ci-baselines/**
+          name: feasibility-results
+          path: |
+            .oximut/ci-baselines/**
+            .oximut/ci-m6/**
           include-hidden-files: true
           if-no-files-found: warn
           retention-days: 7

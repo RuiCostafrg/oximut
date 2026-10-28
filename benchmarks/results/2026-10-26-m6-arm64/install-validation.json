@@ -1,0 +1,21 @@
+{
+  "date": "2026-10-26",
+  "node": "26.3.1",
+  "npm": "11.16.0",
+  "build": "cargo build --locked --release -p oximut-cli --bin oximut",
+  "dependency_install": "npm ci --include=dev --ignore-scripts --no-audit --no-fund",
+  "relocated_prefix": "/tmp/oximut m6 relocated install",
+  "external_project_smoke": {
+    "fresh": {
+      "baseline": "passed",
+      "killed": 1
+    },
+    "persistent": {
+      "baseline": "passed",
+      "killed": 1
+    },
+    "installed_adapter_paths_verified": true
+  },
+  "existing_install_overwrite": "refused",
+  "launcher_unit_tests": 2
+}

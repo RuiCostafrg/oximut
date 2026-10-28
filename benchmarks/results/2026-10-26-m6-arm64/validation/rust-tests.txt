@@ -1,0 +1,70 @@
+   Compiling oximut-core v0.0.0 (/root/oximut/crates/core)
+   Compiling oximut-instrument v0.0.0 (/root/oximut/crates/instrument)
+   Compiling oximut-cli v0.0.0 (/root/oximut/crates/cli)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 6.63s
+     Running unittests src/main.rs (target/debug/deps/oximut-8e6c73b99a5cac5b)
+
+running 13 tests
+test cache::tests::absent_declared_environment_cannot_alias_inherited_literal_absent ... ok
+test cache::tests::outcomes_require_integrity_inventory_and_valid_success_evidence ... ok
+test resources::tests::resolves_namespaced_cgroup_mounts_and_every_ancestor ... ok
+test resources::tests::memory_limits_change_between_unlimited_and_finite_without_parse_failure ... ok
+test resources::tests::own_rss_and_descendants_are_measurable ... ok
+test cache::tests::staged_outcomes_are_invisible_until_report_succeeds ... ok
+test tests::seeded_shuffle_is_reproducible_and_preserves_every_item ... ok
+test resources::tests::unified_and_v1_limits_have_explicit_units ... ok
+test tests::bounded_response_reader_rejects_oversize_and_stale_evidence ... ok
+test cache::tests::corrupt_and_future_instrumentation_is_a_cold_miss ... ok
+test cache::tests::undeclared_external_symlinks_disable_fingerprint ... ok
+test cache::tests::effective_container_memory_policy_invalidates_outcomes ... ok
+test cache::tests::project_fingerprint_tracks_settings_tool_operators_and_runtime ... ok
+
+test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.31s
+
+     Running unittests src/lib.rs (target/debug/deps/oximut_core-e17409603283bd1c)
+
+running 5 tests
+test tests::no_results_have_no_score ... ok
+test tests::infrastructure_is_never_a_kill_and_empty_pass_is_rejected ... ok
+test tests::selected_pass_must_match_inventory_and_coverage_must_be_requested ... ok
+test tests::selection_keeps_sequential_observers_and_requires_explicit_empty_hit ... ok
+test tests::uncertain_attribution_always_selects_full_suite ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running unittests src/lib.rs (target/debug/deps/oximut_instrument-65b5b9b1080a7039)
+
+running 10 tests
+test tests::excludes_computed_keys_in_erased_types_and_abstract_members ... ok
+test tests::excludes_types_ambient_enum_namespace_and_decorators ... ok
+test tests::identities_are_stable_and_source_identity_and_content_sensitive ... ok
+test tests::probes_refuse_shadowed_or_referenced_global_this ... ok
+test tests::rejects_parse_errors_without_generating_mutants ... ok
+test tests::unicode_locations_and_source_maps_use_utf16_columns ... ok
+test tests::produces_supported_operators_only_and_preserves_comments ... ok
+test tests::switching_falls_back_for_shadowed_process_and_large_expansion ... ok
+test tests::probes_preserve_nested_evaluation_coercion_short_circuit_await_and_yield ... ok
+test tests::switching_matches_static_mutants_with_nested_side_effects_await_and_yield ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 5.19s
+
+     Running unittests src/main.rs (target/debug/deps/oximut_oxc_smoke-917ef07179622e86)
+
+running 2 tests
+test tests::rejects_invalid_source_and_unsupported_extensions ... ok
+test tests::parses_typescript_and_tsx_using_the_path ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+   Doc-tests oximut_core
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests oximut_instrument
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

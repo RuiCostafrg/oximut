@@ -1,0 +1,15 @@
+     Locking 10 packages to latest Rust 1.96.0 compatible versions
+   Compiling typenum v1.20.1
+   Compiling libc v0.2.191
+   Compiling const-oid v0.10.2
+   Compiling cfg-if v1.0.5
+   Compiling hybrid-array v0.4.15
+   Compiling cpufeatures v0.3.1
+   Compiling block-buffer v0.12.1
+   Compiling crypto-common v0.2.2
+   Compiling digest v0.11.3
+   Compiling sha2 v0.11.1
+   Compiling oximut-sha-soft-check v0.0.0 (/tmp/oximut-sha-soft)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 8.75s
+     Running `/tmp/oximut-sha-soft/target/debug/oximut-sha-soft-check`
+Forced software SHA-256 backend: 3 streaming known-answer cases passed

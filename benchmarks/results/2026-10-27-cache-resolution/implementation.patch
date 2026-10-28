@@ -1,0 +1,1674 @@
+diff --git a/Cargo.lock b/Cargo.lock
+index 38feca3..9727713 100644
+--- a/Cargo.lock
++++ b/Cargo.lock
+@@ -22,11 +22,11 @@ checksum = "3ded4057c258ba199e2d26386d3af3780957ecaee6c4ef4041c6b4b8b97c0b06"
+ 
+ [[package]]
+ name = "block-buffer"
+-version = "0.10.4"
++version = "0.12.1"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "3078c7629b62d3f0439517fa394996acacc5cbc91c5a20d8c658e77abd503a71"
++checksum = "d2f6c7dbe95a6ed67ad9f18e57daf93a2f034c524b99fd2b76d18fdfeb6660aa"
+ dependencies = [
+- "generic-array",
++ "hybrid-array",
+ ]
+ 
+ [[package]]
+@@ -63,6 +63,12 @@ dependencies = [
+  "zmij",
+ ]
+ 
++[[package]]
++name = "const-oid"
++version = "0.10.2"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "a6ef517f0926dd24a1582492c791b6a4818a4d94e789a334894aa15b0d12f55c"
++
+ [[package]]
+ name = "cow-utils"
+ version = "0.1.3"
+@@ -71,30 +77,30 @@ checksum = "417bef24afe1460300965a25ff4a24b8b45ad011948302ec221e8a0a81eb2c79"
+ 
+ [[package]]
+ name = "cpufeatures"
+-version = "0.2.17"
++version = "0.3.1"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "59ed5838eebb26a2bb2e58f6d5b5316989ae9d08bab10e0e6d103e656d1b0280"
++checksum = "5ca28b0ae3115b884660db4118d803791fd6756b6e88f39c0f3f7859060d7566"
+ dependencies = [
+  "libc",
+ ]
+ 
+ [[package]]
+ name = "crypto-common"
+-version = "0.1.7"
++version = "0.2.2"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "78c8292055d1c1df0cce5d180393dc8cce0abec0a7102adb6c7b1eef6016d60a"
++checksum = "ce6e4c961d6cd6c9a86db418387425e8bdeaf05b3c8bc1411e6dca4c252f1453"
+ dependencies = [
+- "generic-array",
+- "typenum",
++ "hybrid-array",
+ ]
+ 
+ [[package]]
+ name = "digest"
+-version = "0.10.7"
++version = "0.11.3"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "9ed9a281f7bc9b7576e61468ba615a66a5c8cfdff42420a70aa82701a3b1e292"
++checksum = "f1dd6dbb5841937940781866fa1281a1ff7bd3bf827091440879f9994983d5c2"
+ dependencies = [
+  "block-buffer",
++ "const-oid",
+  "crypto-common",
+ ]
+ 
+@@ -131,16 +137,6 @@ version = "2.5.0"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "da7c62ceae207dd37ea5b845da6a0696c799f85e97da1ab5b7910be3c1c80223"
+ 
+-[[package]]
+-name = "generic-array"
+-version = "0.14.7"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "85649ca51fd72272d7821adaf274ad91c288277713d9c18820d8499a7ff69e9a"
+-dependencies = [
+- "typenum",
+- "version_check",
+-]
+-
+ [[package]]
+ name = "getrandom"
+ version = "0.4.3"
+@@ -161,6 +157,15 @@ dependencies = [
+  "allocator-api2",
+ ]
+ 
++[[package]]
++name = "hybrid-array"
++version = "0.4.15"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "27f864f10dfb56725ce5ce5472bc52252c8f93a4ab86327122cebf62c5f59a17"
++dependencies = [
++ "typenum",
++]
++
+ [[package]]
+ name = "icu_collections"
+ version = "2.4.0"
+@@ -721,9 +726,9 @@ dependencies = [
+ 
+ [[package]]
+ name = "sha2"
+-version = "0.10.9"
++version = "0.11.1"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "a7507d819769d01a365ab707794a4084392c824f54a7a6a7862f8c3d0892b283"
++checksum = "47d7069beb7d6ac7b9acd1039986e73443f24234f41074da099d6f994ac9ad19"
+ dependencies = [
+  "cfg-if",
+  "cpufeatures",
+@@ -867,12 +872,6 @@ version = "1.0.4"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "b6c140620e7ffbb22c2dee59cafe6084a59b5ffc27a8859a5f0d494b5d52b6be"
+ 
+-[[package]]
+-name = "version_check"
+-version = "0.9.5"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "0b928f33d975fc6ad9f86c8f283853ad26bdd5b10b7f1542aa2fa15e2289105a"
+-
+ [[package]]
+ name = "windows-link"
+ version = "0.2.1"
+diff --git a/Cargo.toml b/Cargo.toml
+index 3b71f83..0f9d3d5 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -18,6 +18,6 @@ oxc_ast_visit = "=0.152.0"
+ oxc_syntax = "=0.152.0"
+ serde = { version = "=1.0.229", features = ["derive"] }
+ serde_json = "=1.0.154"
+-sha2 = "=0.10.9"
++sha2 = "=0.11.1"
+ tempfile = "=3.27.0"
+ libc = "=0.2.191"
+diff --git a/benchmarks/m6.py b/benchmarks/m6.py
+index 4f742ce..cf30481 100644
+--- a/benchmarks/m6.py
++++ b/benchmarks/m6.py
+@@ -125,6 +125,7 @@ def artifact(tool, path, project, row):
+             source = (project / filename).read_text()
+             mutants.append((filename, source, mutant, mutant['outcome']))
+         extra = {'report_run_id': report.get('runId'), 'cache': report.get('cache'), 'resources': report.get('resources'),
++                 'cache_provenance_count': sum(m.get('provenance', {}).get('source') == 'cache' for m in raw),
+                  'baseline_test_counts': tests, 'diagnostics': report.get('diagnostics', []),
+                  'mutation_summary': report['summary'],
+                  'selection_mode_counts': dict(collections.Counter(
+@@ -296,6 +297,8 @@ def command(args, tool, fixture, project, report, mode, cache=False, force=False
+     if cache:
+         result.extend(['--cache', '--cache-inputs-complete', '--cache-env', 'OXIMUT_FIXTURE_MODE',
+                        '--cache-env', 'OXIMUT_BENCH_INPUT'])
++        if getattr(args, 'cache_policy', None) not in (None, 'legacy'):
++            result.extend(['--cache-policy', args.cache_policy])
+     else:
+         result.append('--no-cache')
+     if force:
+@@ -305,13 +308,24 @@ def command(args, tool, fixture, project, report, mode, cache=False, force=False
+     return result
+ 
+ 
+-def validate_oximut_cache(row, project, force):
++def validate_oximut_cache(row, project, force, policy=None):
+     cache = row.get('cache') or {}
+     hits = cache.get('outcomeHits', 0)
+     if force:
+         if hits:
+             raise ValueError('forced run reused outcome cache entries')
+         return
++    if (policy == 'auto' and row.get('role') == 'incremental'
++            and cache.get('reason') == 'outcome-cache-cost-exceeds-fresh-work'):
++        if (not row.get('cache_prime_validated') or cache.get('enabled') is not True
++                or cache.get('outcomesEnabled') is not False or hits != 0
++                or cache.get('fingerprintProfiles') != []
++                or row.get('cache_provenance_count') != 0):
++            raise ValueError('adaptive bypass lacks primed, entirely fresh execution evidence')
++        row['cache_policy_bypass_verified'] = True
++        # Fresh execution proves agreement, rather than a cache-invalidation policy.
++        row['cache_invalidation_verified'] = None
++        return
+     if cache.get('outcomesEnabled') is not True:
+         raise ValueError('outcome cache disabled; zero hits cannot prove invalidation')
+     if row.get('role') == 'prime':
+@@ -357,21 +371,29 @@ def measured_run(args, tool, fixture, project, run_dir, mode, env, *, cache=Fals
+                                   args.sample_interval, args.output_limit, process_env)
+     if execution_report != report and execution_report.is_file():
+         shutil.copy2(execution_report, report)
++    if tool == 'oximut' and cache and getattr(args, 'cache_policy', None) == 'auto':
++        # Preserve the advisory observations before the fixture is removed.
++        # This happens outside the measured command and contains no raw inputs.
++        history = {path.name: measurement.read_json(path)
++                   for path in sorted((project / '.oximut/cache/policy').glob('*.json'))
++                   if path.stat().st_size <= 8192}
++        write_json(run_dir / 'policy-history.json', history)
+     row.update(schema_version=SCHEMA_VERSION, tool=tool, fixture=fixture, mode=mode,
+-               report_file=str(report), seed=seed, **labels)
++               report_file=str(report), seed=seed, cache_policy=getattr(args, 'cache_policy', None), **labels)
+     config_inputs = {str(p.relative_to(project)): measurement.file_hash(p)
+                      for p in project.rglob('*') if p.is_file()
+                      and 'node_modules' not in p.relative_to(project).parts and '.oximut' not in p.relative_to(project).parts
+                      and not any(part.startswith('.stryker-tmp') for part in p.relative_to(project).parts)}
+     row['configuration_sha256'] = digest({'inputs': config_inputs, 'tool': tool, 'mode': mode,
+                                           'cache': cache, 'force': force, 'workers': args.workers,
++                                          'cache_policy': getattr(args, 'cache_policy', None),
+                                           'memory_budget_mib': args.memory_budget_mib,
+                                           'declared_environment': {k: env[k] for k in
+                                               ('OXIMUT_FIXTURE_MODE', 'OXIMUT_BENCH_INPUT')}})
+     try:
+         row.update(artifact(tool, report, project, row))
+         if tool == 'oximut' and cache:
+-            validate_oximut_cache(row, project, force)
++            validate_oximut_cache(row, project, force, getattr(args, 'cache_policy', None))
+         row['success'] = True  # Oximut exit 1 is a complete surviving-mutant result.
+     except (OSError, ValueError, TypeError, KeyError) as error:
+         row.update(success=False, validation_error=str(error))
+@@ -493,6 +515,8 @@ def main(argv=None):
+     parser.add_argument('--repetitions', type=int, default=5)
+     parser.add_argument('--warmups', type=int, default=1)
+     parser.add_argument('--workers', type=int, default=1)
++    parser.add_argument('--cache-policy', choices=['auto', 'always', 'legacy'], default='always',
++                        help='always measures actual reuse (default); auto measures adaptive decisions; legacy omits the flag for old binaries')
+     parser.add_argument('--memory-budget-mib', type=int)
+     parser.add_argument('--timeout', type=float, default=180)
+     parser.add_argument('--sample-interval', type=float, default=.02)
+@@ -533,7 +557,7 @@ def main(argv=None):
+                     'cross_tool_ratio': 'suppressed unless exact full measured mutation sets and classifications agree; explicitly configured ignored operators published separately as scope exclusions',
+                     'scope': 'checked-in deterministic fixtures only; no real projects, generated scaling, memory stress, cancellation or alpha release decision',
+                     'changed_inputs': 'deterministic behavior-preserving edits; helper imported by a test (unused export), snapshot inert',
+-                    'cache_evidence': 'Oximut requires enabled outcome cache, persisted prime and changed-input zero hits; Stryker unchanged requires explicit reuse, changed-input agreement does not prove invalidation under its narrower reuse policy',
++                    'cache_evidence': 'Oximut always/legacy requires enabled outcome cache, persisted prime and changed-input zero hits; explicit auto cost bypass requires primed entirely fresh execution and is not invalidation evidence; Stryker unchanged requires explicit reuse, changed-input agreement does not prove invalidation under its narrower reuse policy',
+                     'declared_environment': {'CI': 'true', 'NO_COLOR': '1', 'OXIMUT_FIXTURE_MODE': 'fixture', 'OXIMUT_BENCH_INPUT': 'original'}})
+     write_json(output / 'metadata.json', meta)
+     rows = []
+diff --git a/benchmarks/tests/test_m6.py b/benchmarks/tests/test_m6.py
+index 17f9bbe..b2f7251 100644
+--- a/benchmarks/tests/test_m6.py
++++ b/benchmarks/tests/test_m6.py
+@@ -213,6 +213,39 @@ class GateTests(unittest.TestCase):
+ 
+ 
+ class CacheEvidenceTests(unittest.TestCase):
++    def test_policy_arguments_distinguish_legacy_and_explicit_reuse(self):
++        args = SimpleNamespace(binary=Path('/binary'), workers=1, memory_budget_mib=None,
++                               cache_policy='legacy')
++        legacy = m6.command(args, 'oximut', 'm1', Path('/project'), Path('/report'),
++                            'selection', cache=True)
++        self.assertNotIn('--cache-policy', legacy)
++        args.cache_policy = 'always'
++        explicit = m6.command(args, 'oximut', 'm1', Path('/project'), Path('/report'),
++                              'selection', cache=True)
++        self.assertEqual(explicit[explicit.index('--cache-policy') + 1], 'always')
++
++    def test_adaptive_bypass_requires_explicit_policy_and_entirely_fresh_evidence(self):
++        with tempfile.TemporaryDirectory() as temporary:
++            cached = row(role='incremental', mutant_count=2, cache_prime_validated=True,
++                         cache_provenance_count=0, change={'kind': 'unchanged'},
++                         cache={'enabled': True, 'outcomesEnabled': False, 'outcomeHits': 0,
++                                'reason': 'outcome-cache-cost-exceeds-fresh-work',
++                                'fingerprintProfiles': []})
++            with self.assertRaises(ValueError):
++                m6.validate_oximut_cache(cached, Path(temporary), False, 'always')
++            m6.validate_oximut_cache(cached, Path(temporary), False, 'auto')
++            self.assertTrue(cached['cache_policy_bypass_verified'])
++            self.assertIsNone(cached['cache_invalidation_verified'])
++            for field, value in [('cache_prime_validated', False), ('cache_provenance_count', 1)]:
++                altered = dict(cached, **{field: value})
++                with self.assertRaises(ValueError):
++                    m6.validate_oximut_cache(altered, Path(temporary), False, 'auto')
++            for field, value in [('outcomeHits', 1), ('outcomesEnabled', True),
++                                 ('fingerprintProfiles', [{'phase': 'prepare'}])]:
++                altered = dict(cached, cache={**cached['cache'], field: value})
++                with self.assertRaises(ValueError):
++                    m6.validate_oximut_cache(altered, Path(temporary), False, 'auto')
++
+     def test_disabled_or_unprimed_cache_cannot_prove_invalidation(self):
+         with tempfile.TemporaryDirectory() as temporary:
+             project = Path(temporary)
+diff --git a/crates/cli/src/cache.rs b/crates/cli/src/cache.rs
+index 404bfb7..01bbe2a 100644
+--- a/crates/cli/src/cache.rs
++++ b/crates/cli/src/cache.rs
+@@ -1,5 +1,5 @@
+ //! Conservative whole-project cache. Output paths are reserved, never inputs.
+-use super::{Execution, Options};
++use super::{CachePolicy, Execution, Options};
+ use oximut_core::{
+     CacheReport, FingerprintProfile, Mutant, MutantResult, Mutation, Outcome, Tests,
+ };
+@@ -20,7 +20,19 @@ type Probe = Option<Result<Mutation, String>>;
+ type Instrumented = (oximut_instrument::Generated, Probe);
+ 
+ pub fn digest(bytes: &[u8]) -> String {
+-    format!("{:x}", Sha256::digest(bytes))
++    hex_digest(&Sha256::digest(bytes))
++}
++fn hex_digest(bytes: &[u8]) -> String {
++    const HEX: &[u8; 16] = b"0123456789abcdef";
++    bytes
++        .iter()
++        .flat_map(|byte| {
++            [
++                HEX[(byte >> 4) as usize] as char,
++                HEX[(byte & 15) as usize] as char,
++            ]
++        })
++        .collect()
+ }
+ fn part(hash: &mut Sha256, bytes: &[u8]) {
+     hash.update((bytes.len() as u64).to_le_bytes());
+@@ -43,7 +55,7 @@ fn file_hash_counted(path: &Path, profile: &mut FingerprintProfile) -> Result<St
+         hash.update(&buffer[..count]);
+     }
+     profile.files_hashed += 1;
+-    Ok(format!("{:x}", hash.finalize()))
++    Ok(hex_digest(&hash.finalize()))
+ }
+ 
+ pub fn atomic<T: Serialize>(path: &Path, value: &T) -> Result<(), String> {
+@@ -117,7 +129,11 @@ impl Outcomes {
+         }
+     }
+     pub fn validate(&self, mutants: &[Mutant], tests: &Tests) -> bool {
+-        let ids: BTreeSet<_> = self.results.iter().map(|result| &result.id).collect();
++        let indexed: std::collections::BTreeMap<_, _> = self
++            .results
++            .iter()
++            .map(|result| (result.id.as_str(), result))
++            .collect();
+         self.checksum
+             == digest(
+                 &serde_json::to_vec(&(
+@@ -131,33 +147,30 @@ impl Outcomes {
+             && self.schema_version == SCHEMA
+             && self.complete
+             && self.results.len() == mutants.len()
+-            && ids.len() == mutants.len()
++            && indexed.len() == mutants.len()
+             && same(&self.baseline_tests, tests)
+             && mutants.iter().all(|mutant| {
+-                self.results
+-                    .iter()
+-                    .find(|r| r.id == mutant.id)
+-                    .is_some_and(|r| {
+-                        r.file == mutant.file
+-                            && r.operator == mutant.operator
+-                            && r.original == mutant.original
+-                            && r.replacement == mutant.replacement
+-                            && same(&r.location, &mutant.location)
+-                            && match r.outcome {
+-                                Outcome::Killed => r.tests.failed > 0,
+-                                Outcome::Survived => {
+-                                    r.tests.passed > 0 && r.tests.failed == 0 && r.errors.is_empty()
+-                                }
+-                                Outcome::NoCoverage => {
+-                                    r.tests.passed == 0
+-                                        && r.tests.failed == 0
+-                                        && r.tests.skipped == 0
+-                                        && r.errors.is_empty()
+-                                        && r.selection.as_ref().is_some_and(|s| s.mode == "none")
+-                                }
+-                                _ => false,
++                indexed.get(mutant.id.as_str()).is_some_and(|r| {
++                    r.file == mutant.file
++                        && r.operator == mutant.operator
++                        && r.original == mutant.original
++                        && r.replacement == mutant.replacement
++                        && same(&r.location, &mutant.location)
++                        && match r.outcome {
++                            Outcome::Killed => r.tests.failed > 0,
++                            Outcome::Survived => {
++                                r.tests.passed > 0 && r.tests.failed == 0 && r.errors.is_empty()
++                            }
++                            Outcome::NoCoverage => {
++                                r.tests.passed == 0
++                                    && r.tests.failed == 0
++                                    && r.tests.skipped == 0
++                                    && r.errors.is_empty()
++                                    && r.selection.as_ref().is_some_and(|s| s.mode == "none")
+                             }
+-                    })
++                            _ => false,
++                        }
++                })
+             })
+     }
+ }
+@@ -165,10 +178,38 @@ pub fn same<T: Serialize>(a: &T, b: &T) -> bool {
+     serde_json::to_vec(a).ok() == serde_json::to_vec(b).ok()
+ }
+ 
++#[derive(Debug, PartialEq, Eq)]
++pub enum InputCheck {
++    Unchanged,
++    Changed,
++    Unreadable(String),
++}
++
++// Advisory history only selects fresh execution. It never authorizes reuse.
++#[derive(Deserialize, Serialize)]
++#[serde(rename_all = "camelCase", deny_unknown_fields)]
++struct PolicyHistory {
++    schema_version: u32,
++    key: String,
++    fingerprint_cost_ms: u64,
++    fresh_work_ms: u64,
++    successful_bypasses: u8,
++    bypass_outcomes: bool,
++}
++
++struct PolicyState {
++    path: PathBuf,
++    key: String,
++    previous: Option<PolicyHistory>,
++    bypass: bool,
++}
++
+ pub struct Cache {
+     pub report: CacheReport,
+     directory: PathBuf,
+     tool: String,
++    source_keys: Vec<String>,
++    policy: Option<PolicyState>,
+ }
+ impl Cache {
+     pub fn new(options: &Options) -> Self {
+@@ -200,6 +241,8 @@ impl Cache {
+         let mut cache = Self {
+             directory: options.root.join(".oximut/cache"),
+             tool: tool.clone().unwrap_or_default(),
++            source_keys: Vec::new(),
++            policy: None,
+             report: CacheReport {
+                 enabled,
+                 runner_hash_ms,
+@@ -248,6 +291,7 @@ impl Cache {
+             ))
+             .map_err(|e| e.to_string())?,
+         );
++        self.source_keys.push(key.clone());
+         let location = self
+             .directory
+             .join("instrumentation")
+@@ -293,12 +337,40 @@ impl Cache {
+         Ok((entry.generated, entry.probe))
+     }
+     pub fn prepare(&mut self, options: &Options) -> Option<Outcomes> {
++        self.prepare_attempt(options, true)
++    }
++    pub fn prepare_attempt(&mut self, options: &Options, reuse: bool) -> Option<Outcomes> {
+         if !self.report.outcomes_enabled {
+             return None;
+         }
++        let adaptive = reuse && !options.baseline_only && options.cache_policy == CachePolicy::Auto;
++        if adaptive && self.prepare_policy(options) {
++            self.report.outcomes_enabled = false;
++            self.report.reason = "outcome-cache-cost-exceeds-fresh-work".into();
++            return None;
++        }
++        // New/corrupt history and periodic probes measure actual fresh jobs,
++        // even when an otherwise valid outcome entry already exists.
++        let reuse = reuse
++            && (!adaptive
++                || self.policy.as_ref().is_some_and(|policy| {
++                    policy
++                        .previous
++                        .as_ref()
++                        .is_some_and(|history| !history.bypass_outcomes)
++                }));
+         match self.fingerprint(options, "prepare") {
+             Ok(key) => {
+                 self.report.fingerprint = Some(key.clone());
++                if !reuse {
++                    self.report.reason = if adaptive {
++                        "outcome-cache-cost-probe"
++                    } else {
++                        "fresh-retry-after-input-change"
++                    }
++                    .into();
++                    return None;
++                }
+                 match read::<Outcomes>(&self.directory.join("outcomes").join(format!("{key}.json")))
+                 {
+                     Ok(entry)
+@@ -326,16 +398,133 @@ impl Cache {
+             }
+         }
+     }
++    fn prepare_policy(&mut self, options: &Options) -> bool {
++        let mut environment_hash = Sha256::new();
++        hash_environment(
++            &mut environment_hash,
++            &env::vars_os().collect(),
++            &options.cache_env,
++        );
++        let Ok(bytes) = serde_json::to_vec(&(
++            1_u32,
++            &self.tool,
++            options,
++            &self.source_keys,
++            hex_digest(&environment_hash.finalize()),
++        )) else {
++            return false;
++        };
++        let key = digest(&bytes);
++        let path = self.directory.join("policy").join(format!("{key}.json"));
++        let previous = fs::File::open(&path)
++            .ok()
++            .and_then(|file| {
++                let mut bytes = Vec::new();
++                file.take(8193).read_to_end(&mut bytes).ok()?;
++                (bytes.len() <= 8192)
++                    .then(|| serde_json::from_slice::<PolicyHistory>(&bytes).ok())
++                    .flatten()
++            })
++            .filter(|history| {
++                history.schema_version == 1
++                    && history.key == key
++                    && history.successful_bypasses <= 8
++            });
++        let bypass = previous
++            .as_ref()
++            .is_some_and(|history| history.bypass_outcomes && history.successful_bypasses < 8);
++        self.policy = Some(PolicyState {
++            path,
++            key,
++            previous,
++            bypass,
++        });
++        bypass
++    }
++
++    pub fn record_policy(&self, complete: bool, unchanged: bool, fresh_work_ms: u64) {
++        let Some(policy) = &self.policy else {
++            return;
++        };
++        // Reuse cannot measure the mutation work it avoided. Failed runs and
++        // fingerprint failures cannot supply calibration or bypass counts.
++        if !complete || !unchanged || self.report.outcome_hits != 0 {
++            return;
++        }
++        let history = if policy.bypass {
++            let Some(previous) = &policy.previous else {
++                return;
++            };
++            PolicyHistory {
++                schema_version: 1,
++                key: policy.key.clone(),
++                fingerprint_cost_ms: previous.fingerprint_cost_ms,
++                fresh_work_ms,
++                successful_bypasses: previous.successful_bypasses.saturating_add(1),
++                // Re-enable only once fresh work costs at least the full scan
++                // estimate, giving the 125% disable threshold a hysteresis band.
++                bypass_outcomes: previous.fingerprint_cost_ms > fresh_work_ms,
++            }
++        } else {
++            if !self.report.outcomes_enabled
++                || self.report.fingerprint.is_none()
++                || self.report.fingerprint_profiles.is_empty()
++                || self
++                    .report
++                    .fingerprint_profiles
++                    .iter()
++                    .any(|profile| !profile.completed)
++            {
++                return;
++            }
++            let fingerprint_cost_ms = self
++                .report
++                .fingerprint_profiles
++                .iter()
++                .fold(0_u64, |sum, profile| sum.saturating_add(profile.elapsed_ms));
++            let was_bypassed = policy
++                .previous
++                .as_ref()
++                .is_some_and(|history| history.bypass_outcomes);
++            let bypass_outcomes = if was_bypassed {
++                fingerprint_cost_ms > fresh_work_ms
++            } else {
++                u128::from(fingerprint_cost_ms) * 4 >= u128::from(fresh_work_ms) * 5
++            };
++            PolicyHistory {
++                schema_version: 1,
++                key: policy.key.clone(),
++                fingerprint_cost_ms,
++                fresh_work_ms,
++                successful_bypasses: 0,
++                bypass_outcomes,
++            }
++        };
++        // This separate transaction follows successful report emission. A failed
++        // advisory write merely causes a later probe; it cannot affect reuse.
++        let _ = atomic(&policy.path, &history);
++    }
++
+     pub fn inputs_unchanged(&mut self, options: &Options, phase: &str) -> bool {
++        self.check_inputs(options, phase) == InputCheck::Unchanged
++    }
++    pub fn check_inputs(&mut self, options: &Options, phase: &str) -> InputCheck {
+         let Some(key) = self.report.fingerprint.clone() else {
+-            return true;
++            return InputCheck::Unchanged;
+         };
+-        if self.fingerprint(options, phase) == Ok(key) {
+-            true
+-        } else {
++        let check = match self.fingerprint(options, phase) {
++            Ok(current) if current == key => InputCheck::Unchanged,
++            Ok(_) => InputCheck::Changed,
++            Err(error) => {
++                self.report.outcomes_enabled = false;
++                self.report.reason = format!("unsafe-or-incomplete-fingerprint: {error}");
++                InputCheck::Unreadable(error)
++            }
++        };
++        if check != InputCheck::Unchanged {
+             self.report.persistence = "inputs-changed-during-run-not-persisted".into();
+-            false
+         }
++        check
+     }
+     fn fingerprint(&mut self, options: &Options, phase: &str) -> Result<String, String> {
+         let started = Instant::now();
+@@ -777,7 +966,7 @@ fn fingerprint_inputs(
+     for path in paths {
+         tree.visit(&path)?;
+     }
+-    Ok(format!("{:x}", tree.hash.finalize()))
++    Ok(hex_digest(&tree.hash.finalize()))
+ }
+ 
+ fn hash_environment(
+@@ -825,6 +1014,7 @@ mod tests {
+             test_selection: false,
+             cache: true,
+             cache_inputs_complete: true,
++            cache_policy: CachePolicy::Always,
+             no_cache: false,
+             cache_inputs: vec![],
+             cache_env: vec![],
+@@ -837,6 +1027,8 @@ mod tests {
+         Cache {
+             directory: root.join(".oximut/cache"),
+             tool: "runner-and-operators-version-a".into(),
++            source_keys: Vec::new(),
++            policy: None,
+             report: CacheReport {
+                 enabled: true,
+                 outcomes_enabled: true,
+@@ -918,6 +1110,30 @@ mod tests {
+         }
+     }
+     #[test]
++    fn file_sha256_matches_known_answers_across_read_boundaries() {
++        let root = tempfile::tempdir().unwrap();
++        let path = root.path().join("input");
++        // FIPS 180-4 SHA-256 examples include a million ASCII 'a' bytes.
++        // This crosses both compression blocks and the file reader's chunks.
++        for (bytes, expected) in [
++            (
++                Vec::new(),
++                "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
++            ),
++            (
++                b"abc".to_vec(),
++                "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
++            ),
++            (
++                vec![b'a'; 1_000_000],
++                "cdc76e5c9914fb9281a1c7e284d73e67f1809a48a497200e046d39ccc7112cd0",
++            ),
++        ] {
++            fs::write(&path, &bytes).unwrap();
++            assert_eq!(file_hash(&path).unwrap(), expected);
++        }
++    }
++    #[test]
+     fn profiling_counts_actual_reads_without_changing_file_digest() {
+         let root = tempfile::tempdir().unwrap();
+         let path = root.path().join("input");
+@@ -1134,6 +1350,15 @@ mod tests {
+             vec![result.clone()],
+         );
+         assert!(entry.validate(&generated.mutants, &tests));
++        let mut other_mutant = mutant.clone();
++        other_mutant.id.push_str("-other");
++        let duplicated = Outcomes::new(
++            "key".into(),
++            "run".into(),
++            tests.clone(),
++            vec![result.clone(), result.clone()],
++        );
++        assert!(!duplicated.validate(&[mutant.clone(), other_mutant], &tests));
+         entry.results[0].outcome = Outcome::Survived;
+         assert!(!entry.validate(&generated.mutants, &tests));
+         let mut invalid = result.clone();
+diff --git a/crates/cli/src/main.rs b/crates/cli/src/main.rs
+index 1a46508..a499c0c 100644
+--- a/crates/cli/src/main.rs
++++ b/crates/cli/src/main.rs
+@@ -16,7 +16,7 @@ use std::{
+     time::{Duration, Instant, SystemTime, UNIX_EPOCH},
+ };
+ 
+-const HELP: &str = "Usage: oximut [--root DIR] [--config FILE] --source FILE [--source FILE ...]\n  --report FILE       JSON report (- for stdout)\n  --timeout-ms N      Per-job deadline, default 30000 ms\n  --workers N         Maximum simultaneous mutation jobs (default 1; bounded by CPU limits)\n  --memory-budget-mib N Aggregate sampled RSS budget in MiB (1 MiB = 1048576 bytes); default host/container limit\n  --memory-reserve-mib N Reserved admission headroom in MiB (default 64)\n  --execution MODE   fresh (default) or persistent controller with fresh test forks\n  --test-selection    Collect baseline hits and conservatively select hit test files\n  --order-seed N     Deterministically shuffle mutant execution order\n  --adapter FILE      Node adapter entry point override\n  --cache             Cache instrumentation; outcomes require --cache-inputs-complete\n  --cache-inputs-complete Assert all nondeterministic/external inputs are declared\n  --cache-input FILE  Additional input file/directory (repeatable)\n  --cache-env NAME    Additional environment input (repeatable; values stay private)\n  --no-cache, --force Bypass all cache reads and writes\n  --list              Generate mutants as JSON without executing tests\n  --baseline-only     Run original sources without mutants\nExit: 0 complete/no survivors; 1 survivors/no coverage; 2 incomplete/error.\nScore: killed/(killed+survived+no-coverage)*100; empty denominator => null.\nInvalid/timeout/infrastructure-error/resource-exhausted/skipped are excluded and make a run incomplete.";
++const HELP: &str = "Usage: oximut [--root DIR] [--config FILE] --source FILE [--source FILE ...]\n  --report FILE       JSON report (- for stdout)\n  --timeout-ms N      Per-job deadline, default 30000 ms\n  --workers N         Maximum simultaneous mutation jobs (default 1; bounded by CPU limits)\n  --memory-budget-mib N Aggregate sampled RSS budget in MiB (1 MiB = 1048576 bytes); default host/container limit\n  --memory-reserve-mib N Reserved admission headroom in MiB (default 64)\n  --execution MODE   fresh (default) or persistent controller with fresh test forks\n  --test-selection    Collect baseline hits and conservatively select hit test files\n  --order-seed N     Deterministically shuffle mutant execution order\n  --adapter FILE      Node adapter entry point override\n  --cache             Cache instrumentation; outcomes require --cache-inputs-complete\n  --cache-policy MODE  auto (default) learns whether outcome caching saves work; always validates/reuses eligible outcomes\n  --cache-inputs-complete Assert all nondeterministic/external inputs are declared\n  --cache-input FILE  Additional input file/directory (repeatable)\n  --cache-env NAME    Additional environment input (repeatable; values stay private)\n  --no-cache, --force Bypass all cache reads and writes\n  --list              Generate mutants as JSON without executing tests\n  --baseline-only     Run original sources without mutants\nExit: 0 complete/no survivors; 1 survivors/no coverage; 2 incomplete/error.\nScore: killed/(killed+survived+no-coverage)*100; empty denominator => null.\nInvalid/timeout/infrastructure-error/resource-exhausted/skipped are excluded and make a run incomplete.";
+ 
+ #[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+ enum Execution {
+@@ -24,6 +24,14 @@ enum Execution {
+     Persistent,
+ }
+ 
++#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
++#[serde(rename_all = "lowercase")]
++enum CachePolicy {
++    #[default]
++    Auto,
++    Always,
++}
++
+ #[derive(serde::Serialize, serde::Deserialize)]
+ struct Options {
+     root: PathBuf,
+@@ -39,6 +47,8 @@ struct Options {
+     test_selection: bool,
+     cache: bool,
+     cache_inputs_complete: bool,
++    #[serde(default)]
++    cache_policy: CachePolicy,
+     no_cache: bool,
+     cache_inputs: Vec<PathBuf>,
+     cache_env: Vec<String>,
+@@ -64,6 +74,7 @@ fn options() -> Result<Option<Options>, String> {
+     let mut test_selection = false;
+     let mut cache = false;
+     let mut cache_inputs_complete = false;
++    let mut cache_policy = CachePolicy::Auto;
+     let mut no_cache = false;
+     let mut cache_inputs = vec![];
+     let mut cache_env = vec![];
+@@ -90,6 +101,7 @@ fn options() -> Result<Option<Options>, String> {
+             | "--adapter"
+             | "--execution"
+             | "--order-seed"
++            | "--cache-policy"
+             | "--cache-input"
+             | "--cache-env"
+             | "--workers"
+@@ -99,6 +111,13 @@ fn options() -> Result<Option<Options>, String> {
+                     .next()
+                     .ok_or_else(|| format!("missing value for {arg}"))?;
+                 match arg.as_str() {
++                    "--cache-policy" => {
++                        cache_policy = match value.as_str() {
++                            "auto" => CachePolicy::Auto,
++                            "always" => CachePolicy::Always,
++                            _ => return Err("--cache-policy must be auto or always".into()),
++                        };
++                    }
+                     "--workers" => {
+                         workers = value.parse().map_err(|_| "--workers requires an integer")?
+                     }
+@@ -239,6 +258,7 @@ fn options() -> Result<Option<Options>, String> {
+         test_selection,
+         cache,
+         cache_inputs_complete,
++        cache_policy,
+         no_cache,
+         cache_inputs,
+         cache_env,
+@@ -671,10 +691,71 @@ fn validate_coverage(
+     Ok(())
+ }
+ 
++fn selection_for(baseline: &Response, mutant: &Mutant) -> Option<oximut_core::Selection> {
++    baseline.coverage.as_ref().map(|coverage| {
++        let mut selected = coverage.select(&mutant.id);
++        let total = baseline.tests.passed + baseline.tests.failed + baseline.tests.skipped;
++        selected.total_tests = total;
++        if selected.mode == "full" {
++            selected.selected_tests = total;
++            selected.expected_skipped = baseline.tests.skipped;
++        }
++        selected
++    })
++}
++
++fn reusable_result<'a>(
++    indexed: &BTreeMap<&str, &'a MutantResult>,
++    mutant: &Mutant,
++    selection: &Option<oximut_core::Selection>,
++    baseline_ok: bool,
++) -> Option<&'a MutantResult> {
++    let previous = indexed.get(mutant.id.as_str()).copied()?;
++    let no_coverage = baseline_ok
++        && selection
++            .as_ref()
++            .is_some_and(|selected| selected.mode == "none");
++    (cache::same(&previous.selection, selection)
++        && (previous.outcome != Outcome::NoCoverage || no_coverage))
++        .then_some(previous)
++}
++
++struct RetryEvidence {
++    diagnostics: Vec<String>,
++    resources: serde_json::Value,
++    profiles: Vec<oximut_core::FingerprintProfile>,
++    runner_hash_ms: u64,
++}
++
++enum Attempt {
++    Complete(u8),
++    Retry(RetryEvidence),
++}
++
+ fn run(options: Options) -> Result<u8, String> {
+-    let mut cache = cache::Cache::new(&options);
++    match run_attempt(&options, None)? {
++        Attempt::Complete(code) => Ok(code),
++        Attempt::Retry(evidence) => match run_attempt(&options, Some(evidence))? {
++            Attempt::Complete(code) => Ok(code),
++            Attempt::Retry(_) => unreachable!("the fresh retry cannot request another attempt"),
++        },
++    }
++}
++
++fn run_attempt(options: &Options, previous: Option<RetryEvidence>) -> Result<Attempt, String> {
++    let mut cache = cache::Cache::new(options);
+     let mut mutants: Vec<Mutant> = vec![];
+-    let mut diagnostics = vec![];
++    let retry = previous.is_some();
++    let (mut diagnostics, previous_resources, previous_profiles, previous_runner_hash_ms) =
++        match previous {
++            Some(evidence) => (
++                evidence.diagnostics,
++                Some(evidence.resources),
++                evidence.profiles,
++                evidence.runner_hash_ms,
++            ),
++            None => (Vec::new(), None, Vec::new(), 0),
++        };
+     let mut disabled_checks = vec![];
+     let mut probe_transforms = vec![];
+     let mut probe_reasons = vec![];
+@@ -684,7 +765,7 @@ fn run(options: Options) -> Result<u8, String> {
+             .strip_prefix(&options.root)
+             .map_err(|e| e.to_string())?
+             .to_string_lossy();
+-        let (generated, probe) = cache.artifact(&options, &identity, path, &source)?;
++        let (generated, probe) = cache.artifact(options, &identity, path, &source)?;
+         if let Some(probe) = probe {
+             match probe {
+                 Ok(probe) => probe_transforms.push(probe),
+@@ -728,10 +809,14 @@ fn run(options: Options) -> Result<u8, String> {
+             )
+             .map_err(|e| e.to_string())?
+         );
+-        return Ok(0);
++        return Ok(Attempt::Complete(0));
+     }
+     enable_subreaper()?;
+-    let mut cached = cache.prepare(&options);
++    let mut cached = if retry {
++        cache.prepare_attempt(options, false)
++    } else {
++        cache.prepare(options)
++    };
+     let run_id = format!(
+         "{}-{}",
+         std::process::id(),
+@@ -753,7 +838,7 @@ fn run(options: Options) -> Result<u8, String> {
+         collect_coverage: None,
+         selection: None,
+     };
+-    let mut scheduler = scheduler::Scheduler::new(&options)?;
++    let mut scheduler = scheduler::Scheduler::new(options)?;
+     let mut baseline = scheduler.execute(&request);
+     if baseline.outcome == TestOutcome::Passed {
+         for mutation in disabled_checks {
+@@ -824,15 +909,43 @@ fn run(options: Options) -> Result<u8, String> {
+     let baseline_ok = baseline.outcome == TestOutcome::Passed;
+     let mut results = vec![];
+     let mut jobs = vec![];
+-    if cached.is_some() && !cache.inputs_unchanged(&options, "post-baseline") {
++    let cached_valid = baseline_ok
++        && cached
++            .as_ref()
++            .is_some_and(|entry| entry.validate(&mutants, &baseline.tests));
++    let deferred_check = !retry
++        && cached_valid
++        && !options.baseline_only
++        && !mutants.is_empty()
++        && cached.as_ref().is_some_and(|entry| {
++            let indexed: BTreeMap<_, _> = entry
++                .results
++                .iter()
++                .map(|result| (result.id.as_str(), result))
++                .collect();
++            mutants.iter().all(|mutant| {
++                reusable_result(
++                    &indexed,
++                    mutant,
++                    &selection_for(&baseline, mutant),
++                    baseline_ok,
++                )
++                .is_some()
++            })
++        });
++    let post_baseline_unchanged = if !deferred_check && (cached.is_some() || retry) {
++        cache.inputs_unchanged(options, "post-baseline")
++    } else {
++        true
++    };
++    if !post_baseline_unchanged {
+         cached = None;
+-        cache.report.reason = "inputs-changed-during-baseline".into();
++        if cache.report.outcomes_enabled {
++            cache.report.reason = "inputs-changed-during-baseline".into();
++        }
+     }
+     if baseline_ok {
+-        if cached
+-            .as_ref()
+-            .is_some_and(|entry| !entry.validate(&mutants, &baseline.tests))
+-        {
++        if cached.is_some() && !cached_valid {
+             cached = None;
+             cache.report.reason = "cached-outcomes-failed-baseline-or-inventory-validation".into();
+         }
+@@ -842,26 +955,22 @@ fn run(options: Options) -> Result<u8, String> {
+             cache.report.reason = "baseline-did-not-pass".into();
+         }
+     }
++    let indexed: BTreeMap<_, _> = cached.as_ref().map_or_else(BTreeMap::new, |entry| {
++        entry
++            .results
++            .iter()
++            .map(|result| (result.id.as_str(), result))
++            .collect()
++    });
+     if !options.baseline_only {
+         for (index, mutant) in mutants.into_iter().enumerate() {
+-            let selection = baseline.coverage.as_ref().map(|coverage| {
+-                let mut selected = coverage.select(&mutant.id);
+-                let total = baseline.tests.passed + baseline.tests.failed + baseline.tests.skipped;
+-                selected.total_tests = total;
+-                if selected.mode == "full" {
+-                    selected.selected_tests = total;
+-                    selected.expected_skipped = baseline.tests.skipped;
+-                }
+-                selected
+-            });
++            let selection = selection_for(&baseline, &mutant);
+             let no_coverage = baseline_ok
+                 && selection
+                     .as_ref()
+                     .is_some_and(|selected| selected.mode == "none");
+             if let Some(entry) = &cached
+-                && let Some(previous) = entry.results.iter().find(|result| result.id == mutant.id)
+-                && cache::same(&previous.selection, &selection)
+-                && (previous.outcome != Outcome::NoCoverage || no_coverage)
++                && let Some(previous) = reusable_result(&indexed, &mutant, &selection, baseline_ok)
+             {
+                 let mut reused = previous.clone();
+                 reused.provenance = Provenance {
+@@ -941,10 +1050,85 @@ fn run(options: Options) -> Result<u8, String> {
+             });
+         }
+     }
++    let fresh_work_started = Instant::now();
+     scheduler.run_jobs(jobs, &mut results);
++    let fresh_work_ms = fresh_work_started
++        .elapsed()
++        .as_millis()
++        .min(u64::MAX as u128) as u64;
+     let cleanup_ok = scheduler.finish(&mut diagnostics);
+-    let resources = scheduler.report();
+-    let inputs_unchanged = cache.inputs_unchanged(&options, "pre-publication");
++    let mut resources = scheduler.report();
++    let input_check = cache.check_inputs(
++        options,
++        if deferred_check {
++            "post-baseline-and-pre-publication"
++        } else {
++            "pre-publication"
++        },
++    );
++    if deferred_check
++        && input_check == cache::InputCheck::Changed
++        && cleanup_ok
++        && baseline_ok
++        && resources
++            .get("exhaustion")
++            .is_some_and(serde_json::Value::is_null)
++        && results
++            .iter()
++            .all(|result| result.provenance.source == "cache")
++    {
++        diagnostics.push("inputs changed during baseline or teardown; retrying once with fresh mutation execution".into());
++        diagnostics.push(format!("discarded clean attempt {run_id}; resources={resources}; final baseline and outcomes come from the fresh retry"));
++        return Ok(Attempt::Retry(RetryEvidence {
++            diagnostics,
++            resources,
++            profiles: cache.report.fingerprint_profiles,
++            runner_hash_ms: cache.report.runner_hash_ms,
++        }));
++    }
++    let inputs_unchanged = input_check == cache::InputCheck::Unchanged
++        && (!retry || (post_baseline_unchanged && cache.report.fingerprint.is_some()));
++    if retry && !inputs_unchanged {
++        diagnostics.push(
++            "fresh retry input validation failed; run incomplete and outcomes not persisted".into(),
++        );
++    }
++    if let cache::InputCheck::Unreadable(error) = &input_check {
++        diagnostics.push(format!("cache input validation failed: {error}"));
++    }
++    if let Some(previous_resources) = previous_resources {
++        // Peak observations cover both attempts; accounting counters are additive.
++        // Configuration and exhaustion describe the final attempt; the discarded
++        // attempt's complete resource report remains in diagnostics above.
++        for field in [
++            "peakAggregateRssBytes",
++            "measuredWorkerPeakBytes",
++            "admissionWorkerCostBytes",
++            "maxActiveJobs",
++        ] {
++            if let (Some(old), Some(current)) = (
++                previous_resources[field].as_u64(),
++                resources[field].as_u64(),
++            ) {
++                resources[field] = old.max(current).into();
++            }
++        }
++        for field in ["samples", "admissionPauses", "recycledIdleWorkers"] {
++            if let (Some(old), Some(current)) = (
++                previous_resources[field].as_u64(),
++                resources[field].as_u64(),
++            ) {
++                resources[field] = old.saturating_add(current).into();
++            }
++        }
++        cache.report.runner_hash_ms = cache
++            .report
++            .runner_hash_ms
++            .saturating_add(previous_runner_hash_ms);
++        let mut profiles = previous_profiles;
++        profiles.append(&mut cache.report.fingerprint_profiles);
++        cache.report.fingerprint_profiles = profiles;
++    }
+     if !inputs_unchanged {
+         for result in &mut results {
+             if result.provenance.source == "cache" {
+@@ -956,10 +1140,10 @@ fn run(options: Options) -> Result<u8, String> {
+         }
+     }
+     let mut summary = Summary::from_results(&results);
+-    summary.complete &= baseline_ok && cleanup_ok;
++    summary.complete &= baseline_ok && cleanup_ok && (!retry || inputs_unchanged);
+     let code = summary.exit_code();
+     let publication = cache.stage(
+-        &options,
++        options,
+         summary.complete,
+         inputs_unchanged,
+         &run_id,
+@@ -999,6 +1183,7 @@ fn run(options: Options) -> Result<u8, String> {
+                 .map_err(|e| format!("report: {e}"))?;
+         }
+     }
++    cache.record_policy(report.summary.complete, inputs_unchanged, fresh_work_ms);
+     if let Some(publication) = publication {
+         report.cache.persistence = match publication.commit() {
+             Ok(()) => "complete-run-persisted".into(),
+@@ -1074,7 +1259,7 @@ fn run(options: Options) -> Result<u8, String> {
+             println!("Diagnostic: {diagnostic}");
+         }
+     }
+-    Ok(code)
++    Ok(Attempt::Complete(code))
+ }
+ 
+ fn main() -> ExitCode {
+diff --git a/crates/cli/src/resources.rs b/crates/cli/src/resources.rs
+index 02fa9e1..f613630 100644
+--- a/crates/cli/src/resources.rs
++++ b/crates/cli/src/resources.rs
+@@ -208,6 +208,43 @@ fn meminfo(key: &str) -> Option<u64> {
+         })
+ }
+ fn rss(pid: u32) -> Result<Option<u64>, String> {
++    // stat's RSS counter can lag resident allocations by tens of MiB. A rollup
++    // walks the mappings and gives admission a current resident working set.
++    // Older/restricted kernels retain the documented approximate fallback.
++    match fs::read_to_string(format!("/proc/{pid}/smaps_rollup")) {
++        Ok(rollup) => {
++            return match rollup_rss(&rollup) {
++                Ok(bytes) => Ok(Some(bytes)),
++                Err(error) => {
++                    // A task can lose its memory map between open and read.
++                    // An empty rollup is safe only after confirming its exit.
++                    let stat = fs::read_to_string(format!("/proc/{pid}/stat"));
++                    let exited = match &stat {
++                        Ok(stat) => stat
++                            .rsplit_once(')')
++                            .and_then(|(_, fields)| fields.split_whitespace().next())
++                            .is_some_and(|state| matches!(state, "Z" | "X" | "x")),
++                        Err(error) => {
++                            error.kind() == std::io::ErrorKind::NotFound
++                                || error.raw_os_error() == Some(libc::ESRCH)
++                        }
++                    };
++                    if exited {
++                        Ok(None)
++                    } else {
++                        Err(format!("RSS rollup invalid for PID {pid}: {error}"))
++                    }
++                }
++            };
++        }
++        Err(error) if error.raw_os_error() == Some(libc::ESRCH) => return Ok(None),
++        Err(error)
++            if matches!(
++                error.kind(),
++                std::io::ErrorKind::NotFound | std::io::ErrorKind::PermissionDenied
++            ) => {}
++        Err(error) => return Err(format!("RSS rollup unavailable for PID {pid}: {error}")),
++    }
+     let stat = match fs::read_to_string(format!("/proc/{pid}/stat")) {
+         Ok(stat) => stat,
+         Err(error)
+@@ -229,6 +266,22 @@ fn rss(pid: u32) -> Result<Option<u64>, String> {
+     }
+     Ok(Some(pages.saturating_mul(page_size as u64)))
+ }
++fn rollup_rss(rollup: &str) -> Result<u64, String> {
++    let mut fields = rollup
++        .lines()
++        .find_map(|line| line.strip_prefix("Rss:"))
++        .ok_or("RSS rollup is missing Rss")?
++        .split_whitespace();
++    let kib: u64 = fields
++        .next()
++        .and_then(|value| value.parse().ok())
++        .ok_or("RSS rollup has invalid Rss")?;
++    if fields.next() != Some("kB") || fields.next().is_some() {
++        return Err("RSS rollup has invalid Rss units".into());
++    }
++    kib.checked_mul(1024)
++        .ok_or_else(|| "RSS rollup Rss overflow".into())
++}
+ fn tree_rss(pid: u32, tree: &BTreeMap<u32, u64>) -> Result<u64, String> {
+     let mut total = rss(pid)?.unwrap_or(0);
+     for (&pid, &start) in tree {
+@@ -290,7 +343,7 @@ impl Budget {
+             budget_bytes: budget,
+             reserve_bytes: reserve,
+             cgroups,
+-            measurement: "Linux /proc RSS sum: main CLI and all worker/adapter/controller/test descendants; shared pages counted per process",
++            measurement: "Linux /proc smaps_rollup Rss sum, approximate stat RSS fallback on older/restricted kernels: main CLI and all worker/adapter/controller/test descendants; shared pages counted per process",
+             enforcement: "best-effort sampled admission and process-tree cancellation; existing cgroup limits are OS-enforced; no new hard cap installed",
+             sample_interval_ms: SAMPLE_MS,
+             peak_aggregate_rss_bytes: 0,
+@@ -417,6 +470,47 @@ impl Budget {
+ mod tests {
+     use super::*;
+     #[test]
++    fn rollup_uses_resident_rss_and_rejects_invalid_accounting() {
++        assert_eq!(
++            rollup_rss("Pss: 1 kB\nRss: 65536 kB\nAnonymous: 2 kB\n").unwrap(),
++            64 * MIB
++        );
++        for invalid in [
++            "Pss: 10 kB\n",
++            "Rss: not-a-number kB\n",
++            "Rss: 10 MB\n",
++            "Rss: 10 kB extra\n",
++            "Rss: 18446744073709551615 kB\n",
++        ] {
++            assert!(rollup_rss(invalid).is_err(), "{invalid}");
++        }
++    }
++    #[test]
++    fn exited_process_without_memory_map_has_no_resident_working_set() {
++        let mut child = std::process::Command::new(std::env::current_exe().unwrap())
++            .arg("--list")
++            .stdout(std::process::Stdio::null())
++            .spawn()
++            .unwrap();
++        let mut exited = false;
++        for _ in 0..200 {
++            let stat = fs::read_to_string(format!("/proc/{}/stat", child.id())).unwrap();
++            if stat
++                .rsplit_once(')')
++                .and_then(|(_, fields)| fields.split_whitespace().next())
++                == Some("Z")
++            {
++                exited = true;
++                break;
++            }
++            std::thread::sleep(Duration::from_millis(5));
++        }
++        let observed = rss(child.id());
++        child.wait().unwrap();
++        assert!(exited, "child must exit before checking its memory map");
++        assert_eq!(observed.unwrap().unwrap_or(0), 0);
++    }
++    #[test]
+     fn resolves_namespaced_cgroup_mounts_and_every_ancestor() {
+         let unified = parse_hierarchy_paths(
+             "0::/tenant/job\n",
+diff --git a/crates/instrument/src/lib.rs b/crates/instrument/src/lib.rs
+index b60d382..b124fb1 100644
+--- a/crates/instrument/src/lib.rs
++++ b/crates/instrument/src/lib.rs
+@@ -250,7 +250,17 @@ pub fn generate(identity: &str, path: &Path, source: &str) -> Result<Generated,
+             hash.update((item.len() as u64).to_le_bytes());
+             hash.update(item.as_bytes());
+         }
+-        let id = format!("{:x}", hash.finalize());
++        const HEX: &[u8; 16] = b"0123456789abcdef";
++        let id = hash
++            .finalize()
++            .iter()
++            .flat_map(|byte| {
++                [
++                    HEX[(byte >> 4) as usize] as char,
++                    HEX[(byte & 15) as usize] as char,
++                ]
++            })
++            .collect::<String>();
+         let code = format!("{}{}{}", &source[..start], edit.replacement, &source[end..]);
+         // Reparse replacements: grammar-invalid transformations never reach Vitest.
+         let transformed = Parser::new(&allocator, &code, source_type).parse();
+diff --git a/tests/test_m4.py b/tests/test_m4.py
+index dfc6745..d2720b2 100644
+--- a/tests/test_m4.py
++++ b/tests/test_m4.py
+@@ -39,7 +39,23 @@ if (request.collectCoverage) {
+     reasons: [],
+   };
+ }
+-if (request.kind === 'baseline' && command === 'fail-baseline-once') {
++if (request.kind === 'baseline' && command.startsWith('edit-baseline-once|')) {
++  const [, relativePath, contents] = command.split('|');
++  writeFileSync(`${request.root}/${relativePath}`, contents);
++  unlinkSync(control);
++} else if (request.kind === 'baseline' && command.startsWith('edit-baseline-twice|')) {
++  const [, relativePath, first, second] = command.split('|');
++  writeFileSync(`${request.root}/${relativePath}`, first);
++  writeFileSync(control, `edit-baseline-second|${relativePath}|${second}`);
++} else if (request.kind === 'baseline' && command.startsWith('edit-baseline-second|')) {
++  const [, relativePath, contents] = command.split('|');
++  writeFileSync(`${request.root}/${relativePath}`, contents);
++  unlinkSync(control);
++} else if (request.kind === 'baseline' && command.startsWith('delete-baseline-input-once|')) {
++  const [, inputPath] = command.split('|');
++  unlinkSync(inputPath);
++  unlinkSync(control);
++} else if (request.kind === 'baseline' && command === 'fail-baseline-once') {
+   unlinkSync(control);
+   response.outcome = 'failed';
+   response.tests = { passed: 1, failed: 1, skipped: 0 };
+@@ -58,6 +74,44 @@ writeFileSync(output, JSON.stringify(response));
+ """
+ 
+ 
++FAKE_PERSISTENT_ADAPTER = r"""
++import { appendFileSync, existsSync, readFileSync, renameSync, unlinkSync, writeFileSync } from 'node:fs';
++import { join } from 'node:path';
++const session = process.argv[2];
++const control = process.env.OXIMUT_PERSISTENT_CONTROL;
++let sequence = 0;
++for (;;) {
++  if (existsSync(join(session, 'stop'))) {
++    const command = control && existsSync(control) ? readFileSync(control, 'utf8').trim() : '';
++    if (command === 'shutdown-fail') process.exit(23);
++    if (command.startsWith('edit-on-stop|')) {
++      const [, relativePath, contents] = command.split('|');
++      writeFileSync(`${process.env.OXIMUT_PERSISTENT_ROOT}/${relativePath}`, contents);
++      unlinkSync(control);
++    }
++    process.exit(0);
++  }
++  const input = join(session, `request-${sequence}.json`);
++  if (!existsSync(input)) { await new Promise(r => setTimeout(r, 5)); continue; }
++  const request = JSON.parse(readFileSync(input, 'utf8'));
++  if (process.env.OXIMUT_CACHE_CALLS) {
++    appendFileSync(process.env.OXIMUT_CACHE_CALLS, `${request.kind}:${request.jobId}\n`);
++  }
++  const requestCommand = control && existsSync(control) ? readFileSync(control, 'utf8').trim() : '';
++  const failBaseline = request.kind === 'baseline' && requestCommand === 'baseline-fail-once';
++  const response = { protocol: request.protocol, runId: request.runId,
++    jobId: request.jobId, generation: request.generation,
++    outcome: failBaseline ? 'failed' : 'passed',
++    tests: failBaseline ? { passed: 1, failed: 1, skipped: 0 } : { passed: 2, failed: 0, skipped: 0 },
++    errors: failBaseline ? ['injected baseline failure'] : [] };
++  if (failBaseline) unlinkSync(control);
++  const output = join(session, `response-${sequence++}.json`);
++  writeFileSync(output + '.tmp', JSON.stringify(response));
++  renameSync(output + '.tmp', output);
++}
++"""
++
++
+ class IncrementalCache(unittest.TestCase):
+     def setUp(self):
+         self.temporary = tempfile.TemporaryDirectory(prefix="oximut-m4-")
+@@ -74,11 +128,12 @@ class IncrementalCache(unittest.TestCase):
+         self.control = self.base / "control.txt"
+         self.report_path = self.base / "report.json"
+ 
+-    def run_oximut(self, *extra, env=None, success=True):
++    def run_oximut(self, *extra, env=None, success=True, cache_policy="always"):
+         command = [
+             str(BINARY), "--root", str(self.root), "--config", "vitest.config.ts",
+             "--source", "src/subject.ts", "--adapter", str(self.adapter),
+             "--report", str(self.report_path), "--cache", "--cache-inputs-complete",
++            "--cache-policy", cache_policy,
+             *map(str, extra),
+         ]
+         process_env = {**os.environ, "OXIMUT_CACHE_CALLS": str(self.calls),
+@@ -96,6 +151,18 @@ class IncrementalCache(unittest.TestCase):
+     def read_calls(self):
+         return self.calls.read_text().splitlines() if self.calls.exists() else []
+ 
++    def policy_history_files(self):
++        return list((self.root / ".oximut/cache/policy").glob("*.json"))
++
++    def tamper_policy_history(self, **changes):
++        files = self.policy_history_files()
++        self.assertTrue(files, "a complete auto-policy run should write advisory history")
++        path = files[0]
++        history = json.loads(path.read_text())
++        history.update(changes)
++        path.write_text(json.dumps(history))
++        return path
++
+     @staticmethod
+     def outcomes(report):
+         return {item["id"]: item["outcome"] for item in report["mutants"]}
+@@ -111,7 +178,7 @@ class IncrementalCache(unittest.TestCase):
+         def run(*extra):
+             command = [str(BINARY), "--root", str(root), "--config", "vitest.config.ts",
+                        "--source", "src/subject.ts", "--report", str(self.base / "vitest-report.json"),
+-                       "--cache", "--cache-inputs-complete", *extra]
++                       "--cache", "--cache-inputs-complete", "--cache-policy", "always", *extra]
+             result = subprocess.run(command, cwd=REPO, text=True, capture_output=True,
+                                     timeout=180, env=os.environ.copy())
+             self.assertIn(result.returncode, (0, 1), result.stdout + result.stderr)
+@@ -157,8 +224,12 @@ class IncrementalCache(unittest.TestCase):
+         calls_after_first = len(self.read_calls())
+         self.assertGreater(calls_after_first, 1, self.read_calls())
+         self.assertTrue(first["summary"]["complete"], first)
++        self.assertEqual(len(first["cache"]["fingerprintProfiles"]), 2,
++                         first["cache"]["fingerprintProfiles"])
+ 
+         second = self.run_oximut("--test-selection")
++        self.assertEqual(len(second["cache"]["fingerprintProfiles"]), 2,
++                         second["cache"]["fingerprintProfiles"])
+         self.assertEqual(second["baseline"]["outcome"], "passed")
+         self.assertEqual(self.read_calls().count("baseline:baseline"), 2,
+                          "baseline validation must run for each invocation")
+@@ -173,6 +244,124 @@ class IncrementalCache(unittest.TestCase):
+         self.assertEqual(forced["cache"]["outcomeHits"], 0, forced["cache"])
+         self.assertEqual(forced["cache"]["instrumentationHits"], 0, forced["cache"])
+ 
++    def test_baseline_input_change_retries_once_with_fresh_inventory(self):
++        initial = self.run_oximut()
++        initial_ids = set(self.outcomes(initial))
++        added_source = (
++            self.root / "src/subject.ts"
++        ).read_text() + "\nexport function added(value: number): boolean { return value === 0; }\n"
++        self.control.write_text(
++            f"edit-baseline-once|src/subject.ts|{added_source}"
++        )
++        calls_before = len(self.read_calls())
++        retried = self.run_oximut()
++        current_calls = self.read_calls()[calls_before:]
++        self.assertEqual(current_calls.count("baseline:baseline"), 2, current_calls)
++        self.assertEqual(retried["baseline"]["outcome"], "passed", retried)
++        self.assertEqual(retried["cache"]["outcomeHits"], 0, retried["cache"])
++        self.assertTrue(retried["summary"]["complete"], retried)
++        self.assertTrue(all(m.get("provenance", {}).get("source") != "cache"
++                            for m in retried["mutants"]), retried["mutants"])
++        self.assertNotEqual(set(self.outcomes(retried)), initial_ids,
++                            "retry must regenerate mutants from the changed source")
++
++        forced = self.run_oximut("--force")
++        self.assertEqual(self.outcomes(retried), self.outcomes(forced))
++        self.assertEqual(retried["baseline"]["tests"], forced["baseline"]["tests"])
++
++    def test_declared_input_read_failure_fails_closed_without_retry_or_publication(self):
++        declared = self.base / "declared-input.fixture"
++        declared.write_text("stable-input")
++        first = self.run_oximut("--cache-input", declared)
++        warm = self.run_oximut("--cache-input", declared)
++        self.assertGreater(warm["cache"]["outcomeHits"], 0, warm["cache"])
++        old_records = {path.name: path.read_bytes() for path in
++                       (self.root / ".oximut/cache/outcomes").glob("*.json")}
++        self.assertTrue(old_records, first)
++
++        self.control.write_text(f"delete-baseline-input-once|{declared}")
++        calls_before = len(self.read_calls())
++        report = self.run_oximut("--cache-input", declared, success=False)
++        current_calls = self.read_calls()[calls_before:]
++        self.assertEqual(current_calls.count("baseline:baseline"), 1, current_calls)
++        self.assertFalse(report["summary"]["complete"], report)
++        self.assertFalse(report["cache"]["fingerprintProfiles"][-1]["completed"],
++                         report["cache"]["fingerprintProfiles"])
++        self.assertEqual(old_records, {path.name: path.read_bytes() for path in
++                                       (self.root / ".oximut/cache/outcomes").glob("*.json")})
++
++    def test_second_baseline_input_change_fails_closed_without_third_attempt(self):
++        self.run_oximut()
++        old_records = {path.name: path.read_bytes() for path in
++                       (self.root / ".oximut/cache/outcomes").glob("*.json")}
++        self.assertTrue(old_records)
++        source = (self.root / "src/subject.ts").read_text()
++        first = source + "\n// first race edit\n"
++        second = source + "\n// second race edit\n"
++        self.control.write_text(
++            f"edit-baseline-twice|src/subject.ts|{first}|{second}"
++        )
++        calls_before = len(self.read_calls())
++        report = self.run_oximut(success=False)
++        current_calls = self.read_calls()[calls_before:]
++        self.assertEqual(current_calls.count("baseline:baseline"), 2, current_calls)
++        self.assertFalse(report["summary"]["complete"], report)
++        self.assertEqual(report["cache"]["outcomeHits"], 0, report["cache"])
++        self.assertTrue(all(m.get("provenance", {}).get("source") != "cache"
++                            for m in report["mutants"]), report["mutants"])
++        self.assertEqual(old_records, {path.name: path.read_bytes() for path in
++                                       (self.root / ".oximut/cache/outcomes").glob("*.json")})
++
++    def test_persistent_shutdown_failure_prevents_retry_and_publication(self):
++        self.adapter.write_text(FAKE_PERSISTENT_ADAPTER)
++        args = ("--execution", "persistent")
++        self.control.write_text("")
++        base_env = {"OXIMUT_PERSISTENT_ROOT": str(self.root),
++                    "OXIMUT_PERSISTENT_CONTROL": str(self.control)}
++        self.run_oximut(*args, env=base_env)
++        old_records = {path.name: path.read_bytes() for path in
++                       (self.root / ".oximut/cache/outcomes").glob("*.json")}
++        self.assertTrue(old_records)
++
++        self.control.write_text("shutdown-fail")
++        calls_before = len(self.read_calls())
++        report = self.run_oximut(*args, env=base_env, success=False)
++        current_calls = self.read_calls()[calls_before:]
++        self.assertEqual(current_calls.count("baseline:baseline"), 1, current_calls)
++        self.assertFalse(report["summary"]["complete"], report)
++        self.assertFalse(any("retrying once" in d for d in report["diagnostics"]),
++                         report["diagnostics"])
++        self.assertEqual(old_records, {path.name: path.read_bytes() for path in
++                                       (self.root / ".oximut/cache/outcomes").glob("*.json")})
++
++    def test_persistent_shutdown_edit_runs_one_fresh_retry_after_cleanup(self):
++        self.adapter.write_text(FAKE_PERSISTENT_ADAPTER)
++        args = ("--execution", "persistent")
++        self.control.write_text("")
++        base_env = {"OXIMUT_PERSISTENT_ROOT": str(self.root),
++                    "OXIMUT_PERSISTENT_CONTROL": str(self.control)}
++        initial = self.run_oximut(*args, env=base_env)
++        initial_ids = set(self.outcomes(initial))
++        added_source = (
++            self.root / "src/subject.ts"
++        ).read_text() + "\nexport function added(value: number): boolean { return value === 0; }\n"
++        self.control.write_text(f"edit-on-stop|src/subject.ts|{added_source}")
++        calls_before = len(self.read_calls())
++        retried = self.run_oximut(*args, env=base_env)
++        current_calls = self.read_calls()[calls_before:]
++        self.assertEqual(current_calls.count("baseline:baseline"), 2, current_calls)
++        self.assertTrue(any("retrying once" in d for d in retried["diagnostics"]),
++                        retried["diagnostics"])
++        self.assertTrue(retried["summary"]["complete"], retried)
++        self.assertEqual(retried["cache"]["outcomeHits"], 0, retried["cache"])
++        self.assertTrue(all(m.get("provenance", {}).get("source") != "cache"
++                            for m in retried["mutants"]), retried["mutants"])
++        self.assertNotEqual(set(self.outcomes(retried)), initial_ids,
++                            "post-cleanup retry must regenerate the changed mutant inventory")
++
++        forced = self.run_oximut(*args, "--force", env=base_env)
++        self.assertEqual(self.outcomes(retried), self.outcomes(forced))
++
+     def test_project_and_declared_inputs_invalidate_warm_entries(self):
+         # These are all part of the project-wide execution fingerprint. Each
+         # edit must force fresh outcomes for the whole project.
+@@ -224,6 +413,134 @@ class IncrementalCache(unittest.TestCase):
+         self.assertNotIn(b"alpha", persisted)
+         self.assertNotIn(b"beta", persisted)
+ 
++    def test_auto_policy_bypasses_expensive_history_and_always_overrides_it(self):
++        prime = self.run_oximut(cache_policy="auto")
++        self.assertTrue(prime["summary"]["complete"], prime)
++        self.tamper_policy_history(fingerprintCostMs=1_000_000,
++                                  freshWorkMs=1, successfulBypasses=0,
++                                  bypassOutcomes=True)
++        calls_before = len(self.read_calls())
++        auto = self.run_oximut(cache_policy="auto")
++        current_calls = self.read_calls()[calls_before:]
++        self.assertEqual(current_calls.count("baseline:baseline"), 1, current_calls)
++        self.assertEqual(auto["cache"]["reason"],
++                         "outcome-cache-cost-exceeds-fresh-work", auto["cache"])
++        self.assertFalse(auto["cache"]["outcomesEnabled"], auto["cache"])
++        self.assertEqual(auto["cache"]["outcomeHits"], 0, auto["cache"])
++        self.assertIsNone(auto["cache"].get("fingerprint"), auto["cache"])
++        self.assertEqual(auto["cache"]["fingerprintProfiles"], [], auto["cache"])
++        self.assertTrue(all(m.get("provenance", {}).get("source") != "cache"
++                            for m in auto["mutants"]), auto["mutants"])
++        forced = self.run_oximut("--force", cache_policy="always")
++        self.assertEqual(self.outcomes(auto), self.outcomes(forced))
++
++        always = self.run_oximut(cache_policy="always")
++        self.assertGreater(always["cache"]["outcomeHits"], 0, always["cache"])
++        self.assertEqual(len(always["cache"]["fingerprintProfiles"]), 2,
++                         always["cache"]["fingerprintProfiles"])
++        self.assertEqual(self.outcomes(prime), self.outcomes(always))
++
++    def test_auto_policy_corrupt_history_falls_back_to_full_validation(self):
++        prime = self.run_oximut(cache_policy="auto")
++        history = self.policy_history_files()[0]
++        history.write_text('{"schemaVersion":999}\n')
++        report = self.run_oximut(cache_policy="auto")
++        self.assertTrue(report["summary"]["complete"], report)
++        self.assertEqual(len(report["cache"]["fingerprintProfiles"]), 2,
++                         report["cache"]["fingerprintProfiles"])
++        self.assertEqual(report["cache"]["reason"], "outcome-cache-cost-probe",
++                         report["cache"])
++        self.assertEqual(report["cache"]["outcomeHits"], 0, report["cache"])
++        self.assertTrue(all(m.get("provenance", {}).get("source") != "cache"
++                            for m in report["mutants"]), report["mutants"])
++        self.assertEqual(self.outcomes(prime), self.outcomes(report))
++
++    def test_auto_policy_source_change_uses_new_history_key_and_reprobes(self):
++        self.run_oximut(cache_policy="auto")
++        old_history = {path.name for path in self.policy_history_files()}
++        source = self.root / "src/subject.ts"
++        source.write_bytes(source.read_bytes().replace(b"< 10", b"< 11", 1))
++        report = self.run_oximut(cache_policy="auto")
++        self.assertEqual(report["cache"]["outcomeHits"], 0, report["cache"])
++        self.assertEqual(len(report["cache"]["fingerprintProfiles"]), 2,
++                         report["cache"]["fingerprintProfiles"])
++        self.assertTrue(set(path.name for path in self.policy_history_files()) - old_history,
++                        self.policy_history_files())
++
++    def test_auto_policy_reprobes_after_eight_successful_bypasses(self):
++        self.run_oximut(cache_policy="auto")
++        self.tamper_policy_history(fingerprintCostMs=1_000_000,
++                                  freshWorkMs=1, successfulBypasses=8,
++                                  bypassOutcomes=True)
++        calls_before = len(self.read_calls())
++        report = self.run_oximut(cache_policy="auto")
++        self.assertEqual(self.read_calls()[calls_before:].count("baseline:baseline"), 1)
++        self.assertEqual(report["cache"]["reason"], "outcome-cache-cost-probe",
++                         report["cache"])
++        self.assertEqual(report["cache"]["outcomeHits"], 0, report["cache"])
++        self.assertGreaterEqual(len(report["cache"]["fingerprintProfiles"]), 2,
++                                report["cache"]["fingerprintProfiles"])
++
++    def test_auto_policy_does_not_publish_history_for_failed_baseline_or_cleanup(self):
++        self.adapter.write_text(FAKE_PERSISTENT_ADAPTER)
++        self.control.write_text("")
++        env = {"OXIMUT_PERSISTENT_ROOT": str(self.root),
++               "OXIMUT_PERSISTENT_CONTROL": str(self.control)}
++        args = ("--execution", "persistent")
++        initial = self.run_oximut(*args, env=env, cache_policy="auto")
++        self.assertTrue(initial["summary"]["complete"], initial)
++        old_history = {path.name: path.read_bytes() for path in self.policy_history_files()}
++        self.assertTrue(old_history)
++
++        self.control.write_text("baseline-fail-once")
++        baseline_failed = self.run_oximut(*args, env=env, cache_policy="auto", success=False)
++        self.assertFalse(baseline_failed["summary"]["complete"], baseline_failed)
++        self.assertEqual(old_history, {path.name: path.read_bytes()
++                                      for path in self.policy_history_files()})
++
++        self.control.write_text("shutdown-fail")
++        cleanup_failed = self.run_oximut(*args, env=env, cache_policy="auto", success=False)
++        self.assertFalse(cleanup_failed["summary"]["complete"], cleanup_failed)
++        self.assertEqual(old_history, {path.name: path.read_bytes()
++                                      for path in self.policy_history_files()})
++
++    def test_content_mode_and_inherited_environment_changes_invalidate_then_warm(self):
++        source = self.root / "src/subject.ts"
++        env_name = "OXIMUT_M4_INHERITED_CACHE_FIXTURE"
++        env = {env_name: "first"}
++        original_bytes = source.read_bytes()
++        original_stat = source.stat()
++        self.run_oximut(env=env)
++        warm = self.run_oximut(env=env)
++        self.assertGreater(warm["cache"]["outcomeHits"], 0, warm["cache"])
++
++        # A metadata-only fingerprint would miss this equal-length byte edit.
++        changed_bytes = original_bytes.replace(b"< 10", b"< 11", 1)
++        self.assertEqual(len(changed_bytes), len(original_bytes))
++        self.assertNotEqual(changed_bytes, original_bytes)
++        source.write_bytes(changed_bytes)
++        os.utime(source, ns=(original_stat.st_atime_ns, original_stat.st_mtime_ns))
++        changed_content = self.run_oximut(env=env)
++        self.assertEqual(changed_content["cache"]["outcomeHits"], 0,
++                         changed_content["cache"])
++        self.assertGreater(self.run_oximut(env=env)["cache"]["outcomeHits"], 0)
++
++        # Unix mode bits affect executable behavior and are part of the input tree.
++        mode = source.stat().st_mode
++        source.chmod(mode ^ 0o100)
++        changed_mode = self.run_oximut(env=env)
++        self.assertEqual(changed_mode["cache"]["outcomeHits"], 0,
++                         changed_mode["cache"])
++        self.assertGreater(self.run_oximut(env=env)["cache"]["outcomeHits"], 0)
++
++        # Inherited environment is part of the fingerprint even without --cache-env.
++        changed_env = self.run_oximut(env={env_name: "second"})
++        self.assertEqual(changed_env["cache"]["outcomeHits"], 0,
++                         changed_env["cache"])
++        stable_env = self.run_oximut(env={env_name: "second"})
++        self.assertGreater(stable_env["cache"]["outcomeHits"], 0,
++                           stable_env["cache"])
++
+     def test_incomplete_or_undeclared_inputs_never_publish_reusable_outcomes(self):
+         no_assertion = subprocess.run(
+             [str(BINARY), "--root", str(self.root), "--config", "vitest.config.ts",
+@@ -293,7 +610,6 @@ class IncrementalCache(unittest.TestCase):
+         report = self.run_oximut(
+             "--timeout-ms", "1000", env={"PATH": search_path}
+         )
+-        self.assertFalse(report["cache"]["outcomesEnabled"], report["cache"])
+         self.assertEqual(
+             report["cache"]["reason"],
+             "unsafe-or-incomplete-fingerprint: node runtime identity deadline exceeded",
+diff --git a/tests/test_m5.py b/tests/test_m5.py
+index 608f196..8aad1fe 100644
+--- a/tests/test_m5.py
++++ b/tests/test_m5.py
+@@ -21,8 +21,14 @@ const persistent = args.length === 1;
+ const mode = process.env.OXIMUT_M5_MODE;
+ const log = process.env.OXIMUT_M5_LOG;
+ const steady = mode === 'steady' ? Buffer.alloc(64 * 1024 * 1024, 17) : null;
+-if (steady) setInterval(() => { steady[0]++; }, 100).unref();
+ const sleep = ms => new Promise(r => setTimeout(r, ms));
++const touchSteady = () => {
++  if (steady) for (let i = 0; i < steady.length; i += 4096) steady[i] = (steady[i] + 1) & 255;
++};
++if (steady) {
++  touchSteady();
++  setInterval(touchSteady, 100).unref();
++}
+ const event = value => appendFileSync(log, JSON.stringify({ ...value, pid: process.pid, at: Date.now() }) + '\n');
+ async function run(request, output) {
+   const mutant = request.kind === 'mutant' && !request.jobId.startsWith('__oximut_disabled__');
+@@ -115,10 +121,15 @@ class ResourceBudget(unittest.TestCase):
+         self.assert_reaped(self.events())
+ 
+     def test_measured_cost_limits_admission_and_recycles_idle_workers(self):
+-        _, calibration = self.run_cli('--baseline-only', '--execution', 'persistent', '--memory-budget-mib', '512', mode='steady')
++        # This tests admission, with enough startup time for observable residency.
++        # Separate failure tests retain short deadlines for timeout enforcement.
++        _, calibration = self.run_cli('--baseline-only', '--execution', 'persistent', '--memory-budget-mib', '512', '--timeout-ms', '5000', mode='steady')
++        self.assertTrue(calibration['summary']['complete'], calibration)
++        self.assertEqual(calibration['baseline']['outcome'], 'passed', calibration)
+         cost = calibration['resources']['measuredWorkerPeakBytes']
++        self.assertGreaterEqual(cost, 64 * MIB, calibration['resources'])
+         budget = math.ceil((cost * 1.7) / MIB) + 16
+-        _, report = self.run_cli('--execution', 'persistent', '--workers', '4', '--memory-budget-mib', str(budget), mode='steady')
++        _, report = self.run_cli('--execution', 'persistent', '--workers', '4', '--memory-budget-mib', str(budget), '--timeout-ms', '5000', mode='steady')
+         self.assertTrue(report['summary']['complete'], report)
+         self.assertEqual(report['resources']['maxActiveJobs'], 1)
+         self.assertGreater(report['resources']['admissionPauses'], 0)

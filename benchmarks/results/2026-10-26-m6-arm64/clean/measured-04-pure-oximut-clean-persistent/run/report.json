@@ -1,0 +1,634 @@
+{
+  "schemaVersion": 1,
+  "runId": "7254-1793018341698621350",
+  "baseline": {
+    "protocol": 1,
+    "runId": "7254-1793018341698621350",
+    "jobId": "baseline",
+    "generation": 0,
+    "outcome": "passed",
+    "tests": {
+      "passed": 7,
+      "failed": 0,
+      "skipped": 0
+    },
+    "errors": []
+  },
+  "mutants": [
+    {
+      "id": "a5b8eaf60ac6169b4a8bdcbd7e3619c7cfa5db632be6aa62ebc50cb0a21b08f1",
+      "file": "/root/oximut/benchmarks/results/2026-10-26-m6-arm64/clean/measured-04-pure-oximut-clean-persistent/project/src/logic.ts",
+      "operator": "comparison-boundary",
+      "original": "<=",
+      "replacement": "<",
+      "location": {
+        "start": {
+          "offset": 679,
+          "line": 22,
+          "column": 23
+        },
+        "end": {
+          "offset": 681,
+          "line": 22,
+          "column": 25
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 6,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected 10 to be 5 // Object.is equality"
+      ],
+      "provenance": {
+        "source": "executed",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "7815ea750e08254335ca05fb42de4263b498ab6ac703a05c8b2d15217d26ea64",
+      "file": "/root/oximut/benchmarks/results/2026-10-26-m6-arm64/clean/measured-04-pure-oximut-clean-persistent/project/src/logic.ts",
+      "operator": "comparison-boundary",
+      "original": "<",
+      "replacement": "<=",
+      "location": {
+        "start": {
+          "offset": 971,
+          "line": 35,
+          "column": 13
+        },
+        "end": {
+          "offset": 972,
+          "line": 35,
+          "column": 14
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 6,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected 'small' to be 'medium' // Object.is equality"
+      ],
+      "provenance": {
+        "source": "executed",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "b2ed210b22d2323881a2786d3aa7385cce47495068e2bd7188f4ca992d135fc2",
+      "file": "/root/oximut/benchmarks/results/2026-10-26-m6-arm64/clean/measured-04-pure-oximut-clean-persistent/project/src/logic.ts",
+      "operator": "comparison-boundary",
+      "original": "<=",
+      "replacement": "<",
+      "location": {
+        "start": {
+          "offset": 1005,
+          "line": 36,
+          "column": 13
+        },
+        "end": {
+          "offset": 1007,
+          "line": 36,
+          "column": 15
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 6,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected 'large' to be 'medium' // Object.is equality"
+      ],
+      "provenance": {
+        "source": "executed",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "8bb8fc3ae53a0bba165f18eed784b1b1cd39fb30f084741a3491449bf886150b",
+      "file": "/root/oximut/benchmarks/results/2026-10-26-m6-arm64/clean/measured-04-pure-oximut-clean-persistent/project/src/logic.ts",
+      "operator": "comparison-boundary",
+      "original": ">=",
+      "replacement": ">",
+      "location": {
+        "start": {
+          "offset": 308,
+          "line": 10,
+          "column": 13
+        },
+        "end": {
+          "offset": 310,
+          "line": 10,
+          "column": 15
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 6,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected 'failing' to be 'passing' // Object.is equality"
+      ],
+      "provenance": {
+        "source": "executed",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "7c788a9b1144adea81e7a7e4ad53b3d9e34de634c7ce03774e33dbe15ecad391",
+      "file": "/root/oximut/benchmarks/results/2026-10-26-m6-arm64/clean/measured-04-pure-oximut-clean-persistent/project/src/logic.ts",
+      "operator": "arithmetic",
+      "original": "/",
+      "replacement": "*",
+      "location": {
+        "start": {
+          "offset": 543,
+          "line": 17,
+          "column": 36
+        },
+        "end": {
+          "offset": 544,
+          "line": 17,
+          "column": 37
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 6,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected -249900 to be 75 // Object.is equality"
+      ],
+      "provenance": {
+        "source": "executed",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "6782302801eb0752e935e6607c5c7da3a263886102b244e445ae28d375f633d4",
+      "file": "/root/oximut/benchmarks/results/2026-10-26-m6-arm64/clean/measured-04-pure-oximut-clean-persistent/project/src/logic.ts",
+      "operator": "comparison-boundary",
+      "original": ">=",
+      "replacement": ">",
+      "location": {
+        "start": {
+          "offset": 867,
+          "line": 31,
+          "column": 14
+        },
+        "end": {
+          "offset": 869,
+          "line": 31,
+          "column": 16
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 6,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected false to be true // Object.is equality"
+      ],
+      "provenance": {
+        "source": "executed",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "ce8815bd79b8a4e4a210d5d367c921e6cbcf22e56fed5bb7866fa67c9c00432f",
+      "file": "/root/oximut/benchmarks/results/2026-10-26-m6-arm64/clean/measured-04-pure-oximut-clean-persistent/project/src/logic.ts",
+      "operator": "comparison-boundary",
+      "original": ">=",
+      "replacement": ">",
+      "location": {
+        "start": {
+          "offset": 490,
+          "line": 16,
+          "column": 15
+        },
+        "end": {
+          "offset": 492,
+          "line": 16,
+          "column": 17
+        }
+      },
+      "outcome": "survived",
+      "tests": {
+        "passed": 7,
+        "failed": 0,
+        "skipped": 0
+      },
+      "errors": [],
+      "provenance": {
+        "source": "executed",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "efc803a4c10083b14ba4fdddb6216cd7d058c9266715d97733bf6e22d87a5bff",
+      "file": "/root/oximut/benchmarks/results/2026-10-26-m6-arm64/clean/measured-04-pure-oximut-clean-persistent/project/src/logic.ts",
+      "operator": "comparison-boundary",
+      "original": "<",
+      "replacement": "<=",
+      "location": {
+        "start": {
+          "offset": 233,
+          "line": 8,
+          "column": 13
+        },
+        "end": {
+          "offset": 234,
+          "line": 8,
+          "column": 14
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 6,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected 'negative' to be 'failing' // Object.is equality"
+      ],
+      "provenance": {
+        "source": "executed",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "8bb2fcb9d12ec4ec8a65292c3b6fc63eee8dd2bf48cea182625e3928a8a4bc3d",
+      "file": "/root/oximut/benchmarks/results/2026-10-26-m6-arm64/clean/measured-04-pure-oximut-clean-persistent/project/src/logic.ts",
+      "operator": "comparison-boundary",
+      "original": ">=",
+      "replacement": ">",
+      "location": {
+        "start": {
+          "offset": 269,
+          "line": 9,
+          "column": 13
+        },
+        "end": {
+          "offset": 271,
+          "line": 9,
+          "column": 15
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 6,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected 'passing' to be 'excellent' // Object.is equality"
+      ],
+      "provenance": {
+        "source": "executed",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "149dd3d23ef649b87e771258969ba64d88a7726303cc8d7600c16d823ecb11fb",
+      "file": "/root/oximut/benchmarks/results/2026-10-26-m6-arm64/clean/measured-04-pure-oximut-clean-persistent/project/src/logic.ts",
+      "operator": "arithmetic",
+      "original": "+",
+      "replacement": "-",
+      "location": {
+        "start": {
+          "offset": 740,
+          "line": 23,
+          "column": 27
+        },
+        "end": {
+          "offset": 741,
+          "line": 23,
+          "column": 28
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 6,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected 3 to be 17 // Object.is equality"
+      ],
+      "provenance": {
+        "source": "executed",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "18e80836cf0d494874306ea3259aa401907d5c7502f3c0ea3f1302a7496353c7",
+      "file": "/root/oximut/benchmarks/results/2026-10-26-m6-arm64/clean/measured-04-pure-oximut-clean-persistent/project/src/logic.ts",
+      "operator": "arithmetic",
+      "original": "*",
+      "replacement": "/",
+      "location": {
+        "start": {
+          "offset": 532,
+          "line": 17,
+          "column": 25
+        },
+        "end": {
+          "offset": 533,
+          "line": 17,
+          "column": 26
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 6,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected 99.96 to be 75 // Object.is equality"
+      ],
+      "provenance": {
+        "source": "executed",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "f30bfebb7fd15e1f390c3988f8f6b1d4674ab41cb212c7a78b7f7dca34a2b6da",
+      "file": "/root/oximut/benchmarks/results/2026-10-26-m6-arm64/clean/measured-04-pure-oximut-clean-persistent/project/src/logic.ts",
+      "operator": "comparison-boundary",
+      "original": "<=",
+      "replacement": "<",
+      "location": {
+        "start": {
+          "offset": 440,
+          "line": 15,
+          "column": 13
+        },
+        "end": {
+          "offset": 442,
+          "line": 15,
+          "column": 15
+        }
+      },
+      "outcome": "survived",
+      "tests": {
+        "passed": 7,
+        "failed": 0,
+        "skipped": 0
+      },
+      "errors": [],
+      "provenance": {
+        "source": "executed",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "8bcc660efd8fd87fff698054299b9b1cb5418bc0c57c96a4d1943411c5d04120",
+      "file": "/root/oximut/benchmarks/results/2026-10-26-m6-arm64/clean/measured-04-pure-oximut-clean-persistent/project/src/logic.ts",
+      "operator": "comparison-boundary",
+      "original": "<",
+      "replacement": "<=",
+      "location": {
+        "start": {
+          "offset": 89,
+          "line": 2,
+          "column": 13
+        },
+        "end": {
+          "offset": 90,
+          "line": 2,
+          "column": 14
+        }
+      },
+      "outcome": "survived",
+      "tests": {
+        "passed": 7,
+        "failed": 0,
+        "skipped": 0
+      },
+      "errors": [],
+      "provenance": {
+        "source": "executed",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "fcadb7193882ef316bde43a816288a4882cad4a288bb19b6b67111fc2341e815",
+      "file": "/root/oximut/benchmarks/results/2026-10-26-m6-arm64/clean/measured-04-pure-oximut-clean-persistent/project/src/logic.ts",
+      "operator": "comparison-boundary",
+      "original": "<=",
+      "replacement": "<",
+      "location": {
+        "start": {
+          "offset": 641,
+          "line": 21,
+          "column": 14
+        },
+        "end": {
+          "offset": 643,
+          "line": 21,
+          "column": 16
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 6,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected 5 to be +0 // Object.is equality"
+      ],
+      "provenance": {
+        "source": "executed",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "b644dd2e2f8ceb01189821bb21ce49ceab7a466c8dc2c71f5354b384d731fe4b",
+      "file": "/root/oximut/benchmarks/results/2026-10-26-m6-arm64/clean/measured-04-pure-oximut-clean-persistent/project/src/logic.ts",
+      "operator": "comparison-boundary",
+      "original": ">",
+      "replacement": ">=",
+      "location": {
+        "start": {
+          "offset": 124,
+          "line": 3,
+          "column": 13
+        },
+        "end": {
+          "offset": 125,
+          "line": 3,
+          "column": 14
+        }
+      },
+      "outcome": "survived",
+      "tests": {
+        "passed": 7,
+        "failed": 0,
+        "skipped": 0
+      },
+      "errors": [],
+      "provenance": {
+        "source": "executed",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "ab303175fb0790576df7a86a5a040a28e4104fd136a100be1c8b00e4d8875fca",
+      "file": "/root/oximut/benchmarks/results/2026-10-26-m6-arm64/clean/measured-04-pure-oximut-clean-persistent/project/src/logic.ts",
+      "operator": "comparison-boundary",
+      "original": "<=",
+      "replacement": "<",
+      "location": {
+        "start": {
+          "offset": 697,
+          "line": 22,
+          "column": 41
+        },
+        "end": {
+          "offset": 699,
+          "line": 22,
+          "column": 43
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 6,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected 25 to be 17 // Object.is equality"
+      ],
+      "provenance": {
+        "source": "executed",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "72e9646275a74cf5ad859b1db9447744dc888ebbd4e916f91b01eb8495de1df9",
+      "file": "/root/oximut/benchmarks/results/2026-10-26-m6-arm64/clean/measured-04-pure-oximut-clean-persistent/project/src/logic.ts",
+      "operator": "comparison-boundary",
+      "original": "<=",
+      "replacement": "<",
+      "location": {
+        "start": {
+          "offset": 456,
+          "line": 15,
+          "column": 29
+        },
+        "end": {
+          "offset": 458,
+          "line": 15,
+          "column": 31
+        }
+      },
+      "outcome": "survived",
+      "tests": {
+        "passed": 7,
+        "failed": 0,
+        "skipped": 0
+      },
+      "errors": [],
+      "provenance": {
+        "source": "executed",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "ad43fe22222632bf0db1f0f3fdfa26da643dc07dd2a6f407467fda22ea1b32f7",
+      "file": "/root/oximut/benchmarks/results/2026-10-26-m6-arm64/clean/measured-04-pure-oximut-clean-persistent/project/src/logic.ts",
+      "operator": "arithmetic",
+      "original": "-",
+      "replacement": "+",
+      "location": {
+        "start": {
+          "offset": 523,
+          "line": 17,
+          "column": 16
+        },
+        "end": {
+          "offset": 524,
+          "line": 17,
+          "column": 17
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 6,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected 125 to be 75 // Object.is equality"
+      ],
+      "provenance": {
+        "source": "executed",
+        "reason": "forced-no-cache"
+      }
+    }
+  ],
+  "diagnostics": [
+    "execution=persistent; isolation=fresh-test-forks; controller reuse only; baseline=original-and-disabled-switches",
+    "disabled switching validation: /root/oximut/benchmarks/results/2026-10-26-m6-arm64/clean/measured-04-pure-oximut-clean-persistent/project/src/logic.ts: Passed",
+    "adapter observed reuse boundary: controller"
+  ],
+  "summary": {
+    "total": 18,
+    "killed": 13,
+    "survived": 5,
+    "noCoverage": 0,
+    "invalid": 0,
+    "timeout": 0,
+    "infrastructureError": 0,
+    "resourceExhausted": 0,
+    "skipped": 0,
+    "scoreDenominator": 18,
+    "score": 72.22222222222223,
+    "complete": true
+  },
+  "cache": {
+    "enabled": false,
+    "outcomesEnabled": false,
+    "reason": "forced-no-cache",
+    "instrumentationHits": 0,
+    "instrumentationMisses": 0,
+    "outcomeHits": 0,
+    "outcomeMisses": 0,
+    "persistence": "not-written"
+  },
+  "resources": {
+    "admissionPauses": 17,
+    "admissionWorkerCostBytes": 342512640,
+    "budgetBytes": 12115951616,
+    "cgroups": [],
+    "configuredBudgetBytes": null,
+    "configuredWorkers": 1,
+    "cpuLimitWorkers": 8,
+    "effectiveWorkers": 1,
+    "enforcement": "best-effort sampled admission and process-tree cancellation; existing cgroup limits are OS-enforced; no new hard cap installed",
+    "exhaustion": null,
+    "maxActiveJobs": 1,
+    "measuredWorkerPeakBytes": 274010112,
+    "measurement": "Linux /proc RSS sum: main CLI and all worker/adapter/controller/test descendants; shared pages counted per process",
+    "peakAggregateRssBytes": 279760896,
+    "recycledIdleWorkers": 0,
+    "reserveBytes": 67108864,
+    "sampleIntervalMs": 50,
+    "samples": 291
+  }
+}

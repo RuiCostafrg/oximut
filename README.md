@@ -3,7 +3,7 @@
 Mutation testing for JavaScript and TypeScript, designed around a Rust + Oxc
 instrumentation engine and a thin Vitest adapter.
 
-**Status: M5 CPU and memory budgets.** The repository generates JS/TS mutants with
+**Status: M6 benchmark and alpha release evaluation.** The repository generates JS/TS mutants with
 Oxc and executes them with bounded worker concurrency, with text and JSON reports. Fresh execution
 remains the default correctness reference; opt-in persistent execution shares
 transformed code and a Vitest controller while retaining fresh test processes.
@@ -11,6 +11,9 @@ Opt-in test selection collects baseline mutant hits and retains covering test fi
 with full-suite fallbacks when attribution is uncertain.
 Opt-in caching separates instrumentation from outcomes and validates the baseline
 on every run. Outcome reuse requires an explicit declaration of complete inputs.
+The automatic cache policy learns when outcome validation costs more than fresh
+mutation work and selects fresh execution; `--cache-policy always` requests full
+validation/reuse. See the [cache decision](docs/cache-performance.md).
 Resource admission accounts for the complete owned process tree, reserves memory
 headroom, and reports resource exhaustion separately from mutation kills.
 It also retains the M0 lifecycle experiments and baseline benchmarks.
@@ -29,15 +32,19 @@ Oximut is a working name.
 ## Start here
 
 - [Implementation plan](PLAN.md): milestones, dependencies, and acceptance gates.
+- [Roadmap to 1.0.0](docs/release-roadmap.md): remaining release gates and implementation order.
 - [M1 runner](docs/m1.md): commands, report semantics, exit codes, and limitations.
 - [M2 execution](docs/m2.md): switching, persistent controllers, isolation, and validation.
 - [M3 selection](docs/m3.md): baseline attribution, conservative selection, and fallbacks.
 - [M4 cache](docs/m4.md): conservative fingerprints, input declarations, and forced execution.
 - [M5 budgets](docs/m5.md): worker limits, memory units, admission, and enforcement limits.
+- [M6 decision](docs/m6.md): measured scope, release gates, and remaining work.
+- [Compatibility](docs/compatibility.md), [report schema](docs/report-schema.md), and [source installation](docs/install.md).
 - [Architecture](docs/architecture.md): ownership, execution protocol, and correctness rules.
 - [Benchmark plan](docs/benchmarks.md): fair comparison with Stryker and success criteria.
 - [Vitest lifecycle decision](docs/adr/0001-vitest-lifecycle.md): measured reuse boundaries.
 - [Recorded M0 results](benchmarks/results/2026-10-23-m0-arm64/README.md): five-repeat baselines and lifecycle evidence.
+- [Recorded M6 results](benchmarks/results/2026-10-26-m6-arm64/README.md): clean and incremental measurements, regressions, and release decision.
 - [Benchmark harness](benchmarks/README.md): commands and measurement limitations.
 
 ## Run the feasibility checks
@@ -117,4 +124,5 @@ the default remains one worker.
 - [Stryker architecture](https://stryker-mutator.io/docs/stryker-js/guides/create-a-plugin/)
 - [Stryker configuration](https://stryker-mutator.io/docs/stryker-js/configuration/)
 
-License and public package naming will be decided before distribution.
+Licensed under [MIT](LICENSE). `oximut` remains a working name; see the
+[M6 decision](docs/m6.md) before treating this prototype as a public alpha.

@@ -1,0 +1,4 @@
+run: oximut m1 clean-fresh
+run: oximut m1 clean-persistent
+run: oximut m1 clean-selection
+Correctness gate: passed; /root/oximut/.oximut/ci-m6-final/summary.json

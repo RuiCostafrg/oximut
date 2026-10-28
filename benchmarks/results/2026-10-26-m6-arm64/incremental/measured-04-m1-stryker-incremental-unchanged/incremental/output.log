@@ -1,0 +1,13 @@
+[33m12:53:54 (16628) WARN OptionsValidator[39m DEPRECATED. Use of "files" is deprecated, please use "ignorePatterns" instead (or remove "files" altogether will probably work as well). For now, rewriting them as ["**","!src/**/*.ts","!test/**/*.ts","!test/**/*.snap","!vitest.config.ts","!package*.json"]. See https://stryker-mutator.io/docs/stryker-js/configuration/#ignorepatterns-string
+[32m12:53:55 (16628) INFO ProjectReader[39m Found 1 of 7 file(s) to be mutated using incremental report with 9 mutant(s), and 2 test(s).
+[32m12:53:56 (16628) INFO Instrumenter[39m Instrumented 1 source file(s) with 9 mutant(s)
+[32m12:53:56 (16628) INFO ConcurrencyTokenProvider[39m Creating 1 test runner process(es).
+[32m12:54:00 (16628) INFO BroadcastReporter[39m Detected that current console does not support the "progress" reporter, downgrading to "progress-append-only" reporter
+[32m12:54:05 (16628) INFO DryRunExecutor[39m Starting initial test run (vitest test runner with "perTest" coverage analysis). This may take a while.
+[32m12:54:06 (16628) INFO DryRunExecutor[39m Initial test run succeeded. Ran 2 tests in 0 seconds (net 5.338541000000987 ms, overhead 942.661458999999 ms).
+[32m12:54:06 (16628) INFO IncrementalDiffer[39m Incremental report:
+	Mutants:	0 files changed (+0 -0)
+	Tests:		0 files changed (+0 -0)
+	Result:		4 of 9 mutant result(s) are reused.
+[32m12:54:07 (16628) INFO JsonReporter[39m Your report can be found at: file:///root/oximut/benchmarks/results/2026-10-26-m6-arm64/incremental/measured-04-m1-stryker-incremental-unchanged/incremental/report.json
+[32m12:54:07 (16628) INFO MutationTestExecutor[39m Done in 12 seconds.

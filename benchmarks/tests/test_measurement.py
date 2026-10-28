@@ -74,7 +74,8 @@ class CommandTests(unittest.TestCase):
         self.assertLess(time.monotonic() - before, 4)
         descendant = int((self.path / 'output.log').read_text().strip())
         self.assertFalse(Path(f'/proc/{descendant}').exists(), 'descendant must be reaped')
-        self.assertGreaterEqual(result['peak_process_count'], 2)
+        # Discovery can span scans when the parent exits before the child is seen.
+        self.assertGreaterEqual(result['observed_process_count'], 2)
 
     def test_successful_parent_leaving_descendant_is_failed_and_cleaned(self):
         script = ("import subprocess,sys; "

@@ -16,12 +16,20 @@ use std::{
     time::{Duration, Instant, SystemTime, UNIX_EPOCH},
 };
 
-const HELP: &str = "Usage: oximut [--root DIR] [--config FILE] --source FILE [--source FILE ...]\n  --report FILE       JSON report (- for stdout)\n  --timeout-ms N      Per-job deadline, default 30000 ms\n  --workers N         Maximum simultaneous mutation jobs (default 1; bounded by CPU limits)\n  --memory-budget-mib N Aggregate sampled RSS budget in MiB (1 MiB = 1048576 bytes); default host/container limit\n  --memory-reserve-mib N Reserved admission headroom in MiB (default 64)\n  --execution MODE   fresh (default) or persistent controller with fresh test forks\n  --test-selection    Collect baseline hits and conservatively select hit test files\n  --order-seed N     Deterministically shuffle mutant execution order\n  --adapter FILE      Node adapter entry point override\n  --cache             Cache instrumentation; outcomes require --cache-inputs-complete\n  --cache-inputs-complete Assert all nondeterministic/external inputs are declared\n  --cache-input FILE  Additional input file/directory (repeatable)\n  --cache-env NAME    Additional environment input (repeatable; values stay private)\n  --no-cache, --force Bypass all cache reads and writes\n  --list              Generate mutants as JSON without executing tests\n  --baseline-only     Run original sources without mutants\nExit: 0 complete/no survivors; 1 survivors/no coverage; 2 incomplete/error.\nScore: killed/(killed+survived+no-coverage)*100; empty denominator => null.\nInvalid/timeout/infrastructure-error/resource-exhausted/skipped are excluded and make a run incomplete.";
+const HELP: &str = "Usage: oximut [--root DIR] [--config FILE] --source FILE [--source FILE ...]\n  --report FILE       JSON report (- for stdout)\n  --timeout-ms N      Per-job deadline, default 30000 ms\n  --workers N         Maximum simultaneous mutation jobs (default 1; bounded by CPU limits)\n  --memory-budget-mib N Aggregate sampled RSS budget in MiB (1 MiB = 1048576 bytes); default host/container limit\n  --memory-reserve-mib N Reserved admission headroom in MiB (default 64)\n  --execution MODE   fresh (default) or persistent controller with fresh test forks\n  --test-selection    Collect baseline hits and conservatively select hit test files\n  --order-seed N     Deterministically shuffle mutant execution order\n  --adapter FILE      Node adapter entry point override\n  --cache             Cache instrumentation; outcomes require --cache-inputs-complete\n  --cache-policy MODE  auto (default) learns whether outcome caching saves work; always validates/reuses eligible outcomes\n  --cache-inputs-complete Assert all nondeterministic/external inputs are declared\n  --cache-input FILE  Additional input file/directory (repeatable)\n  --cache-env NAME    Additional environment input (repeatable; values stay private)\n  --no-cache, --force Bypass all cache reads and writes\n  --list              Generate mutants as JSON without executing tests\n  --baseline-only     Run original sources without mutants\nExit: 0 complete/no survivors; 1 survivors/no coverage; 2 incomplete/error.\nScore: killed/(killed+survived+no-coverage)*100; empty denominator => null.\nInvalid/timeout/infrastructure-error/resource-exhausted/skipped are excluded and make a run incomplete.";
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 enum Execution {
     Fresh,
     Persistent,
+}
+
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "lowercase")]
+enum CachePolicy {
+    #[default]
+    Auto,
+    Always,
 }
 
 #[derive(serde::Serialize, serde::Deserialize)]
@@ -39,6 +47,8 @@ struct Options {
     test_selection: bool,
     cache: bool,
     cache_inputs_complete: bool,
+    #[serde(default)]
+    cache_policy: CachePolicy,
     no_cache: bool,
     cache_inputs: Vec<PathBuf>,
     cache_env: Vec<String>,
@@ -64,6 +74,7 @@ fn options() -> Result<Option<Options>, String> {
     let mut test_selection = false;
     let mut cache = false;
     let mut cache_inputs_complete = false;
+    let mut cache_policy = CachePolicy::Auto;
     let mut no_cache = false;
     let mut cache_inputs = vec![];
     let mut cache_env = vec![];
@@ -90,6 +101,7 @@ fn options() -> Result<Option<Options>, String> {
             | "--adapter"
             | "--execution"
             | "--order-seed"
+            | "--cache-policy"
             | "--cache-input"
             | "--cache-env"
             | "--workers"
@@ -99,6 +111,13 @@ fn options() -> Result<Option<Options>, String> {
                     .next()
                     .ok_or_else(|| format!("missing value for {arg}"))?;
                 match arg.as_str() {
+                    "--cache-policy" => {
+                        cache_policy = match value.as_str() {
+                            "auto" => CachePolicy::Auto,
+                            "always" => CachePolicy::Always,
+                            _ => return Err("--cache-policy must be auto or always".into()),
+                        };
+                    }
                     "--workers" => {
                         workers = value.parse().map_err(|_| "--workers requires an integer")?
                     }
@@ -239,6 +258,7 @@ fn options() -> Result<Option<Options>, String> {
         test_selection,
         cache,
         cache_inputs_complete,
+        cache_policy,
         no_cache,
         cache_inputs,
         cache_env,
@@ -671,10 +691,71 @@ fn validate_coverage(
     Ok(())
 }
 
+fn selection_for(baseline: &Response, mutant: &Mutant) -> Option<oximut_core::Selection> {
+    baseline.coverage.as_ref().map(|coverage| {
+        let mut selected = coverage.select(&mutant.id);
+        let total = baseline.tests.passed + baseline.tests.failed + baseline.tests.skipped;
+        selected.total_tests = total;
+        if selected.mode == "full" {
+            selected.selected_tests = total;
+            selected.expected_skipped = baseline.tests.skipped;
+        }
+        selected
+    })
+}
+
+fn reusable_result<'a>(
+    indexed: &BTreeMap<&str, &'a MutantResult>,
+    mutant: &Mutant,
+    selection: &Option<oximut_core::Selection>,
+    baseline_ok: bool,
+) -> Option<&'a MutantResult> {
+    let previous = indexed.get(mutant.id.as_str()).copied()?;
+    let no_coverage = baseline_ok
+        && selection
+            .as_ref()
+            .is_some_and(|selected| selected.mode == "none");
+    (cache::same(&previous.selection, selection)
+        && (previous.outcome != Outcome::NoCoverage || no_coverage))
+        .then_some(previous)
+}
+
+struct RetryEvidence {
+    diagnostics: Vec<String>,
+    resources: serde_json::Value,
+    profiles: Vec<oximut_core::FingerprintProfile>,
+    runner_hash_ms: u64,
+}
+
+enum Attempt {
+    Complete(u8),
+    Retry(RetryEvidence),
+}
+
 fn run(options: Options) -> Result<u8, String> {
-    let mut cache = cache::Cache::new(&options);
+    match run_attempt(&options, None)? {
+        Attempt::Complete(code) => Ok(code),
+        Attempt::Retry(evidence) => match run_attempt(&options, Some(evidence))? {
+            Attempt::Complete(code) => Ok(code),
+            Attempt::Retry(_) => unreachable!("the fresh retry cannot request another attempt"),
+        },
+    }
+}
+
+fn run_attempt(options: &Options, previous: Option<RetryEvidence>) -> Result<Attempt, String> {
+    let mut cache = cache::Cache::new(options);
     let mut mutants: Vec<Mutant> = vec![];
-    let mut diagnostics = vec![];
+    let retry = previous.is_some();
+    let (mut diagnostics, previous_resources, previous_profiles, previous_runner_hash_ms) =
+        match previous {
+            Some(evidence) => (
+                evidence.diagnostics,
+                Some(evidence.resources),
+                evidence.profiles,
+                evidence.runner_hash_ms,
+            ),
+            None => (Vec::new(), None, Vec::new(), 0),
+        };
     let mut disabled_checks = vec![];
     let mut probe_transforms = vec![];
     let mut probe_reasons = vec![];
@@ -684,7 +765,7 @@ fn run(options: Options) -> Result<u8, String> {
             .strip_prefix(&options.root)
             .map_err(|e| e.to_string())?
             .to_string_lossy();
-        let (generated, probe) = cache.artifact(&options, &identity, path, &source)?;
+        let (generated, probe) = cache.artifact(options, &identity, path, &source)?;
         if let Some(probe) = probe {
             match probe {
                 Ok(probe) => probe_transforms.push(probe),
@@ -728,10 +809,14 @@ fn run(options: Options) -> Result<u8, String> {
             )
             .map_err(|e| e.to_string())?
         );
-        return Ok(0);
+        return Ok(Attempt::Complete(0));
     }
     enable_subreaper()?;
-    let mut cached = cache.prepare(&options);
+    let mut cached = if retry {
+        cache.prepare_attempt(options, false)
+    } else {
+        cache.prepare(options)
+    };
     let run_id = format!(
         "{}-{}",
         std::process::id(),
@@ -753,7 +838,7 @@ fn run(options: Options) -> Result<u8, String> {
         collect_coverage: None,
         selection: None,
     };
-    let mut scheduler = scheduler::Scheduler::new(&options)?;
+    let mut scheduler = scheduler::Scheduler::new(options)?;
     let mut baseline = scheduler.execute(&request);
     if baseline.outcome == TestOutcome::Passed {
         for mutation in disabled_checks {
@@ -824,15 +909,43 @@ fn run(options: Options) -> Result<u8, String> {
     let baseline_ok = baseline.outcome == TestOutcome::Passed;
     let mut results = vec![];
     let mut jobs = vec![];
-    if cached.is_some() && !cache.inputs_unchanged(&options) {
+    let cached_valid = baseline_ok
+        && cached
+            .as_ref()
+            .is_some_and(|entry| entry.validate(&mutants, &baseline.tests));
+    let deferred_check = !retry
+        && cached_valid
+        && !options.baseline_only
+        && !mutants.is_empty()
+        && cached.as_ref().is_some_and(|entry| {
+            let indexed: BTreeMap<_, _> = entry
+                .results
+                .iter()
+                .map(|result| (result.id.as_str(), result))
+                .collect();
+            mutants.iter().all(|mutant| {
+                reusable_result(
+                    &indexed,
+                    mutant,
+                    &selection_for(&baseline, mutant),
+                    baseline_ok,
+                )
+                .is_some()
+            })
+        });
+    let post_baseline_unchanged = if !deferred_check && (cached.is_some() || retry) {
+        cache.inputs_unchanged(options, "post-baseline")
+    } else {
+        true
+    };
+    if !post_baseline_unchanged {
         cached = None;
-        cache.report.reason = "inputs-changed-during-baseline".into();
+        if cache.report.outcomes_enabled {
+            cache.report.reason = "inputs-changed-during-baseline".into();
+        }
     }
     if baseline_ok {
-        if cached
-            .as_ref()
-            .is_some_and(|entry| !entry.validate(&mutants, &baseline.tests))
-        {
+        if cached.is_some() && !cached_valid {
             cached = None;
             cache.report.reason = "cached-outcomes-failed-baseline-or-inventory-validation".into();
         }
@@ -842,26 +955,22 @@ fn run(options: Options) -> Result<u8, String> {
             cache.report.reason = "baseline-did-not-pass".into();
         }
     }
+    let indexed: BTreeMap<_, _> = cached.as_ref().map_or_else(BTreeMap::new, |entry| {
+        entry
+            .results
+            .iter()
+            .map(|result| (result.id.as_str(), result))
+            .collect()
+    });
     if !options.baseline_only {
         for (index, mutant) in mutants.into_iter().enumerate() {
-            let selection = baseline.coverage.as_ref().map(|coverage| {
-                let mut selected = coverage.select(&mutant.id);
-                let total = baseline.tests.passed + baseline.tests.failed + baseline.tests.skipped;
-                selected.total_tests = total;
-                if selected.mode == "full" {
-                    selected.selected_tests = total;
-                    selected.expected_skipped = baseline.tests.skipped;
-                }
-                selected
-            });
+            let selection = selection_for(&baseline, &mutant);
             let no_coverage = baseline_ok
                 && selection
                     .as_ref()
                     .is_some_and(|selected| selected.mode == "none");
             if let Some(entry) = &cached
-                && let Some(previous) = entry.results.iter().find(|result| result.id == mutant.id)
-                && cache::same(&previous.selection, &selection)
-                && (previous.outcome != Outcome::NoCoverage || no_coverage)
+                && let Some(previous) = reusable_result(&indexed, &mutant, &selection, baseline_ok)
             {
                 let mut reused = previous.clone();
                 reused.provenance = Provenance {
@@ -941,10 +1050,82 @@ fn run(options: Options) -> Result<u8, String> {
             });
         }
     }
+    let fresh_work_started = Instant::now();
     scheduler.run_jobs(jobs, &mut results);
+    let fresh_work_ms = fresh_work_started
+        .elapsed()
+        .as_millis()
+        .min(u64::MAX as u128) as u64;
     let cleanup_ok = scheduler.finish(&mut diagnostics);
-    let resources = scheduler.report();
-    let inputs_unchanged = cache.inputs_unchanged(&options);
+    let mut resources = scheduler.report();
+    let input_check = cache.check_inputs(
+        options,
+        if deferred_check {
+            "post-baseline-and-pre-publication"
+        } else {
+            "pre-publication"
+        },
+    );
+    if deferred_check
+        && input_check == cache::InputCheck::Changed
+        && cleanup_ok
+        && baseline_ok
+        && resources
+            .get("exhaustion")
+            .is_some_and(serde_json::Value::is_null)
+        && results
+            .iter()
+            .all(|result| result.provenance.source == "cache")
+    {
+        diagnostics.push("inputs changed during baseline or teardown; retrying once with fresh mutation execution".into());
+        diagnostics.push(format!("discarded clean attempt {run_id}; resources={resources}; final baseline and outcomes come from the fresh retry"));
+        return Ok(Attempt::Retry(RetryEvidence {
+            diagnostics,
+            resources,
+            profiles: cache.report.fingerprint_profiles,
+            runner_hash_ms: cache.report.runner_hash_ms,
+        }));
+    }
+    let inputs_unchanged = input_check == cache::InputCheck::Unchanged
+        && (!retry || (post_baseline_unchanged && cache.report.fingerprint.is_some()));
+    if retry && !inputs_unchanged {
+        diagnostics.push(
+            "fresh retry input validation failed; run incomplete and outcomes not persisted".into(),
+        );
+    }
+    if let cache::InputCheck::Unreadable(error) = &input_check {
+        diagnostics.push(format!("cache input validation failed: {error}"));
+    }
+    if let Some(previous_resources) = previous_resources {
+        // Peak observations cover both attempts; accounting counters are additive.
+        // Configuration and exhaustion describe the final attempt; the discarded
+        // attempt's complete resource report remains in diagnostics above.
+        for field in [
+            "peakAggregateRssBytes",
+            "measuredWorkerPeakBytes",
+            "admissionWorkerCostBytes",
+            "maxActiveJobs",
+        ] {
+            if let (Some(old), Some(current)) = (
+                previous_resources[field].as_u64(),
+                resources[field].as_u64(),
+            ) {
+                resources[field] = old.max(current).into();
+            }
+        }
+        for field in ["samples", "admissionPauses", "recycledIdleWorkers"] {
+            if let (Some(old), Some(current)) = (
+                previous_resources[field].as_u64(),
+                resources[field].as_u64(),
+            ) {
+                resources[field] = old.saturating_add(current).into();
+            }
+        }
+        cache.add_previous_runner_hash_ms(previous_runner_hash_ms);
+        let mut profiles = previous_profiles;
+        profiles.append(&mut cache.report.fingerprint_profiles);
+        cache.report.fingerprint_profiles = profiles;
+    }
     if !inputs_unchanged {
         for result in &mut results {
             if result.provenance.source == "cache" {
@@ -956,10 +1137,10 @@ fn run(options: Options) -> Result<u8, String> {
         }
     }
     let mut summary = Summary::from_results(&results);
-    summary.complete &= baseline_ok && cleanup_ok;
+    summary.complete &= baseline_ok && cleanup_ok && (!retry || inputs_unchanged);
     let code = summary.exit_code();
     let publication = cache.stage(
-        &options,
+        options,
         summary.complete,
         inputs_unchanged,
         &run_id,
@@ -999,6 +1180,7 @@ fn run(options: Options) -> Result<u8, String> {
                 .map_err(|e| format!("report: {e}"))?;
         }
     }
+    cache.record_policy(report.summary.complete, inputs_unchanged, fresh_work_ms);
     if let Some(publication) = publication {
         report.cache.persistence = match publication.commit() {
             Ok(()) => "complete-run-persisted".into(),
@@ -1074,7 +1256,7 @@ fn run(options: Options) -> Result<u8, String> {
             println!("Diagnostic: {diagnostic}");
         }
     }
-    Ok(code)
+    Ok(Attempt::Complete(code))
 }
 
 fn main() -> ExitCode {

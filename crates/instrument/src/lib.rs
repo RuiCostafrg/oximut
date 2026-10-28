@@ -250,7 +250,17 @@ pub fn generate(identity: &str, path: &Path, source: &str) -> Result<Generated, 
             hash.update((item.len() as u64).to_le_bytes());
             hash.update(item.as_bytes());
         }
-        let id = format!("{:x}", hash.finalize());
+        const HEX: &[u8; 16] = b"0123456789abcdef";
+        let id = hash
+            .finalize()
+            .iter()
+            .flat_map(|byte| {
+                [
+                    HEX[(byte >> 4) as usize] as char,
+                    HEX[(byte & 15) as usize] as char,
+                ]
+            })
+            .collect::<String>();
         let code = format!("{}{}{}", &source[..start], edit.replacement, &source[end..]);
         // Reparse replacements: grammar-invalid transformations never reach Vitest.
         let transformed = Parser::new(&allocator, &code, source_type).parse();

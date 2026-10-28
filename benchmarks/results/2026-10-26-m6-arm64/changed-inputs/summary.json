@@ -1,0 +1,1578 @@
+{
+  "correctness_gate": {
+    "failures": [],
+    "passed": true
+  },
+  "groups": [
+    {
+      "all_runs_successful": true,
+      "cpu_seconds": {
+        "max": 5.488268,
+        "median": 5.488268,
+        "min": 5.488268,
+        "samples": [
+          5.488268
+        ]
+      },
+      "fixture": "m1",
+      "measured_attempts": 1,
+      "measured_successes": 1,
+      "mutation_status_counts": [
+        {
+          "killed": 2,
+          "no-coverage": 1
+        }
+      ],
+      "outcomes_stable": true,
+      "peak_aggregate_rss_bytes": {
+        "max": 244539392,
+        "median": 244539392,
+        "min": 244539392,
+        "samples": [
+          244539392
+        ]
+      },
+      "peak_process_count": {
+        "max": 6,
+        "median": 6,
+        "min": 6,
+        "samples": [
+          6
+        ]
+      },
+      "role": "forced",
+      "scenario": "incremental-config",
+      "tool": "oximut",
+      "wall_seconds": {
+        "max": 5.156086090952158,
+        "median": 5.156086090952158,
+        "min": 5.156086090952158,
+        "samples": [
+          5.156086090952158
+        ]
+      },
+      "warmup_attempts": 0
+    },
+    {
+      "all_runs_successful": true,
+      "cpu_seconds": {
+        "max": 13.540113,
+        "median": 13.540113,
+        "min": 13.540113,
+        "samples": [
+          13.540113
+        ]
+      },
+      "fixture": "m1",
+      "measured_attempts": 1,
+      "measured_successes": 1,
+      "mutation_status_counts": [
+        {
+          "killed": 2,
+          "no-coverage": 1
+        }
+      ],
+      "outcomes_stable": true,
+      "peak_aggregate_rss_bytes": {
+        "max": 242470912,
+        "median": 242470912,
+        "min": 242470912,
+        "samples": [
+          242470912
+        ]
+      },
+      "peak_process_count": {
+        "max": 6,
+        "median": 6,
+        "min": 6,
+        "samples": [
+          6
+        ]
+      },
+      "role": "incremental",
+      "scenario": "incremental-config",
+      "tool": "oximut",
+      "wall_seconds": {
+        "max": 22.829604991013184,
+        "median": 22.829604991013184,
+        "min": 22.829604991013184,
+        "samples": [
+          22.829604991013184
+        ]
+      },
+      "warmup_attempts": 0
+    },
+    {
+      "all_runs_successful": true,
+      "cpu_seconds": {
+        "max": 5.5500430000000005,
+        "median": 5.5500430000000005,
+        "min": 5.5500430000000005,
+        "samples": [
+          5.5500430000000005
+        ]
+      },
+      "fixture": "m1",
+      "measured_attempts": 1,
+      "measured_successes": 1,
+      "mutation_status_counts": [
+        {
+          "killed": 2,
+          "no-coverage": 1
+        }
+      ],
+      "outcomes_stable": true,
+      "peak_aggregate_rss_bytes": {
+        "max": 244797440,
+        "median": 244797440,
+        "min": 244797440,
+        "samples": [
+          244797440
+        ]
+      },
+      "peak_process_count": {
+        "max": 6,
+        "median": 6,
+        "min": 6,
+        "samples": [
+          6
+        ]
+      },
+      "role": "forced",
+      "scenario": "incremental-environment",
+      "tool": "oximut",
+      "wall_seconds": {
+        "max": 5.284760414855555,
+        "median": 5.284760414855555,
+        "min": 5.284760414855555,
+        "samples": [
+          5.284760414855555
+        ]
+      },
+      "warmup_attempts": 0
+    },
+    {
+      "all_runs_successful": true,
+      "cpu_seconds": {
+        "max": 11.976696,
+        "median": 11.976696,
+        "min": 11.976696,
+        "samples": [
+          11.976696
+        ]
+      },
+      "fixture": "m1",
+      "measured_attempts": 1,
+      "measured_successes": 1,
+      "mutation_status_counts": [
+        {
+          "killed": 2,
+          "no-coverage": 1
+        }
+      ],
+      "outcomes_stable": true,
+      "peak_aggregate_rss_bytes": {
+        "max": 248475648,
+        "median": 248475648,
+        "min": 248475648,
+        "samples": [
+          248475648
+        ]
+      },
+      "peak_process_count": {
+        "max": 6,
+        "median": 6,
+        "min": 6,
+        "samples": [
+          6
+        ]
+      },
+      "role": "incremental",
+      "scenario": "incremental-environment",
+      "tool": "oximut",
+      "wall_seconds": {
+        "max": 19.292085618013516,
+        "median": 19.292085618013516,
+        "min": 19.292085618013516,
+        "samples": [
+          19.292085618013516
+        ]
+      },
+      "warmup_attempts": 0
+    },
+    {
+      "all_runs_successful": true,
+      "cpu_seconds": {
+        "max": 5.880167,
+        "median": 5.880167,
+        "min": 5.880167,
+        "samples": [
+          5.880167
+        ]
+      },
+      "fixture": "m1",
+      "measured_attempts": 1,
+      "measured_successes": 1,
+      "mutation_status_counts": [
+        {
+          "killed": 2,
+          "no-coverage": 1
+        }
+      ],
+      "outcomes_stable": true,
+      "peak_aggregate_rss_bytes": {
+        "max": 244158464,
+        "median": 244158464,
+        "min": 244158464,
+        "samples": [
+          244158464
+        ]
+      },
+      "peak_process_count": {
+        "max": 6,
+        "median": 6,
+        "min": 6,
+        "samples": [
+          6
+        ]
+      },
+      "role": "forced",
+      "scenario": "incremental-helper",
+      "tool": "oximut",
+      "wall_seconds": {
+        "max": 5.6525011961348355,
+        "median": 5.6525011961348355,
+        "min": 5.6525011961348355,
+        "samples": [
+          5.6525011961348355
+        ]
+      },
+      "warmup_attempts": 0
+    },
+    {
+      "all_runs_successful": true,
+      "cpu_seconds": {
+        "max": 10.200748,
+        "median": 10.200748,
+        "min": 10.200748,
+        "samples": [
+          10.200748
+        ]
+      },
+      "fixture": "m1",
+      "measured_attempts": 1,
+      "measured_successes": 1,
+      "mutation_status_counts": [
+        {
+          "killed": 2,
+          "no-coverage": 1
+        }
+      ],
+      "outcomes_stable": true,
+      "peak_aggregate_rss_bytes": {
+        "max": 244781056,
+        "median": 244781056,
+        "min": 244781056,
+        "samples": [
+          244781056
+        ]
+      },
+      "peak_process_count": {
+        "max": 6,
+        "median": 6,
+        "min": 6,
+        "samples": [
+          6
+        ]
+      },
+      "role": "incremental",
+      "scenario": "incremental-helper",
+      "tool": "oximut",
+      "wall_seconds": {
+        "max": 15.20299337990582,
+        "median": 15.20299337990582,
+        "min": 15.20299337990582,
+        "samples": [
+          15.20299337990582
+        ]
+      },
+      "warmup_attempts": 0
+    },
+    {
+      "all_runs_successful": true,
+      "cpu_seconds": {
+        "max": 5.795014999999999,
+        "median": 5.795014999999999,
+        "min": 5.795014999999999,
+        "samples": [
+          5.795014999999999
+        ]
+      },
+      "fixture": "m1",
+      "measured_attempts": 1,
+      "measured_successes": 1,
+      "mutation_status_counts": [
+        {
+          "killed": 2,
+          "no-coverage": 1
+        }
+      ],
+      "outcomes_stable": true,
+      "peak_aggregate_rss_bytes": {
+        "max": 248721408,
+        "median": 248721408,
+        "min": 248721408,
+        "samples": [
+          248721408
+        ]
+      },
+      "peak_process_count": {
+        "max": 6,
+        "median": 6,
+        "min": 6,
+        "samples": [
+          6
+        ]
+      },
+      "role": "forced",
+      "scenario": "incremental-lockfile",
+      "tool": "oximut",
+      "wall_seconds": {
+        "max": 5.680410832166672,
+        "median": 5.680410832166672,
+        "min": 5.680410832166672,
+        "samples": [
+          5.680410832166672
+        ]
+      },
+      "warmup_attempts": 0
+    },
+    {
+      "all_runs_successful": true,
+      "cpu_seconds": {
+        "max": 12.390056000000001,
+        "median": 12.390056000000001,
+        "min": 12.390056000000001,
+        "samples": [
+          12.390056000000001
+        ]
+      },
+      "fixture": "m1",
+      "measured_attempts": 1,
+      "measured_successes": 1,
+      "mutation_status_counts": [
+        {
+          "killed": 2,
+          "no-coverage": 1
+        }
+      ],
+      "outcomes_stable": true,
+      "peak_aggregate_rss_bytes": {
+        "max": 247595008,
+        "median": 247595008,
+        "min": 247595008,
+        "samples": [
+          247595008
+        ]
+      },
+      "peak_process_count": {
+        "max": 6,
+        "median": 6,
+        "min": 6,
+        "samples": [
+          6
+        ]
+      },
+      "role": "incremental",
+      "scenario": "incremental-lockfile",
+      "tool": "oximut",
+      "wall_seconds": {
+        "max": 20.008840670110658,
+        "median": 20.008840670110658,
+        "min": 20.008840670110658,
+        "samples": [
+          20.008840670110658
+        ]
+      },
+      "warmup_attempts": 0
+    },
+    {
+      "all_runs_successful": true,
+      "cpu_seconds": {
+        "max": 5.877954,
+        "median": 5.877954,
+        "min": 5.877954,
+        "samples": [
+          5.877954
+        ]
+      },
+      "fixture": "m1",
+      "measured_attempts": 1,
+      "measured_successes": 1,
+      "mutation_status_counts": [
+        {
+          "killed": 2,
+          "no-coverage": 1
+        }
+      ],
+      "outcomes_stable": true,
+      "peak_aggregate_rss_bytes": {
+        "max": 244695040,
+        "median": 244695040,
+        "min": 244695040,
+        "samples": [
+          244695040
+        ]
+      },
+      "peak_process_count": {
+        "max": 6,
+        "median": 6,
+        "min": 6,
+        "samples": [
+          6
+        ]
+      },
+      "role": "forced",
+      "scenario": "incremental-snapshot",
+      "tool": "oximut",
+      "wall_seconds": {
+        "max": 5.78805801901035,
+        "median": 5.78805801901035,
+        "min": 5.78805801901035,
+        "samples": [
+          5.78805801901035
+        ]
+      },
+      "warmup_attempts": 0
+    },
+    {
+      "all_runs_successful": true,
+      "cpu_seconds": {
+        "max": 11.365694,
+        "median": 11.365694,
+        "min": 11.365694,
+        "samples": [
+          11.365694
+        ]
+      },
+      "fixture": "m1",
+      "measured_attempts": 1,
+      "measured_successes": 1,
+      "mutation_status_counts": [
+        {
+          "killed": 2,
+          "no-coverage": 1
+        }
+      ],
+      "outcomes_stable": true,
+      "peak_aggregate_rss_bytes": {
+        "max": 246751232,
+        "median": 246751232,
+        "min": 246751232,
+        "samples": [
+          246751232
+        ]
+      },
+      "peak_process_count": {
+        "max": 6,
+        "median": 6,
+        "min": 6,
+        "samples": [
+          6
+        ]
+      },
+      "role": "incremental",
+      "scenario": "incremental-snapshot",
+      "tool": "oximut",
+      "wall_seconds": {
+        "max": 17.85223108693026,
+        "median": 17.85223108693026,
+        "min": 17.85223108693026,
+        "samples": [
+          17.85223108693026
+        ]
+      },
+      "warmup_attempts": 0
+    },
+    {
+      "all_runs_successful": true,
+      "cpu_seconds": {
+        "max": 5.922402,
+        "median": 5.922402,
+        "min": 5.922402,
+        "samples": [
+          5.922402
+        ]
+      },
+      "fixture": "m1",
+      "measured_attempts": 1,
+      "measured_successes": 1,
+      "mutation_status_counts": [
+        {
+          "killed": 2,
+          "no-coverage": 1
+        }
+      ],
+      "outcomes_stable": true,
+      "peak_aggregate_rss_bytes": {
+        "max": 244621312,
+        "median": 244621312,
+        "min": 244621312,
+        "samples": [
+          244621312
+        ]
+      },
+      "peak_process_count": {
+        "max": 6,
+        "median": 6,
+        "min": 6,
+        "samples": [
+          6
+        ]
+      },
+      "role": "forced",
+      "scenario": "incremental-source",
+      "tool": "oximut",
+      "wall_seconds": {
+        "max": 5.8215870291460305,
+        "median": 5.8215870291460305,
+        "min": 5.8215870291460305,
+        "samples": [
+          5.8215870291460305
+        ]
+      },
+      "warmup_attempts": 0
+    },
+    {
+      "all_runs_successful": true,
+      "cpu_seconds": {
+        "max": 11.447866000000001,
+        "median": 11.447866000000001,
+        "min": 11.447866000000001,
+        "samples": [
+          11.447866000000001
+        ]
+      },
+      "fixture": "m1",
+      "measured_attempts": 1,
+      "measured_successes": 1,
+      "mutation_status_counts": [
+        {
+          "killed": 2,
+          "no-coverage": 1
+        }
+      ],
+      "outcomes_stable": true,
+      "peak_aggregate_rss_bytes": {
+        "max": 253124608,
+        "median": 253124608,
+        "min": 253124608,
+        "samples": [
+          253124608
+        ]
+      },
+      "peak_process_count": {
+        "max": 6,
+        "median": 6,
+        "min": 6,
+        "samples": [
+          6
+        ]
+      },
+      "role": "incremental",
+      "scenario": "incremental-source",
+      "tool": "oximut",
+      "wall_seconds": {
+        "max": 18.046790721826255,
+        "median": 18.046790721826255,
+        "min": 18.046790721826255,
+        "samples": [
+          18.046790721826255
+        ]
+      },
+      "warmup_attempts": 0
+    },
+    {
+      "all_runs_successful": true,
+      "cpu_seconds": {
+        "max": 6.090954,
+        "median": 6.090954,
+        "min": 6.090954,
+        "samples": [
+          6.090954
+        ]
+      },
+      "fixture": "m1",
+      "measured_attempts": 1,
+      "measured_successes": 1,
+      "mutation_status_counts": [
+        {
+          "killed": 2,
+          "no-coverage": 1
+        }
+      ],
+      "outcomes_stable": true,
+      "peak_aggregate_rss_bytes": {
+        "max": 252063744,
+        "median": 252063744,
+        "min": 252063744,
+        "samples": [
+          252063744
+        ]
+      },
+      "peak_process_count": {
+        "max": 6,
+        "median": 6,
+        "min": 6,
+        "samples": [
+          6
+        ]
+      },
+      "role": "forced",
+      "scenario": "incremental-test",
+      "tool": "oximut",
+      "wall_seconds": {
+        "max": 5.942222289042547,
+        "median": 5.942222289042547,
+        "min": 5.942222289042547,
+        "samples": [
+          5.942222289042547
+        ]
+      },
+      "warmup_attempts": 0
+    },
+    {
+      "all_runs_successful": true,
+      "cpu_seconds": {
+        "max": 13.668714000000001,
+        "median": 13.668714000000001,
+        "min": 13.668714000000001,
+        "samples": [
+          13.668714000000001
+        ]
+      },
+      "fixture": "m1",
+      "measured_attempts": 1,
+      "measured_successes": 1,
+      "mutation_status_counts": [
+        {
+          "killed": 2,
+          "no-coverage": 1
+        }
+      ],
+      "outcomes_stable": true,
+      "peak_aggregate_rss_bytes": {
+        "max": 252960768,
+        "median": 252960768,
+        "min": 252960768,
+        "samples": [
+          252960768
+        ]
+      },
+      "peak_process_count": {
+        "max": 6,
+        "median": 6,
+        "min": 6,
+        "samples": [
+          6
+        ]
+      },
+      "role": "incremental",
+      "scenario": "incremental-test",
+      "tool": "oximut",
+      "wall_seconds": {
+        "max": 22.398947855923325,
+        "median": 22.398947855923325,
+        "min": 22.398947855923325,
+        "samples": [
+          22.398947855923325
+        ]
+      },
+      "warmup_attempts": 0
+    },
+    {
+      "all_runs_successful": true,
+      "cpu_seconds": {
+        "max": 6.0433520000000005,
+        "median": 6.0433520000000005,
+        "min": 6.0433520000000005,
+        "samples": [
+          6.0433520000000005
+        ]
+      },
+      "fixture": "m1",
+      "measured_attempts": 1,
+      "measured_successes": 1,
+      "mutation_status_counts": [
+        {
+          "killed": 2,
+          "no-coverage": 1
+        }
+      ],
+      "outcomes_stable": true,
+      "peak_aggregate_rss_bytes": {
+        "max": 246632448,
+        "median": 246632448,
+        "min": 246632448,
+        "samples": [
+          246632448
+        ]
+      },
+      "peak_process_count": {
+        "max": 6,
+        "median": 6,
+        "min": 6,
+        "samples": [
+          6
+        ]
+      },
+      "role": "forced",
+      "scenario": "incremental-unchanged",
+      "tool": "oximut",
+      "wall_seconds": {
+        "max": 6.095771715976298,
+        "median": 6.095771715976298,
+        "min": 6.095771715976298,
+        "samples": [
+          6.095771715976298
+        ]
+      },
+      "warmup_attempts": 0
+    },
+    {
+      "all_runs_successful": true,
+      "cpu_seconds": {
+        "max": 14.193956,
+        "median": 14.193956,
+        "min": 14.193956,
+        "samples": [
+          14.193956
+        ]
+      },
+      "fixture": "m1",
+      "measured_attempts": 1,
+      "measured_successes": 1,
+      "mutation_status_counts": [
+        {
+          "killed": 2,
+          "no-coverage": 1
+        }
+      ],
+      "outcomes_stable": true,
+      "peak_aggregate_rss_bytes": {
+        "max": 246202368,
+        "median": 246202368,
+        "min": 246202368,
+        "samples": [
+          246202368
+        ]
+      },
+      "peak_process_count": {
+        "max": 6,
+        "median": 6,
+        "min": 6,
+        "samples": [
+          6
+        ]
+      },
+      "role": "incremental",
+      "scenario": "incremental-unchanged",
+      "tool": "oximut",
+      "wall_seconds": {
+        "max": 23.235616970108822,
+        "median": 23.235616970108822,
+        "min": 23.235616970108822,
+        "samples": [
+          23.235616970108822
+        ]
+      },
+      "warmup_attempts": 0
+    },
+    {
+      "all_runs_successful": true,
+      "cpu_seconds": {
+        "max": 14.373227,
+        "median": 14.373227,
+        "min": 14.373227,
+        "samples": [
+          14.373227
+        ]
+      },
+      "fixture": "m1",
+      "measured_attempts": 1,
+      "measured_successes": 1,
+      "mutation_status_counts": [
+        {
+          "killed": 3,
+          "no-coverage": 1
+        }
+      ],
+      "outcomes_stable": true,
+      "peak_aggregate_rss_bytes": {
+        "max": 370135040,
+        "median": 370135040,
+        "min": 370135040,
+        "samples": [
+          370135040
+        ]
+      },
+      "peak_process_count": {
+        "max": 4,
+        "median": 4,
+        "min": 4,
+        "samples": [
+          4
+        ]
+      },
+      "role": "forced",
+      "scenario": "incremental-config",
+      "tool": "stryker",
+      "wall_seconds": {
+        "max": 23.5049346270971,
+        "median": 23.5049346270971,
+        "min": 23.5049346270971,
+        "samples": [
+          23.5049346270971
+        ]
+      },
+      "warmup_attempts": 0
+    },
+    {
+      "all_runs_successful": true,
+      "cpu_seconds": {
+        "max": 11.978271,
+        "median": 11.978271,
+        "min": 11.978271,
+        "samples": [
+          11.978271
+        ]
+      },
+      "fixture": "m1",
+      "measured_attempts": 1,
+      "measured_successes": 1,
+      "mutation_status_counts": [
+        {
+          "killed": 3,
+          "no-coverage": 1
+        }
+      ],
+      "outcomes_stable": true,
+      "peak_aggregate_rss_bytes": {
+        "max": 380764160,
+        "median": 380764160,
+        "min": 380764160,
+        "samples": [
+          380764160
+        ]
+      },
+      "peak_process_count": {
+        "max": 4,
+        "median": 4,
+        "min": 4,
+        "samples": [
+          4
+        ]
+      },
+      "role": "incremental",
+      "scenario": "incremental-config",
+      "tool": "stryker",
+      "wall_seconds": {
+        "max": 20.272005669074133,
+        "median": 20.272005669074133,
+        "min": 20.272005669074133,
+        "samples": [
+          20.272005669074133
+        ]
+      },
+      "warmup_attempts": 0
+    },
+    {
+      "all_runs_successful": true,
+      "cpu_seconds": {
+        "max": 12.146379,
+        "median": 12.146379,
+        "min": 12.146379,
+        "samples": [
+          12.146379
+        ]
+      },
+      "fixture": "m1",
+      "measured_attempts": 1,
+      "measured_successes": 1,
+      "mutation_status_counts": [
+        {
+          "killed": 3,
+          "no-coverage": 1
+        }
+      ],
+      "outcomes_stable": true,
+      "peak_aggregate_rss_bytes": {
+        "max": 385556480,
+        "median": 385556480,
+        "min": 385556480,
+        "samples": [
+          385556480
+        ]
+      },
+      "peak_process_count": {
+        "max": 4,
+        "median": 4,
+        "min": 4,
+        "samples": [
+          4
+        ]
+      },
+      "role": "forced",
+      "scenario": "incremental-environment",
+      "tool": "stryker",
+      "wall_seconds": {
+        "max": 19.5180546278134,
+        "median": 19.5180546278134,
+        "min": 19.5180546278134,
+        "samples": [
+          19.5180546278134
+        ]
+      },
+      "warmup_attempts": 0
+    },
+    {
+      "all_runs_successful": true,
+      "cpu_seconds": {
+        "max": 11.481119,
+        "median": 11.481119,
+        "min": 11.481119,
+        "samples": [
+          11.481119
+        ]
+      },
+      "fixture": "m1",
+      "measured_attempts": 1,
+      "measured_successes": 1,
+      "mutation_status_counts": [
+        {
+          "killed": 3,
+          "no-coverage": 1
+        }
+      ],
+      "outcomes_stable": true,
+      "peak_aggregate_rss_bytes": {
+        "max": 380305408,
+        "median": 380305408,
+        "min": 380305408,
+        "samples": [
+          380305408
+        ]
+      },
+      "peak_process_count": {
+        "max": 4,
+        "median": 4,
+        "min": 4,
+        "samples": [
+          4
+        ]
+      },
+      "role": "incremental",
+      "scenario": "incremental-environment",
+      "tool": "stryker",
+      "wall_seconds": {
+        "max": 19.062014523893595,
+        "median": 19.062014523893595,
+        "min": 19.062014523893595,
+        "samples": [
+          19.062014523893595
+        ]
+      },
+      "warmup_attempts": 0
+    },
+    {
+      "all_runs_successful": true,
+      "cpu_seconds": {
+        "max": 12.91356,
+        "median": 12.91356,
+        "min": 12.91356,
+        "samples": [
+          12.91356
+        ]
+      },
+      "fixture": "m1",
+      "measured_attempts": 1,
+      "measured_successes": 1,
+      "mutation_status_counts": [
+        {
+          "killed": 3,
+          "no-coverage": 1
+        }
+      ],
+      "outcomes_stable": true,
+      "peak_aggregate_rss_bytes": {
+        "max": 360968192,
+        "median": 360968192,
+        "min": 360968192,
+        "samples": [
+          360968192
+        ]
+      },
+      "peak_process_count": {
+        "max": 4,
+        "median": 4,
+        "min": 4,
+        "samples": [
+          4
+        ]
+      },
+      "role": "forced",
+      "scenario": "incremental-helper",
+      "tool": "stryker",
+      "wall_seconds": {
+        "max": 20.614830878097564,
+        "median": 20.614830878097564,
+        "min": 20.614830878097564,
+        "samples": [
+          20.614830878097564
+        ]
+      },
+      "warmup_attempts": 0
+    },
+    {
+      "all_runs_successful": true,
+      "cpu_seconds": {
+        "max": 8.6609,
+        "median": 8.6609,
+        "min": 8.6609,
+        "samples": [
+          8.6609
+        ]
+      },
+      "fixture": "m1",
+      "measured_attempts": 1,
+      "measured_successes": 1,
+      "mutation_status_counts": [
+        {
+          "killed": 3,
+          "no-coverage": 1
+        }
+      ],
+      "outcomes_stable": true,
+      "peak_aggregate_rss_bytes": {
+        "max": 371404800,
+        "median": 371404800,
+        "min": 371404800,
+        "samples": [
+          371404800
+        ]
+      },
+      "peak_process_count": {
+        "max": 4,
+        "median": 4,
+        "min": 4,
+        "samples": [
+          4
+        ]
+      },
+      "role": "incremental",
+      "scenario": "incremental-helper",
+      "tool": "stryker",
+      "wall_seconds": {
+        "max": 14.18438666081056,
+        "median": 14.18438666081056,
+        "min": 14.18438666081056,
+        "samples": [
+          14.18438666081056
+        ]
+      },
+      "warmup_attempts": 0
+    },
+    {
+      "all_runs_successful": true,
+      "cpu_seconds": {
+        "max": 14.03644,
+        "median": 14.03644,
+        "min": 14.03644,
+        "samples": [
+          14.03644
+        ]
+      },
+      "fixture": "m1",
+      "measured_attempts": 1,
+      "measured_successes": 1,
+      "mutation_status_counts": [
+        {
+          "killed": 3,
+          "no-coverage": 1
+        }
+      ],
+      "outcomes_stable": true,
+      "peak_aggregate_rss_bytes": {
+        "max": 382644224,
+        "median": 382644224,
+        "min": 382644224,
+        "samples": [
+          382644224
+        ]
+      },
+      "peak_process_count": {
+        "max": 4,
+        "median": 4,
+        "min": 4,
+        "samples": [
+          4
+        ]
+      },
+      "role": "forced",
+      "scenario": "incremental-lockfile",
+      "tool": "stryker",
+      "wall_seconds": {
+        "max": 22.90411670994945,
+        "median": 22.90411670994945,
+        "min": 22.90411670994945,
+        "samples": [
+          22.90411670994945
+        ]
+      },
+      "warmup_attempts": 0
+    },
+    {
+      "all_runs_successful": true,
+      "cpu_seconds": {
+        "max": 11.480491,
+        "median": 11.480491,
+        "min": 11.480491,
+        "samples": [
+          11.480491
+        ]
+      },
+      "fixture": "m1",
+      "measured_attempts": 1,
+      "measured_successes": 1,
+      "mutation_status_counts": [
+        {
+          "killed": 3,
+          "no-coverage": 1
+        }
+      ],
+      "outcomes_stable": true,
+      "peak_aggregate_rss_bytes": {
+        "max": 380858368,
+        "median": 380858368,
+        "min": 380858368,
+        "samples": [
+          380858368
+        ]
+      },
+      "peak_process_count": {
+        "max": 3,
+        "median": 3,
+        "min": 3,
+        "samples": [
+          3
+        ]
+      },
+      "role": "incremental",
+      "scenario": "incremental-lockfile",
+      "tool": "stryker",
+      "wall_seconds": {
+        "max": 18.912623743060976,
+        "median": 18.912623743060976,
+        "min": 18.912623743060976,
+        "samples": [
+          18.912623743060976
+        ]
+      },
+      "warmup_attempts": 0
+    },
+    {
+      "all_runs_successful": true,
+      "cpu_seconds": {
+        "max": 12.882384,
+        "median": 12.882384,
+        "min": 12.882384,
+        "samples": [
+          12.882384
+        ]
+      },
+      "fixture": "m1",
+      "measured_attempts": 1,
+      "measured_successes": 1,
+      "mutation_status_counts": [
+        {
+          "killed": 3,
+          "no-coverage": 1
+        }
+      ],
+      "outcomes_stable": true,
+      "peak_aggregate_rss_bytes": {
+        "max": 380510208,
+        "median": 380510208,
+        "min": 380510208,
+        "samples": [
+          380510208
+        ]
+      },
+      "peak_process_count": {
+        "max": 3,
+        "median": 3,
+        "min": 3,
+        "samples": [
+          3
+        ]
+      },
+      "role": "forced",
+      "scenario": "incremental-snapshot",
+      "tool": "stryker",
+      "wall_seconds": {
+        "max": 20.842488741967827,
+        "median": 20.842488741967827,
+        "min": 20.842488741967827,
+        "samples": [
+          20.842488741967827
+        ]
+      },
+      "warmup_attempts": 0
+    },
+    {
+      "all_runs_successful": true,
+      "cpu_seconds": {
+        "max": 9.58813,
+        "median": 9.58813,
+        "min": 9.58813,
+        "samples": [
+          9.58813
+        ]
+      },
+      "fixture": "m1",
+      "measured_attempts": 1,
+      "measured_successes": 1,
+      "mutation_status_counts": [
+        {
+          "killed": 3,
+          "no-coverage": 1
+        }
+      ],
+      "outcomes_stable": true,
+      "peak_aggregate_rss_bytes": {
+        "max": 369528832,
+        "median": 369528832,
+        "min": 369528832,
+        "samples": [
+          369528832
+        ]
+      },
+      "peak_process_count": {
+        "max": 4,
+        "median": 4,
+        "min": 4,
+        "samples": [
+          4
+        ]
+      },
+      "role": "incremental",
+      "scenario": "incremental-snapshot",
+      "tool": "stryker",
+      "wall_seconds": {
+        "max": 15.461203899933025,
+        "median": 15.461203899933025,
+        "min": 15.461203899933025,
+        "samples": [
+          15.461203899933025
+        ]
+      },
+      "warmup_attempts": 0
+    },
+    {
+      "all_runs_successful": true,
+      "cpu_seconds": {
+        "max": 11.506703,
+        "median": 11.506703,
+        "min": 11.506703,
+        "samples": [
+          11.506703
+        ]
+      },
+      "fixture": "m1",
+      "measured_attempts": 1,
+      "measured_successes": 1,
+      "mutation_status_counts": [
+        {
+          "killed": 3,
+          "no-coverage": 1
+        }
+      ],
+      "outcomes_stable": true,
+      "peak_aggregate_rss_bytes": {
+        "max": 362999808,
+        "median": 362999808,
+        "min": 362999808,
+        "samples": [
+          362999808
+        ]
+      },
+      "peak_process_count": {
+        "max": 4,
+        "median": 4,
+        "min": 4,
+        "samples": [
+          4
+        ]
+      },
+      "role": "forced",
+      "scenario": "incremental-source",
+      "tool": "stryker",
+      "wall_seconds": {
+        "max": 18.086042910115793,
+        "median": 18.086042910115793,
+        "min": 18.086042910115793,
+        "samples": [
+          18.086042910115793
+        ]
+      },
+      "warmup_attempts": 0
+    },
+    {
+      "all_runs_successful": true,
+      "cpu_seconds": {
+        "max": 9.742396,
+        "median": 9.742396,
+        "min": 9.742396,
+        "samples": [
+          9.742396
+        ]
+      },
+      "fixture": "m1",
+      "measured_attempts": 1,
+      "measured_successes": 1,
+      "mutation_status_counts": [
+        {
+          "killed": 3,
+          "no-coverage": 1
+        }
+      ],
+      "outcomes_stable": true,
+      "peak_aggregate_rss_bytes": {
+        "max": 377782272,
+        "median": 377782272,
+        "min": 377782272,
+        "samples": [
+          377782272
+        ]
+      },
+      "peak_process_count": {
+        "max": 4,
+        "median": 4,
+        "min": 4,
+        "samples": [
+          4
+        ]
+      },
+      "role": "incremental",
+      "scenario": "incremental-source",
+      "tool": "stryker",
+      "wall_seconds": {
+        "max": 15.730167286004871,
+        "median": 15.730167286004871,
+        "min": 15.730167286004871,
+        "samples": [
+          15.730167286004871
+        ]
+      },
+      "warmup_attempts": 0
+    },
+    {
+      "all_runs_successful": true,
+      "cpu_seconds": {
+        "max": 11.167950999999999,
+        "median": 11.167950999999999,
+        "min": 11.167950999999999,
+        "samples": [
+          11.167950999999999
+        ]
+      },
+      "fixture": "m1",
+      "measured_attempts": 1,
+      "measured_successes": 1,
+      "mutation_status_counts": [
+        {
+          "killed": 3,
+          "no-coverage": 1
+        }
+      ],
+      "outcomes_stable": true,
+      "peak_aggregate_rss_bytes": {
+        "max": 373673984,
+        "median": 373673984,
+        "min": 373673984,
+        "samples": [
+          373673984
+        ]
+      },
+      "peak_process_count": {
+        "max": 4,
+        "median": 4,
+        "min": 4,
+        "samples": [
+          4
+        ]
+      },
+      "role": "forced",
+      "scenario": "incremental-test",
+      "tool": "stryker",
+      "wall_seconds": {
+        "max": 17.569865565979853,
+        "median": 17.569865565979853,
+        "min": 17.569865565979853,
+        "samples": [
+          17.569865565979853
+        ]
+      },
+      "warmup_attempts": 0
+    },
+    {
+      "all_runs_successful": true,
+      "cpu_seconds": {
+        "max": 12.157803,
+        "median": 12.157803,
+        "min": 12.157803,
+        "samples": [
+          12.157803
+        ]
+      },
+      "fixture": "m1",
+      "measured_attempts": 1,
+      "measured_successes": 1,
+      "mutation_status_counts": [
+        {
+          "killed": 3,
+          "no-coverage": 1
+        }
+      ],
+      "outcomes_stable": true,
+      "peak_aggregate_rss_bytes": {
+        "max": 377966592,
+        "median": 377966592,
+        "min": 377966592,
+        "samples": [
+          377966592
+        ]
+      },
+      "peak_process_count": {
+        "max": 4,
+        "median": 4,
+        "min": 4,
+        "samples": [
+          4
+        ]
+      },
+      "role": "incremental",
+      "scenario": "incremental-test",
+      "tool": "stryker",
+      "wall_seconds": {
+        "max": 19.689002960920334,
+        "median": 19.689002960920334,
+        "min": 19.689002960920334,
+        "samples": [
+          19.689002960920334
+        ]
+      },
+      "warmup_attempts": 0
+    },
+    {
+      "all_runs_successful": true,
+      "cpu_seconds": {
+        "max": 13.859966,
+        "median": 13.859966,
+        "min": 13.859966,
+        "samples": [
+          13.859966
+        ]
+      },
+      "fixture": "m1",
+      "measured_attempts": 1,
+      "measured_successes": 1,
+      "mutation_status_counts": [
+        {
+          "killed": 3,
+          "no-coverage": 1
+        }
+      ],
+      "outcomes_stable": true,
+      "peak_aggregate_rss_bytes": {
+        "max": 382668800,
+        "median": 382668800,
+        "min": 382668800,
+        "samples": [
+          382668800
+        ]
+      },
+      "peak_process_count": {
+        "max": 4,
+        "median": 4,
+        "min": 4,
+        "samples": [
+          4
+        ]
+      },
+      "role": "forced",
+      "scenario": "incremental-unchanged",
+      "tool": "stryker",
+      "wall_seconds": {
+        "max": 22.24474806408398,
+        "median": 22.24474806408398,
+        "min": 22.24474806408398,
+        "samples": [
+          22.24474806408398
+        ]
+      },
+      "warmup_attempts": 0
+    },
+    {
+      "all_runs_successful": true,
+      "cpu_seconds": {
+        "max": 11.663404,
+        "median": 11.663404,
+        "min": 11.663404,
+        "samples": [
+          11.663404
+        ]
+      },
+      "fixture": "m1",
+      "measured_attempts": 1,
+      "measured_successes": 1,
+      "mutation_status_counts": [
+        {
+          "killed": 3,
+          "no-coverage": 1
+        }
+      ],
+      "outcomes_stable": true,
+      "peak_aggregate_rss_bytes": {
+        "max": 356184064,
+        "median": 356184064,
+        "min": 356184064,
+        "samples": [
+          356184064
+        ]
+      },
+      "peak_process_count": {
+        "max": 4,
+        "median": 4,
+        "min": 4,
+        "samples": [
+          4
+        ]
+      },
+      "role": "incremental",
+      "scenario": "incremental-unchanged",
+      "tool": "stryker",
+      "wall_seconds": {
+        "max": 19.65003457502462,
+        "median": 19.65003457502462,
+        "min": 19.65003457502462,
+        "samples": [
+          19.65003457502462
+        ]
+      },
+      "warmup_attempts": 0
+    }
+  ],
+  "ratios": [],
+  "raw_measurement_count": 48
+}

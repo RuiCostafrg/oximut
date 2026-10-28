@@ -1,0 +1,62 @@
+{
+  "warmup-before/summary.json": {
+    "failures": [],
+    "passed": true
+  },
+  "warmup-after/summary.json": {
+    "failures": [],
+    "passed": true
+  },
+  "measured-01-after/summary.json": {
+    "failures": [],
+    "passed": true
+  },
+  "measured-01-before/summary.json": {
+    "failures": [],
+    "passed": true
+  },
+  "measured-02-before/summary.json": {
+    "failures": [],
+    "passed": true
+  },
+  "measured-02-after/summary.json": {
+    "failures": [],
+    "passed": true
+  },
+  "measured-03-after/summary.json": {
+    "failures": [],
+    "passed": true
+  },
+  "measured-03-before/summary.json": {
+    "failures": [],
+    "passed": true
+  },
+  "measured-04-before/summary.json": {
+    "failures": [],
+    "passed": true
+  },
+  "measured-04-after/summary.json": {
+    "failures": [],
+    "passed": true
+  },
+  "measured-05-after/summary.json": {
+    "failures": [],
+    "passed": true
+  },
+  "measured-05-before/summary.json": {
+    "failures": [],
+    "passed": true
+  },
+  "m1-auto/summary.json": {
+    "failures": [],
+    "passed": true
+  },
+  "pure-auto/summary.json": {
+    "failures": [],
+    "passed": true
+  },
+  "input-invalidation/summary.json": {
+    "failures": [],
+    "passed": true
+  }
+}

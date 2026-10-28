@@ -1,0 +1,7 @@
+test_explicit_adapter_and_option_values (test_install.InstalledLauncher.test_explicit_adapter_and_option_values) ... ok
+test_prefix_and_mode_resolution (test_install.InstalledLauncher.test_prefix_and_mode_resolution) ... ok
+
+----------------------------------------------------------------------
+Ran 2 tests in 0.001s
+
+OK

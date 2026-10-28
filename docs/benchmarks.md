@@ -1,6 +1,9 @@
 # Benchmark protocol
 
-No benchmarks have been run. All targets below are proposed engineering goals.
+Historical M0 and M2 measurements are checked in under `benchmarks/results/`.
+M6 adds an end-to-end comparison and an explicit alpha decision in
+[m6.md](m6.md). Targets below remain engineering goals until equivalent-scope
+measurements establish them; a partial mutation overlap cannot establish a speedup.
 
 ## Fair comparison
 

@@ -1,0 +1,22 @@
+[
+  {
+    "fixture": "m1",
+    "mutants": 3,
+    "identical": true
+  },
+  {
+    "fixture": "pure",
+    "mutants": 18,
+    "identical": true
+  },
+  {
+    "fixture": "stateful",
+    "mutants": 4,
+    "identical": true
+  },
+  {
+    "fixture": "m3",
+    "mutants": 12,
+    "identical": true
+  }
+]

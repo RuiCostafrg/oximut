@@ -1,0 +1,11 @@
+[33m12:42:31 (9633) WARN OptionsValidator[39m DEPRECATED. Use of "files" is deprecated, please use "ignorePatterns" instead (or remove "files" altogether will probably work as well). For now, rewriting them as ["**","!src/**/*.ts","!test/**/*.ts","!test/**/*.snap","!vitest.config.ts","!package*.json"]. See https://stryker-mutator.io/docs/stryker-js/configuration/#ignorepatterns-string
+[32m12:42:32 (9633) INFO ProjectReader[39m Found 1 of 7 file(s) to be mutated.
+[32m12:42:32 (9633) INFO Instrumenter[39m Instrumented 1 source file(s) with 83 mutant(s)
+[32m12:42:32 (9633) INFO ConcurrencyTokenProvider[39m Creating 1 test runner process(es).
+[32m12:42:35 (9633) INFO BroadcastReporter[39m Detected that current console does not support the "progress" reporter, downgrading to "progress-append-only" reporter
+[32m12:42:37 (9633) INFO DryRunExecutor[39m Starting initial test run (vitest test runner with "perTest" coverage analysis). This may take a while.
+[32m12:42:38 (9633) INFO DryRunExecutor[39m Initial test run succeeded. Ran 7 tests in 0 seconds (net 8.748331999999664 ms, overhead 772.2516680000003 ms).
+Mutation testing 54% (elapsed: <1m, remaining: <1m) 12/33 tested (3 survived, 0 timed out)
+Mutation testing 77% (elapsed: <1m, remaining: <1m) 26/33 tested (5 survived, 0 timed out)
+[32m12:43:03 (9633) INFO JsonReporter[39m Your report can be found at: file:///root/oximut/benchmarks/results/2026-10-26-m6-arm64/clean/measured-05-pure-stryker-clean-stryker/run/report.json
+[32m12:43:03 (9633) INFO MutationTestExecutor[39m Done in 31 seconds.

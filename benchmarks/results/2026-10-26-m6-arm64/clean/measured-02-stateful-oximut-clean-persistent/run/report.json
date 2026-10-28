@@ -1,0 +1,196 @@
+{
+  "schemaVersion": 1,
+  "runId": "1687-1793018060161653280",
+  "baseline": {
+    "protocol": 1,
+    "runId": "1687-1793018060161653280",
+    "jobId": "baseline",
+    "generation": 0,
+    "outcome": "passed",
+    "tests": {
+      "passed": 4,
+      "failed": 0,
+      "skipped": 0
+    },
+    "errors": []
+  },
+  "mutants": [
+    {
+      "id": "6140bcbf3946962d719f87b093cc2bc1de3e98cfd36cbe319ba16b348a58e961",
+      "file": "/root/oximut/benchmarks/results/2026-10-26-m6-arm64/clean/measured-02-stateful-oximut-clean-persistent/project/src/service.ts",
+      "operator": "arithmetic",
+      "original": "+",
+      "replacement": "-",
+      "location": {
+        "start": {
+          "offset": 552,
+          "line": 17,
+          "column": 16
+        },
+        "end": {
+          "offset": 553,
+          "line": 17,
+          "column": 17
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 3,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected true to be false // Object.is equality"
+      ],
+      "provenance": {
+        "source": "executed",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "113878dec1200fd275f5eff59e4119f949f76ad7dc5d394eedd53f822532c448",
+      "file": "/root/oximut/benchmarks/results/2026-10-26-m6-arm64/clean/measured-02-stateful-oximut-clean-persistent/project/src/service.ts",
+      "operator": "arithmetic",
+      "original": "+",
+      "replacement": "-",
+      "location": {
+        "start": {
+          "offset": 383,
+          "line": 12,
+          "column": 28
+        },
+        "end": {
+          "offset": 384,
+          "line": 12,
+          "column": 29
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 3,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected 13 to be 15 // Object.is equality"
+      ],
+      "provenance": {
+        "source": "executed",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "019a5fa50bb6fbd912e57e2ffe739218ac5f24fa00197b38b56849347801cb3a",
+      "file": "/root/oximut/benchmarks/results/2026-10-26-m6-arm64/clean/measured-02-stateful-oximut-clean-persistent/project/src/service.ts",
+      "operator": "comparison-boundary",
+      "original": "<=",
+      "replacement": "<",
+      "location": {
+        "start": {
+          "offset": 565,
+          "line": 17,
+          "column": 29
+        },
+        "end": {
+          "offset": 567,
+          "line": 17,
+          "column": 31
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 3,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected false to be true // Object.is equality"
+      ],
+      "provenance": {
+        "source": "executed",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "8fde3077186518c1428fae955a770c2184477a041c83edb97918f743cc8ca006",
+      "file": "/root/oximut/benchmarks/results/2026-10-26-m6-arm64/clean/measured-02-stateful-oximut-clean-persistent/project/src/service.ts",
+      "operator": "arithmetic",
+      "original": "+",
+      "replacement": "-",
+      "location": {
+        "start": {
+          "offset": 370,
+          "line": 12,
+          "column": 15
+        },
+        "end": {
+          "offset": 371,
+          "line": 12,
+          "column": 16
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 3,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected 7 to be 15 // Object.is equality"
+      ],
+      "provenance": {
+        "source": "executed",
+        "reason": "forced-no-cache"
+      }
+    }
+  ],
+  "diagnostics": [
+    "/root/oximut/benchmarks/results/2026-10-26-m6-arm64/clean/measured-02-stateful-oximut-clean-persistent/project/src/service.ts: mutation switching fallback: process identifier may shadow or modify the Node selector; using fresh static mutants",
+    "execution=persistent; isolation=fresh-test-forks; controller reuse only; baseline=original-and-disabled-switches",
+    "adapter observed reuse boundary: controller"
+  ],
+  "summary": {
+    "total": 4,
+    "killed": 4,
+    "survived": 0,
+    "noCoverage": 0,
+    "invalid": 0,
+    "timeout": 0,
+    "infrastructureError": 0,
+    "resourceExhausted": 0,
+    "skipped": 0,
+    "scoreDenominator": 4,
+    "score": 100.0,
+    "complete": true
+  },
+  "cache": {
+    "enabled": false,
+    "outcomesEnabled": false,
+    "reason": "forced-no-cache",
+    "instrumentationHits": 0,
+    "instrumentationMisses": 0,
+    "outcomeHits": 0,
+    "outcomeMisses": 0,
+    "persistence": "not-written"
+  },
+  "resources": {
+    "admissionPauses": 3,
+    "admissionWorkerCostBytes": 313425920,
+    "budgetBytes": 12115951616,
+    "cgroups": [],
+    "configuredBudgetBytes": null,
+    "configuredWorkers": 1,
+    "cpuLimitWorkers": 8,
+    "effectiveWorkers": 1,
+    "enforcement": "best-effort sampled admission and process-tree cancellation; existing cgroup limits are OS-enforced; no new hard cap installed",
+    "exhaustion": null,
+    "maxActiveJobs": 1,
+    "measuredWorkerPeakBytes": 250740736,
+    "measurement": "Linux /proc RSS sum: main CLI and all worker/adapter/controller/test descendants; shared pages counted per process",
+    "peakAggregateRssBytes": 255217664,
+    "recycledIdleWorkers": 0,
+    "reserveBytes": 67108864,
+    "sampleIntervalMs": 50,
+    "samples": 155
+  }
+}

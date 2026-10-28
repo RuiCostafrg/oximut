@@ -1,0 +1,180 @@
+{
+  "correctness_gate": {
+    "failures": [],
+    "passed": true
+  },
+  "groups": [
+    {
+      "all_runs_successful": true,
+      "cpu_seconds": {
+        "max": 10.584106,
+        "median": 10.584106,
+        "min": 10.584106,
+        "samples": [
+          10.584106
+        ]
+      },
+      "fixture": "m1",
+      "measured_attempts": 1,
+      "measured_successes": 1,
+      "mutation_status_counts": [
+        {
+          "killed": 2,
+          "survived": 1
+        }
+      ],
+      "outcomes_stable": true,
+      "peak_aggregate_rss_bytes": {
+        "max": 234766336,
+        "median": 234766336,
+        "min": 234766336,
+        "samples": [
+          234766336
+        ]
+      },
+      "peak_process_count": {
+        "max": 6,
+        "median": 6,
+        "min": 6,
+        "samples": [
+          6
+        ]
+      },
+      "role": "clean",
+      "scenario": "clean-fresh",
+      "tool": "oximut",
+      "wall_seconds": {
+        "max": 9.847295569023117,
+        "median": 9.847295569023117,
+        "min": 9.847295569023117,
+        "samples": [
+          9.847295569023117
+        ]
+      },
+      "warmup_attempts": 0
+    },
+    {
+      "all_runs_successful": true,
+      "cpu_seconds": {
+        "max": 6.000263,
+        "median": 6.000263,
+        "min": 6.000263,
+        "samples": [
+          6.000263
+        ]
+      },
+      "fixture": "m1",
+      "measured_attempts": 1,
+      "measured_successes": 1,
+      "mutation_status_counts": [
+        {
+          "killed": 2,
+          "survived": 1
+        }
+      ],
+      "outcomes_stable": true,
+      "peak_aggregate_rss_bytes": {
+        "max": 267345920,
+        "median": 267345920,
+        "min": 267345920,
+        "samples": [
+          267345920
+        ]
+      },
+      "peak_process_count": {
+        "max": 6,
+        "median": 6,
+        "min": 6,
+        "samples": [
+          6
+        ]
+      },
+      "role": "clean",
+      "scenario": "clean-persistent",
+      "tool": "oximut",
+      "wall_seconds": {
+        "max": 5.650029893964529,
+        "median": 5.650029893964529,
+        "min": 5.650029893964529,
+        "samples": [
+          5.650029893964529
+        ]
+      },
+      "warmup_attempts": 0
+    },
+    {
+      "all_runs_successful": true,
+      "cpu_seconds": {
+        "max": 6.070843999999999,
+        "median": 6.070843999999999,
+        "min": 6.070843999999999,
+        "samples": [
+          6.070843999999999
+        ]
+      },
+      "fixture": "m1",
+      "measured_attempts": 1,
+      "measured_successes": 1,
+      "mutation_status_counts": [
+        {
+          "killed": 2,
+          "no-coverage": 1
+        }
+      ],
+      "outcomes_stable": true,
+      "peak_aggregate_rss_bytes": {
+        "max": 250875904,
+        "median": 250875904,
+        "min": 250875904,
+        "samples": [
+          250875904
+        ]
+      },
+      "peak_process_count": {
+        "max": 6,
+        "median": 6,
+        "min": 6,
+        "samples": [
+          6
+        ]
+      },
+      "role": "clean",
+      "scenario": "clean-selection",
+      "tool": "oximut",
+      "wall_seconds": {
+        "max": 5.62011400796473,
+        "median": 5.62011400796473,
+        "min": 5.62011400796473,
+        "samples": [
+          5.62011400796473
+        ]
+      },
+      "warmup_attempts": 0
+    }
+  ],
+  "ratios": [
+    {
+      "denominator": "oximut clean-persistent",
+      "denominator_samples": 1,
+      "eligible": true,
+      "fixture": "m1",
+      "numerator": "oximut clean-fresh",
+      "numerator_samples": 1,
+      "peak_rss_median_ratio": 0.878136969511261,
+      "reason": "all gates pass and exact workloads agree",
+      "wall_median_ratio": 1.7428749500143688
+    },
+    {
+      "denominator": "oximut clean-selection",
+      "denominator_samples": 1,
+      "eligible": true,
+      "fixture": "m1",
+      "numerator": "oximut clean-fresh",
+      "numerator_samples": 1,
+      "peak_rss_median_ratio": 0.9357867067217424,
+      "reason": "all gates pass and exact workloads agree",
+      "wall_median_ratio": 1.7521522793074478
+    }
+  ],
+  "raw_measurement_count": 3
+}

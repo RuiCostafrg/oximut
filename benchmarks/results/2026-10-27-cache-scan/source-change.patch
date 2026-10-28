@@ -1,0 +1,111 @@
+diff --git a/crates/cli/src/cache.rs b/crates/cli/src/cache.rs
+index 5c7d1ae..404bfb7 100644
+--- a/crates/cli/src/cache.rs
++++ b/crates/cli/src/cache.rs
+@@ -416,20 +416,24 @@ struct Tree<'a> {
+     allowed: Vec<PathBuf>,
+     seen: BTreeSet<PathBuf>,
+     active: BTreeSet<PathBuf>,
+-    options: &'a Options,
++    cache_directory: PathBuf,
+     report: Option<PathBuf>,
+     profile: &'a mut FingerprintProfile,
+ }
+ impl Tree<'_> {
+     fn excluded(&self, path: &Path) -> bool {
+-        path.starts_with(self.options.root.join(".oximut/cache"))
+-            || self.report.as_deref() == Some(path)
+-            || path.components().any(|c| c.as_os_str() == ".git")
+-            || (path.components().any(|c| c.as_os_str() == "node_modules")
+-                && path
+-                    .file_name()
+-                    .is_some_and(|n| n == ".vite" || n == ".vite-temp"))
++        if path.starts_with(&self.cache_directory) || self.report.as_deref() == Some(path) {
++            return true;
++        }
++        let vite_output = path
++            .file_name()
++            .is_some_and(|name| name == ".vite" || name == ".vite-temp");
++        path.components().any(|component| {
++            let name = component.as_os_str();
++            name == ".git" || (vite_output && name == "node_modules")
++        })
+     }
++
+     fn visit(&mut self, path: &Path) -> Result<(), String> {
+         if self.excluded(path) {
+             return Ok(());
+@@ -722,7 +726,7 @@ fn fingerprint_inputs(
+         allowed,
+         seen: BTreeSet::new(),
+         active: BTreeSet::new(),
+-        options,
++        cache_directory: options.root.join(".oximut/cache"),
+         report,
+         profile,
+     };
+@@ -856,6 +860,64 @@ mod tests {
+         (root, options, runtime)
+     }
+     #[test]
++    fn exclusions_match_legacy_lexical_path_policy() {
++        let options = options(Path::new("/project"));
++        let mut profile = FingerprintProfile::default();
++        let tree = Tree {
++            hash: Sha256::new(),
++            allowed: vec![],
++            seen: BTreeSet::new(),
++            active: BTreeSet::new(),
++            cache_directory: options.root.join(".oximut/cache"),
++            report: Some(options.root.join("report.json")),
++            profile: &mut profile,
++        };
++        let legacy = |path: &Path| {
++            path.starts_with(options.root.join(".oximut/cache"))
++                || tree.report.as_deref() == Some(path)
++                || path.components().any(|c| c.as_os_str() == ".git")
++                || (path.components().any(|c| c.as_os_str() == "node_modules")
++                    && path
++                        .file_name()
++                        .is_some_and(|n| n == ".vite" || n == ".vite-temp"))
++        };
++        for prefix in ["/project", "/elsewhere", "relative", "/project/../other"] {
++            for middle in [
++                "",
++                ".git",
++                "node_modules",
++                "node_modules/pkg",
++                "node_modules/.git",
++            ] {
++                for leaf in [
++                    "source.ts",
++                    ".git",
++                    ".vite",
++                    ".vite-temp",
++                    ".vite-other",
++                    "node_modules",
++                    ".oximut/cache",
++                    ".oximut/cache-extra",
++                    "report.json",
++                ] {
++                    let path = Path::new(prefix).join(middle).join(leaf);
++                    assert_eq!(tree.excluded(&path), legacy(&path), "{}", path.display());
++                }
++            }
++        }
++        for path in [
++            "/project/.oximut/cache",
++            "/project/.oximut/cache/input",
++            "/project/.oximut/cache/../input",
++            "/project/report.json/child",
++            "/project/node_modules/.vite/child",
++            "/project/./node_modules/pkg/.vite/",
++        ] {
++            let path = Path::new(path);
++            assert_eq!(tree.excluded(path), legacy(path), "{}", path.display());
++        }
++    }
++    #[test]
+     fn profiling_counts_actual_reads_without_changing_file_digest() {
+         let root = tempfile::tempdir().unwrap();
+         let path = root.path().join("input");
