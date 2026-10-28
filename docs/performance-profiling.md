@@ -160,8 +160,9 @@ details; full diagnostics and raw profiles remain in the uploaded artifact.
 Initial Python identity writes and both interpreters' process-identity reads are
 also guarded. An unavailable/invalid start time remains null and cannot validate
 a capture; Node skips startup sampling without that identity. A failed initial
-Python write remains missing evidence even if later writes would succeed. The
-supervisor still runs, and diagnostic stderr failures cannot replace its exit.
+identity write in either interpreter remains incomplete even if later writes would
+succeed. The supervisor still runs, and diagnostic stderr failures cannot replace
+its exit.
 
 
 ### Short-lived worker checkpoints and the first native capture

@@ -24,8 +24,10 @@ const record = {
   selfCpuAtPreloadUs: process.cpuUsage(),
   startTime,
 };
+let initialWriteSucceeded = false;
 try {
   fs.writeFileSync(file, JSON.stringify(record, null, 2));
+  initialWriteSucceeded = true;
 } catch (error) {
   try { fs.writeSync(2, `Diagnostic Node identity write failed: ${error.message}\n`); }
   catch { /* Diagnostic output must not replace the workload's exit status. */ }
@@ -34,6 +36,7 @@ if (process.env.OXIMUT_PROFILE_SEGMENTS === '1' && startTime !== null) {
   require('./node-segments.cjs')(record);
 }
 process.on('exit', (code) => {
+  if (!initialWriteSucceeded) return;
   record.exitCode = code;
   record.selfCpuAtExitUs = process.cpuUsage();
   record.exitObserved = new Date().toISOString();

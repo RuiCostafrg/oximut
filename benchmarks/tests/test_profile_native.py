@@ -251,13 +251,15 @@ class NodeFixtureTests(unittest.TestCase):
         node = shutil.which('node')
         if not node:
             self.skipTest('Node unavailable')
-        for fail_stderr in (False, True):
-            with self.subTest(fail_stderr=fail_stderr), tempfile.TemporaryDirectory() as tmp:
+        for first_only, fail_stderr in ((False, False), (False, True), (True, False), (True, True)):
+            with self.subTest(first_only=first_only, fail_stderr=fail_stderr), tempfile.TemporaryDirectory() as tmp:
                 root = Path(tmp)
                 sabotage = root / 'bad-fs.cjs'
                 sabotage.write_text("const fs = require('node:fs'); const path = require('node:path');\n"
-                                    "const write = fs.writeFileSync; fs.writeFileSync = (p,...args) => {\n"
-                                    "if (path.basename(String(p)).startsWith('node-')) throw Error('initial fixture'); return write(p,...args); };\n"
+                                    "const write = fs.writeFileSync; let failed=false; fs.writeFileSync = (p,...args) => {\n"
+                                    "if (path.basename(String(p)).startsWith('node-') && (!failed || "
+                                    + ('false' if first_only else 'true')
+                                    + ")) { failed=true; throw Error('initial fixture'); } return write(p,...args); };\n"
                                     + ("const raw = fs.writeSync; fs.writeSync = (fd,...args) => { if(fd===2) throw Error('stderr fixture'); return raw(fd,...args); };\n"
                                        if fail_stderr else ''))
                 child = root / 'workload.cjs'
