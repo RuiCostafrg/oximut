@@ -46,3 +46,12 @@ remain cached. Probe changes still invalidate the entire graph. These changes
 require alternating-file, original-source restoration, dynamic-import, selection,
 state-isolation, timeout, and descendant-cleanup regression checks. Their effect
 on elapsed time, CPU, and RSS must be measured rather than assumed.
+
+A subsequent supervisor candidate reduces full `/proc` discovery during active
+execution from every 10ms to every 50ms. Reaping still polls every 10ms. Shutdown
+always discovers a fresh full tree immediately after reaping, including newly
+adopted descendants, and retains the existing cleanup cadence and bound. Success
+requires `waitpid` to report `ECHILD` as well as an empty fresh tree. Historical
+identity tracking is sampled, not an exhaustive process audit. This changes no
+resource-budget sampling, test isolation, baseline, or mutation workload. Its
+performance effect requires a separate matched measurement.
