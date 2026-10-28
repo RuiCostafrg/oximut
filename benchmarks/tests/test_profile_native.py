@@ -279,6 +279,12 @@ class NodeFixtureTests(unittest.TestCase):
             inventory = diagnostic.capture_inventory(root)
             captured = inventory['observed'][0]
             self.assertTrue(captured['partial_segments_finalized'], inventory)
+            self.assertEqual(captured['partial_segment_count'], 1)
+            events = [json.loads(line) for line in next(root.glob('*.segment-events.jsonl')).read_text().splitlines()]
+            self.assertEqual(len(events), 1)
+            self.assertEqual(events[0]['maxSegmentsPerIsolate'], 1)
+            self.assertNotIn('restartedAtNs', events[0])
+            self.assertGreaterEqual(int(events[0]['disconnectedAtNs']), int(events[0]['stoppedAtNs']))
             self.assertFalse(captured['capture_present_and_finalized'])
             self.assertTrue(inventory['errors'])
             self.assertEqual(inventory['orphan_profiles'], [])

@@ -192,14 +192,14 @@ def main(argv=None):
     parser.add_argument('--binary', type=Path, required=True)
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--segments', action='store_true',
-                        help='Use inspector checkpoints instead of exit-time Node profiles; always partial evidence')
+                        help='Use one inspector startup checkpoint per isolate instead of exit-time Node profiles; always partial evidence')
     args = parser.parse_args(argv)
     output = args.output.resolve()
     output.mkdir(parents=True, exist_ok=False)
     profiles = output / 'profiles'
     profiles.mkdir()
     result = {'diagnostic_only': True, 'profiler_overhead': True,
-              'node_capture_mode': 'partial-inspector-segments' if args.segments else 'exit-time-cpu-prof',
+              'node_capture_mode': 'partial-inspector-startup' if args.segments else 'exit-time-cpu-prof',
               'qualification_errors': [], 'failure': None,
               'scope': 'Unchanged colord: 41 sources, 102 tests, five mutation sources, ten arithmetic edits. One capture, no warmup campaign.',
               'limits': 'Node sampling and Python supervisor self CPU only; no complete process-tree CPU partition. Rust resource sampling remains unattributed. External benchmark sampler CPU is outside wait4 product-tree CPU; it perturbs wall time.'}

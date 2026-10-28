@@ -9,7 +9,8 @@ const record = {
   argv: process.argv, execArgv: process.execArgv, cwd: process.cwd(),
   started: new Date().toISOString(),
   segmentCapture: process.env.OXIMUT_PROFILE_SEGMENTS === '1'
-    ? { method: 'inspector checkpoints', requestedIntervalMs: 50, coverage: 'partial; gaps and tail loss unbounded' }
+    ? { method: 'one inspector startup checkpoint', requestedCheckpointDelayMs: 50,
+        maxSegmentsPerIsolate: 1, coverage: 'startup partial; duration and tail loss unbounded' }
     : null,
   selfCpuAtPreloadUs: process.cpuUsage(),
   startTime: fs.readFileSync('/proc/self/stat', 'utf8').split(') ').pop().split(' ')[19],

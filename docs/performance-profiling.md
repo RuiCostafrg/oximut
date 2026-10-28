@@ -171,18 +171,20 @@ performance comparison. Raw evidence is archived under
 
 The native workflow now selects explicit `--segments` mode to collect useful
 partial stacks from these workers. This mode uses an inspector session per isolate
-**instead of** the built-in exit-time profiler. An unreferenced 50ms checkpoint
-requests stop → atomic profile write → restart without intercepting signals,
-waiting at shutdown, retaining the event loop, or changing workload deadlines.
-Requests are serialized. Per-segment event records retain actual profile timestamps
-and observed stop/restart gaps; process identity includes the requested interval.
-Failures disable further checkpointing and retain stderr/error evidence where
-possible while preserving workload exit status.
+**instead of** the built-in exit-time profiler. It starts once during preload and
+requests **one** unreferenced checkpoint after 50ms: stop → disconnect → atomic
+profile write, with no restart, signal interception, shutdown wait, retained event
+loop, or changed workload deadline. Identity metadata declares
+`maxSegmentsPerIsolate: 1`; the event record retains actual profile timestamps and
+stop/disconnect observations. Failures disable capture and retain stderr/error
+evidence where possible while preserving workload exit status.
 
-The interval is a scheduling request, not a duration guarantee. Busy synchronous
-JavaScript can starve checkpoints; startup, checkpoint gaps and the final tail can
-be missing, with no upper bound on lost work. Serialization/profiling overhead can
-perturb workload scheduling. Worker threads have separate segments but share process
+The delay is a scheduling request, not a duration or file-size guarantee. Busy
+synchronous JavaScript can postpone the callback indefinitely; a process killed
+before it fires leaves no checkpoint. These stacks are biased toward startup and
+omit later work, with no upper bound on lost tail. They cannot establish steady-state
+costs or whole-process CPU attribution. Even one checkpoint introduces profiling
+and serialization overhead that can perturb scheduling. Worker threads have separate segments but share process
 CPU counters. Do not combine checkpoint durations, process counters, or full profiles
 into an exact CPU total.
 
@@ -193,3 +195,13 @@ an explicit incomplete/failure status even when workload qualification and minim
 usable-role checks pass. Download its artifacts for analysis; do not retry merely
 to obtain a green check or relax the missing-exit gate. No performance ratios are
 published. Local invocations can select this mode by adding `--segments`.
+
+
+The [repeated-checkpoint run](https://github.com/RuiCostafrg/oximut/actions/runs/40658648515)
+produced 7,416 partial profiles and all minimum-role evidence, but **failed workload
+qualification**: Oximut's original baseline hit its unchanged 30-second deadline.
+The retained sampled stacks were dominated by `node:inspector` `post` frames. This
+motivated the one-checkpoint experiment, not a product optimization or performance
+claim. Its full raw artifact and interpretation are retained in
+[`2026-10-28-native-profile-overhead`](../benchmarks/results/2026-10-28-native-profile-overhead/README.md).
+The deadline, workload, assertions and incomplete-capture gates remain unchanged.
