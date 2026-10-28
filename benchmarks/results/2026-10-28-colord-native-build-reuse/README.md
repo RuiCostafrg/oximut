@@ -14,7 +14,7 @@ Both copied binaries have SHA-256
 `6f2ff9e9606f79026d61d1412f77d8775d6d9585e357f90fbe690e562224d6da`.
 All after reports lack the phase fields required by the candidate Rust source.
 The shared Cargo target directory reused the baseline executable. The retained
-`workflow.log` shows the first build taking 31.46s and the second only 0.05s. Thus the run
+`workflow.log.gz` shows the first build taking 31.46s and the second only 0.05s. Thus the run
 combined that executable with the newer adapter, rather than evaluating the
 complete declared after candidate. Different adapter hashes cannot establish
 correct Rust build provenance. The original generated ratios are not certified.
