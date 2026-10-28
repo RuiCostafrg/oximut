@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Oximut mutant list, schema version 1",
   "type": "object",
-  "additionalProperties": false,
+  "additionalProperties": true,
   "required": [
     "schemaVersion",
     "mutants",
@@ -23,12 +23,17 @@
       "items": {
         "type": "string"
       }
-    }
+    },
+    "runId": false,
+    "baseline": false,
+    "summary": false,
+    "cache": false,
+    "resources": false
   },
   "$defs": {
     "position": {
       "type": "object",
-      "additionalProperties": false,
+      "additionalProperties": true,
       "required": [
         "offset",
         "line",
@@ -53,7 +58,7 @@
     },
     "location": {
       "type": "object",
-      "additionalProperties": false,
+      "additionalProperties": true,
       "required": [
         "start",
         "end"
@@ -69,7 +74,7 @@
     },
     "mutant": {
       "type": "object",
-      "additionalProperties": false,
+      "additionalProperties": true,
       "required": [
         "id",
         "file",
