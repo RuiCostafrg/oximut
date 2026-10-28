@@ -67,6 +67,7 @@ def inspect_archive(archive, version, revision, tree):
     with tarfile.open(fileobj=io.BytesIO(expanded), mode="r:") as tar:
         for entry in tar:
             require(len(files) < MAX_ENTRIES, "archive entry limit exceeded")
+            require(not entry.pax_headers, "extended archive headers forbidden")
             BUILDER.safe_path(entry.name)
             require(entry.name.startswith(prefix), "unexpected archive root")
             name = entry.name[len(prefix):]
@@ -74,7 +75,6 @@ def inspect_archive(archive, version, revision, tree):
             require(name not in files, f"duplicate archive member: {name}")
             require(entry.type in (tarfile.REGTYPE, tarfile.AREGTYPE), "regular files only")
             require(not entry.linkname and not entry.sparse, "links/sparse files forbidden")
-            require(not entry.pax_headers, "extended archive headers forbidden")
             require(entry.mode in (0o644, 0o755), "unexpected file mode")
             require((entry.uid, entry.gid, entry.uname, entry.gname) == (0, 0, "", ""),
                     "unexpected archive ownership")
@@ -97,6 +97,9 @@ def inspect_archive(archive, version, revision, tree):
     require(re.fullmatch(r"[0-9a-f]{64}", manifest["builderSha256"]), "invalid builder digest")
     payload = {name: (mode, data) for name, (mode, data, _) in files.items()
                if name not in (MANIFEST, SUMS)}
+    require("scripts/build-source.py" in payload, "missing archived builder metadata")
+    require(manifest["builderSha256"] == BUILDER.sha(payload["scripts/build-source.py"][1]),
+            "builder digest mismatch")
     require(not any(name.startswith("SOURCE-DISTRIBUTION/") for name in payload),
             "unexpected distribution metadata")
     expected_inventory = [{"path": name, "mode": f"{mode:04o}", "size": len(data),
