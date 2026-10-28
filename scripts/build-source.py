@@ -32,7 +32,7 @@ REQUIRED = {
     "scripts/build-source.py",
     *{f"packages/vitest-adapter/{name}" for name in (
         "m1-runner.mjs", "m1-worker.ts", "m2-runner.mjs", "m2-worker.ts",
-        "m3-selection.ts", "m3-setup.ts", "protocol.ts", "supervisor.py", "worker.mjs")},
+        "m3-selection.ts", "m3-setup.ts", "protocol.ts", "protocol.mjs", "supervisor.py", "worker.mjs")},
 }
 
 

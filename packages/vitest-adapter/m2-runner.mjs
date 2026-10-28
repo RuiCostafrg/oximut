@@ -2,7 +2,7 @@ import { appendFile, lstat, open, readFile, readdir, rename, rm, stat } from 'no
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { openController } from './index.mjs';
-import { envelope, MAX_REQUEST_BYTES, MAX_RESPONSE_BYTES, validateRequest } from './protocol.ts';
+import { envelope, MAX_REQUEST_BYTES, MAX_RESPONSE_BYTES, validateRequest } from './protocol.mjs';
 
 const [session] = process.argv.slice(2);
 if (!session || process.argv.length !== 3) throw new Error('Usage: m2-runner.mjs SESSION_DIR');

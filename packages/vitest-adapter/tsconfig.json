@@ -4,6 +4,8 @@
     "module": "NodeNext",
     "strict": true,
     "noEmit": true,
+    "allowJs": true,
+    "checkJs": true,
     "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": true,
     "noUnusedLocals": true,
@@ -11,5 +13,5 @@
     "skipLibCheck": true,
     "types": ["node"]
   },
-  "include": ["*.ts"]
+  "include": ["*.ts", "protocol.mjs", "test/protocol-types.ts"]
 }

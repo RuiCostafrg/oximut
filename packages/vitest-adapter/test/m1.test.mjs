@@ -60,10 +60,14 @@ async function run(root, input) {
   const outputPath = join(root, 'response.json');
   await writeFile(inputPath, typeof input === 'string' ? input : JSON.stringify(input));
   await rm(outputPath, { force: true });
-  const { stdout } = await exec(process.execPath, [runner, inputPath, outputPath], {
-    timeout: 45000,
-    maxBuffer: 131072,
-  });
+  const { stdout } = await exec(
+    process.execPath,
+    ['--no-experimental-strip-types', runner, inputPath, outputPath],
+    {
+      timeout: 45000,
+      maxBuffer: 131072,
+    },
+  );
   assert.equal(stdout, '', 'test output must not carry protocol messages');
   const output = JSON.parse(await readFile(outputPath, 'utf8'));
   assert.equal(output.protocol, 1);
