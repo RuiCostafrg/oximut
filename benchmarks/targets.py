@@ -41,6 +41,14 @@ def evaluate(rows):
                 errors.append(f'round {index}: missing primary pair')
                 continue
             comparison = m6.compare(a, b)
+            fresh = indexed.get((index, 'clean-fresh'))
+            if (not fresh or not fresh['success']
+                    or not m6.compare(fresh, a)['ratio_eligible']
+                    or not m6.compare(fresh, b)['ratio_eligible']
+                    or fresh.get('matched_test_identity_sha256') != a.get('matched_test_identity_sha256')
+                    or fresh.get('matched_manifest_sha256') != a.get('matched_manifest_sha256')
+                    or fresh['warmup'] != a['warmup']):
+                errors.append(f'round {index}: missing, failed or unequal fresh correctness reference')
             ordinary = indexed.get((index, 'ordinary'))
             if (not ordinary or not ordinary['success']
                     or ordinary.get('matched_test_identity_sha256') != a.get('matched_test_identity_sha256')

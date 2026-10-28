@@ -11,7 +11,7 @@ def evidence(wall=.7, memory=.4, cpu=.6, repetitions=5):
     rows = []
     for fixture in targets.FIXTURES:
         for index in range(repetitions + 1):
-            for scenario in ('ordinary', 'clean-selection', 'clean-stryker'):
+            for scenario in ('ordinary', 'clean-selection', 'clean-stryker', 'clean-fresh'):
                 is_oximut = scenario == 'clean-selection'
                 rows.append(dict(fixture=fixture, round_index=index, scenario=scenario,
                     success=True, warmup=index == 0, memory_method='sum-live-smaps_rollup-rss',
@@ -27,11 +27,29 @@ class TargetTests(unittest.TestCase):
     def test_impossible_nonfinite_and_nonnumeric_measurements_cannot_certify(self):
         for value in (0, -1, float('inf'), float('nan'), None, '1', True):
             for metric in ('wall_seconds', 'peak_aggregate_rss_bytes'):
-                for index in (4, 5):
+                for index in (5, 6):
                     rows = evidence()
                     rows[index][metric] = value
                     with self.subTest(value=value, metric=metric, index=index):
                         self.assertFalse(targets.evaluate(rows)['targets_met'])
+
+    def test_fresh_reference_is_required_and_must_agree_in_every_round(self):
+        self.assertFalse(targets.evaluate([r for r in evidence()
+                                          if r['scenario'] != 'clean-fresh'])['targets_met'])
+        for index in (3, 7):  # warmup and measured references
+            for field, value in (
+                ('success', False), ('warmup', None),
+                ('mutations', {'other-edit': {'outcome': 'killed'}}),
+                ('mutations', {'edit': {'outcome': 'survived'}}),
+                ('matched_test_identity_sha256', 'different'),
+                ('matched_manifest_sha256', 'different'),
+            ):
+                rows = evidence()
+                rows[index][field] = value
+                with self.subTest(index=index, field=field, value=value):
+                    result = targets.evaluate(rows)
+                    self.assertFalse(result['targets_met'])
+                    self.assertIn('fresh correctness reference', ' '.join(result['fixtures'][0]['errors']))
 
     def test_both_targets_at_every_scale_and_cpu_are_reported(self):
         result = targets.evaluate(evidence())

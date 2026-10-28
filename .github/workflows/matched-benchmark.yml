@@ -48,14 +48,21 @@ jobs:
       - name: Evaluate targets and publish misses as evidence
         if: ${{ !cancelled() && hashFiles('.oximut/matched-benchmark/summary.json') != '' }}
         run: |
-          python3 benchmarks/targets.py .oximut/matched-benchmark
+          evaluation_status=0
+          python3 benchmarks/targets.py .oximut/matched-benchmark || evaluation_status=$?
           {
             echo '### Matched benchmark targets'
             echo 'Host/corpus-specific evidence; hosted runners may have noisy neighbours. Target misses do not become correctness failures.'
             echo '```json'
-            cat .oximut/matched-benchmark/performance-targets.json
+            if [[ -f .oximut/matched-benchmark/performance-targets.json ]]; then
+              cat .oximut/matched-benchmark/performance-targets.json
+            else
+              echo "No target result produced; evaluator exited with status $evaluation_status."
+            fi
             echo '```'
+            echo "Evaluator exit status: $evaluation_status"
           } >> "$GITHUB_STEP_SUMMARY"
+          exit "$evaluation_status"
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
