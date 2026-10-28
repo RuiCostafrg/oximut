@@ -205,3 +205,14 @@ motivated the one-checkpoint experiment, not a product optimization or performan
 claim. Its full raw artifact and interpretation are retained in
 [`2026-10-28-native-profile-overhead`](../benchmarks/results/2026-10-28-native-profile-overhead/README.md).
 The deadline, workload, assertions and incomplete-capture gates remain unchanged.
+
+
+The [single-startup-checkpoint run](https://github.com/RuiCostafrg/oximut/actions/runs/40685338353)
+passed the exact workload gate, including all 102 tests and ten shared killed
+arithmetic edits. It retained 64 partial segments, including all 38 Oximut test
+forks and minimum-role evidence for all tools, with no orphan profiles or recorded
+instrumentation errors. Full capture validation still failed: exit/full-profile
+evidence remains incomplete. The [capture capsule and interpretation](../benchmarks/results/2026-10-28-native-startup-qualified/README.md)
+preserve the raw diagnostic data and provenance. These startup-biased samples and
+instrumented Python times identify experiment candidates; they do not establish
+whole-process CPU costs, product speedups or progress against the performance targets.
