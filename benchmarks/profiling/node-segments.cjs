@@ -2,6 +2,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const { Session } = require('node:inspector');
+/** Checkpoint one isolate without retaining its event loop or handling signals. */
 module.exports = (record) => {
   const session = new Session();
   let timer;
@@ -9,6 +10,7 @@ module.exports = (record) => {
   let busy = false;
   const stem = path.join(process.env.OXIMUT_PROFILE_DIR,
     `Segment.${record.pid}.${record.threadId}.${record.startTime}`);
+  /** Disable instrumentation while preserving the workload's exit behavior. */
   const fail = (error) => {
     clearInterval(timer);
     try { session.disconnect(); } catch { /* Already disconnected. */ }
@@ -18,6 +20,7 @@ module.exports = (record) => {
       fs.writeSync(2, `Diagnostic segment capture failed: ${error.message}\n`);
     } catch { /* Preserve workload status. */ }
   };
+  /** Guard inspector responses and serialization errors in one place. */
   const post = (method, callback) => {
     try {
       session.post(method, (error, result) => {

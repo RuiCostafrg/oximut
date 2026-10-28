@@ -19,6 +19,7 @@ SUPPORT = ROOT / 'benchmarks/profiling'
 
 
 def qualification_errors(directory, code):
+    """Require one complete equivalent workload group without published ratios."""
     errors = []
     if code != 0:
         errors.append(f'qualification harness exited {code}')
@@ -43,6 +44,7 @@ def qualification_errors(directory, code):
 
 
 def node_profile_finalized(data):
+    """Check that parsed Node evidence has nodes and finite ordered timestamps."""
     try:
         return (isinstance(data, dict) and isinstance(data.get('nodes'), list) and bool(data['nodes'])
                 and all(isinstance(node, dict) for node in data['nodes'])
@@ -165,6 +167,7 @@ def capture_inventory(directory, qualification=None):
 
 
 def main(argv=None):
+    """Retain one diagnostic capture and fail on workload or capture errors."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--binary', type=Path, required=True)
     parser.add_argument('--output', type=Path, required=True)

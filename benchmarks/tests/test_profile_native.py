@@ -16,6 +16,7 @@ import profile_native as diagnostic
 
 class QualificationTests(unittest.TestCase):
     def rows(self):
+        """Build one equivalent three-tool result group for qualification fixtures."""
         return [dict(tool=tool, round=0, warmup=False, success=True,
                      memory_method='sum-live-smaps_rollup-rss', memory_errors=[],
                      declared_test_identity_sha256='same', mutator_families=['arithmetic'],
@@ -24,6 +25,7 @@ class QualificationTests(unittest.TestCase):
                 for tool in ('vitest', 'oximut', 'stryker')]
 
     def errors(self, rows, code=0, ratios=None):
+        """Validate fixture evidence through the public qualification checker."""
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             (root / 'summary.json').write_text(json.dumps({'correctness_gate': True, 'ratios': ratios or []}))
@@ -31,6 +33,7 @@ class QualificationTests(unittest.TestCase):
             return diagnostic.qualification_errors(root, code)
 
     def test_full_group_passes_but_missing_duplicate_failed_and_ratios_reject(self):
+        """Reject incomplete groups and comparative output in diagnostic mode."""
         rows = self.rows()
         self.assertEqual(self.errors(rows), [])
         self.assertTrue(self.errors(rows[:2]))
@@ -41,6 +44,7 @@ class QualificationTests(unittest.TestCase):
         self.assertTrue(self.errors(rows))
 
     def test_wrong_edit_count_or_outcome_reject_even_equal_cross_tool(self):
+        """Require the declared killed edits even when both tools agree."""
         for count, outcome in [(9, 'killed'), (10, 'survived'), (11, 'killed')]:
             rows = self.rows()
             for row in rows:
@@ -48,10 +52,12 @@ class QualificationTests(unittest.TestCase):
             self.assertTrue(self.errors(rows))
 
     def test_missing_summary_rejected(self):
+        """Treat absent qualification evidence as failure."""
         with tempfile.TemporaryDirectory() as tmp:
             self.assertTrue(diagnostic.qualification_errors(Path(tmp), 0))
 
     def test_preflight_failure_retains_explicit_failed_summary(self):
+        """Retain explicit failure evidence before any workload starts."""
         with tempfile.TemporaryDirectory() as tmp, mock.patch.dict(os.environ, {'NODE_OPTIONS': '--trace-warnings'}):
             out = Path(tmp) / 'capture'
             code = diagnostic.main(['--binary', '/missing', '--output', str(out)])
@@ -65,6 +71,7 @@ class QualificationTests(unittest.TestCase):
 
 class ShimTests(unittest.TestCase):
     def setUp(self):
+        """Prepare an isolated interpreter shim and its target supervisor."""
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name)
@@ -77,6 +84,7 @@ class ShimTests(unittest.TestCase):
                     'OXIMUT_PROFILE_DIR': str(self.root)}
 
     def test_supervisor_keeps_argv_ipc_signal_handler_and_nonzero_exit(self):
+        """Preserve supervisor arguments, inherited IPC and nonzero exit."""
         self.supervisor.write_text('''import os, signal, sys
 assert sys.argv[1:] == ['literal argument', '7']
 fd = int(os.environ['NODE_CHANNEL_FD'])
@@ -102,6 +110,7 @@ sys.exit(7)
         self.assertTrue(records[0].with_suffix('.pstats').is_file())
 
     def test_killed_supervisor_leaves_explicit_incomplete_identity(self):
+        """Keep killed supervisors visibly incomplete."""
         self.supervisor.write_text('import os, signal; os.kill(os.getpid(), signal.SIGKILL)')
         result = subprocess.run([str(self.shim), str(self.supervisor)], env=self.env)
         self.assertEqual(result.returncode, -9)
@@ -111,6 +120,7 @@ sys.exit(7)
         self.assertFalse(record['completed'])
 
     def test_dump_failure_does_not_replace_supervisor_exit(self):
+        """A profile write error must preserve the target exit code."""
         self.supervisor.write_text('''import os, pathlib, sys
 root = pathlib.Path(os.environ['OXIMUT_PROFILE_DIR'])
 identity = next(root.glob('python-*.json'))
@@ -123,6 +133,7 @@ sys.exit(9)
         self.assertTrue(diagnostic.capture_inventory(self.root)['errors'])
 
     def test_unrelated_invocations_exec_real_python_without_profile(self):
+        """Delegate unrelated Python commands without instrumentation."""
         result = subprocess.run([str(self.shim), '-c', 'import sys; sys.exit(23)'], env=self.env)
         self.assertEqual(result.returncode, 23)
         self.assertEqual(list(self.root.glob('python-*.json')), [])
@@ -130,6 +141,7 @@ sys.exit(9)
         self.assertEqual(result.returncode, -15)
 
     def test_incomplete_raw_evidence_is_retained(self):
+        """Retain malformed evidence and report incomplete captures."""
         file = self.root / 'python-999.json'
         file.write_text(json.dumps({'completed': False}))
         raw = self.root / 'CPU.orphan.cpuprofile'
@@ -144,6 +156,7 @@ sys.exit(9)
 
 class NodeFixtureTests(unittest.TestCase):
     def test_segment_timer_starvation_and_kill_before_checkpoint_stay_incomplete(self):
+        """Do not infer capture completeness from a requested checkpoint interval."""
         node = shutil.which('node')
         if not node:
             self.skipTest('Node unavailable')
@@ -174,6 +187,7 @@ class NodeFixtureTests(unittest.TestCase):
                     self.assertEqual(list(root.glob('Segment.*.cpuprofile')), [])
 
     def test_segment_preload_is_inherited_by_ipc_fork_and_terminated_worker_thread(self):
+        """Capture partial isolate stacks while preserving fork IPC."""
         node = shutil.which('node')
         if not node:
             self.skipTest('Node unavailable')
@@ -198,6 +212,7 @@ class NodeFixtureTests(unittest.TestCase):
             self.assertEqual(inventory['orphan_profiles'], [])
 
     def test_segment_checkpoints_survive_sigterm_without_changing_signal_exit(self):
+        """Retain partial stacks without intercepting termination."""
         node = shutil.which('node')
         if not node:
             self.skipTest('Node unavailable')
@@ -228,6 +243,7 @@ class NodeFixtureTests(unittest.TestCase):
             self.assertEqual(inventory['orphan_profiles'], [])
 
     def test_segment_capture_does_not_retain_event_loop_or_replace_failure_status(self):
+        """Allow natural exit and preserve status after checkpoint write failure."""
         node = shutil.which('node')
         if not node:
             self.skipTest('Node unavailable')
@@ -249,6 +265,7 @@ class NodeFixtureTests(unittest.TestCase):
                     self.assertTrue(list(root.glob('Segment.*.cpuprofile')))
 
     def test_inherited_node_profiles_and_identity_include_fork_with_ipc(self):
+        """Link normally exiting child profiles without breaking their IPC."""
         node = shutil.which('node')
         if not node:
             self.skipTest('Node unavailable')
@@ -275,6 +292,7 @@ class NodeFixtureTests(unittest.TestCase):
 
 
     def test_exit_identity_write_failure_preserves_original_node_exit(self):
+        """Keep the initial identity when exit-record writes fail."""
         node = shutil.which('node')
         if not node:
             self.skipTest('Node unavailable')
@@ -296,6 +314,7 @@ class NodeFixtureTests(unittest.TestCase):
 
 class MinimumCaptureTests(unittest.TestCase):
     def fixture(self, root):
+        """Create finalized evidence for each required tool and Oximut role."""
         import cProfile
         profiles = root / 'profiles'
         profiles.mkdir()
@@ -323,6 +342,7 @@ class MinimumCaptureTests(unittest.TestCase):
         return profiles, qualification
 
     def test_all_tool_and_oximut_process_roles_must_have_finalized_evidence(self):
+        """Require evidence for every declared tool and Oximut role."""
         with tempfile.TemporaryDirectory() as tmp:
             profiles, qualification = self.fixture(Path(tmp))
             inventory = diagnostic.capture_inventory(profiles, qualification)
@@ -336,7 +356,24 @@ class MinimumCaptureTests(unittest.TestCase):
                 self.assertTrue(inventory['errors'])
                 self.assertTrue(inventory['orphan_profiles'])
 
+    def test_extra_killed_node_does_not_pass_when_all_required_roles_are_complete(self):
+        """Complete role coverage cannot hide an additional incomplete process."""
+        with tempfile.TemporaryDirectory() as tmp:
+            profiles, qualification = self.fixture(Path(tmp))
+            extra = dict(pid=7, ppid=5, threadId=0, startTime='2',
+                         cwd=str(qualification / '00-oximut' / 'project'),
+                         argv=['node', 'terminated-extra-fork.js'])
+            (profiles / 'node-7.json').write_text(json.dumps(extra))
+            inventory = diagnostic.capture_inventory(profiles, qualification)
+            self.assertTrue(all(inventory['minimum_role_evidence'].values()))
+            self.assertIn('incomplete capture: node-7.json', inventory['errors'])
+            observed = next(r for r in inventory['observed'] if r['identity'] == 'node-7.json')
+            self.assertFalse(observed['capture_present_and_finalized'])
+            self.assertFalse(observed['exit_observed'])
+            self.assertEqual(observed['profiles'], [])
+
     def test_broken_parent_link_and_invalid_identity_fail_closed(self):
+        """Reject invalid identities and broken process ancestry."""
         for field, value in [('ppid', 999), ('pid', None)]:
             with self.subTest(field=field), tempfile.TemporaryDirectory() as tmp:
                 profiles, qualification = self.fixture(Path(tmp))
@@ -349,6 +386,7 @@ class MinimumCaptureTests(unittest.TestCase):
                 self.assertFalse(inventory['minimum_role_evidence']['oximut_supervisor'])
 
     def test_partial_fork_stack_is_usable_but_never_makes_capture_complete(self):
+        """Separate usable partial stacks from lifecycle completeness."""
         with tempfile.TemporaryDirectory() as tmp:
             profiles, qualification = self.fixture(Path(tmp))
             identity = profiles / 'node-6.json'
@@ -363,6 +401,7 @@ class MinimumCaptureTests(unittest.TestCase):
             self.assertEqual(inventory['orphan_profiles'], [])
 
     def test_corrupt_orphan_profile_is_explicitly_retained_and_rejected(self):
+        """Preserve orphan bytes while rejecting them as capture evidence."""
         with tempfile.TemporaryDirectory() as tmp:
             profiles, qualification = self.fixture(Path(tmp))
             orphan = profiles / 'CPU.orphan.cpuprofile'

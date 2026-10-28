@@ -9,6 +9,7 @@ import time
 
 
 def main():
+    """Profile only the selected supervisor, preserving argv, IPC and exit behavior."""
     actual = os.environ['OXIMUT_PROFILE_PYTHON']
     target = Path(os.environ['OXIMUT_PROFILE_SUPERVISOR'])
     # Delegate every other invocation by exec: preserve descriptors, signals/status,
