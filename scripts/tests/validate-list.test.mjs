@@ -21,11 +21,20 @@ test('list schema accepts empty and populated inventories and JSON source maps',
   validateList({ ...sample, mutants: [{ ...sample.mutants[0], map: null }] });
 });
 
+test('list schema accepts optional extensions at every object level', () => {
+  const listing = structuredClone(sample);
+  listing.futureEnvelope = {};
+  listing.mutants[0].futureMutant = true;
+  listing.mutants[0].location.futureLocation = [];
+  listing.mutants[0].location.start.futurePosition = 'optional';
+  validateList(listing);
+});
+
 test('list schema rejects wrong versions, missing fields, invalid positions, and report envelopes', () => {
   const cases = [
     { ...sample, schemaVersion: 2 },
     { ...sample, diagnostics: [42] },
-    { ...sample, runId: 'report-only' },
+    ...['runId', 'baseline', 'summary', 'cache', 'resources'].map(field => ({ ...sample, [field]: null })),
     { schemaVersion: 1, mutants: [], summary: {} },
   ];
   for (const field of Object.keys(sample.mutants[0])) {
