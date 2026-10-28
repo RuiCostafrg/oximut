@@ -143,6 +143,111 @@ sys.exit(9)
 
 
 class NodeFixtureTests(unittest.TestCase):
+    def test_segment_timer_starvation_and_kill_before_checkpoint_stay_incomplete(self):
+        node = shutil.which('node')
+        if not node:
+            self.skipTest('Node unavailable')
+        for busy in (False, True):
+            with self.subTest(busy=busy), tempfile.TemporaryDirectory() as tmp:
+                root = Path(tmp)
+                child = root / 'kill.cjs'
+                child.write_text("console.log('ready');\n" + ('while (true) {}' if busy else 'setInterval(() => {}, 1000);'))
+                env = {**os.environ, 'OXIMUT_PROFILE_DIR': str(root), 'OXIMUT_PROFILE_SEGMENTS': '1',
+                       'NODE_OPTIONS': f'--require="{diagnostic.SUPPORT / "node-identity.cjs"}"'}
+                process = subprocess.Popen([node, str(child)], env=env, stdout=subprocess.PIPE,
+                                           stderr=subprocess.PIPE, text=True)
+                self.addCleanup(lambda p=process: p.poll() is None and p.kill())
+                import select
+                self.assertTrue(select.select([process.stdout], [], [], 5)[0])
+                self.assertEqual(process.stdout.readline().strip(), 'ready')
+                if busy:
+                    # A busy isolate cannot checkpoint even after several nominal intervals.
+                    import time
+                    time.sleep(.2)
+                process.kill()
+                process.communicate(timeout=5)
+                self.assertEqual(process.returncode, -9)
+                inventory = diagnostic.capture_inventory(root)
+                self.assertTrue(inventory['errors'])
+                self.assertFalse(inventory['observed'][0]['capture_present_and_finalized'])
+                if busy:
+                    self.assertEqual(list(root.glob('Segment.*.cpuprofile')), [])
+
+    def test_segment_preload_is_inherited_by_ipc_fork_and_terminated_worker_thread(self):
+        node = shutil.which('node')
+        if not node:
+            self.skipTest('Node unavailable')
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            child = root / 'child.cjs'
+            child.write_text("setTimeout(() => { process.send('ok'); process.disconnect(); }, 220);")
+            parent = root / 'parent.cjs'
+            parent.write_text("const {fork} = require('node:child_process'); const {Worker} = require('node:worker_threads');\n"
+                              "const w = new Worker('setInterval(() => {}, 10)', {eval:true});\n"
+                              "const c = fork(process.argv[2]); c.on('message', m => { if(m !== 'ok') process.exitCode=1; });\n"
+                              "setTimeout(() => w.terminate(), 300);\n")
+            env = {**os.environ, 'OXIMUT_PROFILE_DIR': str(root), 'OXIMUT_PROFILE_SEGMENTS': '1',
+                   'NODE_OPTIONS': f'--require="{diagnostic.SUPPORT / "node-identity.cjs"}"'}
+            result = subprocess.run([node, str(parent), str(child)], env=env, capture_output=True, timeout=5)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            inventory = diagnostic.capture_inventory(root)
+            nodes = inventory['observed']
+            self.assertEqual(len(nodes), 3, inventory)
+            self.assertTrue(all(r['partial_segments_finalized'] for r in nodes), inventory)
+            self.assertTrue(inventory['errors'])
+            self.assertEqual(inventory['orphan_profiles'], [])
+
+    def test_segment_checkpoints_survive_sigterm_without_changing_signal_exit(self):
+        node = shutil.which('node')
+        if not node:
+            self.skipTest('Node unavailable')
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            child = root / 'terminated.cjs'
+            child.write_text("setInterval(() => { for (let i=0;i<10000;i++) Math.sqrt(i); }, 5);\n"
+                             "setTimeout(() => console.log('ready'), 220);\n")
+            env = {**os.environ, 'OXIMUT_PROFILE_DIR': str(root), 'OXIMUT_PROFILE_SEGMENTS': '1',
+                   'NODE_OPTIONS': f'--require="{diagnostic.SUPPORT / "node-identity.cjs"}"'}
+            process = subprocess.Popen([node, str(child)], env=env, stdout=subprocess.PIPE,
+                                       stderr=subprocess.PIPE, text=True)
+            self.addCleanup(lambda: process.poll() is None and process.kill())
+            # Poll the pipe with a bound so preload regressions cannot hang the suite.
+            import select
+            self.assertTrue(select.select([process.stdout], [], [], 5)[0])
+            self.assertEqual(process.stdout.readline().strip(), 'ready')
+            process.terminate()
+            _, stderr = process.communicate(timeout=5)
+            self.assertEqual(process.returncode, -15, stderr)
+            record = json.loads(next(root.glob('node-*.json')).read_text())
+            self.assertNotIn('exitObserved', record)
+            inventory = diagnostic.capture_inventory(root)
+            captured = inventory['observed'][0]
+            self.assertTrue(captured['partial_segments_finalized'], inventory)
+            self.assertFalse(captured['capture_present_and_finalized'])
+            self.assertTrue(inventory['errors'])
+            self.assertEqual(inventory['orphan_profiles'], [])
+
+    def test_segment_capture_does_not_retain_event_loop_or_replace_failure_status(self):
+        node = shutil.which('node')
+        if not node:
+            self.skipTest('Node unavailable')
+        for fail_write in (False, True):
+            with self.subTest(fail_write=fail_write), tempfile.TemporaryDirectory() as tmp:
+                root = Path(tmp)
+                child = root / 'exit.cjs'
+                child.write_text("const fs = require('node:fs'); const original = fs.renameSync;\n"
+                                 + ("fs.renameSync = (a,b) => { if (String(b).includes('Segment.')) throw Error('segment fixture'); return original(a,b); };\n"
+                                    if fail_write else '')
+                                 + "setTimeout(() => { process.exitCode = 23; }, 160);\n")
+                env = {**os.environ, 'OXIMUT_PROFILE_DIR': str(root), 'OXIMUT_PROFILE_SEGMENTS': '1',
+                       'NODE_OPTIONS': f'--require="{diagnostic.SUPPORT / "node-identity.cjs"}"'}
+                result = subprocess.run([node, str(child)], env=env, capture_output=True, timeout=5)
+                self.assertEqual(result.returncode, 23, result.stderr)
+                if fail_write:
+                    self.assertIn(b'Diagnostic segment capture failed', result.stderr)
+                else:
+                    self.assertTrue(list(root.glob('Segment.*.cpuprofile')))
+
     def test_inherited_node_profiles_and_identity_include_fork_with_ipc(self):
         node = shutil.which('node')
         if not node:
@@ -242,6 +347,20 @@ class MinimumCaptureTests(unittest.TestCase):
                 inventory = diagnostic.capture_inventory(profiles, qualification)
                 self.assertTrue(inventory['errors'])
                 self.assertFalse(inventory['minimum_role_evidence']['oximut_supervisor'])
+
+    def test_partial_fork_stack_is_usable_but_never_makes_capture_complete(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            profiles, qualification = self.fixture(Path(tmp))
+            identity = profiles / 'node-6.json'
+            record = json.loads(identity.read_text())
+            del record['exitObserved']
+            identity.write_text(json.dumps(record))
+            (profiles / 'CPU.20261028.000000.6.0.001.cpuprofile').rename(
+                profiles / 'Segment.6.0.1.0.cpuprofile')
+            inventory = diagnostic.capture_inventory(profiles, qualification)
+            self.assertTrue(inventory['minimum_role_evidence']['oximut_test_fork'])
+            self.assertIn('incomplete capture: node-6.json', inventory['errors'])
+            self.assertEqual(inventory['orphan_profiles'], [])
 
     def test_corrupt_orphan_profile_is_explicitly_retained_and_rejected(self):
         with tempfile.TemporaryDirectory() as tmp:

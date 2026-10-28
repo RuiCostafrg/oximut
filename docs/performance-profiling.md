@@ -100,8 +100,8 @@ finalization. No comparative ratios or targets are emitted; raw wall/CPU/RSS
 values in the underlying qualification artifacts include profiler overhead and
 are **not performance evidence**. Never mix them into the scored campaign.
 
-Node inherits `--cpu-prof --cpu-prof-dir=<unique capture directory>` through
-`NODE_OPTIONS`, plus a diagnostic CommonJS preload that records PID, parent PID,
+The default local mode inherits `--cpu-prof --cpu-prof-dir=<unique capture directory>`
+through `NODE_OPTIONS`. A diagnostic CommonJS preload records PID, parent PID,
 Linux start-time identity, thread ID, argv, execArgv, cwd, observed exit status
 and cumulative self CPU counters (`process.cpuUsage()`, microseconds) at preload
 and observed exit. Exit counters omit later shutdown work and missing exits;
@@ -145,10 +145,47 @@ For a prepared native environment, the helper can also be invoked with
 build provenance as the workflow does, leave `NODE_OPTIONS` unset, and use the
 pinned dependencies. This is a profiling command, not a timing benchmark.
 
-Capture success requires finalized Node evidence for each of ordinary Vitest,
+Minimum usable role evidence requires finalized Node profiles or partial segments
+for each of ordinary Vitest,
 Oximut and Stryker, and a linked Oximut adapter → Python supervisor → Node
 controller → test-fork chain, matched using process identities, argv and project
 cwd. This is minimum role evidence, not proof of complete process coverage.
 Unmatched Node/Python profiles are listed as orphans and fail capture validation;
 all raw files remain available. Node exit-record writes are atomic and guarded so
 a profiler write failure cannot replace the workload's original exit status.
+
+
+### Short-lived worker checkpoints and the first native capture
+
+The [first native capture](https://github.com/RuiCostafrg/oximut/actions/runs/40655919509)
+passed workload qualification but **failed capture validation**. Vitest ends its
+forks with SIGTERM, preventing exit-time Node dumps and exit observations. The
+retained Stryker worker-thread profiles also lack exit observations. This is
+incomplete diagnostic evidence, not a product correctness failure or a valid
+performance comparison. Raw evidence is archived under
+[`2026-10-28-native-profile-incomplete`](../benchmarks/results/2026-10-28-native-profile-incomplete/README.md).
+
+The native workflow now selects explicit `--segments` mode to collect useful
+partial stacks from these workers. This mode uses an inspector session per isolate
+**instead of** the built-in exit-time profiler. An unreferenced 50ms checkpoint
+requests stop → atomic profile write → restart without intercepting signals,
+waiting at shutdown, retaining the event loop, or changing workload deadlines.
+Requests are serialized. Per-segment event records retain actual profile timestamps
+and observed stop/restart gaps; process identity includes the requested interval.
+Failures disable further checkpointing and retain stderr/error evidence where
+possible while preserving workload exit status.
+
+The interval is a scheduling request, not a duration guarantee. Busy synchronous
+JavaScript can starve checkpoints; startup, checkpoint gaps and the final tail can
+be missing, with no upper bound on lost work. Serialization/profiling overhead can
+perturb workload scheduling. Worker threads have separate segments but share process
+CPU counters. Do not combine checkpoint durations, process counters, or full profiles
+into an exact CPU total.
+
+Segment validity and usable process-role evidence are reported separately from
+exit observations and full capture validation. Segments never turn an incomplete
+lifecycle into a complete capture. With `--segments`, the job is expected to retain
+an explicit incomplete/failure status even when workload qualification and minimum
+usable-role checks pass. Download its artifacts for analysis; do not retry merely
+to obtain a green check or relax the missing-exit gate. No performance ratios are
+published. Local invocations can select this mode by adding `--segments`.

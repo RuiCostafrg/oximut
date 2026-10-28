@@ -8,10 +8,16 @@ const record = {
   pid: process.pid, ppid: process.ppid, threadId,
   argv: process.argv, execArgv: process.execArgv, cwd: process.cwd(),
   started: new Date().toISOString(),
+  segmentCapture: process.env.OXIMUT_PROFILE_SEGMENTS === '1'
+    ? { method: 'inspector checkpoints', requestedIntervalMs: 50, coverage: 'partial; gaps and tail loss unbounded' }
+    : null,
   selfCpuAtPreloadUs: process.cpuUsage(),
   startTime: fs.readFileSync('/proc/self/stat', 'utf8').split(') ').pop().split(' ')[19],
 };
 fs.writeFileSync(file, JSON.stringify(record, null, 2));
+if (process.env.OXIMUT_PROFILE_SEGMENTS === '1') {
+  require('./node-segments.cjs')(record);
+}
 process.on('exit', (code) => {
   record.exitCode = code;
   record.selfCpuAtExitUs = process.cpuUsage();

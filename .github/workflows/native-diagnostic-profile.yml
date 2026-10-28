@@ -75,7 +75,7 @@ jobs:
         run: |
           set -euo pipefail
           python3 benchmarks/profile_native.py --binary "$PROFILE_ROOT/oximut" \
-            --output "$PROFILE_ROOT/capture" 2>&1 | tee "$PROFILE_ROOT/diagnostic.log"
+            --segments --output "$PROFILE_ROOT/capture" 2>&1 | tee "$PROFILE_ROOT/diagnostic.log"
       - name: Publish diagnostic status and remove dependency symlinks
         if: always()
         shell: bash

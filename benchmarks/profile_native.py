@@ -59,9 +59,18 @@ def capture_inventory(directory, qualification=None):
     for identity in sorted(directory.glob('*.json')):
         try:
             record = json.loads(identity.read_text())
+            segments = []
+            partial = False
             if identity.name.startswith('node-'):
                 profiles = sorted(directory.glob(f'CPU.*.{record["pid"]}.{record["threadId"]}.*.cpuprofile'))
                 matched.update(profiles)
+                segments = sorted(directory.glob(f'Segment.{record["pid"]}.{record["threadId"]}.{record.get("startTime")}.*.cpuprofile'))
+                matched.update(segments)
+                partial = bool(segments)
+                for path in segments:
+                    partial &= node_profile_finalized(json.loads(path.read_text()))
+                if segments and not partial:
+                    errors.append(f'invalid partial segment: {identity.name}')
                 complete = bool(profiles) and 'exitObserved' in record
                 for path in profiles:
                     data = json.loads(path.read_text())
@@ -72,7 +81,7 @@ def capture_inventory(directory, qualification=None):
                 complete = record['completed'] and profiles[0].is_file()
                 if complete:
                     pstats.Stats(str(profiles[0]))
-            if complete and not (
+            if (complete or partial) and not (
                     type(record.get('pid')) is int and record['pid'] > 0
                     and type(record.get('ppid')) is int and record['ppid'] > 0
                     and isinstance(record.get('cwd'), str) and Path(record['cwd']).is_absolute()
@@ -80,14 +89,19 @@ def capture_inventory(directory, qualification=None):
                     and all(isinstance(arg, str) for arg in record['argv'])
                     and isinstance(record.get('startTime'), str) and record['startTime'].isdigit()):
                 complete = False
+                partial = False
                 errors.append(f'invalid process identity: {identity.name}')
-            if complete and identity.name.startswith('node-') and (
+            if (complete or partial) and identity.name.startswith('node-') and (
                     type(record.get('threadId')) is not int or record['threadId'] < 0):
                 complete = False
+                partial = False
                 errors.append(f'invalid Node thread identity: {identity.name}')
             records.append({'identity': identity.name, 'profiles': [p.name for p in profiles],
+                            'partial_segments': [p.name for p in segments],
+                            'partial_segments_finalized': partial,
+                            'exit_observed': 'exitObserved' in record if identity.name.startswith('node-') else None,
                             'capture_present_and_finalized': complete})
-            if complete:
+            if complete or partial:
                 identities.append((identity.name, record))
             if not complete:
                 errors.append(f'incomplete capture: {identity.name}')
@@ -146,6 +160,7 @@ def capture_inventory(directory, qualification=None):
             if not values:
                 errors.append(f'missing finalized process-role capture: {role}')
     return {'observed': records, 'orphan_profiles': orphans, 'minimum_role_evidence': roles, 'errors': errors,
+            'role_evidence_policy': 'Finalized full profiles or explicitly partial segments. Missing lifecycle exits/full profiles still fail capture validation.',
             'completeness': 'Unknown: processes killed before preload/dump and overridden environments may be absent; raw orphan profiles retained.'}
 
 
@@ -153,12 +168,15 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--binary', type=Path, required=True)
     parser.add_argument('--output', type=Path, required=True)
+    parser.add_argument('--segments', action='store_true',
+                        help='Use inspector checkpoints instead of exit-time Node profiles; always partial evidence')
     args = parser.parse_args(argv)
     output = args.output.resolve()
     output.mkdir(parents=True, exist_ok=False)
     profiles = output / 'profiles'
     profiles.mkdir()
     result = {'diagnostic_only': True, 'profiler_overhead': True,
+              'node_capture_mode': 'partial-inspector-segments' if args.segments else 'exit-time-cpu-prof',
               'qualification_errors': [], 'failure': None,
               'scope': 'Unchanged colord: 41 sources, 102 tests, five mutation sources, ten arithmetic edits. One capture, no warmup campaign.',
               'limits': 'Node sampling and Python supervisor self CPU only; no complete process-tree CPU partition. Rust resource sampling remains unattributed. External benchmark sampler CPU is outside wait4 product-tree CPU; it perturbs wall time.'}
@@ -181,7 +199,9 @@ def main(argv=None):
                'OXIMUT_PROFILE_PYTHON': sys.executable,
                'OXIMUT_PROFILE_SUPERVISOR': str(adapter / 'supervisor.py'),
                'OXIMUT_PROFILE_DIR': str(profiles),
-               'NODE_OPTIONS': f'--cpu-prof --cpu-prof-dir="{profiles}" --require="{SUPPORT / "node-identity.cjs"}"'}
+               'OXIMUT_PROFILE_SEGMENTS': '1' if args.segments else '0',
+               'NODE_OPTIONS': ('' if args.segments else f'--cpu-prof --cpu-prof-dir="{profiles}" ') +
+                               f'--require="{SUPPORT / "node-identity.cjs"}"'}
         result['node_options'] = env['NODE_OPTIONS']
         cmd = [sys.executable, str(ROOT / 'benchmarks/real_project.py'),
                '--binary', str(inputs.binary), '--adapter', str(inputs.adapter),
