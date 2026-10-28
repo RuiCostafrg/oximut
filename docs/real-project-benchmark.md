@@ -260,3 +260,27 @@ after candidate; identical hashes and absent after phase fields exposed this.
 The full raw artifact and original summary are preserved separately from strict
 revalidation. Its generated ratios establish no candidate or performance target
 claim. The corrected workflow must produce fresh valid evidence.
+
+## Qualified native evidence, 2026-10-28
+
+[The corrected native campaign](../benchmarks/results/2026-10-28-colord-native-qualified/README.md)
+passed both strict build integrity and the complete workload/measurement gate on
+Ubuntu 24.04 x86_64: distinct candidate binaries, all required after-phase data,
+one warmup and five measured rounds, all 102 tests and ten identical killed edits.
+Original samples, full private projects, reports, logs, build metadata, confidence
+intervals and independent read-only revalidation are retained with checksums.
+
+Median paired after/before ratios were 0.8152 wall, 0.7247 CPU and 0.8273 aggregate
+peak RSS: reductions of 18.5%, 27.5% and 17.3% from the earlier Oximut candidate.
+Against Stryker, the after ratios were 2.4210 wall, 3.3299 CPU and 0.7558 RSS.
+Oximut therefore still takes more elapsed time and CPU, with 24.4% lower RSS.
+Both performance targets remain missed. These are host/workload-specific results,
+not evidence of general application performance or release readiness.
+
+The baseline, disabled-switch and coverage phase medians total roughly 7.65s;
+mutation execution is roughly 3.86s. Those validation checks and fresh forks
+remain required. The next diagnostic should attribute CPU to startup/loading,
+transforms, test execution and process accounting; phase wall times alone cannot
+identify the CPU owner. Profiler measurements must stay separate from scored
+comparisons. The benchmark parent's own CPU is excluded from the product-tree
+CPU measurement, though its activity can affect elapsed time.
