@@ -1,0 +1,47 @@
+Baseline: InfrastructureError (0 passed, 0 failed, 0 skipped)
+  Controller exited (0)
+node:internal/modules/package_json_reader:301
+  throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);
+        ^
+
+Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'vitest' imported from /root/.t3/worktrees/oximut/t3-52f2b967/packages/vitest-adapter/m2-worker.ts
+    at Object.getPackageJSONURL (node:internal/modules/package_json_reader:301:9)
+    at packageResolve (node:internal/modules/esm/resolve:768:81)
+    at moduleResolve (node:internal/modules/esm/resolve:859:18)
+    at defaultResolve (node:internal/modules/esm/resolve:992:11)
+    at #cachedDefaultResolve (node:internal/modules/esm/loader:704:20)
+    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:724:38)
+    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:762:56)
+    at #resolve (node:internal/modules/esm/loader:686:17)
+    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:606:35)
+    at ModuleJob.syncLink (node:internal/modules/esm/module_job:163:33) {
+  code: 'ERR_MODULE_NOT_FOUND'
+}
+
+Node.js v26.3.1
+
+skipped c8fb72bec90d /tmp/oximut-colord-matched-before-20261028-retry/00-oximut/project/src/manipulate/invert.ts:6:10 - -> +
+  baseline did not pass; mutant was not executed
+skipped 9fd7cd8a8c7b /tmp/oximut-colord-matched-before-20261028-retry/00-oximut/project/src/manipulate/mix.ts:12:85 * -> /
+  baseline did not pass; mutant was not executed
+skipped 82b44c30bb77 /tmp/oximut-colord-matched-before-20261028-retry/00-oximut/project/src/manipulate/saturate.ts:10:21 + -> -
+  baseline did not pass; mutant was not executed
+skipped c59a734f77d7 /tmp/oximut-colord-matched-before-20261028-retry/00-oximut/project/src/manipulate/mix.ts:12:76 - -> +
+  baseline did not pass; mutant was not executed
+skipped d608232f1dad /tmp/oximut-colord-matched-before-20261028-retry/00-oximut/project/src/manipulate/invert.ts:5:10 - -> +
+  baseline did not pass; mutant was not executed
+skipped 211c64945c6e /tmp/oximut-colord-matched-before-20261028-retry/00-oximut/project/src/manipulate/lighten.ts:11:21 + -> -
+  baseline did not pass; mutant was not executed
+skipped cf4748d0c363 /tmp/oximut-colord-matched-before-20261028-retry/00-oximut/project/src/manipulate/saturate.ts:10:30 * -> /
+  baseline did not pass; mutant was not executed
+skipped b115f5372f2e /tmp/oximut-colord-matched-before-20261028-retry/00-oximut/project/src/manipulate/mix.ts:12:69 + -> -
+  baseline did not pass; mutant was not executed
+skipped c88a30c6f5f3 /tmp/oximut-colord-matched-before-20261028-retry/00-oximut/project/src/manipulate/invert.ts:4:10 - -> +
+  baseline did not pass; mutant was not executed
+skipped 8a49a888d6e6 /tmp/oximut-colord-matched-before-20261028-retry/00-oximut/project/src/manipulate/lighten.ts:11:30 * -> /
+  baseline did not pass; mutant was not executed
+Mutants: 10 total, 0 killed, 0 survived, 0 no-coverage, 0 invalid, 0 timeout, 0 infrastructure-error, 0 resource-exhausted, 10 skipped
+Score: n/a (0/0); complete: false
+Cache: forced-no-cache; instrumentation hits/misses: 0/0; outcome hits/misses: 0/0; not-written
+Diagnostic: execution=persistent; isolation=fresh-test-forks; controller reuse only; baseline=original-and-disabled-switches
+Diagnostic: mutator families=arithmetic,boolean-literal; exclusions are not part of this run

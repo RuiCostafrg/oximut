@@ -3,7 +3,11 @@
 [Run 40595255153](https://github.com/RuiCostafrg/oximut/actions/runs/40595255153)
 validated PR head `10ef25546b89e88e493bf198fd837111461ce8d1` using GitHub's
 checked-out merge commit `147cfa5600216b71185096a4fd62424de87c0203`.
-All 150 downloaded benchmark artifact files are preserved in `raw/`.
+All 150 downloaded benchmark artifact files are preserved: reports and metadata
+are in `raw/`; the 48 unchanged output logs are in `raw-output-logs.tar.gz`
+(with their original `raw/.../output.log` paths). `RAW-ARTIFACT-SHA256SUMS`
+verifies the original artifact after extracting the logs. This keeps the review
+file count below the service limit while retaining every raw byte.
 The artifact ID is 12777800206; GitHub records ZIP digest
 `sha256:b2822b282945d268cb4ea7b035836b70b3a376121de9e92fc010d6a15b8f01f7`.
 
