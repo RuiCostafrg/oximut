@@ -1,3 +1,4 @@
+import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { createVitest, version, type Reporter } from 'vitest/node';
 import type { Request, Result } from './protocol.ts';
@@ -82,11 +83,13 @@ async function command(name: string, args: Request): Promise<unknown> {
           project.config.pool !== 'forks' ||
           project.config.isolate !== true ||
           project.config.maxWorkers !== 1 ||
-          project.config.maxConcurrency !== 1,
+          project.config.maxConcurrency !== 1 ||
+          project.config.environment !== 'node' ||
+          project.config.browser?.enabled === true,
       )
     )
       throw new Error(
-        'Unsupported resource configuration: one project, one fork, sequential files and tests, and isolation are required',
+        'Unsupported resource configuration: one Node project, one fork, sequential files and tests, and isolation are required',
       );
     if (
       vitest.projects.some(
@@ -149,6 +152,17 @@ async function command(name: string, args: Request): Promise<unknown> {
       job.selection?.mode === 'files'
         ? specifications.filter((spec) => job.selection?.files.includes(resolve(spec.moduleId)))
         : specifications;
+    // Match the file pragma precedence and syntax in pinned Vitest 4.1.12.
+    for (const spec of selected) {
+      const content = await readFile(spec.moduleId, 'utf8');
+      const environment =
+        content.match(/@(?:vitest|jest)-environment\s+([\w-]+)\b/)?.[1] ??
+        spec.project.config.environment;
+      if (environment !== 'node')
+        throw new Error(
+          `Unsupported test environment ${environment} in ${spec.moduleId}; Node is required`,
+        );
+    }
     await vitest.runTestSpecifications(selected, true);
   } finally {
     delete process.env.OXIMUT_ACTIVE_MUTANT;
