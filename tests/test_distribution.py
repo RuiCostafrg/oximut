@@ -137,6 +137,39 @@ class SourceDistribution(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "missing required source files.*protocol.mjs"):
             self.build(revision=self.git("rev-parse", "HEAD").strip())
 
+    def test_older_typescript_protocol_revision_remains_buildable(self):
+        # Model the legacy layout: runtime lives in protocol.ts, not a shim.
+        runtime = self.repo / "packages/vitest-adapter/protocol.mjs"
+        (runtime.with_suffix(".ts")).write_bytes(runtime.read_bytes())
+        for runner in ("m1-runner.mjs", "m2-runner.mjs"):
+            path = self.repo / "packages/vitest-adapter" / runner
+            path.write_text(path.read_text().replace("./protocol.mjs", "./protocol.ts"))
+        self.git("rm", "packages/vitest-adapter/protocol.mjs")
+        self.commit()
+        old = self.git("rev-parse", "HEAD").strip()
+        (self.repo / "README.md").write_text("newer checkout")
+        self.commit()
+        files = self.contents(self.build(revision=old))
+        self.assertNotIn("packages/vitest-adapter/protocol.mjs", files)
+        self.assertIn("packages/vitest-adapter/protocol.ts", files)
+
+    def test_either_runner_import_requires_the_runtime_protocol(self):
+        runtime = self.repo / "packages/vitest-adapter/protocol.mjs"
+        data = runtime.read_bytes()
+        for changed in ("m1-runner.mjs", "m2-runner.mjs"):
+            with self.subTest(changed=changed):
+                runtime.write_bytes(data)
+                for runner in ("m1-runner.mjs", "m2-runner.mjs"):
+                    path = self.repo / "packages/vitest-adapter" / runner
+                    source = path.read_text().replace("./protocol.mjs", "./protocol.ts")
+                    if runner == changed:
+                        source = source.replace("./protocol.ts", "./protocol.mjs")
+                    path.write_text(source)
+                runtime.unlink()
+                self.commit()
+                with self.assertRaisesRegex(ValueError, "missing required source files.*protocol.mjs"):
+                    self.build(revision=self.git("rev-parse", "HEAD").strip())
+
     def test_explicit_old_revision_not_current_checkout(self):
         original = (self.repo / "README.md").read_bytes()
         (self.repo / "README.md").write_text("different HEAD content")

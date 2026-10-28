@@ -32,7 +32,7 @@ REQUIRED = {
     "scripts/build-source.py",
     *{f"packages/vitest-adapter/{name}" for name in (
         "m1-runner.mjs", "m1-worker.ts", "m2-runner.mjs", "m2-worker.ts",
-        "m3-selection.ts", "m3-setup.ts", "protocol.ts", "protocol.mjs", "supervisor.py", "worker.mjs")},
+        "m3-selection.ts", "m3-setup.ts", "protocol.ts", "supervisor.py", "worker.mjs")},
 }
 
 
@@ -66,7 +66,14 @@ def json_bytes(value):
 
 
 def validate_metadata(files, version):
-    missing = REQUIRED - files.keys()
+    required = set(REQUIRED)
+    for runner in ("m1-runner.mjs", "m2-runner.mjs"):
+        source = files.get(f"packages/vitest-adapter/{runner}")
+        if source:
+            # Inspect selected Git blobs, never the current checkout's runners.
+            for name in re.findall(r"from\s+['\"]\./(protocol\.(?:mjs|ts))['\"]", source[1].decode()):
+                required.add(f"packages/vitest-adapter/{name}")
+    missing = required - files.keys()
     if missing:
         raise ValueError(f"missing required source files: {sorted(missing)}")
     read_json = lambda name: json.loads(files[name][1])
