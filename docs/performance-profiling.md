@@ -157,6 +157,11 @@ Initial Node identity writes are also guarded; missing identities remain capture
 errors. Segment metadata records a count and first/last sequence names instead of
 listing every checkpoint. The workflow displays only bounded status/counter/error
 details; full diagnostics and raw profiles remain in the uploaded artifact.
+Initial Python identity writes and both interpreters' process-identity reads are
+also guarded. An unavailable/invalid start time remains null and cannot validate
+a capture; Node skips startup sampling without that identity. A failed initial
+Python write remains missing evidence even if later writes would succeed. The
+supervisor still runs, and diagnostic stderr failures cannot replace its exit.
 
 
 ### Short-lived worker checkpoints and the first native capture

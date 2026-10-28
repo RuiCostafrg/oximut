@@ -108,7 +108,8 @@ def capture_inventory(directory, qualification=None):
                     and isinstance(record.get('cwd'), str) and Path(record['cwd']).is_absolute()
                     and isinstance(record.get('argv'), list) and bool(record['argv'])
                     and all(isinstance(arg, str) for arg in record['argv'])
-                    and isinstance(record.get('startTime'), str) and record['startTime'].isdigit()):
+                    and isinstance(record.get('startTime'), str)
+                    and record['startTime'].isascii() and record['startTime'].isdecimal()):
                 complete = False
                 partial = False
                 errors.append(f'invalid process identity: {identity.name}')

@@ -83,6 +83,56 @@ class QualificationTests(unittest.TestCase):
 
 
 class ShimTests(unittest.TestCase):
+    def test_initial_python_identity_failures_do_not_replace_supervisor_exit(self):
+        """Missing identity evidence must fail capture without preventing execution."""
+        self.supervisor.write_text("print('supervisor ran'); raise SystemExit(23)")
+        for failure in ('write', 'read', 'malformed', 'unicode'):
+            for stderr_error in ('none', 'OSError', 'ValueError'):
+                with self.subTest(failure=failure, stderr_error=stderr_error), tempfile.TemporaryDirectory() as tmp:
+                    output = Path(tmp)
+                    launcher = output / 'launch.py'
+                    launcher.write_text(f'''import pathlib, runpy, sys
+original_write = pathlib.Path.write_text
+original_read = pathlib.Path.read_text
+failed = False
+def write(path, *args, **kwargs):
+    global failed
+    if {failure!r} == 'write' and path.name.startswith('python-') and path.suffix == '.json' and not failed:
+        failed = True
+        raise OSError('initial identity fixture')
+    return original_write(path, *args, **kwargs)
+def read(path, *args, **kwargs):
+    if str(path) == '/proc/self/stat':
+        if {failure!r} == 'read': raise OSError('proc fixture')
+        if {failure!r} == 'malformed': return 'invalid stat'
+        if {failure!r} == 'unicode': return '1 (fixture) ' + ' '.join(['S'] + ['1'] * 18 + ['²'])
+    return original_read(path, *args, **kwargs)
+pathlib.Path.write_text = write
+pathlib.Path.read_text = read
+if {stderr_error!r} != 'none':
+    class BrokenStderr:
+        def write(self, text): raise getattr(__builtins__, {stderr_error!r})('stderr fixture')
+        def flush(self): pass
+    sys.stderr = BrokenStderr()
+sys.argv = [{str(self.shim)!r}, {str(self.supervisor)!r}]
+runpy.run_path({str(self.shim)!r}, run_name='__main__')
+''')
+                    env = {**self.env, 'OXIMUT_PROFILE_DIR': str(output)}
+                    result = subprocess.run([sys.executable, str(launcher)], env=env,
+                                            capture_output=True, timeout=5)
+                    self.assertEqual(result.returncode, 23, result.stderr)
+                    self.assertIn(b'supervisor ran', result.stdout)
+                    inventory = diagnostic.capture_inventory(output)
+                    self.assertTrue(inventory['errors'])
+                    self.assertTrue(list(output.glob('*.pstats')))
+                    if failure == 'write':
+                        # Even if later writes could succeed, initial failure stays visible.
+                        self.assertEqual(list(output.glob('python-*.json')), [])
+                        self.assertTrue(inventory['orphan_profiles'])
+                    else:
+                        record = json.loads(next(output.glob('python-*.json')).read_text())
+                        self.assertIsNone(record['startTime'])
+
     def setUp(self):
         """Prepare an isolated interpreter shim and its target supervisor."""
         self.temp = tempfile.TemporaryDirectory()
@@ -168,6 +218,34 @@ sys.exit(9)
 
 
 class NodeFixtureTests(unittest.TestCase):
+    def test_node_proc_identity_failures_preserve_workload_and_remain_incomplete(self):
+        """An unreadable or malformed stat never aborts preload or binds a segment."""
+        node = shutil.which('node')
+        if not node:
+            self.skipTest('Node unavailable')
+        for malformed in (False, True):
+            for fail_stderr in (False, True):
+                with self.subTest(malformed=malformed, fail_stderr=fail_stderr), tempfile.TemporaryDirectory() as tmp:
+                    root = Path(tmp)
+                    sabotage = root / 'bad-proc.cjs'
+                    sabotage.write_text("const fs = require('node:fs'); const read = fs.readFileSync;\n"
+                                        "fs.readFileSync = (p,...args) => { if(String(p)==='/proc/self/stat') {\n"
+                                        + ("return 'invalid stat';" if malformed else "throw Error('proc fixture');")
+                                        + "} return read(p,...args); };\n"
+                                        + ("const raw=fs.writeSync; fs.writeSync=(fd,...args)=>{if(fd===2) throw Error('stderr fixture'); return raw(fd,...args);};\n"
+                                           if fail_stderr else ''))
+                    child = root / 'workload.cjs'
+                    child.write_text("console.log('workload ran'); process.exitCode=23;")
+                    env = {**os.environ, 'OXIMUT_PROFILE_DIR': str(root), 'OXIMUT_PROFILE_SEGMENTS': '1',
+                           'NODE_OPTIONS': f'--require="{sabotage}" --require="{diagnostic.SUPPORT / "node-identity.cjs"}"'}
+                    result = subprocess.run([node, str(child)], env=env, capture_output=True, timeout=5)
+                    self.assertEqual(result.returncode, 23, result.stderr)
+                    self.assertIn(b'workload ran', result.stdout)
+                    record = json.loads(next(root.glob('node-*.json')).read_text())
+                    self.assertIsNone(record['startTime'])
+                    self.assertEqual(list(root.glob('Segment.*.cpuprofile')), [])
+                    self.assertTrue(diagnostic.capture_inventory(root)['errors'])
+
     def test_initial_identity_and_stderr_write_failures_preserve_workload_exit(self):
         """A failing preload diagnostic must still allow the target to run and exit."""
         node = shutil.which('node')
@@ -442,7 +520,7 @@ class MinimumCaptureTests(unittest.TestCase):
 
     def test_broken_parent_link_and_invalid_identity_fail_closed(self):
         """Reject invalid identities and broken process ancestry."""
-        for field, value in [('ppid', 999), ('pid', None)]:
+        for field, value in [('ppid', 999), ('pid', None), ('startTime', None), ('startTime', '²')]:
             with self.subTest(field=field), tempfile.TemporaryDirectory() as tmp:
                 profiles, qualification = self.fixture(Path(tmp))
                 identity = profiles / 'python-4.json'
