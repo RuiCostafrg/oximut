@@ -20,6 +20,9 @@ def evidence(wall=.7, memory=.4, cpu=.6, repetitions=5):
                     mutations={'edit': {'outcome': 'killed'}}, wall_seconds=wall if is_oximut else 1.,
                     peak_aggregate_rss_bytes=memory * 1000 if is_oximut else 1000,
                     cpu_seconds=cpu if is_oximut else 1.))
+                if scenario == 'clean-fresh':
+                    # Fresh execution has baseline counts, not coverage attribution.
+                    rows[-1].pop('matched_test_identity_sha256')
     return rows
 
 
@@ -41,7 +44,6 @@ class TargetTests(unittest.TestCase):
                 ('success', False), ('warmup', None),
                 ('mutations', {'other-edit': {'outcome': 'killed'}}),
                 ('mutations', {'edit': {'outcome': 'survived'}}),
-                ('matched_test_identity_sha256', 'different'),
                 ('matched_manifest_sha256', 'different'),
             ):
                 rows = evidence()
@@ -52,7 +54,10 @@ class TargetTests(unittest.TestCase):
                     self.assertIn('fresh correctness reference', ' '.join(result['fixtures'][0]['errors']))
 
     def test_both_targets_at_every_scale_and_cpu_are_reported(self):
-        result = targets.evaluate(evidence())
+        rows = evidence()
+        self.assertTrue(all('matched_test_identity_sha256' not in row
+                            for row in rows if row['scenario'] == 'clean-fresh'))
+        result = targets.evaluate(rows)
         self.assertTrue(result['targets_met'])
         self.assertAlmostEqual(result['fixtures'][0]['metrics']['cpu_seconds']['median_cpu_reduction_percent'], 40)
         result = targets.evaluate(evidence(memory=.7))
