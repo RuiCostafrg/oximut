@@ -12,16 +12,20 @@ import sys
 import time
 
 
+def process_identity(pid):
+    with open(f'/proc/{pid}/stat', encoding='utf8') as stream:
+        text = stream.read()
+    fields = text[text.rfind(')') + 2:].split()
+    return int(fields[1]), fields[19], fields[0]
+
+
 def snapshot():
     result = {}
     for item in os.listdir('/proc'):
         if not item.isdigit():
             continue
         try:
-            with open(f'/proc/{item}/stat', encoding='utf8') as stream:
-                text = stream.read()
-            fields = text[text.rfind(')') + 2:].split()
-            result[int(item)] = (int(fields[1]), fields[19], fields[0])
+            result[int(item)] = process_identity(int(item))
         except (FileNotFoundError, ProcessLookupError):
             pass
     return result
@@ -30,6 +34,37 @@ def snapshot():
 def descendants(table, parent):
     children = [pid for pid, value in table.items() if value[0] == parent]
     return [descendant for child in children for descendant in [*descendants(table, child), child]]
+
+
+def cleanup_known(owned, deadline):
+    """Bounded error-path cleanup; never use a cached identity to authorize a kill."""
+    owned = dict(owned)
+    while True:
+        if time.monotonic() >= deadline:
+            return
+        for pid, stamp in owned.items():
+            if time.monotonic() >= deadline:
+                return
+            try:
+                if process_identity(pid)[1] == stamp:
+                    os.kill(pid, signal.SIGKILL)
+            except (OSError, ValueError, IndexError):
+                # Gone, reused or independently unverifiable: do not signal it.
+                pass
+        while True:
+            try:
+                pid, _ = os.waitpid(-1, os.WNOHANG)
+            except ChildProcessError:
+                return
+            except OSError:
+                break
+            if not pid:
+                break
+            if time.monotonic() >= deadline:
+                return
+        if time.monotonic() >= deadline:
+            return
+        time.sleep(0.01)
 
 
 def main():
@@ -48,54 +83,69 @@ def main():
     signal.signal(signal.SIGTERM, request_stop)
     signal.signal(signal.SIGINT, request_stop)
     controller = subprocess.Popen([node, worker], pass_fds=(ipc_fd,))
-    os.close(ipc_fd)
-    with open(report_path + '.ready', 'w', encoding='utf8') as stream:
-        stream.write('ready')
     owned = {}
-    reaped = []
-    controller_status = None
     cleanup_started = None
-    next_snapshot = 0.0
-    while True:
-        # Historical identity discovery is sampled; reaping remains responsive.
-        if stop or time.monotonic() >= next_snapshot:
-            table = snapshot()
-            for pid in descendants(table, os.getpid()):
-                owned[pid] = table[pid][1]
-            next_snapshot = time.monotonic() + 0.05
-        no_children = False
+    try:
+        # Pin the direct child before broad discovery, including startup failures.
+        try:
+            owned[controller.pid] = process_identity(controller.pid)[1]
+        except (FileNotFoundError, ProcessLookupError):
+            pass
+        os.close(ipc_fd)
+        with open(report_path + '.ready', 'w', encoding='utf8') as stream:
+            stream.write('ready')
+        reaped = []
+        controller_status = None
+        next_snapshot = 0.0
         while True:
-            try:
-                pid, status = os.waitpid(-1, os.WNOHANG)
-            except ChildProcessError:
-                no_children = True
-                pid = 0
-            if not pid:
-                break
-            reaped.append(pid)
-            if pid == controller.pid:
-                controller_status = os.waitstatus_to_exitcode(status)
-                stop = True
-        if stop:
-            cleanup_started = cleanup_started or time.monotonic()
-            # Never signal from a cached active snapshot: adoption may have changed.
-            table = snapshot()
-            for pid in descendants(table, os.getpid()):
-                owned[pid] = table[pid][1]
-            # All adopted children are ours. Identity checks use this fresh snapshot.
-            for pid in descendants(table, os.getpid()):
-                if table[pid][1] == owned.get(pid):
-                    try:
-                        os.kill(pid, signal.SIGKILL)
-                    except ProcessLookupError:
-                        pass
-            if no_children and not descendants(snapshot(), os.getpid()):
-                break
-            if time.monotonic() - cleanup_started > 2:
-                raise RuntimeError('Owned descendants did not exit within cleanup bound')
-        time.sleep(0.01)
+            # Historical identity discovery is sampled; reaping remains responsive.
+            if stop or time.monotonic() >= next_snapshot:
+                table = snapshot()
+                for pid in descendants(table, os.getpid()):
+                    owned[pid] = table[pid][1]
+                next_snapshot = time.monotonic() + 0.05
+            no_children = False
+            while True:
+                try:
+                    pid, status = os.waitpid(-1, os.WNOHANG)
+                except ChildProcessError:
+                    no_children = True
+                    pid = 0
+                if not pid:
+                    break
+                reaped.append(pid)
+                if pid == controller.pid:
+                    controller_status = os.waitstatus_to_exitcode(status)
+                    stop = True
+            if stop:
+                cleanup_started = cleanup_started or time.monotonic()
+                # Never signal from a cached active snapshot: adoption may have changed.
+                table = snapshot()
+                for pid in descendants(table, os.getpid()):
+                    owned[pid] = table[pid][1]
+                # All adopted children are ours. Identity checks use this fresh snapshot.
+                for pid in descendants(table, os.getpid()):
+                    if table[pid][1] == owned.get(pid):
+                        try:
+                            os.kill(pid, signal.SIGKILL)
+                        except ProcessLookupError:
+                            pass
+                if no_children and not descendants(snapshot(), os.getpid()):
+                    break
+                if time.monotonic() - cleanup_started > 2:
+                    raise RuntimeError('Owned descendants did not exit within cleanup bound')
+            time.sleep(0.01)
 
-    final = snapshot()
+        final = snapshot()
+    except Exception:
+        # Discovery failure must not strand independently verifiable descendants.
+        # Preserve the original error and never publish successful cleanup evidence.
+        try:
+            cleanup_known(owned, (cleanup_started if cleanup_started is not None
+                                  else time.monotonic()) + 2)
+        except Exception:
+            pass
+        raise
     states = [{'pid': pid, 'startTime': stamp,
                'state': final[pid][2] if pid in final and final[pid][1] == stamp else 'absent'}
               for pid, stamp in owned.items()]

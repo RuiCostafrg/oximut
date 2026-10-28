@@ -55,3 +55,16 @@ requires `waitpid` to report `ECHILD` as well as an empty fresh tree. Historical
 identity tracking is sampled, not an exhaustive process audit. This changes no
 resource-budget sampling, test isolation, baseline, or mutation workload. Its
 performance effect requires a separate matched measurement.
+
+If process discovery fails, the supervisor performs bounded best-effort cleanup
+of previously observed identities, including its directly spawned controller.
+Each signal requires an independent current start-time check; missing, reused,
+malformed or unreadable identities are skipped. Cleanup shares any shutdown
+budget already in progress, reaps without blocking, and then propagates the
+original error without publishing a successful cleanup report.
+
+Post-job discovery can observe a test fork that exits during `/proc` enumeration.
+Before retaining a controller after such an observation, the runner requires a
+second empty excess-descendant scan and independently confirms that every excess
+PID from the first scan is absent. An existing or unverifiable PID still requires
+controller recycling and verified cleanup. No waiting grace period is added.
