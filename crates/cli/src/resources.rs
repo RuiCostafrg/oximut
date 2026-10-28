@@ -309,7 +309,14 @@ fn tree_rss(
 ) -> Result<u64, String> {
     let mut total = checked_rss(pid, table.start(pid), read_identity, read_rss)?;
     for (pid, start) in table.descendants(pid) {
-        total = total.saturating_add(checked_rss(pid, Some(start), read_identity, read_rss)?);
+        // A changed start confirms that this discovered identity has retired.
+        // Preserve the old descendant skip policy without measuring its
+        // replacement. Read failures still propagate, and roots remain strict.
+        if let Some((_, actual)) = read_identity(pid)?
+            && actual == start
+        {
+            total = total.saturating_add(read_rss(pid)?.unwrap_or(0));
+        }
     }
     Ok(total)
 }
@@ -626,6 +633,240 @@ mod tests {
                 assert_eq!(pair[0], ("identity", pair[1].1));
                 assert_eq!(pair[1].0, "rss");
                 assert_ne!(pair[1].1, unrelated);
+            }
+        }
+    }
+
+    #[test]
+    fn samples_ignore_unrelated_discovery_identity_failures() {
+        let cli = std::process::id();
+        let (worker, child, unrelated) = (cli + 1, cli + 2, cli + 3);
+        let identities = BTreeMap::from([(cli, (0, 1)), (worker, (cli, 2)), (child, (worker, 3))]);
+        for error in [
+            "permission denied",
+            "invalid process identity",
+            "stream did not contain valid UTF-8",
+        ] {
+            let mut state = budget();
+            let mut discovery_reads = 0;
+            state.sample_with_readers(
+                &[worker],
+                true,
+                || {
+                    ProcessTable::collect(
+                        [cli, worker, child, unrelated].map(|pid| Ok(Some(pid))),
+                        |pid| {
+                            discovery_reads += 1;
+                            if pid == unrelated {
+                                Err(error.into())
+                            } else {
+                                Ok(identities.get(&pid).copied())
+                            }
+                        },
+                    )
+                },
+                |pid| {
+                    assert_ne!(pid, unrelated);
+                    Ok(identities.get(&pid).copied())
+                },
+                |pid| Ok(Some(if pid == cli { 10 } else { 20 })),
+            );
+            assert_eq!(discovery_reads, 4);
+            assert_eq!(state.exhaustion, None, "{error}");
+            assert_eq!(state.current, 50);
+            assert_eq!(state.observed_workers, BTreeMap::from([(worker, 40)]));
+            assert_eq!(state.measured_worker_peak_bytes, 40);
+            assert_eq!(state.admission_worker_cost_bytes, 50);
+            assert!(state.capacity(&[worker]) > 0);
+        }
+    }
+
+    #[test]
+    fn nested_slot_sum_raises_aggregate_floor_and_preserves_reservations() {
+        let cli = std::process::id();
+        let (worker, nested) = (cli + 1, cli + 2);
+        let identities = BTreeMap::from([(cli, (0, 1)), (worker, (cli, 2)), (nested, (worker, 3))]);
+        let values = BTreeMap::from([(cli, 10), (worker, 20), (nested, 30)]);
+        let mut state = budget();
+        let mut rss_reads = BTreeMap::new();
+        state.sample_with_readers(
+            &[worker, nested],
+            true,
+            || {
+                ProcessTable::collect(identities.keys().map(|&pid| Ok(Some(pid))), |pid| {
+                    Ok(identities.get(&pid).copied())
+                })
+            },
+            |pid| Ok(identities.get(&pid).copied()),
+            |pid| {
+                *rss_reads.entry(pid).or_insert(0) += 1;
+                Ok(Some(values[&pid]))
+            },
+        );
+        assert_eq!(state.exhaustion, None);
+        assert_eq!(
+            rss_reads,
+            BTreeMap::from([(cli, 2), (worker, 2), (nested, 3)])
+        );
+        assert_eq!(
+            state.observed_workers,
+            BTreeMap::from([(worker, 50), (nested, 30)])
+        );
+        let aggregate: u64 = values.values().sum();
+        let slots: u64 = state.observed_workers.values().sum();
+        assert!(slots > aggregate);
+        assert_eq!(state.current, 90); // CLI + nested slot totals, versus aggregate 60.
+        assert_eq!(state.peak_aggregate_rss_bytes, 90);
+        assert_eq!(state.measured_worker_peak_bytes, 50);
+        assert_eq!(state.admission_worker_cost_bytes, 63);
+        state.budget_bytes = 300;
+        state.host_available = 300;
+        state.reserve_bytes = 40;
+        state.active = 2;
+        assert_eq!(state.capacity(&[worker, nested]), 1); // (300 - 90 - 40 - 13 - 33) / 63
+    }
+
+    #[test]
+    fn retired_descendants_are_skipped_before_aggregate_or_slot_measurement() {
+        let cli = std::process::id();
+        let (worker, child) = (cli + 1, cli + 2);
+        let identities = BTreeMap::from([(cli, (0, 1)), (worker, (cli, 2)), (child, (worker, 3))]);
+        for after_aggregate in [false, true] {
+            let mut state = budget();
+            let mut child_checks = 0;
+            let mut child_rss_reads = 0;
+            state.sample_with_readers(
+                &[worker],
+                true,
+                || {
+                    ProcessTable::collect(identities.keys().map(|&pid| Ok(Some(pid))), |pid| {
+                        Ok(identities.get(&pid).copied())
+                    })
+                },
+                |pid| {
+                    if pid == child {
+                        child_checks += 1;
+                        Ok(Some((
+                            worker,
+                            if after_aggregate && child_checks == 1 {
+                                3
+                            } else {
+                                4
+                            },
+                        )))
+                    } else {
+                        Ok(identities.get(&pid).copied())
+                    }
+                },
+                |pid| {
+                    if pid == child {
+                        child_rss_reads += 1;
+                        assert!(after_aggregate && child_rss_reads == 1, "replacement RSS");
+                        Ok(Some(30))
+                    } else {
+                        Ok(Some(if pid == cli { 10 } else { 20 }))
+                    }
+                },
+            );
+            assert_eq!(state.exhaustion, None);
+            assert_eq!(child_checks, 2);
+            assert_eq!(child_rss_reads, u32::from(after_aggregate));
+            assert_eq!(state.observed_workers, BTreeMap::from([(worker, 20)]));
+            assert_eq!(state.current, if after_aggregate { 60 } else { 30 });
+            assert_eq!(state.peak_aggregate_rss_bytes, state.current);
+        }
+    }
+
+    #[test]
+    fn root_identity_changes_after_aggregate_still_exhaust_without_replacement_rss() {
+        let cli = std::process::id();
+        let worker = cli + 1;
+        let identities = BTreeMap::from([(cli, (0, 1)), (worker, (cli, 2))]);
+        for changed in [cli, worker] {
+            let mut state = budget();
+            let mut checks = 0;
+            let mut changed_rss_reads = 0;
+            state.sample_with_readers(
+                &[worker],
+                true,
+                || {
+                    ProcessTable::collect(identities.keys().map(|&pid| Ok(Some(pid))), |pid| {
+                        Ok(identities.get(&pid).copied())
+                    })
+                },
+                |pid| {
+                    let (parent, start) = identities[&pid];
+                    if pid == changed {
+                        checks += 1;
+                        Ok(Some((
+                            parent,
+                            if checks == 1 { start } else { start + 100 },
+                        )))
+                    } else {
+                        Ok(Some((parent, start)))
+                    }
+                },
+                |pid| {
+                    if pid == changed {
+                        changed_rss_reads += 1;
+                        assert_eq!(changed_rss_reads, 1, "replacement RSS");
+                    }
+                    Ok(Some(10))
+                },
+            );
+            assert_eq!(checks, 2);
+            assert_eq!(changed_rss_reads, 1);
+            assert_eq!(
+                state.exhaustion,
+                Some(format!(
+                    "process identity changed since discovery for PID {changed}"
+                ))
+            );
+            assert_eq!(state.capacity(&[]), 0);
+        }
+    }
+
+    #[test]
+    fn fresh_accounting_errors_for_roots_and_discovered_members_still_exhaust() {
+        let cli = std::process::id();
+        let (worker, child) = (cli + 1, cli + 2);
+        let identities = BTreeMap::from([(cli, (0, 1)), (worker, (cli, 2)), (child, (worker, 3))]);
+        for failed_pid in [cli, worker, child] {
+            for identity_error in [false, true] {
+                let mut state = budget();
+                state.sample_with_readers(
+                    &[worker],
+                    true,
+                    || {
+                        ProcessTable::collect(identities.keys().map(|&pid| Ok(Some(pid))), |pid| {
+                            Ok(identities.get(&pid).copied())
+                        })
+                    },
+                    |pid| {
+                        if pid == failed_pid && identity_error {
+                            Err("fresh identity unavailable".into())
+                        } else {
+                            Ok(identities.get(&pid).copied())
+                        }
+                    },
+                    |pid| {
+                        if pid == failed_pid {
+                            assert!(!identity_error, "RSS read after identity failure");
+                            Err("fresh RSS unavailable".into())
+                        } else {
+                            Ok(Some(10))
+                        }
+                    },
+                );
+                assert_eq!(
+                    state.exhaustion.as_deref(),
+                    Some(if identity_error {
+                        "fresh identity unavailable"
+                    } else {
+                        "fresh RSS unavailable"
+                    })
+                );
+                assert_eq!(state.capacity(&[]), 0);
             }
         }
     }

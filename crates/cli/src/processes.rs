@@ -68,7 +68,10 @@ impl ProcessTable {
         let mut processes = BTreeMap::new();
         for pid in pids {
             if let Some(pid) = pid?
-                && let Some(identity) = read_identity(pid)?
+                // Broad discovery includes unrelated host processes. Preserve
+                // best-effort stat handling here; selected roots and discovered
+                // members get independent, strict accounting reads later.
+                && let Ok(Some(identity)) = read_identity(pid)
             {
                 processes.insert(pid, identity);
             }
@@ -160,11 +163,19 @@ mod tests {
     }
 
     #[test]
-    fn collection_tolerates_exits_but_propagates_directory_and_identity_errors() {
-        let table = ProcessTable::collect([Ok(None), Ok(Some(1))], |_| Ok(None)).unwrap();
-        assert!(table.0.is_empty());
+    fn collection_skips_unreadable_identities_but_propagates_directory_errors() {
+        let table = ProcessTable::collect(
+            [Ok(None), Ok(Some(1)), Ok(Some(2)), Ok(Some(3))],
+            |pid| match pid {
+                1 => Ok(None),
+                2 => Err("permission denied".into()),
+                3 => Ok(Some((0, 30))),
+                _ => unreachable!(),
+            },
+        )
+        .unwrap();
+        assert_eq!(table.0, BTreeMap::from([(3, (0, 30))]));
         assert!(ProcessTable::collect([Err("directory entry".into())], |_| Ok(None)).is_err());
-        assert!(ProcessTable::collect([Ok(Some(1))], |_| Err("permission denied".into())).is_err());
         assert!(parse_identity("invalid").is_none());
         let mut fields = vec!["0"; 22];
         fields[0] = "S";
