@@ -6,6 +6,9 @@ This benchmark vendors MIT-licensed colord commit
 test suites plus fixtures are unmodified. The license, original package metadata,
 file hashes and adaptation details are in
 [the corpus provenance](../benchmarks/real-project/colord/PROVENANCE.md).
+That document also records known upstream mixed-case angle-unit behavior. The
+benchmark preserves upstream implementation and test limitations; matching tool
+outcomes do not certify the third-party library's correctness.
 
 The workload declares five mutation source files: `extend.ts` and
 `manipulate/{invert,lighten,mix,saturate}.ts`. All 102 upstream tests remain
