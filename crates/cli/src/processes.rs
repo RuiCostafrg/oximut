@@ -45,7 +45,7 @@ impl ProcessTable {
             .flatten()
             .filter_map(|entry| entry.file_name().to_string_lossy().parse::<u32>().ok())
             .map(|pid| Ok(Some(pid)));
-        Self::collect(pids, |pid| Ok(super::process_identity(pid))).unwrap_or_default()
+        Self::collect(pids, identity).unwrap_or_default()
     }
 
     pub fn read_with(
