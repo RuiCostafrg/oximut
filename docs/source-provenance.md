@@ -66,13 +66,19 @@ GitHub attestation against the expected repository and signer workflow identity,
 then compare the attested evidence's candidate SHA and workflow SHA with the
 reviewed commits. The signed workflow identity is the trusted builder origin;
 when candidate and workflow commits differ, the evidence sidecar binds the
-candidate. For example, with the GitHub CLI:
+candidate. Pin both the source ref and signer digest: the workflow path alone
+does not distinguish an unreviewed workflow dispatched from another branch.
+Set `REVIEWED_WORKFLOW_SHA` to the full reviewed workflow commit, obtained
+independently of the downloaded candidate. For example, with the GitHub CLI:
 
 ```sh
+: "${REVIEWED_WORKFLOW_SHA:?Set the full reviewed workflow commit SHA}"
 gh attestation verify oximut-1.0.0-rc.1-source.tar.gz \
-  --repo OWNER/REPO --signer-workflow OWNER/REPO/.github/workflows/source-candidate.yml
+  --repo RuiCostafrg/oximut --signer-workflow RuiCostafrg/oximut/.github/workflows/source-candidate.yml \
+  --source-ref refs/heads/main --signer-digest "$REVIEWED_WORKFLOW_SHA"
 gh attestation verify oximut-1.0.0-rc.1-source.tar.gz.evidence.json \
-  --repo OWNER/REPO --signer-workflow OWNER/REPO/.github/workflows/source-candidate.yml
+  --repo RuiCostafrg/oximut --signer-workflow RuiCostafrg/oximut/.github/workflows/source-candidate.yml \
+  --source-ref refs/heads/main --signer-digest "$REVIEWED_WORKFLOW_SHA"
 ```
 
 ## Exact artifact validation before attestation

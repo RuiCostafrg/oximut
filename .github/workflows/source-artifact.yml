@@ -48,6 +48,8 @@ jobs:
           revision=$(git rev-parse HEAD)
           version=$(python3 -c 'import json; print(json.load(open("package.json"))["version"])')
           python3 scripts/build-source.py --revision "$revision" --version "$version" --output-dir "$RUNNER_TEMP/source-candidate"
+      - name: Install trusted validator dependencies
+        run: npm ci --include=dev --ignore-scripts --no-audit --no-fund
       - name: Install candidate once and validate outside checkout
         shell: bash
         run: |
