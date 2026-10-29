@@ -144,9 +144,14 @@ print('ISOLATED')
             SANDBOX.run(['/bin/sh', '-c', 'exit 7'], cwd=self.work, writable=[self.work])
         marker = self.work / 'late-write'
         started = self.work / 'started'
+        lifetime = self.work / 'descendant-lifetime'
+        os.mkfifo(lifetime)
+        reader = os.open(lifetime, os.O_RDONLY | os.O_NONBLOCK)
+        self.addCleanup(os.close, reader)
         code = f'''import os, time
 if os.fork() == 0:
     os.setsid()
+    writer = os.open({str(lifetime)!r}, os.O_WRONLY)
     open({str(started)!r}, 'w').write('started')
     time.sleep(5)
     open({str(marker)!r}, 'w').write('survived')
@@ -173,8 +178,19 @@ else:
                 with self.assertRaises(subprocess.TimeoutExpired):
                     SANDBOX.run(['/usr/bin/python3', '-c', code.replace('{parent}', parent)],
                                 cwd=self.work, writable=[self.work], timeout=3)
-            time.sleep(5.2)
             self.assertTrue(started.exists(), 'descendant never started')
+            # The child opens this FIFO before announcing readiness and never
+            # closes it itself. A live child yields EAGAIN; teardown yields EOF.
+            deadline = time.monotonic() + 3
+            while True:
+                try:
+                    self.assertEqual(os.read(reader, 1), b'')
+                    break
+                except BlockingIOError:
+                    if time.monotonic() >= deadline:
+                        self.fail('detached descendant still holds its lifetime pipe')
+                    time.sleep(0.01)
+            time.sleep(5.2)
             self.assertFalse(marker.exists(), 'detached writer survived namespace teardown')
 
     @unittest.skipUnless(os.environ.get('OXIMUT_TEST_BINARY'), 'real binary supplied by Ubuntu CI')
