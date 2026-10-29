@@ -60,10 +60,12 @@ def run(command, *, cwd, writable, readonly=(), timeout=300, network=False,
             args += ['--ro-bind', path, path]
     # Ubuntu's /usr/bin/cc and c++ links traverse /etc/alternatives.
     # Expose only compiler aliases resolving into the trusted /usr toolchain.
+    args += ['--dir', '/etc/alternatives']
     for name in ('cc', 'c++'):
         alias = Path('/etc/alternatives') / name
         if alias.is_file() and alias.resolve().is_relative_to('/usr'):
-            args += ['--ro-bind', str(alias.resolve()), str(alias)]
+            # Preserve canonical /usr location for GCC's cc1/collect2 lookup.
+            args += ['--symlink', str(alias.resolve()), str(alias)]
     # Mount only standalone tool distributions, never rustup/cargo homes or PATH dirs.
     tool_dirs = []
     node = Path(shutil.which('node') or '/usr/bin/node').resolve()
