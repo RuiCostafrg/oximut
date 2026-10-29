@@ -149,6 +149,10 @@ async function run(request) {
   }
 }
 try {
+  // Requests are strictly serial. Reuse the bounded buffer instead of allocating
+  // another 8 MiB external allocation for every mutation job. Only bytesRead
+  // participates in parsing, so shorter requests cannot observe an old suffix.
+  const requestBuffer = Buffer.alloc(MAX_REQUEST_BYTES + 1);
   for (let sequence = 0; ; sequence++) {
     const requestPath = join(session, `request-${sequence}.json`);
     while (!(await exists(requestPath))) {
@@ -166,10 +170,9 @@ try {
         const info = await file.stat();
         if (!info.isFile() || info.size > MAX_REQUEST_BYTES)
           throw new Error('Request must be a regular file of at most 8 MiB');
-        const buffer = Buffer.alloc(MAX_REQUEST_BYTES + 1);
-        const { bytesRead } = await file.read(buffer, 0, buffer.length, 0);
+        const { bytesRead } = await file.read(requestBuffer, 0, requestBuffer.length, 0);
         if (bytesRead > MAX_REQUEST_BYTES) throw new Error('Request exceeds 8 MiB');
-        request = JSON.parse(buffer.toString('utf8', 0, bytesRead));
+        request = JSON.parse(requestBuffer.toString('utf8', 0, bytesRead));
       } finally {
         await file.close();
       }

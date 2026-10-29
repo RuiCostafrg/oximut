@@ -25,6 +25,7 @@ test(
       const original = await readFile(new URL(`../${name}`, import.meta.url), 'utf8');
       const source = original
         .replace("from 'vitest/node'", `from ${JSON.stringify(stub)}`)
+        .replace("from 'vite'", `from ${JSON.stringify(import.meta.resolve('vite'))}`)
         .replace(
           "from './m3-selection.ts'",
           `from '${new URL('../m3-selection.ts', import.meta.url).href}'`,
@@ -32,11 +33,22 @@ test(
       const path = join(directory, name);
       await writeFile(path, source);
       const child = fork(path, [], { stdio: ['ignore', 'pipe', 'pipe', 'ipc'] });
+      let diagnostics = '';
+      child.stderr.on('data', (data) => {
+        diagnostics += data;
+      });
       const exited = once(child, 'exit');
       try {
         const response = once(child, 'message', { signal: AbortSignal.timeout(5000) });
         child.send({ protocol: 1, id: 1, command: 'initialize', args: {} });
-        const [message] = await response;
+        const [message] = await Promise.race([
+          response,
+          exited.then(([code, signal]) => {
+            throw new Error(
+              `Worker exited before version response (${code}, ${signal}): ${diagnostics}`,
+            );
+          }),
+        ]);
         assert.equal(message.id, 1);
         assert.match(message.error, /Unsupported Vitest 4\.1\.11; expected 4\.1\.12/);
       } finally {

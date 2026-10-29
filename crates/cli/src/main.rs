@@ -768,6 +768,9 @@ fn run(options: Options) -> Result<u8, String> {
 }
 
 fn run_attempt(options: &Options, previous: Option<RetryEvidence>) -> Result<Attempt, String> {
+    let preparation_started = Instant::now();
+    let mut phase_wall_ms = BTreeMap::new();
+    let mut disabled_validation_runs = Vec::new();
     let mut cache = cache::Cache::new(options);
     let mut mutants: Vec<Mutant> = vec![];
     let retry = previous.is_some();
@@ -881,7 +884,17 @@ fn run_attempt(options: &Options, previous: Option<RetryEvidence>) -> Result<Att
         selection: None,
     };
     let mut scheduler = scheduler::Scheduler::new(options)?;
+    phase_wall_ms.insert(
+        "inputAndSchedulerPreparation",
+        preparation_started.elapsed().as_secs_f64() * 1000.0,
+    );
+    let baseline_started = Instant::now();
     let mut baseline = scheduler.execute(&request);
+    phase_wall_ms.insert(
+        "originalBaseline",
+        baseline_started.elapsed().as_secs_f64() * 1000.0,
+    );
+    let disabled_started = Instant::now();
     if baseline.outcome == TestOutcome::Passed {
         for mutation in disabled_checks {
             request.generation += 1;
@@ -889,7 +902,11 @@ fn run_attempt(options: &Options, previous: Option<RetryEvidence>) -> Result<Att
             request.kind = "mutant".into();
             let file = mutation.file.clone();
             request.mutation = Some(mutation);
+            let started = Instant::now();
             let mut checked = scheduler.execute(&request);
+            disabled_validation_runs.push(serde_json::json!({
+                "file": file, "wallMs": started.elapsed().as_secs_f64() * 1000.0
+            }));
             if checked.outcome == TestOutcome::Passed
                 && (checked.tests.passed != baseline.tests.passed
                     || checked.tests.failed != baseline.tests.failed
@@ -908,6 +925,11 @@ fn run_attempt(options: &Options, previous: Option<RetryEvidence>) -> Result<Att
             }
         }
     }
+    phase_wall_ms.insert(
+        "disabledSwitchValidation",
+        disabled_started.elapsed().as_secs_f64() * 1000.0,
+    );
+    let coverage_started = Instant::now();
     if baseline.outcome == TestOutcome::Passed && options.test_selection {
         request.generation += 1;
         request.job_id = "coverage-baseline".into();
@@ -955,6 +977,11 @@ fn run_attempt(options: &Options, previous: Option<RetryEvidence>) -> Result<Att
         request.collect_coverage = None;
     }
     let generation_offset = request.generation;
+    phase_wall_ms.insert(
+        "coverageBaseline",
+        coverage_started.elapsed().as_secs_f64() * 1000.0,
+    );
+    let post_baseline_started = Instant::now();
     let baseline_ok = baseline.outcome == TestOutcome::Passed;
     let mut results = vec![];
     let mut jobs = vec![];
@@ -1011,6 +1038,11 @@ fn run_attempt(options: &Options, previous: Option<RetryEvidence>) -> Result<Att
             .map(|result| (result.id.as_str(), result))
             .collect()
     });
+    phase_wall_ms.insert(
+        "postBaselineValidation",
+        post_baseline_started.elapsed().as_secs_f64() * 1000.0,
+    );
+    let planning_started = Instant::now();
     if !options.baseline_only {
         for (index, mutant) in mutants.into_iter().enumerate() {
             let selection = selection_for(&baseline, &mutant);
@@ -1100,13 +1132,27 @@ fn run_attempt(options: &Options, previous: Option<RetryEvidence>) -> Result<Att
         }
     }
     let fresh_work_started = Instant::now();
+    phase_wall_ms.insert(
+        "mutationPlanning",
+        planning_started.elapsed().as_secs_f64() * 1000.0,
+    );
     scheduler.run_jobs(jobs, &mut results);
+    phase_wall_ms.insert(
+        "mutationExecution",
+        fresh_work_started.elapsed().as_secs_f64() * 1000.0,
+    );
     let fresh_work_ms = fresh_work_started
         .elapsed()
         .as_millis()
         .min(u64::MAX as u128) as u64;
+    let teardown_started = Instant::now();
     let cleanup_ok = scheduler.finish(&mut diagnostics);
+    phase_wall_ms.insert(
+        "teardown",
+        teardown_started.elapsed().as_secs_f64() * 1000.0,
+    );
     let mut resources = scheduler.report();
+    let input_validation_started = Instant::now();
     let input_check = cache.check_inputs(
         options,
         if deferred_check {
@@ -1115,6 +1161,13 @@ fn run_attempt(options: &Options, previous: Option<RetryEvidence>) -> Result<Att
             "pre-publication"
         },
     );
+    phase_wall_ms.insert(
+        "finalInputValidation",
+        input_validation_started.elapsed().as_secs_f64() * 1000.0,
+    );
+    resources["phaseWallMs"] = serde_json::to_value(phase_wall_ms).map_err(|e| e.to_string())?;
+    resources["disabledValidationRuns"] =
+        serde_json::to_value(disabled_validation_runs).map_err(|e| e.to_string())?;
     if deferred_check
         && input_check == cache::InputCheck::Changed
         && cleanup_ok
