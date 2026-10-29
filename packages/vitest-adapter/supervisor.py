@@ -66,7 +66,10 @@ def cleanup_known(owned, deadline):
             if time.monotonic() >= deadline:
                 return
             try:
-                if process_identity(pid)[1] == stamp:
+                current_start = process_identity(pid)[1]
+                if time.monotonic() >= deadline:
+                    return
+                if current_start == stamp:
                     os.kill(pid, signal.SIGKILL)
             except (OSError, ValueError, IndexError):
                 # Gone, reused or independently unverifiable: do not signal it.
@@ -107,12 +110,16 @@ def main():
     signal.signal(signal.SIGINT, request_stop)
     controller = subprocess.Popen([node, worker], pass_fds=(ipc_fd,))
     owned = {}
+    unexpected_identity_failure = False
     try:
         # Pin the direct child before broad discovery, including startup failures.
         try:
             owned[controller.pid] = process_identity(controller.pid)[1]
         except (FileNotFoundError, ProcessLookupError):
             pass
+        except Exception:
+            unexpected_identity_failure = True
+            raise
         os.close(ipc_fd)
         with open(report_path + '.ready', 'w', encoding='utf8') as stream:
             stream.write('ready')
@@ -184,9 +191,27 @@ def main():
     except Exception:
         # Discovery failure must not strand independently verifiable descendants.
         # Preserve the original error and never publish successful cleanup evidence.
+        deadline = (cleanup_started if cleanup_started is not None else time.monotonic()) + 2
+        if unexpected_identity_failure:
+            # Popen owns this unreaped direct child, independently of /proc.
+            # Do not use this exception path for cached descendant identities.
+            try:
+                os.close(ipc_fd)
+            except OSError:
+                pass
+            if time.monotonic() < deadline:
+                try:
+                    controller.kill()
+                except Exception:
+                    pass
+                remaining = deadline - time.monotonic()
+                if remaining > 0:
+                    try:
+                        controller.wait(timeout=remaining)
+                    except Exception:
+                        pass
         try:
-            cleanup_known(owned, (cleanup_started if cleanup_started is not None
-                                  else time.monotonic()) + 2)
+            cleanup_known(owned, deadline)
         except Exception:
             pass
         raise

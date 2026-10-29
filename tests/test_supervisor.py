@@ -17,7 +17,8 @@ spec.loader.exec_module(supervisor)
 
 
 class SupervisorCleanup(unittest.TestCase):
-    def run_supervisor(self, directory, snapshots, waits, identities=None, signals=None, handlers=None):
+    def run_supervisor(self, directory, snapshots, waits, identities=None, signals=None, handlers=None,
+                       controller=None):
         report = Path(directory) / 'cleanup.json'
         libc = Mock()
         libc.prctl.return_value = 0
@@ -28,7 +29,7 @@ class SupervisorCleanup(unittest.TestCase):
               patch.object(supervisor.os, 'close'),
               patch.object(supervisor.os, 'waitpid', side_effect=waits) as wait,
               patch.object(supervisor.os, 'kill', new=signals if signals is not None else Mock()) as kill,
-              patch.object(supervisor.subprocess, 'Popen', return_value=Mock(pid=123)),
+              patch.object(supervisor.subprocess, 'Popen', return_value=controller or Mock(pid=123)),
               patch.object(supervisor, 'process_identity',
                            side_effect=identities or FileNotFoundError()),
               patch.object(supervisor, 'snapshot', side_effect=snapshots),
@@ -199,6 +200,44 @@ class SupervisorCleanup(unittest.TestCase):
             signals.assert_called_once_with(123, supervisor.signal.SIGKILL)
             self.assertFalse((Path(directory) / 'cleanup.json').exists())
 
+    def test_initial_identity_failure_kills_and_waits_for_direct_child_with_shared_budget(self):
+        for error in [PermissionError('denied'), ValueError('malformed'), IndexError('truncated')]:
+            now = [10.0]
+            controller = Mock(pid=123)
+            controller.kill.side_effect = lambda: now.__setitem__(0, 11.0)
+            with self.subTest(error=error), tempfile.TemporaryDirectory() as directory:
+                with (patch.object(supervisor.time, 'monotonic', side_effect=lambda: now[0]),
+                      patch.object(supervisor, 'cleanup_known') as cleanup):
+                    with self.assertRaises(type(error)) as raised:
+                        self.run_supervisor(directory, [], [], error, controller=controller)
+                self.assertIs(raised.exception, error)
+                controller.kill.assert_called_once_with()
+                controller.wait.assert_called_once_with(timeout=1.0)
+                cleanup.assert_called_once_with({}, 12.0)
+                self.assertFalse((Path(directory) / 'cleanup.json.ready').exists())
+                self.assertFalse((Path(directory) / 'cleanup.json').exists())
+
+    def test_initial_identity_failure_cannot_restart_expired_signal_budget(self):
+        now = [10.0]
+        handlers = {}
+        controller = Mock(pid=123)
+        error = PermissionError('initial identity denied')
+
+        def identity(_pid):
+            handlers[supervisor.signal.SIGTERM](None, None)
+            now[0] = 12.1
+            raise error
+
+        with tempfile.TemporaryDirectory() as directory:
+            with patch.object(supervisor.time, 'monotonic', side_effect=lambda: now[0]):
+                with self.assertRaises(PermissionError) as raised:
+                    self.run_supervisor(directory, [], [], identity, handlers=handlers,
+                                        controller=controller)
+            self.assertIs(raised.exception, error)
+            controller.kill.assert_not_called()
+            controller.wait.assert_not_called()
+            self.assertFalse((Path(directory) / 'cleanup.json').exists())
+
     def test_shutdown_discovery_failure_cleans_verified_identities_and_reraises(self):
         parent = supervisor.os.getpid()
         observed = {456: (parent, 'known', 'S'),
@@ -221,6 +260,21 @@ class SupervisorCleanup(unittest.TestCase):
 
 
 class KnownIdentityCleanup(unittest.TestCase):
+    def test_identity_read_overrun_cannot_signal_or_reap(self):
+        now = [10.0]
+
+        def identity(_pid):
+            now[0] = 12.1
+            return (1, 'start', 'S')
+
+        with (patch.object(supervisor.time, 'monotonic', side_effect=lambda: now[0]),
+              patch.object(supervisor, 'process_identity', side_effect=identity),
+              patch.object(supervisor.os, 'kill') as kill,
+              patch.object(supervisor.os, 'waitpid') as wait):
+            supervisor.cleanup_known({123: 'start'}, 12.0)
+            kill.assert_not_called()
+            wait.assert_not_called()
+
     @unittest.skipUnless(hasattr(supervisor.os, 'uname') and supervisor.os.uname().sysname == 'Linux',
                          'requires Linux /proc and waitpid')
     def test_real_detached_child_is_signalled_and_reaped(self):
@@ -278,7 +332,7 @@ class KnownIdentityCleanup(unittest.TestCase):
         with (patch.object(supervisor, 'process_identity', return_value=(1, 'known', 'S')) as identity,
               patch.object(supervisor.os, 'kill') as kill,
               patch.object(supervisor.os, 'waitpid') as wait,
-              patch.object(supervisor.time, 'monotonic', side_effect=[0, 0, 2])):
+              patch.object(supervisor.time, 'monotonic', side_effect=[0, 0, 0, 2])):
             supervisor.cleanup_known({456: 'known', 457: 'known'}, 2)
             identity.assert_called_once_with(456)
             kill.assert_called_once_with(456, supervisor.signal.SIGKILL)
