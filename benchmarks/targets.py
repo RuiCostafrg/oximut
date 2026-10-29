@@ -119,6 +119,13 @@ def main(argv=None):
     result['correctness_gate'] = summary['correctness_gate']
     if not summary['correctness_gate']['passed']:
         result['targets_met'] = False
+        for fixture in result['fixtures']:
+            fixture['status'] = 'invalid workload'
+            fixture['errors'].append('global correctness gate failed; metrics are diagnostic only')
+            for metric in fixture['metrics'].values():
+                metric['status'] = 'invalid workload'
+                if 'median_target_met' in metric:
+                    metric['median_target_met'] = False
     m6.write_json(args.campaign / 'performance-targets.json', result)
     print(json.dumps(result, indent=2))
     invalid = not summary['correctness_gate']['passed'] or any(r['errors'] for r in result['fixtures'])

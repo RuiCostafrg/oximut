@@ -7,6 +7,7 @@ on:
       - 'benchmarks/targets.py'
       - 'benchmarks/run.py'
       - 'benchmarks/m6.py'
+      - 'benchmarks/config/m6-stryker.mjs'
       - 'fixtures/matched-*/**'
       - '.github/workflows/matched-benchmark.yml'
 

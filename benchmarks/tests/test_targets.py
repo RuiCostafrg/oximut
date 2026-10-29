@@ -1,6 +1,10 @@
 """Performance claims require complete, equivalent, repeated evidence."""
 from pathlib import Path
+import contextlib
+import io
+import json
 import sys
+import tempfile
 import unittest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -27,6 +31,36 @@ def evidence(wall=.7, memory=.4, cpu=.6, repetitions=5):
 
 
 class TargetTests(unittest.TestCase):
+    def test_global_gate_invalidates_otherwise_passing_targets_in_written_result(self):
+        for passed in (False, True):
+            with self.subTest(passed=passed), tempfile.TemporaryDirectory() as directory:
+                campaign = Path(directory)
+                rows = evidence()
+                # An additional failed run is rejected by M6's global gate,
+                # independently of the locally eligible primary pairs.
+                if not passed:
+                    rows.append(dict(rows[0], fixture='other', success=False))
+                (campaign / 'measurements.jsonl').write_text(
+                    '\n'.join(json.dumps(row) for row in rows))
+                gate = {'passed': passed, 'errors': [] if passed else ['additional run failed']}
+                (campaign / 'summary.json').write_text(json.dumps({'correctness_gate': gate}))
+                with contextlib.redirect_stdout(io.StringIO()):
+                    status = targets.main([str(campaign), '--require-targets'])
+                result = json.loads((campaign / 'performance-targets.json').read_text())
+                self.assertEqual(status, 0 if passed else 1)
+                self.assertEqual(result['correctness_gate'], gate)
+                self.assertEqual(result['targets_met'], passed)
+                for fixture in result['fixtures']:
+                    self.assertEqual(fixture['status'], 'target met' if passed else 'invalid workload')
+                    for name, metric in fixture['metrics'].items():
+                        self.assertAlmostEqual(metric['median'],
+                                               {'wall_seconds': .7, 'peak_aggregate_rss_bytes': .4,
+                                                'cpu_seconds': .6}[name])
+                        if not passed:
+                            self.assertEqual(metric['status'], 'invalid workload')
+                        if name in targets.THRESHOLDS:
+                            self.assertEqual(metric['median_target_met'], passed)
+
     def test_impossible_nonfinite_and_nonnumeric_measurements_cannot_certify(self):
         for value in (0, -1, float('inf'), float('nan'), None, '1', True):
             for metric in ('wall_seconds', 'peak_aggregate_rss_bytes'):
