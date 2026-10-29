@@ -17,6 +17,7 @@ def check(archive, evidence, revision):
             or data.get('archiveSha256') != digest
             or data.get('source', {}).get('commit') != revision
             or data.get('version') != '1.0.0-rc.1'
+            or data.get('isolation') != 'bubblewrap-pid-mount-v1'
             or data.get('buildCount') != 1
             or data.get('extractedSourceRemoved') is not True
             or not re.fullmatch(r'[0-9a-f]{64}', data.get('binarySha256', ''))):

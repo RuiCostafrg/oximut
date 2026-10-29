@@ -1,4 +1,6 @@
+import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
+import { normalizePath } from 'vite';
 import { createVitest, version, type Reporter } from 'vitest/node';
 import type { Request, Result } from './protocol.ts';
 import { SelectionSupport } from './m3-selection.ts';
@@ -143,7 +145,7 @@ async function command(name: string, args: Request): Promise<unknown> {
       // unrelated modules retain their transform cache. Test forks stay fresh.
       const files = new Set([mutation?.file, next?.file]);
       for (const file of files) {
-        if (file) project.vite.moduleGraph.onFileChange(resolve(file));
+        if (file) project.vite.moduleGraph.onFileChange(normalizePath(resolve(file)));
       }
     }
   }
@@ -159,6 +161,17 @@ async function command(name: string, args: Request): Promise<unknown> {
       job.selection?.mode === 'files'
         ? specifications.filter((spec) => job.selection?.files.includes(resolve(spec.moduleId)))
         : specifications;
+    // Match the file pragma precedence and syntax in pinned Vitest 4.1.12.
+    for (const spec of selected) {
+      const content = await readFile(spec.moduleId, 'utf8');
+      const environment =
+        content.match(/@(?:vitest|jest)-environment\s+([\w-]+)\b/)?.[1] ??
+        spec.project.config.environment;
+      if (environment !== 'node')
+        throw new Error(
+          `Unsupported test environment ${environment} in ${spec.moduleId}; Node is required`,
+        );
+    }
     await vitest.runTestSpecifications(selected, true);
   } finally {
     delete process.env.OXIMUT_ACTIVE_MUTANT;
