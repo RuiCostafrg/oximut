@@ -15,8 +15,9 @@ concurrency:
 jobs:
   feasibility:
     runs-on: ubuntu-24.04
-    # Acceptance alone can take 18 minutes; retain time for setup and smoke runs.
-    timeout-minutes: 35
+    # Native install/relocation smoke takes ~13 minutes before the full
+    # acceptance suite; retain time for both, setup and benchmark smoke.
+    timeout-minutes: 60
     permissions:
       contents: read
     steps:
