@@ -79,7 +79,16 @@ gh attestation verify oximut-1.0.0-rc.1-source.tar.gz \
 gh attestation verify oximut-1.0.0-rc.1-source.tar.gz.evidence.json \
   --repo RuiCostafrg/oximut --signer-workflow RuiCostafrg/oximut/.github/workflows/source-candidate.yml \
   --source-ref refs/heads/main --signer-digest "$REVIEWED_WORKFLOW_SHA"
+gh attestation verify r3-validation.evidence.json \
+  --repo RuiCostafrg/oximut --signer-workflow RuiCostafrg/oximut/.github/workflows/source-candidate.yml \
+  --source-ref refs/heads/main --signer-digest "$REVIEWED_WORKFLOW_SHA"
+gh attestation verify oximut-1.0.0-rc.1-source.tar.gz.spdx.json \
+  --repo RuiCostafrg/oximut --signer-workflow RuiCostafrg/oximut/.github/workflows/source-candidate.yml \
+  --source-ref refs/heads/main --signer-digest "$REVIEWED_WORKFLOW_SHA"
 ```
+
+Require every verification command above to succeed before relying on the archive,
+R3 installation/relocation evidence, or dependency inventory.
 
 ## Exact artifact validation before attestation
 
