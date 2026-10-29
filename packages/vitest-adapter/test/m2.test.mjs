@@ -44,7 +44,7 @@ let state = 0; test('enabled', () => { expect(state++).toBe(0); expect(enabled).
   let sequence = 0;
   return {
     root,
-    async run(id, code = switched, deadlineMs = 30000, filename = 'source.ts') {
+    async run(id, code = switched, deadlineMs = 30000, filename = 'source.ts', requestBytes) {
       const n = sequence++;
       const input = {
         protocol: 1,
@@ -65,7 +65,16 @@ let state = 0; test('enabled', () => { expect(state++).toBe(0); expect(enabled).
                 map: { version: 3, sources: [filename], mappings: 'AAAA', names: [] },
               },
       };
-      await writeFile(join(directory, 'request.tmp'), JSON.stringify(input));
+      let payload = JSON.stringify(input);
+      if (requestBytes !== undefined) {
+        const padding = requestBytes - Buffer.byteLength(payload);
+        assert.ok(padding >= 0);
+        // JSON whitespace exercises the actual serialized request limit without
+        // making test transformation cost depend on an enormous source comment.
+        payload += ' '.repeat(padding);
+        assert.equal(Buffer.byteLength(payload), requestBytes);
+      }
+      await writeFile(join(directory, 'request.tmp'), payload);
       await rename(join(directory, 'request.tmp'), join(directory, `request-${n}.json`));
       const until = Date.now() + deadlineMs + 10000;
       while (Date.now() < until) {
@@ -111,6 +120,23 @@ test(
       observations.map((item) => item.active),
       ['disabled', 'kill', 'disabled', undefined, 'kill', 'disabled', 'disabled'],
     );
+  },
+);
+
+test(
+  'M2 accepts the request byte limit and rejects one byte over it',
+  { timeout: 120000 },
+  async (t) => {
+    const s = await session(t);
+    const limit = 8 * 1024 * 1024;
+    const atLimit = await s.run('kill', switched, 30000, 'source.ts', limit);
+    assert.equal(atLimit.outcome, 'failed', JSON.stringify(atLimit));
+    assert.equal(atLimit.tests.failed, 1);
+    assert.equal((await s.run('original', null)).outcome, 'passed');
+    const oversized = await s.run('kill', switched, 30000, 'source.ts', limit + 1);
+    assert.equal(oversized.outcome, 'infrastructure-error', JSON.stringify(oversized));
+    assert.match(oversized.errors.join('\n'), /at most 8 MiB|exceeds 8 MiB/);
+    assert.equal((await s.run('original', null)).outcome, 'passed');
   },
 );
 
@@ -260,7 +286,7 @@ test('all dependencies', async () => {
     );
     const other =
       "export const extra = process.env.OXIMUT_ACTIVE_MUTANT === 'kill' ? false : true;";
-    // Long → short → long requests also exercise the shared buffer's byte limit.
+    // Long → short → long requests catch stale suffixes in the shared buffer.
     const padded = `${switched}\n/*${'x'.repeat(65536)}*/`;
     for (const [id, code, file, outcome] of [
       ['original', null, 'source.ts', 'passed'],
