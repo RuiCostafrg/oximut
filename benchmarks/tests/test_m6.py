@@ -1,5 +1,7 @@
 """M6 gates: source identity, strict artifacts, paired cache validation and failures."""
 import importlib.util
+import contextlib
+import io
 import json
 import os
 from pathlib import Path
@@ -463,6 +465,21 @@ class WorkflowTests(unittest.TestCase):
                     else:
                         self.assertEqual(env['OXIMUT_BENCH_INPUT'], 'changed')
             json.loads((project / 'package-lock.json').read_text())
+
+
+class MatchedSchedulingTests(unittest.TestCase):
+    def test_changed_matched_inputs_rejected_before_creating_output_or_running(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            output = Path(temporary) / 'campaign'
+            for fixture in ('matched-small', 'matched-scale'):
+                for change in m6.CHANGES:
+                    with self.subTest(fixture=fixture, change=change), mock.patch.object(m6, 'measured_run') as run, contextlib.redirect_stderr(io.StringIO()):
+                        with self.assertRaises(SystemExit) as error:
+                            m6.main(['--output', str(output), '--fixtures', fixture,
+                                     '--changes', change])
+                        self.assertEqual(error.exception.code, 2)
+                        run.assert_not_called()
+                        self.assertFalse(output.exists())
 
 
 if __name__ == '__main__':

@@ -19,6 +19,9 @@ import tempfile
 SPEC = importlib.util.spec_from_file_location("source_builder", Path(__file__).with_name("build-source.py"))
 BUILDER = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(BUILDER)
+SANDBOX_SPEC = importlib.util.spec_from_file_location("candidate_sandbox", Path(__file__).with_name("candidate-sandbox.py"))
+SANDBOX = importlib.util.module_from_spec(SANDBOX_SPEC)
+SANDBOX_SPEC.loader.exec_module(SANDBOX)
 MAX_COMPRESSED = 64 * 1024 * 1024
 MAX_EXPANDED = 256 * 1024 * 1024
 MAX_FILE = 16 * 1024 * 1024
@@ -67,6 +70,7 @@ def inspect_archive(archive, version, revision, tree):
     with tarfile.open(fileobj=io.BytesIO(expanded), mode="r:") as tar:
         for entry in tar:
             require(len(files) < MAX_ENTRIES, "archive entry limit exceeded")
+            require(not entry.pax_headers, "extended archive headers forbidden")
             BUILDER.safe_path(entry.name)
             require(entry.name.startswith(prefix), "unexpected archive root")
             name = entry.name[len(prefix):]
@@ -74,7 +78,6 @@ def inspect_archive(archive, version, revision, tree):
             require(name not in files, f"duplicate archive member: {name}")
             require(entry.type in (tarfile.REGTYPE, tarfile.AREGTYPE), "regular files only")
             require(not entry.linkname and not entry.sparse, "links/sparse files forbidden")
-            require(not entry.pax_headers, "extended archive headers forbidden")
             require(entry.mode in (0o644, 0o755), "unexpected file mode")
             require((entry.uid, entry.gid, entry.uname, entry.gname) == (0, 0, "", ""),
                     "unexpected archive ownership")
@@ -97,6 +100,9 @@ def inspect_archive(archive, version, revision, tree):
     require(re.fullmatch(r"[0-9a-f]{64}", manifest["builderSha256"]), "invalid builder digest")
     payload = {name: (mode, data) for name, (mode, data, _) in files.items()
                if name not in (MANIFEST, SUMS)}
+    require("scripts/build-source.py" in payload, "missing archived builder metadata")
+    require(manifest["builderSha256"] == BUILDER.sha(payload["scripts/build-source.py"][1]),
+            "builder digest mismatch")
     require(not any(name.startswith("SOURCE-DISTRIBUTION/") for name in payload),
             "unexpected distribution metadata")
     expected_inventory = [{"path": name, "mode": f"{mode:04o}", "size": len(data),
@@ -143,7 +149,8 @@ def validate(archive, version, revision, tree, output):
                 "version": version, "source": manifest["source"],
                 "host": {"system": platform.system(), "machine": platform.machine(),
                          "platform": platform.platform()},
-                "tests": [], "toolVersions": {}, "buildCount": 0}
+                "tests": [], "toolVersions": {}, "buildCount": 0,
+                "isolation": "bubblewrap-pid-mount-v1"}
     try:
         for tool in ("rustc", "cargo", "node", "npm", "python3"):
             evidence["toolVersions"][tool] = run([tool, "--version"], output)
@@ -156,17 +163,20 @@ def validate(archive, version, revision, tree, output):
             (harness / "scripts").mkdir(parents=True)
             (harness / "docs").mkdir()
             trusted = Path(__file__).resolve().parents[1]
-            for name in ("scripts/smoke-install.py", "scripts/validate-reports.mjs", "docs/report.schema.json"):
+            for name in ("scripts/smoke-install.py", "scripts/candidate-sandbox.py", "scripts/validate-reports.mjs", "docs/report.schema.json"):
                 shutil.copy2(trusted / name, harness / name)
             prefix = output / "original prefix with spaces"
+            prefix.mkdir()
+            # Validator modules come from the trusted checkout, never the installed candidate.
+            (harness / "node_modules").symlink_to(trusted / "node_modules", target_is_directory=True)
             # One compilation, outside any benchmark; preserve exactly this installed binary.
-            evidence["installationLog"] = run([
-                sys.executable, source / "scripts/install-source.py", "--prefix", prefix],
-                work, timeout=4800)
+            evidence["installationLog"] = SANDBOX.run([
+                "/usr/bin/python3", source / "scripts/install-source.py", "--prefix", prefix],
+                cwd=source, writable=[source, prefix], timeout=4800, network=True)
+            SANDBOX.safe_tree(prefix)
             evidence["buildCount"] = 1
             binary = prefix / "lib/oximut/oximut"
             evidence["binarySha256"] = BUILDER.sha(binary.read_bytes())
-            (harness / "node_modules").symlink_to(prefix / "lib/oximut/node_modules", target_is_directory=True)
             shutil.rmtree(source)
             require(not source.exists(), "extracted source still available")
             evidence["extractedSourceRemoved"] = True
@@ -175,11 +185,9 @@ def validate(archive, version, revision, tree, output):
                     relocated = output / "relocated prefix with spaces"
                     prefix.rename(relocated)
                     prefix = relocated
-                    (harness / "node_modules").unlink()
-                    (harness / "node_modules").symlink_to(prefix / "lib/oximut/node_modules", target_is_directory=True)
                 reports = output / phase
                 log = run([sys.executable, harness / "scripts/smoke-install.py", "--prefix", prefix,
-                           "--reports-dir", reports, "--validator", harness / "scripts/validate-reports.mjs"],
+                           "--reports-dir", reports, "--validator", harness / "scripts/validate-reports.mjs", "--isolated"],
                           harness, timeout=1200)
                 evidence["tests"].append({"phase": phase, "passed": True, "log": log})
                 require(BUILDER.sha((prefix / "lib/oximut/oximut").read_bytes()) == evidence["binarySha256"],
