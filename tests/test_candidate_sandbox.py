@@ -143,15 +143,25 @@ print('ISOLATED')
         with self.assertRaisesRegex(RuntimeError, 'exited 7'):
             SANDBOX.run(['/bin/sh', '-c', 'exit 7'], cwd=self.work, writable=[self.work])
         marker = self.work / 'late-write'
+        started = self.work / 'started'
         code = f'''import os, time
 if os.fork() == 0:
     os.setsid()
-    time.sleep(0.4)
+    open({str(started)!r}, 'w').write('started')
+    time.sleep(5)
     open({str(marker)!r}, 'w').write('survived')
 else:
+    for _ in range(300):
+        if os.path.exists({str(started)!r}):
+            break
+        time.sleep(0.01)
+    else:
+        raise SystemExit('descendant did not start')
     {{parent}}
 '''
         for parent in ('pass', 'os._exit(7)', 'time.sleep(10)'):
+            started.unlink(missing_ok=True)
+            marker.unlink(missing_ok=True)
             if parent == 'pass':
                 SANDBOX.run(['/usr/bin/python3', '-c', code.replace('{parent}', parent)],
                             cwd=self.work, writable=[self.work])
@@ -162,8 +172,9 @@ else:
             else:
                 with self.assertRaises(subprocess.TimeoutExpired):
                     SANDBOX.run(['/usr/bin/python3', '-c', code.replace('{parent}', parent)],
-                                cwd=self.work, writable=[self.work], timeout=0.1)
-            time.sleep(0.6)
+                                cwd=self.work, writable=[self.work], timeout=3)
+            time.sleep(5.2)
+            self.assertTrue(started.exists(), 'descendant never started')
             self.assertFalse(marker.exists(), 'detached writer survived namespace teardown')
 
     @unittest.skipUnless(os.environ.get('OXIMUT_TEST_BINARY'), 'real binary supplied by Ubuntu CI')
