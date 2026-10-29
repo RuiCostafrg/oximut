@@ -73,6 +73,14 @@ assert subprocess.run(['/usr/bin/unshare', '--user', '--map-root-user', '/bin/tr
 print('ATTACKS_COMPLETED')
 '''
 
+    def test_native_compiler_alias_can_build_and_execute(self):
+        source = self.work / 'main.c'
+        source.write_text('int main(void) { return 0; }\n')
+        binary = self.work / 'compiled'
+        SANDBOX.run(['/bin/sh', '-ec', 'cc main.c -o compiled && ./compiled'],
+                    cwd=self.work, writable=[self.work])
+        self.assertTrue(binary.is_file())
+
     def test_smoke_network_namespace_cannot_reach_host_loopback(self):
         with socket.socket() as listener:
             listener.bind(('127.0.0.1', 0))
