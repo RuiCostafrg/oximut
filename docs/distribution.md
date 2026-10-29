@@ -111,6 +111,9 @@ python3 -m unittest discover -s tests -p 'test_distribution.py' -v
 python3 -m unittest discover -s tests -p 'test_install.py' -v
 ```
 
+For unpublished RC1 notes, third-party licensing scope, and the manual source
+provenance gate, see [draft release notes](release-notes-1.0.0-rc.1.md),
+[notices](../NOTICE.md), and [source provenance](source-provenance.md).
 ## R3 exact artifact gate
 
 The R3 workflow (`.github/workflows/source-artifact.yml`) builds the selected

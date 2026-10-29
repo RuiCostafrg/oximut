@@ -1,0 +1,193 @@
+name: Source candidate provenance (not release approval)
+
+on:
+  workflow_dispatch:
+    inputs:
+      revision:
+        description: Full 40-character candidate commit SHA, already in trusted default-branch history
+        required: true
+        type: string
+
+permissions: {}
+
+jobs:
+  build-source:
+    # Select the intended default-branch run, not an authorization boundary.
+    # Consumers must pin the source ref and reviewed signer digest.
+    if: >-
+      github.ref == format('refs/heads/{0}', github.event.repository.default_branch) &&
+      github.workflow_sha == github.sha
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    outputs:
+      artifact_id: ${{ steps.source-upload.outputs.artifact-id }}
+    env:
+      CANDIDATE_REVISION: ${{ inputs.revision }}
+      WORKFLOW_COMMIT: ${{ github.workflow_sha }}
+    steps:
+      - name: Choose candidate output directory
+        run: echo "CANDIDATE_DIR=$RUNNER_TEMP/source-candidate" >> "$GITHUB_ENV"
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.workflow_sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Build with trusted scripts; validate source format; record pending release gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$CANDIDATE_REVISION" =~ ^[0-9a-f]{40}$ ]]
+          test "$(git rev-parse HEAD)" = "$WORKFLOW_COMMIT"
+          git merge-base --is-ancestor "$CANDIDATE_REVISION" "$WORKFLOW_COMMIT"
+          python3 scripts/build-source.py --revision "$CANDIDATE_REVISION" \
+            --version 1.0.0-rc.1 --output-dir "$CANDIDATE_DIR"
+          python3 scripts/source-release-metadata.py --revision "$CANDIDATE_REVISION" \
+            --workflow-commit "$WORKFLOW_COMMIT" \
+            --archive "$CANDIDATE_DIR/oximut-1.0.0-rc.1-source.tar.gz"
+          (cd "$CANDIDATE_DIR" && sha256sum --check oximut-1.0.0-rc.1-source.tar.gz.sha256)
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        id: source-upload
+        with:
+          name: source-input-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/source-candidate/*
+          if-no-files-found: error
+          retention-days: 30
+          overwrite: false
+
+  validate-source:
+    needs: build-source
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    permissions:
+      contents: read
+    outputs:
+      artifact_id: ${{ steps.validation-upload.outputs.artifact-id }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.workflow_sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          artifact-ids: ${{ needs.build-source.outputs.artifact_id }}
+          path: ${{ runner.temp }}/source-candidate
+          merge-multiple: true
+          digest-mismatch: error
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version-file: .node-version
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: '3.13'
+      - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # stable
+        with:
+          toolchain: '1.96.0'
+      - name: Require candidate isolation and hostile-candidate regressions
+        run: |
+          bash scripts/setup-candidate-sandbox.sh
+          OXIMUT_REQUIRE_SANDBOX=1 python3 -m unittest discover -s tests -p test_candidate_sandbox.py -v
+      - run: npm ci --include=dev --ignore-scripts --no-audit --no-fund
+      - name: Install and relocate the downloaded exact archive without signing credentials
+        env:
+          CANDIDATE_REVISION: ${{ inputs.revision }}
+        run: |
+          test "$(uname -s)" = Linux
+          test "$(uname -m)" = x86_64
+          tree=$(git rev-parse "${CANDIDATE_REVISION}^{tree}")
+          python3 scripts/validate-source.py --archive "$RUNNER_TEMP/source-candidate/oximut-1.0.0-rc.1-source.tar.gz" \
+            --version 1.0.0-rc.1 --revision "$CANDIDATE_REVISION" --tree "$tree" \
+            --output-dir "$RUNNER_TEMP/source-validation"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        id: validation-upload
+        if: always()
+        with:
+          name: source-validation-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/source-validation/evidence.json
+            ${{ runner.temp }}/source-validation/installed/*.json
+            ${{ runner.temp }}/source-validation/relocated/*.json
+          if-no-files-found: error
+          retention-days: 30
+          overwrite: false
+
+  attest-source:
+    needs: [build-source, validate-source]
+    if: >-
+      github.ref == format('refs/heads/{0}', github.event.repository.default_branch) &&
+      github.workflow_sha == github.sha
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    env:
+      CANDIDATE_REVISION: ${{ inputs.revision }}
+      WORKFLOW_COMMIT: ${{ github.workflow_sha }}
+    steps:
+      - name: Choose candidate output directory
+        run: echo "CANDIDATE_DIR=$RUNNER_TEMP/source-candidate" >> "$GITHUB_ENV"
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.workflow_sha }}
+          persist-credentials: false
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          artifact-ids: ${{ needs.build-source.outputs.artifact_id }}
+          path: ${{ runner.temp }}/source-candidate
+          merge-multiple: true
+          digest-mismatch: error
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          artifact-ids: ${{ needs.validate-source.outputs.artifact_id }}
+          path: ${{ runner.temp }}/validation-evidence
+          merge-multiple: true
+          digest-mismatch: error
+      - name: Bind successful R3 evidence to these source bytes
+        run: |
+          python3 scripts/check-source-evidence.py \
+            --archive "$CANDIDATE_DIR/oximut-1.0.0-rc.1-source.tar.gz" \
+            --evidence "$RUNNER_TEMP/validation-evidence/evidence.json" \
+            --revision "$CANDIDATE_REVISION"
+          cp "$RUNNER_TEMP/validation-evidence/evidence.json" "$CANDIDATE_DIR/r3-validation.evidence.json"
+      - name: Attest source archive and its metadata only
+        id: attest
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-path: |
+            ${{ runner.temp }}/source-candidate/oximut-1.0.0-rc.1-source.tar.gz
+            ${{ runner.temp }}/source-candidate/oximut-1.0.0-rc.1-source.tar.gz.spdx.json
+            ${{ runner.temp }}/source-candidate/oximut-1.0.0-rc.1-source.tar.gz.evidence.json
+            ${{ runner.temp }}/source-candidate/r3-validation.evidence.json
+          create-storage-record: false
+      - name: Retain attestation verification bundle
+        env:
+          BUNDLE_PATH: ${{ steps.attest.outputs.bundle-path }}
+        run: cp -- "$BUNDLE_PATH" "$CANDIDATE_DIR/provenance.sigstore.json"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        id: upload
+        with:
+          name: source-candidate-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/source-candidate/*
+          if-no-files-found: error
+          retention-days: 30
+          compression-level: 0
+          overwrite: false
+      - name: Record immutable artifact identity and outstanding gate
+        env:
+          ARTIFACT_ID: ${{ steps.upload.outputs.artifact-id }}
+          ARTIFACT_DIGEST: ${{ steps.upload.outputs.artifact-digest }}
+          ARTIFACT_URL: ${{ steps.upload.outputs.artifact-url }}
+        run: |
+          {
+            echo 'Source provenance and exact-artifact build/install/relocation passed. Release publication still requires review; no release is created.'
+            echo "Candidate commit: $CANDIDATE_REVISION"
+            echo "Trusted workflow commit: $WORKFLOW_COMMIT"
+            echo "Artifact ID: $ARTIFACT_ID"
+            echo "Artifact ZIP SHA-256: $ARTIFACT_DIGEST"
+            echo "Artifact URL: $ARTIFACT_URL"
+            cat "$CANDIDATE_DIR/oximut-1.0.0-rc.1-source.tar.gz.sha256"
+          } >> "$GITHUB_STEP_SUMMARY"

@@ -196,7 +196,7 @@ class ArtifactValidation(unittest.TestCase):
             self.assertEqual((prefix / "lib/oximut/oximut").read_bytes(), b"exact compiled candidate")
             smokes.append(prefix)
             return "mock smoke"
-        with mock.patch.object(GATE, "run", side_effect=run):
+        with mock.patch.object(GATE, "run", side_effect=run), mock.patch.object(GATE.SANDBOX, "run", side_effect=run):
             evidence = GATE.validate(archive, VERSION, self.revision, self.tree, output)
         self.assertEqual(len(installations), 1)
         self.assertEqual(len(smokes), 2)
