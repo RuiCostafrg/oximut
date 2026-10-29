@@ -1,7 +1,7 @@
 import { appendFile, lstat, open, readFile, readdir, rename, rm, stat } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { openController } from './index.mjs';
+import { hasUnexpectedDescendants, openController } from './index.mjs';
 import { envelope, MAX_REQUEST_BYTES, MAX_RESPONSE_BYTES, validateRequest } from './protocol.ts';
 
 const [session] = process.argv.slice(2);
@@ -117,22 +117,11 @@ async function run(request) {
       jobs++;
       const unexpectedDescendants = async () =>
         [...(await tree(controller.supervisorPid))].filter((pid) => !descendants.has(pid));
-      const observed = await unexpectedDescendants();
-      let leaked = observed.length > 0;
       // A completed test fork can exit while /proc is being enumerated. Confirm
       // disappearance independently; an empty second tree can miss reparenting.
-      if (leaked && (await unexpectedDescendants()).length === 0) {
-        leaked = false;
-        for (const pid of observed) {
-          try {
-            await stat(`/proc/${pid}/stat`);
-            leaked = true;
-          } catch (error) {
-            if (!['ENOENT', 'ESRCH'].includes(error.code)) leaked = true;
-          }
-          if (leaked) break;
-        }
-      }
+      const leaked = await hasUnexpectedDescendants(unexpectedDescendants, (pid) =>
+        stat(`/proc/${pid}/stat`),
+      );
       // The supervisor reaps even detached descendants before another job starts.
       if (
         result.outcome === 'timeout' ||

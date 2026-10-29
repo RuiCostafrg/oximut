@@ -7,6 +7,22 @@ import { fileURLToPath } from 'node:url';
 const controllerFile = fileURLToPath(new URL('./worker.mjs', import.meta.url));
 const supervisorFile = fileURLToPath(new URL('./supervisor.py', import.meta.url));
 
+/** An empty follow-up scan alone cannot prove an observed child disappeared. */
+export async function hasUnexpectedDescendants(scan, check) {
+  const observed = await scan();
+  if (observed.length === 0) return false;
+  if ((await scan()).length > 0) return true;
+  for (const pid of observed) {
+    try {
+      await check(pid);
+      return true;
+    } catch (error) {
+      if (!['ENOENT', 'ESRCH'].includes(error.code)) return true;
+    }
+  }
+  return false;
+}
+
 async function within(promise, ms, message) {
   let timer;
   try {
