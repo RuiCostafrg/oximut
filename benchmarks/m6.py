@@ -30,14 +30,19 @@ FIXTURES = {
     'stateful': ('dependency.ts', 'service.ts', 'state.ts'),
     'm1': ('subject.ts',),
     'm2': ('subject.ts',),
+    'matched-small': ('arithmetic.ts',),
+    'matched-scale': tuple(f'arithmetic-{i}.ts' for i in range(8)),
 }
-TEST_COUNTS = {'pure': 7, 'stateful': 4, 'm1': 2, 'm2': 4}
+TEST_COUNTS = {'pure': 7, 'stateful': 4, 'm1': 2, 'm2': 4,
+               'matched-small': 8, 'matched-scale': 64}
 CHANGES = ('source', 'test', 'helper', 'snapshot', 'config', 'lockfile', 'environment')
 SENTINELS = {
     'm1': ('subject.ts', 'return value < 10;', 'return value <= 10;'),
     'm2': ('subject.ts', 'return value < 3;', 'return value <= 3;'),
     'pure': ('logic.ts', 'if (score >= 90)', 'if (score > 90)'),
     'stateful': ('service.ts', 'value + adjustment <= limit', 'value + adjustment < limit'),
+    'matched-small': ('arithmetic.ts', 'return value + 7;', 'return value - 7;'),
+    'matched-scale': ('arithmetic-0.ts', 'return value + 7;', 'return value - 7;'),
 }
 METRICS = ('wall_seconds', 'cpu_seconds', 'peak_aggregate_rss_bytes', 'peak_process_count')
 
@@ -108,7 +113,7 @@ def artifact(tool, path, project, row):
     allowed_exit = (0, 1) if tool == 'oximut' else (0,)
     if (row.get('exit_code') not in allowed_exit or row.get('timed_out')
             or row.get('descendant_cleanup_required') or row.get('cleanup_error')
-            or row.get('spawn_error')):
+            or row.get('spawn_error') or row.get('memory_errors')):
         raise ValueError('command failed, timed out, or required descendant cleanup')
     report = measurement.read_json(path)
     scope_exclusions = []
@@ -127,6 +132,12 @@ def artifact(tool, path, project, row):
         if fixture and (report['numTotalTests'] != TEST_COUNTS[fixture]
                         or {identity[0] for identity in identities} != expected_files):
             raise ValueError('ordinary test count/files differ from fixture scope')
+        if fixture and fixture.startswith('matched-'):
+            manifest = measurement.read_json(project / 'benchmark-manifest.json')
+            if sorted([list(x[:2]) for x in identities]) != sorted(manifest['expectedTests']):
+                raise ValueError('ordinary test identities differ from declared matched corpus')
+            validated['matched_test_identity_sha256'] = digest(sorted([list(x[:2]) for x in identities]))
+            validated['matched_manifest_sha256'] = measurement.file_hash(project / 'benchmark-manifest.json')
         return validated
     if tool == 'oximut':
         validate_oximut_report(report, path)
@@ -211,6 +222,28 @@ def artifact(tool, path, project, row):
                                 'selection': mutant.get('selection')}
     if not identities:
         raise ValueError('empty mutation workload')
+    if fixture and fixture.startswith('matched-'):
+        manifest = measurement.read_json(project / 'benchmark-manifest.json')
+        if {key: value['outcome'] for key, value in identities.items()} != manifest['expectedMutants']:
+            raise ValueError('mutation identities/outcomes differ from declared matched corpus')
+        for filename, expected in manifest['sourceSha256'].items():
+            if measurement.file_hash(project / filename) != expected:
+                raise ValueError('matched corpus source changed')
+        discovered = None
+        if tool == 'stryker':
+            discovered = [[filename, test['name']] for filename, data in report['testFiles'].items()
+                          for test in data['tests']]
+        elif row.get('mode') == 'selection':
+            coverage = report['baseline'].get('coverage') or {}
+            if not coverage.get('complete') or coverage.get('reasons'):
+                raise ValueError('matched corpus lacks complete baseline test attribution')
+            discovered = [[Path(test['file']).relative_to(project).as_posix(), test['name']]
+                          for test in coverage.get('tests', [])]
+        if discovered is not None:
+            if sorted(discovered) != sorted(manifest['expectedTests']):
+                raise ValueError('baseline test identities differ from declared matched corpus')
+            extra['matched_test_identity_sha256'] = digest(sorted(discovered))
+        extra['matched_manifest_sha256'] = measurement.file_hash(project / 'benchmark-manifest.json')
     sentinel = None
     if fixture:
         filename, original, replacement = SENTINELS[fixture]
@@ -274,6 +307,9 @@ def prepare_project(destination, fixture):
     first_test.write_text(first_test.read_text() +
                           "\nimport '../src/benchmark-helper.js';\n")
     template = (ROOT / 'benchmarks/config/m6-stryker.mjs').read_text()
+    if fixture.startswith('matched-'):
+        # Arithmetic-only corpus: all supported edits are shared by both tools.
+        template = template.replace("'AssignmentOperator',", "'EqualityOperator', 'BooleanLiteral', 'AssignmentOperator',")
     (destination / 'stryker.config.mjs').write_text(template)
 
 
@@ -533,6 +569,9 @@ def main(argv=None):
     parser.add_argument('--fixtures', nargs='+', choices=FIXTURES, default=['pure', 'stateful'])
     parser.add_argument('--tools', nargs='+', choices=['vitest', 'oximut', 'stryker'], default=['vitest', 'oximut', 'stryker'])
     parser.add_argument('--scenarios', nargs='+', choices=['clean', 'incremental'], default=['clean', 'incremental'])
+    parser.add_argument('--modes', nargs='+', choices=['fresh', 'persistent', 'selection'],
+                        default=['fresh', 'persistent', 'selection'],
+                        help='clean Oximut modes; keep fresh for the independent correctness reference')
     parser.add_argument('--changes', nargs='*', choices=CHANGES, default=['source', 'test'])
     parser.add_argument('--repetitions', type=int, default=5)
     parser.add_argument('--warmups', type=int, default=1)
@@ -544,6 +583,10 @@ def main(argv=None):
     parser.add_argument('--sample-interval', type=float, default=.02)
     parser.add_argument('--output-limit', type=int, default=1_048_576)
     args = parser.parse_args(argv)
+    if (any(fixture.startswith('matched-') for fixture in args.fixtures)
+            and 'incremental' in args.scenarios and args.changes):
+        parser.error('matched fixtures use a fixed manifest; changed-input incremental runs require '
+                     '--scenarios clean or --changes with no values')
     if not measurement.LINUX_KERNEL:
         parser.error('Linux /proc and wait4 required')
     if (args.repetitions < 1 or args.warmups < 0 or args.workers < 1 or args.timeout <= 0
@@ -563,6 +606,9 @@ def main(argv=None):
                   *sorted((ROOT / 'packages/vitest-adapter').glob('*.mjs')),
                   ROOT / 'packages/vitest-adapter/supervisor.py',
                   ROOT / 'scripts/validate-reports.mjs', ROOT / 'docs/report.schema.json']})
+    meta['input_sha256'].update({str(p.relative_to(ROOT)): measurement.file_hash(p)
+        for p in [ROOT / 'benchmarks/targets.py', *sorted((ROOT / 'fixtures').glob('matched-*/benchmark-manifest.json'))]
+        if p.exists()})
     meta.update(schema_version=SCHEMA_VERSION, created_utc=time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()),
                 binary={'path': str(args.binary), 'sha256': measurement.file_hash(args.binary)
                         if args.binary.exists() else None, 'profile': 'user-supplied; default debug'},
@@ -578,7 +624,7 @@ def main(argv=None):
                     'typescript_checkers': False, 'stryker_coverage': 'perTest; worker reuse default; incremental for cache pairs',
                     'identity': 'exact edited source plus relative filename; whitespace/parentheses differences excluded',
                     'cross_tool_ratio': 'suppressed unless exact full measured mutation sets and classifications agree; explicitly configured ignored operators published separately as scope exclusions',
-                    'scope': 'checked-in deterministic fixtures only; no real projects, generated scaling, memory stress, cancellation or alpha release decision',
+                    'scope': 'checked-in deterministic fixtures, including controlled matched arithmetic scaling if selected; no real-project or broad release-performance claim',
                     'changed_inputs': 'deterministic behavior-preserving edits; helper imported by a test (unused export), snapshot inert',
                     'cache_evidence': 'Oximut always/legacy requires enabled outcome cache, persisted prime and changed-input zero hits; explicit auto cost bypass requires primed entirely fresh execution and is not invalidation evidence; Stryker unchanged requires explicit reuse, changed-input agreement does not prove invalidation under its narrower reuse policy',
                     'declared_environment': {'CI': 'true', 'NO_COLOR': '1', 'OXIMUT_FIXTURE_MODE': 'fixture', 'OXIMUT_BENCH_INPUT': 'original'}})
@@ -599,7 +645,7 @@ def main(argv=None):
                     if 'vitest' in args.tools:
                         tasks.append(('vitest', 'ordinary', 'fresh'))
                     if 'oximut' in args.tools:
-                        tasks.extend(('oximut', 'clean-' + mode, mode) for mode in ('fresh', 'persistent', 'selection'))
+                        tasks.extend(('oximut', 'clean-' + mode, mode) for mode in args.modes)
                     if 'stryker' in args.tools:
                         tasks.append(('stryker', 'clean-stryker', 'selection'))
                 if 'incremental' in args.scenarios:

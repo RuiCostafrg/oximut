@@ -1,0 +1,51 @@
+{
+  "description": "Arithmetic-only controlled corpus, all four operations, eight independent functions per module; not a representative application.",
+  "expectedMutants": {
+    "src/arithmetic.ts:0bb63f17da1dd236b01338caabde3f8cc767295c8ce125b989122f59513cb1e1": "killed",
+    "src/arithmetic.ts:4e8a255c26188ab501b83c6af904e9dac6e987d72a47f23c6f551d6037007ed3": "killed",
+    "src/arithmetic.ts:6700b3f61d697676383dad2c4395f347b295e1bd99e9df3d0daf90600d257e49": "killed",
+    "src/arithmetic.ts:6fe07c06b3d0e085507d88e6d87547264b11c09b7ab4b756c71890e9dbfc31ce": "killed",
+    "src/arithmetic.ts:9c0452ef08e78cc2cec2b552f6ef1def6849a9f8eb5d703ae5bf70df1a6aef26": "killed",
+    "src/arithmetic.ts:bf77d9fdd48beef089bb33024c367cebc07321bc7b1e5d9338bf3db474a29876": "killed",
+    "src/arithmetic.ts:daaed3439168d1cbf76e8d93dee9ed35abe2ca2e57679989036c9acab38136d7": "killed",
+    "src/arithmetic.ts:e00212e8e3cf9dee7cadd53205a9c4af87eb74fd44975cf1827761b7f4c4b214": "killed"
+  },
+  "expectedTests": [
+    [
+      "test/arithmetic.test.ts",
+      "operation 0 at three inputs"
+    ],
+    [
+      "test/arithmetic.test.ts",
+      "operation 1 at three inputs"
+    ],
+    [
+      "test/arithmetic.test.ts",
+      "operation 2 at three inputs"
+    ],
+    [
+      "test/arithmetic.test.ts",
+      "operation 3 at three inputs"
+    ],
+    [
+      "test/arithmetic.test.ts",
+      "operation 4 at three inputs"
+    ],
+    [
+      "test/arithmetic.test.ts",
+      "operation 5 at three inputs"
+    ],
+    [
+      "test/arithmetic.test.ts",
+      "operation 6 at three inputs"
+    ],
+    [
+      "test/arithmetic.test.ts",
+      "operation 7 at three inputs"
+    ]
+  ],
+  "schemaVersion": 1,
+  "sourceSha256": {
+    "src/arithmetic.ts": "82541278290a4a32d02579effb2fdf7063639b64e65dcdb7b5a8a52ed8a3425d"
+  }
+}

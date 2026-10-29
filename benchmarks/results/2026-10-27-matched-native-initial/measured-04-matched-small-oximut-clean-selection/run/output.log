@@ -1,0 +1,31 @@
+Baseline: Passed (8 passed, 0 failed, 0 skipped)
+killed 23275536b8b6 /home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-04-matched-small-oximut-clean-selection/project/src/arithmetic.ts:2:16 + -> -
+  expected -15 to be close to -1, received difference is 14, but expected 5e-11
+  Selected tests: 8/8 (files); reasons: whole-file-preserves-sequential-state-and-hooks
+killed 690dc1e0b074 /home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-04-matched-small-oximut-clean-selection/project/src/arithmetic.ts:10:16 * -> /
+  expected -1.1428571428571428 to be close to -56, received difference is 54.857142857142854, but expected 5e-11
+  Selected tests: 8/8 (files); reasons: whole-file-preserves-sequential-state-and-hooks
+killed 84ab1b7009a7 /home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-04-matched-small-oximut-clean-selection/project/src/arithmetic.ts:30:16 / -> *
+  expected -64 to be close to -1, received difference is 63, but expected 5e-11
+  Selected tests: 8/8 (files); reasons: whole-file-preserves-sequential-state-and-hooks
+killed 66c64b1cae8a /home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-04-matched-small-oximut-clean-selection/project/src/arithmetic.ts:14:16 / -> *
+  expected -56 to be close to -1.1428571428571428, received difference is 54.857142857142854, but expected 5e-11
+  Selected tests: 8/8 (files); reasons: whole-file-preserves-sequential-state-and-hooks
+killed 9aaa67ed932f /home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-04-matched-small-oximut-clean-selection/project/src/arithmetic.ts:22:16 - -> +
+  expected +0 to be close to -16, received difference is 16, but expected 5e-11
+  Selected tests: 8/8 (files); reasons: whole-file-preserves-sequential-state-and-hooks
+killed 22b3c6ddeb49 /home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-04-matched-small-oximut-clean-selection/project/src/arithmetic.ts:26:16 * -> /
+  expected -1 to be close to -64, received difference is 63, but expected 5e-11
+  Selected tests: 8/8 (files); reasons: whole-file-preserves-sequential-state-and-hooks
+killed 0ebe972d24f4 /home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-04-matched-small-oximut-clean-selection/project/src/arithmetic.ts:6:16 - -> +
+  expected -1 to be close to -15, received difference is 14, but expected 5e-11
+  Selected tests: 8/8 (files); reasons: whole-file-preserves-sequential-state-and-hooks
+killed 80464881afea /home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-04-matched-small-oximut-clean-selection/project/src/arithmetic.ts:18:16 + -> -
+  expected -16 to be close to +0, received difference is 16, but expected 5e-11
+  Selected tests: 8/8 (files); reasons: whole-file-preserves-sequential-state-and-hooks
+Mutants: 8 total, 8 killed, 0 survived, 0 no-coverage, 0 invalid, 0 timeout, 0 infrastructure-error, 0 resource-exhausted, 0 skipped
+Score: 100.00% (8/8); complete: true
+Cache: forced-no-cache; instrumentation hits/misses: 0/0; outcome hits/misses: 0/0; not-written
+Diagnostic: execution=persistent; isolation=fresh-test-forks; controller reuse only; baseline=original-and-disabled-switches
+Diagnostic: disabled switching validation: /home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-04-matched-small-oximut-clean-selection/project/src/arithmetic.ts: Passed
+Diagnostic: adapter observed reuse boundary: controller

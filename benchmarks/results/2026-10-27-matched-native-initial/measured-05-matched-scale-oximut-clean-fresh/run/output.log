@@ -1,0 +1,133 @@
+Baseline: Passed (64 passed, 0 failed, 0 skipped)
+killed fe49b03ed8cd /home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-05-matched-scale-oximut-clean-fresh/project/src/arithmetic-0.ts:2:16 + -> -
+  expected -15 to be close to -1, received difference is 14, but expected 5e-11
+killed d64c82eb1aff /home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-05-matched-scale-oximut-clean-fresh/project/src/arithmetic-2.ts:2:16 + -> -
+  expected -31 to be close to 15, received difference is 46, but expected 5e-11
+killed 58d659fcd554 /home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-05-matched-scale-oximut-clean-fresh/project/src/arithmetic-6.ts:14:16 / -> *
+  expected -440 to be close to -0.14545454545454545, received difference is 439.8545454545455, but expected 5e-11
+killed d7b1dab91a4a /home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-05-matched-scale-oximut-clean-fresh/project/src/arithmetic-7.ts:6:16 - -> +
+  expected 55 to be close to -71, received difference is 126, but expected 5e-11
+killed c36738c24343 /home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-05-matched-scale-oximut-clean-fresh/project/src/arithmetic-7.ts:18:16 + -> -
+  expected -72 to be close to 56, received difference is 128, but expected 5e-11
+killed 804662d79735 /home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-05-matched-scale-oximut-clean-fresh/project/src/arithmetic-2.ts:6:16 - -> +
+  expected 15 to be close to -31, received difference is 46, but expected 5e-11
+killed 7b9b3ed4dcc6 /home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-05-matched-scale-oximut-clean-fresh/project/src/arithmetic-3.ts:30:16 / -> *
+  expected -256 to be close to -0.25, received difference is 255.75, but expected 5e-11
+killed 284bcd276e22 /home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-05-matched-scale-oximut-clean-fresh/project/src/arithmetic-6.ts:2:16 + -> -
+  expected -63 to be close to 47, received difference is 110, but expected 5e-11
+killed 6decdb2102ce /home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-05-matched-scale-oximut-clean-fresh/project/src/arithmetic-5.ts:18:16 + -> -
+  expected -56 to be close to 40, received difference is 96, but expected 5e-11
+killed 0bb58e64ca87 /home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-05-matched-scale-oximut-clean-fresh/project/src/arithmetic-3.ts:10:16 * -> /
+  expected -0.25806451612903225 to be close to -248, received difference is 247.74193548387098, but expected 5e-11
+killed 339447f51dcd /home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-05-matched-scale-oximut-clean-fresh/project/src/arithmetic-2.ts:18:16 + -> -
+  expected -32 to be close to 16, received difference is 48, but expected 5e-11
+killed ca51ce2c1333 /home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-05-matched-scale-oximut-clean-fresh/project/src/arithmetic-0.ts:10:16 * -> /
+  expected -1.1428571428571428 to be close to -56, received difference is 54.857142857142854, but expected 5e-11
+killed 27ea1cbc9d7f /home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-05-matched-scale-oximut-clean-fresh/project/src/arithmetic-6.ts:18:16 + -> -
+  expected -64 to be close to 48, received difference is 112, but expected 5e-11
+killed d3af601d536c /home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-05-matched-scale-oximut-clean-fresh/project/src/arithmetic-4.ts:26:16 * -> /
+  expected -0.2 to be close to -320, received difference is 319.8, but expected 5e-11
+killed 937610a4446c /home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-05-matched-scale-oximut-clean-fresh/project/src/arithmetic-4.ts:2:16 + -> -
+  expected -47 to be close to 31, received difference is 78, but expected 5e-11
+killed 65157bf86996 /home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-05-matched-scale-oximut-clean-fresh/project/src/arithmetic-1.ts:30:16 / -> *
+  expected -128 to be close to -0.5, received difference is 127.5, but expected 5e-11
+killed 2cddfe21116e /home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-05-matched-scale-oximut-clean-fresh/project/src/arithmetic-5.ts:14:16 / -> *
+  expected -376 to be close to -0.1702127659574468, received difference is 375.82978723404256, but expected 5e-11
+killed dae9e83bec9e /home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-05-matched-scale-oximut-clean-fresh/project/src/arithmetic-1.ts:22:16 - -> +
+  expected 8 to be close to -24, received difference is 32, but expected 5e-11
+killed 28f376231f01 /home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-05-matched-scale-oximut-clean-fresh/project/src/arithmetic-3.ts:18:16 + -> -
+  expected -40 to be close to 24, received difference is 64, but expected 5e-11
+killed 6dbd60062b68 /home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-05-matched-scale-oximut-clean-fresh/project/src/arithmetic-4.ts:6:16 - -> +
+  expected 31 to be close to -47, received difference is 78, but expected 5e-11
+killed 492240cc0f71 /home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-05-matched-scale-oximut-clean-fresh/project/src/arithmetic-0.ts:6:16 - -> +
+  expected -1 to be close to -15, received difference is 14, but expected 5e-11
+killed 0fc6f48f9715 /home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-05-matched-scale-oximut-clean-fresh/project/src/arithmetic-7.ts:22:16 - -> +
+  expected 56 to be close to -72, received difference is 128, but expected 5e-11
+killed 06cd4070ba6f /home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-05-matched-scale-oximut-clean-fresh/project/src/arithmetic-1.ts:26:16 * -> /
+  expected -0.5 to be close to -128, received difference is 127.5, but expected 5e-11
+killed fa58c889a15b /home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-05-matched-scale-oximut-clean-fresh/project/src/arithmetic-7.ts:26:16 * -> /
+  expected -0.125 to be close to -512, received difference is 511.875, but expected 5e-11
+killed 2626af7777b9 /home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-05-matched-scale-oximut-clean-fresh/project/src/arithmetic-7.ts:10:16 * -> /
+  expected -0.12698412698412698 to be close to -504, received difference is 503.87301587301585, but expected 5e-11
+killed c788a146b010 /home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-05-matched-scale-oximut-clean-fresh/project/src/arithmetic-3.ts:2:16 + -> -
+  expected -39 to be close to 23, received difference is 62, but expected 5e-11
+killed 934987fc0a40 /home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-05-matched-scale-oximut-clean-fresh/project/src/arithmetic-3.ts:14:16 / -> *
+  expected -248 to be close to -0.25806451612903225, received difference is 247.74193548387098, but expected 5e-11
+killed 9b3c2b324f5f /home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-05-matched-scale-oximut-clean-fresh/project/src/arithmetic-3.ts:26:16 * -> /
+  expected -0.25 to be close to -256, received difference is 255.75, but expected 5e-11
+killed 9342f8a6bdfd /home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-05-matched-scale-oximut-clean-fresh/project/src/arithmetic-5.ts:26:16 * -> /
+  expected -0.16666666666666666 to be close to -384, received difference is 383.8333333333333, but expected 5e-11
+killed 161125390f79 /home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-05-matched-scale-oximut-clean-fresh/project/src/arithmetic-5.ts:2:16 + -> -
+  expected -55 to be close to 39, received difference is 94, but expected 5e-11
+killed 5eac3305ae66 /home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-05-matched-scale-oximut-clean-fresh/project/src/arithmetic-1.ts:2:16 + -> -
+  expected -23 to be close to 7, received difference is 30, but expected 5e-11
+killed 781a7cadaacc /home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-05-matched-scale-oximut-clean-fresh/project/src/arithmetic-5.ts:6:16 - -> +
+  expected 39 to be close to -55, received difference is 94, but expected 5e-11
+killed c1a8652dcbc2 /home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-05-matched-scale-oximut-clean-fresh/project/src/arithmetic-1.ts:6:16 - -> +
+  expected 7 to be close to -23, received difference is 30, but expected 5e-11
+killed 6fc6f1e50bc7 /home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-05-matched-scale-oximut-clean-fresh/project/src/arithmetic-6.ts:22:16 - -> +
+  expected 48 to be close to -64, received difference is 112, but expected 5e-11
+killed f6dda74723b1 /home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-05-matched-scale-oximut-clean-fresh/project/src/arithmetic-2.ts:26:16 * -> /
+  expected -0.3333333333333333 to be close to -192, received difference is 191.66666666666666, but expected 5e-11
+killed b63083b51b0c /home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-05-matched-scale-oximut-clean-fresh/project/src/arithmetic-7.ts:2:16 + -> -
+  expected -71 to be close to 55, received difference is 126, but expected 5e-11
+killed 5fc8dde4c65b /home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-05-matched-scale-oximut-clean-fresh/project/src/arithmetic-2.ts:30:16 / -> *
+  expected -192 to be close to -0.3333333333333333, received difference is 191.66666666666666, but expected 5e-11
+killed e082e169fc7c /home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-05-matched-scale-oximut-clean-fresh/project/src/arithmetic-6.ts:26:16 * -> /
+  expected -0.14285714285714285 to be close to -448, received difference is 447.85714285714283, but expected 5e-11
+killed 258d2b786aa8 /home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-05-matched-scale-oximut-clean-fresh/project/src/arithmetic-6.ts:30:16 / -> *
+  expected -448 to be close to -0.14285714285714285, received difference is 447.85714285714283, but expected 5e-11
+killed e92aa478c84d /home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-05-matched-scale-oximut-clean-fresh/project/src/arithmetic-4.ts:10:16 * -> /
+  expected -0.20512820512820512 to be close to -312, received difference is 311.79487179487177, but expected 5e-11
+killed 5d3dfadaa8ca /home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-05-matched-scale-oximut-clean-fresh/project/src/arithmetic-5.ts:30:16 / -> *
+  expected -384 to be close to -0.16666666666666666, received difference is 383.8333333333333, but expected 5e-11
+killed 9ef652b122f7 /home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-05-matched-scale-oximut-clean-fresh/project/src/arithmetic-3.ts:6:16 - -> +
+  expected 23 to be close to -39, received difference is 62, but expected 5e-11
+killed 26e29767c11b /home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-05-matched-scale-oximut-clean-fresh/project/src/arithmetic-1.ts:18:16 + -> -
+  expected -24 to be close to 8, received difference is 32, but expected 5e-11
+killed 62ab979af16f /home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-05-matched-scale-oximut-clean-fresh/project/src/arithmetic-2.ts:10:16 * -> /
+  expected -0.34782608695652173 to be close to -184, received difference is 183.65217391304347, but expected 5e-11
+killed 5fb588b72447 /home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-05-matched-scale-oximut-clean-fresh/project/src/arithmetic-0.ts:30:16 / -> *
+  expected -64 to be close to -1, received difference is 63, but expected 5e-11
+killed 7519b5955171 /home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-05-matched-scale-oximut-clean-fresh/project/src/arithmetic-6.ts:10:16 * -> /
+  expected -0.14545454545454545 to be close to -440, received difference is 439.8545454545455, but expected 5e-11
+killed e232e307be43 /home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-05-matched-scale-oximut-clean-fresh/project/src/arithmetic-4.ts:14:16 / -> *
+  expected -312 to be close to -0.20512820512820512, received difference is 311.79487179487177, but expected 5e-11
+killed 18308b064ab5 /home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-05-matched-scale-oximut-clean-fresh/project/src/arithmetic-3.ts:22:16 - -> +
+  expected 24 to be close to -40, received difference is 64, but expected 5e-11
+killed 005eb9ea7ffc /home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-05-matched-scale-oximut-clean-fresh/project/src/arithmetic-6.ts:6:16 - -> +
+  expected 47 to be close to -63, received difference is 110, but expected 5e-11
+killed 71333257bd89 /home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-05-matched-scale-oximut-clean-fresh/project/src/arithmetic-4.ts:22:16 - -> +
+  expected 32 to be close to -48, received difference is 80, but expected 5e-11
+killed 78b07836a084 /home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-05-matched-scale-oximut-clean-fresh/project/src/arithmetic-7.ts:14:16 / -> *
+  expected -504 to be close to -0.12698412698412698, received difference is 503.87301587301585, but expected 5e-11
+killed 20d55c8856a7 /home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-05-matched-scale-oximut-clean-fresh/project/src/arithmetic-4.ts:30:16 / -> *
+  expected -320 to be close to -0.2, received difference is 319.8, but expected 5e-11
+killed 5d4f824d619c /home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-05-matched-scale-oximut-clean-fresh/project/src/arithmetic-2.ts:14:16 / -> *
+  expected -184 to be close to -0.34782608695652173, received difference is 183.65217391304347, but expected 5e-11
+killed e43bbd7efcd9 /home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-05-matched-scale-oximut-clean-fresh/project/src/arithmetic-0.ts:26:16 * -> /
+  expected -1 to be close to -64, received difference is 63, but expected 5e-11
+killed d607c7ed50e0 /home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-05-matched-scale-oximut-clean-fresh/project/src/arithmetic-1.ts:14:16 / -> *
+  expected -120 to be close to -0.5333333333333333, received difference is 119.46666666666667, but expected 5e-11
+killed ee6ab18bca00 /home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-05-matched-scale-oximut-clean-fresh/project/src/arithmetic-0.ts:22:16 - -> +
+  expected +0 to be close to -16, received difference is 16, but expected 5e-11
+killed ea3597690c51 /home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-05-matched-scale-oximut-clean-fresh/project/src/arithmetic-5.ts:10:16 * -> /
+  expected -0.1702127659574468 to be close to -376, received difference is 375.82978723404256, but expected 5e-11
+killed cab6e7f1d166 /home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-05-matched-scale-oximut-clean-fresh/project/src/arithmetic-2.ts:22:16 - -> +
+  expected 16 to be close to -32, received difference is 48, but expected 5e-11
+killed 4c432dc35d5b /home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-05-matched-scale-oximut-clean-fresh/project/src/arithmetic-1.ts:10:16 * -> /
+  expected -0.5333333333333333 to be close to -120, received difference is 119.46666666666667, but expected 5e-11
+killed 7fbffe41cec3 /home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-05-matched-scale-oximut-clean-fresh/project/src/arithmetic-0.ts:14:16 / -> *
+  expected -56 to be close to -1.1428571428571428, received difference is 54.857142857142854, but expected 5e-11
+killed 80e12edd15e5 /home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-05-matched-scale-oximut-clean-fresh/project/src/arithmetic-7.ts:30:16 / -> *
+  expected -512 to be close to -0.125, received difference is 511.875, but expected 5e-11
+killed fff937ef5106 /home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-05-matched-scale-oximut-clean-fresh/project/src/arithmetic-5.ts:22:16 - -> +
+  expected 40 to be close to -56, received difference is 96, but expected 5e-11
+killed d9b9e79fe3f4 /home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-05-matched-scale-oximut-clean-fresh/project/src/arithmetic-4.ts:18:16 + -> -
+  expected -48 to be close to 32, received difference is 80, but expected 5e-11
+killed b3e84551fbce /home/runner/work/oximut/oximut/.oximut/matched-benchmark/measured-05-matched-scale-oximut-clean-fresh/project/src/arithmetic-0.ts:18:16 + -> -
+  expected -16 to be close to +0, received difference is 16, but expected 5e-11
+Mutants: 64 total, 64 killed, 0 survived, 0 no-coverage, 0 invalid, 0 timeout, 0 infrastructure-error, 0 resource-exhausted, 0 skipped
+Score: 100.00% (64/64); complete: true
+Cache: forced-no-cache; instrumentation hits/misses: 0/0; outcome hits/misses: 0/0; not-written
+Diagnostic: execution=fresh; isolation=fresh-controller-and-test-process

@@ -14,6 +14,31 @@ SPEC.loader.exec_module(runner)
 
 
 class ProcessStatsTests(unittest.TestCase):
+    def test_rollup_rss_is_strict_and_does_not_include_pss(self):
+        self.assertEqual(runner.parse_rollup_rss('Rss: 123 kB\nPss: 7 kB\n'), 123 * 1024)
+        for value in ('Pss: 1 kB', 'Rss: -1 kB', 'Rss: 1 MB',
+                      'Rss: 1 kB\nRss: 2 kB', 'Rss: 1', 'Rss: ١ kB'):
+            with self.subTest(value=value), self.assertRaises(ValueError):
+                runner.parse_rollup_rss(value)
+
+    def test_memory_unavailable_for_live_process_invalidates_sample(self):
+        tail = ['S', '12', '34'] + ['0'] * 16 + ['9876', '1234', '7']
+        stat = '99 (worker) ' + ' '.join(tail)
+        with mock.patch.object(Path, 'read_text', side_effect=[PermissionError('restricted'), stat]):
+            rss, errors = runner.aggregate_rollup_rss({99: {'starttime': 9876}})
+        self.assertEqual(rss, 0)
+        self.assertEqual(len(errors), 1)
+        self.assertIn('RSS unavailable', errors[0])
+
+    def test_exit_or_reused_pid_during_memory_sample_is_ignored(self):
+        tail = ['S', '12', '34'] + ['0'] * 16 + ['9877', '1234', '7']
+        for values in ([FileNotFoundError(), FileNotFoundError()],
+                       ['Rss: 123 kB', ProcessLookupError()],
+                       [ProcessLookupError()],
+                       ['Rss: 123 kB', '99 (worker) ' + ' '.join(tail)]):
+            with mock.patch.object(Path, 'read_text', side_effect=values):
+                self.assertEqual(runner.aggregate_rollup_rss({99: {'starttime': 9876}}), (0, []))
+
     def test_stat_command_can_contain_parentheses_and_spaces(self):
         # Real proc layout: fields 3..24, with arbitrary comm text in field 2.
         tail = ['S', '12', '34'] + ['0'] * 16 + ['9876', '1234', '7']
@@ -94,6 +119,8 @@ class CommandTests(unittest.TestCase):
         self.assertTrue(result['success'])
         self.assertGreater(result['cpu_seconds'], .03)
         self.assertGreater(result['peak_aggregate_rss_bytes'], 0)
+        self.assertEqual(result['memory_method'], 'sum-live-smaps_rollup-rss')
+        self.assertEqual(result['memory_errors'], [])
         self.assertGreaterEqual(result['peak_process_count'], 2)
 
 

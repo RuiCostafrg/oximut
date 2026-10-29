@@ -1,0 +1,74 @@
+name: Matched Stryker benchmark
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'benchmarks/targets.py'
+      - 'benchmarks/run.py'
+      - 'benchmarks/m6.py'
+      - 'benchmarks/config/m6-stryker.mjs'
+      - 'fixtures/matched-*/**'
+      - '.github/workflows/matched-benchmark.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: matched-benchmark-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  matched:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version-file: .node-version
+          cache: npm
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: '3.13'
+      - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # stable
+        with:
+          toolchain: '1.96.0'
+      - run: npm ci --ignore-scripts
+      - run: cargo build --locked --release -p oximut-cli
+      - name: Benchmark gates and measurement tests
+        run: python3 -m unittest discover -s benchmarks/tests -v
+      - name: Serial matched workload campaign (build and install excluded)
+        run: >-
+          python3 benchmarks/m6.py --fixtures matched-small matched-scale
+          --scenarios clean --modes fresh selection --binary target/release/oximut
+          --workers 1 --repetitions 5 --warmups 1 --timeout 600
+          --output .oximut/matched-benchmark
+      - name: Evaluate targets and publish misses as evidence
+        if: ${{ !cancelled() && hashFiles('.oximut/matched-benchmark/summary.json') != '' }}
+        run: |
+          evaluation_status=0
+          python3 benchmarks/targets.py .oximut/matched-benchmark || evaluation_status=$?
+          {
+            echo '### Matched benchmark targets'
+            echo 'Host/corpus-specific evidence; hosted runners may have noisy neighbours. Target misses do not become correctness failures.'
+            echo '```json'
+            if [[ -f .oximut/matched-benchmark/performance-targets.json ]]; then
+              cat .oximut/matched-benchmark/performance-targets.json
+            else
+              echo "No target result produced; evaluator exited with status $evaluation_status."
+            fi
+            echo '```'
+            echo "Evaluator exit status: $evaluation_status"
+          } >> "$GITHUB_STEP_SUMMARY"
+          exit "$evaluation_status"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: matched-benchmark-${{ github.sha }}
+          path: .oximut/matched-benchmark/**
+          include-hidden-files: true
+          if-no-files-found: warn
+          retention-days: 14

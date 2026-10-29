@@ -60,12 +60,13 @@ summed. This avoids counting sampled cumulative CPU multiple times. Descendants
 that escape observation or are not reaped can undercount usage. Metadata gathering
 and the Python harness itself are excluded from workload CPU and memory.
 
-Memory is the maximum sampled sum of `/proc/PID/stat` resident page counts across
+Memory is the maximum sampled sum of `/proc/PID/smaps_rollup` Rss across
 the observed process tree, sampled every 20 ms by default. Shared pages count in
 each process's RSS, and short-lived processes or peaks between samples can be
-missed. On the recorded host, stat RSS also lagged a live allocation by several
-seconds while a smaps rollup already showed the resident pages. Stat-only peaks
-therefore do not establish precise memory savings. This is an observed aggregate RSS peak, not a PSS/unique-memory figure or
+missed. Missing or malformed live-process memory accounting invalidates a run.
+Historical campaigns recorded approximate stat RSS, which can lag live allocations;
+those immutable results do not establish precise memory savings.
+This is an observed aggregate RSS peak, not a PSS/unique-memory figure or
 an enforced memory cap. Process count includes the tool controller and workers,
 excludes zombie processes, and is not a count of worker threads. Cgroup/affinity
 values are recorded, not changed; missing or virtualized counters remain a host
@@ -142,9 +143,9 @@ admission budget only. Separate runs can explore budgets without implying that
 Stryker implements an equivalent cap.
 
 The M0 process-tree CPU/RSS sampler described above supplies the measurements.
-Its approximate stat RSS is distinct from current Oximut admission accounting,
-which prefers accurate smaps rollups. Do not compare those two internal memory
-methods as if an accounting change were a change in actual memory use.
+Current campaigns use smaps rollups, as does Oximut admission accounting. Earlier
+archives retain their original stat RSS method. Do not interpret a difference
+between accounting methods as a change in actual memory use.
 `metadata.json`, `measurements.jsonl`, `measurements.csv`, `summary.json`, and
 `comparisons.json` retain commands, configuration hashes, environment, medians,
 min/max spread, warmups, failures, overlap/exclusions, and correctness gates.
@@ -173,3 +174,54 @@ Single-repeat smoke/input-change runs are correctness evidence only.
 The harness covers deterministic fixtures. Real projects, generated scaling,
 resource-failure stress, and public release readiness require separate evidence;
 see [the M6 decision](../docs/m6.md).
+
+## Matched arithmetic comparison and candidate targets
+
+The `matched-small` and `matched-scale` corpora contain 8 and 64 arithmetic
+mutants and tests respectively. They cover `+`, `-`, `*`, `/` with fixed numeric
+inputs. The larger corpus has eight independently tested modules. Their checked
+manifests declare exact edited-source identities, expected killed outcomes,
+source hashes, and test names/files. This is a controlled synthetic comparison;
+it does not establish performance on arbitrary applications or boundary operators.
+
+The **predeclared primary mode** is Oximut persistent controller with file
+selection against Stryker's `perTest` selection, with one configured worker,
+no outcome cache, no TypeScript checking, and the identical available tests and
+executed mutant set. Selection granularity and early termination differ; tests
+actually executed need not be equal. Fresh Oximut provides a correctness reference.
+Both scales must meet the targets; choosing a favorable mode or scale afterward
+cannot satisfy the campaign. The requested targets supersede earlier engineering
+aspirations for this campaign: Oximut/Stryker wall time ≤0.80 and sampled peak
+aggregate RSS ≤0.50. CPU time is reported separately without inventing a CPU target.
+
+Build first with `cargo build --locked --release -p oximut-cli`, then run on a quiet
+host with no concurrent builds, tests, or benchmarks:
+
+```sh
+python3 benchmarks/m6.py \
+  --fixtures matched-small matched-scale --scenarios clean \
+  --binary target/release/oximut --workers 1 \
+  --repetitions 5 --warmups 1 --timeout 600 \
+  --output /tmp/oximut-matched-campaign
+python3 benchmarks/targets.py /tmp/oximut-matched-campaign --require-targets
+```
+
+The second command writes `performance-targets.json`. A target is marked met only
+when the complete correctness gate passes, both tools and ordinary Vitest match
+the declared test inventory, exact mutation edits/outcomes agree, every pair has
+accurate memory accounting, and the paired bootstrap 95% upper bound meets the
+threshold. Crossing intervals and insufficient repetitions are inconclusive;
+missed goals remain visible. Bootstrap intervals are exploratory on one host and
+corpus, not broad product guarantees. Raw attempts, warmups, failures, and ranges
+are retained. `--require-targets` fails on missed/inconclusive goals; omitting it
+still fails invalid evidence but permits publishing honest negative results.
+
+Memory is the sum of live owned processes' `/proc/PID/smaps_rollup` **Rss**, sampled
+through complete shutdown. Shared mappings count once per process. Approximate
+`stat` RSS is never a fallback for a claim. Missing/restricted/malformed accounting
+for a live process invalidates the measurement; normal process exits are ignored.
+The metadata reports actual maximum sample spacing and memory-read duration.
+Samples are sequential, not atomic; short-lived processes and between-sample
+peaks may be missed. The harness is excluded and its overhead remains a limitation,
+especially on emulated/PRoot hosts. CPU is `wait4` user+system seconds, including
+reaped child subtrees once. Report native versus emulated hosts explicitly.
