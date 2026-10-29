@@ -73,6 +73,17 @@ assert subprocess.run(['/usr/bin/unshare', '--user', '--map-root-user', '/bin/tr
 print('ATTACKS_COMPLETED')
 '''
 
+    def test_unreadable_directory_is_not_silently_skipped(self):
+        hidden = self.work / 'unreadable'
+        hidden.mkdir()
+        (hidden / 'unsafe-link').symlink_to(self.harness)
+        hidden.chmod(0)
+        try:
+            with self.assertRaises(PermissionError):
+                SANDBOX.safe_tree(self.work)
+        finally:
+            hidden.chmod(0o700)
+
     def test_native_compiler_alias_can_build_and_execute(self):
         source = self.work / 'main.c'
         source.write_text('int main(void) { return 0; }\n')
@@ -236,6 +247,13 @@ else:
 
 
 class SandboxConstruction(unittest.TestCase):
+    def test_tree_walk_rejects_directory_scan_errors(self):
+        with tempfile.TemporaryDirectory() as directory:
+            with mock.patch.object(SANDBOX.os, 'scandir', side_effect=PermissionError('unreadable subtree')):
+                with self.assertRaisesRegex(PermissionError, 'unreadable subtree'):
+                    SANDBOX.safe_tree(Path(directory))
+
+
     def test_isolated_project_cache_writes_preserve_installed_dependencies(self):
         with tempfile.TemporaryDirectory() as directory:
             base = Path(directory)

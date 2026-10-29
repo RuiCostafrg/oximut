@@ -13,7 +13,9 @@ import tempfile
 def safe_tree(root, *, external_links=()):
     root = Path(root).resolve()
     allowed = {Path(p): Path(target) for p, target in external_links}
-    for directory, dirs, files in os.walk(root, followlinks=False):
+    def fail(error):
+        raise error
+    for directory, dirs, files in os.walk(root, followlinks=False, onerror=fail):
         for name in dirs + files:
             path = Path(directory) / name
             mode = path.lstat().st_mode

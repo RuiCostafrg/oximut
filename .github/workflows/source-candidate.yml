@@ -12,7 +12,8 @@ permissions: {}
 
 jobs:
   build-source:
-    # A dispatch from any other ref must not get signing credentials.
+    # Select the intended default-branch run, not an authorization boundary.
+    # Consumers must pin the source ref and reviewed signer digest.
     if: >-
       github.ref == format('refs/heads/{0}', github.event.repository.default_branch) &&
       github.workflow_sha == github.sha

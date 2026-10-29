@@ -8,11 +8,15 @@ policy. This gate does not configure repository protection rules.
 
 Dispatch **Source candidate provenance (not release approval)** on the default
 branch with `revision` set to the full lowercase 40-character candidate commit
-SHA. Other workflow refs are skipped before the signing job runs. The job checks
-out `github.workflow_sha`, requires it to equal the dispatch SHA, and requires the
-candidate to be an ancestor of that trusted workflow commit. Candidate code is
-read from Git objects as data; scripts from the candidate revision are never
-executed. This permits an older reviewed candidate with a newer trusted builder;
+SHA. The default-branch condition selects the intended run; it is not a trust
+boundary because a dispatch can use a modified workflow from another ref.
+Consumers must pin `--source-ref refs/heads/main` and the independently reviewed
+`--signer-digest`. Repository branch rulesets or push restrictions must limit who
+can create or update refs; this gate does not configure or verify those rules.
+The job checks out `github.workflow_sha`, requires it to equal the dispatch SHA,
+and requires the candidate to be an ancestor of that workflow commit. Archive
+construction reads candidate Git objects as data. Candidate installation and
+execution occur only inside the validation sandbox described below. This permits an older reviewed candidate with a newer trusted builder;
 both revisions and both script digests are recorded. Only `1.0.0-rc.1` is accepted,
 and the builder checks all committed package versions against it.
 
