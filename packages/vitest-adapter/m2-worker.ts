@@ -1,5 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
+import { normalizePath } from 'vite';
 import { createVitest, version, type Reporter } from 'vitest/node';
 import type { Request, Result } from './protocol.ts';
 import { SelectionSupport } from './m3-selection.ts';
@@ -144,7 +145,7 @@ async function command(name: string, args: Request): Promise<unknown> {
       // unrelated modules retain their transform cache. Test forks stay fresh.
       const files = new Set([mutation?.file, next?.file]);
       for (const file of files) {
-        if (file) project.vite.moduleGraph.onFileChange(resolve(file));
+        if (file) project.vite.moduleGraph.onFileChange(normalizePath(resolve(file)));
       }
     }
   }
