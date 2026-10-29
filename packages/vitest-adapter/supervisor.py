@@ -123,9 +123,14 @@ def main():
                 table = snapshot()
                 for pid in descendants(table, os.getpid()):
                     owned[pid] = table[pid][1]
-                # All adopted children are ours. Identity checks use this fresh snapshot.
+                # Re-read identity immediately before signalling: even a fresh
+                # discovery snapshot cannot rule out subsequent PID reuse.
                 for pid in descendants(table, os.getpid()):
-                    if table[pid][1] == owned.get(pid):
+                    try:
+                        current_start = process_identity(pid)[1]
+                    except (OSError, ValueError, IndexError):
+                        continue
+                    if current_start == table[pid][1]:
                         try:
                             os.kill(pid, signal.SIGKILL)
                         except ProcessLookupError:

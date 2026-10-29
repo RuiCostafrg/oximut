@@ -58,7 +58,8 @@ class SupervisorCleanup(unittest.TestCase):
               patch.object(supervisor.time, 'monotonic', return_value=10.0)):
             result, report, _, kill = self.run_supervisor(
                 directory, discovery,
-                [(0, 0), (0, 0), (0, 0), (123, 0), (0, 0), (456, 9), ChildProcessError()])
+                [(0, 0), (0, 0), (0, 0), (123, 0), (0, 0), (456, 9), ChildProcessError()],
+                [FileNotFoundError(), (parent, 'start-456', 'S')])
             # Three intervening polls skipped active discovery; stop forces it.
             self.assertEqual(discovery.call_count, 6)
             self.assertEqual(result, 0)
@@ -67,6 +68,24 @@ class SupervisorCleanup(unittest.TestCase):
             self.assertIn(456, evidence['tracked'])
             self.assertIn(456, evidence['reaped'])
             self.assertTrue(evidence['allReaped'])
+
+    def test_shutdown_rereads_identity_before_signalling(self):
+        parent = supervisor.os.getpid()
+        observed = {456: (parent, 'original', 'S')}
+        for current in [(parent, 'original', 'S'), (parent, 'reused', 'S'),
+                        FileNotFoundError(), ProcessLookupError(), PermissionError(),
+                        OSError('unreadable'), ValueError('malformed'), IndexError('truncated')]:
+            with self.subTest(current=current), tempfile.TemporaryDirectory() as directory:
+                with patch.object(supervisor.time, 'monotonic', return_value=10.0):
+                    result, _, _, kill = self.run_supervisor(
+                        directory, [observed, observed, {}, {}, {}, {}],
+                        [(123, 0), (0, 0), ChildProcessError()],
+                        [FileNotFoundError(), current])
+                self.assertEqual(result, 0)
+                if current == (parent, 'original', 'S'):
+                    kill.assert_called_once_with(456, supervisor.signal.SIGKILL)
+                else:
+                    kill.assert_not_called()
 
     def test_discovery_failure_cannot_publish_success(self):
         with tempfile.TemporaryDirectory() as directory:
