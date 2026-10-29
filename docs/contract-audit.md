@@ -47,3 +47,13 @@ The guards added here close the resolved non-Node-environment gap in both
 workers. No cache, scheduler, installer, package-version or distribution policy
 changes are part of this audit. Sampled resource accounting remains best-effort
 admission/cancellation; no hard memory or CPU-time limit is promised.
+
+Selected test files are checked before execution for both `@vitest-environment`
+and `@jest-environment` overrides, using the pinned Vitest 4.1.12 precedence
+and syntax. Non-Node overrides fail explicitly in both workers; files outside
+a file selection do not block it. The adapter contract test verifies rejection
+before a test-module execution marker is written.
+
+The list schema accepts optional extension fields at every object level while
+reserving `runId`, `baseline`, `summary`, `cache`, and `resources` for run reports.
+Required list fields and position constraints remain validated.

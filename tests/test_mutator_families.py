@@ -24,7 +24,7 @@ class MutatorFamilies(unittest.TestCase):
         self.assertEqual(boolean_only.returncode, 0, boolean_only.stderr)
         self.assertEqual(union.returncode, 0, union.stderr)
         one, combined = json.loads(boolean_only.stdout), json.loads(union.stdout)
-        self.assertTrue(all(m["operator"] == "boolean-literal" for m in one["mutants"]))
+        self.assertEqual({m["operator"] for m in one["mutants"]}, {"boolean-literal"})
         self.assertEqual({m["operator"] for m in combined["mutants"]}, {"boolean-literal", "comparison-boundary"})
         self.assertIn("exclusions are not part of this run", " ".join(combined["diagnostics"]))
 
