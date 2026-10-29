@@ -114,7 +114,10 @@ Missing profile support or namespace permissions fail the required native tests.
 Installation can write only extracted source and
 its new prefix. Each installed/relocated invocation gets a writable disposable
 project and a read-only prefix; trusted harness, schema, validator dependencies,
-archived reports and evidence are not mounted. The validator uses the trusted
+archived reports and evidence are not mounted. Writable private tmpfs scratch
+can contain shadow files at those pathnames; it does not expose or modify the
+host originals. Host-side regression assertions check original bytes after
+namespace teardown. The validator uses the trusted
 checkout's locked npm dependencies, never candidate-installed JavaScript.
 Only system tools, CA certificates and standalone Node/Rust toolchains are
 mounted read-only. The environment is cleared; host homes, checkout credentials,

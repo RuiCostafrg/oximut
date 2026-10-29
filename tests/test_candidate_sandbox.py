@@ -50,13 +50,15 @@ class CandidateSandbox(unittest.TestCase):
     def attack(self):
         return f'''import os, json
 from pathlib import Path
-denied = []
 for target in {list(map(str, [self.harness, self.evidence]))!r}:
+    # Parent directories may exist for bind mounts, but host files must not.
+    assert not Path(target).exists(), target
     try:
         Path(target).write_text('{{"status":"passed"}}')
     except OSError:
-        denied.append(target)
-assert len(denied) == 2, denied
+        pass
+# A successful write above creates only a private tmpfs shadow. The trusted
+# parent checks original host bytes after this namespace has been destroyed.
 assert 'HOST_SECRET_SENTINEL' not in os.environ
 assert not Path('/var/run/docker.sock').exists()
 assert not Path('/run').exists()
@@ -68,7 +70,7 @@ for cap in ('CapEff', 'CapPrm', 'CapAmb'):
 import subprocess
 assert subprocess.run(['/usr/bin/unshare', '--user', '--map-root-user', '/bin/true'],
                       capture_output=True).returncode != 0
-print('DENIED_BOTH')
+print('ATTACKS_COMPLETED')
 '''
 
     def test_smoke_network_namespace_cannot_reach_host_loopback(self):
@@ -92,7 +94,7 @@ print('ISOLATED')
         self.addCleanup(os.environ.pop, 'HOST_SECRET_SENTINEL', None)
         log = SANDBOX.run(['/usr/bin/python3', script], cwd=self.work,
                           writable=[self.work], network=True)
-        self.assertIn('DENIED_BOTH', log)
+        self.assertIn('ATTACKS_COMPLETED', log)
         self.assertEqual(self.harness.read_text(), 'trusted')
         self.assertEqual(json.loads(self.evidence.read_text())['status'], 'failed')
 
