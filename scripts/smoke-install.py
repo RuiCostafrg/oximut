@@ -15,6 +15,16 @@ SANDBOX = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(SANDBOX)
 
 
+def project_dependencies(prefix, root, isolated):
+    installed = prefix / "lib/oximut/node_modules"
+    if isolated:
+        # Vite writes .vite-temp beside the project's dependencies. Keep those
+        # writes private without making any installed candidate assets writable.
+        shutil.copytree(installed, root / "node_modules", symlinks=True)
+    else:
+        (root / "node_modules").symlink_to(installed, target_is_directory=True)
+
+
 def smoke(prefix, *, reports_dir=None, validator=None, isolated=False):
     if (reports_dir is None) != (validator is None):
         raise ValueError("reports-dir and validator must be supplied together")
@@ -27,7 +37,7 @@ def smoke(prefix, *, reports_dir=None, validator=None, isolated=False):
     with tempfile.TemporaryDirectory(prefix="oximut-installed-project-") as temporary:
         root = Path(temporary) / "project"
         root.mkdir()
-        (root / "node_modules").symlink_to(prefix / "lib" / "oximut" / "node_modules", target_is_directory=True)
+        project_dependencies(prefix, root, isolated)
         (root / "package.json").write_text('{"type":"module"}\n')
         (root / "vitest.config.mjs").write_text('export default { test: { include: ["subject.test.js"] } };\n')
         (root / "subject.js").write_text('export const positive = value => value > 0;\n')

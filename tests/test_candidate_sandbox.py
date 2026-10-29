@@ -209,6 +209,25 @@ else:
 
 
 class SandboxConstruction(unittest.TestCase):
+    def test_isolated_project_cache_writes_preserve_installed_dependencies(self):
+        with tempfile.TemporaryDirectory() as directory:
+            base = Path(directory)
+            prefix = base / 'prefix'
+            installed = prefix / 'lib/oximut/node_modules'
+            installed.mkdir(parents=True)
+            (installed / 'asset.js').write_text('original')
+            root = base / 'project'
+            root.mkdir()
+            SMOKE.project_dependencies(prefix, root, True)
+            private = root / 'node_modules'
+            self.assertFalse(private.is_symlink())
+            (private / '.vite-temp').mkdir()
+            (private / '.vite-temp/config.mjs').write_text('compiled config')
+            (private / 'asset.js').write_text('private change')
+            self.assertEqual((installed / 'asset.js').read_text(), 'original')
+            self.assertFalse((installed / '.vite-temp').exists())
+
+
     def test_namespace_and_privilege_contract(self):
         for network in (False, True):
             with self.subTest(network=network), \
