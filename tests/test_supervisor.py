@@ -39,7 +39,7 @@ class SupervisorCleanup(unittest.TestCase):
     def test_empty_snapshot_does_not_authorize_cleanup_while_child_is_live(self):
         with tempfile.TemporaryDirectory() as directory:
             result, report, wait, kill = self.run_supervisor(
-                directory, lambda: {},
+                directory, lambda _deadline=None: {},
                 [(123, 0), (0, 0), (0, 0), ChildProcessError()])
             self.assertEqual(result, 0)
             self.assertEqual(wait.call_count, 4)
@@ -53,7 +53,7 @@ class SupervisorCleanup(unittest.TestCase):
         adopted = {456: (parent, 'start-456', 'S')}
         # Empty active scan, adoption discovered only after controller reaping.
         tables = iter([{}, adopted, adopted, {}, {}, {}])
-        discovery = Mock(side_effect=lambda: next(tables))
+        discovery = Mock(side_effect=lambda _deadline=None: next(tables))
         with (tempfile.TemporaryDirectory() as directory,
               patch.object(supervisor.time, 'monotonic', return_value=10.0)):
             result, report, _, kill = self.run_supervisor(
@@ -61,13 +61,81 @@ class SupervisorCleanup(unittest.TestCase):
                 [(0, 0), (0, 0), (0, 0), (123, 0), (0, 0), (456, 9), ChildProcessError()],
                 [FileNotFoundError(), (parent, 'start-456', 'S')])
             # Three intervening polls skipped active discovery; stop forces it.
-            self.assertEqual(discovery.call_count, 6)
+            self.assertEqual(discovery.call_count, 5)
             self.assertEqual(result, 0)
             kill.assert_called_once_with(456, supervisor.signal.SIGKILL)
             evidence = json.loads(report.read_text())
             self.assertIn(456, evidence['tracked'])
             self.assertIn(456, evidence['reaped'])
             self.assertTrue(evidence['allReaped'])
+
+    def test_shutdown_snapshot_overrun_cannot_publish_empty_tree_success(self):
+        for slow_scan in [2, 3]:
+            now = [10.0]
+            calls = []
+
+            def discovery(deadline=None):
+                calls.append(deadline)
+                if len(calls) == slow_scan:
+                    self.assertEqual(deadline, 12.0)
+                    now[0] = 12.1
+                return {}
+
+            with self.subTest(slow_scan=slow_scan), tempfile.TemporaryDirectory() as directory:
+                with patch.object(supervisor.time, 'monotonic', side_effect=lambda: now[0]):
+                    with self.assertRaisesRegex(RuntimeError, 'cleanup bound'):
+                        self.run_supervisor(directory, discovery, [(123, 0), ChildProcessError()])
+                self.assertEqual(len(calls), slow_scan)
+                self.assertFalse((Path(directory) / 'cleanup.json').exists())
+
+    def test_snapshot_checks_budget_after_identity_read(self):
+        now = [10.0]
+
+        def identity(_pid):
+            now[0] = 12.1
+            return (1, 'start', 'S')
+
+        with (patch.object(supervisor.time, 'monotonic', side_effect=lambda: now[0]),
+              patch.object(supervisor.os, 'listdir', return_value=['123', '456']),
+              patch.object(supervisor, 'process_identity', side_effect=identity) as read):
+            with self.assertRaisesRegex(RuntimeError, 'cleanup bound'):
+                supervisor.snapshot(12.0)
+            self.assertEqual(read.call_count, 1)
+
+    def test_descendant_traversal_checks_budget_during_iteration(self):
+        class SlowTable(dict):
+            def items(self):
+                yield 123, (1, 'start', 'S')
+                now[0] = 12.1
+                yield 456, (123, 'start', 'S')
+
+        now = [10.0]
+        with patch.object(supervisor.time, 'monotonic', side_effect=lambda: now[0]):
+            with self.assertRaisesRegex(RuntimeError, 'cleanup bound'):
+                supervisor.descendants(SlowTable(), 1, 12.0)
+
+    def test_shutdown_identity_overrun_does_not_signal(self):
+        parent = supervisor.os.getpid()
+        observed = {456: (parent, 'start', 'S')}
+        now = [10.0]
+        reads = []
+
+        def identity(pid):
+            reads.append(pid)
+            if pid == 123:
+                raise FileNotFoundError()
+            now[0] = 12.1
+            return (parent, 'start', 'S')
+
+        with tempfile.TemporaryDirectory() as directory:
+            signals = Mock()
+            with patch.object(supervisor.time, 'monotonic', side_effect=lambda: now[0]):
+                with self.assertRaisesRegex(RuntimeError, 'cleanup bound'):
+                    self.run_supervisor(directory, [observed, observed],
+                                        [(123, 0), (0, 0)], identity, signals)
+            signals.assert_not_called()
+            self.assertEqual(reads, [123, 456])
+            self.assertFalse((Path(directory) / 'cleanup.json').exists())
 
     def test_shutdown_rereads_identity_before_signalling(self):
         parent = supervisor.os.getpid()
