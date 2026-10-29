@@ -17,12 +17,14 @@ spec.loader.exec_module(supervisor)
 
 
 class SupervisorCleanup(unittest.TestCase):
-    def run_supervisor(self, directory, snapshots, waits, identities=None, signals=None):
+    def run_supervisor(self, directory, snapshots, waits, identities=None, signals=None, handlers=None):
         report = Path(directory) / 'cleanup.json'
         libc = Mock()
         libc.prctl.return_value = 0
         with (patch.object(supervisor.ctypes, 'CDLL', return_value=libc),
-              patch.object(supervisor.signal, 'signal'),
+              patch.object(supervisor.signal, 'signal',
+                           side_effect=lambda number, handler:
+                           handlers.update({number: handler}) if handlers is not None else None),
               patch.object(supervisor.os, 'close'),
               patch.object(supervisor.os, 'waitpid', side_effect=waits) as wait,
               patch.object(supervisor.os, 'kill', new=signals if signals is not None else Mock()) as kill,
@@ -87,6 +89,30 @@ class SupervisorCleanup(unittest.TestCase):
                         self.run_supervisor(directory, discovery, [(123, 0), ChildProcessError()])
                 self.assertEqual(len(calls), slow_scan)
                 self.assertFalse((Path(directory) / 'cleanup.json').exists())
+
+    def test_signal_during_active_scan_starts_budget_before_shutdown_scan(self):
+        now = [10.0]
+        handlers = {}
+        calls = []
+
+        def discovery(deadline=None):
+            calls.append(deadline)
+            if len(calls) == 1:
+                self.assertIsNone(deadline)
+                handlers[supervisor.signal.SIGTERM](None, None)
+                now[0] = 11.0
+            else:
+                self.assertEqual(deadline, 12.0)
+                # The signal's original budget must not restart at shutdown.
+                now[0] = 12.1
+            return {}
+
+        with tempfile.TemporaryDirectory() as directory:
+            with patch.object(supervisor.time, 'monotonic', side_effect=lambda: now[0]):
+                with self.assertRaisesRegex(RuntimeError, 'cleanup bound'):
+                    self.run_supervisor(directory, discovery, [(0, 0)], handlers=handlers)
+            self.assertEqual(calls, [None, 12.0])
+            self.assertFalse((Path(directory) / 'cleanup.json').exists())
 
     def test_snapshot_checks_budget_after_identity_read(self):
         now = [10.0]

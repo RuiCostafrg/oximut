@@ -95,16 +95,18 @@ def main():
     node, worker, report_path = sys.argv[1:]
     ipc_fd = int(os.environ['NODE_CHANNEL_FD'])
     stop = False
+    cleanup_started = None
 
     def request_stop(_signum, _frame):
-        nonlocal stop
+        nonlocal stop, cleanup_started
+        if cleanup_started is None:
+            cleanup_started = time.monotonic()
         stop = True
 
     signal.signal(signal.SIGTERM, request_stop)
     signal.signal(signal.SIGINT, request_stop)
     controller = subprocess.Popen([node, worker], pass_fds=(ipc_fd,))
     owned = {}
-    cleanup_started = None
     try:
         # Pin the direct child before broad discovery, including startup failures.
         try:
@@ -146,6 +148,11 @@ def main():
                         cleanup_started = time.monotonic()
                         deadline = cleanup_started + 2
             if stop:
+                # A signal can arrive after this iteration cached its deadline.
+                if cleanup_started is None:
+                    cleanup_started = time.monotonic()
+                deadline = cleanup_started + 2
+                check_deadline(deadline)
                 # Never signal from a cached active snapshot: adoption may have changed.
                 table = snapshot(deadline)
                 check_deadline(deadline)
