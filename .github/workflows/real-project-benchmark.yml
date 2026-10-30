@@ -1,0 +1,140 @@
+name: Real project before-after benchmark
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'benchmarks/compare_candidates.py'
+      - 'benchmarks/real_project.py'
+      - 'benchmarks/real-project/**'
+      - 'benchmarks/targets.py'
+      - 'benchmarks/run.py'
+      - 'benchmarks/m6.py'
+      - 'benchmarks/tests/**'
+      - 'docs/real-project-benchmark.md'
+      - '.github/workflows/real-project-benchmark.yml'
+      # Runner changes are what this campaign measures.
+      - 'crates/**'
+      - 'packages/vitest-adapter/**'
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+      - 'rust-toolchain.toml'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.node-version'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: real-project-benchmark-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  compare:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    env:
+      BEFORE_COMMIT: 4a6993b564758d15d976cd0998ba490fbf64e1e1
+      BUILD_FLAGS: --locked --release -p oximut-cli
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version-file: .node-version
+          cache: npm
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: '3.13'
+      - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # stable
+        with:
+          toolchain: '1.96.0'
+      - name: Set native campaign paths
+        run: |
+          test "$(uname -m)" = x86_64
+          echo "BEFORE_WORKTREE=$RUNNER_TEMP/real-project-before" >> "$GITHUB_ENV"
+          echo "BINARY_DIR=$RUNNER_TEMP/real-project-binaries" >> "$GITHUB_ENV"
+          echo "BEFORE_CARGO_TARGET_DIR=$RUNNER_TEMP/real-project-before-target" >> "$GITHUB_ENV"
+          echo "AFTER_CARGO_TARGET_DIR=$RUNNER_TEMP/real-project-after-target" >> "$GITHUB_ENV"
+          echo "CAMPAIGN_DIR=$RUNNER_TEMP/real-project-comparison" >> "$GITHUB_ENV"
+          echo "AFTER_COMMIT=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+      - run: npm ci --ignore-scripts
+      - name: Check harness gates before building
+        run: python3 -m unittest discover -s benchmarks/tests -v
+      - name: Build both candidates before any timing
+        shell: bash
+        run: |
+          set -euo pipefail
+          git cat-file -e "$BEFORE_COMMIT^{commit}"
+          git worktree add --detach "$BEFORE_WORKTREE" "$BEFORE_COMMIT"
+          ln -s "$GITHUB_WORKSPACE/node_modules" "$BEFORE_WORKTREE/node_modules"
+          mkdir -p "$BINARY_DIR"
+          cargo build --target-dir "$BEFORE_CARGO_TARGET_DIR" --manifest-path "$BEFORE_WORKTREE/Cargo.toml" --locked --release -p oximut-cli
+          cp "$BEFORE_CARGO_TARGET_DIR/release/oximut" "$BINARY_DIR/before-oximut"
+          cargo build --target-dir "$AFTER_CARGO_TARGET_DIR" --locked --release -p oximut-cli
+          cp "$AFTER_CARGO_TARGET_DIR/release/oximut" "$BINARY_DIR/after-oximut"
+          python3 - <<'PY'
+          import hashlib, json, os, pathlib, subprocess
+          binaries = pathlib.Path(os.environ['BINARY_DIR'])
+          capture = lambda *cmd: subprocess.check_output(cmd, text=True).strip()
+          record = {
+              'before_commit': capture('git', '-C', os.environ['BEFORE_WORKTREE'], 'rev-parse', 'HEAD'),
+              'after_commit': capture('git', 'rev-parse', 'HEAD'),
+              'build_flags': os.environ['BUILD_FLAGS'],
+              'rustflags': os.environ.get('RUSTFLAGS'),
+              'cargo_encoded_rustflags': os.environ.get('CARGO_ENCODED_RUSTFLAGS'),
+              'cargo_target_dirs': {variant: os.environ[f'{variant.upper()}_CARGO_TARGET_DIR']
+                                    for variant in ['before', 'after']},
+              'before_source': os.environ['BEFORE_WORKTREE'],
+              'after_source': os.environ['GITHUB_WORKSPACE'],
+              'tool_versions': {name: capture(name, '--version')
+                                for name in ['rustc', 'cargo', 'node', 'npm', 'python3']},
+              'binary_sha256': {name: hashlib.sha256((binaries / f'{name}-oximut').read_bytes()).hexdigest()
+                                for name in ['before', 'after']},
+              'host': capture('uname', '-a'),
+              'timing_policy': 'Both copied binaries built before timing; isolated compiled artifacts; registry downloads may be shared; no rebuilds during campaign',
+          }
+          (binaries / 'build-metadata.json').write_text(json.dumps(record, indent=2) + '\n')
+          PY
+      - name: Serial real project comparison, one warmup and five measured rounds
+        run: |
+          python3 benchmarks/compare_candidates.py \
+            --before-binary "$BINARY_DIR/before-oximut" \
+            --before-adapter-dir "$BEFORE_WORKTREE/packages/vitest-adapter" \
+            --before-commit "$BEFORE_COMMIT" \
+            --after-binary "$BINARY_DIR/after-oximut" \
+            --after-adapter-dir "$GITHUB_WORKSPACE/packages/vitest-adapter" \
+            --after-commit "$AFTER_COMMIT" \
+            --build-flags="$BUILD_FLAGS" --build-metadata "$BINARY_DIR/build-metadata.json" \
+            --require-build-integrity --warmups 1 --repetitions 5 --timeout 600 --output "$CAMPAIGN_DIR"
+      - name: Publish results, including missed targets and invalid campaigns
+        if: ${{ !cancelled() }}
+        run: |
+          if ! test -f "$CAMPAIGN_DIR/summary.json"; then exit 0; fi
+          {
+            echo '### Real project comparison'
+            echo 'Five mutation source files; all 41 production files and 102 upstream tests available. Host/corpus-specific evidence; no full-colord performance claim.'
+            echo 'Target misses are evidence, not correctness failures. Invalid workload gates fail the job.'
+            echo '```json'
+            cat "$CAMPAIGN_DIR/summary.json"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Remove dependency symlinks from artifact inputs
+        if: always()
+        run: |
+          if test -d "$RUNNER_TEMP/real-project-comparison"; then
+            find "$RUNNER_TEMP/real-project-comparison" -type l -name node_modules -delete
+          fi
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: real-project-comparison-${{ github.sha }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/real-project-comparison/**
+            ${{ runner.temp }}/real-project-binaries/build-metadata.json
+          include-hidden-files: true
+          if-no-files-found: warn
+          retention-days: 14

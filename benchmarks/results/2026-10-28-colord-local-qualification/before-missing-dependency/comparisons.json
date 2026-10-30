@@ -1,0 +1,198 @@
+[
+  {
+    "declared_families_agree": true,
+    "equal_mutation_scope": false,
+    "explained_no_coverage_refinements": [],
+    "left_count": 0,
+    "left_only": {},
+    "mismatches": [],
+    "ratio_eligible": false,
+    "right_count": 10,
+    "right_only": {
+      "src/manipulate/invert.ts:5a4b1a49db3370f35595a4c9f791f764cf85c8d609e144ef3caa133c9896b2de": {
+        "file": "src/manipulate/invert.ts",
+        "id": "14",
+        "location": {
+          "end": {
+            "column": 18,
+            "line": 5
+          },
+          "start": {
+            "column": 6,
+            "line": 5
+          }
+        },
+        "operator": "ArithmeticOperator",
+        "outcome": "killed",
+        "replacement": "255 + rgba.g",
+        "selection": null
+      },
+      "src/manipulate/invert.ts:5fbed2307807aa5a74d7e636be307eea6129cb2e3fb98fe273d18f5367cfb507": {
+        "file": "src/manipulate/invert.ts",
+        "id": "13",
+        "location": {
+          "end": {
+            "column": 18,
+            "line": 4
+          },
+          "start": {
+            "column": 6,
+            "line": 4
+          }
+        },
+        "operator": "ArithmeticOperator",
+        "outcome": "killed",
+        "replacement": "255 + rgba.r",
+        "selection": null
+      },
+      "src/manipulate/invert.ts:a8ebfc39040c2547f2c900fd8332e6ec4656ff3f03e3125c61521db95a26110e": {
+        "file": "src/manipulate/invert.ts",
+        "id": "15",
+        "location": {
+          "end": {
+            "column": 18,
+            "line": 6
+          },
+          "start": {
+            "column": 6,
+            "line": 6
+          }
+        },
+        "operator": "ArithmeticOperator",
+        "outcome": "killed",
+        "replacement": "255 + rgba.b",
+        "selection": null
+      },
+      "src/manipulate/lighten.ts:1b86c71dcb16950d4140a02f181952714eeaa2549a61fccb24494783677d8d7f": {
+        "file": "src/manipulate/lighten.ts",
+        "id": "18",
+        "location": {
+          "end": {
+            "column": 35,
+            "line": 11
+          },
+          "start": {
+            "column": 14,
+            "line": 11
+          }
+        },
+        "operator": "ArithmeticOperator",
+        "outcome": "killed",
+        "replacement": "hsla.l - amount * 100",
+        "selection": null
+      },
+      "src/manipulate/lighten.ts:ca564f0146f4da53ffd01272fbf916cb6f91c02062790b38e6a65e6bf690b5b5": {
+        "file": "src/manipulate/lighten.ts",
+        "id": "19",
+        "location": {
+          "end": {
+            "column": 35,
+            "line": 11
+          },
+          "start": {
+            "column": 23,
+            "line": 11
+          }
+        },
+        "operator": "ArithmeticOperator",
+        "outcome": "killed",
+        "replacement": "amount / 100",
+        "selection": null
+      },
+      "src/manipulate/mix.ts:ab7c2717dd32bfe6cda2204d18311a44304c4eeca230406aee89fd71af11c33e": {
+        "file": "src/manipulate/mix.ts",
+        "id": "22",
+        "location": {
+          "end": {
+            "column": 92,
+            "line": 12
+          },
+          "start": {
+            "column": 63,
+            "line": 12
+          }
+        },
+        "operator": "ArithmeticOperator",
+        "outcome": "killed",
+        "replacement": "start - (end - start) * ratio",
+        "selection": null
+      },
+      "src/manipulate/mix.ts:ad93e4a21051eb6120c994d143461e770aa3a500740e3e8ae581e5f50489a328": {
+        "file": "src/manipulate/mix.ts",
+        "id": "23",
+        "location": {
+          "end": {
+            "column": 92,
+            "line": 12
+          },
+          "start": {
+            "column": 71,
+            "line": 12
+          }
+        },
+        "operator": "ArithmeticOperator",
+        "outcome": "killed",
+        "replacement": "(end - start) / ratio",
+        "selection": null
+      },
+      "src/manipulate/mix.ts:f44c37dfacc4fe424faf13618c63ac5e20f597149d89e9c6a8ab1fd20a2003d2": {
+        "file": "src/manipulate/mix.ts",
+        "id": "24",
+        "location": {
+          "end": {
+            "column": 83,
+            "line": 12
+          },
+          "start": {
+            "column": 72,
+            "line": 12
+          }
+        },
+        "operator": "ArithmeticOperator",
+        "outcome": "killed",
+        "replacement": "end + start",
+        "selection": null
+      },
+      "src/manipulate/saturate.ts:00c84cea49566ce0605592dd88efdea80232ffbb26674daa80c51bc17926bcf8": {
+        "file": "src/manipulate/saturate.ts",
+        "id": "35",
+        "location": {
+          "end": {
+            "column": 35,
+            "line": 10
+          },
+          "start": {
+            "column": 23,
+            "line": 10
+          }
+        },
+        "operator": "ArithmeticOperator",
+        "outcome": "killed",
+        "replacement": "amount / 100",
+        "selection": null
+      },
+      "src/manipulate/saturate.ts:1f8641db24336a5d61f4c26107390fcde9987081b5d1e8196e929f239d2499df": {
+        "file": "src/manipulate/saturate.ts",
+        "id": "34",
+        "location": {
+          "end": {
+            "column": 35,
+            "line": 10
+          },
+          "start": {
+            "column": 14,
+            "line": 10
+          }
+        },
+        "operator": "ArithmeticOperator",
+        "outcome": "killed",
+        "replacement": "hsla.s - amount * 100",
+        "selection": null
+      }
+    },
+    "round": 0,
+    "shared": [],
+    "shared_classifications_agree": false,
+    "shared_count": 0
+  }
+]

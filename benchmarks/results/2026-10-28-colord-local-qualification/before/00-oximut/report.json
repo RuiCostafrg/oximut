@@ -1,0 +1,1151 @@
+{
+  "schemaVersion": 1,
+  "runId": "8474-1793157688238281832",
+  "baseline": {
+    "protocol": 1,
+    "runId": "8474-1793157688238281832",
+    "jobId": "baseline",
+    "generation": 0,
+    "outcome": "passed",
+    "tests": {
+      "passed": 102,
+      "failed": 0,
+      "skipped": 0
+    },
+    "errors": [],
+    "coverage": {
+      "complete": true,
+      "tests": [
+        {
+          "id": "1655324540_0",
+          "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/colord.test.ts",
+          "name": "Converts between HEX, RGB, HSL and HSV color models properly"
+        },
+        {
+          "id": "1655324540_1",
+          "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/colord.test.ts",
+          "name": "Parses and converts a color"
+        },
+        {
+          "id": "1655324540_2",
+          "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/colord.test.ts",
+          "name": "Adds alpha number to RGB and HSL strings only if the color has an opacity"
+        },
+        {
+          "id": "1655324540_3",
+          "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/colord.test.ts",
+          "name": "Keeps the hue within [0, 360) so HSL/HSV round-trips are stable"
+        },
+        {
+          "id": "1655324540_4",
+          "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/colord.test.ts",
+          "name": "Clamps a hue into [0, 360)"
+        },
+        {
+          "id": "1655324540_5",
+          "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/colord.test.ts",
+          "name": "Rounds a hue into [0, 360)"
+        },
+        {
+          "id": "1655324540_6",
+          "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/colord.test.ts",
+          "name": "Accepts a hue of 360 on input and reports it as 0"
+        },
+        {
+          "id": "1655324540_7",
+          "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/colord.test.ts",
+          "name": "Rotates across the 0/360 boundary"
+        },
+        {
+          "id": "1655324540_8",
+          "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/colord.test.ts",
+          "name": "Reports the same hue through every accessor"
+        },
+        {
+          "id": "1655324540_9",
+          "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/colord.test.ts",
+          "name": "Parses modern RGB functional notations"
+        },
+        {
+          "id": "1655324540_10",
+          "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/colord.test.ts",
+          "name": "Parses modern HSL functional notations"
+        },
+        {
+          "id": "1655324540_11",
+          "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/colord.test.ts",
+          "name": "Supports HEX4 and HEX8 color models"
+        },
+        {
+          "id": "1655324540_12",
+          "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/colord.test.ts",
+          "name": "Parses and serializes every HEX digit exactly"
+        },
+        {
+          "id": "1655324540_13",
+          "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/colord.test.ts",
+          "name": "Ignores a case and extra whitespace"
+        },
+        {
+          "id": "1655324540_14",
+          "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/colord.test.ts",
+          "name": "Parses shorthand alpha values"
+        },
+        {
+          "id": "1655324540_15",
+          "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/colord.test.ts",
+          "name": "Ignores invalid color formats"
+        },
+        {
+          "id": "1655324540_16",
+          "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/colord.test.ts",
+          "name": "Parses numbers with an omitted integer part"
+        },
+        {
+          "id": "1655324540_17",
+          "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/colord.test.ts",
+          "name": "Clamps input numbers"
+        },
+        {
+          "id": "1655324540_18",
+          "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/colord.test.ts",
+          "name": "Clamps hue (angle) value properly"
+        },
+        {
+          "id": "1655324540_19",
+          "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/colord.test.ts",
+          "name": "Supports all valid CSS angle units"
+        },
+        {
+          "id": "1655324540_20",
+          "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/colord.test.ts",
+          "name": "Accepts a colord instance as an input"
+        },
+        {
+          "id": "1655324540_21",
+          "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/colord.test.ts",
+          "name": "Does not crash when input has an invalid type"
+        },
+        {
+          "id": "1655324540_22",
+          "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/colord.test.ts",
+          "name": "Does not crash when input has an invalid format"
+        },
+        {
+          "id": "1655324540_23",
+          "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/colord.test.ts",
+          "name": "Validates an input value"
+        },
+        {
+          "id": "1655324540_24",
+          "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/colord.test.ts",
+          "name": "Saturates and desaturates a color"
+        },
+        {
+          "id": "1655324540_25",
+          "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/colord.test.ts",
+          "name": "Makes a color lighter and darker"
+        },
+        {
+          "id": "1655324540_26",
+          "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/colord.test.ts",
+          "name": "Inverts a color"
+        },
+        {
+          "id": "1655324540_27",
+          "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/colord.test.ts",
+          "name": "Gets color brightness"
+        },
+        {
+          "id": "1655324540_28",
+          "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/colord.test.ts",
+          "name": "Gets an alpha channel value"
+        },
+        {
+          "id": "1655324540_29",
+          "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/colord.test.ts",
+          "name": "Changes an alpha channel value"
+        },
+        {
+          "id": "1655324540_30",
+          "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/colord.test.ts",
+          "name": "Produces alpha values with up to 3 digits after the decimal point"
+        },
+        {
+          "id": "1655324540_31",
+          "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/colord.test.ts",
+          "name": "Gets a hue value"
+        },
+        {
+          "id": "1655324540_32",
+          "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/colord.test.ts",
+          "name": "Changes a hue value"
+        },
+        {
+          "id": "1655324540_33",
+          "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/colord.test.ts",
+          "name": "Rotates a hue circle"
+        },
+        {
+          "id": "1655324540_34",
+          "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/colord.test.ts",
+          "name": "Preserves a color with a non-integer hue while rotating"
+        },
+        {
+          "id": "1655324540_35",
+          "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/colord.test.ts",
+          "name": "Checks colors for equality"
+        },
+        {
+          "id": "1655324540_36",
+          "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/colord.test.ts",
+          "name": "Generates a random color"
+        },
+        {
+          "id": "1655324540_37",
+          "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/colord.test.ts",
+          "name": "Gets an input color format"
+        },
+        {
+          "id": "-202254705_0",
+          "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/delta-e00.test.ts",
+          "name": "Matches the CIEDE2000 reference data set"
+        },
+        {
+          "id": "-202254705_1",
+          "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/delta-e00.test.ts",
+          "name": "Is symmetric"
+        },
+        {
+          "id": "-684047629_0_0",
+          "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/parse-complexity.test.ts",
+          "name": "Rejects oversized malformed colors in linear time > rgb"
+        },
+        {
+          "id": "-684047629_0_1",
+          "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/parse-complexity.test.ts",
+          "name": "Rejects oversized malformed colors in linear time > rgb, alpha position"
+        },
+        {
+          "id": "-684047629_0_2",
+          "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/parse-complexity.test.ts",
+          "name": "Rejects oversized malformed colors in linear time > hsl"
+        },
+        {
+          "id": "-684047629_0_3",
+          "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/parse-complexity.test.ts",
+          "name": "Rejects oversized malformed colors in linear time > hsl, alpha position"
+        },
+        {
+          "id": "-684047629_0_4",
+          "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/parse-complexity.test.ts",
+          "name": "Rejects oversized malformed colors in linear time > hwb"
+        },
+        {
+          "id": "-684047629_0_5",
+          "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/parse-complexity.test.ts",
+          "name": "Rejects oversized malformed colors in linear time > lch"
+        },
+        {
+          "id": "-684047629_0_6",
+          "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/parse-complexity.test.ts",
+          "name": "Rejects oversized malformed colors in linear time > device-cmyk"
+        },
+        {
+          "id": "-510335713_0_0",
+          "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/plugins.test.ts",
+          "name": "a11y > Returns the perceived luminance of a color"
+        },
+        {
+          "id": "-510335713_0_1",
+          "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/plugins.test.ts",
+          "name": "a11y > Calculates a contrast ratio for a color pair"
+        },
+        {
+          "id": "-510335713_0_2",
+          "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/plugins.test.ts",
+          "name": "a11y > Check readability"
+        },
+        {
+          "id": "-510335713_1_0",
+          "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/plugins.test.ts",
+          "name": "cmyk > Parses CMYK color object"
+        },
+        {
+          "id": "-510335713_1_1",
+          "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/plugins.test.ts",
+          "name": "cmyk > Parses CMYK color string"
+        },
+        {
+          "id": "-510335713_1_2",
+          "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/plugins.test.ts",
+          "name": "cmyk > Converts a color to CMYK object"
+        },
+        {
+          "id": "-510335713_1_3",
+          "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/plugins.test.ts",
+          "name": "cmyk > Converts a color to CMYK string"
+        },
+        {
+          "id": "-510335713_1_4",
+          "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/plugins.test.ts",
+          "name": "cmyk > Supported by `getFormat`"
+        },
+        {
+          "id": "-510335713_2_0",
+          "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/plugins.test.ts",
+          "name": "harmonies > Generates harmony colors"
+        },
+        {
+          "id": "-510335713_2_1",
+          "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/plugins.test.ts",
+          "name": "harmonies > Preserves an input color with a non-integer hue"
+        },
+        {
+          "id": "-510335713_3_0",
+          "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/plugins.test.ts",
+          "name": "hwb > Parses HWB color object"
+        },
+        {
+          "id": "-510335713_3_1",
+          "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/plugins.test.ts",
+          "name": "hwb > Normalizes whiteness + blackness over 100% to an achromatic gray"
+        },
+        {
+          "id": "-510335713_3_2",
+          "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/plugins.test.ts",
+          "name": "hwb > Converts a color to HWB object"
+        },
+        {
+          "id": "-510335713_3_3",
+          "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/plugins.test.ts",
+          "name": "hwb > Parses HWB color string"
+        },
+        {
+          "id": "-510335713_3_4",
+          "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/plugins.test.ts",
+          "name": "hwb > Ignores invalid syntax"
+        },
+        {
+          "id": "-510335713_3_5",
+          "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/plugins.test.ts",
+          "name": "hwb > Converts a color to HWB string"
+        },
+        {
+          "id": "-510335713_3_6",
+          "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/plugins.test.ts",
+          "name": "hwb > Supports all valid CSS angle units"
+        },
+        {
+          "id": "-510335713_3_7",
+          "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/plugins.test.ts",
+          "name": "hwb > Supported by `getFormat`"
+        },
+        {
+          "id": "-510335713_4_0",
+          "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/plugins.test.ts",
+          "name": "lab > Parses CIE LAB color object"
+        },
+        {
+          "id": "-510335713_4_1",
+          "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/plugins.test.ts",
+          "name": "lab > Converts a color to CIE LAB object"
+        },
+        {
+          "id": "-510335713_4_2",
+          "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/plugins.test.ts",
+          "name": "lab > Calculates the the perceived color difference"
+        },
+        {
+          "id": "-510335713_4_3",
+          "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/plugins.test.ts",
+          "name": "lab > Supported by `getFormat`"
+        },
+        {
+          "id": "-510335713_5_0",
+          "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/plugins.test.ts",
+          "name": "lch > Parses CIE LCH color object"
+        },
+        {
+          "id": "-510335713_5_1",
+          "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/plugins.test.ts",
+          "name": "lch > Parses CIE LCH color string"
+        },
+        {
+          "id": "-510335713_5_2",
+          "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/plugins.test.ts",
+          "name": "lch > Converts a color to CIE LCH object"
+        },
+        {
+          "id": "-510335713_5_3",
+          "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/plugins.test.ts",
+          "name": "lch > Keeps the LCH hue within [0, 360)"
+        },
+        {
+          "id": "-510335713_5_4",
+          "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/plugins.test.ts",
+          "name": "lch > Converts a color to CIE LCH string (CSS functional notation)"
+        },
+        {
+          "id": "-510335713_5_5",
+          "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/plugins.test.ts",
+          "name": "lch > Supports all valid CSS angle units"
+        },
+        {
+          "id": "-510335713_5_6",
+          "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/plugins.test.ts",
+          "name": "lch > Supported by `getFormat`"
+        },
+        {
+          "id": "-510335713_6_0",
+          "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/plugins.test.ts",
+          "name": "minify > Minifies a color"
+        },
+        {
+          "id": "-510335713_6_1",
+          "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/plugins.test.ts",
+          "name": "minify > Supports alpha hexes"
+        },
+        {
+          "id": "-510335713_6_2",
+          "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/plugins.test.ts",
+          "name": "minify > Performs lossless minification (handles alpha hex issues)"
+        },
+        {
+          "id": "-510335713_6_3",
+          "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/plugins.test.ts",
+          "name": "minify > Supports names"
+        },
+        {
+          "id": "-510335713_6_4",
+          "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/plugins.test.ts",
+          "name": "minify > Supports `transparent` keyword"
+        },
+        {
+          "id": "-510335713_7_0",
+          "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/plugins.test.ts",
+          "name": "mix > Mixes two colors"
+        },
+        {
+          "id": "-510335713_7_1",
+          "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/plugins.test.ts",
+          "name": "mix > Returns the same color if ratio is 0 or 1"
+        },
+        {
+          "id": "-510335713_7_2",
+          "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/plugins.test.ts",
+          "name": "mix > Return the color if both values are equal"
+        },
+        {
+          "id": "-510335713_7_3",
+          "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/plugins.test.ts",
+          "name": "mix > Generates a tints palette"
+        },
+        {
+          "id": "-510335713_7_4",
+          "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/plugins.test.ts",
+          "name": "mix > Generates a shades palette"
+        },
+        {
+          "id": "-510335713_7_5",
+          "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/plugins.test.ts",
+          "name": "mix > Generates a tones palette"
+        },
+        {
+          "id": "-510335713_7_6",
+          "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/plugins.test.ts",
+          "name": "mix > Mixes two colors through RGB color space"
+        },
+        {
+          "id": "-510335713_7_7",
+          "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/plugins.test.ts",
+          "name": "mix > Interpolates alpha channel in RGB color space"
+        },
+        {
+          "id": "-510335713_7_8",
+          "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/plugins.test.ts",
+          "name": "mix > Mixes through LAB when the space is set explicitly"
+        },
+        {
+          "id": "-510335713_7_9",
+          "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/plugins.test.ts",
+          "name": "mix > Generates palettes through RGB color space"
+        },
+        {
+          "id": "-510335713_8_0",
+          "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/plugins.test.ts",
+          "name": "names > Parses valid CSS color names"
+        },
+        {
+          "id": "-510335713_8_1",
+          "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/plugins.test.ts",
+          "name": "names > Ignores the case and extra whitespaces"
+        },
+        {
+          "id": "-510335713_8_2",
+          "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/plugins.test.ts",
+          "name": "names > Converts a color to CSS name"
+        },
+        {
+          "id": "-510335713_8_3",
+          "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/plugins.test.ts",
+          "name": "names > Gets the closest CSS color keyword"
+        },
+        {
+          "id": "-510335713_8_4",
+          "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/plugins.test.ts",
+          "name": "names > Does not crash when name is not found"
+        },
+        {
+          "id": "-510335713_8_5",
+          "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/plugins.test.ts",
+          "name": "names > Processes 'transparent' color properly"
+        },
+        {
+          "id": "-510335713_8_6",
+          "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/plugins.test.ts",
+          "name": "names > Works properly in pair with the built-in validation"
+        },
+        {
+          "id": "-510335713_8_7",
+          "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/plugins.test.ts",
+          "name": "names > Supported by `getFormat`"
+        },
+        {
+          "id": "-510335713_9_0",
+          "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/plugins.test.ts",
+          "name": "xyz > Parses XYZ color object"
+        },
+        {
+          "id": "-510335713_9_1",
+          "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/plugins.test.ts",
+          "name": "xyz > Converts a color to CIE XYZ object"
+        },
+        {
+          "id": "-510335713_9_2",
+          "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/plugins.test.ts",
+          "name": "xyz > Supported by `getFormat`"
+        }
+      ],
+      "hits": [
+        {
+          "mutantId": "c88a30c6f5f3ccc6db4c6c87bf61459c5b328fc5b7df59aa03dde1ca099aa3db",
+          "tests": [
+            "1655324540_26"
+          ],
+          "outsideTest": false
+        },
+        {
+          "mutantId": "d608232f1dad0bf6337abb58c011a8da27269951d412bc352dacf25828e209d3",
+          "tests": [
+            "1655324540_26"
+          ],
+          "outsideTest": false
+        },
+        {
+          "mutantId": "c8fb72bec90d9a783caf7ef8479772865cadc5338cbace358a9a173db7fcf175",
+          "tests": [
+            "1655324540_26"
+          ],
+          "outsideTest": false
+        },
+        {
+          "mutantId": "211c64945c6ed85c7fe4073b36288ffc39e3697f07c009e14edcf98b8d0f84b0",
+          "tests": [
+            "1655324540_25"
+          ],
+          "outsideTest": false
+        },
+        {
+          "mutantId": "8a49a888d6e614ce683525b9bd586b4271285324ddac088829d4a8beec90c2a5",
+          "tests": [
+            "1655324540_25"
+          ],
+          "outsideTest": false
+        },
+        {
+          "mutantId": "b115f5372f2edf03e51a8f712460addaed3513a89703cc1fe8500eee367aba65",
+          "tests": [
+            "-510335713_7_0",
+            "-510335713_7_1",
+            "-510335713_7_2",
+            "-510335713_7_3",
+            "-510335713_7_4",
+            "-510335713_7_5",
+            "-510335713_7_6",
+            "-510335713_7_7",
+            "-510335713_7_8",
+            "-510335713_7_9"
+          ],
+          "outsideTest": false
+        },
+        {
+          "mutantId": "9fd7cd8a8c7b265bb46410e0ca0429f59067d4a2e458cd743941c88ea05ee378",
+          "tests": [
+            "-510335713_7_0",
+            "-510335713_7_1",
+            "-510335713_7_2",
+            "-510335713_7_3",
+            "-510335713_7_4",
+            "-510335713_7_5",
+            "-510335713_7_6",
+            "-510335713_7_7",
+            "-510335713_7_8",
+            "-510335713_7_9"
+          ],
+          "outsideTest": false
+        },
+        {
+          "mutantId": "c59a734f77d74a37da696a4904f169a3a119a78a22d2732ca87f3c08b0a3cebd",
+          "tests": [
+            "-510335713_7_0",
+            "-510335713_7_1",
+            "-510335713_7_2",
+            "-510335713_7_3",
+            "-510335713_7_4",
+            "-510335713_7_5",
+            "-510335713_7_6",
+            "-510335713_7_7",
+            "-510335713_7_8",
+            "-510335713_7_9"
+          ],
+          "outsideTest": false
+        },
+        {
+          "mutantId": "82b44c30bb77459ea1aa962c8f328ae2ee1aedcdd0ef3982cef07e398229385e",
+          "tests": [
+            "1655324540_24"
+          ],
+          "outsideTest": false
+        },
+        {
+          "mutantId": "cf4748d0c363684160adae8ce709b2c871449b782017d3e7ad704525d7b51154",
+          "tests": [
+            "1655324540_24"
+          ],
+          "outsideTest": false
+        }
+      ],
+      "reasons": []
+    }
+  },
+  "mutants": [
+    {
+      "id": "c8fb72bec90d9a783caf7ef8479772865cadc5338cbace358a9a173db7fcf175",
+      "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/src/manipulate/invert.ts",
+      "operator": "arithmetic",
+      "original": "-",
+      "replacement": "+",
+      "location": {
+        "start": {
+          "offset": 143,
+          "line": 6,
+          "column": 10
+        },
+        "end": {
+          "offset": 144,
+          "line": 6,
+          "column": 11
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 37,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected '#0000ff' to be '#000000' // Object.is equality"
+      ],
+      "selection": {
+        "mode": "files",
+        "files": [
+          "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/colord.test.ts"
+        ],
+        "selectedTests": 38,
+        "totalTests": 102,
+        "expectedSkipped": 0,
+        "reasons": [
+          "whole-file-preserves-sequential-state-and-hooks"
+        ]
+      },
+      "provenance": {
+        "source": "executed",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "9fd7cd8a8c7b265bb46410e0ca0429f59067d4a2e458cd743941c88ea05ee378",
+      "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/src/manipulate/mix.ts",
+      "operator": "arithmetic",
+      "original": "*",
+      "replacement": "/",
+      "location": {
+        "start": {
+          "offset": 365,
+          "line": 12,
+          "column": 85
+        },
+        "end": {
+          "offset": 366,
+          "line": 12,
+          "column": 86
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 46,
+        "failed": 9,
+        "skipped": 0
+      },
+      "errors": [
+        "expected '#ffffff' to be '#777777' // Object.is equality",
+        "expected '#00000000' to be '#cd853f' // Object.is equality",
+        "expected [ '#00000000', '#ffffff' ] to deeply equal [ '#ff0000', '#ffffff' ]",
+        "expected [ '#00000000', '#000000' ] to deeply equal [ '#ff0000', '#000000' ]",
+        "expected [ '#00000000', '#808080' ] to deeply equal [ '#ff0000', '#808080' ]",
+        "expected '#ffffff' to be '#ff4040' // Object.is equality",
+        "expected 'rgba(255, 255, 255, 0)' to be 'rgba(128, 128, 128, 0.5)' // Object.is equality",
+        "expected '#ffffff' to be '#777777' // Object.is equality"
+      ],
+      "selection": {
+        "mode": "files",
+        "files": [
+          "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/plugins.test.ts"
+        ],
+        "selectedTests": 55,
+        "totalTests": 102,
+        "expectedSkipped": 0,
+        "reasons": [
+          "whole-file-preserves-sequential-state-and-hooks"
+        ]
+      },
+      "provenance": {
+        "source": "executed",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "82b44c30bb77459ea1aa962c8f328ae2ee1aedcdd0ef3982cef07e398229385e",
+      "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/src/manipulate/saturate.ts",
+      "operator": "arithmetic",
+      "original": "+",
+      "replacement": "-",
+      "location": {
+        "start": {
+          "offset": 289,
+          "line": 10,
+          "column": 21
+        },
+        "end": {
+          "offset": 290,
+          "line": 10,
+          "column": 22
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 37,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected '#6d5aa6' to be '#5327d9' // Object.is equality"
+      ],
+      "selection": {
+        "mode": "files",
+        "files": [
+          "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/colord.test.ts"
+        ],
+        "selectedTests": 38,
+        "totalTests": 102,
+        "expectedSkipped": 0,
+        "reasons": [
+          "whole-file-preserves-sequential-state-and-hooks"
+        ]
+      },
+      "provenance": {
+        "source": "executed",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "c59a734f77d74a37da696a4904f169a3a119a78a22d2732ca87f3c08b0a3cebd",
+      "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/src/manipulate/mix.ts",
+      "operator": "arithmetic",
+      "original": "-",
+      "replacement": "+",
+      "location": {
+        "start": {
+          "offset": 356,
+          "line": 12,
+          "column": 76
+        },
+        "end": {
+          "offset": 357,
+          "line": 12,
+          "column": 77
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 47,
+        "failed": 8,
+        "skipped": 0
+      },
+      "errors": [
+        "expected '#ff005a' to be '#6a1b21' // Object.is equality",
+        "expected '#ffffff' to be '#cd853f' // Object.is equality",
+        "expected [ '#ff0000', '#ffd68a', '#ffffff' ] to deeply equal [ '#ff0000', '#ff9f80', '#ffffff' ]",
+        "expected [ '#ff0000', '#ff0000' ] to deeply equal [ '#ff0000', '#000000' ]",
+        "expected [ '#ff0000', '#fff394' ] to deeply equal [ '#ff0000', '#808080' ]",
+        "expected '#ffffff' to be '#cee2d8' // Object.is equality",
+        "expected 'rgb(128, 128, 128)' to be 'rgba(128, 128, 128, 0.5)' // Object.is equality",
+        "expected [ '#ff0000', '#ff0000', '#ff0000' ] to deeply equal [ '#ff0000', '#800000', '#000000' ]"
+      ],
+      "selection": {
+        "mode": "files",
+        "files": [
+          "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/plugins.test.ts"
+        ],
+        "selectedTests": 55,
+        "totalTests": 102,
+        "expectedSkipped": 0,
+        "reasons": [
+          "whole-file-preserves-sequential-state-and-hooks"
+        ]
+      },
+      "provenance": {
+        "source": "executed",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "d608232f1dad0bf6337abb58c011a8da27269951d412bc352dacf25828e209d3",
+      "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/src/manipulate/invert.ts",
+      "operator": "arithmetic",
+      "original": "-",
+      "replacement": "+",
+      "location": {
+        "start": {
+          "offset": 124,
+          "line": 5,
+          "column": 10
+        },
+        "end": {
+          "offset": 125,
+          "line": 5,
+          "column": 11
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 37,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected '#00ff00' to be '#000000' // Object.is equality"
+      ],
+      "selection": {
+        "mode": "files",
+        "files": [
+          "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/colord.test.ts"
+        ],
+        "selectedTests": 38,
+        "totalTests": 102,
+        "expectedSkipped": 0,
+        "reasons": [
+          "whole-file-preserves-sequential-state-and-hooks"
+        ]
+      },
+      "provenance": {
+        "source": "executed",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "211c64945c6ed85c7fe4073b36288ffc39e3697f07c009e14edcf98b8d0f84b0",
+      "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/src/manipulate/lighten.ts",
+      "operator": "arithmetic",
+      "original": "+",
+      "replacement": "-",
+      "location": {
+        "start": {
+          "offset": 303,
+          "line": 11,
+          "column": 21
+        },
+        "end": {
+          "offset": 304,
+          "line": 11,
+          "column": 22
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 37,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected 'hsl(100, 50%, 40%)' to be 'hsl(100, 50%, 60%)' // Object.is equality"
+      ],
+      "selection": {
+        "mode": "files",
+        "files": [
+          "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/colord.test.ts"
+        ],
+        "selectedTests": 38,
+        "totalTests": 102,
+        "expectedSkipped": 0,
+        "reasons": [
+          "whole-file-preserves-sequential-state-and-hooks"
+        ]
+      },
+      "provenance": {
+        "source": "executed",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "cf4748d0c363684160adae8ce709b2c871449b782017d3e7ad704525d7b51154",
+      "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/src/manipulate/saturate.ts",
+      "operator": "arithmetic",
+      "original": "*",
+      "replacement": "/",
+      "location": {
+        "start": {
+          "offset": 298,
+          "line": 10,
+          "column": 30
+        },
+        "end": {
+          "offset": 299,
+          "line": 10,
+          "column": 31
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 37,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected '#6040bf' to be '#5327d9' // Object.is equality"
+      ],
+      "selection": {
+        "mode": "files",
+        "files": [
+          "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/colord.test.ts"
+        ],
+        "selectedTests": 38,
+        "totalTests": 102,
+        "expectedSkipped": 0,
+        "reasons": [
+          "whole-file-preserves-sequential-state-and-hooks"
+        ]
+      },
+      "provenance": {
+        "source": "executed",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "b115f5372f2edf03e51a8f712460addaed3513a89703cc1fe8500eee367aba65",
+      "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/src/manipulate/mix.ts",
+      "operator": "arithmetic",
+      "original": "+",
+      "replacement": "-",
+      "location": {
+        "start": {
+          "offset": 349,
+          "line": 12,
+          "column": 69
+        },
+        "end": {
+          "offset": 350,
+          "line": 12,
+          "column": 70
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 46,
+        "failed": 9,
+        "skipped": 0
+      },
+      "errors": [
+        "expected '#000000' to be '#777777' // Object.is equality",
+        "expected '#fcffff' to be '#cd853f' // Object.is equality",
+        "expected [ '#ff0000', '#b80000' ] to deeply equal [ '#ff0000', '#ffffff' ]",
+        "expected [ '#ff0000', '#ff0000' ] to deeply equal [ '#ff0000', '#000000' ]",
+        "expected [ '#ff0000', '#ff0000' ] to deeply equal [ '#ff0000', '#808080' ]",
+        "expected '#ff0000' to be '#ff4040' // Object.is equality",
+        "expected 'rgb(0, 0, 0)' to be 'rgba(128, 128, 128, 0.5)' // Object.is equality",
+        "expected '#000000' to be '#777777' // Object.is equality"
+      ],
+      "selection": {
+        "mode": "files",
+        "files": [
+          "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/plugins.test.ts"
+        ],
+        "selectedTests": 55,
+        "totalTests": 102,
+        "expectedSkipped": 0,
+        "reasons": [
+          "whole-file-preserves-sequential-state-and-hooks"
+        ]
+      },
+      "provenance": {
+        "source": "executed",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "c88a30c6f5f3ccc6db4c6c87bf61459c5b328fc5b7df59aa03dde1ca099aa3db",
+      "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/src/manipulate/invert.ts",
+      "operator": "arithmetic",
+      "original": "-",
+      "replacement": "+",
+      "location": {
+        "start": {
+          "offset": 105,
+          "line": 4,
+          "column": 10
+        },
+        "end": {
+          "offset": 106,
+          "line": 4,
+          "column": 11
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 37,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected '#ff0000' to be '#000000' // Object.is equality"
+      ],
+      "selection": {
+        "mode": "files",
+        "files": [
+          "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/colord.test.ts"
+        ],
+        "selectedTests": 38,
+        "totalTests": 102,
+        "expectedSkipped": 0,
+        "reasons": [
+          "whole-file-preserves-sequential-state-and-hooks"
+        ]
+      },
+      "provenance": {
+        "source": "executed",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "8a49a888d6e614ce683525b9bd586b4271285324ddac088829d4a8beec90c2a5",
+      "file": "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/src/manipulate/lighten.ts",
+      "operator": "arithmetic",
+      "original": "*",
+      "replacement": "/",
+      "location": {
+        "start": {
+          "offset": 312,
+          "line": 11,
+          "column": 30
+        },
+        "end": {
+          "offset": 313,
+          "line": 11,
+          "column": 31
+        }
+      },
+      "outcome": "killed",
+      "tests": {
+        "passed": 37,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "expected 'hsl(100, 50%, 50%)' to be 'hsl(100, 50%, 60%)' // Object.is equality"
+      ],
+      "selection": {
+        "mode": "files",
+        "files": [
+          "/tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/tests/colord.test.ts"
+        ],
+        "selectedTests": 38,
+        "totalTests": 102,
+        "expectedSkipped": 0,
+        "reasons": [
+          "whole-file-preserves-sequential-state-and-hooks"
+        ]
+      },
+      "provenance": {
+        "source": "executed",
+        "reason": "forced-no-cache"
+      }
+    }
+  ],
+  "diagnostics": [
+    "execution=persistent; isolation=fresh-test-forks; controller reuse only; baseline=original-and-disabled-switches",
+    "mutator families=arithmetic,boolean-literal; exclusions are not part of this run",
+    "disabled switching validation: /tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/src/extend.ts: Passed",
+    "disabled switching validation: /tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/src/manipulate/invert.ts: Passed",
+    "disabled switching validation: /tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/src/manipulate/lighten.ts: Passed",
+    "disabled switching validation: /tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/src/manipulate/mix.ts: Passed",
+    "disabled switching validation: /tmp/oximut-colord-matched-before-20261028-ready/00-oximut/project/src/manipulate/saturate.ts: Passed",
+    "adapter observed reuse boundary: controller"
+  ],
+  "summary": {
+    "total": 10,
+    "killed": 10,
+    "survived": 0,
+    "noCoverage": 0,
+    "invalid": 0,
+    "timeout": 0,
+    "infrastructureError": 0,
+    "resourceExhausted": 0,
+    "skipped": 0,
+    "scoreDenominator": 10,
+    "score": 100.0,
+    "complete": true
+  },
+  "cache": {
+    "enabled": false,
+    "outcomesEnabled": false,
+    "reason": "forced-no-cache",
+    "instrumentationHits": 0,
+    "instrumentationMisses": 0,
+    "outcomeHits": 0,
+    "outcomeMisses": 0,
+    "persistence": "not-written",
+    "runnerHashMs": 0,
+    "fingerprintProfiles": []
+  },
+  "resources": {
+    "admissionPauses": 9,
+    "admissionWorkerCostBytes": 531927040,
+    "budgetBytes": 12115951616,
+    "cgroups": [],
+    "configuredBudgetBytes": null,
+    "configuredWorkers": 1,
+    "cpuLimitWorkers": 8,
+    "effectiveWorkers": 1,
+    "enforcement": "best-effort sampled admission and process-tree cancellation; existing cgroup limits are OS-enforced; no new hard cap installed",
+    "exhaustion": null,
+    "maxActiveJobs": 1,
+    "measuredWorkerPeakBytes": 425541632,
+    "measurement": "Linux /proc smaps_rollup Rss sum, approximate stat RSS fallback on older/restricted kernels: main CLI and all worker/adapter/controller/test descendants; shared pages counted per process",
+    "peakAggregateRssBytes": 439037952,
+    "recycledIdleWorkers": 0,
+    "reserveBytes": 67108864,
+    "sampleIntervalMs": 50,
+    "samples": 537
+  }
+}

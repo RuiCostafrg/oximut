@@ -1,0 +1,591 @@
+{
+  "binary_sha256": "b7ae1c991ff2e52c7b3f767dbfb4be8e265c588863f5e58757612f46ec9d8f0d",
+  "diagnostic_unrestricted": false,
+  "git_revision": "10ef25546b89e88e493bf198fd837111461ce8d1",
+  "git_status": "?? benchmarks/real-project/\n?? benchmarks/real_project.py\n?? node_modules",
+  "input_sha256": {
+    ".node-version": "e35f85db6458a3e4736f050ff42d720b39bbff9debe6b50c11e753b3ac2ecc3d",
+    "Cargo.lock": "b3a8971f6d2e099fd78654cc18d894d6131d6daa5678191780b76d9560aac50c",
+    "Cargo.toml": "0be2072748a5bb0bc730fe437e9ddc1d3c669d9bfe07e4fd7cad981383099758",
+    "benchmarks/config/base.mjs": "bf5763f936258ac870ed68a60c2e05a709311590db4be2d75baa38cae1e2fdf7",
+    "benchmarks/config/m6-stryker.mjs": "7154e8878e5bd588f42cbc82fcc74cd831d20733e2d2b7a7be3810d015a411fc",
+    "benchmarks/config/pure.mjs": "12bdc964446377f81a23bf22f52c828787243fa98580b27a9e5c9c5950e9447a",
+    "benchmarks/config/stateful.mjs": "8d2fb4a37458f13a743741e49cc1edefeffb80fba59ce817d4a79d631824296c",
+    "benchmarks/config/vitest-base.mjs": "90d8d26b5c4a4b19375aea12c2ed32b0ef5ea0a08ca7e1b714957e3cf65bbd67",
+    "benchmarks/config/vitest-pure.mjs": "f889ed8d23a8b210347261f0bae40e901ce14d618298ec0323bc754000e8ca62",
+    "benchmarks/config/vitest-stateful.mjs": "6b07c94927bcfc39036576721d77a7acf02f7b3f987584ca504c667a33f85798",
+    "benchmarks/run.py": "1c07c060f8049e3b89e770565f35f89e0b27c5563a5e63cda640718b211c13b6",
+    "fixtures/m1/src/subject.ts": "a37031ae368b1bf235277cde74394fe1b82ad1fb4b6886543c522065b3659835",
+    "fixtures/m1/test/subject.test.ts": "3d82619b209c46eeea31ee29787559df1be8488ad36faaee766046698bde4c93",
+    "fixtures/m1/vitest.config.ts": "6d89c7f170f35a06962bf33b6b4df3ab06a6e3b1ddc860e1cc51f167cfbffbc7",
+    "fixtures/m2/src/subject.ts": "68576e699c61205343d293be0eac23dd4caaa0223b642a3cc5e8c03b98c34557",
+    "fixtures/m2/test/subject.test.ts": "ce657d974cc333b791f615c5669e826f416ca772e8e325323f634b1cbd187fce",
+    "fixtures/m2/vitest.config.ts": "6d89c7f170f35a06962bf33b6b4df3ab06a6e3b1ddc860e1cc51f167cfbffbc7",
+    "fixtures/m3/concurrent.config.ts": "f0bcc91df5e51548d2cc3732a84cf9f8bb6dac9f26c7d1822321ba771f5ec070",
+    "fixtures/m3/global-setup.config.ts": "9be1d912e66e1dd5bd00bfcf4a9e53b1d9fbb5f965819fe2bacb22e7d10e78cf",
+    "fixtures/m3/import-init.config.ts": "6aa778d7c8849eccf9c5a72b7ee76ae3e3ea340b3fca13e8f52d3e906ad8b3e3",
+    "fixtures/m3/src/subject.ts": "fa500badb3f1f90c486fad120d099c0f8d8c15368b88616508fc7d1dc6cd382c",
+    "fixtures/m3/src/top-level.ts": "aa91a08c8e55f4dd8f1196f4d1026d99a0f21eb6287830307f437a0ea4e83ecb",
+    "fixtures/m3/test/arithmetic.test.ts": "0d6fef729aba504c5eb4dd49d539347641f8f639f00dd5918aedfd6a3f220b83",
+    "fixtures/m3/test/boundary.test.ts": "eceebb763f25b7681507d2102c67bbf04dd49db9d530e1499572ae3a18b6b5de",
+    "fixtures/m3/test/concurrent.test.ts": "4d6ff943351428fd862cbe2d2aaac75f2b82347a3419653c55be4539c02cf8d5",
+    "fixtures/m3/test/enabled.test.ts": "732835b50f41dfcac61b4eaabe88730a3fc32f31f23664050ec064b6a10bd100",
+    "fixtures/m3/test/global-setup.ts": "de300a4e1e7eb74b8f466fb48deaf58e40d5666298a52f6f50af07c027394dff",
+    "fixtures/m3/test/hooks-and-duplicate-names.test.ts": "66dacdd2ea24368d7d87bdc7c89d3bb6046d62703e2349a075fbed770ce82bec",
+    "fixtures/m3/test/import-and-concurrent.test.ts": "0216964d5e6d66abbbce01d52cd82a4bed90856483d199e2b87f16d09490cb0f",
+    "fixtures/m3/test/shared-state.test.ts": "a5427f9d24a67301a69540bc8d3259ae0f62fd38d632e00a7e63381081ed82de",
+    "fixtures/m3/test/uncovered.test.ts": "21df8f58b1d1c381dc89f95f79ea61ebf0e240e201d48a46099e96da4d4a4026",
+    "fixtures/m3/vitest.config.ts": "86ad3de8e62b7eb10dde417769f010ce6b323a283cce0d16b931f7e6b1178034",
+    "fixtures/matched-scale/src/arithmetic-0.ts": "82541278290a4a32d02579effb2fdf7063639b64e65dcdb7b5a8a52ed8a3425d",
+    "fixtures/matched-scale/src/arithmetic-1.ts": "7392e6c1388073815ef9e09650fca720f58964bdfc1b00793d01e092d55a6c96",
+    "fixtures/matched-scale/src/arithmetic-2.ts": "525c59a9c27e4c18d516f13efab7d8c0ce868dc0e888777c7fb1838cdd95ae17",
+    "fixtures/matched-scale/src/arithmetic-3.ts": "6771c1c0491b9ebe6d8111ecd2e7a49c5a6fe8fc6c51f63260d38a2cd3599df0",
+    "fixtures/matched-scale/src/arithmetic-4.ts": "2998d9908497cfd517477c01fa1afa633bac039ae6a38dcbb55649aef76f20e7",
+    "fixtures/matched-scale/src/arithmetic-5.ts": "97659e089244dfe1abf59810b8e9d63029be85f469210049594945fd73fd0d90",
+    "fixtures/matched-scale/src/arithmetic-6.ts": "4309750449dc6b49ed3062bb38ab64c37b7db47ce39008a6118c39b5c35bd24e",
+    "fixtures/matched-scale/src/arithmetic-7.ts": "36ad01de87f9c5dc4253c058f73b3ea2cddc0f74f001513104037c19b026c0cb",
+    "fixtures/matched-scale/test/arithmetic-0.test.ts": "1fe2738eeb982b6279a0b53462fa1dfd5cf64175897598c08a6c520b8b425bb8",
+    "fixtures/matched-scale/test/arithmetic-1.test.ts": "f96ce339bb80a34f38c2215b125eb6b601be7e85da15f2fabc28c44d3e2f19c2",
+    "fixtures/matched-scale/test/arithmetic-2.test.ts": "ae2a234f255f49253a66cc1d465ce88b366c5686df6105318a6a18c2180ff5d7",
+    "fixtures/matched-scale/test/arithmetic-3.test.ts": "8ab85de4f48b7097c5882a0071a9c99551a67c44257d5b2be96660434a0cc262",
+    "fixtures/matched-scale/test/arithmetic-4.test.ts": "b3b07589a44dbd41d87f3c3709d49d7956e11c3a40e16402df15405faa9356db",
+    "fixtures/matched-scale/test/arithmetic-5.test.ts": "102bf89f8ffbd7117a67215d8fe3e3c28b0e7bb97995df7b91e70ffe1c9b592d",
+    "fixtures/matched-scale/test/arithmetic-6.test.ts": "746cbfba23dbb4ccfc3533a2a2db78b015cadb09404e7cf4471b243b34736ca7",
+    "fixtures/matched-scale/test/arithmetic-7.test.ts": "4d42147f52e006c472f37f555372372d066d30541270b18dad689868982011ae",
+    "fixtures/matched-scale/vitest.config.ts": "f620509bf49114c4d8a4172b1057968a8e81cbb0c79fca4ac8bf21f6d18da209",
+    "fixtures/matched-small/src/arithmetic.ts": "82541278290a4a32d02579effb2fdf7063639b64e65dcdb7b5a8a52ed8a3425d",
+    "fixtures/matched-small/test/arithmetic.test.ts": "be391e2362499c2e1dda7a70cc4a8a00b0acb16e9b3de053eaf4fd977c87a4d2",
+    "fixtures/matched-small/vitest.config.ts": "f620509bf49114c4d8a4172b1057968a8e81cbb0c79fca4ac8bf21f6d18da209",
+    "fixtures/pure/src/logic.ts": "36ee6c7603efa889d5ae34fdb43c91706ba2b9ce9743a48ec74fe9a2b6b5b138",
+    "fixtures/pure/test/logic.test.ts": "b4eece09cad9c6db1a6123485887d0797b5d5221db5125e2a09b645cfd1a08b0",
+    "fixtures/pure/vitest.config.ts": "f620509bf49114c4d8a4172b1057968a8e81cbb0c79fca4ac8bf21f6d18da209",
+    "fixtures/stateful/src/dependency.ts": "bc99b910077e4f4514efbdf6163c0c4d2742a912e1a1ac72b7fffea2e51f5257",
+    "fixtures/stateful/src/service.ts": "8dafbf8a9f8f1fd2154986dea16a42dc46de43a46ec1c72d0fdb2a93c07949f2",
+    "fixtures/stateful/src/state.ts": "6341fbccd648230cf4477bc7468cbca622ee6621e1ad2753cd277eda13732379",
+    "fixtures/stateful/test/dependency.test.ts": "33ae6940674edf38274540493b60f0165146bb4e7c90a1de9939143e9dc35996",
+    "fixtures/stateful/test/service.test.ts": "1b32ea1b621489bcd68adaff2bf5167a7f36875bd84c8488f08f937e12d56090",
+    "fixtures/stateful/vitest.config.ts": "b806ac8fce4f89c0d981327c140d4b7884f30ff7a2c851085430b0a5b86865f5",
+    "package-lock.json": "a9f8153560e60d6fdec8fcfefc36d1908b1853b94b9b7e87ddebea7532bf7f34",
+    "package.json": "b3da0afe9f28f46f258740a09e2ec28031db672c5b9da90ce767c6e643bc0c48",
+    "rust-toolchain.toml": "fb0a56ca2fc09db10159f6983e9d747f4afeb64e1d6d941dc36a3c20bf3a5749"
+  },
+  "machine": {
+    "cgroup": "6:schedtune:/top-app\n5:memory:/\n4:freezer:/\n3:cpuset:/top-app\n2:cpu:/\n1:blkio:/\n0::/uid_10226/pid_18129\n",
+    "cgroup_cpu_max": "unavailable",
+    "cgroup_cpuset": "unavailable",
+    "cgroup_memory_max": "unavailable",
+    "cpu_affinity": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "cpuinfo": "Processor\t: AArch64 Processor rev 0 (aarch64)\nprocessor\t: 0\nBogoMIPS\t: 38.40\nFeatures\t: fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm lrcpc dcpop asimddp\nCPU implementer\t: 0x51\nCPU architecture: 8\nCPU variant\t: 0xd\nCPU part\t: 0x805\nCPU revision\t: 14",
+    "load_average": [
+      3.2431640625,
+      2.83544921875,
+      2.59814453125
+    ],
+    "logical_cpu_count": 8,
+    "machine": "aarch64",
+    "meminfo": "MemTotal:       11831984 kB\nMemFree:          915336 kB\nMemAvailable:    4654888 kB\nBuffers:            2944 kB\nCached:          4146044 kB\nSwapCached:        27732 kB\nActive:          5802576 kB\nInactive:        2438736 kB\nActive(anon):    3818016 kB\nInactive(anon):   740036 kB\nActive(file):    1984560 kB\nInactive(file):  1698700 kB\nUnevictable:      358160 kB\nMlocked:          358160 kB\nSwapTotal:       4194300 kB\nSwapFree:        3425148 kB\nDirty:              6568 kB\nWriteback:             0 kB\nAnonPages:       4437960 kB\nMapped:          2062228 kB\nShmem:            122036 kB\nKReclaimable:     232376 kB\nSlab:             613704 kB\nSReclaimable:     218952 kB\nSUnreclaim:       394752 kB\nKernelStack:       92672 kB\nPageTables:       183852 kB\nNFS_Unstable:          0 kB\nBounce:                0 kB\nWritebackTmp:          0 kB\nCommitLimit:    10110292 kB\nCommitted_AS:   156254132 kB\nVmallocTotal:   263061440 kB\nVmallocUsed:      187544 kB\nVmallocChunk:          0 kB\nPercpu:            10848 kB\nCmaTotal:         356352 kB\nCmaFree:               0 kB\n",
+    "node": "localhost",
+    "release": "12",
+    "system": "Android"
+  },
+  "policy": "Clean private copies; no cache; sequential tools, alternating order. RSS is sampled aggregate smaps_rollup, CPU is process-tree wait4 rusage. All raw artifacts/projects retained. Ratios require all tests and exact full edited-source identities/outcomes; no overlap normalization. Clean performance only; this harness makes no cache validation claim.",
+  "versions": {
+    "@stryker-mutator/core": "10.0.0",
+    "@stryker-mutator/vitest-runner": "10.0.0",
+    "@vitest/coverage-v8": "4.1.12",
+    "cargo": "cargo 1.96.0 (30a34c682 2026-05-25) (built from a source tarball)",
+    "node": "v26.3.1",
+    "node_runtime": "{\"execPath\":\"/root/.local/share/oximut/toolchains/node-v26.3.1-linux-arm64/bin/node\",\"platform\":\"linux\",\"arch\":\"arm64\"}",
+    "npm": "11.16.0",
+    "python": "3.13.13 (main, Apr 10 2026, 13:09:22) [Clang 21.0.0 (https://android.googlesource.com/toolchain/llvm-project 5e96669f0",
+    "python_executable": "/data/data/com.termux/files/usr/bin/python3",
+    "python_platform": "android",
+    "rustc": "rustc 1.96.0 (ac68faa20 2026-05-25) (built from a source tarball)",
+    "typescript": "7.0.2",
+    "vitest": "4.1.12"
+  },
+  "workload": {
+    "commit": "1404cfe80cf8fe6df1a876ea3b12aa8eccc7feff",
+    "expectedTests": [
+      [
+        "tests/colord.test.ts",
+        "Accepts a colord instance as an input"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Accepts a hue of 360 on input and reports it as 0"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Adds alpha number to RGB and HSL strings only if the color has an opacity"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Changes a hue value"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Changes an alpha channel value"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Checks colors for equality"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Clamps a hue into [0, 360)"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Clamps hue (angle) value properly"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Clamps input numbers"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Converts between HEX, RGB, HSL and HSV color models properly"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Does not crash when input has an invalid format"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Does not crash when input has an invalid type"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Generates a random color"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Gets a hue value"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Gets an alpha channel value"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Gets an input color format"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Gets color brightness"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Ignores a case and extra whitespace"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Ignores invalid color formats"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Inverts a color"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Keeps the hue within [0, 360) so HSL/HSV round-trips are stable"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Makes a color lighter and darker"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Parses and converts a color"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Parses and serializes every HEX digit exactly"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Parses modern HSL functional notations"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Parses modern RGB functional notations"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Parses numbers with an omitted integer part"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Parses shorthand alpha values"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Preserves a color with a non-integer hue while rotating"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Produces alpha values with up to 3 digits after the decimal point"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Reports the same hue through every accessor"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Rotates a hue circle"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Rotates across the 0/360 boundary"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Rounds a hue into [0, 360)"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Saturates and desaturates a color"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Supports HEX4 and HEX8 color models"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Supports all valid CSS angle units"
+      ],
+      [
+        "tests/colord.test.ts",
+        "Validates an input value"
+      ],
+      [
+        "tests/delta-e00.test.ts",
+        "Is symmetric"
+      ],
+      [
+        "tests/delta-e00.test.ts",
+        "Matches the CIEDE2000 reference data set"
+      ],
+      [
+        "tests/parse-complexity.test.ts",
+        "Rejects oversized malformed colors in linear time device-cmyk"
+      ],
+      [
+        "tests/parse-complexity.test.ts",
+        "Rejects oversized malformed colors in linear time hsl"
+      ],
+      [
+        "tests/parse-complexity.test.ts",
+        "Rejects oversized malformed colors in linear time hsl, alpha position"
+      ],
+      [
+        "tests/parse-complexity.test.ts",
+        "Rejects oversized malformed colors in linear time hwb"
+      ],
+      [
+        "tests/parse-complexity.test.ts",
+        "Rejects oversized malformed colors in linear time lch"
+      ],
+      [
+        "tests/parse-complexity.test.ts",
+        "Rejects oversized malformed colors in linear time rgb"
+      ],
+      [
+        "tests/parse-complexity.test.ts",
+        "Rejects oversized malformed colors in linear time rgb, alpha position"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "a11y Calculates a contrast ratio for a color pair"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "a11y Check readability"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "a11y Returns the perceived luminance of a color"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "cmyk Converts a color to CMYK object"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "cmyk Converts a color to CMYK string"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "cmyk Parses CMYK color object"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "cmyk Parses CMYK color string"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "cmyk Supported by `getFormat`"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "harmonies Generates harmony colors"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "harmonies Preserves an input color with a non-integer hue"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "hwb Converts a color to HWB object"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "hwb Converts a color to HWB string"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "hwb Ignores invalid syntax"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "hwb Normalizes whiteness + blackness over 100% to an achromatic gray"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "hwb Parses HWB color object"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "hwb Parses HWB color string"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "hwb Supported by `getFormat`"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "hwb Supports all valid CSS angle units"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "lab Calculates the the perceived color difference"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "lab Converts a color to CIE LAB object"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "lab Parses CIE LAB color object"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "lab Supported by `getFormat`"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "lch Converts a color to CIE LCH object"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "lch Converts a color to CIE LCH string (CSS functional notation)"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "lch Keeps the LCH hue within [0, 360)"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "lch Parses CIE LCH color object"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "lch Parses CIE LCH color string"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "lch Supported by `getFormat`"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "lch Supports all valid CSS angle units"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "minify Minifies a color"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "minify Performs lossless minification (handles alpha hex issues)"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "minify Supports `transparent` keyword"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "minify Supports alpha hexes"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "minify Supports names"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "mix Generates a shades palette"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "mix Generates a tints palette"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "mix Generates a tones palette"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "mix Generates palettes through RGB color space"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "mix Interpolates alpha channel in RGB color space"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "mix Mixes through LAB when the space is set explicitly"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "mix Mixes two colors"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "mix Mixes two colors through RGB color space"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "mix Return the color if both values are equal"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "mix Returns the same color if ratio is 0 or 1"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "names Converts a color to CSS name"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "names Does not crash when name is not found"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "names Gets the closest CSS color keyword"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "names Ignores the case and extra whitespaces"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "names Parses valid CSS color names"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "names Processes 'transparent' color properly"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "names Supported by `getFormat`"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "names Works properly in pair with the built-in validation"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "xyz Converts a color to CIE XYZ object"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "xyz Parses XYZ color object"
+      ],
+      [
+        "tests/plugins.test.ts",
+        "xyz Supported by `getFormat`"
+      ]
+    ],
+    "families": [
+      "arithmetic",
+      "boolean-literal"
+    ],
+    "license": "MIT",
+    "mutate": [
+      "src/manipulate/invert.ts",
+      "src/manipulate/lighten.ts",
+      "src/manipulate/mix.ts",
+      "src/manipulate/saturate.ts",
+      "src/extend.ts"
+    ],
+    "packageVersion": "2.10.0",
+    "repository": "https://github.com/omgovich/colord",
+    "upstreamSha256": {
+      "src/colorModels/cmyk.ts": "3285e84020bbcacf7de2c58a3ff7821368cd0446f2f10e8549bae78abe73071b",
+      "src/colorModels/cmykString.ts": "3b6445d6dd6b4931239217b75c230a9943537a1851ee417013eb3d3fbfa61086",
+      "src/colorModels/hex.ts": "849fa36a950ccdc8dd1be5e385dbbeb048c67b6d5a9b36dab000a3b81e17d32c",
+      "src/colorModels/hsl.ts": "40f4352795c4bbfb0347095d12604d7fef946527338f2e572b5098c220ddb7f7",
+      "src/colorModels/hslString.ts": "6cdda23b921dc6c897b021467ea181c99e7af8cc0e4b64ec3810bcabdbc98538",
+      "src/colorModels/hsv.ts": "c0110aa65e4c9465183f78015cd0af8ac24b89a88f21b0b013fcb9bfb14ef821",
+      "src/colorModels/hwb.ts": "72261c7eabd81bf33b140b4f3a4b9a849fa100144a97ec49e660af8473be1b37",
+      "src/colorModels/hwbString.ts": "e46ac62d45ab05f288e673b3149df4f2845d1f14f91003ac615b961201bdb78c",
+      "src/colorModels/lab.ts": "e20a646fd254ef812eaf7861f62b9625f88cde6988cf658a00b701bf1f5661a6",
+      "src/colorModels/lch.ts": "33051bdc22ee1c9c22ba987d4622f0d25ee8553589941ae394b03adf5e833511",
+      "src/colorModels/lchString.ts": "7639a373633b012c7ce4582c12236d5d63c666cf915eaa15dc5460c236e3be23",
+      "src/colorModels/rgb.ts": "6040aa6cf101c8fa963739e74c9e5b5bcbf1bdbd9898deefdcd21e455dcc7269",
+      "src/colorModels/rgbString.ts": "dc74339feff95f9c9cdfb027fdd8f61a59c702690581ee1f01bb584fbc19915c",
+      "src/colorModels/xyz.ts": "47812abb2b6671eaf84bf2aff41956efeb3a4b028a97bff1cf57c75fddc92af5",
+      "src/colord.ts": "61d464a894f6a626b6b29c9ab676497b76abbe6394d54cfca7f94d372e1027cd",
+      "src/constants.ts": "3fc3b4485f87d603a535a9337a5b3d743f9bbdef3bac3795261105cb2538ddae",
+      "src/extend.ts": "f737b30230d7f0072cdda74d097795cf7f80dbddc13ff6b0a8b5d7a1047116f5",
+      "src/get/getBrightness.ts": "85ed9bc043edbd254af1d4dba74f4f051d03438ae97d9deff0b6336d047def70",
+      "src/get/getContrast.ts": "a2ded8d89380db55c676ee199894a15a94cac8c0eff0139baa532ca6f395bab1",
+      "src/get/getLuminance.ts": "38b2e18889c8c47f1020936bc9d38774322dd3741fa40045edbc29a73fccf6ce",
+      "src/get/getPerceivedDifference.ts": "64d43d0967a18435402d63f3526823e546119db73c4bc2f8433877b72fc2d2bb",
+      "src/helpers.ts": "44340f8316b7bfcb53e5bbdeda1e8fed7aaec2b156a2cb30dccd29569b0ec30b",
+      "src/index.ts": "872f382da0dd6729bd89b0f30dcb974a797e2952e5920747a3c3b5f86b03554d",
+      "src/manipulate/changeAlpha.ts": "d7011b465cc15705149a8637ba773e28f60e6d35ea0d338efb3734f59556020d",
+      "src/manipulate/invert.ts": "09696bf35f4d9d855e83859e962ba9aa198ef395e4be60833109cd17906aaf75",
+      "src/manipulate/lighten.ts": "f0fa9ff9e4fb45caf88bac25d28e9eb06563d9b6e8a29eb2331bafe04fb40bb6",
+      "src/manipulate/mix.ts": "9ae4295eea21e7128ae84f1bf68ac940c30aa6f006c8ea6cae78314f8d573039",
+      "src/manipulate/saturate.ts": "993216b67a0a8685f41da56da0812d8399537ab0033cf10dfb7c737c0ff3bb25",
+      "src/parse.ts": "ad7a21121b6340ae45f1ccbd9ce6712a7856721418f24c2f36613a5bd7b0acb0",
+      "src/plugins/a11y.ts": "d7e44473c9c4e9ae3b84ae6ae233ecf057c776cafde5c2e253d0f7b36b4ccae5",
+      "src/plugins/cmyk.ts": "29a21dbfa57bbc2072b95001e7cc2c61af6fe83cd378612a3c8e56356ec1e97b",
+      "src/plugins/harmonies.ts": "8043e3a2402007eef9fc94dce04ec34b7598f476c23e7e88b5d12b34d1cd342c",
+      "src/plugins/hwb.ts": "b4cdfa4eee8d68d408de55fc650325a1b1c09c532e1b1edc2c902914e43d96a3",
+      "src/plugins/lab.ts": "2464ed7cec69aa46e5b467afce36068bfe17db99e625d6395f1b244411d9a700",
+      "src/plugins/lch.ts": "5dfee66585a3529a0061bcca39df80e9076628df20dee9c5d085c1bd12a5c733",
+      "src/plugins/minify.ts": "7267187c43ebb489ce1bb28af2cabc9b404912cc7ab912c28519a518f390d6a4",
+      "src/plugins/mix.ts": "5d18265de095e1cb5f6de2df4745b8068390bd8e6679e0029bf8f39cfa919ef7",
+      "src/plugins/names.ts": "2db1fdc2da69775b8f60af83ed3202388d61ce00c38919075831f2c4ed3c0637",
+      "src/plugins/xyz.ts": "9470b16046d7a5e2b3106a5350aa574832fa14cad883bc3d1365805436f30eaa",
+      "src/random.ts": "ec6e13cf59c128b7b1d7c358d0a681002c4f2db8e0232aa2eb24b0ab7cd3c76c",
+      "src/types.ts": "73dfb041446985b3d68d1edafff0cbc0a2d3ee4d1f9b95538c762975007504c5",
+      "tests/colord.test.ts": "7c4a4c901b2c07a1b3fd6545e7cf8d86a8cecb6e460e6705aef2a053c9726af3",
+      "tests/delta-e00.test.ts": "62ab4a18994e53043a87bdbf18e9b14d84db74f69729c2c87c95337b4dd77e98",
+      "tests/fixtures.ts": "4137b9da219a40abb9e37f4c521a8ecd679f2b8abd6d8869a4200bf97358e278",
+      "tests/parse-complexity.test.ts": "0d72fb1c743a8f6368d31c811a9afaf855ea270d6a4b6e058d5e8942af64e460",
+      "tests/plugins.test.ts": "32e1caf6c951e791467d3dfaa5aee2503a9d816bd95919b0caa70eb7ab71cefd"
+    }
+  }
+}

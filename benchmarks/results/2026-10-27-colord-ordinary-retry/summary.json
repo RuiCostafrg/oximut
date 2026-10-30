@@ -1,0 +1,18 @@
+{
+  "correctness_gate": false,
+  "groups": [
+    {
+      "raw_medians": {
+        "cpu_seconds": 4.285569,
+        "peak_aggregate_rss_bytes": 228261888,
+        "peak_process_count": 2,
+        "wall_seconds": 5.598743226844817
+      },
+      "runs": 1,
+      "successes": 1,
+      "tool": "vitest"
+    }
+  ],
+  "ratios": [],
+  "raw_measurement_count": 1
+}

@@ -93,10 +93,13 @@ class CommandTests(unittest.TestCase):
                   "p=subprocess.Popen([sys.executable,'-c','import time; time.sleep(60)'], "
                   "start_new_session=True); print(p.pid,flush=True); time.sleep(60)")
         before = time.monotonic()
-        result = self.run_python(script, timeout=.3)
+        # The fixture must create its detached child before the deadline.
+        # Python startup/imports can exceed 300ms on PRoot or loaded CI hosts.
+        timeout = 2
+        result = self.run_python(script, timeout=timeout)
         self.assertTrue(result['timed_out'])
         self.assertFalse(result['success'])
-        self.assertLess(time.monotonic() - before, 4)
+        self.assertLess(time.monotonic() - before, timeout + 3)
         descendant = int((self.path / 'output.log').read_text().strip())
         self.assertFalse(Path(f'/proc/{descendant}').exists(), 'descendant must be reaped')
         # Discovery can span scans when the parent exits before the child is seen.

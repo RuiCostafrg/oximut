@@ -1,0 +1,16 @@
+[
+  {
+    "equal_mutation_scope": false,
+    "explained_no_coverage_refinements": [],
+    "left_count": 0,
+    "left_only": {},
+    "mismatches": [],
+    "ratio_eligible": false,
+    "right_count": 0,
+    "right_only": {},
+    "round": 0,
+    "shared": [],
+    "shared_classifications_agree": false,
+    "shared_count": 0
+  }
+]

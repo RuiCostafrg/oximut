@@ -1,0 +1,7 @@
+{
+  "phase": "private-project preparation before process launch",
+  "error": "FileExistsError: copytree copied Vitest's generated node_modules/.vite cache; creating the dependency symlink then failed",
+  "resolution": "prepare() now ignores node_modules and generated caches, matching m6 isolation policy",
+  "measurement_count": 0,
+  "retry": "../2026-10-27-colord-ordinary-retry"
+}

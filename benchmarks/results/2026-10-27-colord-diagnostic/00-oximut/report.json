@@ -1,0 +1,422 @@
+{
+  "schemaVersion": 1,
+  "runId": "20101-1793140455686295809",
+  "baseline": {
+    "protocol": 1,
+    "runId": "20101-1793140455686295809",
+    "jobId": "baseline",
+    "generation": 0,
+    "outcome": "infrastructure-error",
+    "tests": {
+      "passed": 0,
+      "failed": 0,
+      "skipped": 0
+    },
+    "errors": [
+      "persistent adapter exited before response: exit status: 1"
+    ]
+  },
+  "mutants": [
+    {
+      "id": "cf4748d0c363684160adae8ce709b2c871449b782017d3e7ad704525d7b51154",
+      "file": "/root/.t3/worktrees/oximut/t3-d296c14c/benchmarks/results/2026-10-27-colord-diagnostic/00-oximut/project/src/manipulate/saturate.ts",
+      "operator": "arithmetic",
+      "original": "*",
+      "replacement": "/",
+      "location": {
+        "start": {
+          "offset": 298,
+          "line": 10,
+          "column": 30
+        },
+        "end": {
+          "offset": 299,
+          "line": 10,
+          "column": 31
+        }
+      },
+      "outcome": "skipped",
+      "tests": {
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0
+      },
+      "errors": [
+        "baseline did not pass; mutant was not executed"
+      ],
+      "provenance": {
+        "source": "skipped",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "c88a30c6f5f3ccc6db4c6c87bf61459c5b328fc5b7df59aa03dde1ca099aa3db",
+      "file": "/root/.t3/worktrees/oximut/t3-d296c14c/benchmarks/results/2026-10-27-colord-diagnostic/00-oximut/project/src/manipulate/invert.ts",
+      "operator": "arithmetic",
+      "original": "-",
+      "replacement": "+",
+      "location": {
+        "start": {
+          "offset": 105,
+          "line": 4,
+          "column": 10
+        },
+        "end": {
+          "offset": 106,
+          "line": 4,
+          "column": 11
+        }
+      },
+      "outcome": "skipped",
+      "tests": {
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0
+      },
+      "errors": [
+        "baseline did not pass; mutant was not executed"
+      ],
+      "provenance": {
+        "source": "skipped",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "c59a734f77d74a37da696a4904f169a3a119a78a22d2732ca87f3c08b0a3cebd",
+      "file": "/root/.t3/worktrees/oximut/t3-d296c14c/benchmarks/results/2026-10-27-colord-diagnostic/00-oximut/project/src/manipulate/mix.ts",
+      "operator": "arithmetic",
+      "original": "-",
+      "replacement": "+",
+      "location": {
+        "start": {
+          "offset": 356,
+          "line": 12,
+          "column": 76
+        },
+        "end": {
+          "offset": 357,
+          "line": 12,
+          "column": 77
+        }
+      },
+      "outcome": "skipped",
+      "tests": {
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0
+      },
+      "errors": [
+        "baseline did not pass; mutant was not executed"
+      ],
+      "provenance": {
+        "source": "skipped",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "d608232f1dad0bf6337abb58c011a8da27269951d412bc352dacf25828e209d3",
+      "file": "/root/.t3/worktrees/oximut/t3-d296c14c/benchmarks/results/2026-10-27-colord-diagnostic/00-oximut/project/src/manipulate/invert.ts",
+      "operator": "arithmetic",
+      "original": "-",
+      "replacement": "+",
+      "location": {
+        "start": {
+          "offset": 124,
+          "line": 5,
+          "column": 10
+        },
+        "end": {
+          "offset": 125,
+          "line": 5,
+          "column": 11
+        }
+      },
+      "outcome": "skipped",
+      "tests": {
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0
+      },
+      "errors": [
+        "baseline did not pass; mutant was not executed"
+      ],
+      "provenance": {
+        "source": "skipped",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "8a49a888d6e614ce683525b9bd586b4271285324ddac088829d4a8beec90c2a5",
+      "file": "/root/.t3/worktrees/oximut/t3-d296c14c/benchmarks/results/2026-10-27-colord-diagnostic/00-oximut/project/src/manipulate/lighten.ts",
+      "operator": "arithmetic",
+      "original": "*",
+      "replacement": "/",
+      "location": {
+        "start": {
+          "offset": 312,
+          "line": 11,
+          "column": 30
+        },
+        "end": {
+          "offset": 313,
+          "line": 11,
+          "column": 31
+        }
+      },
+      "outcome": "skipped",
+      "tests": {
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0
+      },
+      "errors": [
+        "baseline did not pass; mutant was not executed"
+      ],
+      "provenance": {
+        "source": "skipped",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "b115f5372f2edf03e51a8f712460addaed3513a89703cc1fe8500eee367aba65",
+      "file": "/root/.t3/worktrees/oximut/t3-d296c14c/benchmarks/results/2026-10-27-colord-diagnostic/00-oximut/project/src/manipulate/mix.ts",
+      "operator": "arithmetic",
+      "original": "+",
+      "replacement": "-",
+      "location": {
+        "start": {
+          "offset": 349,
+          "line": 12,
+          "column": 69
+        },
+        "end": {
+          "offset": 350,
+          "line": 12,
+          "column": 70
+        }
+      },
+      "outcome": "skipped",
+      "tests": {
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0
+      },
+      "errors": [
+        "baseline did not pass; mutant was not executed"
+      ],
+      "provenance": {
+        "source": "skipped",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "9fd7cd8a8c7b265bb46410e0ca0429f59067d4a2e458cd743941c88ea05ee378",
+      "file": "/root/.t3/worktrees/oximut/t3-d296c14c/benchmarks/results/2026-10-27-colord-diagnostic/00-oximut/project/src/manipulate/mix.ts",
+      "operator": "arithmetic",
+      "original": "*",
+      "replacement": "/",
+      "location": {
+        "start": {
+          "offset": 365,
+          "line": 12,
+          "column": 85
+        },
+        "end": {
+          "offset": 366,
+          "line": 12,
+          "column": 86
+        }
+      },
+      "outcome": "skipped",
+      "tests": {
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0
+      },
+      "errors": [
+        "baseline did not pass; mutant was not executed"
+      ],
+      "provenance": {
+        "source": "skipped",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "82b44c30bb77459ea1aa962c8f328ae2ee1aedcdd0ef3982cef07e398229385e",
+      "file": "/root/.t3/worktrees/oximut/t3-d296c14c/benchmarks/results/2026-10-27-colord-diagnostic/00-oximut/project/src/manipulate/saturate.ts",
+      "operator": "arithmetic",
+      "original": "+",
+      "replacement": "-",
+      "location": {
+        "start": {
+          "offset": 289,
+          "line": 10,
+          "column": 21
+        },
+        "end": {
+          "offset": 290,
+          "line": 10,
+          "column": 22
+        }
+      },
+      "outcome": "skipped",
+      "tests": {
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0
+      },
+      "errors": [
+        "baseline did not pass; mutant was not executed"
+      ],
+      "provenance": {
+        "source": "skipped",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "211c64945c6ed85c7fe4073b36288ffc39e3697f07c009e14edcf98b8d0f84b0",
+      "file": "/root/.t3/worktrees/oximut/t3-d296c14c/benchmarks/results/2026-10-27-colord-diagnostic/00-oximut/project/src/manipulate/lighten.ts",
+      "operator": "arithmetic",
+      "original": "+",
+      "replacement": "-",
+      "location": {
+        "start": {
+          "offset": 303,
+          "line": 11,
+          "column": 21
+        },
+        "end": {
+          "offset": 304,
+          "line": 11,
+          "column": 22
+        }
+      },
+      "outcome": "skipped",
+      "tests": {
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0
+      },
+      "errors": [
+        "baseline did not pass; mutant was not executed"
+      ],
+      "provenance": {
+        "source": "skipped",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "ef47eb079678fe3394e670f75553d1ed95568788dcfd52c8c2685e0500e889fc",
+      "file": "/root/.t3/worktrees/oximut/t3-d296c14c/benchmarks/results/2026-10-27-colord-diagnostic/00-oximut/project/src/extend.ts",
+      "operator": "comparison-boundary",
+      "original": "<",
+      "replacement": "<=",
+      "location": {
+        "start": {
+          "offset": 344,
+          "line": 11,
+          "column": 39
+        },
+        "end": {
+          "offset": 345,
+          "line": 11,
+          "column": 40
+        }
+      },
+      "outcome": "skipped",
+      "tests": {
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0
+      },
+      "errors": [
+        "baseline did not pass; mutant was not executed"
+      ],
+      "provenance": {
+        "source": "skipped",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "c8fb72bec90d9a783caf7ef8479772865cadc5338cbace358a9a173db7fcf175",
+      "file": "/root/.t3/worktrees/oximut/t3-d296c14c/benchmarks/results/2026-10-27-colord-diagnostic/00-oximut/project/src/manipulate/invert.ts",
+      "operator": "arithmetic",
+      "original": "-",
+      "replacement": "+",
+      "location": {
+        "start": {
+          "offset": 143,
+          "line": 6,
+          "column": 10
+        },
+        "end": {
+          "offset": 144,
+          "line": 6,
+          "column": 11
+        }
+      },
+      "outcome": "skipped",
+      "tests": {
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0
+      },
+      "errors": [
+        "baseline did not pass; mutant was not executed"
+      ],
+      "provenance": {
+        "source": "skipped",
+        "reason": "forced-no-cache"
+      }
+    }
+  ],
+  "diagnostics": [
+    "execution=persistent; isolation=fresh-test-forks; controller reuse only; baseline=original-and-disabled-switches"
+  ],
+  "summary": {
+    "total": 11,
+    "killed": 0,
+    "survived": 0,
+    "noCoverage": 0,
+    "invalid": 0,
+    "timeout": 0,
+    "infrastructureError": 0,
+    "resourceExhausted": 0,
+    "skipped": 11,
+    "scoreDenominator": 0,
+    "score": null,
+    "complete": false
+  },
+  "cache": {
+    "enabled": false,
+    "outcomesEnabled": false,
+    "reason": "forced-no-cache",
+    "instrumentationHits": 0,
+    "instrumentationMisses": 0,
+    "outcomeHits": 0,
+    "outcomeMisses": 0,
+    "persistence": "not-written",
+    "runnerHashMs": 0,
+    "fingerprintProfiles": []
+  },
+  "resources": {
+    "admissionPauses": 0,
+    "admissionWorkerCostBytes": 88586240,
+    "budgetBytes": 12115951616,
+    "cgroups": [],
+    "configuredBudgetBytes": null,
+    "configuredWorkers": 1,
+    "cpuLimitWorkers": 8,
+    "effectiveWorkers": 1,
+    "enforcement": "best-effort sampled admission and process-tree cancellation; existing cgroup limits are OS-enforced; no new hard cap installed",
+    "exhaustion": null,
+    "maxActiveJobs": 1,
+    "measuredWorkerPeakBytes": 70868992,
+    "measurement": "Linux /proc smaps_rollup Rss sum, approximate stat RSS fallback on older/restricted kernels: main CLI and all worker/adapter/controller/test descendants; shared pages counted per process",
+    "peakAggregateRssBytes": 75665408,
+    "recycledIdleWorkers": 0,
+    "reserveBytes": 67108864,
+    "sampleIntervalMs": 50,
+    "samples": 6
+  }
+}

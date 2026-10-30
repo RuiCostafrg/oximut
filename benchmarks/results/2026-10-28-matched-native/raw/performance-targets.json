@@ -1,0 +1,150 @@
+{
+  "all_scales_required": true,
+  "confidence": "deterministic paired percentile bootstrap; exploratory, host/corpus-specific",
+  "correctness_gate": {
+    "failures": [],
+    "passed": true
+  },
+  "fixtures": [
+    {
+      "denominator": "Stryker perTest selection",
+      "errors": [],
+      "fixture": "matched-small",
+      "measured_pairs": 5,
+      "metrics": {
+        "cpu_seconds": {
+          "bootstrap_95_percent": [
+            1.5340971384458866,
+            1.5524078684753964
+          ],
+          "max": 1.5524078684753964,
+          "median": 1.542313433744417,
+          "median_cpu_reduction_percent": -54.23134337444171,
+          "min": 1.5340971384458866,
+          "paired_ratios": [
+            1.5524078684753964,
+            1.5340971384458866,
+            1.5375677482329437,
+            1.5470484619146423,
+            1.542313433744417
+          ]
+        },
+        "peak_aggregate_rss_bytes": {
+          "bootstrap_95_percent": [
+            0.7535599743425273,
+            0.7770119043757501
+          ],
+          "max": 0.7770119043757501,
+          "median": 0.7626543485496716,
+          "median_target_met": false,
+          "min": 0.7535599743425273,
+          "paired_ratios": [
+            0.7535599743425273,
+            0.7561492585428755,
+            0.7626543485496716,
+            0.7745926544105136,
+            0.7770119043757501
+          ],
+          "status": "target missed",
+          "target_ratio": 0.5
+        },
+        "wall_seconds": {
+          "bootstrap_95_percent": [
+            1.048984019269263,
+            1.0825165652339641
+          ],
+          "max": 1.0825165652339641,
+          "median": 1.0560440366927006,
+          "median_target_met": false,
+          "min": 1.048984019269263,
+          "paired_ratios": [
+            1.0825165652339641,
+            1.048984019269263,
+            1.0560440366927006,
+            1.0710431425550044,
+            1.0495281461289259
+          ],
+          "status": "target missed",
+          "target_ratio": 0.8
+        }
+      },
+      "numerator": "Oximut persistent controller with file selection",
+      "status": "target missed",
+      "warmup_pairs": 1
+    },
+    {
+      "denominator": "Stryker perTest selection",
+      "errors": [],
+      "fixture": "matched-scale",
+      "measured_pairs": 5,
+      "metrics": {
+        "cpu_seconds": {
+          "bootstrap_95_percent": [
+            3.912976332727381,
+            4.139755250791783
+          ],
+          "max": 4.139755250791783,
+          "median": 3.9425236484957424,
+          "median_cpu_reduction_percent": -294.25236484957423,
+          "min": 3.912976332727381,
+          "paired_ratios": [
+            4.139755250791783,
+            3.912976332727381,
+            3.918399480300257,
+            3.982293847796998,
+            3.9425236484957424
+          ]
+        },
+        "peak_aggregate_rss_bytes": {
+          "bootstrap_95_percent": [
+            0.8451331475814187,
+            0.8753329945642968
+          ],
+          "max": 0.8753329945642968,
+          "median": 0.869530426486316,
+          "median_target_met": false,
+          "min": 0.8451331475814187,
+          "paired_ratios": [
+            0.8451331475814187,
+            0.8753329945642968,
+            0.8716714516765591,
+            0.869530426486316,
+            0.8627559363412332
+          ],
+          "status": "target missed",
+          "target_ratio": 0.5
+        },
+        "wall_seconds": {
+          "bootstrap_95_percent": [
+            2.680735042684003,
+            2.842558377504982
+          ],
+          "max": 2.842558377504982,
+          "median": 2.7239057689075343,
+          "median_target_met": false,
+          "min": 2.680735042684003,
+          "paired_ratios": [
+            2.842558377504982,
+            2.7069589163156,
+            2.680735042684003,
+            2.7547965755265555,
+            2.7239057689075343
+          ],
+          "status": "target missed",
+          "target_ratio": 0.8
+        }
+      },
+      "numerator": "Oximut persistent controller with file selection",
+      "status": "target missed",
+      "warmup_pairs": 1
+    }
+  ],
+  "minimum_measured_pairs": 5,
+  "minimum_warmup_pairs": 1,
+  "primary_mode": "clean-selection",
+  "targets_met": false,
+  "thresholds": {
+    "peak_aggregate_rss_bytes": 0.5,
+    "wall_seconds": 0.8
+  }
+}

@@ -1,0 +1,64 @@
+Baseline: Passed (102 passed, 0 failed, 0 skipped)
+killed cf4748d0c363 /root/.t3/worktrees/oximut/t3-d296c14c/benchmarks/results/2026-10-27-colord-diagnostic-retry/00-oximut/project/src/manipulate/saturate.ts:10:30 * -> /
+  expected '#6040bf' to be '#5327d9' // Object.is equality
+  Selected tests: 38/102 (files); reasons: whole-file-preserves-sequential-state-and-hooks
+killed c88a30c6f5f3 /root/.t3/worktrees/oximut/t3-d296c14c/benchmarks/results/2026-10-27-colord-diagnostic-retry/00-oximut/project/src/manipulate/invert.ts:4:10 - -> +
+  expected '#ff0000' to be '#000000' // Object.is equality
+  Selected tests: 38/102 (files); reasons: whole-file-preserves-sequential-state-and-hooks
+killed c59a734f77d7 /root/.t3/worktrees/oximut/t3-d296c14c/benchmarks/results/2026-10-27-colord-diagnostic-retry/00-oximut/project/src/manipulate/mix.ts:12:76 - -> +
+  expected '#ff005a' to be '#6a1b21' // Object.is equality
+  expected '#ffffff' to be '#cd853f' // Object.is equality
+  expected [ '#ff0000', '#ffd68a', '#ffffff' ] to deeply equal [ '#ff0000', '#ff9f80', '#ffffff' ]
+  expected [ '#ff0000', '#ff0000' ] to deeply equal [ '#ff0000', '#000000' ]
+  expected [ '#ff0000', '#fff394' ] to deeply equal [ '#ff0000', '#808080' ]
+  expected '#ffffff' to be '#cee2d8' // Object.is equality
+  expected 'rgb(128, 128, 128)' to be 'rgba(128, 128, 128, 0.5)' // Object.is equality
+  expected [ '#ff0000', '#ff0000', '#ff0000' ] to deeply equal [ '#ff0000', '#800000', '#000000' ]
+  Selected tests: 55/102 (files); reasons: whole-file-preserves-sequential-state-and-hooks
+killed d608232f1dad /root/.t3/worktrees/oximut/t3-d296c14c/benchmarks/results/2026-10-27-colord-diagnostic-retry/00-oximut/project/src/manipulate/invert.ts:5:10 - -> +
+  expected '#00ff00' to be '#000000' // Object.is equality
+  Selected tests: 38/102 (files); reasons: whole-file-preserves-sequential-state-and-hooks
+killed 8a49a888d6e6 /root/.t3/worktrees/oximut/t3-d296c14c/benchmarks/results/2026-10-27-colord-diagnostic-retry/00-oximut/project/src/manipulate/lighten.ts:11:30 * -> /
+  expected 'hsl(100, 50%, 50%)' to be 'hsl(100, 50%, 60%)' // Object.is equality
+  Selected tests: 38/102 (files); reasons: whole-file-preserves-sequential-state-and-hooks
+killed b115f5372f2e /root/.t3/worktrees/oximut/t3-d296c14c/benchmarks/results/2026-10-27-colord-diagnostic-retry/00-oximut/project/src/manipulate/mix.ts:12:69 + -> -
+  expected '#000000' to be '#777777' // Object.is equality
+  expected '#fcffff' to be '#cd853f' // Object.is equality
+  expected [ '#ff0000', '#b80000' ] to deeply equal [ '#ff0000', '#ffffff' ]
+  expected [ '#ff0000', '#ff0000' ] to deeply equal [ '#ff0000', '#000000' ]
+  expected [ '#ff0000', '#ff0000' ] to deeply equal [ '#ff0000', '#808080' ]
+  expected '#ff0000' to be '#ff4040' // Object.is equality
+  expected 'rgb(0, 0, 0)' to be 'rgba(128, 128, 128, 0.5)' // Object.is equality
+  expected '#000000' to be '#777777' // Object.is equality
+  Selected tests: 55/102 (files); reasons: whole-file-preserves-sequential-state-and-hooks
+killed 9fd7cd8a8c7b /root/.t3/worktrees/oximut/t3-d296c14c/benchmarks/results/2026-10-27-colord-diagnostic-retry/00-oximut/project/src/manipulate/mix.ts:12:85 * -> /
+  expected '#ffffff' to be '#777777' // Object.is equality
+  expected '#00000000' to be '#cd853f' // Object.is equality
+  expected [ '#00000000', '#ffffff' ] to deeply equal [ '#ff0000', '#ffffff' ]
+  expected [ '#00000000', '#000000' ] to deeply equal [ '#ff0000', '#000000' ]
+  expected [ '#00000000', '#808080' ] to deeply equal [ '#ff0000', '#808080' ]
+  expected '#ffffff' to be '#ff4040' // Object.is equality
+  expected 'rgba(255, 255, 255, 0)' to be 'rgba(128, 128, 128, 0.5)' // Object.is equality
+  expected '#ffffff' to be '#777777' // Object.is equality
+  Selected tests: 55/102 (files); reasons: whole-file-preserves-sequential-state-and-hooks
+killed 82b44c30bb77 /root/.t3/worktrees/oximut/t3-d296c14c/benchmarks/results/2026-10-27-colord-diagnostic-retry/00-oximut/project/src/manipulate/saturate.ts:10:21 + -> -
+  expected '#6d5aa6' to be '#5327d9' // Object.is equality
+  Selected tests: 38/102 (files); reasons: whole-file-preserves-sequential-state-and-hooks
+killed 211c64945c6e /root/.t3/worktrees/oximut/t3-d296c14c/benchmarks/results/2026-10-27-colord-diagnostic-retry/00-oximut/project/src/manipulate/lighten.ts:11:21 + -> -
+  expected 'hsl(100, 50%, 40%)' to be 'hsl(100, 50%, 60%)' // Object.is equality
+  Selected tests: 38/102 (files); reasons: whole-file-preserves-sequential-state-and-hooks
+survived ef47eb079678 /root/.t3/worktrees/oximut/t3-d296c14c/benchmarks/results/2026-10-27-colord-diagnostic-retry/00-oximut/project/src/extend.ts:11:39 < -> <=
+  Selected tests: 102/102 (full); reasons: outside-test-execution
+killed c8fb72bec90d /root/.t3/worktrees/oximut/t3-d296c14c/benchmarks/results/2026-10-27-colord-diagnostic-retry/00-oximut/project/src/manipulate/invert.ts:6:10 - -> +
+  expected '#0000ff' to be '#000000' // Object.is equality
+  Selected tests: 38/102 (files); reasons: whole-file-preserves-sequential-state-and-hooks
+Mutants: 11 total, 10 killed, 1 survived, 0 no-coverage, 0 invalid, 0 timeout, 0 infrastructure-error, 0 resource-exhausted, 0 skipped
+Score: 90.91% (10/11); complete: true
+Cache: forced-no-cache; instrumentation hits/misses: 0/0; outcome hits/misses: 0/0; not-written
+Diagnostic: execution=persistent; isolation=fresh-test-forks; controller reuse only; baseline=original-and-disabled-switches
+Diagnostic: disabled switching validation: /root/.t3/worktrees/oximut/t3-d296c14c/benchmarks/results/2026-10-27-colord-diagnostic-retry/00-oximut/project/src/extend.ts: Passed
+Diagnostic: disabled switching validation: /root/.t3/worktrees/oximut/t3-d296c14c/benchmarks/results/2026-10-27-colord-diagnostic-retry/00-oximut/project/src/manipulate/invert.ts: Passed
+Diagnostic: disabled switching validation: /root/.t3/worktrees/oximut/t3-d296c14c/benchmarks/results/2026-10-27-colord-diagnostic-retry/00-oximut/project/src/manipulate/lighten.ts: Passed
+Diagnostic: disabled switching validation: /root/.t3/worktrees/oximut/t3-d296c14c/benchmarks/results/2026-10-27-colord-diagnostic-retry/00-oximut/project/src/manipulate/mix.ts: Passed
+Diagnostic: disabled switching validation: /root/.t3/worktrees/oximut/t3-d296c14c/benchmarks/results/2026-10-27-colord-diagnostic-retry/00-oximut/project/src/manipulate/saturate.ts: Passed
+Diagnostic: adapter observed reuse boundary: controller

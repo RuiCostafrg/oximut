@@ -1,0 +1,391 @@
+{
+  "schemaVersion": 1,
+  "runId": "7540-1793157638999267476",
+  "baseline": {
+    "protocol": 1,
+    "runId": "7540-1793157638999267476",
+    "jobId": "baseline",
+    "generation": 0,
+    "outcome": "infrastructure-error",
+    "tests": {
+      "passed": 0,
+      "failed": 0,
+      "skipped": 0
+    },
+    "errors": [
+      "Controller exited (0)\nnode:internal/modules/package_json_reader:301\n  throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);\n        ^\n\nError [ERR_MODULE_NOT_FOUND]: Cannot find package 'vitest' imported from /root/.t3/worktrees/oximut/t3-52f2b967/packages/vitest-adapter/m2-worker.ts\n    at Object.getPackageJSONURL (node:internal/modules/package_json_reader:301:9)\n    at packageResolve (node:internal/modules/esm/resolve:768:81)\n    at moduleResolve (node:internal/modules/esm/resolve:859:18)\n    at defaultResolve (node:internal/modules/esm/resolve:992:11)\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:704:20)\n    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:724:38)\n    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:762:56)\n    at #resolve (node:internal/modules/esm/loader:686:17)\n    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:606:35)\n    at ModuleJob.syncLink (node:internal/modules/esm/module_job:163:33) {\n  code: 'ERR_MODULE_NOT_FOUND'\n}\n\nNode.js v26.3.1\n"
+    ]
+  },
+  "mutants": [
+    {
+      "id": "c8fb72bec90d9a783caf7ef8479772865cadc5338cbace358a9a173db7fcf175",
+      "file": "/tmp/oximut-colord-matched-before-20261028-retry/00-oximut/project/src/manipulate/invert.ts",
+      "operator": "arithmetic",
+      "original": "-",
+      "replacement": "+",
+      "location": {
+        "start": {
+          "offset": 143,
+          "line": 6,
+          "column": 10
+        },
+        "end": {
+          "offset": 144,
+          "line": 6,
+          "column": 11
+        }
+      },
+      "outcome": "skipped",
+      "tests": {
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0
+      },
+      "errors": [
+        "baseline did not pass; mutant was not executed"
+      ],
+      "provenance": {
+        "source": "skipped",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "9fd7cd8a8c7b265bb46410e0ca0429f59067d4a2e458cd743941c88ea05ee378",
+      "file": "/tmp/oximut-colord-matched-before-20261028-retry/00-oximut/project/src/manipulate/mix.ts",
+      "operator": "arithmetic",
+      "original": "*",
+      "replacement": "/",
+      "location": {
+        "start": {
+          "offset": 365,
+          "line": 12,
+          "column": 85
+        },
+        "end": {
+          "offset": 366,
+          "line": 12,
+          "column": 86
+        }
+      },
+      "outcome": "skipped",
+      "tests": {
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0
+      },
+      "errors": [
+        "baseline did not pass; mutant was not executed"
+      ],
+      "provenance": {
+        "source": "skipped",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "82b44c30bb77459ea1aa962c8f328ae2ee1aedcdd0ef3982cef07e398229385e",
+      "file": "/tmp/oximut-colord-matched-before-20261028-retry/00-oximut/project/src/manipulate/saturate.ts",
+      "operator": "arithmetic",
+      "original": "+",
+      "replacement": "-",
+      "location": {
+        "start": {
+          "offset": 289,
+          "line": 10,
+          "column": 21
+        },
+        "end": {
+          "offset": 290,
+          "line": 10,
+          "column": 22
+        }
+      },
+      "outcome": "skipped",
+      "tests": {
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0
+      },
+      "errors": [
+        "baseline did not pass; mutant was not executed"
+      ],
+      "provenance": {
+        "source": "skipped",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "c59a734f77d74a37da696a4904f169a3a119a78a22d2732ca87f3c08b0a3cebd",
+      "file": "/tmp/oximut-colord-matched-before-20261028-retry/00-oximut/project/src/manipulate/mix.ts",
+      "operator": "arithmetic",
+      "original": "-",
+      "replacement": "+",
+      "location": {
+        "start": {
+          "offset": 356,
+          "line": 12,
+          "column": 76
+        },
+        "end": {
+          "offset": 357,
+          "line": 12,
+          "column": 77
+        }
+      },
+      "outcome": "skipped",
+      "tests": {
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0
+      },
+      "errors": [
+        "baseline did not pass; mutant was not executed"
+      ],
+      "provenance": {
+        "source": "skipped",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "d608232f1dad0bf6337abb58c011a8da27269951d412bc352dacf25828e209d3",
+      "file": "/tmp/oximut-colord-matched-before-20261028-retry/00-oximut/project/src/manipulate/invert.ts",
+      "operator": "arithmetic",
+      "original": "-",
+      "replacement": "+",
+      "location": {
+        "start": {
+          "offset": 124,
+          "line": 5,
+          "column": 10
+        },
+        "end": {
+          "offset": 125,
+          "line": 5,
+          "column": 11
+        }
+      },
+      "outcome": "skipped",
+      "tests": {
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0
+      },
+      "errors": [
+        "baseline did not pass; mutant was not executed"
+      ],
+      "provenance": {
+        "source": "skipped",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "211c64945c6ed85c7fe4073b36288ffc39e3697f07c009e14edcf98b8d0f84b0",
+      "file": "/tmp/oximut-colord-matched-before-20261028-retry/00-oximut/project/src/manipulate/lighten.ts",
+      "operator": "arithmetic",
+      "original": "+",
+      "replacement": "-",
+      "location": {
+        "start": {
+          "offset": 303,
+          "line": 11,
+          "column": 21
+        },
+        "end": {
+          "offset": 304,
+          "line": 11,
+          "column": 22
+        }
+      },
+      "outcome": "skipped",
+      "tests": {
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0
+      },
+      "errors": [
+        "baseline did not pass; mutant was not executed"
+      ],
+      "provenance": {
+        "source": "skipped",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "cf4748d0c363684160adae8ce709b2c871449b782017d3e7ad704525d7b51154",
+      "file": "/tmp/oximut-colord-matched-before-20261028-retry/00-oximut/project/src/manipulate/saturate.ts",
+      "operator": "arithmetic",
+      "original": "*",
+      "replacement": "/",
+      "location": {
+        "start": {
+          "offset": 298,
+          "line": 10,
+          "column": 30
+        },
+        "end": {
+          "offset": 299,
+          "line": 10,
+          "column": 31
+        }
+      },
+      "outcome": "skipped",
+      "tests": {
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0
+      },
+      "errors": [
+        "baseline did not pass; mutant was not executed"
+      ],
+      "provenance": {
+        "source": "skipped",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "b115f5372f2edf03e51a8f712460addaed3513a89703cc1fe8500eee367aba65",
+      "file": "/tmp/oximut-colord-matched-before-20261028-retry/00-oximut/project/src/manipulate/mix.ts",
+      "operator": "arithmetic",
+      "original": "+",
+      "replacement": "-",
+      "location": {
+        "start": {
+          "offset": 349,
+          "line": 12,
+          "column": 69
+        },
+        "end": {
+          "offset": 350,
+          "line": 12,
+          "column": 70
+        }
+      },
+      "outcome": "skipped",
+      "tests": {
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0
+      },
+      "errors": [
+        "baseline did not pass; mutant was not executed"
+      ],
+      "provenance": {
+        "source": "skipped",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "c88a30c6f5f3ccc6db4c6c87bf61459c5b328fc5b7df59aa03dde1ca099aa3db",
+      "file": "/tmp/oximut-colord-matched-before-20261028-retry/00-oximut/project/src/manipulate/invert.ts",
+      "operator": "arithmetic",
+      "original": "-",
+      "replacement": "+",
+      "location": {
+        "start": {
+          "offset": 105,
+          "line": 4,
+          "column": 10
+        },
+        "end": {
+          "offset": 106,
+          "line": 4,
+          "column": 11
+        }
+      },
+      "outcome": "skipped",
+      "tests": {
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0
+      },
+      "errors": [
+        "baseline did not pass; mutant was not executed"
+      ],
+      "provenance": {
+        "source": "skipped",
+        "reason": "forced-no-cache"
+      }
+    },
+    {
+      "id": "8a49a888d6e614ce683525b9bd586b4271285324ddac088829d4a8beec90c2a5",
+      "file": "/tmp/oximut-colord-matched-before-20261028-retry/00-oximut/project/src/manipulate/lighten.ts",
+      "operator": "arithmetic",
+      "original": "*",
+      "replacement": "/",
+      "location": {
+        "start": {
+          "offset": 312,
+          "line": 11,
+          "column": 30
+        },
+        "end": {
+          "offset": 313,
+          "line": 11,
+          "column": 31
+        }
+      },
+      "outcome": "skipped",
+      "tests": {
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0
+      },
+      "errors": [
+        "baseline did not pass; mutant was not executed"
+      ],
+      "provenance": {
+        "source": "skipped",
+        "reason": "forced-no-cache"
+      }
+    }
+  ],
+  "diagnostics": [
+    "execution=persistent; isolation=fresh-test-forks; controller reuse only; baseline=original-and-disabled-switches",
+    "mutator families=arithmetic,boolean-literal; exclusions are not part of this run"
+  ],
+  "summary": {
+    "total": 10,
+    "killed": 0,
+    "survived": 0,
+    "noCoverage": 0,
+    "invalid": 0,
+    "timeout": 0,
+    "infrastructureError": 0,
+    "resourceExhausted": 0,
+    "skipped": 10,
+    "scoreDenominator": 0,
+    "score": null,
+    "complete": false
+  },
+  "cache": {
+    "enabled": false,
+    "outcomesEnabled": false,
+    "reason": "forced-no-cache",
+    "instrumentationHits": 0,
+    "instrumentationMisses": 0,
+    "outcomeHits": 0,
+    "outcomeMisses": 0,
+    "persistence": "not-written",
+    "runnerHashMs": 0,
+    "fingerprintProfiles": []
+  },
+  "resources": {
+    "admissionPauses": 0,
+    "admissionWorkerCostBytes": 195722240,
+    "budgetBytes": 12115951616,
+    "cgroups": [],
+    "configuredBudgetBytes": null,
+    "configuredWorkers": 1,
+    "cpuLimitWorkers": 8,
+    "effectiveWorkers": 1,
+    "enforcement": "best-effort sampled admission and process-tree cancellation; existing cgroup limits are OS-enforced; no new hard cap installed",
+    "exhaustion": null,
+    "maxActiveJobs": 1,
+    "measuredWorkerPeakBytes": 156577792,
+    "measurement": "Linux /proc smaps_rollup Rss sum, approximate stat RSS fallback on older/restricted kernels: main CLI and all worker/adapter/controller/test descendants; shared pages counted per process",
+    "peakAggregateRssBytes": 161427456,
+    "recycledIdleWorkers": 0,
+    "reserveBytes": 67108864,
+    "sampleIntervalMs": 50,
+    "samples": 17
+  }
+}
