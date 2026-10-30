@@ -72,6 +72,26 @@ def compact_summary(result):
     }
 
 
+def segment_events_match(events_file, segments):
+    """Each helper event names one retained profile, with its times, within the segment limit."""
+    try:
+        events = [json.loads(line) for line in events_file.read_text().splitlines()]
+        profiles = {path.name: json.loads(path.read_text()) for path in segments}
+    except (OSError, ValueError):
+        return False
+    if len(events) != len(profiles) or not all(isinstance(event, dict) for event in events):
+        return False
+    named = [event.get('profile') for event in events]
+    if sorted(named, key=str) != sorted(profiles) or any(
+            type(event.get('maxSegmentsPerIsolate')) is not int
+            or len(profiles) > event['maxSegmentsPerIsolate']
+            or event.get('startTime') != profiles[event['profile']].get('startTime')
+            or event.get('endTime') != profiles[event['profile']].get('endTime')
+            for event in events):
+        return False
+    return True
+
+
 def capture_inventory(directory, qualification=None):
     """Report observed captures only. Absence cannot establish process completeness."""
     records, errors, identities, matched = [], [], [], set()
@@ -101,6 +121,9 @@ def capture_inventory(directory, qualification=None):
                 elif partial and not (directory / f'{stem}.segment-events.jsonl').is_file():
                     partial = False
                     errors.append(f'segment events missing: {identity.name}')
+                elif partial and not segment_events_match(directory / f'{stem}.segment-events.jsonl', segments):
+                    partial = False
+                    errors.append(f'segment events do not match profiles: {identity.name}')
                 complete = bool(profiles) and 'exitObserved' in record
                 for path in profiles:
                     data = json.loads(path.read_text())

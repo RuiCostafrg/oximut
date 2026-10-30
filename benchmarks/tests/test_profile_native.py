@@ -568,7 +568,9 @@ class MinimumCaptureTests(unittest.TestCase):
             raw = json.dumps({'nodes': [{'id': 1}], 'startTime': 1, 'endTime': 2})
             for index in range(2000):
                 (profiles / f'Segment.6.0.1.{index}.cpuprofile').write_text(raw)
-            (profiles / 'Segment.6.0.1.segment-events.jsonl').write_text('{}\n')
+            (profiles / 'Segment.6.0.1.segment-events.jsonl').write_text(''.join(
+                json.dumps({'profile': f'Segment.6.0.1.{index}.cpuprofile', 'startTime': 1, 'endTime': 2,
+                            'maxSegmentsPerIsolate': 1}) + '\n' for index in range(2000)))
             inventory = diagnostic.capture_inventory(profiles, qualification)
             observed = next(r for r in inventory['observed'] if r['identity'] == 'node-6.json')
             self.assertEqual(observed['partial_segment_count'], 2000)
@@ -576,7 +578,9 @@ class MinimumCaptureTests(unittest.TestCase):
                              ['Segment.6.0.1.0.cpuprofile', 'Segment.6.0.1.1999.cpuprofile'])
             self.assertNotIn('partial_segments', observed)
             self.assertLess(len(json.dumps(observed)), 600)
-            self.assertEqual(inventory['errors'], [])
+            # The helper writes one segment per isolate; surplus segments are not its evidence.
+            self.assertFalse(observed['partial_segments_finalized'])
+            self.assertEqual(inventory['errors'], ['segment events do not match profiles: node-6.json'])
             self.assertEqual(len(list(profiles.glob('Segment.*.cpuprofile'))), 2000)
 
     def fixture(self, root):
@@ -653,7 +657,7 @@ class MinimumCaptureTests(unittest.TestCase):
 
     def test_partial_fork_stack_is_usable_but_never_makes_capture_complete(self):
         """Separate usable partial stacks from lifecycle completeness."""
-        for helper in ('completed', 'error-file', 'events-missing'):
+        for helper in ('completed', 'error-file', 'events-missing', 'events-mismatch'):
             with self.subTest(helper=helper), tempfile.TemporaryDirectory() as tmp:
                 profiles, qualification = self.fixture(Path(tmp))
                 identity = profiles / 'node-6.json'
@@ -662,8 +666,13 @@ class MinimumCaptureTests(unittest.TestCase):
                 identity.write_text(json.dumps(record))
                 (profiles / 'CPU.20261028.000000.6.0.001.cpuprofile').rename(
                     profiles / 'Segment.6.0.1.0.cpuprofile')
+                segment = json.loads((profiles / 'Segment.6.0.1.0.cpuprofile').read_text())
+                event = {'profile': 'Segment.6.0.1.0.cpuprofile', 'startTime': segment['startTime'],
+                         'endTime': segment['endTime'], 'maxSegmentsPerIsolate': 1}
+                if helper == 'events-mismatch':
+                    event['endTime'] = segment['endTime'] + 1  # Names a different profile generation.
                 if helper != 'events-missing':
-                    (profiles / 'Segment.6.0.1.segment-events.jsonl').write_text('{}\n')
+                    (profiles / 'Segment.6.0.1.segment-events.jsonl').write_text(json.dumps(event) + '\n')
                 if helper == 'error-file':
                     # The profile was finalized, then the event write or rename failed.
                     (profiles / 'Segment.6.0.1.segment-error.txt').write_text('Error: event write')
@@ -675,8 +684,9 @@ class MinimumCaptureTests(unittest.TestCase):
                     self.assertTrue(evidence)
                 else:
                     self.assertEqual(evidence, [])
-                    expected = ('segment helper failed' if helper == 'error-file'
-                                else 'segment events missing')
+                    expected = {'error-file': 'segment helper failed',
+                                'events-missing': 'segment events missing',
+                                'events-mismatch': 'segment events do not match profiles'}[helper]
                     self.assertIn(f'{expected}: node-6.json', inventory['errors'])
 
     def test_corrupt_orphan_profile_is_explicitly_retained_and_rejected(self):
