@@ -441,6 +441,30 @@ class NodeFixtureTests(unittest.TestCase):
                 else:
                     self.assertTrue(list(root.glob('Segment.*.cpuprofile')))
 
+    def test_event_record_failure_after_finalized_profile_is_not_evidence(self):
+        """A real helper failure after the profile rename is reported and quarantined."""
+        node = shutil.which('node')
+        if not node:
+            self.skipTest('Node unavailable')
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            child = root / 'exit.cjs'
+            child.write_text("const fs = require('node:fs'); const original = fs.renameSync;\n"
+                             "fs.renameSync = (a,b) => { if (String(b).endsWith('.segment-events.jsonl')) "
+                             "throw Error('event fixture'); return original(a,b); };\n"
+                             "setTimeout(() => {}, 160);\n")
+            env = {**os.environ, 'OXIMUT_PROFILE_DIR': str(root), 'OXIMUT_PROFILE_SEGMENTS': '1',
+                   'NODE_OPTIONS': f'--require="{diagnostic.SUPPORT / "node-identity.cjs"}"'}
+            result = subprocess.run([node, str(child)], env=env, capture_output=True, timeout=5)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn(b'Diagnostic segment capture failed', result.stderr)
+            self.assertTrue(list(root.glob('Segment.*.cpuprofile')))  # Finalized before the failure.
+            self.assertTrue(list(root.glob('*.segment-error.txt')))
+            inventory = diagnostic.capture_inventory(root)
+            observed = next(r for r in inventory['observed'] if r['identity'].startswith('node-'))
+            self.assertFalse(observed['partial_segments_finalized'])
+            self.assertTrue(any('segment helper failed' in error for error in inventory['errors']))
+
     def test_inherited_node_profiles_and_identity_include_fork_with_ipc(self):
         """Link normally exiting child profiles without breaking their IPC."""
         node = shutil.which('node')
@@ -522,6 +546,7 @@ class MinimumCaptureTests(unittest.TestCase):
             raw = json.dumps({'nodes': [{'id': 1}], 'startTime': 1, 'endTime': 2})
             for index in range(2000):
                 (profiles / f'Segment.6.0.1.{index}.cpuprofile').write_text(raw)
+            (profiles / 'Segment.6.0.1.segment-events.jsonl').write_text('{}\n')
             inventory = diagnostic.capture_inventory(profiles, qualification)
             observed = next(r for r in inventory['observed'] if r['identity'] == 'node-6.json')
             self.assertEqual(observed['partial_segment_count'], 2000)
@@ -606,18 +631,31 @@ class MinimumCaptureTests(unittest.TestCase):
 
     def test_partial_fork_stack_is_usable_but_never_makes_capture_complete(self):
         """Separate usable partial stacks from lifecycle completeness."""
-        with tempfile.TemporaryDirectory() as tmp:
-            profiles, qualification = self.fixture(Path(tmp))
-            identity = profiles / 'node-6.json'
-            record = json.loads(identity.read_text())
-            del record['exitObserved']
-            identity.write_text(json.dumps(record))
-            (profiles / 'CPU.20261028.000000.6.0.001.cpuprofile').rename(
-                profiles / 'Segment.6.0.1.0.cpuprofile')
-            inventory = diagnostic.capture_inventory(profiles, qualification)
-            self.assertTrue(inventory['minimum_role_evidence']['oximut_test_fork'])
-            self.assertIn('incomplete capture: node-6.json', inventory['errors'])
-            self.assertEqual(inventory['orphan_profiles'], [])
+        for helper in ('completed', 'error-file', 'events-missing'):
+            with self.subTest(helper=helper), tempfile.TemporaryDirectory() as tmp:
+                profiles, qualification = self.fixture(Path(tmp))
+                identity = profiles / 'node-6.json'
+                record = json.loads(identity.read_text())
+                del record['exitObserved']
+                identity.write_text(json.dumps(record))
+                (profiles / 'CPU.20261028.000000.6.0.001.cpuprofile').rename(
+                    profiles / 'Segment.6.0.1.0.cpuprofile')
+                if helper != 'events-missing':
+                    (profiles / 'Segment.6.0.1.segment-events.jsonl').write_text('{}\n')
+                if helper == 'error-file':
+                    # The profile was finalized, then the event write or rename failed.
+                    (profiles / 'Segment.6.0.1.segment-error.txt').write_text('Error: event write')
+                inventory = diagnostic.capture_inventory(profiles, qualification)
+                self.assertIn('incomplete capture: node-6.json', inventory['errors'])
+                self.assertEqual(inventory['orphan_profiles'], [])
+                evidence = inventory['minimum_role_evidence']['oximut_test_fork']
+                if helper == 'completed':
+                    self.assertTrue(evidence)
+                else:
+                    self.assertEqual(evidence, [])
+                    expected = ('segment helper failed' if helper == 'error-file'
+                                else 'segment events missing')
+                    self.assertIn(f'{expected}: node-6.json', inventory['errors'])
 
     def test_corrupt_orphan_profile_is_explicitly_retained_and_rejected(self):
         """Preserve orphan bytes while rejecting them as capture evidence."""

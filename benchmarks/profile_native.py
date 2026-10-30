@@ -92,6 +92,15 @@ def capture_inventory(directory, qualification=None):
                     partial &= node_profile_finalized(json.loads(path.read_text()))
                 if segments and not partial:
                     errors.append(f'invalid partial segment: {identity.name}')
+                # A finalized profile is not evidence unless its helper also completed:
+                # the event record is written last, and failures leave an error file.
+                stem = f'Segment.{record["pid"]}.{record["threadId"]}.{record.get("startTime")}'
+                if (directory / f'{stem}.segment-error.txt').is_file():
+                    partial = False
+                    errors.append(f'segment helper failed: {identity.name}')
+                elif partial and not (directory / f'{stem}.segment-events.jsonl').is_file():
+                    partial = False
+                    errors.append(f'segment events missing: {identity.name}')
                 complete = bool(profiles) and 'exitObserved' in record
                 for path in profiles:
                     data = json.loads(path.read_text())
