@@ -512,14 +512,16 @@ class SubcampaignCleanupTests(unittest.TestCase):
         started = time.monotonic()
         with (patch.object(campaign.subprocess, 'Popen', return_value=root),
               patch.object(campaign.workload.measurement, 'enable_subreaper'),
-              patch.object(campaign, 'reap_descendants') as reap,
+              patch.object(campaign, 'reap_descendants',
+                           side_effect=campaign.CleanupError('tools still alive')) as reap,
               open(os.devnull, 'w') as log):
-            with self.assertRaises(campaign.CleanupError):
+            with self.assertRaisesRegex(campaign.CleanupError, 'root did not exit'):
                 campaign.run_subcampaign(['stuck'], '.', log, 0.05, attempt, bound=0.1)
         self.assertLess(time.monotonic() - started, 5)
         root.kill.assert_called_once()
         self.assertTrue(attempt['descendant_cleanup_required'])
-        reap.assert_not_called()
+        # Detached tools are still signalled even though the root cannot be reaped.
+        reap.assert_called_once_with(0.1)
 
 
 if __name__ == '__main__':

@@ -85,6 +85,10 @@ def run_subcampaign(cmd, cwd, log, timeout, attempt=None, bound=30):
                 proc.wait(bound)
             except subprocess.TimeoutExpired:
                 attempt['descendant_cleanup_required'] = True
+                try:  # Still signal the detached tools; ECHILD cannot occur while the root lives.
+                    reap_descendants(bound)
+                except CleanupError:
+                    pass
                 raise CleanupError(f'subcampaign root did not exit within {bound}s of SIGKILL') from None
         try:
             attempt['descendant_cleanup_required'] = reap_descendants(bound)
