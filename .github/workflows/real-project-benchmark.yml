@@ -15,6 +15,15 @@ on:
       - 'benchmarks/tests/**'
       - 'docs/real-project-benchmark.md'
       - '.github/workflows/real-project-benchmark.yml'
+      # Runner changes are what this campaign measures.
+      - 'crates/**'
+      - 'packages/vitest-adapter/**'
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+      - 'rust-toolchain.toml'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.node-version'
 
 permissions:
   contents: read

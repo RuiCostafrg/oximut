@@ -21,13 +21,13 @@ class EvidenceTests(unittest.TestCase):
             digest = hashlib.sha256(archive.read_bytes()).hexdigest()
             data = dict(gate='R3', status='passed', archiveSha256=digest,
                         source={'commit': 'a' * 40}, version='1.0.0-rc.1', buildCount=1,
-                        extractedSourceRemoved=True, binarySha256='b' * 64,
+                        isolation='bubblewrap-pid-mount-v1', extractedSourceRemoved=True, binarySha256='b' * 64,
                         tests=[{'phase': 'installed', 'passed': True}, {'phase': 'relocated', 'passed': True}])
             evidence.write_text(json.dumps(data))
             self.assertEqual(CHECK.check(archive, evidence, 'a' * 40), digest)
             for key, value in [('status', 'failed'), ('archiveSha256', '0' * 64),
                                ('source', {'commit': 'c' * 40}), ('version', '1.0.0'),
-                               ('buildCount', 2), ('extractedSourceRemoved', False),
+                               ('isolation', None), ('isolation', 'same-uid'), ('buildCount', 2), ('extractedSourceRemoved', False),
                                ('binarySha256', ''), ('tests', []),
                                ('tests', [{'phase': 'installed', 'passed': True}] * 2),
                                ('tests', [{'phase': 'installed', 'passed': True}, {'phase': 'relocated', 'passed': False}])]:
