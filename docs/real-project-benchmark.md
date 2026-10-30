@@ -33,7 +33,8 @@ Sources and binary must remain unchanged during each timed command. These hashes
 are provenance of observed files, not proof of how an arbitrary binary was built.
 
 ```sh
-export PATH=/root/.local/share/oximut/toolchains/node-v26.3.1-linux-arm64/bin:$PATH
+NODE_BIN=/absolute/path/to/node-v26.3.1/bin
+export PATH="$NODE_BIN:$PATH"
 npm ci
 # Build separately, outside measurement; serialize builds and benchmarks.
 cargo build --release -p oximut-cli
@@ -190,16 +191,22 @@ requires complete after-candidate phase evidence, including every warmup, via
 `--require-build-integrity`. The before candidate may omit those fields. The original report and complete resources remain in raw
 subcampaign evidence, including failed campaigns.
 
-For the parent's local comparison after both matching binaries are ready:
+For a local comparison after both matching binaries are ready, set these
+checkout paths to the exact revisions being compared. `NODE_BIN` must contain
+the pinned Linux Node executable for your host architecture:
 
 ```sh
-export PATH=/root/.local/share/oximut/toolchains/node-v26.3.1-linux-arm64/bin:$PATH
+NODE_BIN=/absolute/path/to/node-v26.3.1/bin
+export PATH="$NODE_BIN:$PATH"
+BEFORE_CHECKOUT=/absolute/path/to/before-checkout
+AFTER_CHECKOUT=/absolute/path/to/after-checkout
 python3 benchmarks/compare_candidates.py \
-  --before-binary /root/.t3/worktrees/oximut/t3-52f2b967/target/release/oximut \
-  --before-adapter-dir /root/.t3/worktrees/oximut/t3-52f2b967/packages/vitest-adapter \
-  --after-binary /root/oximut/target/release/oximut \
-  --after-adapter-dir /root/oximut/packages/vitest-adapter \
-  --after-commit "$(git -C /root/oximut rev-parse HEAD)" \
+  --before-binary "$BEFORE_CHECKOUT/target/release/oximut" \
+  --before-adapter-dir "$BEFORE_CHECKOUT/packages/vitest-adapter" \
+  --before-commit "$(git -C "$BEFORE_CHECKOUT" rev-parse HEAD)" \
+  --after-binary "$AFTER_CHECKOUT/target/release/oximut" \
+  --after-adapter-dir "$AFTER_CHECKOUT/packages/vitest-adapter" \
+  --after-commit "$(git -C "$AFTER_CHECKOUT" rev-parse HEAD)" \
   --output .oximut/colord-before-after
 ```
 
@@ -209,8 +216,9 @@ requires the full minimum campaign. The command above is documentation only; thi
 implementation follow-up did not execute benchmarks or builds.
 
 The `Real project before-after benchmark` workflow runs natively on Ubuntu 24.04
-x86_64 with a 90-minute job limit, on relevant pull-request paths or manual
-dispatch. It creates the baseline worktree in RUNNER_TEMP at the full pinned SHA,
+x86_64 with a 90-minute job limit, on manual dispatch or pull requests that
+change the harness, the runner (`crates/`, `packages/vitest-adapter/`) or its
+Rust/Node build inputs. It creates the baseline worktree in RUNNER_TEMP at the full pinned SHA,
 uses separate Cargo target directories for the two candidates, and copies each
 binary from its corresponding build. Registry downloads may be shared; compiled
 workspace artifacts are isolated. Matching adapters remain in
@@ -284,3 +292,8 @@ transforms, test execution and process accounting; phase wall times alone cannot
 identify the CPU owner. Profiler measurements must stay separate from scored
 comparisons. The benchmark parent's own CPU is excluded from the product-tree
 CPU measurement, though its activity can affect elapsed time.
+
+The before/after wrapper bounds each subcampaign by the number of tool commands
+times `--timeout`, plus 300 seconds for preparation and validation. A timeout
+retains the attempt error and raw subcampaign directory, stops further
+measurements, and writes a failed global summary with no comparative ratios.

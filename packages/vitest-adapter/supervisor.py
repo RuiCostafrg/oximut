@@ -19,21 +19,108 @@ def process_identity(pid):
     return int(fields[1]), fields[19], fields[0]
 
 
-def snapshot():
+class CleanupDeadline(RuntimeError):
+    pass
+
+
+def check_deadline(deadline):
+    # A callable deadline lets a scan observe a budget started mid-enumeration.
+    deadline = deadline() if callable(deadline) else deadline
+    if deadline is not None and time.monotonic() >= deadline:
+        raise CleanupDeadline('Owned descendants did not exit within cleanup bound')
+
+
+def _syscall(number, *args):
+    libc = ctypes.CDLL(None, use_errno=True)
+    result = libc.syscall(ctypes.c_long(number), *args)
+    if result < 0:
+        error = ctypes.get_errno()
+        raise OSError(error, os.strerror(error))
+    return result
+
+
+def pidfd_open(pid):
+    """Pin one process generation; some Python builds lack os.pidfd_open."""
+    if hasattr(os, 'pidfd_open'):
+        return os.pidfd_open(pid)
+    return _syscall(434, ctypes.c_long(pid), ctypes.c_long(0))  # SYS_pidfd_open
+
+
+def pidfd_signal(fd, signum):
+    if hasattr(signal, 'pidfd_send_signal'):
+        signal.pidfd_send_signal(fd, signum)
+    else:
+        _syscall(424, ctypes.c_long(fd), ctypes.c_long(signum), None,
+                 ctypes.c_long(0))  # SYS_pidfd_send_signal
+
+
+def pidfd_kill(fd):
+    pidfd_signal(fd, signal.SIGKILL)
+
+
+def probe_pidfd():
+    """Both syscalls can be denied independently (e.g. by seccomp); test each."""
+    fd = pidfd_open(os.getpid())
+    try:
+        pidfd_signal(fd, 0)  # Null signal: checks permission, delivers nothing.
+    finally:
+        os.close(fd)
+
+
+def signal_verified(pid, stamp, deadline):
+    """Signal only the generation pinned before its identity was re-read.
+
+    A numeric kill after an identity check can hit a reused PID. The pidfd is
+    opened first, so a matching re-read proves it pins that generation; if the
+    generation exits afterwards, the signal fails with ESRCH and cannot reach a
+    replacement. Missing pidfd support raises OSError: never fall back to kill.
+    """
+    check_deadline(deadline)
+    fd = pidfd_open(pid)
+    try:
+        current = process_identity(pid)[1]
+        check_deadline(deadline)
+        if current != stamp:
+            return False
+        try:
+            pidfd_kill(fd)
+        except ProcessLookupError:
+            return False
+        return True
+    finally:
+        os.close(fd)
+
+
+def snapshot(deadline=None):
+    check_deadline(deadline)
     result = {}
     for item in os.listdir('/proc'):
+        check_deadline(deadline)
         if not item.isdigit():
             continue
         try:
             result[int(item)] = process_identity(int(item))
         except (FileNotFoundError, ProcessLookupError):
             pass
+        check_deadline(deadline)
+    check_deadline(deadline)
     return result
 
 
-def descendants(table, parent):
-    children = [pid for pid, value in table.items() if value[0] == parent]
-    return [descendant for child in children for descendant in [*descendants(table, child), child]]
+def descendants(table, parent, deadline=None):
+    check_deadline(deadline)
+    children = []
+    for pid, value in table.items():
+        check_deadline(deadline)
+        if value[0] == parent:
+            children.append(pid)
+    result = []
+    for child in children:
+        check_deadline(deadline)
+        result.extend(descendants(table, child, deadline))
+        result.append(child)
+    check_deadline(deadline)
+    return result
 
 
 def cleanup_known(owned, deadline):
@@ -46,8 +133,9 @@ def cleanup_known(owned, deadline):
             if time.monotonic() >= deadline:
                 return
             try:
-                if process_identity(pid)[1] == stamp:
-                    os.kill(pid, signal.SIGKILL)
+                signal_verified(pid, stamp, deadline)
+            except CleanupDeadline:
+                return
             except (OSError, ValueError, IndexError):
                 # Gone, reused or independently unverifiable: do not signal it.
                 pass
@@ -73,39 +161,66 @@ def main():
         raise OSError(ctypes.get_errno(), 'PR_SET_CHILD_SUBREAPER failed')
 
     node, worker, report_path = sys.argv[1:]
+    # Fail before spawning anything if identity-bound signalling is unavailable.
+    probe_pidfd()
     ipc_fd = int(os.environ['NODE_CHANNEL_FD'])
     stop = False
+    cleanup_started = None
 
     def request_stop(_signum, _frame):
-        nonlocal stop
+        nonlocal stop, cleanup_started
+        if cleanup_started is None:
+            cleanup_started = time.monotonic()
         stop = True
+
+    def active_deadline():
+        return cleanup_started + 2 if cleanup_started is not None else None
 
     signal.signal(signal.SIGTERM, request_stop)
     signal.signal(signal.SIGINT, request_stop)
     controller = subprocess.Popen([node, worker], pass_fds=(ipc_fd,))
     owned = {}
-    cleanup_started = None
+    unexpected_identity_failure = False
     try:
         # Pin the direct child before broad discovery, including startup failures.
         try:
             owned[controller.pid] = process_identity(controller.pid)[1]
         except (FileNotFoundError, ProcessLookupError):
             pass
+        except Exception:
+            unexpected_identity_failure = True
+            raise
         os.close(ipc_fd)
         with open(report_path + '.ready', 'w', encoding='utf8') as stream:
             stream.write('ready')
         reaped = []
         controller_status = None
+
+        def record(pid, status):
+            nonlocal controller_status, stop, cleanup_started
+            reaped.append(pid)
+            if pid == controller.pid:
+                controller_status = os.waitstatus_to_exitcode(status)
+                stop = True
+                if cleanup_started is None:
+                    cleanup_started = time.monotonic()
+
         next_snapshot = 0.0
         while True:
+            if stop and cleanup_started is None:
+                cleanup_started = time.monotonic()
+            deadline = cleanup_started + 2 if cleanup_started is not None else None
+            check_deadline(deadline)
             # Historical identity discovery is sampled; reaping remains responsive.
             if stop or time.monotonic() >= next_snapshot:
-                table = snapshot()
-                for pid in descendants(table, os.getpid()):
+                # A stop signal during this scan starts a budget it must observe.
+                table = snapshot(active_deadline)
+                for pid in descendants(table, os.getpid(), active_deadline):
                     owned[pid] = table[pid][1]
                 next_snapshot = time.monotonic() + 0.05
             no_children = False
             while True:
+                check_deadline(active_deadline)
                 try:
                     pid, status = os.waitpid(-1, os.WNOHANG)
                 except ChildProcessError:
@@ -113,37 +228,70 @@ def main():
                     pid = 0
                 if not pid:
                     break
-                reaped.append(pid)
-                if pid == controller.pid:
-                    controller_status = os.waitstatus_to_exitcode(status)
-                    stop = True
+                record(pid, status)
             if stop:
-                cleanup_started = cleanup_started or time.monotonic()
+                # A signal can arrive after this iteration cached its deadline.
+                if cleanup_started is None:
+                    cleanup_started = time.monotonic()
+                deadline = cleanup_started + 2
+                check_deadline(deadline)
                 # Never signal from a cached active snapshot: adoption may have changed.
-                table = snapshot()
-                for pid in descendants(table, os.getpid()):
+                table = snapshot(deadline)
+                check_deadline(deadline)
+                for pid in descendants(table, os.getpid(), deadline):
                     owned[pid] = table[pid][1]
-                # All adopted children are ours. Identity checks use this fresh snapshot.
-                for pid in descendants(table, os.getpid()):
-                    if table[pid][1] == owned.get(pid):
+                # Even a fresh discovery snapshot cannot rule out PID reuse.
+                for pid in descendants(table, os.getpid(), deadline):
+                    try:
+                        signal_verified(pid, table[pid][1], deadline)
+                    except (OSError, ValueError, IndexError):
+                        check_deadline(deadline)
+                if no_children:
+                    final = snapshot(deadline)
+                    if not descendants(final, os.getpid(), deadline):
+                        check_deadline(deadline)
+                        # ECHILD predates the scan: a child adopted during it is
+                        # missed by the scan but visible to a fresh waitpid.
                         try:
-                            os.kill(pid, signal.SIGKILL)
-                        except ProcessLookupError:
-                            pass
-                if no_children and not descendants(snapshot(), os.getpid()):
-                    break
-                if time.monotonic() - cleanup_started > 2:
-                    raise RuntimeError('Owned descendants did not exit within cleanup bound')
+                            pid, status = os.waitpid(-1, os.WNOHANG)
+                        except ChildProcessError:
+                            break
+                        if pid:
+                            record(pid, status)
+                check_deadline(deadline)
             time.sleep(0.01)
 
-        final = snapshot()
-    except Exception:
+    except Exception as error:
         # Discovery failure must not strand independently verifiable descendants.
         # Preserve the original error and never publish successful cleanup evidence.
+        deadline = (cleanup_started if cleanup_started is not None else time.monotonic()) + 2
+        if unexpected_identity_failure:
+            # Popen owns this unreaped direct child, independently of /proc.
+            # Do not use this exception path for cached descendant identities.
+            try:
+                os.close(ipc_fd)
+            except OSError:
+                pass
+            if time.monotonic() < deadline:
+                try:
+                    controller.kill()
+                except Exception:
+                    pass
+                remaining = deadline - time.monotonic()
+                if remaining > 0:
+                    try:
+                        controller.wait(timeout=remaining)
+                    except Exception:
+                        pass
         try:
-            cleanup_known(owned, (cleanup_started if cleanup_started is not None
-                                  else time.monotonic()) + 2)
+            cleanup_known(owned, deadline)
         except Exception:
+            pass
+        # The Node parent cannot see this exception; leave a bounded diagnostic.
+        try:
+            with open(report_path + '.error', 'w', encoding='utf8') as stream:
+                json.dump({'error': f'{type(error).__name__}: {error}'[:2048]}, stream)
+        except OSError:
             pass
         raise
     states = [{'pid': pid, 'startTime': stamp,

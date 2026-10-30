@@ -41,6 +41,13 @@ def evaluate(rows):
                 errors.append(f'round {index}: missing primary pair')
                 continue
             comparison = m6.compare(a, b)
+            fresh = indexed.get((index, 'clean-fresh'))
+            if (not fresh or not fresh['success']
+                    or not m6.compare(fresh, a)['ratio_eligible']
+                    or not m6.compare(fresh, b)['ratio_eligible']
+                    or fresh.get('matched_manifest_sha256') != a.get('matched_manifest_sha256')
+                    or fresh['warmup'] != a['warmup']):
+                errors.append(f'round {index}: missing, failed or unequal fresh correctness reference')
             ordinary = indexed.get((index, 'ordinary'))
             if (not ordinary or not ordinary['success']
                     or ordinary.get('matched_test_identity_sha256') != a.get('matched_test_identity_sha256')
@@ -112,6 +119,13 @@ def main(argv=None):
     result['correctness_gate'] = summary['correctness_gate']
     if not summary['correctness_gate']['passed']:
         result['targets_met'] = False
+        for fixture in result['fixtures']:
+            fixture['status'] = 'invalid workload'
+            fixture['errors'].append('global correctness gate failed; metrics are diagnostic only')
+            for metric in fixture['metrics'].values():
+                metric['status'] = 'invalid workload'
+                if 'median_target_met' in metric:
+                    metric['median_target_met'] = False
     m6.write_json(args.campaign / 'performance-targets.json', result)
     print(json.dumps(result, indent=2))
     invalid = not summary['correctness_gate']['passed'] or any(r['errors'] for r in result['fixtures'])

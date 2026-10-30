@@ -583,6 +583,10 @@ def main(argv=None):
     parser.add_argument('--sample-interval', type=float, default=.02)
     parser.add_argument('--output-limit', type=int, default=1_048_576)
     args = parser.parse_args(argv)
+    if (any(fixture.startswith('matched-') for fixture in args.fixtures)
+            and 'incremental' in args.scenarios and args.changes):
+        parser.error('matched fixtures use a fixed manifest; changed-input incremental runs require '
+                     '--scenarios clean or --changes with no values')
     if not measurement.LINUX_KERNEL:
         parser.error('Linux /proc and wait4 required')
     if (args.repetitions < 1 or args.warmups < 0 or args.workers < 1 or args.timeout <= 0
