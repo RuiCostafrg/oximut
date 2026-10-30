@@ -2,6 +2,8 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const { threadId } = require('node:worker_threads');
+// Inherited NODE_OPTIONS without a capture directory must leave the workload alone.
+if (!process.env.OXIMUT_PROFILE_DIR) return;
 const file = path.join(process.env.OXIMUT_PROFILE_DIR,
   `node-${process.pid}-${threadId}.json`);
 let startTime = null;

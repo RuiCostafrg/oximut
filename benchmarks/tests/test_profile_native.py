@@ -369,7 +369,9 @@ class NodeFixtureTests(unittest.TestCase):
             parent = root / 'parent.cjs'
             parent.write_text("const {fork} = require('node:child_process'); const {Worker} = require('node:worker_threads');\n"
                               "const w = new Worker('setInterval(() => {}, 10)', {eval:true});\n"
-                              "const c = fork(process.argv[2]); c.on('message', m => { if(m !== 'ok') process.exitCode=1; });\n"
+                              "let ok = false; const c = fork(process.argv[2]);\n"
+                              "c.on('message', m => { ok = m === 'ok'; });\n"
+                              "c.on('exit', () => { if (!ok) process.exitCode = 1; });\n"
                               "setTimeout(() => w.terminate(), 300);\n")
             env = {**os.environ, 'OXIMUT_PROFILE_DIR': str(root), 'OXIMUT_PROFILE_SEGMENTS': '1',
                    'NODE_OPTIONS': f'--require="{diagnostic.SUPPORT / "node-identity.cjs"}"'}
@@ -477,8 +479,9 @@ class NodeFixtureTests(unittest.TestCase):
             parent = root / 'parent.cjs'
             parent.write_text("const {fork} = require('node:child_process');\n"
                               "const c = fork(process.argv[2]);\n"
-                              "c.on('message', m => { if (!m.ok) process.exitCode = 1; });\n"
-                              "c.on('exit', code => { process.exitCode = code; });\n")
+                              "let ok = false;\n"
+                              "c.on('message', m => { ok = m.ok === true; });\n"
+                              "c.on('exit', code => { process.exitCode = code || (ok ? 0 : 1); });\n")
             env = {**os.environ, 'OXIMUT_PROFILE_DIR': str(root),
                    'NODE_OPTIONS': f'--cpu-prof --cpu-prof-dir="{root}" --require="{diagnostic.SUPPORT / "node-identity.cjs"}"'}
             result = subprocess.run([node, str(parent), str(child)], env=env, capture_output=True)
@@ -491,6 +494,25 @@ class NodeFixtureTests(unittest.TestCase):
             self.assertEqual({r['argv'][1] for r in identities}, {str(parent), str(child)})
             self.assertTrue(all(r['startTime'].isdigit() for r in identities))
 
+
+    def test_preload_is_noop_without_profile_dir(self):
+        """Inherited NODE_OPTIONS must not break a workload lacking OXIMUT_PROFILE_DIR."""
+        node = shutil.which('node')
+        if not node:
+            self.skipTest('Node unavailable')
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            script = root / 'work.cjs'
+            script.write_text("process.stdout.write('ran'); process.exitCode = 23;\n")
+            env = {k: v for k, v in os.environ.items() if k != 'OXIMUT_PROFILE_DIR'}
+            env['NODE_OPTIONS'] = f'--require="{diagnostic.SUPPORT / "node-identity.cjs"}"'
+            for segments in ('0', '1'):
+                result = subprocess.run([node, str(script)], env={**env, 'OXIMUT_PROFILE_SEGMENTS': segments},
+                                        cwd=root, capture_output=True, timeout=5)
+                self.assertEqual(result.returncode, 23, result.stderr)
+                self.assertEqual(result.stdout, b'ran')
+                self.assertEqual(result.stderr, b'')
+            self.assertEqual(sorted(p.name for p in root.iterdir()), ['work.cjs'])
 
     def test_exit_identity_write_failure_preserves_original_node_exit(self):
         """Keep the initial identity when exit-record writes fail."""

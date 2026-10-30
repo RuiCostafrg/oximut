@@ -14,7 +14,7 @@ concurrency:
 
 jobs:
   profile:
-    if: github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'native-profile')
+    if: github.event_name == 'workflow_dispatch' || (contains(github.event.pull_request.labels.*.name, 'native-profile') && (github.event.action != 'labeled' || github.event.label.name == 'native-profile'))
     runs-on: ubuntu-24.04
     timeout-minutes: 45
     steps:

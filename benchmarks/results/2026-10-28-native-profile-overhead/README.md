@@ -30,5 +30,6 @@ CPU bottleneck.
 The next experiment requests only one startup checkpoint per isolate, with no
 restart and immediate session disconnect after stopping. It still includes
 profiler overhead, may miss short-lived or busy workers, and is biased toward
-startup. Missing tail/lifecycle data and all original qualification gates remain
-failures; no deadline or assertion is extended to make the capture pass.
+startup. Workload qualification gates are unchanged and still apply; missing
+tail/lifecycle data still fails capture validation. No deadline or assertion is
+extended to make the capture pass.

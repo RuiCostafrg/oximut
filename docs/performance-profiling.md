@@ -72,8 +72,9 @@ controller recycling and verified cleanup. No waiting grace period is added.
 ## Opt-in native CPU capture
 
 `Native diagnostic CPU profiles` is a separate Ubuntu 24.04 workflow. After this
-change is in a PR, add the **`native-profile`** label to that PR (and keep it for
-subsequent pushes), or dispatch the workflow on the desired branch. PR runs record
+change is in a PR, add the **`native-profile`** label to that PR (every push while it is
+present reruns the job, so remove it after the desired capture and before
+evidence-only archival pushes), or dispatch the workflow on the desired branch. PR runs record
 the checked-out merge commit; the artifact source archive and hashes identify
 what actually ran. It builds one release candidate into a newly created, private
 Cargo target directory before capturing anything. Node 26.3.1, Python 3.13, Rust
