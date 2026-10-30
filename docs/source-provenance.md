@@ -8,11 +8,15 @@ policy. This gate does not configure repository protection rules.
 
 Dispatch **Source candidate provenance (not release approval)** on the default
 branch with `revision` set to the full lowercase 40-character candidate commit
-SHA. Other workflow refs are skipped before the signing job runs. The job checks
-out `github.workflow_sha`, requires it to equal the dispatch SHA, and requires the
-candidate to be an ancestor of that trusted workflow commit. Candidate code is
-read from Git objects as data; scripts from the candidate revision are never
-executed. This permits an older reviewed candidate with a newer trusted builder;
+SHA. The default-branch condition selects the intended run; it is not a trust
+boundary because a dispatch can use a modified workflow from another ref.
+Consumers must pin `--source-ref refs/heads/main` and the independently reviewed
+`--signer-digest`. Repository branch rulesets or push restrictions must limit who
+can create or update refs; this gate does not configure or verify those rules.
+The job checks out `github.workflow_sha`, requires it to equal the dispatch SHA,
+and requires the candidate to be an ancestor of that workflow commit. Archive
+construction reads candidate Git objects as data. Candidate installation and
+execution occur only inside the validation sandbox described below. This permits an older reviewed candidate with a newer trusted builder;
 both revisions and both script digests are recorded. Only `1.0.0-rc.1` is accepted,
 and the builder checks all committed package versions against it.
 
@@ -66,14 +70,29 @@ GitHub attestation against the expected repository and signer workflow identity,
 then compare the attested evidence's candidate SHA and workflow SHA with the
 reviewed commits. The signed workflow identity is the trusted builder origin;
 when candidate and workflow commits differ, the evidence sidecar binds the
-candidate. For example, with the GitHub CLI:
+candidate. Pin both the source ref and signer digest: the workflow path alone
+does not distinguish an unreviewed workflow dispatched from another branch.
+Set `REVIEWED_WORKFLOW_SHA` to the full reviewed workflow commit, obtained
+independently of the downloaded candidate. For example, with the GitHub CLI:
 
 ```sh
+: "${REVIEWED_WORKFLOW_SHA:?Set the full reviewed workflow commit SHA}"
 gh attestation verify oximut-1.0.0-rc.1-source.tar.gz \
-  --repo OWNER/REPO --signer-workflow OWNER/REPO/.github/workflows/source-candidate.yml
+  --repo RuiCostafrg/oximut --signer-workflow RuiCostafrg/oximut/.github/workflows/source-candidate.yml \
+  --source-ref refs/heads/main --signer-digest "$REVIEWED_WORKFLOW_SHA"
 gh attestation verify oximut-1.0.0-rc.1-source.tar.gz.evidence.json \
-  --repo OWNER/REPO --signer-workflow OWNER/REPO/.github/workflows/source-candidate.yml
+  --repo RuiCostafrg/oximut --signer-workflow RuiCostafrg/oximut/.github/workflows/source-candidate.yml \
+  --source-ref refs/heads/main --signer-digest "$REVIEWED_WORKFLOW_SHA"
+gh attestation verify r3-validation.evidence.json \
+  --repo RuiCostafrg/oximut --signer-workflow RuiCostafrg/oximut/.github/workflows/source-candidate.yml \
+  --source-ref refs/heads/main --signer-digest "$REVIEWED_WORKFLOW_SHA"
+gh attestation verify oximut-1.0.0-rc.1-source.tar.gz.spdx.json \
+  --repo RuiCostafrg/oximut --signer-workflow RuiCostafrg/oximut/.github/workflows/source-candidate.yml \
+  --source-ref refs/heads/main --signer-digest "$REVIEWED_WORKFLOW_SHA"
 ```
+
+Require every verification command above to succeed before relying on the archive,
+R3 installation/relocation evidence, or dependency inventory.
 
 ## Exact artifact validation before attestation
 
@@ -93,6 +112,60 @@ candidate build code executes in that job. The earlier source-format sidecar's
 `r3-validation.evidence.json` supplies subsequent evidence for those exact bytes.
 A failed validation blocks signing. No release publication path exists here;
 success still requires explicit release review before any attachment/promotion.
+
+### Candidate execution boundary
+
+On native Ubuntu 24.04, `candidate-sandbox.py` requires bubblewrap user, mount,
+PID, IPC, network and UTS namespaces. CI provisions Ubuntu's archive bubblewrap (0.9.0 on Noble) using
+`scripts/setup-candidate-sandbox.sh`. Ubuntu 24.04's default AppArmor userns
+policy denies namespace capabilities, which can fail loopback setup with
+`Failed RTM_NEWADDR: Operation not permitted`. Following the
+[Ubuntu release notes](https://documentation.ubuntu.com/release-notes/24.04/#unprivileged-user-namespace-restrictions),
+the setup loads an executable-scoped `/usr/bin/bwrap` profile with `userns`
+permission and `flags=(unconfined)`. This profile permits bubblewrap's own
+sandbox construction; it is not an additional candidate confinement policy.
+The global AppArmor/userns restrictions remain enabled. Only provisioning uses
+sudo; the harness rejects host UID 0 and never launches candidates through sudo.
+Explicit `--unshare-user --disable-userns` requires a user namespace and prevents
+candidates creating nested user namespaces to regain namespace capabilities.
+Missing profile support or namespace permissions fail the required native tests.
+
+Installation can write only extracted source and
+its new prefix. Each installed/relocated invocation gets a writable disposable
+project and a read-only prefix; trusted harness, schema, validator dependencies,
+archived reports and evidence are not mounted. Writable private tmpfs scratch
+can contain shadow files at those pathnames; it does not expose or modify the
+host originals. Host-side regression assertions check original bytes after
+namespace teardown. The validator uses the trusted
+checkout's locked npm dependencies, never candidate-installed JavaScript.
+Only system tools, CA certificates and standalone Node/Rust toolchains are
+mounted read-only. The environment is cleared; host homes, checkout credentials,
+runner tokens, `/run`, and Docker sockets are absent. Capabilities are dropped
+and bubblewrap sets no-new-privileges, including for setuid tools.
+
+Installation retains network access for locked Cargo/npm downloads. Runtime
+smokes use a separate network namespace. This is a filesystem/process isolation
+boundary, not an installation egress firewall or protection against kernel
+vulnerabilities. Run only on the dedicated, disposable GitHub-hosted validation
+runner, never a credential-bearing development machine or shared host service.
+
+Bubblewrap's PID namespace init exits before successful command return, killing
+and reaping remaining descendants, including detached sessions. Timeouts kill
+the process group and fail validation; output is never accepted on timeout.
+Only after successful teardown does trusted code inspect prefix links/types,
+read bounded regular report files without following links, copy reports, validate
+schemas, or hash the exact binary. Prefix files remain read-only for both smoke
+phases. File size, descriptor and process-count limits supplement command and
+job timeouts; they are not a total disk or memory quota. Failed evidence remains
+failed, and signing rejects evidence without the new isolation identity.
+
+CI requires real hostile installer/runtime tests, read-only asset enforcement,
+detached-process cleanup, failure/timeout checks, and the ordinary installed and
+relocated smoke using the built CLI. A missing/unusable sandbox fails CI rather
+than skipping. PRoot cannot enforce these mounts and is explicitly rejected.
+Local work in PRoot validates format/lifecycle unit tests only; **native Ubuntu
+CI must pass before this boundary is considered validated**. No attestation or
+release dispatch is needed for the PR regression job.
 
 ## Action pin evidence
 

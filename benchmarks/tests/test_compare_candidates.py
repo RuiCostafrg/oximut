@@ -1,6 +1,7 @@
 """Candidate campaigns reject partial, unstable or cross-candidate unequal evidence."""
 import copy
 import json
+import os
 from pathlib import Path
 import sys
 from types import SimpleNamespace
@@ -264,6 +265,263 @@ class CampaignTests(unittest.TestCase):
                 invalid = json.loads((invalid_output / 'summary.json').read_text())
                 self.assertFalse(invalid['correctness_gate']['passed'])
                 self.assertEqual(invalid['comparisons'], {})
+
+
+class SubcampaignFailureTests(unittest.TestCase):
+    def test_timeout_retains_attempt_and_summary_and_stops_campaign(self):
+        import subprocess
+        from tempfile import TemporaryDirectory
+        from unittest.mock import patch
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            binary = root / 'binary'
+            binary.write_bytes(b'executable')
+            adapter = root / 'adapter'
+            adapter.mkdir()
+            (adapter / 'm2-runner.mjs').write_text('// unused')
+            output = root / 'output'
+            provenance = {'binary_sha256': 'binary', 'adapter_source_sha256': {}}
+            with (patch.object(campaign.workload.measurement, 'metadata', return_value={'versions': {}}),
+                  patch.object(campaign.workload, 'execution_inputs', return_value=provenance),
+                  patch.object(campaign, 'run_subcampaign',
+                               side_effect=subprocess.TimeoutExpired(['subcampaign'], 330)) as command):
+                result = campaign.main(['--before-binary', str(binary), '--after-binary', str(binary),
+                                        '--before-adapter-dir', str(adapter), '--after-adapter-dir', str(adapter),
+                                        '--after-commit', 'a' * 40, '--timeout', '10', '--output', str(output)])
+            self.assertEqual(result, 1)
+            command.assert_called_once()
+            self.assertEqual(command.call_args.args[3], 330)
+            attempts = json.loads((output / 'attempts.json').read_text())
+            self.assertTrue(attempts[0]['timed_out'])
+            self.assertIn('timed out', attempts[0]['error'])
+            self.assertTrue((output / '00-before.log').exists())
+            summary = json.loads((output / 'summary.json').read_text())
+            self.assertFalse(summary['correctness_gate']['passed'])
+            self.assertFalse(summary['targets_met'])
+            self.assertEqual(summary['comparisons'], {})
+
+
+    def test_descendants_outliving_a_zero_exit_fail_the_campaign(self):
+        from tempfile import TemporaryDirectory
+        from unittest.mock import patch
+
+        def campaign_with(leftovers):
+            def subcampaign(cmd, _cwd, _log, _timeout, attempt):
+                # A complete, valid subcampaign apart from the leftover descendants.
+                directory = Path(cmd[cmd.index('--output') + 1])
+                directory.mkdir(parents=True)
+                (directory / 'metadata.json').write_text(json.dumps({'versions': {}}))
+                (directory / 'measurements.jsonl').write_text('')
+                attempt['descendant_cleanup_required'] = leftovers
+                return 0
+
+            with TemporaryDirectory() as directory:
+                root = Path(directory)
+                binary = root / 'binary'
+                binary.write_bytes(b'executable')
+                adapter = root / 'adapter'
+                adapter.mkdir()
+                (adapter / 'm2-runner.mjs').write_text('// unused')
+                output = root / 'output'
+                provenance = {'binary_sha256': 'binary', 'adapter_source_sha256': {}}
+                with (patch.object(campaign.workload.measurement, 'metadata', return_value={'versions': {}}),
+                      patch.object(campaign.workload, 'execution_inputs', return_value=provenance),
+                      patch.object(campaign, 'run_subcampaign', side_effect=subcampaign)):
+                    campaign.main(['--before-binary', str(binary), '--after-binary', str(binary),
+                                   '--before-adapter-dir', str(adapter), '--after-adapter-dir', str(adapter),
+                                   '--after-commit', 'a' * 40, '--output', str(output)])
+                return (output / 'summary.json').read_text()
+
+        self.assertNotIn('descendants outlived', campaign_with(False))
+        summary = campaign_with(True)
+        self.assertIn('round 0 before: descendants outlived the subcampaign root', summary)
+        self.assertFalse(json.loads(summary)['correctness_gate']['passed'])
+
+    def malformed_metadata_campaign(self, metadata):
+        from tempfile import TemporaryDirectory
+        from unittest.mock import patch
+
+        def subcampaign(cmd, _cwd, _log, _timeout, attempt):
+            directory = Path(cmd[cmd.index('--output') + 1])
+            directory.mkdir(parents=True)
+            (directory / 'metadata.json').write_text(json.dumps(metadata))
+            (directory / 'measurements.jsonl').write_text('')
+            attempt['descendant_cleanup_required'] = False
+            return 0
+
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            binary = root / 'binary'
+            binary.write_bytes(b'executable')
+            adapter = root / 'adapter'
+            adapter.mkdir()
+            (adapter / 'm2-runner.mjs').write_text('// unused')
+            output = root / 'output'
+            provenance = {'binary_sha256': 'binary', 'adapter_source_sha256': {}}
+            with (patch.object(campaign.workload.measurement, 'metadata', return_value={'versions': {}}),
+                  patch.object(campaign.workload, 'execution_inputs', return_value=provenance),
+                  patch.object(campaign, 'run_subcampaign', side_effect=subcampaign)):
+                result = campaign.main(['--before-binary', str(binary), '--after-binary', str(binary),
+                                        '--before-adapter-dir', str(adapter), '--after-adapter-dir', str(adapter),
+                                        '--after-commit', 'a' * 40, '--output', str(output)])
+            return (result, json.loads((output / 'attempts.json').read_text()),
+                    json.loads((output / 'summary.json').read_text()))
+
+    def test_malformed_subcampaign_metadata_is_an_attempt_failure(self):
+        for metadata in ([], {}, {'versions': []}, 'text', {'versions': None}):
+            with self.subTest(metadata=metadata):
+                result, attempts, summary = self.malformed_metadata_campaign(metadata)
+                self.assertEqual(result, 1)
+                self.assertIn('versions object', attempts[0]['error'])
+                self.assertFalse(summary['correctness_gate']['passed'])
+
+    def test_valid_subcampaign_metadata_has_no_versions_error(self):
+        _, attempts, _ = self.malformed_metadata_campaign({'versions': {}})
+        self.assertNotIn('versions object', json.dumps(attempts))
+
+
+class SubcampaignCleanupTests(unittest.TestCase):
+    CHILD = (
+        'import subprocess, sys, time\n'
+        'g = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(60)"], start_new_session=True)\n'
+        'open(sys.argv[1], "w").write(str(g.pid))\n'
+        'EXIT\n')
+
+    def run_child(self, tail, timeout):
+        import subprocess
+        from tempfile import TemporaryDirectory
+        with TemporaryDirectory() as directory:
+            pidfile = Path(directory) / 'pid'
+            cmd = [sys.executable, '-c', self.CHILD.replace('EXIT', tail), str(pidfile)]
+            attempt, error, code, pid = {}, None, None, None
+            try:
+                with (Path(directory) / 'log').open('w') as log:
+                    try:
+                        code = campaign.run_subcampaign(cmd, directory, log, timeout, attempt)
+                    except subprocess.TimeoutExpired as caught:
+                        error = caught
+                if pidfile.exists():
+                    pid = int(pidfile.read_text())
+                    self.assertFalse(Path(f'/proc/{pid}').exists() and
+                                     Path(f'/proc/{pid}/stat').read_text().split(')')[-1].split()[0] != 'Z')
+                with self.assertRaises(ChildProcessError):
+                    os.waitpid(-1, os.WNOHANG)
+            finally:
+                if pidfile.exists():
+                    try:
+                        os.kill(int(pidfile.read_text()), 9)
+                    except ProcessLookupError:
+                        pass
+            return attempt, error, code, pid
+
+    def test_timeout_kills_detached_grandchild(self):
+        attempt, error, _, pid = self.run_child('time.sleep(1000)', 2)
+        self.assertIsNotNone(error)
+        self.assertIsNotNone(pid)
+        self.assertTrue(attempt['descendant_cleanup_required'])
+
+    def test_normal_exit_kills_orphaned_grandchild(self):
+        attempt, error, code, pid = self.run_child('', 30)
+        self.assertIsNone(error)
+        self.assertEqual(code, 0)
+        self.assertIsNotNone(pid)
+        self.assertTrue(attempt['descendant_cleanup_required'])
+
+    def test_clean_exit_requires_no_cleanup(self):
+        import subprocess
+        attempt = {}
+        with open(os.devnull, 'w') as log:
+            self.assertEqual(campaign.run_subcampaign([sys.executable, '-c', 'pass'], '.', log, 30, attempt), 0)
+        self.assertFalse(attempt['descendant_cleanup_required'])
+
+    def interrupted(self, interruption):
+        import signal
+        from tempfile import TemporaryDirectory
+        with TemporaryDirectory() as directory:
+            pidfile = Path(directory) / 'pid'
+            cmd = [sys.executable, '-c', self.CHILD.replace('EXIT', 'time.sleep(1000)'), str(pidfile)]
+            attempt = {}
+
+            def alarm(_signum, _frame):
+                interruption()
+
+            previous = signal.signal(signal.SIGALRM, alarm)
+            try:
+                with (Path(directory) / 'log').open('w') as log:
+                    # Generous delay so the child has recorded its grandchild before the interruption.
+                    signal.setitimer(signal.ITIMER_REAL, 3)
+                    try:
+                        interruption_seen = None
+                        try:
+                            campaign.run_subcampaign(cmd, directory, log, 60, attempt)
+                        except BaseException as caught:
+                            interruption_seen = caught
+                    finally:
+                        signal.setitimer(signal.ITIMER_REAL, 0)
+                self.assertTrue(pidfile.exists())
+                pid = int(pidfile.read_text())
+                stat = Path(f'/proc/{pid}/stat')
+                self.assertFalse(stat.exists() and stat.read_text().split(')')[-1].split()[0] != 'Z')
+                with self.assertRaises(ChildProcessError):
+                    os.waitpid(-1, os.WNOHANG)
+                return interruption_seen, attempt
+            finally:
+                signal.signal(signal.SIGALRM, previous)
+                if pidfile.exists():
+                    try:
+                        os.kill(int(pidfile.read_text()), 9)
+                    except ProcessLookupError:
+                        pass
+
+    def test_keyboard_interrupt_during_wait_kills_descendants(self):
+        def interrupt():
+            raise KeyboardInterrupt
+        error, attempt = self.interrupted(interrupt)
+        self.assertIsInstance(error, KeyboardInterrupt)
+        self.assertTrue(attempt['descendant_cleanup_required'])
+
+    def test_sigterm_handler_unwinds_through_cleanup(self):
+        import signal
+        error, attempt = self.interrupted(lambda: campaign.stop_on_sigterm(signal.SIGTERM, None))
+        self.assertIsInstance(error, SystemExit)
+        self.assertEqual(error.code, 143)
+        self.assertTrue(attempt['descendant_cleanup_required'])
+
+    def test_stop_on_sigterm_raises_system_exit(self):
+        import signal
+        with self.assertRaises(SystemExit) as raised:
+            campaign.stop_on_sigterm(signal.SIGTERM, None)
+        self.assertEqual(raised.exception.code, 143)
+
+    def test_root_that_survives_sigkill_raises_cleanup_error_without_hanging(self):
+        import subprocess
+        import time
+        from unittest.mock import Mock, patch
+
+        class StuckRoot:
+            def __init__(self):
+                self.kill = Mock()
+
+            def wait(self, timeout=None):
+                raise subprocess.TimeoutExpired(['stuck'], timeout)
+
+            def poll(self):
+                return None
+
+        root, attempt = StuckRoot(), {}
+        started = time.monotonic()
+        with (patch.object(campaign.subprocess, 'Popen', return_value=root),
+              patch.object(campaign.workload.measurement, 'enable_subreaper'),
+              patch.object(campaign, 'reap_descendants',
+                           side_effect=campaign.CleanupError('tools still alive')) as reap,
+              open(os.devnull, 'w') as log):
+            with self.assertRaisesRegex(campaign.CleanupError, 'root did not exit'):
+                campaign.run_subcampaign(['stuck'], '.', log, 0.05, attempt, bound=0.1)
+        self.assertLess(time.monotonic() - started, 5)
+        root.kill.assert_called_once()
+        self.assertTrue(attempt['descendant_cleanup_required'])
+        # Detached tools are still signalled even though the root cannot be reaped.
+        reap.assert_called_once_with(0.1)
 
 
 if __name__ == '__main__':

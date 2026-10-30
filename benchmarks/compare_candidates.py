@@ -8,10 +8,13 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import os
 from pathlib import Path
 import re
+import signal
 import subprocess
 import sys
+import time
 from types import SimpleNamespace
 
 import m6
@@ -24,6 +27,77 @@ VARIANTS = ('before', 'after')
 PHASES = ('inputAndSchedulerPreparation', 'originalBaseline', 'disabledSwitchValidation',
           'coverageBaseline', 'postBaselineValidation', 'mutationPlanning',
           'mutationExecution', 'teardown', 'finalInputValidation')
+
+
+class CleanupError(subprocess.SubprocessError):
+    pass
+
+
+def descendants(root):
+    snapshot = workload.measurement.process_snapshot()
+    found = {}
+    while True:
+        children = {pid: stat for pid, stat in snapshot.items()
+                    if stat['ppid'] in found or stat['ppid'] == root}
+        if len(children) == len(found):
+            return found
+        found = children
+
+
+def reap_descendants(bound=30):
+    """Kill everything left under this process; True if anything was still alive."""
+    found = False
+    deadline = time.monotonic() + bound
+    while time.monotonic() < deadline:
+        try:
+            while os.waitpid(-1, os.WNOHANG)[0]:
+                pass
+        except ChildProcessError:
+            # As a subreaper, any live descendant keeps some child of ours alive: ECHILD means none remain.
+            return found
+        for pid, stat in descendants(os.getpid()).items():
+            found = True
+            try:  # Avoid signaling a reused PID between sampling and killing.
+                current = workload.measurement.parse_proc_stat(Path(f'/proc/{pid}/stat').read_text())
+                if current['starttime'] == stat['starttime']:
+                    os.kill(pid, signal.SIGKILL)
+            except (ProcessLookupError, FileNotFoundError):
+                pass
+        time.sleep(.02)
+    raise CleanupError(f'descendant cleanup incomplete after {bound}s')
+
+
+def run_subcampaign(cmd, cwd, log, timeout, attempt=None, bound=30):
+    """Run one subcampaign; its detached tool sessions never outlive it (even on timeout)."""
+    attempt = {} if attempt is None else attempt
+    workload.measurement.enable_subreaper()
+    proc = subprocess.Popen(cmd, cwd=cwd, stdout=log, stderr=subprocess.STDOUT)
+    expired = None
+    try:
+        proc.wait(timeout)
+    except subprocess.TimeoutExpired as error:
+        expired = error
+    finally:
+        # Also on interruption: detached tool sessions would otherwise keep running.
+        if proc.poll() is None:
+            proc.kill()
+            try:  # A root stuck in an uninterruptible wait must not hang the campaign.
+                proc.wait(bound)
+            except subprocess.TimeoutExpired:
+                attempt['descendant_cleanup_required'] = True
+                try:  # Still signal the detached tools; ECHILD cannot occur while the root lives.
+                    reap_descendants(bound)
+                except CleanupError:
+                    pass
+                raise CleanupError(f'subcampaign root did not exit within {bound}s of SIGKILL') from None
+        try:
+            attempt['descendant_cleanup_required'] = reap_descendants(bound)
+        except CleanupError:
+            attempt['descendant_cleanup_required'] = True
+            raise
+    if expired:
+        raise expired
+    return proc.returncode
 
 
 def build_errors(provenance, metadata, commits, required):
@@ -201,7 +275,13 @@ def subcommand(args, directory, warmup, variant, tools):
             '--output', str(directory)]
 
 
+def stop_on_sigterm(signum, _frame):
+    # Unwind like SIGINT so run_subcampaign kills and reaps the active subcampaign.
+    raise SystemExit(128 + signum)
+
+
 def main(argv=None):
+    signal.signal(signal.SIGTERM, stop_on_sigterm)
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--output', type=Path, required=True)
     for variant in VARIANTS:
@@ -218,6 +298,8 @@ def main(argv=None):
     parser.add_argument('--require-build-integrity', action='store_true',
                         help='Pinned CI comparison: isolated builds, distinct binaries and complete after phase evidence')
     args = parser.parse_args(argv)
+    if not math.isfinite(args.timeout) or args.timeout <= 0:
+        parser.error('--timeout must be positive and finite')
     if args.warmups < 1 or args.repetitions < 5:
         parser.error('require at least one warmup and five measured rounds')
     provenance = {}
@@ -279,11 +361,16 @@ def main(argv=None):
             try:
                 # The orchestration process is deliberately outside run.py timing/accounting.
                 with (output / f'{index:02d}-{variant}.log').open('w') as log:
-                    completed = subprocess.run(cmd, cwd=workload.ROOT, stdout=log, stderr=subprocess.STDOUT)
-                attempt['exit_code'] = completed.returncode
-                if completed.returncode:
-                    failures.append(f'round {index} {variant}: subcampaign exited {completed.returncode}')
+                    returncode = run_subcampaign(cmd, workload.ROOT, log, len(tools) * args.timeout + 300, attempt)
+                attempt['exit_code'] = returncode
+                if returncode:
+                    failures.append(f'round {index} {variant}: subcampaign exited {returncode}')
+                if attempt.get('descendant_cleanup_required'):
+                    # Survivors ran outside per-tool accounting and may have skewed this round.
+                    failures.append(f'round {index} {variant}: descendants outlived the subcampaign root')
                 meta = workload.measurement.read_json(directory / 'metadata.json')
+                if not isinstance(meta, dict) or not isinstance(meta.get('versions'), dict):
+                    raise ValueError('subcampaign metadata lacks a versions object')
                 if meta['versions'] != metadata['versions']:
                     failures.append(f'round {index} {variant}: tool versions changed')
                 for line in (directory / 'measurements.jsonl').read_text().splitlines():
@@ -292,11 +379,18 @@ def main(argv=None):
                     rows.append(row)
                     stream.write(json.dumps(row, sort_keys=True) + '\n')
                     stream.flush()
-            except (OSError, ValueError, KeyError) as error:
+            except (OSError, ValueError, KeyError, TypeError, AttributeError,
+                    subprocess.SubprocessError) as error:
                 attempt['error'] = str(error)
+                if isinstance(error, subprocess.TimeoutExpired):
+                    attempt['timed_out'] = True
+                if isinstance(error, CleanupError):
+                    attempt['timed_out'] = True  # Unkillable leftovers would skew later rounds: stop.
                 failures.append(f'round {index} {variant}: {error}')
             attempts.append(attempt)
             m6.write_json(output / 'attempts.json', attempts)
+            if attempt.get('timed_out'):
+                break
     result = evaluate(rows, args.warmups, args.repetitions, provenance, failures, **integrity)
     m6.write_json(output / 'summary.json', result)
     print(json.dumps(result, indent=2))
