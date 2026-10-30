@@ -4,8 +4,6 @@ on:
   workflow_dispatch:
   pull_request:
     paths:
-      - 'crates/cli/src/**'
-      - 'packages/vitest-adapter/**'
       - 'benchmarks/compare_candidates.py'
       - 'benchmarks/real_project.py'
       - 'benchmarks/real-project/**'
