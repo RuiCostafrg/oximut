@@ -29,6 +29,9 @@ class PidfdRoutedToKill(unittest.TestCase):
         patcher = patch.object(supervisor.os, 'close')
         self.close = patcher.start()
         self.addCleanup(patcher.stop)
+        patcher = patch.object(supervisor, 'probe_pidfd')
+        self.probe = patcher.start()
+        self.addCleanup(patcher.stop)
 
 
 class SupervisorCleanup(PidfdRoutedToKill):
@@ -323,10 +326,8 @@ class SupervisorCleanup(PidfdRoutedToKill):
         now = [10.0]
         signals = Mock()
 
-        def unavailable(pid):
+        def unavailable(_pid):
             # The startup probe passes; the descendant path loses pidfd support.
-            if pid == parent:
-                return pid
             now[0] = 12.1
             raise OSError(38, 'Function not implemented')
 
@@ -342,7 +343,7 @@ class SupervisorCleanup(PidfdRoutedToKill):
         self.pidfd_kill.assert_not_called()
 
     def test_unavailable_pidfd_aborts_before_spawning(self):
-        self.pidfd_open.side_effect = OSError(38, 'Function not implemented')
+        self.probe.side_effect = OSError(38, 'Function not implemented')
         with tempfile.TemporaryDirectory() as directory, \
                 patch.object(supervisor.subprocess, 'Popen') as popen:
             with self.assertRaises(OSError):
@@ -356,6 +357,29 @@ class SupervisorCleanup(PidfdRoutedToKill):
             diagnostic = json.loads((Path(directory) / 'cleanup.json.error').read_text())
             self.assertEqual(diagnostic['error'], 'PermissionError: proc unavailable')
             self.assertFalse((Path(directory) / 'cleanup.json').exists())
+
+
+class PidfdProbe(unittest.TestCase):
+    def test_probe_exercises_open_and_send_and_closes(self):
+        for failing in [None, 'pidfd_open', 'pidfd_signal']:
+            with self.subTest(failing=failing), \
+                    patch.object(supervisor, 'pidfd_open', return_value=77) as opened, \
+                    patch.object(supervisor, 'pidfd_signal') as sent, \
+                    patch.object(supervisor.os, 'close') as close:
+                denied = PermissionError('denied by seccomp')
+                if failing:
+                    {'pidfd_open': opened, 'pidfd_signal': sent}[failing].side_effect = denied
+                    with self.assertRaises(PermissionError):
+                        supervisor.probe_pidfd()
+                else:
+                    supervisor.probe_pidfd()
+                opened.assert_called_once_with(supervisor.os.getpid())
+                if failing == 'pidfd_open':
+                    sent.assert_not_called()
+                    close.assert_not_called()
+                else:
+                    sent.assert_called_once_with(77, 0)
+                    close.assert_called_once_with(77)
 
 
 class SignalVerified(PidfdRoutedToKill):
@@ -467,6 +491,13 @@ class KnownIdentityCleanup(PidfdRoutedToKill):
 class RealPidfdCleanup(unittest.TestCase):
     """No mocks: the identity-bound signal path must work on this kernel."""
 
+    def setUp(self):
+        # Probe before spawning so an unsupported system skips without children.
+        try:
+            supervisor.probe_pidfd()
+        except (AttributeError, OSError) as error:
+            self.skipTest(f'pidfds unavailable: {error}')
+
     @unittest.skipUnless(hasattr(supervisor.os, 'uname') and supervisor.os.uname().sysname == 'Linux',
                          'requires Linux /proc and waitpid')
     def test_real_detached_child_is_signalled_and_reaped(self):
@@ -486,8 +517,9 @@ class RealPidfdCleanup(unittest.TestCase):
                          'requires Linux pidfds')
     def test_pidfd_of_reaped_generation_cannot_signal_its_pid(self):
         child = subprocess.Popen([sys.executable, '-c', 'import time; time.sleep(60)'])
-        fd = supervisor.pidfd_open(child.pid)
+        fd = None
         try:
+            fd = supervisor.pidfd_open(child.pid)
             child.kill()
             child.wait(timeout=3)
             # The numeric PID is now free for reuse; the handle still names the
@@ -495,7 +527,8 @@ class RealPidfdCleanup(unittest.TestCase):
             with self.assertRaises(ProcessLookupError):
                 supervisor.pidfd_kill(fd)
         finally:
-            supervisor.os.close(fd)
+            if fd is not None:
+                supervisor.os.close(fd)
             if child.poll() is None:
                 child.kill()
                 child.wait(timeout=3)

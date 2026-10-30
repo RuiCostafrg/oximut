@@ -46,12 +46,25 @@ def pidfd_open(pid):
     return _syscall(434, ctypes.c_long(pid), ctypes.c_long(0))  # SYS_pidfd_open
 
 
-def pidfd_kill(fd):
+def pidfd_signal(fd, signum):
     if hasattr(signal, 'pidfd_send_signal'):
-        signal.pidfd_send_signal(fd, signal.SIGKILL)
+        signal.pidfd_send_signal(fd, signum)
     else:
-        _syscall(424, ctypes.c_long(fd), ctypes.c_long(signal.SIGKILL), None,
+        _syscall(424, ctypes.c_long(fd), ctypes.c_long(signum), None,
                  ctypes.c_long(0))  # SYS_pidfd_send_signal
+
+
+def pidfd_kill(fd):
+    pidfd_signal(fd, signal.SIGKILL)
+
+
+def probe_pidfd():
+    """Both syscalls can be denied independently (e.g. by seccomp); test each."""
+    fd = pidfd_open(os.getpid())
+    try:
+        pidfd_signal(fd, 0)  # Null signal: checks permission, delivers nothing.
+    finally:
+        os.close(fd)
 
 
 def signal_verified(pid, stamp, deadline):
@@ -149,7 +162,7 @@ def main():
 
     node, worker, report_path = sys.argv[1:]
     # Fail before spawning anything if identity-bound signalling is unavailable.
-    os.close(pidfd_open(os.getpid()))
+    probe_pidfd()
     ipc_fd = int(os.environ['NODE_CHANNEL_FD'])
     stop = False
     cleanup_started = None
