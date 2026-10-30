@@ -273,10 +273,11 @@ def main(argv=None):
                 print(f"  success={row['success']} wall={row['wall_seconds']:.3f}s "
                       f"cpu={row['cpu_seconds']:.3f}s rss={row['peak_aggregate_rss_bytes']}", flush=True)
     comparisons, ratios = compare_rows(rows)
-    if args.defer_ratios:
-        ratios = []
     passed = (all(row['success'] for row in rows) and bool(comparisons)
               and all(item['ratio_eligible'] for item in comparisons))
+    # Passing rounds of a failed campaign are not a qualified sample.
+    if args.defer_ratios or not passed:
+        ratios = []
     m6.write_json(output / 'comparisons.json', comparisons)
     groups = []
     for tool in args.tools:

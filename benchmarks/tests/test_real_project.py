@@ -97,6 +97,52 @@ class WarmupOnlyTests(unittest.TestCase):
             self.assertTrue(json.loads((output / 'measurements.jsonl').read_text())['warmup'])
 
 
+class FailedCampaignRatioTests(unittest.TestCase):
+    def campaign(self, failing_round):
+        def prepare(project, manifest):
+            project.mkdir()
+            for name in ('vitest.config.ts', 'stryker.config.mjs', 'package.json'):
+                (project / name).write_text('{}')
+
+        rounds = []
+
+        def run_command(*_args, **_kwargs):
+            return {metric: 2. for metric in benchmark.METRICS} | {
+                'peak_process_count': 1, 'memory_method': 'sum-live-smaps_rollup-rss',
+                'memory_errors': []}
+
+        def validate(tool, *_args):
+            rounds.append(tool)
+            if (len(rounds) - 1) // 3 == failing_round:
+                raise ValueError('injected validation failure')
+            return {'declared_test_identity_sha256': 'same',
+                    'mutations': {'a': {'outcome': 'killed'}}}
+
+        versions = {'node': 'v26.3.1', 'vitest': '4.1.12',
+                    '@stryker-mutator/core': '10.0.0', '@stryker-mutator/vitest-runner': '10.0.0'}
+        with tempfile.TemporaryDirectory() as tmp:
+            output = Path(tmp) / 'campaign'
+            with mock.patch.object(benchmark.measurement, 'metadata', return_value={'versions': versions}), \
+                 mock.patch.object(benchmark, 'prepare', side_effect=prepare), \
+                 mock.patch.object(benchmark.measurement, 'run_command', side_effect=run_command), \
+                 mock.patch.object(benchmark, 'validate', side_effect=validate), \
+                 mock.patch.object(benchmark, 'execution_inputs', return_value={}):
+                code = benchmark.main(['--tools', 'vitest', 'oximut', 'stryker', '--warmups', '1',
+                                       '--repetitions', '1', '--output', str(output),
+                                       '--adapter-source-dir',
+                                       str(benchmark.ROOT / 'packages/vitest-adapter')])
+            return code, json.loads((output / 'summary.json').read_text())
+
+    def test_failed_warmup_suppresses_ratios_from_passing_measured_round(self):
+        code, summary = self.campaign(failing_round=None)
+        self.assertTrue(summary['correctness_gate'])
+        self.assertEqual(len(summary['ratios']), 1)  # Control: the measured round qualifies.
+        code, summary = self.campaign(failing_round=0)
+        self.assertNotEqual(code, 0)
+        self.assertFalse(summary['correctness_gate'])
+        self.assertEqual(summary['ratios'], [])
+
+
 class AdapterProvenanceTests(unittest.TestCase):
     def test_binary_default_is_preserved_and_override_is_explicit(self):
         args = SimpleNamespace(binary=Path('/candidate/oximut'), adapter=None,
