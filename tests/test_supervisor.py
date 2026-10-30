@@ -47,13 +47,15 @@ class SupervisorCleanup(PidfdRoutedToKill):
               patch.object(supervisor.os, 'close'),
               patch.object(supervisor.os, 'waitpid', side_effect=waits) as wait,
               patch.object(supervisor.os, 'kill', new=signals if signals is not None else Mock()) as kill,
-              patch.object(supervisor.subprocess, 'Popen', return_value=controller or Mock(pid=123)),
+              patch.object(supervisor.subprocess, 'Popen',
+                           return_value=controller or Mock(pid=123)) as popen,
               patch.object(supervisor, 'process_identity',
                            side_effect=identities or FileNotFoundError()),
               patch.object(supervisor, 'snapshot', side_effect=snapshots),
               patch.object(supervisor.time, 'sleep'),
               patch.object(supervisor.sys, 'argv', ['supervisor', 'node', 'worker', str(report)]),
               patch.dict(supervisor.os.environ, {'NODE_CHANNEL_FD': '99'})):
+            self.popen = popen
             result = supervisor.main()
         return result, report, wait, kill
 
@@ -344,11 +346,10 @@ class SupervisorCleanup(PidfdRoutedToKill):
 
     def test_unavailable_pidfd_aborts_before_spawning(self):
         self.probe.side_effect = OSError(38, 'Function not implemented')
-        with tempfile.TemporaryDirectory() as directory, \
-                patch.object(supervisor.subprocess, 'Popen') as popen:
+        with tempfile.TemporaryDirectory() as directory:
             with self.assertRaises(OSError):
                 self.run_supervisor(directory, [], [])
-            popen.assert_not_called()
+            self.popen.assert_not_called()
 
     def test_discovery_failure_leaves_causal_diagnostic(self):
         with tempfile.TemporaryDirectory() as directory:
