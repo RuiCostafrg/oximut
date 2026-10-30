@@ -1,6 +1,7 @@
 """Candidate campaigns reject partial, unstable or cross-candidate unequal evidence."""
 import copy
 import json
+import os
 from pathlib import Path
 import sys
 from types import SimpleNamespace
@@ -282,14 +283,14 @@ class SubcampaignFailureTests(unittest.TestCase):
             provenance = {'binary_sha256': 'binary', 'adapter_source_sha256': {}}
             with (patch.object(campaign.workload.measurement, 'metadata', return_value={'versions': {}}),
                   patch.object(campaign.workload, 'execution_inputs', return_value=provenance),
-                  patch.object(campaign.subprocess, 'run',
+                  patch.object(campaign, 'run_subcampaign',
                                side_effect=subprocess.TimeoutExpired(['subcampaign'], 330)) as command):
                 result = campaign.main(['--before-binary', str(binary), '--after-binary', str(binary),
                                         '--before-adapter-dir', str(adapter), '--after-adapter-dir', str(adapter),
                                         '--after-commit', 'a' * 40, '--timeout', '10', '--output', str(output)])
             self.assertEqual(result, 1)
             command.assert_called_once()
-            self.assertEqual(command.call_args.kwargs['timeout'], 330)
+            self.assertEqual(command.call_args.args[3], 330)
             attempts = json.loads((output / 'attempts.json').read_text())
             self.assertTrue(attempts[0]['timed_out'])
             self.assertIn('timed out', attempts[0]['error'])
@@ -298,6 +299,61 @@ class SubcampaignFailureTests(unittest.TestCase):
             self.assertFalse(summary['correctness_gate']['passed'])
             self.assertFalse(summary['targets_met'])
             self.assertEqual(summary['comparisons'], {})
+
+
+class SubcampaignCleanupTests(unittest.TestCase):
+    CHILD = (
+        'import subprocess, sys, time\n'
+        'g = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(60)"], start_new_session=True)\n'
+        'open(sys.argv[1], "w").write(str(g.pid))\n'
+        'EXIT\n')
+
+    def run_child(self, tail, timeout):
+        import subprocess
+        from tempfile import TemporaryDirectory
+        with TemporaryDirectory() as directory:
+            pidfile = Path(directory) / 'pid'
+            cmd = [sys.executable, '-c', self.CHILD.replace('EXIT', tail), str(pidfile)]
+            attempt, error, code, pid = {}, None, None, None
+            try:
+                with (Path(directory) / 'log').open('w') as log:
+                    try:
+                        code = campaign.run_subcampaign(cmd, directory, log, timeout, attempt)
+                    except subprocess.TimeoutExpired as caught:
+                        error = caught
+                if pidfile.exists():
+                    pid = int(pidfile.read_text())
+                    self.assertFalse(Path(f'/proc/{pid}').exists() and
+                                     Path(f'/proc/{pid}/stat').read_text().split(')')[-1].split()[0] != 'Z')
+                with self.assertRaises(ChildProcessError):
+                    os.waitpid(-1, os.WNOHANG)
+            finally:
+                if pidfile.exists():
+                    try:
+                        os.kill(int(pidfile.read_text()), 9)
+                    except ProcessLookupError:
+                        pass
+            return attempt, error, code, pid
+
+    def test_timeout_kills_detached_grandchild(self):
+        attempt, error, _, pid = self.run_child('time.sleep(1000)', 2)
+        self.assertIsNotNone(error)
+        self.assertIsNotNone(pid)
+        self.assertTrue(attempt['descendant_cleanup_required'])
+
+    def test_normal_exit_kills_orphaned_grandchild(self):
+        attempt, error, code, pid = self.run_child('', 30)
+        self.assertIsNone(error)
+        self.assertEqual(code, 0)
+        self.assertIsNotNone(pid)
+        self.assertTrue(attempt['descendant_cleanup_required'])
+
+    def test_clean_exit_requires_no_cleanup(self):
+        import subprocess
+        attempt = {}
+        with open(os.devnull, 'w') as log:
+            self.assertEqual(campaign.run_subcampaign([sys.executable, '-c', 'pass'], '.', log, 30, attempt), 0)
+        self.assertFalse(attempt['descendant_cleanup_required'])
 
 
 if __name__ == '__main__':

@@ -8,10 +8,13 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import os
 from pathlib import Path
 import re
+import signal
 import subprocess
 import sys
+import time
 from types import SimpleNamespace
 
 import m6
@@ -24,6 +27,67 @@ VARIANTS = ('before', 'after')
 PHASES = ('inputAndSchedulerPreparation', 'originalBaseline', 'disabledSwitchValidation',
           'coverageBaseline', 'postBaselineValidation', 'mutationPlanning',
           'mutationExecution', 'teardown', 'finalInputValidation')
+
+
+class CleanupError(subprocess.SubprocessError):
+    pass
+
+
+def descendants(root):
+    snapshot = workload.measurement.process_snapshot()
+    found = {}
+    while True:
+        children = {pid: stat for pid, stat in snapshot.items()
+                    if stat['ppid'] in found or stat['ppid'] == root}
+        if len(children) == len(found):
+            return found
+        found = children
+
+
+def reap_descendants(bound=30):
+    """Kill everything left under this process; True if anything was still alive."""
+    found = False
+    deadline = time.monotonic() + bound
+    while time.monotonic() < deadline:
+        try:
+            while os.waitpid(-1, os.WNOHANG)[0]:
+                pass
+        except ChildProcessError:
+            # As a subreaper, any live descendant keeps some child of ours alive: ECHILD means none remain.
+            return found
+        for pid, stat in descendants(os.getpid()).items():
+            found = True
+            try:  # Avoid signaling a reused PID between sampling and killing.
+                current = workload.measurement.parse_proc_stat(Path(f'/proc/{pid}/stat').read_text())
+                if current['starttime'] == stat['starttime']:
+                    os.kill(pid, signal.SIGKILL)
+            except (ProcessLookupError, FileNotFoundError):
+                pass
+        time.sleep(.02)
+    raise CleanupError(f'descendant cleanup incomplete after {bound}s')
+
+
+def run_subcampaign(cmd, cwd, log, timeout, attempt=None):
+    """Run one subcampaign; its detached tool sessions never outlive it (even on timeout)."""
+    attempt = {} if attempt is None else attempt
+    workload.measurement.enable_subreaper()
+    proc = subprocess.Popen(cmd, cwd=cwd, stdout=log, stderr=subprocess.STDOUT)
+    expired = None
+    try:
+        proc.wait(timeout)
+    except subprocess.TimeoutExpired as error:
+        expired = error
+    if proc.poll() is None:
+        proc.kill()
+        proc.wait()
+    try:
+        attempt['descendant_cleanup_required'] = reap_descendants()
+    except CleanupError:
+        attempt['descendant_cleanup_required'] = True
+        raise
+    if expired:
+        raise expired
+    return proc.returncode
 
 
 def build_errors(provenance, metadata, commits, required):
@@ -281,11 +345,10 @@ def main(argv=None):
             try:
                 # The orchestration process is deliberately outside run.py timing/accounting.
                 with (output / f'{index:02d}-{variant}.log').open('w') as log:
-                    completed = subprocess.run(cmd, cwd=workload.ROOT, stdout=log, stderr=subprocess.STDOUT,
-                                               timeout=len(tools) * args.timeout + 300)
-                attempt['exit_code'] = completed.returncode
-                if completed.returncode:
-                    failures.append(f'round {index} {variant}: subcampaign exited {completed.returncode}')
+                    returncode = run_subcampaign(cmd, workload.ROOT, log, len(tools) * args.timeout + 300, attempt)
+                attempt['exit_code'] = returncode
+                if returncode:
+                    failures.append(f'round {index} {variant}: subcampaign exited {returncode}')
                 meta = workload.measurement.read_json(directory / 'metadata.json')
                 if meta['versions'] != metadata['versions']:
                     failures.append(f'round {index} {variant}: tool versions changed')
@@ -299,6 +362,8 @@ def main(argv=None):
                 attempt['error'] = str(error)
                 if isinstance(error, subprocess.TimeoutExpired):
                     attempt['timed_out'] = True
+                if isinstance(error, CleanupError):
+                    attempt['timed_out'] = True  # Unkillable leftovers would skew later rounds: stop.
                 failures.append(f'round {index} {variant}: {error}')
             attempts.append(attempt)
             m6.write_json(output / 'attempts.json', attempts)
