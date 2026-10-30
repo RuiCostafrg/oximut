@@ -1,7 +1,7 @@
 import { appendFile, lstat, open, readFile, readdir, rename, rm, stat } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { openController } from './index.mjs';
+import { hasUnexpectedDescendants, openController } from './index.mjs';
 import { envelope, MAX_REQUEST_BYTES, MAX_RESPONSE_BYTES, validateRequest } from './protocol.ts';
 
 const [session] = process.argv.slice(2);
@@ -11,7 +11,7 @@ const sleep = () => new Promise((resolve) => setTimeout(resolve, 15));
 let controller;
 let fingerprint;
 let jobs = 0;
-let descendants = new Set();
+let descendants = new Map();
 const empty = (outcome, error) => ({
   outcome,
   tests: { passed: 0, failed: 0, skipped: 0 },
@@ -26,25 +26,33 @@ async function exists(path) {
     throw error;
   }
 }
-async function tree(pid) {
+/** Parent PID and start time; a PID alone can name a later process generation. */
+async function identity(pid) {
+  const value = await readFile(`/proc/${pid}/stat`, 'utf8');
+  const fields = value.slice(value.lastIndexOf(')') + 2).split(' ');
+  if (fields.length < 20 || !/^\d+$/.test(fields[1]) || !/^\d+$/.test(fields[19]))
+    throw new Error(`Malformed /proc/${pid}/stat`);
+  return { parent: Number(fields[1]), start: fields[19] };
+}
+async function tree(pid, checkpoint = () => {}) {
   const parents = new Map();
   for (const entry of await readdir('/proc')) {
     if (!/^\d+$/.test(entry)) continue;
+    checkpoint();
     try {
-      const value = await readFile(`/proc/${entry}/stat`, 'utf8');
-      const fields = value.slice(value.lastIndexOf(')') + 2).split(' ');
-      parents.set(Number(entry), Number(fields[1]));
+      parents.set(Number(entry), await identity(entry));
     } catch (error) {
       if (!['ENOENT', 'ESRCH'].includes(error.code)) throw error;
     }
   }
-  const result = new Set();
+  checkpoint();
+  const result = new Map();
   let added = true;
   while (added) {
     added = false;
-    for (const [child, parent] of parents) {
+    for (const [child, { parent, start }] of parents) {
       if (child !== pid && !result.has(child) && (parent === pid || result.has(parent))) {
-        result.add(child);
+        result.set(child, start);
         added = true;
       }
     }
@@ -85,6 +93,13 @@ async function close() {
 async function run(request) {
   const started = performance.now();
   const remaining = () => request.deadlineMs - (performance.now() - started);
+  // Synchronous /proc reads cannot be interrupted; check between them instead.
+  const checkpoint = () => {
+    if (remaining() > 0) return;
+    const error = new Error('Job deadline exceeded during descendant verification');
+    error.code = 'OXIMUT_TIMEOUT';
+    throw error;
+  };
   const snapshot = await inputs(request.root, request.config);
   const next = JSON.stringify([request.root, request.config, snapshot.entries]);
   if (snapshot.symlink || fingerprint !== next || jobs >= 50) await close();
@@ -108,24 +123,36 @@ async function run(request) {
           })}\n`,
         );
         jobs = 0;
-        descendants = await tree(controller.supervisorPid);
+        descendants = await tree(controller.supervisorPid, checkpoint);
       }
       const result =
         remaining() <= 0
           ? { outcome: 'timeout', termination: await controller.terminate() }
           : await controller.run({ request, deadlineMs: remaining() });
       jobs++;
-      const leaked = [...(await tree(controller.supervisorPid))].some(
-        (pid) => !descendants.has(pid),
-      );
-      // The supervisor reaps even detached descendants before another job starts.
-      if (
+      const retire =
         result.outcome === 'timeout' ||
         result.outcome === 'infrastructure-error' ||
-        controller.reuse !== 'controller' ||
-        leaked
-      )
-        await close();
+        controller.reuse !== 'controller';
+      // A baseline PID reused by a test process is a new, unexpected generation.
+      const unexpectedDescendants = async () =>
+        [...(await tree(controller.supervisorPid, checkpoint))].filter(
+          ([pid, start]) => descendants.get(pid) !== start,
+        );
+      // A completed test fork can exit while /proc is being enumerated. Confirm
+      // disappearance independently; an empty second tree can miss reparenting.
+      const leaked =
+        !retire &&
+        (await hasUnexpectedDescendants(
+          unexpectedDescendants,
+          async ([pid, start]) => (await identity(pid)).start === start,
+          checkpoint,
+        ));
+      // Verification may cross the deadline; never publish a late result. Only
+      // verification is bounded here: retiring a controller is not job time.
+      if (!retire) checkpoint();
+      // The supervisor reaps even detached descendants before another job starts.
+      if (retire || leaked) await close();
       if (result.termination)
         return empty('timeout', 'Job deadline exceeded; owned processes reaped');
       const crash =
