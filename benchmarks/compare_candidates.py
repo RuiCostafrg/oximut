@@ -349,6 +349,9 @@ def main(argv=None):
                 attempt['exit_code'] = returncode
                 if returncode:
                     failures.append(f'round {index} {variant}: subcampaign exited {returncode}')
+                if attempt.get('descendant_cleanup_required'):
+                    # Survivors ran outside per-tool accounting and may have skewed this round.
+                    failures.append(f'round {index} {variant}: descendants outlived the subcampaign root')
                 meta = workload.measurement.read_json(directory / 'metadata.json')
                 if meta['versions'] != metadata['versions']:
                     failures.append(f'round {index} {variant}: tool versions changed')

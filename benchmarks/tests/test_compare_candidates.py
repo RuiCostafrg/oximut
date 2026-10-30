@@ -301,6 +301,43 @@ class SubcampaignFailureTests(unittest.TestCase):
             self.assertEqual(summary['comparisons'], {})
 
 
+    def test_descendants_outliving_a_zero_exit_fail_the_campaign(self):
+        from tempfile import TemporaryDirectory
+        from unittest.mock import patch
+
+        def campaign_with(leftovers):
+            def subcampaign(cmd, _cwd, _log, _timeout, attempt):
+                # A complete, valid subcampaign apart from the leftover descendants.
+                directory = Path(cmd[cmd.index('--output') + 1])
+                directory.mkdir(parents=True)
+                (directory / 'metadata.json').write_text(json.dumps({'versions': {}}))
+                (directory / 'measurements.jsonl').write_text('')
+                attempt['descendant_cleanup_required'] = leftovers
+                return 0
+
+            with TemporaryDirectory() as directory:
+                root = Path(directory)
+                binary = root / 'binary'
+                binary.write_bytes(b'executable')
+                adapter = root / 'adapter'
+                adapter.mkdir()
+                (adapter / 'm2-runner.mjs').write_text('// unused')
+                output = root / 'output'
+                provenance = {'binary_sha256': 'binary', 'adapter_source_sha256': {}}
+                with (patch.object(campaign.workload.measurement, 'metadata', return_value={'versions': {}}),
+                      patch.object(campaign.workload, 'execution_inputs', return_value=provenance),
+                      patch.object(campaign, 'run_subcampaign', side_effect=subcampaign)):
+                    campaign.main(['--before-binary', str(binary), '--after-binary', str(binary),
+                                   '--before-adapter-dir', str(adapter), '--after-adapter-dir', str(adapter),
+                                   '--after-commit', 'a' * 40, '--output', str(output)])
+                return (output / 'summary.json').read_text()
+
+        self.assertNotIn('descendants outlived', campaign_with(False))
+        summary = campaign_with(True)
+        self.assertIn('round 0 before: descendants outlived the subcampaign root', summary)
+        self.assertFalse(json.loads(summary)['correctness_gate']['passed'])
+
+
 class SubcampaignCleanupTests(unittest.TestCase):
     CHILD = (
         'import subprocess, sys, time\n'
