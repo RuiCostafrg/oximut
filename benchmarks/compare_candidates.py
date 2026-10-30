@@ -67,7 +67,7 @@ def reap_descendants(bound=30):
     raise CleanupError(f'descendant cleanup incomplete after {bound}s')
 
 
-def run_subcampaign(cmd, cwd, log, timeout, attempt=None):
+def run_subcampaign(cmd, cwd, log, timeout, attempt=None, bound=30):
     """Run one subcampaign; its detached tool sessions never outlive it (even on timeout)."""
     attempt = {} if attempt is None else attempt
     workload.measurement.enable_subreaper()
@@ -77,14 +77,20 @@ def run_subcampaign(cmd, cwd, log, timeout, attempt=None):
         proc.wait(timeout)
     except subprocess.TimeoutExpired as error:
         expired = error
-    if proc.poll() is None:
-        proc.kill()
-        proc.wait()
-    try:
-        attempt['descendant_cleanup_required'] = reap_descendants()
-    except CleanupError:
-        attempt['descendant_cleanup_required'] = True
-        raise
+    finally:
+        # Also on interruption: detached tool sessions would otherwise keep running.
+        if proc.poll() is None:
+            proc.kill()
+            try:  # A root stuck in an uninterruptible wait must not hang the campaign.
+                proc.wait(bound)
+            except subprocess.TimeoutExpired:
+                attempt['descendant_cleanup_required'] = True
+                raise CleanupError(f'subcampaign root did not exit within {bound}s of SIGKILL') from None
+        try:
+            attempt['descendant_cleanup_required'] = reap_descendants(bound)
+        except CleanupError:
+            attempt['descendant_cleanup_required'] = True
+            raise
     if expired:
         raise expired
     return proc.returncode
@@ -265,7 +271,13 @@ def subcommand(args, directory, warmup, variant, tools):
             '--output', str(directory)]
 
 
+def stop_on_sigterm(signum, _frame):
+    # Unwind like SIGINT so run_subcampaign kills and reaps the active subcampaign.
+    raise SystemExit(128 + signum)
+
+
 def main(argv=None):
+    signal.signal(signal.SIGTERM, stop_on_sigterm)
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--output', type=Path, required=True)
     for variant in VARIANTS:
@@ -353,6 +365,8 @@ def main(argv=None):
                     # Survivors ran outside per-tool accounting and may have skewed this round.
                     failures.append(f'round {index} {variant}: descendants outlived the subcampaign root')
                 meta = workload.measurement.read_json(directory / 'metadata.json')
+                if not isinstance(meta, dict) or not isinstance(meta.get('versions'), dict):
+                    raise ValueError('subcampaign metadata lacks a versions object')
                 if meta['versions'] != metadata['versions']:
                     failures.append(f'round {index} {variant}: tool versions changed')
                 for line in (directory / 'measurements.jsonl').read_text().splitlines():
@@ -361,7 +375,8 @@ def main(argv=None):
                     rows.append(row)
                     stream.write(json.dumps(row, sort_keys=True) + '\n')
                     stream.flush()
-            except (OSError, ValueError, KeyError, subprocess.SubprocessError) as error:
+            except (OSError, ValueError, KeyError, TypeError, AttributeError,
+                    subprocess.SubprocessError) as error:
                 attempt['error'] = str(error)
                 if isinstance(error, subprocess.TimeoutExpired):
                     attempt['timed_out'] = True

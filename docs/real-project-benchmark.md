@@ -216,8 +216,9 @@ requires the full minimum campaign. The command above is documentation only; thi
 implementation follow-up did not execute benchmarks or builds.
 
 The `Real project before-after benchmark` workflow runs natively on Ubuntu 24.04
-x86_64 with a 90-minute job limit, on relevant pull-request paths or manual
-dispatch. It creates the baseline worktree in RUNNER_TEMP at the full pinned SHA,
+x86_64 with a 90-minute job limit, on manual dispatch or pull requests that
+change the harness, the runner (`crates/`, `packages/vitest-adapter/`) or its
+Rust/Node build inputs. It creates the baseline worktree in RUNNER_TEMP at the full pinned SHA,
 uses separate Cargo target directories for the two candidates, and copies each
 binary from its corresponding build. Registry downloads may be shared; compiled
 workspace artifacts are isolated. Matching adapters remain in

@@ -220,5 +220,27 @@ class RatioTests(unittest.TestCase):
         self.assertEqual(benchmark.compare_rows(rows)[1], [])
 
 
+class ArgumentValidationTests(unittest.TestCase):
+    def rejected(self, *extra):
+        import contextlib
+        import io
+        with tempfile.TemporaryDirectory() as tmp:
+            output = Path(tmp) / 'out'
+            with contextlib.redirect_stderr(io.StringIO()) as stderr, self.assertRaises(SystemExit) as raised:
+                benchmark.main(['--output', str(output), *extra])
+            self.assertEqual(raised.exception.code, 2)
+            # Validation precedes any filesystem side effect.
+            self.assertFalse(output.exists())
+            return stderr.getvalue()
+
+    def test_non_positive_or_non_finite_timeout_is_rejected(self):
+        for value in ('nan', 'inf', '-inf', '0', '-1'):
+            with self.subTest(timeout=value):
+                self.assertIn('--timeout', self.rejected('--tools', 'vitest', '--timeout', value))
+
+    def test_repeated_tool_is_rejected(self):
+        self.assertIn('--tools', self.rejected('--tools', 'vitest', 'vitest'))
+
+
 if __name__ == '__main__':
     unittest.main()

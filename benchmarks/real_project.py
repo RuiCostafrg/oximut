@@ -195,6 +195,10 @@ def main(argv=None):
     args = parser.parse_args(argv)
     if args.warmups < 0 or args.repetitions < 0 or args.warmups + args.repetitions < 1:
         parser.error('require nonnegative warmups/repetitions and at least one round')
+    if not math.isfinite(args.timeout) or args.timeout <= 0:
+        parser.error('--timeout must be positive and finite')
+    if len(set(args.tools)) != len(args.tools):
+        parser.error('--tools must not repeat a tool')
     args.binary = args.binary.resolve()
     if args.adapter is not None:
         args.adapter = args.adapter.resolve()
