@@ -16,7 +16,22 @@ supervisor = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(supervisor)
 
 
-class SupervisorCleanup(unittest.TestCase):
+class PidfdRoutedToKill(unittest.TestCase):
+    """Route pidfd signalling through os.kill mocks; fd numbers mirror PIDs."""
+
+    def setUp(self):
+        for name, replacement in [
+                ('pidfd_open', lambda pid: pid),
+                ('pidfd_kill', lambda fd: supervisor.os.kill(fd, supervisor.signal.SIGKILL))]:
+            patcher = patch.object(supervisor, name, side_effect=replacement)
+            setattr(self, name, patcher.start())
+            self.addCleanup(patcher.stop)
+        patcher = patch.object(supervisor.os, 'close')
+        self.close = patcher.start()
+        self.addCleanup(patcher.stop)
+
+
+class SupervisorCleanup(PidfdRoutedToKill):
     def run_supervisor(self, directory, snapshots, waits, identities=None, signals=None, handlers=None,
                        controller=None):
         report = Path(directory) / 'cleanup.json'
@@ -43,9 +58,10 @@ class SupervisorCleanup(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             result, report, wait, kill = self.run_supervisor(
                 directory, lambda _deadline=None: {},
-                [(123, 0), (0, 0), (0, 0), ChildProcessError()])
+                [(123, 0), (0, 0), (0, 0), ChildProcessError(), ChildProcessError()])
             self.assertEqual(result, 0)
-            self.assertEqual(wait.call_count, 4)
+            # ECHILD is rechecked after the final empty scan before success.
+            self.assertEqual(wait.call_count, 5)
             kill.assert_not_called()
             evidence = json.loads(report.read_text())
             self.assertEqual(evidence['reaped'], [123])
@@ -61,7 +77,8 @@ class SupervisorCleanup(unittest.TestCase):
               patch.object(supervisor.time, 'monotonic', return_value=10.0)):
             result, report, _, kill = self.run_supervisor(
                 directory, discovery,
-                [(0, 0), (0, 0), (0, 0), (123, 0), (0, 0), (456, 9), ChildProcessError()],
+                [(0, 0), (0, 0), (0, 0), (123, 0), (0, 0), (456, 9), ChildProcessError(),
+                 ChildProcessError()],
                 [FileNotFoundError(), (parent, 'start-456', 'S')])
             # Three intervening polls skipped active discovery; stop forces it.
             self.assertEqual(discovery.call_count, 5)
@@ -99,9 +116,10 @@ class SupervisorCleanup(unittest.TestCase):
         def discovery(deadline=None):
             calls.append(deadline)
             if len(calls) == 1:
-                self.assertIsNone(deadline)
+                supervisor.check_deadline(deadline)
                 handlers[supervisor.signal.SIGTERM](None, None)
                 now[0] = 11.0
+                supervisor.check_deadline(deadline)
             else:
                 self.assertEqual(deadline, 12.0)
                 # The signal's original budget must not restart at shutdown.
@@ -112,7 +130,28 @@ class SupervisorCleanup(unittest.TestCase):
             with patch.object(supervisor.time, 'monotonic', side_effect=lambda: now[0]):
                 with self.assertRaisesRegex(RuntimeError, 'cleanup bound'):
                     self.run_supervisor(directory, discovery, [(0, 0)], handlers=handlers)
-            self.assertEqual(calls, [None, 12.0])
+            self.assertEqual(len(calls), 2)
+            self.assertEqual(calls[1], 12.0)
+            self.assertFalse((Path(directory) / 'cleanup.json').exists())
+
+    def test_active_scan_enforces_budget_started_mid_enumeration(self):
+        now = [10.0]
+        handlers = {}
+        calls = []
+
+        def discovery(deadline=None):
+            calls.append(deadline)
+            handlers[supervisor.signal.SIGTERM](None, None)
+            now[0] = 12.1
+            # Remaining enumeration must see the new budget, not a cached None.
+            supervisor.check_deadline(deadline)
+            self.fail('scan continued past the signal-started cleanup budget')
+
+        with tempfile.TemporaryDirectory() as directory:
+            with patch.object(supervisor.time, 'monotonic', side_effect=lambda: now[0]):
+                with self.assertRaisesRegex(RuntimeError, 'cleanup bound'):
+                    self.run_supervisor(directory, discovery, [], handlers=handlers)
+            self.assertEqual(len(calls), 1)
             self.assertFalse((Path(directory) / 'cleanup.json').exists())
 
     def test_snapshot_checks_budget_after_identity_read(self):
@@ -174,7 +213,7 @@ class SupervisorCleanup(unittest.TestCase):
                 with patch.object(supervisor.time, 'monotonic', return_value=10.0):
                     result, _, _, kill = self.run_supervisor(
                         directory, [observed, observed, {}, {}, {}, {}],
-                        [(123, 0), (0, 0), ChildProcessError()],
+                        [(123, 0), (0, 0), ChildProcessError(), ChildProcessError()],
                         [FileNotFoundError(), current])
                 self.assertEqual(result, 0)
                 if current == (parent, 'original', 'S'):
@@ -259,7 +298,104 @@ class SupervisorCleanup(unittest.TestCase):
             self.assertFalse((Path(directory) / 'cleanup.json').exists())
 
 
-class KnownIdentityCleanup(unittest.TestCase):
+    def test_empty_final_scan_rechecks_waitpid_before_success(self):
+        parent = supervisor.os.getpid()
+        adopted = {456: (parent, 'start-456', 'S')}
+        # ECHILD, then an empty final scan races with an adoption: waitpid shows
+        # a live child, so discovery repeats, signals it and reaps it.
+        tables = iter([{}, {}, {}, adopted, adopted, {}, {}])
+        with tempfile.TemporaryDirectory() as directory:
+            with patch.object(supervisor.time, 'monotonic', return_value=10.0):
+                result, report, wait, kill = self.run_supervisor(
+                    directory, lambda _deadline=None: next(tables),
+                    [(123, 0), ChildProcessError(), (0, 0), (456, 9), ChildProcessError(),
+                     ChildProcessError()],
+                    [FileNotFoundError(), (parent, 'start-456', 'S')])
+            self.assertEqual(result, 0)
+            kill.assert_called_once_with(456, supervisor.signal.SIGKILL)
+            evidence = json.loads(report.read_text())
+            self.assertEqual(evidence['reaped'], [123, 456])
+            self.assertTrue(evidence['allReaped'])
+
+    def test_missing_pidfd_support_fails_closed_without_numeric_kill(self):
+        parent = supervisor.os.getpid()
+        observed = {456: (parent, 'start', 'S')}
+        now = [10.0]
+        signals = Mock()
+
+        def unavailable(pid):
+            # The startup probe passes; the descendant path loses pidfd support.
+            if pid == parent:
+                return pid
+            now[0] = 12.1
+            raise OSError(38, 'Function not implemented')
+
+        self.pidfd_open.side_effect = unavailable
+        with tempfile.TemporaryDirectory() as directory:
+            with patch.object(supervisor.time, 'monotonic', side_effect=lambda: now[0]):
+                with self.assertRaisesRegex(RuntimeError, 'cleanup bound'):
+                    self.run_supervisor(directory, lambda _deadline=None: observed,
+                                        [(123, 0), ChildProcessError()],
+                                        lambda _pid: (parent, 'start', 'S'), signals)
+            self.assertFalse((Path(directory) / 'cleanup.json').exists())
+        signals.assert_not_called()
+        self.pidfd_kill.assert_not_called()
+
+    def test_unavailable_pidfd_aborts_before_spawning(self):
+        self.pidfd_open.side_effect = OSError(38, 'Function not implemented')
+        with tempfile.TemporaryDirectory() as directory, \
+                patch.object(supervisor.subprocess, 'Popen') as popen:
+            with self.assertRaises(OSError):
+                self.run_supervisor(directory, [], [])
+            popen.assert_not_called()
+
+    def test_discovery_failure_leaves_causal_diagnostic(self):
+        with tempfile.TemporaryDirectory() as directory:
+            with self.assertRaises(PermissionError):
+                self.run_supervisor(directory, PermissionError('proc unavailable'), [])
+            diagnostic = json.loads((Path(directory) / 'cleanup.json.error').read_text())
+            self.assertEqual(diagnostic['error'], 'PermissionError: proc unavailable')
+            self.assertFalse((Path(directory) / 'cleanup.json').exists())
+
+
+class SignalVerified(PidfdRoutedToKill):
+    def test_pidfd_is_pinned_before_identity_reread_and_always_closed(self):
+        order = []
+        self.pidfd_open.side_effect = lambda pid: order.append('open') or 77
+        self.pidfd_kill.side_effect = lambda fd: order.append(('kill', fd))
+        self.close.side_effect = lambda fd: order.append(('close', fd))
+        for identity, signalled in [((1, 'known', 'S'), True), ((1, 'reused', 'S'), False)]:
+            order.clear()
+            with self.subTest(identity=identity), \
+                    patch.object(supervisor, 'process_identity',
+                                 side_effect=lambda _pid, value=identity: order.append('read') or value):
+                self.assertIs(supervisor.signal_verified(456, 'known', None), signalled)
+                expected = ['open', 'read'] + ([('kill', 77)] if signalled else []) + [('close', 77)]
+                self.assertEqual(order, expected)
+        order.clear()
+        with patch.object(supervisor, 'process_identity', side_effect=PermissionError()):
+            with self.assertRaises(PermissionError):
+                supervisor.signal_verified(456, 'known', None)
+        self.assertEqual(order, ['open', ('close', 77)])
+
+    def test_exited_pinned_generation_is_not_an_error(self):
+        self.pidfd_kill.side_effect = ProcessLookupError()
+        with patch.object(supervisor, 'process_identity', return_value=(1, 'known', 'S')):
+            self.assertFalse(supervisor.signal_verified(456, 'known', None))
+        self.close.assert_called_once_with(456)
+
+    def test_deadline_after_reread_does_not_signal(self):
+        now = [10.0]
+        with (patch.object(supervisor.time, 'monotonic', side_effect=lambda: now[0]),
+              patch.object(supervisor, 'process_identity',
+                           side_effect=lambda _pid: now.__setitem__(0, 12.1) or (1, 'known', 'S'))):
+            with self.assertRaises(supervisor.CleanupDeadline):
+                supervisor.signal_verified(456, 'known', 12.0)
+        self.pidfd_kill.assert_not_called()
+        self.close.assert_called_once_with(456)
+
+
+class KnownIdentityCleanup(PidfdRoutedToKill):
     def test_identity_read_overrun_cannot_signal_or_reap(self):
         now = [10.0]
 
@@ -275,21 +411,6 @@ class KnownIdentityCleanup(unittest.TestCase):
             kill.assert_not_called()
             wait.assert_not_called()
 
-    @unittest.skipUnless(hasattr(supervisor.os, 'uname') and supervisor.os.uname().sysname == 'Linux',
-                         'requires Linux /proc and waitpid')
-    def test_real_detached_child_is_signalled_and_reaped(self):
-        child = subprocess.Popen([sys.executable, '-c', 'import time; time.sleep(60)'],
-                                 start_new_session=True)
-        try:
-            stamp = supervisor.process_identity(child.pid)[1]
-            supervisor.cleanup_known({child.pid: stamp}, time.monotonic() + 2)
-            self.assertFalse(Path(f'/proc/{child.pid}').exists())
-        finally:
-            # Avoid leaving a child behind even if the cleanup assertion fails.
-            if child.poll() is None:
-                child.kill()
-            child.wait(timeout=3)
-
     def test_only_fresh_matching_identity_is_signalled_and_children_are_reaped(self):
         with (patch.object(supervisor, 'process_identity', side_effect=[
                 (1, 'known', 'S'), (1, 'new-generation', 'S'), PermissionError(),
@@ -303,11 +424,13 @@ class KnownIdentityCleanup(unittest.TestCase):
             self.assertEqual(wait.call_count, 2)
 
     def test_live_unverifiable_child_cannot_make_fallback_wait_forever(self):
+        now = [0]
         with (patch.object(supervisor, 'process_identity', side_effect=PermissionError()),
               patch.object(supervisor.os, 'kill') as kill,
               patch.object(supervisor.os, 'waitpid', return_value=(0, 0)),
-              patch.object(supervisor.time, 'monotonic', side_effect=[0, 0, 0, 2]),
-              patch.object(supervisor.time, 'sleep') as sleep):
+              patch.object(supervisor.time, 'monotonic', side_effect=lambda: now[0]),
+              patch.object(supervisor.time, 'sleep',
+                           side_effect=lambda _seconds: now.__setitem__(0, 2)) as sleep):
             supervisor.cleanup_known({456: 'unreadable'}, 2)
             kill.assert_not_called()
             sleep.assert_called_once_with(0.01)
@@ -329,11 +452,50 @@ class KnownIdentityCleanup(unittest.TestCase):
             wait.assert_not_called()
 
     def test_identity_pass_stops_when_budget_expires(self):
+        now = [0]
         with (patch.object(supervisor, 'process_identity', return_value=(1, 'known', 'S')) as identity,
-              patch.object(supervisor.os, 'kill') as kill,
+              patch.object(supervisor.os, 'kill',
+                           side_effect=lambda *_args: now.__setitem__(0, 2)) as kill,
               patch.object(supervisor.os, 'waitpid') as wait,
-              patch.object(supervisor.time, 'monotonic', side_effect=[0, 0, 0, 2])):
+              patch.object(supervisor.time, 'monotonic', side_effect=lambda: now[0])):
             supervisor.cleanup_known({456: 'known', 457: 'known'}, 2)
             identity.assert_called_once_with(456)
             kill.assert_called_once_with(456, supervisor.signal.SIGKILL)
             wait.assert_not_called()
+
+
+class RealPidfdCleanup(unittest.TestCase):
+    """No mocks: the identity-bound signal path must work on this kernel."""
+
+    @unittest.skipUnless(hasattr(supervisor.os, 'uname') and supervisor.os.uname().sysname == 'Linux',
+                         'requires Linux /proc and waitpid')
+    def test_real_detached_child_is_signalled_and_reaped(self):
+        child = subprocess.Popen([sys.executable, '-c', 'import time; time.sleep(60)'],
+                                 start_new_session=True)
+        try:
+            stamp = supervisor.process_identity(child.pid)[1]
+            supervisor.cleanup_known({child.pid: stamp}, time.monotonic() + 2)
+            self.assertFalse(Path(f'/proc/{child.pid}').exists())
+        finally:
+            # Avoid leaving a child behind even if the cleanup assertion fails.
+            if child.poll() is None:
+                child.kill()
+            child.wait(timeout=3)
+
+    @unittest.skipUnless(hasattr(supervisor.os, 'uname') and supervisor.os.uname().sysname == 'Linux',
+                         'requires Linux pidfds')
+    def test_pidfd_of_reaped_generation_cannot_signal_its_pid(self):
+        child = subprocess.Popen([sys.executable, '-c', 'import time; time.sleep(60)'])
+        fd = supervisor.pidfd_open(child.pid)
+        try:
+            child.kill()
+            child.wait(timeout=3)
+            # The numeric PID is now free for reuse; the handle still names the
+            # reaped generation, so it can never reach a replacement process.
+            with self.assertRaises(ProcessLookupError):
+                supervisor.pidfd_kill(fd)
+        finally:
+            supervisor.os.close(fd)
+            if child.poll() is None:
+                child.kill()
+                child.wait(timeout=3)
