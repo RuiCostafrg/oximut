@@ -56,6 +56,18 @@ identity tracking is sampled, not an exhaustive process audit. This changes no
 resource-budget sampling, test isolation, baseline, or mutation workload. Its
 performance effect requires a separate matched measurement.
 
+Periodic accounting now discovers only the owned tree. The CLI and each slot
+are subreapers, so every owned process, including adopted orphans, is reachable
+through the per-thread `/proc/<pid>/task/<tid>/children` links. The resource
+sampler and the slots' 50ms ownership snapshots follow those links instead of
+reading every host process, and fall back to broad discovery when a kernel lacks
+them (`resources.treeDiscoveries` and `resources.broadDiscoveries` count each
+kind). The CLI no longer enumerates `/proc` on every 10ms dispatch poll: slot
+ownership reuses the sampler's discovery. Every abort, termination and shutdown
+verification still performs a fresh broad discovery before signalling or
+concluding cleanup, so the fail-closed cleanup gates are unchanged. Identity and
+RSS reads for tree members remain fresh and strict.
+
 If process discovery fails, the supervisor performs bounded best-effort cleanup
 of previously observed identities, including its directly spawned controller.
 Each signal requires an independent current start-time check; missing, reused,

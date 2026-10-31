@@ -75,7 +75,6 @@ impl Worker {
         Ok(())
     }
     fn ready(&mut self) -> Option<Result<Response, String>> {
-        self.snapshot();
         let (_, request, started) = self.busy.as_ref()?;
         let path = self
             .directory
@@ -153,7 +152,17 @@ impl<'a> Scheduler<'a> {
     }
     fn sample(&mut self, force: bool) {
         let pids: Vec<_> = self.slots.iter().flatten().map(|w| w.child.id()).collect();
+        let before = self.budget.samples;
         self.budget.sample(&pids, force);
+        // Ownership snapshots reuse the sample's discovery. Aborts and
+        // shutdown still discover afresh before signalling anything.
+        if self.budget.samples != before
+            && let Some(table) = &self.budget.table
+        {
+            for worker in self.slots.iter_mut().flatten() {
+                worker.owned.extend(table.descendants(worker.child.id()));
+            }
+        }
     }
     fn close_slot(&mut self, slot: usize) {
         let Some(mut worker) = self.slots[slot].take() else {

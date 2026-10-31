@@ -340,7 +340,14 @@ pub struct Budget {
     pub admission_pauses: u64,
     pub recycled_idle_workers: u64,
     pub samples: u64,
+    /// Samples discovered by walking the owned tree's `children` links, and
+    /// by broad `/proc` enumeration (kernels without those links).
+    pub tree_discoveries: u64,
+    pub broad_discoveries: u64,
     pub exhaustion: Option<String>,
+    /// The latest sample's discovery, so slot ownership needs no extra scan.
+    #[serde(skip)]
+    pub table: Option<ProcessTable>,
     #[serde(skip)]
     last_sample: Instant,
     #[serde(skip)]
@@ -382,7 +389,10 @@ impl Budget {
             admission_pauses: 0,
             recycled_idle_workers: 0,
             samples: 0,
+            tree_discoveries: 0,
+            broad_discoveries: 0,
             exhaustion: None,
+            table: None,
             last_sample: Instant::now() - Duration::from_secs(1),
             current: 0,
             active: 0,
@@ -394,13 +404,26 @@ impl Budget {
         Ok(state)
     }
     pub fn sample(&mut self, workers: &[u32], force: bool) {
+        let (mut tree, mut broad) = (0, 0);
         self.sample_with_readers(
             workers,
             force,
-            || ProcessTable::read_with(identity),
+            || {
+                // Every owned process descends from this subreaper CLI. Any
+                // tree-walk failure falls back to broad discovery, whose
+                // strict errors are unchanged.
+                if let Ok(Some(table)) = ProcessTable::read_tree(std::process::id()) {
+                    tree += 1;
+                    return Ok(table);
+                }
+                broad += 1;
+                ProcessTable::read_with(identity)
+            },
             identity,
             rss,
         );
+        self.tree_discoveries += tree;
+        self.broad_discoveries += broad;
     }
     fn sample_with_readers(
         &mut self,
@@ -415,6 +438,7 @@ impl Budget {
         }
         self.last_sample = Instant::now();
         self.samples += 1;
+        self.table = None;
         let observed = (|| -> Result<(), String> {
             // Exactly one fresh broad discovery per admitted sample. This also
             // includes adopted descendants outside any live worker branch.
@@ -476,6 +500,7 @@ impl Budget {
                     self.current, self.budget_bytes
                 ));
             }
+            self.table = Some(table);
             Ok(())
         })();
         if let Err(error) = observed
@@ -545,7 +570,10 @@ mod tests {
             admission_pauses: 0,
             recycled_idle_workers: 0,
             samples: 0,
+            tree_discoveries: 0,
+            broad_discoveries: 0,
             exhaustion: None,
+            table: None,
             last_sample: Instant::now() - Duration::from_secs(1),
             current: 0,
             active: 0,

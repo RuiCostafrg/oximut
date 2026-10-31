@@ -1,6 +1,6 @@
 //! One broad /proc discovery, with pure projections for each process tree.
 use std::{
-    collections::{BTreeMap, BTreeSet},
+    collections::{BTreeMap, BTreeSet, VecDeque},
     fs,
 };
 
@@ -29,6 +29,44 @@ fn parse_identity(stat: &str) -> Option<(u32, u64)> {
     let parent = fields.nth(1)?.parse().ok()?;
     let start = fields.nth(17)?.parse().ok()?;
     Some((parent, start))
+}
+
+/// Children of every thread of `pid`; an exited process or thread has none.
+fn children(pid: u32) -> Result<Vec<u32>, String> {
+    let gone = |error: &std::io::Error| {
+        error.kind() == std::io::ErrorKind::NotFound || error.raw_os_error() == Some(libc::ESRCH)
+    };
+    let tasks = match fs::read_dir(format!("/proc/{pid}/task")) {
+        Ok(tasks) => tasks,
+        Err(error) if gone(&error) => return Ok(vec![]),
+        Err(error) => return Err(format!("process tasks unavailable for PID {pid}: {error}")),
+    };
+    let mut result = vec![];
+    for task in tasks {
+        let task = match task {
+            Ok(task) => task,
+            Err(error) if gone(&error) => continue,
+            Err(error) => return Err(format!("process task unavailable for PID {pid}: {error}")),
+        };
+        match fs::read_to_string(task.path().join("children")) {
+            Ok(list) => {
+                for child in list.split_whitespace() {
+                    result.push(
+                        child
+                            .parse()
+                            .map_err(|_| format!("invalid children list for PID {pid}"))?,
+                    );
+                }
+            }
+            Err(error) if gone(&error) => {}
+            Err(error) => {
+                return Err(format!(
+                    "process children unavailable for PID {pid}: {error}"
+                ));
+            }
+        }
+    }
+    Ok(result)
 }
 
 #[derive(Default)]
@@ -74,6 +112,46 @@ impl ProcessTable {
                 && let Ok(Some(identity)) = read_identity(pid)
             {
                 processes.insert(pid, identity);
+            }
+        }
+        Ok(Self(processes))
+    }
+
+    /// Periodic accounting of an owned tree only: follow every thread's
+    /// `children` links from `root` instead of reading every host process.
+    /// Orphans are reparented to the subreaper `root` (or a subreaper below
+    /// it), so they stay reachable. `Ok(None)` means the kernel lacks these
+    /// links (CONFIG_PROC_CHILDREN); callers then use broad discovery. Cleanup
+    /// verification must keep using broad discovery.
+    pub fn read_tree(root: u32) -> Result<Option<Self>, String> {
+        if fs::metadata(format!("/proc/{root}/task/{root}/children")).is_err() {
+            return Ok(None);
+        }
+        Self::walk(root, children, identity).map(Some)
+    }
+
+    pub(super) fn walk(
+        root: u32,
+        mut children: impl FnMut(u32) -> Result<Vec<u32>, String>,
+        mut read_identity: impl FnMut(u32) -> Result<Option<(u32, u64)>, String>,
+    ) -> Result<Self, String> {
+        let mut processes = BTreeMap::new();
+        let mut seen = BTreeSet::from([root]);
+        let mut queue = VecDeque::new();
+        // Like broad discovery, member stat failures are skipped here; roots
+        // and members get independent, strict accounting reads later.
+        if let Ok(Some(identity)) = read_identity(root) {
+            processes.insert(root, identity);
+            queue.push_back(root);
+        }
+        while let Some(pid) = queue.pop_front() {
+            for child in children(pid)? {
+                if seen.insert(child)
+                    && let Ok(Some(identity)) = read_identity(child)
+                {
+                    processes.insert(child, identity);
+                    queue.push_back(child);
+                }
             }
         }
         Ok(Self(processes))
@@ -147,6 +225,104 @@ mod tests {
         assert_eq!(table.descendants(15), BTreeMap::new());
         assert_eq!(table.descendants(99), BTreeMap::new());
         assert_eq!(reads, data.len(), "projections must never read /proc");
+    }
+
+    #[test]
+    fn tree_walk_follows_links_skips_exits_and_matches_broad_projection() {
+        // 10 is the subreaper root; 40 was adopted after its parent exited;
+        // 32 exits before its stat is read; 90 is an unrelated host process.
+        let links = BTreeMap::from([
+            (10, vec![20, 30, 40]),
+            (20, vec![15]),
+            (30, vec![31, 32, 31]),
+            (90, vec![91]),
+        ]);
+        let stats = BTreeMap::from([
+            (10, (1, 100)),
+            (20, (10, 200)),
+            (15, (20, 300)),
+            (30, (10, 400)),
+            (31, (30, 500)),
+            (40, (10, 600)),
+            (90, (1, 800)),
+            (91, (90, 900)),
+        ]);
+        let mut reads = vec![];
+        let table = ProcessTable::walk(
+            10,
+            |pid| Ok(links.get(&pid).cloned().unwrap_or_default()),
+            |pid| {
+                reads.push(pid);
+                Ok(stats.get(&pid).copied())
+            },
+        )
+        .unwrap();
+        // Only the owned tree is read, each process once.
+        reads.sort_unstable();
+        assert_eq!(reads, vec![10, 15, 20, 30, 31, 32, 40]);
+        assert_eq!(table.start(10), Some(100));
+        let broad = ProcessTable::collect(stats.keys().map(|&pid| Ok(Some(pid))), |pid| {
+            Ok(stats.get(&pid).copied())
+        })
+        .unwrap();
+        for root in [10, 20, 30, 40] {
+            assert_eq!(table.descendants(root), broad.descendants(root));
+        }
+    }
+
+    #[test]
+    fn tree_walk_propagates_link_errors_and_handles_an_exited_root() {
+        assert!(
+            ProcessTable::walk(
+                1,
+                |_| Err("children unreadable".into()),
+                |_| Ok(Some((0, 1)))
+            )
+            .is_err()
+        );
+        let table = ProcessTable::walk(1, |_| Ok(vec![2]), |_| Ok(None)).unwrap();
+        assert!(table.0.is_empty());
+    }
+
+    #[test]
+    #[cfg(any(target_os = "linux", target_os = "android"))]
+    fn tree_walk_finds_real_descendants_when_the_kernel_links_children() {
+        let mut child = std::process::Command::new("sh")
+            .args(["-c", "sleep 30 & sleep 30 & wait"])
+            .spawn()
+            .unwrap();
+        let root = std::process::id();
+        let mut found = None;
+        for _ in 0..200 {
+            match ProcessTable::read_tree(root).unwrap() {
+                None => break, // Kernel without CONFIG_PROC_CHILDREN.
+                Some(table) => {
+                    let owned = table.descendants(root);
+                    if owned.len() >= 3 {
+                        found = Some(owned);
+                        break;
+                    }
+                }
+            }
+            std::thread::sleep(std::time::Duration::from_millis(10));
+        }
+        let broad = ProcessTable::read_for_cleanup().descendants(root);
+        let _ = child.kill();
+        let _ = child.wait();
+        // Hosted CI kernels link children; only local sandboxes may lack them.
+        if std::env::var_os("CI").is_some() {
+            assert!(found.is_some(), "CI kernel must expose children links");
+        }
+        if let Some(owned) = found {
+            assert!(owned.contains_key(&child.id()));
+            for (pid, start) in &owned {
+                assert_eq!(
+                    broad.get(pid),
+                    Some(start),
+                    "walk saw {pid} that broad missed"
+                );
+            }
+        }
     }
 
     #[test]

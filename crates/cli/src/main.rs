@@ -346,6 +346,23 @@ fn descendants(_: u32) -> BTreeMap<u32, u64> {
     BTreeMap::new()
 }
 
+/// Periodic ownership snapshots of this subreaper's tree walk its `children`
+/// links instead of reading every host process. Any failure, or a kernel
+/// without those links, falls back to broad discovery. Termination and
+/// shutdown verification always use broad discovery.
+#[cfg(any(target_os = "linux", target_os = "android"))]
+fn owned_snapshot() -> BTreeMap<u32, u64> {
+    let root = std::process::id();
+    match processes::ProcessTable::read_tree(root) {
+        Ok(Some(table)) => table.descendants(root),
+        _ => descendants(root),
+    }
+}
+#[cfg(not(any(target_os = "linux", target_os = "android")))]
+fn owned_snapshot() -> BTreeMap<u32, u64> {
+    BTreeMap::new()
+}
+
 fn terminate(child: &mut std::process::Child, owned: &BTreeMap<u32, u64>) {
     #[cfg(unix)]
     unsafe {
@@ -419,7 +436,7 @@ fn invoke(options: &Options, request: &Request) -> Response {
         let mut last_snapshot = Instant::now() - Duration::from_secs(1);
         let status = loop {
             if last_snapshot.elapsed() >= Duration::from_millis(50) {
-                owned.extend(descendants(std::process::id()));
+                owned.extend(owned_snapshot());
                 owned.remove(&child.id());
                 last_snapshot = Instant::now();
             }
@@ -563,7 +580,8 @@ impl Session {
         let mut last_snapshot = Instant::now() - Duration::from_secs(1);
         loop {
             if last_snapshot.elapsed() >= Duration::from_millis(50) {
-                self.snapshot();
+                self.owned.extend(owned_snapshot());
+                self.owned.remove(&self.child.id());
                 last_snapshot = Instant::now();
             }
             if response_path.exists() {
