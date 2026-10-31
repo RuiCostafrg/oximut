@@ -689,6 +689,34 @@ class MinimumCaptureTests(unittest.TestCase):
                                 'events-mismatch': 'segment events do not match profiles'}[helper]
                     self.assertIn(f'{expected}: node-6.json', inventory['errors'])
 
+    def test_segment_events_cannot_raise_the_helpers_fixed_segment_cap(self):
+        """Two matching segments whose events claim a cap of 2 are still not helper evidence."""
+        for cap, count in [(1, 1), (2, 1), (2, 2), (True, 1)]:
+            with self.subTest(cap=cap, count=count), tempfile.TemporaryDirectory() as tmp:
+                profiles, qualification = self.fixture(Path(tmp))
+                identity = profiles / 'node-6.json'
+                record = json.loads(identity.read_text())
+                del record['exitObserved']
+                identity.write_text(json.dumps(record))
+                source = profiles / 'CPU.20261028.000000.6.0.001.cpuprofile'
+                segment = json.loads(source.read_text())
+                source.unlink()
+                events = []
+                for index in range(count):
+                    (profiles / f'Segment.6.0.1.{index}.cpuprofile').write_text(json.dumps(segment))
+                    events.append(json.dumps({'profile': f'Segment.6.0.1.{index}.cpuprofile',
+                                              'startTime': segment['startTime'],
+                                              'endTime': segment['endTime'],
+                                              'maxSegmentsPerIsolate': cap}) + '\n')
+                (profiles / 'Segment.6.0.1.segment-events.jsonl').write_text(''.join(events))
+                inventory = diagnostic.capture_inventory(profiles, qualification)
+                evidence = inventory['minimum_role_evidence']['oximut_test_fork']
+                if (cap, count) == (1, 1):
+                    self.assertTrue(evidence)
+                else:
+                    self.assertEqual(evidence, [])
+                    self.assertIn('segment events do not match profiles: node-6.json', inventory['errors'])
+
     def test_corrupt_orphan_profile_is_explicitly_retained_and_rejected(self):
         """Preserve orphan bytes while rejecting them as capture evidence."""
         with tempfile.TemporaryDirectory() as tmp:

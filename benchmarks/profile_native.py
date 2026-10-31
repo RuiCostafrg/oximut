@@ -72,19 +72,23 @@ def compact_summary(result):
     }
 
 
+# node-segments.cjs captures one checkpoint per isolate; events cannot raise this.
+SEGMENTS_PER_ISOLATE = 1
+
+
 def segment_events_match(events_file, segments):
-    """Each helper event names one retained profile, with its times, within the segment limit."""
+    """Each helper event names one retained profile, with its times, within the helper's limit."""
     try:
         events = [json.loads(line) for line in events_file.read_text().splitlines()]
         profiles = {path.name: json.loads(path.read_text()) for path in segments}
     except (OSError, ValueError):
         return False
-    if len(events) != len(profiles) or not all(isinstance(event, dict) for event in events):
+    if (len(events) != len(profiles) or len(profiles) > SEGMENTS_PER_ISOLATE
+            or not all(isinstance(event, dict) for event in events)):
         return False
     named = [event.get('profile') for event in events]
     if sorted(named, key=str) != sorted(profiles) or any(
-            type(event.get('maxSegmentsPerIsolate')) is not int
-            or len(profiles) > event['maxSegmentsPerIsolate']
+            event.get('maxSegmentsPerIsolate') != SEGMENTS_PER_ISOLATE
             or event.get('startTime') != profiles[event['profile']].get('startTime')
             or event.get('endTime') != profiles[event['profile']].get('endTime')
             for event in events):
