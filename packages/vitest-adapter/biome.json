@@ -3,6 +3,9 @@
   "files": {
     "includes": [
       "*.ts",
+      "protocol.mjs",
+      "test/protocol.test.mjs",
+      "test/protocol-types.ts",
       "m1-runner.mjs",
       "m2-runner.mjs",
       "test/m1.test.mjs",

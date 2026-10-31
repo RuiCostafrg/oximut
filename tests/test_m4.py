@@ -418,6 +418,17 @@ class IncrementalCache(unittest.TestCase):
         self.assertEqual(changed_adapter["cache"]["outcomeHits"], 0, changed_adapter["cache"])
         self.assertGreater(self.run_oximut("--cache-input", declared_file)["cache"]["outcomeHits"], 0)
 
+        # Runtime dependencies next to the entry point must be fingerprinted,
+        # even with the adapter directory outside the project root.
+        protocol = self.adapter.parent / "protocol.mjs"
+        protocol.write_bytes((REPO / "packages/vitest-adapter/protocol.mjs").read_bytes())
+        self.run_oximut("--cache-input", declared_file)
+        self.assertGreater(self.run_oximut("--cache-input", declared_file)["cache"]["outcomeHits"], 0)
+        protocol.write_text(protocol.read_text() + "\n// changed protocol implementation\n")
+        changed_protocol = self.run_oximut("--cache-input", declared_file)
+        self.assertEqual(changed_protocol["cache"]["outcomeHits"], 0, changed_protocol["cache"])
+        self.assertGreater(self.run_oximut("--cache-input", declared_file)["cache"]["outcomeHits"], 0)
+
         with_env = self.run_oximut("--cache-input", declared_file, "--cache-env", "OXIMUT_FIXTURE_MODE",
                                    env={"OXIMUT_FIXTURE_MODE": "alpha"})
         changed_env = self.run_oximut("--cache-input", declared_file, "--cache-env", "OXIMUT_FIXTURE_MODE",
