@@ -33,6 +33,9 @@
   "overrides": {
     "typed-rest-client": {
       "qs": "6.16.1"
+    },
+    "@stryker-mutator/core": {
+      "minimatch": "11.0.3"
     }
   },
   "license": "MIT"
