@@ -79,12 +79,15 @@ class InstrumentedBaseline(unittest.TestCase):
         for request in mutants:
             self.assertNotIn('collectCoverage', request)
             mutation = request['mutation']
-            self.assertEqual(mutation['code'], modules[mutation['file']]['code'])
+            # Code and source map: attribution depends on both.
+            for field in ('code', 'map'):
+                self.assertEqual(mutation[field], modules[mutation['file']][field])
             if grouped:
                 # Every module of the validated group, never a partial set.
                 self.assertEqual({m['file'] for m in request['resident']}, set(FILES))
                 for module in request['resident']:
-                    self.assertEqual(module['code'], modules[module['file']]['code'])
+                    for field in ('code', 'map'):
+                        self.assertEqual(module[field], modules[module['file']][field])
             else:
                 # A lone module is served through `mutation` alone.
                 self.assertNotIn('resident', request)
