@@ -160,12 +160,16 @@ deliberately in its own commit with the reason.
   pidfd-pinned identities, the same guarantees as `supervisor.py`. Ports:
   post-job leak detection with independent disappearance checks, deadline-bounded
   shutdown, controller recycling, crash retry policy and input-change detection
-  for controller reuse. The reuse check keeps exactly today's invariant: path,
-  size, mtime and ctime for every project input, and any symlink forces a fresh
-  controller. ctime changes on every content write and cannot be set by user
-  code. Content-hashed input fingerprints stay where they apply today: in
-  cache-enabled runs, they are checked after the baseline and before
-  publication. P2 neither adds nor removes them.
+  for controller reuse. The reuse check keeps today's per-input path, size,
+  mtime and ctime comparison, and any symlink still forces a fresh controller.
+  It also closes a gap that check has today. Filesystems with coarse timestamps
+  can leave all three unchanged after an equal-size rewrite in the same tick.
+  So, following git's "racily clean" rule, any entry whose mtime or ctime is not
+  strictly older than the previous snapshot's start is content-hashed, and a
+  hash change retires the controller. The check is strictly stronger than
+  today's, never weaker. Content-hashed cache fingerprints stay where they
+  apply today: in cache-enabled runs, after the baseline and before
+  publication.
 - Blocking `poll(2)` with deadlines replaces the 10/15 ms sleeps.
 - Expected effect: two fewer processes (CPU and RSS), about 100 ms less per job.
 
