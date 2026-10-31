@@ -1,0 +1,1050 @@
+{
+  "captures": {
+    "completeness": "Unknown: processes killed before preload/dump and overridden environments may be absent; raw orphan profiles retained.",
+    "errors": [
+      "incomplete capture: node-4995-0.json",
+      "incomplete capture: node-5018-0.json",
+      "incomplete capture: node-5031-0.json",
+      "incomplete capture: node-5052-0.json",
+      "incomplete capture: node-5060-0.json",
+      "incomplete capture: node-5068-0.json",
+      "incomplete capture: node-5076-0.json",
+      "incomplete capture: node-5086-0.json",
+      "incomplete capture: node-5096-0.json",
+      "incomplete capture: node-5111-0.json",
+      "incomplete capture: node-5119-0.json",
+      "incomplete capture: node-5127-0.json",
+      "incomplete capture: node-5136-0.json",
+      "incomplete capture: node-5144-0.json",
+      "incomplete capture: node-5152-0.json",
+      "incomplete capture: node-5161-0.json",
+      "incomplete capture: node-5169-0.json",
+      "incomplete capture: node-5177-0.json",
+      "incomplete capture: node-5185-0.json",
+      "incomplete capture: node-5193-0.json",
+      "incomplete capture: node-5201-0.json",
+      "incomplete capture: node-5209-0.json",
+      "incomplete capture: node-5217-0.json",
+      "incomplete capture: node-5225-0.json",
+      "incomplete capture: node-5233-0.json",
+      "incomplete capture: node-5241-0.json",
+      "incomplete capture: node-5249-0.json",
+      "incomplete capture: node-5257-0.json",
+      "incomplete capture: node-5265-0.json",
+      "incomplete capture: node-5273-0.json",
+      "incomplete capture: node-5281-0.json",
+      "incomplete capture: node-5289-0.json",
+      "incomplete capture: node-5297-0.json",
+      "incomplete capture: node-5305-0.json",
+      "incomplete capture: node-5313-0.json",
+      "incomplete capture: node-5321-0.json",
+      "incomplete capture: node-5329-0.json",
+      "incomplete capture: node-5337-0.json",
+      "incomplete capture: node-5345-0.json",
+      "incomplete capture: node-5353-0.json",
+      "incomplete capture: node-5361-0.json",
+      "incomplete capture: node-5369-0.json",
+      "incomplete capture: node-5377-0.json",
+      "incomplete capture: node-5385-0.json",
+      "incomplete capture: node-5393-0.json",
+      "incomplete capture: node-5401-0.json",
+      "incomplete capture: node-5409-0.json",
+      "incomplete capture: node-5417-0.json",
+      "incomplete capture: node-5429-0.json",
+      "incomplete capture: node-5445-0.json",
+      "incomplete capture: node-5461-0.json",
+      "incomplete capture: node-5461-1.json",
+      "incomplete capture: node-5461-10.json",
+      "incomplete capture: node-5461-11.json",
+      "incomplete capture: node-5461-12.json",
+      "incomplete capture: node-5461-13.json",
+      "incomplete capture: node-5461-14.json",
+      "incomplete capture: node-5461-2.json",
+      "incomplete capture: node-5461-3.json",
+      "incomplete capture: node-5461-4.json",
+      "incomplete capture: node-5461-5.json",
+      "incomplete capture: node-5461-6.json",
+      "incomplete capture: node-5461-7.json",
+      "incomplete capture: node-5461-8.json",
+      "incomplete capture: node-5461-9.json"
+    ],
+    "minimum_role_evidence": {
+      "oximut_adapter": [
+        "node-5086-0.json"
+      ],
+      "oximut_controller": [
+        "node-5096-0.json"
+      ],
+      "oximut_node": [
+        "node-5086-0.json",
+        "node-5096-0.json",
+        "node-5111-0.json",
+        "node-5119-0.json",
+        "node-5127-0.json",
+        "node-5136-0.json",
+        "node-5144-0.json",
+        "node-5152-0.json",
+        "node-5161-0.json",
+        "node-5169-0.json",
+        "node-5177-0.json",
+        "node-5185-0.json",
+        "node-5193-0.json",
+        "node-5201-0.json",
+        "node-5209-0.json",
+        "node-5217-0.json",
+        "node-5225-0.json",
+        "node-5233-0.json",
+        "node-5241-0.json",
+        "node-5249-0.json",
+        "node-5257-0.json",
+        "node-5265-0.json",
+        "node-5273-0.json",
+        "node-5281-0.json",
+        "node-5289-0.json",
+        "node-5297-0.json",
+        "node-5305-0.json",
+        "node-5313-0.json",
+        "node-5321-0.json",
+        "node-5329-0.json",
+        "node-5337-0.json",
+        "node-5345-0.json",
+        "node-5353-0.json",
+        "node-5361-0.json",
+        "node-5369-0.json",
+        "node-5377-0.json",
+        "node-5385-0.json",
+        "node-5393-0.json",
+        "node-5401-0.json",
+        "node-5409-0.json"
+      ],
+      "oximut_supervisor": [
+        "python-5095-1793189374803634255.json"
+      ],
+      "oximut_test_fork": [
+        "node-5111-0.json",
+        "node-5119-0.json",
+        "node-5127-0.json",
+        "node-5136-0.json",
+        "node-5144-0.json",
+        "node-5152-0.json",
+        "node-5161-0.json",
+        "node-5169-0.json",
+        "node-5177-0.json",
+        "node-5185-0.json",
+        "node-5193-0.json",
+        "node-5201-0.json",
+        "node-5209-0.json",
+        "node-5217-0.json",
+        "node-5225-0.json",
+        "node-5233-0.json",
+        "node-5241-0.json",
+        "node-5249-0.json",
+        "node-5257-0.json",
+        "node-5265-0.json",
+        "node-5273-0.json",
+        "node-5281-0.json",
+        "node-5289-0.json",
+        "node-5297-0.json",
+        "node-5305-0.json",
+        "node-5313-0.json",
+        "node-5321-0.json",
+        "node-5329-0.json",
+        "node-5337-0.json",
+        "node-5345-0.json",
+        "node-5353-0.json",
+        "node-5361-0.json",
+        "node-5369-0.json",
+        "node-5377-0.json",
+        "node-5385-0.json",
+        "node-5393-0.json",
+        "node-5401-0.json",
+        "node-5409-0.json"
+      ],
+      "stryker_node": [
+        "node-5429-0.json",
+        "node-5445-0.json",
+        "node-5461-0.json",
+        "node-5461-1.json",
+        "node-5461-10.json",
+        "node-5461-11.json",
+        "node-5461-12.json",
+        "node-5461-13.json",
+        "node-5461-14.json",
+        "node-5461-2.json",
+        "node-5461-3.json",
+        "node-5461-4.json",
+        "node-5461-5.json",
+        "node-5461-6.json",
+        "node-5461-7.json",
+        "node-5461-8.json",
+        "node-5461-9.json"
+      ],
+      "vitest_node": [
+        "node-5031-0.json",
+        "node-5052-0.json",
+        "node-5060-0.json",
+        "node-5068-0.json",
+        "node-5076-0.json"
+      ]
+    },
+    "observed": [
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": true,
+        "identity": "node-4995-0.json",
+        "partial_segment_count": 1,
+        "partial_segment_range": [
+          "Segment.4995.0.11423.0.cpuprofile",
+          "Segment.4995.0.11423.0.cpuprofile"
+        ],
+        "partial_segments_finalized": true,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": true,
+        "identity": "node-5018-0.json",
+        "partial_segment_count": 0,
+        "partial_segment_range": [],
+        "partial_segments_finalized": false,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": true,
+        "identity": "node-5031-0.json",
+        "partial_segment_count": 1,
+        "partial_segment_range": [
+          "Segment.5031.0.11466.0.cpuprofile",
+          "Segment.5031.0.11466.0.cpuprofile"
+        ],
+        "partial_segments_finalized": true,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-5052-0.json",
+        "partial_segment_count": 1,
+        "partial_segment_range": [
+          "Segment.5052.0.11506.0.cpuprofile",
+          "Segment.5052.0.11506.0.cpuprofile"
+        ],
+        "partial_segments_finalized": true,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-5060-0.json",
+        "partial_segment_count": 1,
+        "partial_segment_range": [
+          "Segment.5060.0.11549.0.cpuprofile",
+          "Segment.5060.0.11549.0.cpuprofile"
+        ],
+        "partial_segments_finalized": true,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-5068-0.json",
+        "partial_segment_count": 1,
+        "partial_segment_range": [
+          "Segment.5068.0.11577.0.cpuprofile",
+          "Segment.5068.0.11577.0.cpuprofile"
+        ],
+        "partial_segments_finalized": true,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-5076-0.json",
+        "partial_segment_count": 1,
+        "partial_segment_range": [
+          "Segment.5076.0.11594.0.cpuprofile",
+          "Segment.5076.0.11594.0.cpuprofile"
+        ],
+        "partial_segments_finalized": true,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": true,
+        "identity": "node-5086-0.json",
+        "partial_segment_count": 1,
+        "partial_segment_range": [
+          "Segment.5086.0.11621.0.cpuprofile",
+          "Segment.5086.0.11621.0.cpuprofile"
+        ],
+        "partial_segments_finalized": true,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": true,
+        "identity": "node-5096-0.json",
+        "partial_segment_count": 1,
+        "partial_segment_range": [
+          "Segment.5096.0.11644.0.cpuprofile",
+          "Segment.5096.0.11644.0.cpuprofile"
+        ],
+        "partial_segments_finalized": true,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-5111-0.json",
+        "partial_segment_count": 1,
+        "partial_segment_range": [
+          "Segment.5111.0.11699.0.cpuprofile",
+          "Segment.5111.0.11699.0.cpuprofile"
+        ],
+        "partial_segments_finalized": true,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-5119-0.json",
+        "partial_segment_count": 1,
+        "partial_segment_range": [
+          "Segment.5119.0.11744.0.cpuprofile",
+          "Segment.5119.0.11744.0.cpuprofile"
+        ],
+        "partial_segments_finalized": true,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-5127-0.json",
+        "partial_segment_count": 1,
+        "partial_segment_range": [
+          "Segment.5127.0.11785.0.cpuprofile",
+          "Segment.5127.0.11785.0.cpuprofile"
+        ],
+        "partial_segments_finalized": true,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-5136-0.json",
+        "partial_segment_count": 1,
+        "partial_segment_range": [
+          "Segment.5136.0.11807.0.cpuprofile",
+          "Segment.5136.0.11807.0.cpuprofile"
+        ],
+        "partial_segments_finalized": true,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-5144-0.json",
+        "partial_segment_count": 1,
+        "partial_segment_range": [
+          "Segment.5144.0.11840.0.cpuprofile",
+          "Segment.5144.0.11840.0.cpuprofile"
+        ],
+        "partial_segments_finalized": true,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-5152-0.json",
+        "partial_segment_count": 1,
+        "partial_segment_range": [
+          "Segment.5152.0.11870.0.cpuprofile",
+          "Segment.5152.0.11870.0.cpuprofile"
+        ],
+        "partial_segments_finalized": true,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-5161-0.json",
+        "partial_segment_count": 1,
+        "partial_segment_range": [
+          "Segment.5161.0.11900.0.cpuprofile",
+          "Segment.5161.0.11900.0.cpuprofile"
+        ],
+        "partial_segments_finalized": true,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-5169-0.json",
+        "partial_segment_count": 1,
+        "partial_segment_range": [
+          "Segment.5169.0.11922.0.cpuprofile",
+          "Segment.5169.0.11922.0.cpuprofile"
+        ],
+        "partial_segments_finalized": true,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-5177-0.json",
+        "partial_segment_count": 1,
+        "partial_segment_range": [
+          "Segment.5177.0.11950.0.cpuprofile",
+          "Segment.5177.0.11950.0.cpuprofile"
+        ],
+        "partial_segments_finalized": true,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-5185-0.json",
+        "partial_segment_count": 1,
+        "partial_segment_range": [
+          "Segment.5185.0.11980.0.cpuprofile",
+          "Segment.5185.0.11980.0.cpuprofile"
+        ],
+        "partial_segments_finalized": true,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-5193-0.json",
+        "partial_segment_count": 1,
+        "partial_segment_range": [
+          "Segment.5193.0.12008.0.cpuprofile",
+          "Segment.5193.0.12008.0.cpuprofile"
+        ],
+        "partial_segments_finalized": true,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-5201-0.json",
+        "partial_segment_count": 1,
+        "partial_segment_range": [
+          "Segment.5201.0.12032.0.cpuprofile",
+          "Segment.5201.0.12032.0.cpuprofile"
+        ],
+        "partial_segments_finalized": true,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-5209-0.json",
+        "partial_segment_count": 1,
+        "partial_segment_range": [
+          "Segment.5209.0.12060.0.cpuprofile",
+          "Segment.5209.0.12060.0.cpuprofile"
+        ],
+        "partial_segments_finalized": true,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-5217-0.json",
+        "partial_segment_count": 1,
+        "partial_segment_range": [
+          "Segment.5217.0.12089.0.cpuprofile",
+          "Segment.5217.0.12089.0.cpuprofile"
+        ],
+        "partial_segments_finalized": true,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-5225-0.json",
+        "partial_segment_count": 1,
+        "partial_segment_range": [
+          "Segment.5225.0.12119.0.cpuprofile",
+          "Segment.5225.0.12119.0.cpuprofile"
+        ],
+        "partial_segments_finalized": true,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-5233-0.json",
+        "partial_segment_count": 1,
+        "partial_segment_range": [
+          "Segment.5233.0.12141.0.cpuprofile",
+          "Segment.5233.0.12141.0.cpuprofile"
+        ],
+        "partial_segments_finalized": true,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-5241-0.json",
+        "partial_segment_count": 1,
+        "partial_segment_range": [
+          "Segment.5241.0.12173.0.cpuprofile",
+          "Segment.5241.0.12173.0.cpuprofile"
+        ],
+        "partial_segments_finalized": true,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-5249-0.json",
+        "partial_segment_count": 1,
+        "partial_segment_range": [
+          "Segment.5249.0.12201.0.cpuprofile",
+          "Segment.5249.0.12201.0.cpuprofile"
+        ],
+        "partial_segments_finalized": true,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-5257-0.json",
+        "partial_segment_count": 1,
+        "partial_segment_range": [
+          "Segment.5257.0.12231.0.cpuprofile",
+          "Segment.5257.0.12231.0.cpuprofile"
+        ],
+        "partial_segments_finalized": true,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-5265-0.json",
+        "partial_segment_count": 1,
+        "partial_segment_range": [
+          "Segment.5265.0.12253.0.cpuprofile",
+          "Segment.5265.0.12253.0.cpuprofile"
+        ],
+        "partial_segments_finalized": true,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-5273-0.json",
+        "partial_segment_count": 1,
+        "partial_segment_range": [
+          "Segment.5273.0.12285.0.cpuprofile",
+          "Segment.5273.0.12285.0.cpuprofile"
+        ],
+        "partial_segments_finalized": true,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-5281-0.json",
+        "partial_segment_count": 1,
+        "partial_segment_range": [
+          "Segment.5281.0.12314.0.cpuprofile",
+          "Segment.5281.0.12314.0.cpuprofile"
+        ],
+        "partial_segments_finalized": true,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-5289-0.json",
+        "partial_segment_count": 1,
+        "partial_segment_range": [
+          "Segment.5289.0.12343.0.cpuprofile",
+          "Segment.5289.0.12343.0.cpuprofile"
+        ],
+        "partial_segments_finalized": true,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-5297-0.json",
+        "partial_segment_count": 1,
+        "partial_segment_range": [
+          "Segment.5297.0.12365.0.cpuprofile",
+          "Segment.5297.0.12365.0.cpuprofile"
+        ],
+        "partial_segments_finalized": true,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-5305-0.json",
+        "partial_segment_count": 1,
+        "partial_segment_range": [
+          "Segment.5305.0.12395.0.cpuprofile",
+          "Segment.5305.0.12395.0.cpuprofile"
+        ],
+        "partial_segments_finalized": true,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-5313-0.json",
+        "partial_segment_count": 1,
+        "partial_segment_range": [
+          "Segment.5313.0.12434.0.cpuprofile",
+          "Segment.5313.0.12434.0.cpuprofile"
+        ],
+        "partial_segments_finalized": true,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-5321-0.json",
+        "partial_segment_count": 1,
+        "partial_segment_range": [
+          "Segment.5321.0.12477.0.cpuprofile",
+          "Segment.5321.0.12477.0.cpuprofile"
+        ],
+        "partial_segments_finalized": true,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-5329-0.json",
+        "partial_segment_count": 1,
+        "partial_segment_range": [
+          "Segment.5329.0.12501.0.cpuprofile",
+          "Segment.5329.0.12501.0.cpuprofile"
+        ],
+        "partial_segments_finalized": true,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-5337-0.json",
+        "partial_segment_count": 1,
+        "partial_segment_range": [
+          "Segment.5337.0.12535.0.cpuprofile",
+          "Segment.5337.0.12535.0.cpuprofile"
+        ],
+        "partial_segments_finalized": true,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-5345-0.json",
+        "partial_segment_count": 1,
+        "partial_segment_range": [
+          "Segment.5345.0.12588.0.cpuprofile",
+          "Segment.5345.0.12588.0.cpuprofile"
+        ],
+        "partial_segments_finalized": true,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-5353-0.json",
+        "partial_segment_count": 1,
+        "partial_segment_range": [
+          "Segment.5353.0.12641.0.cpuprofile",
+          "Segment.5353.0.12641.0.cpuprofile"
+        ],
+        "partial_segments_finalized": true,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-5361-0.json",
+        "partial_segment_count": 1,
+        "partial_segment_range": [
+          "Segment.5361.0.12686.0.cpuprofile",
+          "Segment.5361.0.12686.0.cpuprofile"
+        ],
+        "partial_segments_finalized": true,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-5369-0.json",
+        "partial_segment_count": 1,
+        "partial_segment_range": [
+          "Segment.5369.0.12732.0.cpuprofile",
+          "Segment.5369.0.12732.0.cpuprofile"
+        ],
+        "partial_segments_finalized": true,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-5377-0.json",
+        "partial_segment_count": 1,
+        "partial_segment_range": [
+          "Segment.5377.0.12773.0.cpuprofile",
+          "Segment.5377.0.12773.0.cpuprofile"
+        ],
+        "partial_segments_finalized": true,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-5385-0.json",
+        "partial_segment_count": 1,
+        "partial_segment_range": [
+          "Segment.5385.0.12815.0.cpuprofile",
+          "Segment.5385.0.12815.0.cpuprofile"
+        ],
+        "partial_segments_finalized": true,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": true,
+        "identity": "node-5393-0.json",
+        "partial_segment_count": 1,
+        "partial_segment_range": [
+          "Segment.5393.0.12858.0.cpuprofile",
+          "Segment.5393.0.12858.0.cpuprofile"
+        ],
+        "partial_segments_finalized": true,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-5401-0.json",
+        "partial_segment_count": 1,
+        "partial_segment_range": [
+          "Segment.5401.0.12906.0.cpuprofile",
+          "Segment.5401.0.12906.0.cpuprofile"
+        ],
+        "partial_segments_finalized": true,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-5409-0.json",
+        "partial_segment_count": 1,
+        "partial_segment_range": [
+          "Segment.5409.0.12947.0.cpuprofile",
+          "Segment.5409.0.12947.0.cpuprofile"
+        ],
+        "partial_segments_finalized": true,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": true,
+        "identity": "node-5417-0.json",
+        "partial_segment_count": 1,
+        "partial_segment_range": [
+          "Segment.5417.0.13003.0.cpuprofile",
+          "Segment.5417.0.13003.0.cpuprofile"
+        ],
+        "partial_segments_finalized": true,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": true,
+        "identity": "node-5429-0.json",
+        "partial_segment_count": 1,
+        "partial_segment_range": [
+          "Segment.5429.0.13024.0.cpuprofile",
+          "Segment.5429.0.13024.0.cpuprofile"
+        ],
+        "partial_segments_finalized": true,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-5445-0.json",
+        "partial_segment_count": 1,
+        "partial_segment_range": [
+          "Segment.5445.0.13141.0.cpuprofile",
+          "Segment.5445.0.13141.0.cpuprofile"
+        ],
+        "partial_segments_finalized": true,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-5461-0.json",
+        "partial_segment_count": 1,
+        "partial_segment_range": [
+          "Segment.5461.0.13196.0.cpuprofile",
+          "Segment.5461.0.13196.0.cpuprofile"
+        ],
+        "partial_segments_finalized": true,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-5461-1.json",
+        "partial_segment_count": 1,
+        "partial_segment_range": [
+          "Segment.5461.1.13196.0.cpuprofile",
+          "Segment.5461.1.13196.0.cpuprofile"
+        ],
+        "partial_segments_finalized": true,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-5461-10.json",
+        "partial_segment_count": 1,
+        "partial_segment_range": [
+          "Segment.5461.10.13196.0.cpuprofile",
+          "Segment.5461.10.13196.0.cpuprofile"
+        ],
+        "partial_segments_finalized": true,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-5461-11.json",
+        "partial_segment_count": 1,
+        "partial_segment_range": [
+          "Segment.5461.11.13196.0.cpuprofile",
+          "Segment.5461.11.13196.0.cpuprofile"
+        ],
+        "partial_segments_finalized": true,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-5461-12.json",
+        "partial_segment_count": 1,
+        "partial_segment_range": [
+          "Segment.5461.12.13196.0.cpuprofile",
+          "Segment.5461.12.13196.0.cpuprofile"
+        ],
+        "partial_segments_finalized": true,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-5461-13.json",
+        "partial_segment_count": 1,
+        "partial_segment_range": [
+          "Segment.5461.13.13196.0.cpuprofile",
+          "Segment.5461.13.13196.0.cpuprofile"
+        ],
+        "partial_segments_finalized": true,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-5461-14.json",
+        "partial_segment_count": 1,
+        "partial_segment_range": [
+          "Segment.5461.14.13196.0.cpuprofile",
+          "Segment.5461.14.13196.0.cpuprofile"
+        ],
+        "partial_segments_finalized": true,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-5461-2.json",
+        "partial_segment_count": 1,
+        "partial_segment_range": [
+          "Segment.5461.2.13196.0.cpuprofile",
+          "Segment.5461.2.13196.0.cpuprofile"
+        ],
+        "partial_segments_finalized": true,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-5461-3.json",
+        "partial_segment_count": 1,
+        "partial_segment_range": [
+          "Segment.5461.3.13196.0.cpuprofile",
+          "Segment.5461.3.13196.0.cpuprofile"
+        ],
+        "partial_segments_finalized": true,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-5461-4.json",
+        "partial_segment_count": 1,
+        "partial_segment_range": [
+          "Segment.5461.4.13196.0.cpuprofile",
+          "Segment.5461.4.13196.0.cpuprofile"
+        ],
+        "partial_segments_finalized": true,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-5461-5.json",
+        "partial_segment_count": 1,
+        "partial_segment_range": [
+          "Segment.5461.5.13196.0.cpuprofile",
+          "Segment.5461.5.13196.0.cpuprofile"
+        ],
+        "partial_segments_finalized": true,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-5461-6.json",
+        "partial_segment_count": 1,
+        "partial_segment_range": [
+          "Segment.5461.6.13196.0.cpuprofile",
+          "Segment.5461.6.13196.0.cpuprofile"
+        ],
+        "partial_segments_finalized": true,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-5461-7.json",
+        "partial_segment_count": 1,
+        "partial_segment_range": [
+          "Segment.5461.7.13196.0.cpuprofile",
+          "Segment.5461.7.13196.0.cpuprofile"
+        ],
+        "partial_segments_finalized": true,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-5461-8.json",
+        "partial_segment_count": 1,
+        "partial_segment_range": [
+          "Segment.5461.8.13196.0.cpuprofile",
+          "Segment.5461.8.13196.0.cpuprofile"
+        ],
+        "partial_segments_finalized": true,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-5461-9.json",
+        "partial_segment_count": 1,
+        "partial_segment_range": [
+          "Segment.5461.9.13196.0.cpuprofile",
+          "Segment.5461.9.13196.0.cpuprofile"
+        ],
+        "partial_segments_finalized": true,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": true,
+        "exit_observed": null,
+        "identity": "python-5095-1793189374803634255.json",
+        "partial_segment_count": 0,
+        "partial_segment_range": [],
+        "partial_segments_finalized": false,
+        "profiles": [
+          "python-5095-1793189374803634255.pstats"
+        ]
+      }
+    ],
+    "orphan_profiles": [],
+    "role_evidence_policy": "Finalized full profiles or explicitly partial segments. Missing lifecycle exits/full profiles still fail capture validation."
+  },
+  "command": [
+    "/opt/hostedtoolcache/Python/3.13.17/x64/bin/python3",
+    "/home/runner/work/oximut/oximut/benchmarks/real_project.py",
+    "--binary",
+    "/home/runner/work/_temp/native-diagnostic/oximut",
+    "--adapter",
+    "/home/runner/work/oximut/oximut/packages/vitest-adapter/m2-runner.mjs",
+    "--adapter-source-dir",
+    "/home/runner/work/oximut/oximut/packages/vitest-adapter",
+    "--defer-ratios",
+    "--tools",
+    "vitest",
+    "oximut",
+    "stryker",
+    "--warmups",
+    "0",
+    "--repetitions",
+    "1",
+    "--timeout",
+    "600",
+    "--output",
+    "/home/runner/work/_temp/native-diagnostic/capture/qualification"
+  ],
+  "diagnostic_only": true,
+  "execution_inputs": {
+    "adapter_override": "/home/runner/work/oximut/oximut/packages/vitest-adapter/m2-runner.mjs",
+    "adapter_pairing": "explicit override",
+    "adapter_source_dir": "/home/runner/work/oximut/oximut/packages/vitest-adapter",
+    "adapter_source_sha256": {
+      "biome.json": "ef5cbac0631b8f51a6e1afcc59e9a35e90252d93e6e7b7e3dd430ef623c832ca",
+      "experiment.mjs": "8aef7cae2ef734311a1998ec6928f389a8887b59e32979c27c0ebe87d77468fe",
+      "index.mjs": "3e2346c45e3e3aa2236cf6a7c243abbca4ca88b75db58d346681ac29edcba01d",
+      "m1-runner.mjs": "f33f43731294536fe5aebbe6b42f21585073ee2744a73a7324c8145a9fc0c5c5",
+      "m1-worker.ts": "29e717ad07c2cce5ae163b16cf58f4bc5071efc428b126edc600e88e3a234293",
+      "m2-runner.mjs": "b21f679c2c26756f4e6a47abe0ef32b8f32a73d4513d771694a47866d9545f9f",
+      "m2-worker.ts": "f3bc093c7949df937181f1b5512b3f609de6c422d6b89a737699bdef49242c2f",
+      "m3-selection.ts": "e3df6ad0ef9050393c20fd4c5f7b1d3f3a931e87ffeb5efb722dfe6c55e1f567",
+      "m3-setup.ts": "23e46f230e438e9c080d73173760b1340c02506ebe03a7d7ed725d1dc1dd8f7f",
+      "package.json": "5cd6bd7d4af022c372c0d305b2a6d1826818c35929e2984b2fee526168552056",
+      "protocol.ts": "edc3c67e3b94fe776c0b1f7c20f84fa61d0b299dce54dd26977a77d737000821",
+      "supervisor.py": "26dd496b2f5cbb757a4e585e209a67d9c4e1723fa7e8f5de8e33fbb05a84421c",
+      "test/contract.test.mjs": "a75f969b766e0ead4775b00258026998669ec2fd21001a010d3749f59334c01d",
+      "test/lifecycle.test.mjs": "7ec6fe62792f4564b8af74d331297317bce8f64abf002456738a3fcd5b9c7d07",
+      "test/m1.test.mjs": "2cf0544a7bf07a8d2d7ced2c43c71e8e194372e6af8d1bf31d01515ad377e689",
+      "test/m2.test.mjs": "96a7147c3d8fb840605a7d83e8e36f8ab1d02b50a5437bbda51127bf0187fb43",
+      "test/m3.test.mjs": "dc08829807dcfcdad5e64001fdf3f6893833c6fa86c5a938a1f244a3a8f898fa",
+      "tsconfig.json": "bf71465e8c68e3cc557f5a9f857301c3d48d89c9567baf31edfb9f4f4b2bfb55",
+      "worker.mjs": "26eee9f48e37250c52a6662fc0efdc30f9678cf7541f55c5b89d68dd97d79281"
+    },
+    "binary": "/home/runner/work/_temp/native-diagnostic/oximut",
+    "binary_sha256": "39cf43deae386ccc10a25568fbdeebd095d377f183d40b5faac37c33aa6570a3"
+  },
+  "failure": null,
+  "helper_sha256": {
+    "benchmarks/profile_native.py": "343ba2cc24db84b9a09267bbf59676c87ded98f99f5654a0c249c5609906d31c",
+    "benchmarks/profiling/node-identity.cjs": "93728396bf1ae4a4af8b717dfa8868f0133aab9796b66439235d339fb6bc9428",
+    "benchmarks/profiling/node-segments.cjs": "ad5ca48917af6d77e06c14c07f117f104d5f5199f0776b1c7ea530c25764fa83",
+    "benchmarks/profiling/python-shim.py": "8a41e0539a368ab39b7c70a38fa3086bae3ff65e70c9f4ba7edc85bf91bc2122"
+  },
+  "limits": "Node sampling and Python supervisor self CPU only; no complete process-tree CPU partition. Rust resource sampling remains unattributed. External benchmark sampler CPU is outside wait4 product-tree CPU; it perturbs wall time.",
+  "node_capture_mode": "partial-inspector-startup",
+  "node_options": "--require=\"/home/runner/work/oximut/oximut/benchmarks/profiling/node-identity.cjs\"",
+  "passed": false,
+  "profiler_overhead": true,
+  "qualification_errors": [],
+  "scope": "Unchanged colord: 41 sources, 102 tests, five mutation sources, ten arithmetic edits. One capture, no warmup campaign.",
+  "source_commit": "1b1552965477a29561c8371d524ee34e604c0df8"
+}

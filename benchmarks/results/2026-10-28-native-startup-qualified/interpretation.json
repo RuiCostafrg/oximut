@@ -1,0 +1,21 @@
+{
+  "source_commit": "1b1552965477a29561c8371d524ee34e604c0df8",
+  "qualification_passed": true,
+  "complete_capture_passed": false,
+  "observed_identity_count": 66,
+  "node_exit_observed_count": 8,
+  "node_exit_missing_count": 57,
+  "minimum_usable_role_counts": {
+    "oximut_adapter": 1,
+    "oximut_controller": 1,
+    "oximut_node": 40,
+    "oximut_supervisor": 1,
+    "oximut_test_fork": 38,
+    "stryker_node": 17,
+    "vitest_node": 5
+  },
+  "orphan_count": 0,
+  "capture_error_count": 65,
+  "profiles": 64,
+  "limits": "Startup-only, sampling/idle/profiler overhead included; no exact whole-process CPU or scored comparative ratios."
+}

@@ -1,0 +1,498 @@
+{
+  "captures": {
+    "completeness": "Unknown: processes killed before preload/dump and overridden environments may be absent; raw orphan profiles retained.",
+    "errors": [
+      "incomplete capture: node-4934-0.json",
+      "incomplete capture: node-4957-0.json",
+      "incomplete capture: node-4970-0.json",
+      "incomplete capture: node-4994-0.json",
+      "incomplete capture: node-5236-0.json",
+      "incomplete capture: node-5400-0.json",
+      "incomplete capture: node-5478-0.json",
+      "incomplete capture: node-5596-0.json",
+      "incomplete capture: node-5609-0.json",
+      "incomplete capture: node-5647-0.json",
+      "incomplete capture: node-7017-0.json",
+      "incomplete capture: node-7299-0.json",
+      "incomplete capture: node-7331-0.json",
+      "incomplete capture: node-7410-0.json",
+      "incomplete capture: node-7410-1.json",
+      "incomplete capture: node-7410-10.json",
+      "incomplete capture: node-7410-11.json",
+      "incomplete capture: node-7410-12.json",
+      "incomplete capture: node-7410-13.json",
+      "incomplete capture: node-7410-14.json",
+      "incomplete capture: node-7410-2.json",
+      "incomplete capture: node-7410-3.json",
+      "incomplete capture: node-7410-4.json",
+      "incomplete capture: node-7410-5.json",
+      "incomplete capture: node-7410-6.json",
+      "incomplete capture: node-7410-7.json",
+      "incomplete capture: node-7410-8.json",
+      "incomplete capture: node-7410-9.json"
+    ],
+    "minimum_role_evidence": {
+      "oximut_adapter": [
+        "node-5596-0.json"
+      ],
+      "oximut_controller": [
+        "node-5609-0.json"
+      ],
+      "oximut_node": [
+        "node-5596-0.json",
+        "node-5609-0.json",
+        "node-5647-0.json",
+        "node-7017-0.json"
+      ],
+      "oximut_supervisor": [
+        "python-5606-1793177008263787582.json"
+      ],
+      "oximut_test_fork": [
+        "node-5647-0.json",
+        "node-7017-0.json"
+      ],
+      "stryker_node": [
+        "node-7299-0.json",
+        "node-7331-0.json",
+        "node-7410-0.json",
+        "node-7410-1.json",
+        "node-7410-10.json",
+        "node-7410-11.json",
+        "node-7410-12.json",
+        "node-7410-13.json",
+        "node-7410-14.json",
+        "node-7410-2.json",
+        "node-7410-3.json",
+        "node-7410-4.json",
+        "node-7410-5.json",
+        "node-7410-6.json",
+        "node-7410-7.json",
+        "node-7410-8.json",
+        "node-7410-9.json"
+      ],
+      "vitest_node": [
+        "node-4970-0.json",
+        "node-4994-0.json",
+        "node-5236-0.json",
+        "node-5400-0.json",
+        "node-5478-0.json"
+      ]
+    },
+    "observed": [
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": true,
+        "identity": "node-4934-0.json",
+        "partial_segment_count": 0,
+        "partial_segment_range": [],
+        "partial_segments_finalized": false,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": true,
+        "identity": "node-4957-0.json",
+        "partial_segment_count": 0,
+        "partial_segment_range": [],
+        "partial_segments_finalized": false,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": true,
+        "identity": "node-4970-0.json",
+        "partial_segment_count": 271,
+        "partial_segment_range": [
+          "Segment.4970.0.10573.0.cpuprofile",
+          "Segment.4970.0.10573.270.cpuprofile"
+        ],
+        "partial_segments_finalized": true,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": true,
+        "identity": "node-4994-0.json",
+        "partial_segment_count": 119,
+        "partial_segment_range": [
+          "Segment.4994.0.10622.0.cpuprofile",
+          "Segment.4994.0.10622.118.cpuprofile"
+        ],
+        "partial_segments_finalized": true,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": true,
+        "identity": "node-5236-0.json",
+        "partial_segment_count": 85,
+        "partial_segment_range": [
+          "Segment.5236.0.11235.0.cpuprofile",
+          "Segment.5236.0.11235.84.cpuprofile"
+        ],
+        "partial_segments_finalized": true,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": true,
+        "identity": "node-5400-0.json",
+        "partial_segment_count": 38,
+        "partial_segment_range": [
+          "Segment.5400.0.11680.0.cpuprofile",
+          "Segment.5400.0.11680.37.cpuprofile"
+        ],
+        "partial_segments_finalized": true,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-5478-0.json",
+        "partial_segment_count": 56,
+        "partial_segment_range": [
+          "Segment.5478.0.11885.0.cpuprofile",
+          "Segment.5478.0.11885.55.cpuprofile"
+        ],
+        "partial_segments_finalized": true,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": true,
+        "identity": "node-5596-0.json",
+        "partial_segment_count": 603,
+        "partial_segment_range": [
+          "Segment.5596.0.12203.0.cpuprofile",
+          "Segment.5596.0.12203.602.cpuprofile"
+        ],
+        "partial_segments_finalized": true,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-5609-0.json",
+        "partial_segment_count": 485,
+        "partial_segment_range": [
+          "Segment.5609.0.12225.0.cpuprofile",
+          "Segment.5609.0.12225.484.cpuprofile"
+        ],
+        "partial_segments_finalized": true,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-5647-0.json",
+        "partial_segment_count": 478,
+        "partial_segment_range": [
+          "Segment.5647.0.12307.0.cpuprofile",
+          "Segment.5647.0.12307.477.cpuprofile"
+        ],
+        "partial_segments_finalized": true,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-7017-0.json",
+        "partial_segment_count": 95,
+        "partial_segment_range": [
+          "Segment.7017.0.14722.0.cpuprofile",
+          "Segment.7017.0.14722.94.cpuprofile"
+        ],
+        "partial_segments_finalized": true,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": true,
+        "identity": "node-7299-0.json",
+        "partial_segment_count": 902,
+        "partial_segment_range": [
+          "Segment.7299.0.15242.0.cpuprofile",
+          "Segment.7299.0.15242.901.cpuprofile"
+        ],
+        "partial_segments_finalized": true,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-7331-0.json",
+        "partial_segment_count": 1164,
+        "partial_segment_range": [
+          "Segment.7331.0.15485.0.cpuprofile",
+          "Segment.7331.0.15485.1163.cpuprofile"
+        ],
+        "partial_segments_finalized": true,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-7410-0.json",
+        "partial_segment_count": 1338,
+        "partial_segment_range": [
+          "Segment.7410.0.15751.0.cpuprofile",
+          "Segment.7410.0.15751.1337.cpuprofile"
+        ],
+        "partial_segments_finalized": true,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-7410-1.json",
+        "partial_segment_count": 861,
+        "partial_segment_range": [
+          "Segment.7410.1.15751.0.cpuprofile",
+          "Segment.7410.1.15751.860.cpuprofile"
+        ],
+        "partial_segments_finalized": true,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-7410-10.json",
+        "partial_segment_count": 100,
+        "partial_segment_range": [
+          "Segment.7410.10.15751.0.cpuprofile",
+          "Segment.7410.10.15751.99.cpuprofile"
+        ],
+        "partial_segments_finalized": true,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-7410-11.json",
+        "partial_segment_count": 95,
+        "partial_segment_range": [
+          "Segment.7410.11.15751.0.cpuprofile",
+          "Segment.7410.11.15751.94.cpuprofile"
+        ],
+        "partial_segments_finalized": true,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-7410-12.json",
+        "partial_segment_count": 89,
+        "partial_segment_range": [
+          "Segment.7410.12.15751.0.cpuprofile",
+          "Segment.7410.12.15751.88.cpuprofile"
+        ],
+        "partial_segments_finalized": true,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-7410-13.json",
+        "partial_segment_count": 61,
+        "partial_segment_range": [
+          "Segment.7410.13.15751.0.cpuprofile",
+          "Segment.7410.13.15751.60.cpuprofile"
+        ],
+        "partial_segments_finalized": true,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-7410-14.json",
+        "partial_segment_count": 61,
+        "partial_segment_range": [
+          "Segment.7410.14.15751.0.cpuprofile",
+          "Segment.7410.14.15751.60.cpuprofile"
+        ],
+        "partial_segments_finalized": true,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-7410-2.json",
+        "partial_segment_count": 91,
+        "partial_segment_range": [
+          "Segment.7410.2.15751.0.cpuprofile",
+          "Segment.7410.2.15751.90.cpuprofile"
+        ],
+        "partial_segments_finalized": true,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-7410-3.json",
+        "partial_segment_count": 48,
+        "partial_segment_range": [
+          "Segment.7410.3.15751.0.cpuprofile",
+          "Segment.7410.3.15751.47.cpuprofile"
+        ],
+        "partial_segments_finalized": true,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-7410-4.json",
+        "partial_segment_count": 90,
+        "partial_segment_range": [
+          "Segment.7410.4.15751.0.cpuprofile",
+          "Segment.7410.4.15751.89.cpuprofile"
+        ],
+        "partial_segments_finalized": true,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-7410-5.json",
+        "partial_segment_count": 53,
+        "partial_segment_range": [
+          "Segment.7410.5.15751.0.cpuprofile",
+          "Segment.7410.5.15751.52.cpuprofile"
+        ],
+        "partial_segments_finalized": true,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-7410-6.json",
+        "partial_segment_count": 59,
+        "partial_segment_range": [
+          "Segment.7410.6.15751.0.cpuprofile",
+          "Segment.7410.6.15751.58.cpuprofile"
+        ],
+        "partial_segments_finalized": true,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-7410-7.json",
+        "partial_segment_count": 61,
+        "partial_segment_range": [
+          "Segment.7410.7.15751.0.cpuprofile",
+          "Segment.7410.7.15751.60.cpuprofile"
+        ],
+        "partial_segments_finalized": true,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-7410-8.json",
+        "partial_segment_count": 57,
+        "partial_segment_range": [
+          "Segment.7410.8.15751.0.cpuprofile",
+          "Segment.7410.8.15751.56.cpuprofile"
+        ],
+        "partial_segments_finalized": true,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-7410-9.json",
+        "partial_segment_count": 56,
+        "partial_segment_range": [
+          "Segment.7410.9.15751.0.cpuprofile",
+          "Segment.7410.9.15751.55.cpuprofile"
+        ],
+        "partial_segments_finalized": true,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": true,
+        "exit_observed": null,
+        "identity": "python-5606-1793177008263787582.json",
+        "partial_segment_count": 0,
+        "partial_segment_range": [],
+        "partial_segments_finalized": false,
+        "profiles": [
+          "python-5606-1793177008263787582.pstats"
+        ]
+      }
+    ],
+    "orphan_profiles": [],
+    "role_evidence_policy": "Finalized full profiles or explicitly partial segments. Missing lifecycle exits/full profiles still fail capture validation."
+  },
+  "command": [
+    "/opt/hostedtoolcache/Python/3.13.16/x64/bin/python3",
+    "/home/runner/work/oximut/oximut/benchmarks/real_project.py",
+    "--binary",
+    "/home/runner/work/_temp/native-diagnostic/oximut",
+    "--adapter",
+    "/home/runner/work/oximut/oximut/packages/vitest-adapter/m2-runner.mjs",
+    "--adapter-source-dir",
+    "/home/runner/work/oximut/oximut/packages/vitest-adapter",
+    "--defer-ratios",
+    "--tools",
+    "vitest",
+    "oximut",
+    "stryker",
+    "--warmups",
+    "0",
+    "--repetitions",
+    "1",
+    "--timeout",
+    "600",
+    "--output",
+    "/home/runner/work/_temp/native-diagnostic/capture/qualification"
+  ],
+  "diagnostic_only": true,
+  "execution_inputs": {
+    "adapter_override": "/home/runner/work/oximut/oximut/packages/vitest-adapter/m2-runner.mjs",
+    "adapter_pairing": "explicit override",
+    "adapter_source_dir": "/home/runner/work/oximut/oximut/packages/vitest-adapter",
+    "adapter_source_sha256": {
+      "biome.json": "ef5cbac0631b8f51a6e1afcc59e9a35e90252d93e6e7b7e3dd430ef623c832ca",
+      "experiment.mjs": "8aef7cae2ef734311a1998ec6928f389a8887b59e32979c27c0ebe87d77468fe",
+      "index.mjs": "3e2346c45e3e3aa2236cf6a7c243abbca4ca88b75db58d346681ac29edcba01d",
+      "m1-runner.mjs": "f33f43731294536fe5aebbe6b42f21585073ee2744a73a7324c8145a9fc0c5c5",
+      "m1-worker.ts": "29e717ad07c2cce5ae163b16cf58f4bc5071efc428b126edc600e88e3a234293",
+      "m2-runner.mjs": "b21f679c2c26756f4e6a47abe0ef32b8f32a73d4513d771694a47866d9545f9f",
+      "m2-worker.ts": "f3bc093c7949df937181f1b5512b3f609de6c422d6b89a737699bdef49242c2f",
+      "m3-selection.ts": "e3df6ad0ef9050393c20fd4c5f7b1d3f3a931e87ffeb5efb722dfe6c55e1f567",
+      "m3-setup.ts": "23e46f230e438e9c080d73173760b1340c02506ebe03a7d7ed725d1dc1dd8f7f",
+      "package.json": "5cd6bd7d4af022c372c0d305b2a6d1826818c35929e2984b2fee526168552056",
+      "protocol.ts": "edc3c67e3b94fe776c0b1f7c20f84fa61d0b299dce54dd26977a77d737000821",
+      "supervisor.py": "26dd496b2f5cbb757a4e585e209a67d9c4e1723fa7e8f5de8e33fbb05a84421c",
+      "test/contract.test.mjs": "a75f969b766e0ead4775b00258026998669ec2fd21001a010d3749f59334c01d",
+      "test/lifecycle.test.mjs": "7ec6fe62792f4564b8af74d331297317bce8f64abf002456738a3fcd5b9c7d07",
+      "test/m1.test.mjs": "2cf0544a7bf07a8d2d7ced2c43c71e8e194372e6af8d1bf31d01515ad377e689",
+      "test/m2.test.mjs": "96a7147c3d8fb840605a7d83e8e36f8ab1d02b50a5437bbda51127bf0187fb43",
+      "test/m3.test.mjs": "dc08829807dcfcdad5e64001fdf3f6893833c6fa86c5a938a1f244a3a8f898fa",
+      "tsconfig.json": "bf71465e8c68e3cc557f5a9f857301c3d48d89c9567baf31edfb9f4f4b2bfb55",
+      "worker.mjs": "26eee9f48e37250c52a6662fc0efdc30f9678cf7541f55c5b89d68dd97d79281"
+    },
+    "binary": "/home/runner/work/_temp/native-diagnostic/oximut",
+    "binary_sha256": "39cf43deae386ccc10a25568fbdeebd095d377f183d40b5faac37c33aa6570a3"
+  },
+  "failure": null,
+  "helper_sha256": {
+    "benchmarks/profile_native.py": "065d93aa1cb79e5ee14c67899640aa7103bb8db24bfa3c41991441497f5b6c36",
+    "benchmarks/profiling/node-identity.cjs": "b194c76c7d77d442965a0be2d802860de181d061b05c88926fdbc1d5612a576b",
+    "benchmarks/profiling/node-segments.cjs": "39f3de78d434b60e9e8ea40e43788e3e2703271b70783c137316ef2b79f627bd",
+    "benchmarks/profiling/python-shim.py": "8a41e0539a368ab39b7c70a38fa3086bae3ff65e70c9f4ba7edc85bf91bc2122"
+  },
+  "limits": "Node sampling and Python supervisor self CPU only; no complete process-tree CPU partition. Rust resource sampling remains unattributed. External benchmark sampler CPU is outside wait4 product-tree CPU; it perturbs wall time.",
+  "node_capture_mode": "partial-inspector-segments",
+  "node_options": "--require=\"/home/runner/work/oximut/oximut/benchmarks/profiling/node-identity.cjs\"",
+  "passed": false,
+  "profiler_overhead": true,
+  "qualification_errors": [
+    "qualification harness exited 1",
+    "exact workload gate failed or ratios were published",
+    "require exactly ten killed edits per mutation tool"
+  ],
+  "scope": "Unchanged colord: 41 sources, 102 tests, five mutation sources, ten arithmetic edits. One capture, no warmup campaign.",
+  "source_commit": "a8b5416e7ca2f3499cad78a1d5ddd0ce774fe312"
+}
