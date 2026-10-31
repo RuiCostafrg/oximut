@@ -1,5 +1,6 @@
 //! Sequential fresh-reference and persistent-controller runners.
 mod cache;
+mod processes;
 mod resources;
 mod scheduler;
 use oximut_core::{
@@ -322,9 +323,7 @@ fn enable_subreaper() -> Result<(), String> {
 
 #[cfg(any(target_os = "linux", target_os = "android"))]
 fn process_identity(pid: u32) -> Option<(u32, u64)> {
-    let stat = fs::read_to_string(format!("/proc/{pid}/stat")).ok()?;
-    let fields: Vec<_> = stat.rsplit_once(')')?.1.split_whitespace().collect();
-    Some((fields.get(1)?.parse().ok()?, fields.get(19)?.parse().ok()?))
+    processes::identity(pid).ok().flatten()
 }
 
 #[cfg(any(target_os = "linux", target_os = "android"))]
@@ -338,35 +337,9 @@ fn still_owned(_: u32, _: u64) -> bool {
 
 #[cfg(any(target_os = "linux", target_os = "android"))]
 fn descendants(parent: u32) -> BTreeMap<u32, u64> {
-    let mut processes = vec![];
-    if let Ok(entries) = fs::read_dir("/proc") {
-        for entry in entries.flatten() {
-            let Ok(pid) = entry.file_name().to_string_lossy().parse::<u32>() else {
-                continue;
-            };
-            if let Some((ppid, start)) = process_identity(pid) {
-                processes.push((pid, ppid, start));
-            }
-        }
-    }
-    let mut owned = BTreeSet::from([parent]);
-    loop {
-        let before = owned.len();
-        for &(pid, ppid, _) in &processes {
-            if owned.contains(&ppid) {
-                owned.insert(pid);
-            }
-        }
-        if before == owned.len() {
-            break;
-        }
-    }
-    owned.remove(&parent);
-    processes
-        .into_iter()
-        .filter(|(pid, _, _)| owned.contains(pid))
-        .map(|(pid, _, start)| (pid, start))
-        .collect()
+    // Cleanup always discovers afresh and retains its best-effort handling of
+    // unrelated unreadable stat files. Accounting uses the strict reader.
+    processes::ProcessTable::read_for_cleanup().descendants(parent)
 }
 #[cfg(not(any(target_os = "linux", target_os = "android")))]
 fn descendants(_: u32) -> BTreeMap<u32, u64> {

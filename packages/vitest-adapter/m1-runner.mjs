@@ -1,7 +1,7 @@
 import { open, rename, rm } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { openController } from './index.mjs';
-import { envelope, MAX_REQUEST_BYTES, MAX_RESPONSE_BYTES, validateRequest } from './protocol.ts';
+import { envelope, MAX_REQUEST_BYTES, MAX_RESPONSE_BYTES, validateRequest } from './protocol.mjs';
 
 const started = performance.now();
 const [requestPath, responsePath] = process.argv.slice(2);

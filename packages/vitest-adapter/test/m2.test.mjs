@@ -27,7 +27,11 @@ let state = 0; test('enabled', () => { expect(state++).toBe(0); expect(enabled).
   );
   const child = spawn(
     process.execPath,
-    [join(repository, 'packages/vitest-adapter/m2-runner.mjs'), directory],
+    [
+      '--no-experimental-strip-types',
+      join(repository, 'packages/vitest-adapter/m2-runner.mjs'),
+      directory,
+    ],
     { stdio: ['ignore', 'pipe', 'pipe'] },
   );
   let diagnostics = '';

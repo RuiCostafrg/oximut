@@ -66,6 +66,8 @@ class SourceDistribution(unittest.TestCase):
         self.assertIn("fixtures/pure/vitest.config.ts", files)
         self.assertIn("tests/test_install.py", files)
         self.assertIn("packages/vitest-adapter/test/m1.test.mjs", files)
+        self.assertEqual(files["packages/vitest-adapter/protocol.mjs"][1],
+                         (ROOT / "packages/vitest-adapter/protocol.mjs").read_bytes())
         manifest = json.loads(files["SOURCE-DISTRIBUTION/manifest.json"][1])
         self.assertEqual(manifest["source"]["commit"], self.revision)
         self.assertEqual(manifest["version"], VERSION)
@@ -110,12 +112,80 @@ class SourceDistribution(unittest.TestCase):
         first.rename(relocated)
         shutil.rmtree(extracted)
         for prefix in (relocated, second):
+            adapter = prefix / "lib/oximut/packages/vitest-adapter"
+            self.assertEqual((adapter / "protocol.mjs").read_bytes(),
+                             (ROOT / "packages/vitest-adapter/protocol.mjs").read_bytes())
+            # No checkout, dependencies or TS stripping are available here. The
+            # installed protocol and outer adapter must resolve after relocation.
+            subprocess.run([
+                "node", "--no-experimental-strip-types", "--input-type=module", "-e",
+                f"const p = await import({json.dumps((adapter / 'protocol.mjs').as_uri())});"
+                f"await import({json.dumps((adapter / 'index.mjs').as_uri())});"
+                "try { p.validateRequest(null); throw new Error('accepted invalid request'); }"
+                "catch (e) { if (e.message !== 'Unsupported or missing protocol (expected 1)') throw e; }",
+            ], cwd=self.base, check=True, capture_output=True, text=True, timeout=10)
             for arguments, runner in (([], "m1"), (["--execution", "persistent"], "m2")):
                 result = json.loads(subprocess.check_output(
                     [str(prefix / "bin/oximut"), *arguments], cwd=self.base))
                 self.assertEqual(result, ["--adapter", str(
                     prefix / f"lib/oximut/packages/vitest-adapter/{runner}-runner.mjs"), *arguments])
                 self.assertTrue(Path(result[1]).is_file())
+
+    def test_missing_protocol_runtime_rejected(self):
+        self.git("rm", "packages/vitest-adapter/protocol.mjs")
+        self.commit()
+        with self.assertRaisesRegex(ValueError, "missing required source files.*protocol.mjs"):
+            self.build(revision=self.git("rev-parse", "HEAD").strip())
+
+    def test_older_typescript_protocol_revision_remains_buildable(self):
+        # Model the legacy layout: runtime lives in protocol.ts, not a shim.
+        runtime = self.repo / "packages/vitest-adapter/protocol.mjs"
+        (runtime.with_suffix(".ts")).write_bytes(runtime.read_bytes())
+        for runner in ("m1-runner.mjs", "m2-runner.mjs"):
+            path = self.repo / "packages/vitest-adapter" / runner
+            path.write_text(path.read_text().replace("./protocol.mjs", "./protocol.ts"))
+        self.git("rm", "packages/vitest-adapter/protocol.mjs")
+        self.commit()
+        old = self.git("rev-parse", "HEAD").strip()
+        runtime.write_bytes(runtime.with_suffix(".ts").read_bytes() + b"\n// newer runtime\n")
+        for runner in ("m1-runner.mjs", "m2-runner.mjs"):
+            path = self.repo / "packages/vitest-adapter" / runner
+            path.write_text(path.read_text().replace("./protocol.ts", "./protocol.mjs"))
+        (self.repo / "README.md").write_text("newer checkout")
+        self.commit()
+        files = self.contents(self.build(revision=old))
+        self.assertNotIn("packages/vitest-adapter/protocol.mjs", files)
+        self.assertIn("packages/vitest-adapter/protocol.ts", files)
+
+    def test_typescript_shim_requires_its_reexported_runtime(self):
+        for runner in ("m1-runner.mjs", "m2-runner.mjs"):
+            path = self.repo / "packages/vitest-adapter" / runner
+            path.write_text(path.read_text().replace("./protocol.mjs", "./protocol.ts"))
+        self.commit()
+        valid = self.git("rev-parse", "HEAD").strip()
+        self.assertIn("packages/vitest-adapter/protocol.mjs", self.contents(self.build(revision=valid)))
+        self.git("rm", "packages/vitest-adapter/protocol.mjs")
+        self.commit()
+        with self.assertRaisesRegex(ValueError, "missing required source files.*protocol.mjs"):
+            self.build("missing-shim-runtime", revision=self.git("rev-parse", "HEAD").strip())
+
+    def test_either_runner_import_requires_the_runtime_protocol(self):
+        runtime = self.repo / "packages/vitest-adapter/protocol.mjs"
+        data = runtime.read_bytes()
+        runtime.with_suffix(".ts").write_bytes(data)
+        for changed in ("m1-runner.mjs", "m2-runner.mjs"):
+            with self.subTest(changed=changed):
+                runtime.write_bytes(data)
+                for runner in ("m1-runner.mjs", "m2-runner.mjs"):
+                    path = self.repo / "packages/vitest-adapter" / runner
+                    source = path.read_text().replace("./protocol.mjs", "./protocol.ts")
+                    if runner == changed:
+                        source = source.replace("./protocol.ts", "./protocol.mjs")
+                    path.write_text(source)
+                runtime.unlink()
+                self.commit()
+                with self.assertRaisesRegex(ValueError, "missing required source files.*protocol.mjs"):
+                    self.build(revision=self.git("rev-parse", "HEAD").strip())
 
     def test_explicit_old_revision_not_current_checkout(self):
         original = (self.repo / "README.md").read_bytes()

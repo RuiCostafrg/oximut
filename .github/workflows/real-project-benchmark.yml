@@ -35,7 +35,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 90
     env:
-      BEFORE_COMMIT: 4a6993b564758d15d976cd0998ba490fbf64e1e1
+      BEFORE_COMMIT: 7a2c8509a0bc25cf9888a27fd985deec65c34120
       BUILD_FLAGS: --locked --release -p oximut-cli
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
