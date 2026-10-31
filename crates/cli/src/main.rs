@@ -7,6 +7,7 @@ use oximut_core::{
     Coverage, Mutant, MutantResult, Mutation, Outcome, PROTOCOL, Provenance, Report, Request,
     Response, Summary, TestOutcome, Tests,
 };
+use std::sync::Arc;
 use std::{
     collections::{BTreeMap, BTreeSet},
     env, fs,
@@ -303,6 +304,7 @@ fn infrastructure(request: &Request, error: impl Into<String>) -> Response {
         tests: Tests::default(),
         errors: vec![error.into()],
         coverage: None,
+        resident: None,
     }
 }
 
@@ -658,6 +660,52 @@ fn execute_local(options: &Options, request: &Request, session: &mut Option<Sess
     }
 }
 
+/// The adapter rejects requests above 8 MiB. Keep headroom for identities,
+/// paths, deadlines and test-selection lists.
+const REQUEST_LIMIT: usize = 8 * 1024 * 1024;
+const REQUEST_HEADROOM: usize = 1024 * 1024;
+
+fn request_budget() -> usize {
+    // Debug builds accept a smaller budget so tests can exercise grouping.
+    #[cfg(debug_assertions)]
+    if let Some(budget) = env::var("OXIMUT_DEBUG_REQUEST_BUDGET")
+        .ok()
+        .and_then(|value| value.parse().ok())
+    {
+        return budget;
+    }
+    REQUEST_LIMIT - REQUEST_HEADROOM
+}
+
+fn encoded_len<T: serde::Serialize + ?Sized>(value: &T) -> usize {
+    serde_json::to_vec(value).map_or(usize::MAX, |bytes| bytes.len())
+}
+
+/// Partition switched modules into groups validated and served together. A
+/// mutant request carries its group plus another copy of the active module, so
+/// a multi-module group must fit `group + largest member`. A lone module is
+/// served through `mutation` alone and needs no resident copy.
+fn plan_groups(modules: Vec<Mutation>, budget: usize) -> Vec<Vec<Mutation>> {
+    let mut groups: Vec<(usize, usize, Vec<Mutation>)> = vec![];
+    for module in modules {
+        let size = encoded_len(&module);
+        match groups.last_mut() {
+            Some((total, largest, members))
+                if total
+                    .saturating_add(size)
+                    .saturating_add((*largest).max(size))
+                    <= budget =>
+            {
+                *total += size;
+                *largest = (*largest).max(size);
+                members.push(module);
+            }
+            _ => groups.push((size, size, vec![module])),
+        }
+    }
+    groups.into_iter().map(|(_, _, members)| members).collect()
+}
+
 fn validate_coverage(
     coverage: &Coverage,
     inventory: &[String],
@@ -869,17 +917,72 @@ fn run_attempt(options: &Options, previous: Option<RetryEvidence>) -> Result<Att
         "originalBaseline",
         baseline_started.elapsed().as_secs_f64() * 1000.0,
     );
-    // One run validates inactive switching for every switched file and, with
-    // selection, collects per-test coverage from the same code mutants execute.
+    // Instrumented runs validate inactive switching for the exact module groups
+    // mutant jobs serve and, with selection, collect per-test coverage from the
+    // same code. Normally one group and one run; groups split only to keep each
+    // request within the adapter's limit.
     let instrumented_started = Instant::now();
     let collect = options.test_selection;
-    if baseline.outcome == TestOutcome::Passed && (collect || !resident.is_empty()) {
+    let budget = request_budget();
+    let groups: Vec<Arc<Vec<Mutation>>> = plan_groups(resident, budget)
+        .into_iter()
+        .map(Arc::new)
+        .collect();
+    let group_of: BTreeMap<String, usize> = groups
+        .iter()
+        .enumerate()
+        .flat_map(|(index, group)| group.iter().map(move |module| (module.file.clone(), index)))
+        .collect();
+    let coverage_size = encoded_len(&probe_transforms);
+    let coverage_fits = coverage_size <= budget;
+    // Resident modules identical to a coverage transform are not sent twice.
+    let residual = |group: &Arc<Vec<Mutation>>, coverage: bool| -> Option<Arc<Vec<Mutation>>> {
+        if !coverage {
+            return Some(group.clone());
+        }
+        let left: Vec<_> = group
+            .iter()
+            .filter(|module| {
+                !probe_transforms.iter().any(|probe| {
+                    probe.file == module.file
+                        && probe.code == module.code
+                        && probe.map == module.map
+                })
+            })
+            .cloned()
+            .collect();
+        (!left.is_empty()).then(|| Arc::new(left))
+    };
+    let combined = collect
+        && coverage_fits
+        && groups.len() == 1
+        && coverage_size
+            .saturating_add(residual(&groups[0], true).map_or(0, |left| encoded_len(&left)))
+            <= budget;
+    let mut runs: Vec<(Option<usize>, bool)> = vec![];
+    if combined {
+        runs.push((Some(0), true));
+    } else {
+        if collect && coverage_fits {
+            runs.push((None, true));
+        }
+        runs.extend((0..groups.len()).map(|index| (Some(index), false)));
+    }
+    for (run, &(group, coverage)) in runs.iter().enumerate() {
+        if baseline.outcome != TestOutcome::Passed {
+            break;
+        }
+        let started = Instant::now();
         request.generation += 1;
-        request.job_id = "instrumented-baseline".into();
+        request.job_id = if runs.len() == 1 {
+            "instrumented-baseline".into()
+        } else {
+            format!("instrumented-baseline-{run}")
+        };
         request.kind = "baseline".into();
         request.mutation = None;
-        request.resident = (!resident.is_empty()).then(|| resident.clone());
-        request.collect_coverage = collect.then_some(probe_transforms);
+        request.resident = group.and_then(|index| residual(&groups[index], coverage));
+        request.collect_coverage = coverage.then(|| probe_transforms.clone());
         let mut collected = scheduler.execute(&request);
         if collected.outcome == TestOutcome::Passed
             && (collected.tests.passed != baseline.tests.passed
@@ -891,57 +994,73 @@ fn run_attempt(options: &Options, previous: Option<RetryEvidence>) -> Result<Att
                 "instrumented baseline (inactive switching and probes) changed baseline test counts",
             );
         }
-        let validated: Vec<_> = resident
-            .iter()
-            .map(|mutation| mutation.file.clone())
-            .collect();
-        for file in &validated {
-            diagnostics.push(format!(
-                "disabled switching validation: {file}: {:?}",
-                collected.outcome
-            ));
-        }
-        if !validated.is_empty() {
+        if let Some(index) = group {
+            let validated: Vec<_> = groups[index]
+                .iter()
+                .map(|module| module.file.clone())
+                .collect();
+            for file in &validated {
+                diagnostics.push(format!(
+                    "disabled switching validation: {file}: {:?}",
+                    collected.outcome
+                ));
+            }
             disabled_validation_runs.push(serde_json::json!({
                 "files": validated,
-                "wallMs": instrumented_started.elapsed().as_secs_f64() * 1000.0,
+                "wallMs": started.elapsed().as_secs_f64() * 1000.0,
                 "run": "instrumentedBaseline",
-                "coverage": collect,
+                "coverage": coverage,
             }));
         }
         if collected.outcome != TestOutcome::Passed {
             diagnostics.push("instrumented baseline failed; mutation execution blocked".into());
             baseline = collected;
-        } else if collect {
-            let mut coverage = collected.coverage.take().unwrap_or(Coverage {
+        } else if coverage {
+            let mut collected_coverage = collected.coverage.take().unwrap_or(Coverage {
                 complete: false,
                 tests: vec![],
                 hits: vec![],
                 reasons: vec!["missing-coverage".into()],
             });
-            coverage.reasons.extend(probe_reasons);
-            if let Err(reason) =
-                validate_coverage(&coverage, &inventory, &options.root, &baseline.tests)
-            {
-                coverage.complete = false;
-                coverage.reasons.push(reason);
+            collected_coverage
+                .reasons
+                .extend(probe_reasons.iter().cloned());
+            if let Err(reason) = validate_coverage(
+                &collected_coverage,
+                &inventory,
+                &options.root,
+                &baseline.tests,
+            ) {
+                collected_coverage.complete = false;
+                collected_coverage.reasons.push(reason);
             }
-            if coverage.complete {
+            if collected_coverage.complete {
                 let requested: BTreeSet<_> =
                     mutants.iter().map(|mutant| mutant.id.as_str()).collect();
-                coverage
+                collected_coverage
                     .hits
                     .retain(|hit| requested.contains(hit.mutant_id.as_str()));
             }
-            if !coverage.reasons.is_empty() {
-                coverage.complete = false;
+            if !collected_coverage.reasons.is_empty() {
+                collected_coverage.complete = false;
             }
-            baseline.coverage = Some(coverage);
+            baseline.coverage = Some(collected_coverage);
         }
         request.collect_coverage = None;
+        request.resident = None;
     }
-    // Mutant jobs serve the validated modules; only the selector changes.
-    request.resident = (!resident.is_empty()).then_some(resident);
+    if collect && !coverage_fits && baseline.outcome == TestOutcome::Passed {
+        // Coverage cannot be transported; every mutant runs its full suite.
+        diagnostics.push(format!(
+            "coverage transforms ({coverage_size} bytes) exceed the {budget}-byte request budget; test selection falls back to full suites"
+        ));
+        baseline.coverage = Some(Coverage {
+            complete: false,
+            tests: vec![],
+            hits: vec![],
+            reasons: vec!["coverage-request-exceeds-limit".into()],
+        });
+    }
     phase_wall_ms.insert(
         "instrumentedBaseline",
         instrumented_started.elapsed().as_secs_f64() * 1000.0,
@@ -1038,6 +1157,11 @@ fn run_attempt(options: &Options, previous: Option<RetryEvidence>) -> Result<Att
                 request.generation = generation_offset + index as u64 + 1;
                 request.kind = "mutant".into();
                 request.selection = selection.clone();
+                // A lone module is served through `mutation` alone.
+                request.resident = group_of
+                    .get(&mutant.file)
+                    .map(|&index| groups[index].clone())
+                    .filter(|group| group.len() > 1);
                 request.mutation = Some(Mutation {
                     id: mutant.id.clone(),
                     file: mutant.file.clone(),
@@ -1060,6 +1184,7 @@ fn run_attempt(options: &Options, previous: Option<RetryEvidence>) -> Result<Att
                         vec!["baseline did not pass; mutant was not executed".into()]
                     },
                     coverage: None,
+                    resident: None,
                 }
             };
             results.push(MutantResult {
@@ -1399,6 +1524,47 @@ mod tests {
         });
         assert!(validate_coverage(&coverage, &inventory, &root, &tests).is_err());
         assert!(validate_coverage(&coverage, &["a".into(), "a".into()], &root, &tests).is_err());
+    }
+
+    #[test]
+    fn resident_groups_fit_the_budget_with_a_duplicate_member() {
+        let module = |file: &str, bytes: usize| Mutation {
+            id: "__oximut_resident__".into(),
+            file: file.into(),
+            code: "x".repeat(bytes),
+            map: serde_json::json!({}),
+        };
+        let modules = vec![module("/a", 100), module("/b", 100), module("/c", 1000)];
+        let sizes: Vec<_> = modules.iter().map(encoded_len).collect();
+        fn files(groups: &[Vec<Mutation>]) -> Vec<Vec<&str>> {
+            groups
+                .iter()
+                .map(|group| group.iter().map(|m| m.file.as_str()).collect())
+                .collect()
+        }
+        // Everything fits once: one group, as in the common case.
+        let all = sizes.iter().sum::<usize>() + sizes[2];
+        assert_eq!(
+            files(&plan_groups(modules.clone(), all)),
+            vec![vec!["/a", "/b", "/c"]]
+        );
+        // One byte short splits before the member that overflows.
+        assert_eq!(
+            files(&plan_groups(modules.clone(), all - 1)),
+            vec![vec!["/a", "/b"], vec!["/c"]]
+        );
+        // A module too large to share a request still gets its own group.
+        let pair = sizes[0] + sizes[1] + sizes[0].max(sizes[1]);
+        assert!(pair < sizes[2]);
+        assert_eq!(
+            files(&plan_groups(modules.clone(), pair)),
+            vec![vec!["/a", "/b"], vec!["/c"]]
+        );
+        assert_eq!(
+            files(&plan_groups(modules, 1)),
+            vec![vec!["/a"], vec!["/b"], vec!["/c"]]
+        );
+        assert!(plan_groups(vec![], 1).is_empty());
     }
 
     #[test]

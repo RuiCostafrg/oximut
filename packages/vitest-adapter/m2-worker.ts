@@ -243,6 +243,9 @@ async function command(name: string, args: Request): Promise<unknown> {
     tests,
     errors: errors.slice(0, 8).map((error) => String(error.message ?? error).slice(0, 2048)),
   };
+  // Acknowledge the resident modules this job served; the CLI rejects
+  // executed results from adapters that ignore them.
+  if (job.resident) result.resident = job.resident.length;
   result.coverage = selectionSupport.finish(vitest, job, modules, result);
   selectionSupport.close();
   return result;

@@ -340,19 +340,8 @@ fn switch(
     let allocator = Allocator::default();
     let source_type = SourceType::from_path(path).map_err(|e| e.to_string())?;
     let parsed = Parser::new(&allocator, source, source_type).parse();
-    struct ProcessUse(bool);
-    impl<'a> Visit<'a> for ProcessUse {
-        fn visit_identifier_reference(&mut self, it: &IdentifierReference<'a>) {
-            self.0 |= it.name == "process";
-        }
-        fn visit_binding_identifier(&mut self, it: &BindingIdentifier<'a>) {
-            self.0 |= it.name == "process";
-        }
-    }
-    let mut process_use = ProcessUse(false);
-    process_use.visit_program(&parsed.program);
-    if process_use.0 {
-        generated.diagnostics.push("mutation switching fallback: process identifier may shadow or modify the Node selector; using fresh static mutants".into());
+    if may_shadow(&parsed.program, "process") {
+        generated.diagnostics.push("mutation switching fallback: process identifier or with statement may shadow or modify the Node selector; using fresh static mutants".into());
         return Ok((generated, Switch::Static));
     }
     let global_conflict = probes && uses_global_this(&parsed.program);
@@ -528,18 +517,29 @@ fn switch(
 }
 
 fn uses_global_this(program: &Program<'_>) -> bool {
-    struct GlobalUse(bool);
-    impl<'a> Visit<'a> for GlobalUse {
+    may_shadow(program, "globalThis")
+}
+
+/// Whether an injected free reference to `name` could resolve to something
+/// other than the global: the source names it, or a sloppy-mode `with` scope
+/// could supply a same-named property without naming it.
+fn may_shadow(program: &Program<'_>, name: &str) -> bool {
+    struct Use<'n>(&'n str, bool);
+    impl<'a> Visit<'a> for Use<'_> {
         fn visit_identifier_reference(&mut self, it: &IdentifierReference<'a>) {
-            self.0 |= it.name == "globalThis";
+            self.1 |= it.name == self.0;
         }
         fn visit_binding_identifier(&mut self, it: &BindingIdentifier<'a>) {
-            self.0 |= it.name == "globalThis";
+            self.1 |= it.name == self.0;
+        }
+        fn visit_with_statement(&mut self, it: &WithStatement<'a>) {
+            self.1 = true;
+            walk::walk_with_statement(self, it);
         }
     }
-    let mut global_use = GlobalUse(false);
-    global_use.visit_program(program);
-    global_use.0
+    let mut found = Use(name, false);
+    found.visit_program(program);
+    found.1
 }
 
 /// Probe expression evaluation without changing values, operand order, or the
@@ -1027,6 +1027,26 @@ console.log(JSON.stringify([a, b, c, iterator.next(), iterator.next(7), true, ca
             generate_switched_probed("src/a.ts", path, "export const x = 1;").unwrap();
         assert!(generated.mutants.is_empty());
         assert_eq!(coverage.unwrap().code, "export const x = 1;");
+    }
+
+    #[test]
+    fn with_scopes_fall_back_for_switching_and_probes() {
+        // Sloppy scripts only: a with object can supply `process`/`globalThis`.
+        let path = Path::new("/project/src/a.js");
+        let source = "var scope = {}; with (scope) { var x = 1 + 2; }";
+        let (generated, coverage) = generate_switched_probed("src/a.js", path, source).unwrap();
+        assert!(
+            generated
+                .diagnostics
+                .iter()
+                .any(|d| d.contains("switching fallback") && d.contains("with statement"))
+        );
+        assert_eq!(generated.mutants[0].code, source.replacen('+', "-", 1));
+        assert_eq!(coverage.unwrap_err(), "probe-globalThis-conflict");
+        assert_eq!(
+            generate_probes("src/a.js", path, source).unwrap_err(),
+            "probe-globalThis-conflict"
+        );
     }
 
     #[test]

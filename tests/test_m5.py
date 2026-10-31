@@ -46,7 +46,7 @@ async function run(request, output) {
   await sleep(mutant ? 250 : 180);
   const failed = mutant && request.generation % 2 === 1;
   const response = { protocol: request.protocol, runId: request.runId, jobId: request.jobId,
-    generation: request.generation, outcome: failed ? 'failed' : 'passed',
+    generation: request.generation, ...(request.resident ? { resident: request.resident.length } : {}), outcome: failed ? 'failed' : 'passed',
     tests: { passed: failed ? 0 : 1, failed: failed ? 1 : 0, skipped: 0 }, errors: [] };
   event({ event: 'end', job: request.jobId });
   writeFileSync(output + '.tmp', JSON.stringify(response)); renameSync(output + '.tmp', output);

@@ -188,6 +188,8 @@ export const other = process.env.OXIMUT_ACTIVE_MUTANT === 'other' ? 2 : 1;`,
         shared ? { resident: shared } : {},
       );
       assert.equal(response.outcome, expected, JSON.stringify([id, response]));
+      // Executed results acknowledge exactly the resident modules served.
+      assert.equal(response.resident, shared?.length, id);
       assert.equal(await count(), evaluations, id);
     }
   },

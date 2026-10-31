@@ -158,6 +158,10 @@ def phase_errors(row, manifest):
                 'files' in run and (not isinstance(checked, list) or not checked)):
             errors.append('invalid disabled validation file')
             continue
+        if 'files' in run and (run.get('run') != 'instrumentedBaseline'
+                               or type(run.get('coverage')) is not bool):
+            errors.append('mislabeled shared disabled validation record')
+            continue
         try:
             for file in ([run['file']] if 'file' in run else checked):
                 files.append(Path(file).relative_to(Path(row['cwd'])).as_posix())

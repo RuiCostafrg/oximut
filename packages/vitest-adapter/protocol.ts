@@ -36,5 +36,7 @@ export interface Result {
   tests: { passed: number; failed: number; skipped: number };
   errors: string[];
   coverage?: Coverage;
+  /** Count of resident modules served; required whenever the request had any. */
+  resident?: number;
 }
 export type Response = Pick<Request, 'protocol' | 'runId' | 'jobId' | 'generation'> & Result;

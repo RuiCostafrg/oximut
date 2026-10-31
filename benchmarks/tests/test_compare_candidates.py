@@ -193,7 +193,9 @@ class CampaignTests(unittest.TestCase):
         causes = [f'missing:{key}' for key in campaign.PHASES]
         causes += ['warmup', 'resources-list', 'resources-string', 'phases-list', 'missing-runs',
                    'runs-count', 'missing-file', 'duplicate-file', 'extra-file', 'malformed-run',
-                   'both-file-forms', 'empty-files', 'files-string', 'outside-root']
+                   'both-file-forms', 'empty-files', 'files-string', 'outside-root',
+                   'missing-run-label', 'wrong-run-label', 'missing-coverage-flag',
+                   'non-boolean-coverage-flag']
         for bad in (True, None, '1', -1, float('nan'), float('inf'), -float('inf'), 10 ** 400):
             causes.extend([('duration', bad), ('run-duration', bad)])
         for cause in causes:
@@ -236,6 +238,14 @@ class CampaignTests(unittest.TestCase):
                 resources['disabledValidationRuns'][0]['files'] = []
             elif cause == 'files-string':
                 resources['disabledValidationRuns'][0]['files'] = 'src/extend.ts'
+            elif cause == 'missing-run-label':
+                resources['disabledValidationRuns'][0].pop('run')
+            elif cause == 'wrong-run-label':
+                resources['disabledValidationRuns'][0]['run'] = 'coverageBaseline'
+            elif cause == 'missing-coverage-flag':
+                resources['disabledValidationRuns'][0].pop('coverage')
+            elif cause == 'non-boolean-coverage-flag':
+                resources['disabledValidationRuns'][0]['coverage'] = 1
             elif cause == 'outside-root':
                 resources['disabledValidationRuns'][0]['files'][0] = '/elsewhere/src/extend.ts'
             with self.subTest(cause=cause):
