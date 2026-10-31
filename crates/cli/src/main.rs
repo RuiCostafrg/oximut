@@ -757,7 +757,7 @@ fn run_attempt(options: &Options, previous: Option<RetryEvidence>) -> Result<Att
             ),
             None => (Vec::new(), None, Vec::new(), 0),
         };
-    let mut disabled_checks = vec![];
+    let mut resident = vec![];
     let mut probe_transforms = vec![];
     let mut probe_reasons = vec![];
     let mut inventory = vec![];
@@ -782,8 +782,9 @@ fn run_attempt(options: &Options, previous: Option<RetryEvidence>) -> Result<Att
                 .any(|d| d.contains("switching fallback"))
             && let Some(first) = generated.mutants.first()
         {
-            disabled_checks.push(Mutation {
-                id: format!("__oximut_disabled__-{}", disabled_checks.len()),
+            // All mutants of a switched file share this module.
+            resident.push(Mutation {
+                id: "__oximut_resident__".into(),
                 file: first.file.clone(),
                 code: first.code.clone(),
                 map: first.map.clone(),
@@ -804,7 +805,7 @@ fn run_attempt(options: &Options, previous: Option<RetryEvidence>) -> Result<Att
     }
     diagnostics.push(match options.execution {
         Execution::Fresh => "execution=fresh; isolation=fresh-controller-and-test-process".into(),
-        Execution::Persistent => "execution=persistent; isolation=fresh-test-forks; controller reuse only; baseline=original-and-disabled-switches".into(),
+        Execution::Persistent => "execution=persistent; isolation=fresh-test-forks; controller reuse only; baseline=original-and-instrumented".into(),
     });
     diagnostics.push(if options.mutators.is_empty() {
         "mutator families=all".into()
@@ -854,6 +855,7 @@ fn run_attempt(options: &Options, previous: Option<RetryEvidence>) -> Result<Att
         deadline_ms: options.timeout_ms,
         mutation: None,
         collect_coverage: None,
+        resident: None,
         selection: None,
     };
     let mut scheduler = scheduler::Scheduler::new(options)?;
@@ -867,61 +869,50 @@ fn run_attempt(options: &Options, previous: Option<RetryEvidence>) -> Result<Att
         "originalBaseline",
         baseline_started.elapsed().as_secs_f64() * 1000.0,
     );
-    let disabled_started = Instant::now();
-    if baseline.outcome == TestOutcome::Passed {
-        for mutation in disabled_checks {
-            request.generation += 1;
-            request.job_id = mutation.id.clone();
-            request.kind = "mutant".into();
-            let file = mutation.file.clone();
-            request.mutation = Some(mutation);
-            let started = Instant::now();
-            let mut checked = scheduler.execute(&request);
-            disabled_validation_runs.push(serde_json::json!({
-                "file": file, "wallMs": started.elapsed().as_secs_f64() * 1000.0
-            }));
-            if checked.outcome == TestOutcome::Passed
-                && (checked.tests.passed != baseline.tests.passed
-                    || checked.tests.failed != baseline.tests.failed
-                    || checked.tests.skipped != baseline.tests.skipped)
-            {
-                checked =
-                    infrastructure(&request, "disabled switching changed baseline test counts");
-            }
-            diagnostics.push(format!(
-                "disabled switching validation: {file}: {:?}",
-                checked.outcome
-            ));
-            if checked.outcome != TestOutcome::Passed {
-                baseline = checked;
-                break;
-            }
-        }
-    }
-    phase_wall_ms.insert(
-        "disabledSwitchValidation",
-        disabled_started.elapsed().as_secs_f64() * 1000.0,
-    );
-    let coverage_started = Instant::now();
-    if baseline.outcome == TestOutcome::Passed && options.test_selection {
+    // One run validates inactive switching for every switched file and, with
+    // selection, collects per-test coverage from the same code mutants execute.
+    let instrumented_started = Instant::now();
+    let collect = options.test_selection;
+    if baseline.outcome == TestOutcome::Passed && (collect || !resident.is_empty()) {
         request.generation += 1;
-        request.job_id = "coverage-baseline".into();
+        request.job_id = "instrumented-baseline".into();
         request.kind = "baseline".into();
         request.mutation = None;
-        request.collect_coverage = Some(probe_transforms);
+        request.resident = (!resident.is_empty()).then(|| resident.clone());
+        request.collect_coverage = collect.then_some(probe_transforms);
         let mut collected = scheduler.execute(&request);
-        if collected.outcome != TestOutcome::Passed {
-            diagnostics.push("probe baseline failed; mutation execution blocked".into());
-            baseline = collected;
-        } else if collected.tests.passed != baseline.tests.passed
-            || collected.tests.failed != baseline.tests.failed
-            || collected.tests.skipped != baseline.tests.skipped
+        if collected.outcome == TestOutcome::Passed
+            && (collected.tests.passed != baseline.tests.passed
+                || collected.tests.failed != baseline.tests.failed
+                || collected.tests.skipped != baseline.tests.skipped)
         {
-            baseline = infrastructure(
+            collected = infrastructure(
                 &request,
-                "probe instrumentation changed baseline test counts",
+                "instrumented baseline (inactive switching and probes) changed baseline test counts",
             );
-        } else {
+        }
+        let validated: Vec<_> = resident
+            .iter()
+            .map(|mutation| mutation.file.clone())
+            .collect();
+        for file in &validated {
+            diagnostics.push(format!(
+                "disabled switching validation: {file}: {:?}",
+                collected.outcome
+            ));
+        }
+        if !validated.is_empty() {
+            disabled_validation_runs.push(serde_json::json!({
+                "files": validated,
+                "wallMs": instrumented_started.elapsed().as_secs_f64() * 1000.0,
+                "run": "instrumentedBaseline",
+                "coverage": collect,
+            }));
+        }
+        if collected.outcome != TestOutcome::Passed {
+            diagnostics.push("instrumented baseline failed; mutation execution blocked".into());
+            baseline = collected;
+        } else if collect {
             let mut coverage = collected.coverage.take().unwrap_or(Coverage {
                 complete: false,
                 tests: vec![],
@@ -949,11 +940,13 @@ fn run_attempt(options: &Options, previous: Option<RetryEvidence>) -> Result<Att
         }
         request.collect_coverage = None;
     }
-    let generation_offset = request.generation;
+    // Mutant jobs serve the validated modules; only the selector changes.
+    request.resident = (!resident.is_empty()).then_some(resident);
     phase_wall_ms.insert(
-        "coverageBaseline",
-        coverage_started.elapsed().as_secs_f64() * 1000.0,
+        "instrumentedBaseline",
+        instrumented_started.elapsed().as_secs_f64() * 1000.0,
     );
+    let generation_offset = request.generation;
     let post_baseline_started = Instant::now();
     let baseline_ok = baseline.outcome == TestOutcome::Passed;
     let mut results = vec![];
@@ -1438,6 +1431,7 @@ mod tests {
             deadline_ms: 100,
             mutation: None,
             collect_coverage: None,
+            resident: None,
             selection: None,
         };
         fs::write(&path, vec![b' '; 1_048_577]).unwrap();

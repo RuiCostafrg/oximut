@@ -48,7 +48,14 @@ let state = 0; test('enabled', () => { expect(state++).toBe(0); expect(enabled).
   let sequence = 0;
   return {
     root,
-    async run(id, code = switched, deadlineMs = 30000, filename = 'source.ts', requestBytes) {
+    async run(
+      id,
+      code = switched,
+      deadlineMs = 30000,
+      filename = 'source.ts',
+      requestBytes,
+      extra = {},
+    ) {
       const n = sequence++;
       const input = {
         protocol: 1,
@@ -68,6 +75,7 @@ let state = 0; test('enabled', () => { expect(state++).toBe(0); expect(enabled).
                 code,
                 map: { version: 3, sources: [filename], mappings: 'AAAA', names: [] },
               },
+        ...extra,
       };
       let payload = JSON.stringify(input);
       if (requestBytes !== undefined) {
@@ -124,6 +132,64 @@ test(
       observations.map((item) => item.active),
       ['disabled', 'kill', 'disabled', undefined, 'kill', 'disabled', 'disabled'],
     );
+  },
+);
+
+test(
+  'M2 serves validated resident modules in every job and restores changed files exactly',
+  { timeout: 120000 },
+  async (t) => {
+    const s = await session(t);
+    const observed = join(s.root, 'session/resident-observations');
+    await writeFile(join(s.root, 'other.ts'), 'export const other = 1;');
+    await writeFile(
+      join(s.root, 'sample.test.ts'),
+      `import { test, expect } from 'vitest';
+import { enabled } from './source'; import { other } from './other';
+test('enabled', () => { expect(enabled).toBe(true); expect(other).toBe(1); });`,
+    );
+    const map = { version: 3, sources: ['other.ts'], mappings: 'AAAA', names: [] };
+    const resident = [
+      {
+        id: '__oximut_resident__',
+        file: join(s.root, 'other.ts'),
+        code: `import { appendFileSync } from 'node:fs';
+appendFileSync(${JSON.stringify(observed)}, 'resident\\n');
+export const other = process.env.OXIMUT_ACTIVE_MUTANT === 'other' ? 2 : 1;`,
+        map,
+      },
+    ];
+    const count = async () => {
+      try {
+        return (await readFile(observed, 'utf8')).split('\n').filter(Boolean).length;
+      } catch (error) {
+        if (error.code === 'ENOENT') return 0;
+        throw error;
+      }
+    };
+    const steps = [
+      // [id, mutation code, resident, expected outcome, resident evaluations]
+      ['', null, undefined, 'passed', 0],
+      ['', null, resident, 'passed', 1],
+      ['other', switched, resident, 'failed', 2],
+      ['kill', switched, resident, 'failed', 3],
+      ['disabled', switched, resident, 'passed', 4],
+      ['static', 'export const other = 3;', resident, 'failed', 4, 'other.ts'],
+      ['disabled', switched, resident, 'passed', 5],
+      ['', null, undefined, 'passed', 5],
+    ];
+    for (const [id, code, shared, expected, evaluations, filename = 'source.ts'] of steps) {
+      const response = await s.run(
+        id,
+        code,
+        30000,
+        filename,
+        undefined,
+        shared ? { resident: shared } : {},
+      );
+      assert.equal(response.outcome, expected, JSON.stringify([id, response]));
+      assert.equal(await count(), evaluations, id);
+    }
   },
 );
 

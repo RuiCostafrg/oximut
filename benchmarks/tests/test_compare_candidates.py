@@ -41,7 +41,7 @@ class CampaignTests(unittest.TestCase):
         rows[-2]['resources']['phaseWallMs']['originalBaseline'] = 123.
         result = campaign.evaluate(rows, 1, 5, provenance, **policy)
         self.assertEqual(result['phase_evidence']['after'][-1]['phaseWallMs']['originalBaseline'], 123.)
-        self.assertEqual(len(result['phase_evidence']['after'][-1]['disabledValidationRuns']), 5)
+        self.assertEqual(len(result['phase_evidence']['after'][-1]['disabledValidationRuns']), 1)
         self.assertIsNone(result['phase_evidence']['before'][0]['phaseWallMs'])
         self.assertTrue(result['correctness_gate']['passed'])
         self.assertTrue(result['targets_met'])
@@ -128,8 +128,9 @@ class CampaignTests(unittest.TestCase):
                 row['cwd'] = '/projects/after'
                 row['resources'] = {
                     'phaseWallMs': {key: 1. for key in campaign.PHASES},
-                    'disabledValidationRuns': [{'file': f'/projects/after/{file}', 'wallMs': 1.}
-                                               for file in manifest['mutate']]}
+                    'disabledValidationRuns': [{
+                        'files': [f'/projects/after/{file}' for file in manifest['mutate']],
+                        'wallMs': 1., 'run': 'instrumentedBaseline', 'coverage': True}]}
         return rows, provenance, dict(require_build_integrity=True, build_metadata=metadata,
                                      candidate_commits=commits)
 
@@ -138,6 +139,16 @@ class CampaignTests(unittest.TestCase):
         result = campaign.evaluate(rows, 1, 5, provenance, **policy)
         self.assertTrue(result['correctness_gate']['passed'])
         self.assertTrue(result['build_integrity']['passed'])
+
+    def test_legacy_per_file_disabled_validation_records_still_qualify(self):
+        rows, provenance, policy = self.strict_evidence()
+        for row in rows:
+            runs = row.get('resources', {}).get('disabledValidationRuns')
+            if runs:
+                row['resources']['disabledValidationRuns'] = [
+                    {'file': file, 'wallMs': 1.} for file in runs[0]['files']]
+        result = campaign.evaluate(rows, 1, 5, provenance, **policy)
+        self.assertTrue(result['correctness_gate']['passed'])
         self.assertIsNone(result['phase_evidence']['before'][0]['phaseWallMs'])
 
     def test_build_metadata_and_expected_executable_divergence_gate_all_ratios(self):
@@ -181,7 +192,8 @@ class CampaignTests(unittest.TestCase):
     def test_missing_or_invalid_after_phases_including_warmup_suppress_all_ratios(self):
         causes = [f'missing:{key}' for key in campaign.PHASES]
         causes += ['warmup', 'resources-list', 'resources-string', 'phases-list', 'missing-runs',
-                   'runs-count', 'missing-file', 'duplicate-file', 'extra-file', 'malformed-run']
+                   'runs-count', 'missing-file', 'duplicate-file', 'extra-file', 'malformed-run',
+                   'both-file-forms', 'empty-files', 'files-string', 'outside-root']
         for bad in (True, None, '1', -1, float('nan'), float('inf'), -float('inf'), 10 ** 400):
             causes.extend([('duration', bad), ('run-duration', bad)])
         for cause in causes:
@@ -208,13 +220,24 @@ class CampaignTests(unittest.TestCase):
             elif cause == 'runs-count':
                 resources['disabledValidationRuns'] = 5
             elif cause == 'missing-file':
-                resources['disabledValidationRuns'].pop()
+                resources['disabledValidationRuns'][0]['files'].pop()
             elif cause == 'duplicate-file':
-                resources['disabledValidationRuns'][1] = resources['disabledValidationRuns'][0]
+                shared = resources['disabledValidationRuns'][0]
+                resources['disabledValidationRuns'].append(
+                    {'file': shared['files'][0], 'wallMs': 1.})
             elif cause == 'extra-file':
-                resources['disabledValidationRuns'].append({'file': '/projects/after/src/extra.ts', 'wallMs': 1})
+                resources['disabledValidationRuns'][0]['files'].append('/projects/after/src/extra.ts')
             elif cause == 'malformed-run':
                 resources['disabledValidationRuns'][0] = None
+            elif cause == 'both-file-forms':
+                shared = resources['disabledValidationRuns'][0]
+                shared['file'] = shared['files'][0]
+            elif cause == 'empty-files':
+                resources['disabledValidationRuns'][0]['files'] = []
+            elif cause == 'files-string':
+                resources['disabledValidationRuns'][0]['files'] = 'src/extend.ts'
+            elif cause == 'outside-root':
+                resources['disabledValidationRuns'][0]['files'][0] = '/elsewhere/src/extend.ts'
             with self.subTest(cause=cause):
                 result = campaign.evaluate(rows, 1, 5, provenance, **policy)
                 self.assertFalse(result['correctness_gate']['passed'])

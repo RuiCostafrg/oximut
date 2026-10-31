@@ -12,6 +12,22 @@ let currentRun: Parameters<NonNullable<Reporter['onTestRunEnd']>> | undefined;
 let busy = false;
 let mutation: Request['mutation'] = null;
 let probes: Request['collectCoverage'];
+let resident: Request['resident'];
+let servedModules = new Map<string, NonNullable<Request['mutation']>>();
+
+/** Modules served outside probe runs: the active mutation overrides resident. */
+function served(
+  active: Request['mutation'],
+  shared: Request['resident'],
+): Map<string, NonNullable<Request['mutation']>> {
+  const modules = new Map<string, NonNullable<Request['mutation']>>();
+  for (const item of shared ?? []) modules.set(resolve(item.file), item);
+  if (active) modules.set(resolve(active.file), active);
+  return modules;
+}
+function same(a?: NonNullable<Request['mutation']>, b?: NonNullable<Request['mutation']>) {
+  return a?.code === b?.code && JSON.stringify(a?.map) === JSON.stringify(b?.map);
+}
 
 function message(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
@@ -33,6 +49,8 @@ async function command(name: string, args: Request): Promise<unknown> {
     if (version !== '4.1.12') throw new Error(`Unsupported Vitest ${version}; expected 4.1.12`);
     mutation = args.mutation;
     probes = args.collectCoverage;
+    resident = args.resident;
+    servedModules = served(mutation, resident);
     delete process.env.OXIMUT_ACTIVE_MUTANT;
     if (args.kind === 'mutant' && mutation) process.env.OXIMUT_ACTIVE_MUTANT = mutation.id;
     vitest = await createVitest(
@@ -61,16 +79,14 @@ async function command(name: string, args: Request): Promise<unknown> {
             name: 'oximut-m2-mutation',
             enforce: 'pre',
             transform(_code, id) {
-              const probe = probes?.find(
-                (probe) => resolve(id.split('?')[0]) === resolve(probe.file),
-              );
+              const file = resolve(id.split('?')[0]);
+              const probe = probes?.find((probe) => file === resolve(probe.file));
               if (probe) {
                 selectionSupport.observed.add(resolve(probe.file));
                 return { code: probe.code, map: JSON.stringify(probe.map) };
               }
-              if (mutation && resolve(id.split('?')[0]) === resolve(mutation.file)) {
-                return { code: mutation.code, map: JSON.stringify(mutation.map) };
-              }
+              const module = servedModules.get(file);
+              if (module) return { code: module.code, map: JSON.stringify(module.map) };
             },
           },
         ],
@@ -134,23 +150,26 @@ async function command(name: string, args: Request): Promise<unknown> {
   if (probesChanged) {
     // Probe changes can affect every source file and attribution dependency.
     for (const project of vitest.projects) project.vite.moduleGraph.invalidateAll();
-  } else if (
-    mutation?.file !== next?.file ||
-    mutation?.code !== next?.code ||
-    JSON.stringify(mutation?.map) !== JSON.stringify(next?.map)
-  ) {
+  } else {
+    // Invalidate exactly the files whose served module changes, restoring the
+    // previous transform as well as activating the next one. Vite invalidates
+    // every query/SSR variant and propagates to importers; unrelated modules
+    // retain their transform cache. A switched mutant serves its file's resident
+    // module, so consecutive switched mutants invalidate nothing; the selector
+    // is read at runtime by fresh test forks.
+    const before = servedModules;
+    const after = served(next, job.resident);
+    const changed = [...new Set([...before.keys(), ...after.keys()])].filter(
+      (file) => !same(before.get(file), after.get(file)),
+    );
     for (const project of vitest.projects) {
-      // Restore the previous transform as well as activating the next one.
-      // Vite invalidates every query/SSR variant and propagates to importers;
-      // unrelated modules retain their transform cache. Test forks stay fresh.
-      const files = new Set([mutation?.file, next?.file]);
-      for (const file of files) {
-        if (file) project.vite.moduleGraph.onFileChange(normalizePath(resolve(file)));
-      }
+      for (const file of changed) project.vite.moduleGraph.onFileChange(normalizePath(file));
     }
   }
   mutation = next;
   probes = job.collectCoverage;
+  resident = job.resident;
+  servedModules = served(mutation, resident);
   currentRun = undefined;
   delete process.env.OXIMUT_ACTIVE_MUTANT;
   if (job.kind === 'mutant' && next) process.env.OXIMUT_ACTIVE_MUTANT = next.id;

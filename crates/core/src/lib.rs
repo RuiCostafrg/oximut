@@ -89,6 +89,11 @@ pub struct Request {
     pub mutation: Option<Mutation>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub collect_coverage: Option<Vec<Mutation>>,
+    /// Shared switched modules served for every listed file throughout a job.
+    /// The instrumented baseline validates exactly these with no active mutant;
+    /// mutant jobs keep serving them so executed code equals validated code.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub resident: Option<Vec<Mutation>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub selection: Option<Selection>,
 }
@@ -411,6 +416,7 @@ mod tests {
             deadline_ms: 10,
             mutation: None,
             collect_coverage: None,
+            resident: None,
             selection: None,
         };
         let mut response = Response {

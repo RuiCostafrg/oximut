@@ -253,9 +253,10 @@ that change; single local qualifications are not repeated performance evidence.
 
 The pinned native workflow requires distinct executable hashes, build metadata
 binding the requested commits and observed executable hashes, separate absolute
-Cargo target directories, and all nine after-candidate phase timings. It also
-requires finite nonnegative durations and exactly one disabled-validation record
-for each of the five declared source files. Missing, duplicated, malformed or
+Cargo target directories, and all eight after-candidate phase timings. It also
+requires finite nonnegative durations and disabled-validation records that cover
+each of the five declared source files exactly once (one shared instrumented
+baseline record listing `files`, or legacy one-`file` records). Missing, duplicated, malformed or
 nonfinite evidence invalidates the whole comparison and suppresses all ratios.
 Build preflight failures retain metadata and an invalid summary without starting
 any timed command. Generic adapter-only comparisons can omit the strict flag

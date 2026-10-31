@@ -1,4 +1,4 @@
-import { isAbsolute, relative } from 'node:path';
+import { isAbsolute, relative, resolve } from 'node:path';
 
 /** @typedef {import('./protocol.ts').Request} Request */
 /** @typedef {import('./protocol.ts').Result} Result */
@@ -66,7 +66,31 @@ export function validateRequest(value) {
     if (value.kind !== 'baseline' || !Array.isArray(value.collectCoverage))
       throw new Error('Coverage collection requires baseline probe transforms');
     for (const mutation of value.collectCoverage)
-      validateRequest({ ...value, kind: 'mutant', mutation, collectCoverage: undefined });
+      validateRequest({
+        ...value,
+        kind: 'mutant',
+        mutation,
+        collectCoverage: undefined,
+        resident: undefined,
+      });
+  }
+  if (value.resident !== undefined) {
+    if (!Array.isArray(value.resident) || value.resident.length === 0)
+      throw new Error('Resident transforms must be a nonempty array');
+    const files = new Set();
+    for (const mutation of value.resident) {
+      validateRequest({
+        ...value,
+        kind: 'mutant',
+        mutation,
+        collectCoverage: undefined,
+        resident: undefined,
+        selection: undefined,
+      });
+      const file = resolve(/** @type {{ file: string }} */ (mutation).file);
+      if (files.has(file)) throw new Error('Duplicate resident transform file');
+      files.add(file);
+    }
   }
   if (value.selection !== undefined) {
     const selected = value.selection;

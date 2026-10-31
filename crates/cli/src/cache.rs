@@ -204,6 +204,32 @@ struct PolicyState {
     bypass: bool,
 }
 
+/// Persistent selection embeds probes in the shared switched module, so the
+/// coverage transform for a switched file is the exact code its mutants run.
+fn instrument(
+    options: &Options,
+    identity: &str,
+    path: &Path,
+    source: &str,
+) -> Result<Instrumented, String> {
+    match (options.execution, options.test_selection) {
+        (Execution::Persistent, true) => {
+            let (generated, probe) =
+                oximut_instrument::generate_switched_probed(identity, path, source)?;
+            Ok((generated, Some(probe)))
+        }
+        (execution, selection) => Ok((
+            match execution {
+                Execution::Fresh => oximut_instrument::generate(identity, path, source)?,
+                Execution::Persistent => {
+                    oximut_instrument::generate_switched(identity, path, source)?
+                }
+            },
+            selection.then(|| oximut_instrument::generate_probes(identity, path, source)),
+        )),
+    }
+}
+
 pub struct Cache {
     pub report: CacheReport,
     directory: PathBuf,
@@ -279,16 +305,7 @@ impl Cache {
         source: &str,
     ) -> Result<Instrumented, String> {
         if !self.report.enabled {
-            let generated = match options.execution {
-                Execution::Fresh => oximut_instrument::generate(identity, path, source)?,
-                Execution::Persistent => {
-                    oximut_instrument::generate_switched(identity, path, source)?
-                }
-            };
-            let probe = options
-                .test_selection
-                .then(|| oximut_instrument::generate_probes(identity, path, source));
-            return Ok((generated, probe));
+            return instrument(options, identity, path, source);
         }
         let key = digest(
             &serde_json::to_vec(&(
@@ -324,13 +341,7 @@ impl Cache {
             }
             self.report.instrumentation_misses += 1;
         }
-        let generated = match options.execution {
-            Execution::Fresh => oximut_instrument::generate(identity, path, source)?,
-            Execution::Persistent => oximut_instrument::generate_switched(identity, path, source)?,
-        };
-        let probe = options
-            .test_selection
-            .then(|| oximut_instrument::generate_probes(identity, path, source));
+        let (generated, probe) = instrument(options, identity, path, source)?;
         let checksum =
             digest(&serde_json::to_vec(&(&generated, &probe)).map_err(|e| e.to_string())?);
         let entry = Artifact {
