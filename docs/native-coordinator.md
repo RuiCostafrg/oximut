@@ -8,13 +8,22 @@ performance claim; only qualified native campaign evidence is.
 ## Goal
 
 On the pinned colord workload (41 sources, 102 tests, five mutated files, ten
-killed arithmetic mutants, one worker), against tuned Stryker:
+killed arithmetic mutants, one worker), against tuned Stryker. These targets
+supersede the campaign harness's current thresholds (wall ≤ 0.80, RSS ≤ 0.50,
+no CPU target) for this plan. A dedicated PR aligns `compare_candidates.py`'s
+`targets_met` with them before any target claim.
 
 | Metric | Target (paired ratio, CI upper bound) | `main` @ 988a619 (run 41182865902) |
 |---|---|---|
 | Wall time | ≤ 0.50 | 2.41 (2.23–2.50) |
 | CPU seconds (user+system, process tree) | ≤ 0.80 | 3.26 (3.13–3.42) |
 | Peak aggregate sampled RSS | ≤ 0.80 | 0.75 (0.74–0.76) |
+
+Baseline provenance: run 41182865902 (pull_request event for #24; measured
+merge revision `0b15f6c`, tree identical to `main` @ 988a619; before candidate
+`7a2c850`). Ubuntu 24.04 x86_64 Azure runner; Node v26.3.1, Vitest 4.1.12
+(lockfile, enforced by the harness), Stryker core/vitest-runner 10.0.0, Rust
+1.96.0, Python 3.13.17. One warmup and five measured pairs.
 
 All existing correctness gates stay fail-closed: the original baseline oracle,
 inactive-instrumentation validation, exact test inventory, deadlines, verified
@@ -62,17 +71,21 @@ The startup-qualified profile capture and the code identify the costs:
    ownership and it enforces deadlines.
 
 Stryker, by contrast: one instrumented dry run (no uninstrumented oracle),
-`pool: 'threads'` overriding the project's `forks` (fresh worker *threads*,
-still one per test file because the project sets `isolate: true`), mutants
-switched at runtime through a global, and `bail: 1`.
+`pool: 'threads'` overriding the project's `forks`, mutants switched at runtime
+through a global, and `bail: 1`. Because the project sets `isolate: true`, Vitest
+4.1.12's pool stops each runner after its test file and never returns it to the
+shared-runner list, so every test file still gets a fresh worker *thread*.
 
 ## Honest reading of the proposed architecture
 
 The proposal is: a Rust-native mutation engine (Oxc, scheduler, cache,
 coverage mapping), then a persistent native execution coordinator, then a minimal
 Vitest compatibility layer. Moving orchestration from Node/Python into Rust
-removes costs 3–5 (layers, polling, scans, per-job fingerprint walks, two
-processes' CPU and RSS). It does **not** by itself remove fresh test workers,
+reduces costs 3–5: it removes the two relay processes, file polling and
+duplicate scanners, and consolidates the remaining process scans and
+fingerprint walks into Rust. P2 still keeps a stat walk and cleanup checks,
+and P3 keeps a full `/proc` enumeration for cleanup verification, so scan
+costs shrink but do not disappear. It does **not** by itself remove fresh test workers,
 which are costs 1–2 and the majority of wall time. Those need separate changes:
 
 - **Run fewer suites.** Validate the exact code mutants will execute, once, in
@@ -114,8 +127,13 @@ deliberately in its own commit with the reason.
   code and mark coverage incomplete, as today.
 - One **instrumented baseline** serves the combined code for *all* switched files
   with no active mutant. It must pass with test counts identical to the original
-  baseline, which validates inactive switching for every file. With test
-  selection on, the same run collects per-test coverage.
+  baseline, the same check the per-file disabled runs applied. This validates
+  the transforms and their *inactive* paths. Active paths run only in mutant
+  jobs; their equivalence with static mutants stays covered by the switching
+  oracle tests. With test selection on, the same run collects per-test coverage.
+  That coverage still has to pass the existing inventory and identity
+  validation; anything incomplete falls back to full selection, never to
+  narrower selection.
 - Every mutant run serves the same resident transforms (only the active-mutant
   selector changes; static mutants override their own file). The executed code
   therefore equals the validated code, and Vite's transform cache is no longer
@@ -124,18 +142,30 @@ deliberately in its own commit with the reason.
 - Expected effect: 38 → 18 fresh forks; removes most of the 4.4 s validation
   phase. Report schema: `phaseWallMs.instrumentedBaseline` replaces
   `disabledSwitchValidation` + `coverageBaseline`; `disabledValidationRuns`
-  becomes one record listing every validated file.
+  becomes one record listing every validated file. The same PR updates the
+  campaign integrity gate (`compare_candidates.py`) to accept this record while
+  still requiring each declared file to be validated exactly once.
 
 ### P2 — Native coordinator: Rust drives the Vitest layer directly
 
 - The Rust worker slot spawns the Node controller itself, talking
-  length-bounded NDJSON over dedicated pipes (no stdout/stderr sharing, no file
-  polling). `m2-runner.mjs` and `supervisor.py` leave the execution path.
+  length-bounded NDJSON over a dedicated channel (no stdout/stderr sharing, no
+  file polling). `m2-runner.mjs` and `supervisor.py` leave the execution path.
+- The protocol contract stays the same: requests of at most 8 MiB and
+  responses of at most 1 MiB, enforced on both sides. The Node layer keeps
+  `validateRequest`, and Rust keeps `Response::validate` (identity, generation,
+  staleness). Conformance tests cover the limits and rejection paths before the
+  old path is removed.
 - The Rust slot is the subreaper and does verified cleanup with
   pidfd-pinned identities, the same guarantees as `supervisor.py`. Ports:
   post-job leak detection with independent disappearance checks, deadline-bounded
   shutdown, controller recycling, crash retry policy and input-change detection
-  for controller reuse (a Rust stat walk, as before but cheaper).
+  for controller reuse. The reuse check keeps exactly today's invariant: path,
+  size, mtime and ctime for every project input, and any symlink forces a fresh
+  controller. ctime changes on every content write and cannot be set by user
+  code. Content-hashed input fingerprints stay where they apply today: in
+  cache-enabled runs, they are checked after the baseline and before
+  publication. P2 neither adds nor removes them.
 - Blocking `poll(2)` with deadlines replaces the 10/15 ms sleeps.
 - Expected effect: two fewer processes (CPU and RSS), about 100 ms less per job.
 
