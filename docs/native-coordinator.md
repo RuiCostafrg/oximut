@@ -165,8 +165,12 @@ deliberately in its own commit with the reason.
   It also closes a gap that check has today. Filesystems with coarse timestamps
   can leave all three unchanged after an equal-size rewrite in the same tick.
   So, following git's "racily clean" rule, any entry whose mtime or ctime is not
-  strictly older than the previous snapshot's start is content-hashed, and a
-  hash change retires the controller. The check is strictly stronger than
+  strictly older than the previous snapshot's start minus a 2-second precision
+  allowance is content-hashed, and a hash change retires the controller.
+  Without the allowance, a whole-second filesystem could stamp a later rewrite
+  with a time older than a sub-second snapshot start. Two seconds covers FAT,
+  the coarsest common granularity. A regression test rewrites a file with the
+  same size and restored timestamps. The check is strictly stronger than
   today's, never weaker. Content-hashed cache fingerprints stay where they
   apply today: in cache-enabled runs, after the baseline and before
   publication.
