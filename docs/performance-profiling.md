@@ -61,6 +61,29 @@ identity tracking is sampled, not an exhaustive process audit. This changes no
 resource-budget sampling, test isolation, baseline, or mutation workload. Its
 performance effect requires a separate matched measurement.
 
+Periodic accounting now discovers only the owned tree. The CLI and each slot
+are subreapers, so every owned process, including adopted orphans, is reachable
+through the per-thread `/proc/<pid>/task/<tid>/children` links. Periodic resource
+samples and the slots' 50ms ownership snapshots follow those links instead of
+reading every host process. A walk fails when it observes the tree changing:
+a visited or listed process exited (including zombies, whose children have
+already moved to a subreaper), or a listed PID's parent is outside the tree
+(PID reuse or reparenting). That sample then uses broad discovery, as do kernels
+without the links. Forced samples (job completion, admission pressure and final
+accounting) always use broad discovery. The kernel's `children` lists are only
+exact for frozen processes, so a periodic sample can still miss a process that
+forks or exits concurrently. That miss lasts at most one interval, the same
+order as the sampling interval itself. `resources.treeDiscoveries` and
+`resources.broadDiscoveries` count each kind. The CLI no longer enumerates
+`/proc` on every 10ms dispatch poll: slot ownership reuses the sampler's
+discovery. Waiting for a busy slot is ordinary waiting and forces no samples.
+Only memory-pressure admission waits take a broad sample, at most once per
+sampling interval. Before this change, every 10ms poll while all slots were busy
+(the whole mutation phase with one worker) forced a broad host scan. Every abort, termination and shutdown verification still performs a
+fresh broad discovery before signalling or concluding cleanup, so the
+fail-closed cleanup gates are unchanged. Identity and RSS reads for tree members
+remain fresh and strict.
+
 If process discovery fails, the supervisor performs bounded best-effort cleanup
 of previously observed identities, including its directly spawned controller.
 Each signal requires an independent current start-time check; missing, reused,

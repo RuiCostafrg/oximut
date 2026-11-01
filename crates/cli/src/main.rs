@@ -348,6 +348,23 @@ fn descendants(_: u32) -> BTreeMap<u32, u64> {
     BTreeMap::new()
 }
 
+/// Periodic ownership snapshots of this subreaper's tree walk its `children`
+/// links instead of reading every host process. Any failure, or a kernel
+/// without those links, falls back to broad discovery. Termination and
+/// shutdown verification always use broad discovery.
+#[cfg(any(target_os = "linux", target_os = "android"))]
+fn owned_snapshot() -> BTreeMap<u32, u64> {
+    let root = std::process::id();
+    match processes::ProcessTable::read_tree(root) {
+        Ok(Some(table)) => table.descendants(root),
+        _ => descendants(root),
+    }
+}
+#[cfg(not(any(target_os = "linux", target_os = "android")))]
+fn owned_snapshot() -> BTreeMap<u32, u64> {
+    BTreeMap::new()
+}
+
 fn terminate(child: &mut std::process::Child, owned: &BTreeMap<u32, u64>) {
     #[cfg(unix)]
     unsafe {
@@ -421,7 +438,7 @@ fn invoke(options: &Options, request: &Request) -> Response {
         let mut last_snapshot = Instant::now() - Duration::from_secs(1);
         let status = loop {
             if last_snapshot.elapsed() >= Duration::from_millis(50) {
-                owned.extend(descendants(std::process::id()));
+                owned.extend(owned_snapshot());
                 owned.remove(&child.id());
                 last_snapshot = Instant::now();
             }
@@ -429,6 +446,9 @@ fn invoke(options: &Options, request: &Request) -> Response {
                 Ok(Some(status)) => break status,
                 Ok(None) => {}
                 Err(error) => {
+                    // Termination always starts from a fresh broad discovery.
+                    owned.extend(descendants(std::process::id()));
+                    owned.remove(&child.id());
                     terminate(&mut child, &owned);
                     return Err(format!("adapter wait failed: {error}"));
                 }
@@ -565,7 +585,8 @@ impl Session {
         let mut last_snapshot = Instant::now() - Duration::from_secs(1);
         loop {
             if last_snapshot.elapsed() >= Duration::from_millis(50) {
-                self.snapshot();
+                self.owned.extend(owned_snapshot());
+                self.owned.remove(&self.child.id());
                 last_snapshot = Instant::now();
             }
             if response_path.exists() {
@@ -1335,7 +1356,13 @@ fn run_attempt(options: &Options, previous: Option<RetryEvidence>) -> Result<Att
                 resources[field] = old.max(current).into();
             }
         }
-        for field in ["samples", "admissionPauses", "recycledIdleWorkers"] {
+        for field in [
+            "samples",
+            "treeDiscoveries",
+            "broadDiscoveries",
+            "admissionPauses",
+            "recycledIdleWorkers",
+        ] {
             if let (Some(old), Some(current)) = (
                 previous_resources[field].as_u64(),
                 resources[field].as_u64(),
