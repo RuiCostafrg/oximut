@@ -24,9 +24,11 @@ import targets
 BASELINE = '4a6993b564758d15d976cd0998ba490fbf64e1e1'
 METRICS = ('wall_seconds', 'cpu_seconds', 'peak_aggregate_rss_bytes')
 VARIANTS = ('before', 'after')
-PHASES = ('inputAndSchedulerPreparation', 'originalBaseline', 'disabledSwitchValidation',
-          'coverageBaseline', 'postBaselineValidation', 'mutationPlanning',
-          'mutationExecution', 'teardown', 'finalInputValidation')
+# One instrumented baseline validates inactive switching for every switched file
+# and collects coverage, replacing per-file disabled runs plus a coverage run.
+PHASES = ('inputAndSchedulerPreparation', 'originalBaseline', 'instrumentedBaseline',
+          'postBaselineValidation', 'mutationPlanning', 'mutationExecution', 'teardown',
+          'finalInputValidation')
 
 
 class CleanupError(subprocess.SubprocessError):
@@ -150,12 +152,21 @@ def phase_errors(row, manifest):
         if not isinstance(run, dict) or not valid_duration(run.get('wallMs')):
             errors.append('invalid disabled validation duration')
             continue
-        try:
-            file = Path(run['file']).relative_to(Path(row['cwd'])).as_posix()
-        except (KeyError, TypeError, ValueError):
+        # A record validates one file (legacy) or every file of a shared run.
+        checked = run.get('files')
+        if ('file' in run) == ('files' in run) or (
+                'files' in run and (not isinstance(checked, list) or not checked)):
             errors.append('invalid disabled validation file')
             continue
-        files.append(file)
+        if 'files' in run and (run.get('run') != 'instrumentedBaseline'
+                               or type(run.get('coverage')) is not bool):
+            errors.append('mislabeled shared disabled validation record')
+            continue
+        try:
+            for file in ([run['file']] if 'file' in run else checked):
+                files.append(Path(file).relative_to(Path(row['cwd'])).as_posix())
+        except (TypeError, ValueError):
+            errors.append('invalid disabled validation file')
     if sorted(files) != sorted(manifest['mutate']):
         errors.append('missing, duplicate or unexpected disabled validation files')
     return errors

@@ -89,6 +89,12 @@ pub struct Request {
     pub mutation: Option<Mutation>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub collect_coverage: Option<Vec<Mutation>>,
+    /// Shared switched modules served for every listed file throughout a job.
+    /// The instrumented baseline validates exactly these with no active mutant;
+    /// mutant jobs keep serving them so executed code equals validated code.
+    /// Shared, so queued jobs never copy the modules (one allocation per set).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub resident: Option<std::sync::Arc<Vec<Mutation>>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub selection: Option<Selection>,
 }
@@ -207,6 +213,10 @@ pub struct Response {
     pub errors: Vec<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub coverage: Option<Coverage>,
+    /// Number of resident modules the adapter registered for this job. An
+    /// adapter that ignores `resident` cannot report a validated execution.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub resident: Option<usize>,
 }
 
 impl Response {
@@ -226,6 +236,21 @@ impl Response {
             .ok_or("adapter test counts overflow")?;
         if self.coverage.is_some() && request.collect_coverage.is_none() {
             return Err("unsolicited adapter coverage".into());
+        }
+        // Runner-level timeouts and failures carry no test evidence; every
+        // outcome produced by executing tests must acknowledge resident modules.
+        let executed = !matches!(
+            self.outcome,
+            TestOutcome::Timeout
+                | TestOutcome::InfrastructureError
+                | TestOutcome::ResourceExhausted
+        );
+        match (&request.resident, self.resident) {
+            (Some(modules), acknowledged) if executed && acknowledged != Some(modules.len()) => {
+                return Err("adapter did not acknowledge the resident modules".into());
+            }
+            (None, Some(_)) => return Err("unsolicited resident acknowledgement".into()),
+            _ => {}
         }
         if let Some(selection) = &request.selection
             && self.outcome == TestOutcome::Passed
@@ -411,6 +436,7 @@ mod tests {
             deadline_ms: 10,
             mutation: None,
             collect_coverage: None,
+            resident: None,
             selection: None,
         };
         let mut response = Response {
@@ -422,6 +448,7 @@ mod tests {
             tests: Tests::default(),
             errors: vec!["crash".into()],
             coverage: None,
+            resident: None,
         };
         assert_eq!(response.mutant_outcome(), Outcome::InfrastructureError);
         assert!(response.validate(&request).is_ok());
@@ -526,6 +553,7 @@ mod tests {
             },
             errors: vec![],
             coverage: None,
+            resident: None,
         };
         assert!(response.validate(&request).is_err());
         response.tests.passed = 2;
@@ -537,5 +565,79 @@ mod tests {
         response.tests.passed = u64::MAX;
         response.tests.skipped = 1;
         assert!(response.validate(&request).is_err());
+    }
+
+    #[test]
+    fn executed_results_must_acknowledge_exactly_the_resident_modules() {
+        let mut request: Request = serde_json::from_value(serde_json::json!({
+            "protocol": 1, "runId": "r", "jobId": "j", "generation": 0,
+            "kind": "baseline", "root": "/project", "config": "/project/vitest.config.ts",
+            "deadlineMs": 1000, "mutation": null
+        }))
+        .unwrap();
+        let module = Mutation {
+            id: "__oximut_resident__".into(),
+            file: "/project/a.ts".into(),
+            code: String::new(),
+            map: serde_json::json!({}),
+        };
+        let mut response = Response {
+            protocol: 1,
+            run_id: "r".into(),
+            job_id: "j".into(),
+            generation: 0,
+            outcome: TestOutcome::Passed,
+            tests: Tests {
+                passed: 1,
+                failed: 0,
+                skipped: 0,
+            },
+            errors: vec![],
+            coverage: None,
+            resident: Some(1),
+        };
+        assert!(
+            response
+                .validate(&request)
+                .unwrap_err()
+                .contains("unsolicited")
+        );
+        request.resident = Some(std::sync::Arc::new(vec![module.clone(), module]));
+        assert!(
+            response
+                .validate(&request)
+                .unwrap_err()
+                .contains("acknowledge")
+        );
+        response.resident = Some(2);
+        assert!(response.validate(&request).is_ok());
+        for outcome in [
+            TestOutcome::Failed,
+            TestOutcome::Invalid,
+            TestOutcome::Skipped,
+        ] {
+            response.outcome = outcome;
+            response.tests = Tests {
+                passed: 0,
+                failed: 1,
+                skipped: 0,
+            };
+            response.resident = None;
+            assert!(
+                response
+                    .validate(&request)
+                    .unwrap_err()
+                    .contains("acknowledge")
+            );
+        }
+        // Runner-level failures carry no test evidence to validate.
+        for outcome in [
+            TestOutcome::Timeout,
+            TestOutcome::InfrastructureError,
+            TestOutcome::ResourceExhausted,
+        ] {
+            response.outcome = outcome;
+            assert!(response.validate(&request).is_ok());
+        }
     }
 }

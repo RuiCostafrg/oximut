@@ -22,7 +22,7 @@ if (process.env.OXIMUT_CACHE_CALLS) {
 }
 const response = {
   protocol: request.protocol, runId: request.runId, jobId: request.jobId,
-  generation: request.generation, outcome: 'passed',
+  generation: request.generation, ...(request.resident ? { resident: request.resident.length } : {}), outcome: 'passed',
   tests: { passed: 2, failed: 0, skipped: 0 }, errors: [],
 };
 const control = process.env.OXIMUT_CACHE_CONTROL;
@@ -100,7 +100,7 @@ for (;;) {
   const requestCommand = control && existsSync(control) ? readFileSync(control, 'utf8').trim() : '';
   const failBaseline = request.kind === 'baseline' && requestCommand === 'baseline-fail-once';
   const response = { protocol: request.protocol, runId: request.runId,
-    jobId: request.jobId, generation: request.generation,
+    jobId: request.jobId, generation: request.generation, ...(request.resident ? { resident: request.resident.length } : {}),
     outcome: failBaseline ? 'failed' : 'passed',
     tests: failBaseline ? { passed: 1, failed: 1, skipped: 0 } : { passed: 2, failed: 0, skipped: 0 },
     errors: failBaseline ? ['injected baseline failure'] : [] };

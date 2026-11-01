@@ -42,7 +42,7 @@ const identity = {
   protocol: request.protocol,
   runId: request.runId,
   jobId: request.jobId,
-  generation: request.generation,
+  generation: request.generation, ...(request.resident ? { resident: request.resident.length } : {}),
 };
 if (mode === 'stale' && request.kind === 'mutant') identity.jobId = 'old-job';
 const result = request.kind === 'baseline' && mode === 'baseline-failure'

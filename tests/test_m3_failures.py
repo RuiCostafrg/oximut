@@ -15,7 +15,7 @@ const request = JSON.parse(readFileSync(input, 'utf8'));
 const mode = process.env.OXIMUT_BAD_COVERAGE;
 const response = {
   protocol: request.protocol, runId: request.runId, jobId: request.jobId,
-  generation: request.generation, outcome: 'passed',
+  generation: request.generation, ...(request.resident ? { resident: request.resident.length } : {}), outcome: 'passed',
   tests: { passed: 1, failed: 0, skipped: 0 }, errors: [],
 };
 if (request.collectCoverage || mode === 'unsolicited') {

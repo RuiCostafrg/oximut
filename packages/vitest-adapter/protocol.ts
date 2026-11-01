@@ -27,6 +27,8 @@ export interface Request {
   deadlineMs: number;
   mutation: null | { id: string; file: string; code: string; map: Record<string, unknown> };
   collectCoverage?: NonNullable<Request['mutation']>[];
+  /** Shared switched modules served for every listed file throughout the job. */
+  resident?: NonNullable<Request['mutation']>[];
   selection?: Selection;
 }
 export interface Result {
@@ -34,5 +36,7 @@ export interface Result {
   tests: { passed: number; failed: number; skipped: number };
   errors: string[];
   coverage?: Coverage;
+  /** Count of resident modules served; required whenever the request had any. */
+  resident?: number;
 }
 export type Response = Pick<Request, 'protocol' | 'runId' | 'jobId' | 'generation'> & Result;

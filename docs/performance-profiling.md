@@ -12,10 +12,15 @@ also revealed eight full disabled-transform validation runs before mutation
 execution. These safety checks remain in place.
 
 `resources.phaseWallMs` records monotonic wall durations for input/scheduler
-preparation, the original baseline, all disabled-switch validation, the coverage
-baseline, post-baseline validation, mutation planning/execution, teardown, and
-final input validation. `resources.disabledValidationRuns` records each checked
-file and its duration. These are durations within the final attempt; a discarded
+preparation, the original baseline, the instrumented baseline (inactive switch
+validation for every switched file, plus coverage collection when
+`--test-selection` is enabled), post-baseline
+validation, mutation planning/execution, teardown, and final input validation.
+`resources.disabledValidationRuns` records each shared validation run with its
+validated files (`files`), duration, and whether it also collected coverage. There
+is normally one record; groups split only to keep requests within the adapter's
+limit. Earlier binaries recorded one `file` per
+separate disabled run and separate `disabledSwitchValidation`/`coverageBaseline` phases. These are durations within the final attempt; a discarded
 cache attempt retains its resource report in diagnostics. They exclude final
 report serialization/publication and are not CPU attribution or an exact
 partition of external command time. A skipped phase can be near zero. Existing

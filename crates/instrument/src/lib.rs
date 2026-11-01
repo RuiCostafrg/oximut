@@ -295,28 +295,56 @@ pub fn generate(identity: &str, path: &Path, source: &str) -> Result<Generated, 
 /// Files referring to `process` fall back to static mutants because the selector
 /// could otherwise resolve to a shadowed binding.
 pub fn generate_switched(identity: &str, path: &Path, source: &str) -> Result<Generated, String> {
+    Ok(switch(identity, path, source, false)?.0)
+}
+
+/// Switched module whose inactive branches also carry coverage probes. One
+/// inactive run of this exact code validates switching and observes coverage;
+/// mutant runs then execute the validated code, where absent probes are no-ops.
+/// Returns the coverage transform: the shared code itself when probes are
+/// embedded, the separate probe-only module for static fallbacks, or the reason
+/// probes could not be embedded (coverage is then incomplete).
+pub fn generate_switched_probed(
+    identity: &str,
+    path: &Path,
+    source: &str,
+) -> Result<(Generated, Result<oximut_core::Mutation, String>), String> {
+    let (generated, switched) = switch(identity, path, source, true)?;
+    let coverage = match switched {
+        Switch::Probed(coverage) => Ok(coverage),
+        Switch::Unprobed(reason) => Err(reason),
+        Switch::Static => generate_probes(identity, path, source),
+    };
+    Ok((generated, coverage))
+}
+
+enum Switch {
+    /// Static mutants (or no mutants): each mutant carries its own module.
+    Static,
+    /// Shared switched module without probes, and why probes are absent.
+    Unprobed(String),
+    /// Shared switched module with embedded probes, as a coverage transform.
+    Probed(oximut_core::Mutation),
+}
+
+fn switch(
+    identity: &str,
+    path: &Path,
+    source: &str,
+    probes: bool,
+) -> Result<(Generated, Switch), String> {
     let mut generated = generate(identity, path, source)?;
     if generated.mutants.is_empty() {
-        return Ok(generated);
+        return Ok((generated, Switch::Static));
     }
     let allocator = Allocator::default();
     let source_type = SourceType::from_path(path).map_err(|e| e.to_string())?;
     let parsed = Parser::new(&allocator, source, source_type).parse();
-    struct ProcessUse(bool);
-    impl<'a> Visit<'a> for ProcessUse {
-        fn visit_identifier_reference(&mut self, it: &IdentifierReference<'a>) {
-            self.0 |= it.name == "process";
-        }
-        fn visit_binding_identifier(&mut self, it: &BindingIdentifier<'a>) {
-            self.0 |= it.name == "process";
-        }
+    if may_shadow(&parsed.program, "process") {
+        generated.diagnostics.push("mutation switching fallback: process identifier or with statement may shadow or modify the Node selector; using fresh static mutants".into());
+        return Ok((generated, Switch::Static));
     }
-    let mut process_use = ProcessUse(false);
-    process_use.visit_program(&parsed.program);
-    if process_use.0 {
-        generated.diagnostics.push("mutation switching fallback: process identifier may shadow or modify the Node selector; using fresh static mutants".into());
-        return Ok(generated);
-    }
+    let global_conflict = probes && uses_global_this(&parsed.program);
     let mut collector = Collector {
         source,
         edits: vec![],
@@ -356,7 +384,7 @@ pub fn generate_switched(identity: &str, path: &Path, source: &str) -> Result<Ge
         > 8 * 1024 * 1024
     {
         generated.diagnostics.push("mutation switching fallback: nested expression expansion exceeds size budget; using fresh static mutants".into());
-        return Ok(generated);
+        return Ok((generated, Switch::Static));
     }
     struct Output {
         code: String,
@@ -372,6 +400,7 @@ pub fn generate_switched(identity: &str, path: &Path, source: &str) -> Result<Ge
             self.origins.extend(start..end);
         }
     }
+    #[allow(clippy::too_many_arguments)]
     fn render(
         source: &str,
         start: usize,
@@ -379,6 +408,7 @@ pub fn generate_switched(identity: &str, path: &Path, source: &str) -> Result<Ge
         edits: &[(&Edit, &str)],
         skip: Option<usize>,
         replacement: Option<&Edit>,
+        probes: bool,
         output: &mut Output,
     ) {
         let mut cursor = start;
@@ -416,34 +446,100 @@ pub fn generate_switched(identity: &str, path: &Path, source: &str) -> Result<Ge
                 &format!("(process.env.OXIMUT_ACTIVE_MUTANT === \"{id}\" ? ("),
                 a,
             );
-            render(source, a, b, edits, Some(index), Some(edit), output);
+            render(source, a, b, edits, Some(index), Some(edit), probes, output);
             output.insert(") : (", a);
-            render(source, a, b, edits, Some(index), None, output);
+            // The probe precedes the original operands, exactly as in
+            // `generate_probes`, and only runs while this mutant is inactive.
+            if probes {
+                output.insert(&format!("globalThis.__oximut_m3_hit__?.(\"{id}\"), ("), a);
+            }
+            render(source, a, b, edits, Some(index), None, probes, output);
+            if probes {
+                output.insert(")", b);
+            }
             output.insert("))", b);
             cursor = b;
         }
     }
-    let mut output = Output {
-        code: String::new(),
-        origins: vec![],
+    let rendered = |probes: bool| {
+        let mut output = Output {
+            code: String::new(),
+            origins: vec![],
+        };
+        render(
+            source,
+            0,
+            source.len(),
+            &edits,
+            None,
+            None,
+            probes,
+            &mut output,
+        );
+        let transformed = Parser::new(&allocator, &output.code, source_type).parse();
+        (!transformed.fatal_error && transformed.diagnostics.is_empty()).then_some(output)
     };
-    render(source, 0, source.len(), &edits, None, None, &mut output);
-    let transformed = Parser::new(&allocator, &output.code, source_type).parse();
-    if transformed.fatal_error || !transformed.diagnostics.is_empty() {
-        generated.diagnostics.push("mutation switching fallback: shared transform is not valid syntax; using fresh static mutants".into());
-        return Ok(generated);
+    let mut probed = probes && !global_conflict;
+    let mut output = if probed { rendered(true) } else { None };
+    let mut unprobed = if global_conflict {
+        "probe-globalThis-conflict"
+    } else {
+        "probes-not-requested"
+    };
+    if probed && output.is_none() {
+        probed = false;
+        unprobed = "unsupported-probe-syntax";
     }
-    let map = mapped_code(
-        &path.to_string_lossy(),
-        source,
-        &output.code,
-        &output.origins,
-    );
+    if output.is_none() {
+        output = rendered(false);
+    }
+    let Some(output) = output else {
+        generated.diagnostics.push("mutation switching fallback: shared transform is not valid syntax; using fresh static mutants".into());
+        return Ok((generated, Switch::Static));
+    };
+    let file = path.to_string_lossy().into_owned();
+    let map = mapped_code(&file, source, &output.code, &output.origins);
     for mutant in &mut generated.mutants {
         mutant.code.clone_from(&output.code);
         mutant.map.clone_from(&map);
     }
-    Ok(generated)
+    let switched = if probed {
+        Switch::Probed(oximut_core::Mutation {
+            id: "__oximut_probes__".into(),
+            file,
+            code: output.code,
+            map,
+        })
+    } else {
+        Switch::Unprobed(unprobed.into())
+    };
+    Ok((generated, switched))
+}
+
+fn uses_global_this(program: &Program<'_>) -> bool {
+    may_shadow(program, "globalThis")
+}
+
+/// Whether an injected free reference to `name` could resolve to something
+/// other than the global: the source names it, or a sloppy-mode `with` scope
+/// could supply a same-named property without naming it.
+fn may_shadow(program: &Program<'_>, name: &str) -> bool {
+    struct Use<'n>(&'n str, bool);
+    impl<'a> Visit<'a> for Use<'_> {
+        fn visit_identifier_reference(&mut self, it: &IdentifierReference<'a>) {
+            self.1 |= it.name == self.0;
+        }
+        fn visit_binding_identifier(&mut self, it: &BindingIdentifier<'a>) {
+            self.1 |= it.name == self.0;
+        }
+        fn visit_with_statement(&mut self, it: &WithStatement<'a>) {
+            self.1 = true;
+            walk::walk_with_statement(self, it);
+        }
+    }
+    let mut found = Use(name, false);
+    found.visit_program(program);
+    found.1
 }
 
 /// Probe expression evaluation without changing values, operand order, or the
@@ -457,18 +553,7 @@ pub fn generate_probes(
     let allocator = Allocator::default();
     let source_type = SourceType::from_path(path).map_err(|e| e.to_string())?;
     let parsed = Parser::new(&allocator, source, source_type).parse();
-    struct GlobalUse(bool);
-    impl<'a> Visit<'a> for GlobalUse {
-        fn visit_identifier_reference(&mut self, it: &IdentifierReference<'a>) {
-            self.0 |= it.name == "globalThis";
-        }
-        fn visit_binding_identifier(&mut self, it: &BindingIdentifier<'a>) {
-            self.0 |= it.name == "globalThis";
-        }
-    }
-    let mut global_use = GlobalUse(false);
-    global_use.visit_program(&parsed.program);
-    if global_use.0 {
+    if uses_global_this(&parsed.program) {
         return Err("probe-globalThis-conflict".into());
     }
     let mut collector = Collector {
@@ -851,6 +936,117 @@ console.log(JSON.stringify([a, b, c, iterator.next(), iterator.next(7), calls]))
             assert_eq!(probe.code.matches(&mutant.id).count(), 1);
         }
         assert_eq!(probe.map["sourcesContent"][0], source);
+    }
+
+    #[test]
+    fn probed_switching_validates_and_observes_the_code_mutants_execute() {
+        let source = r#"
+let calls = [];
+const value = n => { calls.push(n); return n; };
+const object = n => ({ valueOf() { calls.push(`coerce${n}`); return n; } });
+const a = (await Promise.resolve(value(8))) + value(3) * value(2);
+const b = object(4) + object(2) / object(1);
+const c = false && value(99) < value(100);
+function* sequence() { return (yield value(9)) - value(2); }
+const iterator = sequence();
+console.log(JSON.stringify([a, b, c, iterator.next(), iterator.next(7), true, calls]));
+"#;
+        let path = Path::new("/project/src/a.ts");
+        let (shared, coverage) = generate_switched_probed("src/a.ts", path, source).unwrap();
+        let coverage = coverage.unwrap();
+        let fresh = mutations(source);
+        assert_eq!(fresh.mutants.len(), shared.mutants.len());
+        // The coverage transform is exactly the shared module mutants execute.
+        for mutant in &shared.mutants {
+            assert_eq!(mutant.code, coverage.code);
+            assert_eq!(mutant.map, coverage.map);
+        }
+        assert_eq!(coverage.id, "__oximut_probes__");
+        assert_eq!(coverage.file, path.to_string_lossy());
+        let original = execute(source, "");
+        // Inactive: identity, with and without an installed collector.
+        assert_eq!(execute(&coverage.code, ""), original);
+        let record = |code: &str| {
+            execute(
+                &format!(
+                    "const hits = []; globalThis.__oximut_m3_hit__ = id => {{ hits.push(id); }}; {code}\nprocess.on('exit', () => console.log(JSON.stringify(hits)));"
+                ),
+                "",
+            )
+        };
+        let probe_only = generate_probes("src/a.ts", path, source).unwrap();
+        // Same output and the same ordered hit sequence as probe-only coverage.
+        assert_eq!(record(&coverage.code), record(&probe_only.code));
+        assert!(record(&coverage.code).starts_with(&original));
+        // Active: each mutant behaves like its static module.
+        for (static_mutant, switched) in fresh.mutants.iter().zip(&shared.mutants) {
+            assert_eq!(static_mutant.id, switched.id);
+            assert_eq!(
+                execute(&static_mutant.code, ""),
+                execute(&switched.code, &switched.id)
+            );
+            assert!(coverage.code.contains(&format!(
+                "globalThis.__oximut_m3_hit__?.(\"{}\")",
+                switched.id
+            )));
+        }
+        // Without probes requested, the shared module carries no probes.
+        let plain = generate_switched("src/a.ts", path, source).unwrap();
+        assert!(!plain.mutants[0].code.contains("__oximut_m3_hit__"));
+        assert_eq!(execute(&plain.mutants[0].code, ""), original);
+    }
+
+    #[test]
+    fn probed_switching_reports_unprobed_and_static_fallbacks() {
+        let path = Path::new("/project/src/a.ts");
+        // globalThis use: switching stays shared, probes are refused.
+        let source = "globalThis.y = 1; export const x = 1 + 2;";
+        let (generated, coverage) = generate_switched_probed("src/a.ts", path, source).unwrap();
+        assert_eq!(coverage.unwrap_err(), "probe-globalThis-conflict");
+        assert_eq!(
+            generated.mutants[0].code,
+            generate_switched("src/a.ts", path, source).unwrap().mutants[0].code
+        );
+        assert!(!generated.mutants[0].code.contains("__oximut_m3_hit__"));
+        // process use: static mutants keep the separate probe-only module.
+        let source = "export const x = process.argv.length + 2;";
+        let (generated, coverage) = generate_switched_probed("src/a.ts", path, source).unwrap();
+        assert!(
+            generated
+                .diagnostics
+                .iter()
+                .any(|d| d.contains("switching fallback"))
+        );
+        assert_eq!(generated.mutants[0].code, source.replace('+', "-"));
+        assert_eq!(
+            coverage.unwrap().code,
+            generate_probes("src/a.ts", path, source).unwrap().code
+        );
+        // No mutants: the probe-only module is the unchanged source.
+        let (generated, coverage) =
+            generate_switched_probed("src/a.ts", path, "export const x = 1;").unwrap();
+        assert!(generated.mutants.is_empty());
+        assert_eq!(coverage.unwrap().code, "export const x = 1;");
+    }
+
+    #[test]
+    fn with_scopes_fall_back_for_switching_and_probes() {
+        // Sloppy scripts only: a with object can supply `process`/`globalThis`.
+        let path = Path::new("/project/src/a.js");
+        let source = "var scope = {}; with (scope) { var x = 1 + 2; }";
+        let (generated, coverage) = generate_switched_probed("src/a.js", path, source).unwrap();
+        assert!(
+            generated
+                .diagnostics
+                .iter()
+                .any(|d| d.contains("switching fallback") && d.contains("with statement"))
+        );
+        assert_eq!(generated.mutants[0].code, source.replacen('+', "-", 1));
+        assert_eq!(coverage.unwrap_err(), "probe-globalThis-conflict");
+        assert_eq!(
+            generate_probes("src/a.js", path, source).unwrap_err(),
+            "probe-globalThis-conflict"
+        );
     }
 
     #[test]

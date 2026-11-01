@@ -81,6 +81,9 @@ test('validation accepts existing boundary, mutation, coverage and selection req
     { ...mutant, selection: { ...selection, expectedSkipped: 0 } },
     { ...mutant, selection: { ...selection, expectedSkipped: 1 } },
     { ...mutant, selection: { ...selection, mode: 'full', files: [], totalTests: 1 } },
+    { ...baseline, resident: [mutation] },
+    { ...baseline, collectCoverage: [mutation], resident: [mutation] },
+    { ...mutant, resident: [mutation, { ...mutation, file: '/project/other.ts' }], selection },
   ]) {
     const before = structuredClone(value);
     assert.equal(runtime.validateRequest(value), undefined);
@@ -164,6 +167,32 @@ test('validation preserves rejection order and exact diagnostic messages', () =>
   add(
     [{ ...baseline, collectCoverage: [{ ...mutation, file: '/outside.ts' }] }],
     'Mutation file must be inside root',
+  );
+  add(
+    [{}, [], null, 'x'].map((resident) => ({ ...baseline, resident })),
+    'Resident transforms must be a nonempty array',
+  );
+  add(
+    [null, { ...mutation, id: '' }, { ...mutation, map: [] }].map((item) => ({
+      ...mutant,
+      resident: [item],
+    })),
+    'Invalid mutation',
+  );
+  add(
+    [{ ...baseline, resident: [{ ...mutation, file: '/outside.ts' }] }],
+    'Mutation file must be inside root',
+  );
+  add(
+    [{ ...mutant, resident: [{ ...mutation, map: { ...mutation.map, version: 2 } }] }],
+    'Invalid version 3 source map',
+  );
+  add(
+    [
+      { ...baseline, resident: [mutation, { ...mutation, id: 'other' }] },
+      { ...mutant, resident: [mutation, { ...mutation, file: '/project/./source.ts' }] },
+    ],
+    'Duplicate resident transform file',
   );
   add([{ ...baseline, selection }], 'Invalid test selection');
   const selections = [null, {}, { ...selection, mode: 'none' }];
