@@ -312,7 +312,8 @@ mod tests {
 
     #[test]
     fn tree_walk_refuses_partial_tables_when_the_tree_changes() {
-        let cases: Vec<(&str, Box<dyn Fn(&mut Links, &mut Stats)>)> = vec![
+        type Change = Box<dyn Fn(&mut Links, &mut Stats)>;
+        let cases: Vec<(&str, Change)> = vec![
             (
                 "root gone",
                 Box::new(|_, stats| {
