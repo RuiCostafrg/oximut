@@ -660,10 +660,15 @@ fn execute_local(options: &Options, request: &Request, session: &mut Option<Sess
     }
 }
 
-/// The adapter rejects requests above 8 MiB. Keep headroom for identities,
-/// paths, deadlines and test-selection lists.
+/// The adapter rejects requests above 8 MiB. Groups are planned within 7/8 of
+/// that, keeping headroom for identities, paths, deadlines and selections.
 const REQUEST_LIMIT: usize = 8 * 1024 * 1024;
-const REQUEST_HEADROOM: usize = 1024 * 1024;
+const REQUEST_HEADROOM: usize = REQUEST_LIMIT / 8;
+
+/// The hard limit matching a planning budget: exactly 8 MiB in production.
+fn request_limit(budget: usize) -> usize {
+    budget.saturating_add(budget / 7)
+}
 
 fn request_budget() -> usize {
     // Debug builds accept a smaller budget so tests can exercise grouping.
@@ -983,23 +988,30 @@ fn run_attempt(options: &Options, previous: Option<RetryEvidence>) -> Result<Att
         request.mutation = None;
         request.resident = group.and_then(|index| residual(&groups[index], coverage));
         request.collect_coverage = coverage.then(|| probe_transforms.clone());
-        // A module that alone exceeds the budget cannot be transported in any
-        // validation or mutant request; refuse it here with its identity.
-        let oversized = group.and_then(|index| {
-            groups[index]
-                .iter()
-                .map(|module| (module, encoded_len(module)))
-                .find(|&(_, size)| size > budget)
-        });
-        let mut collected = match oversized {
-            Some((module, size)) => infrastructure(
+        // A request over the adapter's hard limit (only possible for a lone
+        // module too large to share a request) cannot be transported; refuse
+        // it here, naming its largest module, instead of dispatching it.
+        let size = encoded_len(&request);
+        let limit = request_limit(budget);
+        let mut collected = if size > limit {
+            let largest = group
+                .and_then(|index| {
+                    groups[index]
+                        .iter()
+                        .max_by_key(|module| encoded_len(*module))
+                })
+                .map_or_else(
+                    || "coverage transforms".to_string(),
+                    |module| module.file.clone(),
+                );
+            infrastructure(
                 &request,
                 format!(
-                    "switched module {} ({size} bytes) exceeds the {budget}-byte request budget and cannot be validated",
-                    module.file
+                    "instrumented baseline request ({size} bytes, largest module {largest}) exceeds the {limit}-byte request limit and cannot be validated"
                 ),
-            ),
-            None => scheduler.execute(&request),
+            )
+        } else {
+            scheduler.execute(&request)
         };
         if collected.outcome == TestOutcome::Passed
             && (collected.tests.passed != baseline.tests.passed
@@ -1491,6 +1503,15 @@ fn main() -> ExitCode {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn production_budget_maps_to_the_adapter_limit() {
+        assert_eq!(REQUEST_LIMIT - REQUEST_HEADROOM, 7 * 1024 * 1024);
+        assert_eq!(
+            request_limit(REQUEST_LIMIT - REQUEST_HEADROOM),
+            REQUEST_LIMIT
+        );
+    }
 
     #[test]
     fn coverage_inventory_is_validated_before_subset_projection() {
