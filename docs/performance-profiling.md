@@ -71,7 +71,10 @@ forks or exits concurrently. That miss lasts at most one interval, the same
 order as the sampling interval itself. `resources.treeDiscoveries` and
 `resources.broadDiscoveries` count each kind. The CLI no longer enumerates
 `/proc` on every 10ms dispatch poll: slot ownership reuses the sampler's
-discovery. Every abort, termination and shutdown verification still performs a
+discovery. Waiting for a busy slot is ordinary waiting and forces no samples.
+Only memory-pressure admission waits take a broad sample, at most once per
+sampling interval. Before this change, every 10ms poll while all slots were busy
+(the whole mutation phase with one worker) forced a broad host scan. Every abort, termination and shutdown verification still performs a
 fresh broad discovery before signalling or concluding cleanup, so the
 fail-closed cleanup gates are unchanged. Identity and RSS reads for tree members
 remain fresh and strict.

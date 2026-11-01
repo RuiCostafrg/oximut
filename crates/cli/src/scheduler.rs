@@ -151,9 +151,12 @@ impl<'a> Scheduler<'a> {
         })
     }
     fn sample(&mut self, force: bool) {
+        self.sample_with(|budget, pids| budget.sample(pids, force));
+    }
+    fn sample_with(&mut self, sample: impl FnOnce(&mut resources::Budget, &[u32])) {
         let pids: Vec<_> = self.slots.iter().flatten().map(|w| w.child.id()).collect();
         let before = self.budget.samples;
-        self.budget.sample(&pids, force);
+        sample(&mut self.budget, &pids);
         // Ownership snapshots reuse the sample's discovery. Aborts and
         // shutdown still discover afresh before signalling anything.
         if self.budget.samples != before
@@ -335,7 +338,10 @@ impl<'a> Scheduler<'a> {
                 // including processes not visible yet at this sampling instant.
                 paused = false;
                 idle_pressure_since = None;
-            } else if capacity == 0 {
+            } else if capacity == 0 && self.budget.active < self.budget.effective_workers {
+                // Memory pressure: a slot is free but admission must wait.
+                // Busy slots alone are ordinary waiting (below), relying on
+                // the periodic sample and the forced sample at completion.
                 if !paused {
                     self.budget.admission_pauses += 1;
                     paused = true;
@@ -352,7 +358,7 @@ impl<'a> Scheduler<'a> {
                     self.close_slot(index);
                     self.budget.recycled_idle_workers += 1;
                 }
-                self.sample(true);
+                self.sample_with(|budget, pids| budget.sample_admission(pids));
                 if self.budget.active == 0 {
                     let since = idle_pressure_since.get_or_insert_with(Instant::now);
                     if since.elapsed() >= Duration::from_millis(250) {

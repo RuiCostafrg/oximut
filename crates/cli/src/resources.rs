@@ -351,6 +351,8 @@ pub struct Budget {
     #[serde(skip)]
     last_sample: Instant,
     #[serde(skip)]
+    last_broad: Instant,
+    #[serde(skip)]
     pub current: u64,
     #[serde(skip)]
     pub active: usize,
@@ -394,6 +396,7 @@ impl Budget {
             exhaustion: None,
             table: None,
             last_sample: Instant::now() - Duration::from_secs(1),
+            last_broad: Instant::now() - Duration::from_secs(1),
             current: 0,
             active: 0,
             host_available: 0,
@@ -403,7 +406,18 @@ impl Budget {
         state.sample(&[], true);
         Ok(state)
     }
+    /// Admission under memory pressure: a broad sample at most once per
+    /// sampling interval, so waiting never rescans the host on every poll.
+    pub fn sample_admission(&mut self, workers: &[u32]) {
+        if self.last_broad.elapsed() >= Duration::from_millis(SAMPLE_MS) {
+            self.sample(workers, true);
+        }
+    }
+
     pub fn sample(&mut self, workers: &[u32], force: bool) {
+        if force {
+            self.last_broad = Instant::now();
+        }
         let (mut tree, mut broad) = (0, 0);
         self.sample_with_readers(
             workers,
@@ -577,6 +591,7 @@ mod tests {
             exhaustion: None,
             table: None,
             last_sample: Instant::now() - Duration::from_secs(1),
+            last_broad: Instant::now() - Duration::from_secs(1),
             current: 0,
             active: 0,
             host_available: u64::MAX,
