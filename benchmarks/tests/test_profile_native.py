@@ -583,8 +583,12 @@ class MinimumCaptureTests(unittest.TestCase):
             self.assertEqual(inventory['errors'], ['segment events do not match profiles: node-6.json'])
             self.assertEqual(len(list(profiles.glob('Segment.*.cpuprofile'))), 2000)
 
-    def fixture(self, root):
-        """Create finalized evidence for each required tool and Oximut role."""
+    def fixture(self, root, chain='legacy'):
+        """Create finalized evidence for each required tool and Oximut role.
+
+        The native chain has no adapter relay or Python supervisor: the controller's
+        parent (pid 100) is the uncaptured Rust worker.
+        """
         import cProfile
         profiles = root / 'profiles'
         profiles.mkdir()
@@ -596,6 +600,9 @@ class MinimumCaptureTests(unittest.TestCase):
                    ('python', 4, 3, 'oximut', [adapter + '/supervisor.py']),
                    ('node', 5, 4, 'oximut', ['node', adapter + '/m2-worker.ts']),
                    ('node', 6, 5, 'oximut', ['node', 'test-fork.js'])]
+        if chain == 'native':
+            entries = entries[:2] + [('node', 5, 100, 'oximut', ['node', adapter + '/m2-worker.ts']),
+                                     ('node', 6, 5, 'oximut', ['node', 'test-fork.js'])]
         for kind, pid, ppid, tool, argv in entries:
             record = dict(pid=pid, ppid=ppid, cwd=str(qualification / f'00-{tool}' / 'project'),
                           argv=argv, startTime='1')
@@ -688,6 +695,82 @@ class MinimumCaptureTests(unittest.TestCase):
                                 'events-missing': 'segment events missing',
                                 'events-mismatch': 'segment events do not match profiles'}[helper]
                     self.assertIn(f'{expected}: node-6.json', inventory['errors'])
+
+    def test_native_chain_needs_no_adapter_or_python_supervisor(self):
+        """Rust slot -> Node controller -> test forks is complete role evidence."""
+        with tempfile.TemporaryDirectory() as tmp:
+            profiles, qualification = self.fixture(Path(tmp), 'native')
+            self.assertFalse(list(profiles.glob('python-*')))
+            inventory = diagnostic.capture_inventory(profiles, qualification)
+            self.assertEqual(inventory['errors'], [])
+            self.assertEqual(inventory['oximut_chain'], 'native')
+            roles = inventory['minimum_role_evidence']
+            self.assertEqual(roles['oximut_controller'], ['node-5.json'])
+            self.assertEqual(roles['oximut_test_fork'], ['node-6.json'])
+            self.assertNotIn('oximut_adapter', roles)
+            self.assertNotIn('oximut_supervisor', roles)
+
+    def test_native_chain_requires_controller_and_fork(self):
+        """A native capture missing either role fails closed."""
+        for missing, role in [('node-5.json', 'oximut_controller'), ('node-6.json', 'oximut_test_fork')]:
+            with self.subTest(missing=missing), tempfile.TemporaryDirectory() as tmp:
+                profiles, qualification = self.fixture(Path(tmp), 'native')
+                (profiles / missing).unlink()
+                inventory = diagnostic.capture_inventory(profiles, qualification)
+                self.assertEqual(inventory['oximut_chain'], 'native')
+                self.assertIn(f'missing finalized process-role capture: {role}', inventory['errors'])
+                self.assertTrue(inventory['orphan_profiles'])
+
+    def test_native_controller_with_captured_parent_is_not_a_controller(self):
+        """A parent that is any captured identity is not the uncaptured Rust slot."""
+        for kind, parent in [('python', 'python-9.json'), ('node', 'node-9.json')]:
+            with self.subTest(parent=kind), tempfile.TemporaryDirectory() as tmp:
+                profiles, qualification = self.fixture(Path(tmp), 'native')
+                record = dict(pid=9, ppid=100, cwd=str(qualification / '00-oximut' / 'project'),
+                              argv=[kind, 'other.js'], startTime='1')
+                if kind == 'python':
+                    import cProfile
+                    record['completed'] = True
+                    profiler = cProfile.Profile()
+                    profiler.runcall(lambda: None)
+                    profiler.dump_stats(str(profiles / 'python-9.pstats'))
+                else:
+                    record.update(threadId=0, exitObserved='now')
+                    (profiles / 'CPU.20261028.000000.9.0.001.cpuprofile').write_text(
+                        json.dumps({'nodes': [{'id': 1}], 'startTime': 1, 'endTime': 2}))
+                (profiles / parent).write_text(json.dumps(record))
+                controller = json.loads((profiles / 'node-5.json').read_text())
+                controller['ppid'] = 9
+                (profiles / 'node-5.json').write_text(json.dumps(controller))
+                inventory = diagnostic.capture_inventory(profiles, qualification)
+                self.assertEqual(inventory['oximut_chain'], 'native')
+                self.assertIn('missing finalized process-role capture: oximut_controller', inventory['errors'])
+                self.assertIn('missing finalized process-role capture: oximut_test_fork', inventory['errors'])
+                self.assertEqual(inventory['minimum_role_evidence']['oximut_controller'], [])
+
+    def test_legacy_adapter_without_supervisor_stays_strict(self):
+        """An m2-runner capture selects the legacy chain, which still needs the Python supervisor."""
+        with tempfile.TemporaryDirectory() as tmp:
+            profiles, qualification = self.fixture(Path(tmp))
+            (profiles / 'python-4.json').unlink()
+            (profiles / 'python-4.pstats').unlink()
+            inventory = diagnostic.capture_inventory(profiles, qualification)
+            self.assertEqual(inventory['oximut_chain'], 'legacy')
+            self.assertIn('no Python supervisor identities captured', inventory['errors'])
+            self.assertIn('missing finalized process-role capture: oximut_supervisor', inventory['errors'])
+            self.assertIn('missing finalized process-role capture: oximut_controller', inventory['errors'])
+            self.assertIn('missing finalized process-role capture: oximut_test_fork', inventory['errors'])
+
+    def test_legacy_chain_reports_all_four_roles(self):
+        """The legacy relay keeps adapter and supervisor roles."""
+        with tempfile.TemporaryDirectory() as tmp:
+            profiles, qualification = self.fixture(Path(tmp))
+            inventory = diagnostic.capture_inventory(profiles, qualification)
+            self.assertEqual(inventory['oximut_chain'], 'legacy')
+            roles = inventory['minimum_role_evidence']
+            self.assertEqual([roles[r] for r in ('oximut_adapter', 'oximut_supervisor',
+                                                 'oximut_controller', 'oximut_test_fork')],
+                             [['node-3.json'], ['python-4.json'], ['node-5.json'], ['node-6.json']])
 
     def test_segment_events_cannot_raise_the_helpers_fixed_segment_cap(self):
         """Two matching segments whose events claim a cap of 2 are still not helper evidence."""

@@ -1,5 +1,8 @@
 # Native execution coordinator: design and PR plan
 
+Status: P1 (#29) is merged. P3 (#30), P4 (#31) and P2 (the native coordinator)
+are separate measured PRs.
+
 Status: proposal plus incremental implementation plan. Each step below ships as
 its own PR from `main` and is measured by the native colord before/after
 campaign (`real-project-benchmark.yml`). Nothing in this document is a

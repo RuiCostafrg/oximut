@@ -96,6 +96,23 @@ def segment_events_match(events_file, segments):
     return True
 
 
+def oximut_chain(identities, qualification):
+    """Return 'legacy' when a custom-adapter m2-runner.mjs Node identity is captured in the Oximut project
+    (or when the chain cannot be classified), else 'native'."""
+    if qualification is None:
+        return 'legacy'
+    project = (qualification / '00-oximut' / 'project').resolve()
+    runner = [str(ROOT / 'packages/vitest-adapter/m2-runner.mjs')]
+    for name, record in identities:
+        try:
+            if (name.startswith('node-') and isinstance(record.get('argv'), list)
+                    and record['argv'][1:2] == runner and Path(record['cwd']).resolve().is_relative_to(project)):
+                return 'legacy'
+        except (KeyError, TypeError, ValueError):
+            continue
+    return 'native'
+
+
 def capture_inventory(directory, qualification=None):
     """Report observed captures only. Absence cannot establish process completeness."""
     records, errors, identities, matched = [], [], [], set()
@@ -176,7 +193,11 @@ def capture_inventory(directory, qualification=None):
             errors.append(f'invalid capture {identity.name}: {error}')
     if not any(r['identity'].startswith('node-') for r in records):
         errors.append('no Node identities captured')
-    if not any(r['identity'].startswith('python-') for r in records):
+    # The legacy custom-adapter relay is identified by its Node runner; without it the chain is native,
+    # where the controller's parent is the uncaptured Rust worker and no Python supervisor exists.
+    # Without a qualification root the chain cannot be classified, so the strict legacy rule applies.
+    chain = oximut_chain(identities, qualification)
+    if chain == 'legacy' and not any(r['identity'].startswith('python-') for r in records):
         errors.append('no Python supervisor identities captured')
     orphans = []
     for path in sorted((set(directory.glob('*.cpuprofile')) | set(directory.glob('*.pstats'))) - matched):
@@ -208,25 +229,35 @@ def capture_inventory(directory, qualification=None):
                 errors.append(f'missing finalized Node capture for {tool}')
         oxi = tool_records['oximut']
         adapter = str(ROOT / 'packages/vitest-adapter')
-        adapters = [(name, r) for name, r in oxi if name.startswith('node-')
-                    and isinstance(r.get('argv'), list) and r['argv'][1:2] == [adapter + '/m2-runner.mjs']]
-        adapter_pids = {r['pid'] for _, r in adapters}
-        supervisors = [(name, r) for name, r in oxi if name.startswith('python-')
-                       and r.get('ppid') in adapter_pids and isinstance(r.get('argv'), list)
-                       and r['argv'][:1] == [adapter + '/supervisor.py']]
-        supervisor_pids = {r['pid'] for _, r in supervisors}
-        controllers = [(name, r) for name, r in oxi if name.startswith('node-')
-                       and r.get('ppid') in supervisor_pids and isinstance(r.get('argv'), list)
-                       and r['argv'][1:2] == [adapter + '/m2-worker.ts']]
+        worker = [adapter + '/m2-worker.ts']
+        required = []
+        if chain == 'legacy':
+            adapters = [(name, r) for name, r in oxi if name.startswith('node-')
+                        and isinstance(r.get('argv'), list) and r['argv'][1:2] == [adapter + '/m2-runner.mjs']]
+            adapter_pids = {r['pid'] for _, r in adapters}
+            supervisors = [(name, r) for name, r in oxi if name.startswith('python-')
+                           and r.get('ppid') in adapter_pids and isinstance(r.get('argv'), list)
+                           and r['argv'][:1] == [adapter + '/supervisor.py']]
+            supervisor_pids = {r['pid'] for _, r in supervisors}
+            controllers = [(name, r) for name, r in oxi if name.startswith('node-')
+                           and r.get('ppid') in supervisor_pids and isinstance(r.get('argv'), list)
+                           and r['argv'][1:2] == worker]
+            required += [('oximut_adapter', adapters), ('oximut_supervisor', supervisors)]
+        else:
+            # The controller's parent is the Rust worker slot: no captured identity may own that pid.
+            captured_pids = {r.get('pid') for _, r in identities}
+            controllers = [(name, r) for name, r in oxi if name.startswith('node-')
+                           and r.get('ppid') not in captured_pids and isinstance(r.get('argv'), list)
+                           and r['argv'][1:2] == worker]
         controller_pids = {r['pid'] for _, r in controllers}
         forks = [(name, r) for name, r in oxi if name.startswith('node-')
                  and r.get('ppid') in controller_pids and r.get('pid') not in controller_pids]
-        for role, values in [('oximut_adapter', adapters), ('oximut_supervisor', supervisors),
-                             ('oximut_controller', controllers), ('oximut_test_fork', forks)]:
+        required += [('oximut_controller', controllers), ('oximut_test_fork', forks)]
+        for role, values in required:
             roles[role] = [name for name, _ in values]
             if not values:
                 errors.append(f'missing finalized process-role capture: {role}')
-    return {'observed': records, 'orphan_profiles': orphans, 'minimum_role_evidence': roles, 'errors': errors,
+    return {'observed': records, 'orphan_profiles': orphans, 'minimum_role_evidence': roles, 'oximut_chain': chain, 'errors': errors,
             'role_evidence_policy': 'Finalized full profiles or explicitly partial segments. Missing lifecycle exits/full profiles still fail capture validation.',
             'completeness': 'Unknown: processes killed before preload/dump and overridden environments may be absent; raw orphan profiles retained.'}
 

@@ -9,7 +9,7 @@ not evidence that every project using it is supported.
 
 | Component | Required or pinned value | Evidence and boundary |
 | --- | --- | --- |
-| Host kernel/process model | Linux with readable `/proc`, `prctl(PR_SET_CHILD_SUBREAPER)`, process signaling, and `waitpid` | Required by the Python process supervisor and Rust resource/process-tree controller. Windows and macOS are unsupported. |
+| Host kernel/process model | Linux with readable `/proc`, `prctl(PR_SET_CHILD_SUBREAPER)`, process signaling, and `waitpid` | Required by the Rust resource/process-tree controller and native coordinator (pidfd signalling) and by the Python supervisor of the custom-adapter relay. Windows and macOS are unsupported. |
 | Demonstrated host | Android 12, aarch64, Ubuntu userspace under Termux PRoot; Linux kernel reported as `6.17.0-PRoot-Distro` in the M0 lifecycle record | M0/M2 and M6 fixtures and benchmarks ran here. This is one environment, not a claim for all Linux distributions, kernels, or containers. |
 | Node.js | `26.3.1`, Linux executable | Pinned in `package.json` and used in the recorded M0/M2 runs. Adapter code records `process.version` but does not reject other Node versions; other versions have no compatibility evidence. Android/Termux Node cannot replace the Linux binary when Linux native dependencies are loaded. |
 | npm | `11.16.0` | Pinned in `package.json`; use `npm ci` with the committed lockfile. |
