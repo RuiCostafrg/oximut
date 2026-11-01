@@ -415,9 +415,6 @@ impl Budget {
     }
 
     pub fn sample(&mut self, workers: &[u32], force: bool) {
-        if force {
-            self.last_broad = Instant::now();
-        }
         let (mut tree, mut broad) = (0, 0);
         self.sample_with_readers(
             workers,
@@ -440,6 +437,10 @@ impl Budget {
         );
         self.tree_discoveries += tree;
         self.broad_discoveries += broad;
+        // Every broad scan, forced or a walk's fallback, satisfies admission.
+        if broad > 0 {
+            self.last_broad = Instant::now();
+        }
     }
     fn sample_with_readers(
         &mut self,
