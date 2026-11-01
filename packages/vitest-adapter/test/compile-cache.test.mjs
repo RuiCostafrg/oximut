@@ -30,10 +30,11 @@ process.send('ready'); setInterval(() => {}, 1000);`,
   });
   const exited = once(child, 'exit');
   const failed = once(child, 'error');
-  failed.catch(() => {});
   t.after(async () => {
-    if (child.exitCode === null && child.signalCode === null) child.kill('SIGKILL');
-    await exited;
+    // A child that never spawned has no pid and emits 'error', not 'exit'.
+    if (child.pid !== undefined && child.exitCode === null && child.signalCode === null)
+      child.kill('SIGKILL');
+    await Promise.race([exited, failed]);
   });
   /** The next message, failing on child errors, early exit or a timeout. */
   const next = (expected) =>
