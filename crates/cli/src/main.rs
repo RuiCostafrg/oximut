@@ -983,7 +983,24 @@ fn run_attempt(options: &Options, previous: Option<RetryEvidence>) -> Result<Att
         request.mutation = None;
         request.resident = group.and_then(|index| residual(&groups[index], coverage));
         request.collect_coverage = coverage.then(|| probe_transforms.clone());
-        let mut collected = scheduler.execute(&request);
+        // A module that alone exceeds the budget cannot be transported in any
+        // validation or mutant request; refuse it here with its identity.
+        let oversized = group.and_then(|index| {
+            groups[index]
+                .iter()
+                .map(|module| (module, encoded_len(module)))
+                .find(|&(_, size)| size > budget)
+        });
+        let mut collected = match oversized {
+            Some((module, size)) => infrastructure(
+                &request,
+                format!(
+                    "switched module {} ({size} bytes) exceeds the {budget}-byte request budget and cannot be validated",
+                    module.file
+                ),
+            ),
+            None => scheduler.execute(&request),
+        };
         if collected.outcome == TestOutcome::Passed
             && (collected.tests.passed != baseline.tests.passed
                 || collected.tests.failed != baseline.tests.failed

@@ -175,6 +175,16 @@ class InstrumentedBaseline(unittest.TestCase):
         for mutant in report['mutants']:
             self.assertEqual(mutant['selection']['mode'], 'full', mutant)
 
+    def test_untransportable_module_is_refused_before_dispatch(self):
+        modules = self.modules(selection=False)
+        smallest = min(encoded(module) for module in modules.values())
+        report, requests = self.run_cli(budget=smallest - 1)
+        self.assertEqual([r['jobId'] for r in requests], ['baseline'])
+        self.assertEqual(report['baseline']['outcome'], 'infrastructure-error')
+        self.assertIn('exceeds the', report['baseline']['errors'][0])
+        self.assertIn('cannot be validated', report['baseline']['errors'][0])
+        self.assertTrue(all(m['outcome'] == 'skipped' for m in report['mutants']))
+
     def test_failed_count_changing_or_unacknowledged_validation_blocks_every_mutant(self):
         for mode, outcome, message in [
             ('fail', 'failed', 'instrumented baseline failed'),
