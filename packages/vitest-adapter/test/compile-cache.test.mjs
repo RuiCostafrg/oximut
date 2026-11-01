@@ -29,6 +29,8 @@ process.send('ready'); setInterval(() => {}, 1000);`,
     stdio: ['ignore', 'ignore', 'ignore', 'ipc'],
   });
   const exited = once(child, 'exit');
+  const failed = once(child, 'error');
+  failed.catch(() => {});
   t.after(async () => {
     if (child.exitCode === null && child.signalCode === null) child.kill('SIGKILL');
     await exited;
@@ -41,6 +43,10 @@ process.send('ready'); setInterval(() => {}, 1000);`,
       }),
       exited.then(([code, signal]) => {
         throw new Error(`child exited before ${expected} (${code}, ${signal})`);
+      }),
+      // A fork that cannot start emits 'error' and may never emit 'exit'.
+      failed.then(([error]) => {
+        throw error;
       }),
     ]);
   await next('ready');
