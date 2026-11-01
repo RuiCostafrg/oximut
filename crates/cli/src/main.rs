@@ -444,6 +444,9 @@ fn invoke(options: &Options, request: &Request) -> Response {
                 Ok(Some(status)) => break status,
                 Ok(None) => {}
                 Err(error) => {
+                    // Termination always starts from a fresh broad discovery.
+                    owned.extend(descendants(std::process::id()));
+                    owned.remove(&child.id());
                     terminate(&mut child, &owned);
                     return Err(format!("adapter wait failed: {error}"));
                 }
@@ -1206,7 +1209,13 @@ fn run_attempt(options: &Options, previous: Option<RetryEvidence>) -> Result<Att
                 resources[field] = old.max(current).into();
             }
         }
-        for field in ["samples", "admissionPauses", "recycledIdleWorkers"] {
+        for field in [
+            "samples",
+            "treeDiscoveries",
+            "broadDiscoveries",
+            "admissionPauses",
+            "recycledIdleWorkers",
+        ] {
             if let (Some(old), Some(current)) = (
                 previous_resources[field].as_u64(),
                 resources[field].as_u64(),

@@ -409,10 +409,12 @@ impl Budget {
             workers,
             force,
             || {
-                // Every owned process descends from this subreaper CLI. Any
-                // tree-walk failure falls back to broad discovery, whose
-                // strict errors are unchanged.
-                if let Ok(Some(table)) = ProcessTable::read_tree(std::process::id()) {
+                // Every owned process descends from this subreaper CLI.
+                // Periodic samples walk the owned tree; forced samples (job
+                // completion, admission pressure, final accounting) and any
+                // walk that observed the tree changing use broad discovery,
+                // whose strict errors are unchanged.
+                if !force && let Ok(Some(table)) = ProcessTable::read_tree(std::process::id()) {
                     tree += 1;
                     return Ok(table);
                 }
