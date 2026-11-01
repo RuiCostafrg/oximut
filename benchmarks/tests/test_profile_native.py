@@ -583,11 +583,12 @@ class MinimumCaptureTests(unittest.TestCase):
             self.assertEqual(inventory['errors'], ['segment events do not match profiles: node-6.json'])
             self.assertEqual(len(list(profiles.glob('Segment.*.cpuprofile'))), 2000)
 
-    def fixture(self, root, chain='legacy'):
+    def fixture(self, root, chain='legacy', report='native'):
         """Create finalized evidence for each required tool and Oximut role.
 
         The native chain has no adapter relay or Python supervisor: the controller's
-        parent (pid 100) is the uncaptured Rust worker.
+        parent (pid 100) is the uncaptured Rust worker. `report` selects the Oximut report written for the
+        native chain: 'native' (diagnostic present), 'none' (no report), 'malformed', or 'empty' (no diagnostics).
         """
         import cProfile
         profiles = root / 'profiles'
@@ -616,6 +617,12 @@ class MinimumCaptureTests(unittest.TestCase):
                 profiler.runcall(lambda: None)
                 profiler.dump_stats(str(profiles / f'python-{pid}.pstats'))
             (profiles / f'{kind}-{pid}.json').write_text(json.dumps(record))
+        if report != 'none':
+            (qualification / '00-oximut').mkdir(parents=True, exist_ok=True)
+            text = {'native': json.dumps({'diagnostics': ['native coordinator: 1 controllers for 12 jobs']}),
+                    'empty': json.dumps({'diagnostics': ['something else']}),
+                    'malformed': '{not json'}[report]
+            (qualification / '00-oximut' / 'report.json').write_text(text)
         return profiles, qualification
 
     def test_all_tool_and_oximut_process_roles_must_have_finalized_evidence(self):
@@ -709,6 +716,44 @@ class MinimumCaptureTests(unittest.TestCase):
             self.assertEqual(roles['oximut_test_fork'], ['node-6.json'])
             self.assertNotIn('oximut_adapter', roles)
             self.assertNotIn('oximut_supervisor', roles)
+
+    def test_native_shaped_capture_without_report_evidence_is_unclassified(self):
+        """Absent runner and absent native diagnostic could be an uncaptured legacy relay: fail closed."""
+        for report in ('none', 'empty', 'malformed'):
+            with self.subTest(report=report), tempfile.TemporaryDirectory() as tmp:
+                profiles, qualification = self.fixture(Path(tmp), 'native', report)
+                inventory = diagnostic.capture_inventory(profiles, qualification)
+                self.assertEqual(inventory['oximut_chain'], 'unclassified')
+                self.assertIn('oximut process chain unclassifiable: no native coordinator evidence '
+                              'and no legacy relay capture', inventory['errors'])
+                # Strict legacy requirements apply.
+                self.assertIn('no Python supervisor identities captured', inventory['errors'])
+                self.assertIn('missing finalized process-role capture: oximut_adapter', inventory['errors'])
+                self.assertIn('missing finalized process-role capture: oximut_supervisor', inventory['errors'])
+
+    def test_report_diagnostics_must_be_a_list_of_strings_with_the_native_prefix(self):
+        for diagnostics in ('native coordinator: 1', [1, None], ['not native coordinator: 1'], {}, None):
+            with self.subTest(diagnostics=diagnostics), tempfile.TemporaryDirectory() as tmp:
+                profiles, qualification = self.fixture(Path(tmp), 'native')
+                (qualification / '00-oximut' / 'report.json').write_text(json.dumps({'diagnostics': diagnostics}))
+                inventory = diagnostic.capture_inventory(profiles, qualification)
+                self.assertEqual(inventory['oximut_chain'], 'unclassified')
+
+    def test_legacy_capture_stays_strict_even_with_native_diagnostic(self):
+        """Conflicting evidence (runner captured and native diagnostic) is classified conservatively as legacy."""
+        with tempfile.TemporaryDirectory() as tmp:
+            profiles, qualification = self.fixture(Path(tmp))
+            (qualification / '00-oximut').mkdir(parents=True, exist_ok=True)
+            (qualification / '00-oximut' / 'report.json').write_text(
+                json.dumps({'diagnostics': ['native coordinator: 1 controllers for 12 jobs']}))
+            inventory = diagnostic.capture_inventory(profiles, qualification)
+            self.assertEqual(inventory['oximut_chain'], 'legacy')
+            self.assertEqual(inventory['errors'], [])
+            (profiles / 'python-4.json').unlink()
+            (profiles / 'python-4.pstats').unlink()
+            inventory = diagnostic.capture_inventory(profiles, qualification)
+            self.assertEqual(inventory['oximut_chain'], 'legacy')
+            self.assertIn('missing finalized process-role capture: oximut_supervisor', inventory['errors'])
 
     def test_native_chain_requires_controller_and_fork(self):
         """A native capture missing either role fails closed."""

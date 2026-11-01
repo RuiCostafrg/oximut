@@ -1,7 +1,8 @@
 # Native execution coordinator: design and PR plan
 
-Status: P1 (#29) is merged. P3 (#30), P4 (#31) and P2 (the native coordinator)
-are separate measured PRs.
+Status: P1 (#29) and P3 (#30) are merged. P4 (#31) is parked as a draft: its
+gain was not significant once P1 had landed. P2 (the native coordinator, #32) is
+under measurement.
 
 Status: proposal plus incremental implementation plan. Each step below ships as
 its own PR from `main` and is measured by the native colord before/after
@@ -168,11 +169,11 @@ deliberately in its own commit with the reason.
   It also closes a gap that check has today. Filesystems with coarse timestamps
   can leave all three unchanged after an equal-size rewrite in the same tick.
   So, following git's "racily clean" rule, any entry whose mtime or ctime is not
-  strictly older than the previous snapshot's start minus a 2-second precision
-  allowance is content-hashed, and a hash change retires the controller.
-  Without the allowance, a whole-second filesystem could stamp a later rewrite
-  with a time older than a sub-second snapshot start. Two seconds covers FAT,
-  the coarsest common granularity. A regression test rewrites a file with the
+  strictly older than a snapshot's start minus a 2-second precision allowance is
+  content-hashed in that snapshot and again in the next one. A hash change
+  between them retires the controller. A later write to an entry that was not
+  racy moves its ctime past the recorded value, so metadata alone detects it.
+  Two seconds covers FAT, the coarsest common granularity. A regression test rewrites a file with the
   same size and restored timestamps. The check is strictly stronger than
   today's, never weaker. Content-hashed cache fingerprints stay where they
   apply today: in cache-enabled runs, after the baseline and before

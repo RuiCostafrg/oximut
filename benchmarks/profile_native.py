@@ -96,9 +96,26 @@ def segment_events_match(events_file, segments):
     return True
 
 
+def native_coordinator_evidence(qualification):
+    """True only when the Oximut report exists, is valid JSON, and carries the native coordinator diagnostic."""
+    try:
+        report = json.loads((qualification / '00-oximut' / 'report.json').read_text())
+        diagnostics = report['diagnostics']
+        return isinstance(diagnostics, list) and any(
+            isinstance(line, str) and line.startswith('native coordinator: ') for line in diagnostics)
+    except (OSError, ValueError, KeyError, TypeError):
+        return False
+
+
 def oximut_chain(identities, qualification):
-    """Return 'legacy' when a custom-adapter m2-runner.mjs Node identity is captured in the Oximut project
-    (or when the chain cannot be classified), else 'native'."""
+    """Classify the Oximut process chain as 'legacy', 'native' or 'unclassified'.
+
+    'legacy': a custom-adapter m2-runner.mjs Node identity is captured in the Oximut project, or there is no
+    qualification root. A runner capture wins even when the report also claims the native coordinator: the
+    stricter legacy role rules are the conservative choice when the evidence conflicts.
+    'native': no runner capture AND the Oximut report positively states the native coordinator ran. An
+    uncaptured legacy relay must not pass as native merely because it is absent from the captures.
+    'unclassified': neither; the caller fails closed under the strict legacy rules."""
     if qualification is None:
         return 'legacy'
     project = (qualification / '00-oximut' / 'project').resolve()
@@ -110,7 +127,7 @@ def oximut_chain(identities, qualification):
                 return 'legacy'
         except (KeyError, TypeError, ValueError):
             continue
-    return 'native'
+    return 'native' if native_coordinator_evidence(qualification) else 'unclassified'
 
 
 def capture_inventory(directory, qualification=None):
@@ -193,11 +210,13 @@ def capture_inventory(directory, qualification=None):
             errors.append(f'invalid capture {identity.name}: {error}')
     if not any(r['identity'].startswith('node-') for r in records):
         errors.append('no Node identities captured')
-    # The legacy custom-adapter relay is identified by its Node runner; without it the chain is native,
-    # where the controller's parent is the uncaptured Rust worker and no Python supervisor exists.
-    # Without a qualification root the chain cannot be classified, so the strict legacy rule applies.
+    # The legacy relay is identified by its captured Node runner; the native chain (the controller's parent is
+    # the uncaptured Rust worker, no Python supervisor) additionally needs the report's native-coordinator
+    # diagnostic. Anything else is unclassified and keeps the strict legacy requirements, failing closed.
     chain = oximut_chain(identities, qualification)
-    if chain == 'legacy' and not any(r['identity'].startswith('python-') for r in records):
+    if chain == 'unclassified':
+        errors.append('oximut process chain unclassifiable: no native coordinator evidence and no legacy relay capture')
+    if chain != 'native' and not any(r['identity'].startswith('python-') for r in records):
         errors.append('no Python supervisor identities captured')
     orphans = []
     for path in sorted((set(directory.glob('*.cpuprofile')) | set(directory.glob('*.pstats'))) - matched):
@@ -231,7 +250,7 @@ def capture_inventory(directory, qualification=None):
         adapter = str(ROOT / 'packages/vitest-adapter')
         worker = [adapter + '/m2-worker.ts']
         required = []
-        if chain == 'legacy':
+        if chain != 'native':
             adapters = [(name, r) for name, r in oxi if name.startswith('node-')
                         and isinstance(r.get('argv'), list) and r['argv'][1:2] == [adapter + '/m2-runner.mjs']]
             adapter_pids = {r['pid'] for _, r in adapters}

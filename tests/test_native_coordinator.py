@@ -39,6 +39,11 @@ process.on('message', (message) => {
   if (mode === 'crash') process.exit(3);
   if (mode === 'error') return reply({ error: 'boom from controller' });
   if (mode === 'oversized') return reply({ result: { padding: 'x'.repeat(2 * 1024 * 1024) } });
+  if (mode === 'lingering') {
+    // Like a Vitest fork still exiting when the run resolves.
+    const child = spawn(process.execPath, ['-e', 'setTimeout(() => {}, 150)'], { stdio: 'ignore' });
+    log({ event: 'lingering', child: child.pid });
+  }
   if (mode === 'leak' && !existsSync(process.env.OXIMUT_FAKE_LOG + '.leaked')) {
     writeFileSync(process.env.OXIMUT_FAKE_LOG + '.leaked', '');
     const child = spawn(process.execPath, ['-e', 'setInterval(() => {}, 1000)'],
@@ -99,6 +104,7 @@ class NativeCoordinator(unittest.TestCase):
         self.assertEqual(len(self.controllers(events)), 1)
         self.assertEqual([e['event'] for e in events][-1], 'close')
         self.assertIn('adapter observed reuse boundary: controller', report['diagnostics'])
+        self.assertIn('native coordinator: 1 controllers for 2 jobs', report['diagnostics'])
         self.assert_reaped(events)
 
     def test_hung_job_times_out_after_verified_cleanup(self):
@@ -129,6 +135,14 @@ class NativeCoordinator(unittest.TestCase):
         self.assertFalse(alive(leaked), 'detached descendant survived')
         # The next job could not reuse a controller whose job leaked a process.
         self.assertEqual(len(self.controllers(events)), 2)
+        self.assert_reaped(events)
+
+    def test_exiting_children_do_not_retire_a_healthy_controller(self):
+        result, report, events = self.run_cli('lingering')
+        self.assertEqual(report['baseline']['outcome'], 'passed', result.stderr)
+        self.assertEqual(len([e for e in events if e['event'] == 'lingering']), 2)
+        self.assertEqual(len(self.controllers(events)), 1)
+        self.assertIn('native coordinator: 1 controllers for 2 jobs', report['diagnostics'])
         self.assert_reaped(events)
 
     def test_fresh_reuse_decisions_open_a_controller_per_job(self):

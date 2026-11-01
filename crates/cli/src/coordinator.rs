@@ -25,6 +25,11 @@ const OUTPUT_BYTES: usize = 32 * 1024;
 const CLOSE_MS: u64 = 3_000;
 const EXIT_MS: u64 = 1_000;
 const CLEANUP_MS: u64 = 2_000;
+/// Vitest resolves a run before its pool has awaited fork termination, so the
+/// last test fork may still be exiting when the reply arrives. Owned
+/// processes get this long (within the job deadline) to exit before leak
+/// verification; any that remain are leaks and retire the controller.
+const EXIT_GRACE_MS: u64 = 500;
 /// Timestamps on coarse filesystems (FAT: 2 s) can hide a same-tick rewrite.
 const TIMESTAMP_ALLOWANCE: Duration = Duration::from_secs(2);
 
@@ -91,8 +96,22 @@ fn signal_verified(pid: u32, start: u64) {
 
 /// Every descendant of this slot. Only the controller tree lives under it, and
 /// as a subreaper it adopts every orphan, so this is the complete owned set.
-fn owned() -> BTreeMap<u32, u64> {
-    descendants(std::process::id())
+/// Strict: an unreadable process table is a verification failure, never an
+/// empty (clean-looking) tree.
+fn owned() -> Result<BTreeMap<u32, u64>, String> {
+    processes::ProcessTable::read_with(processes::identity)
+        .map(|table| table.descendants(std::process::id()))
+        .map_err(|error| format!("owned-process verification unavailable: {error}"))
+}
+
+/// Cheap polling view of the owned tree for exit waits; never used to
+/// conclude cleanup or the absence of leaks.
+fn owned_hint() -> BTreeMap<u32, u64> {
+    let root = std::process::id();
+    match processes::ProcessTable::read_tree(root) {
+        Ok(Some(table)) => table.descendants(root),
+        _ => descendants(root),
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -112,6 +131,37 @@ struct Entry {
     racy: bool,
 }
 
+#[derive(Debug)]
+enum TakeError {
+    Deadline,
+    Io(String),
+}
+
+impl From<String> for TakeError {
+    fn from(error: String) -> Self {
+        TakeError::Io(error)
+    }
+}
+
+/// Streams a file through SHA-256, checking the job deadline between chunks.
+fn hash_file(path: &Path, deadline: Instant) -> Result<[u8; 32], TakeError> {
+    let mut file = fs::File::open(path).map_err(|e| format!("{}: {e}", path.display()))?;
+    let mut hasher = Sha256::new();
+    let mut chunk = vec![0u8; 1 << 16];
+    loop {
+        if Instant::now() >= deadline {
+            return Err(TakeError::Deadline);
+        }
+        let read = file
+            .read(&mut chunk)
+            .map_err(|e| format!("{}: {e}", path.display()))?;
+        if read == 0 {
+            return Ok(hasher.finalize().into());
+        }
+        hasher.update(&chunk[..read]);
+    }
+}
+
 #[derive(Clone, Debug)]
 struct Fingerprint {
     root: PathBuf,
@@ -127,7 +177,12 @@ impl Fingerprint {
     /// older than a snapshot's start (minus a precision allowance) are hashed
     /// then and in the next snapshot, so an equal-size same-tick rewrite with
     /// restored timestamps still changes the fingerprint.
-    fn take(root: &Path, config: &Path, previous: Option<&Fingerprint>) -> Result<Self, String> {
+    fn take(
+        root: &Path,
+        config: &Path,
+        previous: Option<&Fingerprint>,
+        deadline: Instant,
+    ) -> Result<Self, TakeError> {
         let started = SystemTime::now();
         let mut entries = vec![];
         let mut symlink = false;
@@ -142,7 +197,10 @@ impl Fingerprint {
         let cutoff = started
             .checked_sub(TIMESTAMP_ALLOWANCE)
             .unwrap_or(UNIX_EPOCH);
-        let mut record = |path: PathBuf, metadata: &fs::Metadata| -> Result<(), String> {
+        let mut record = |path: PathBuf, metadata: &fs::Metadata| -> Result<(), TakeError> {
+            if Instant::now() >= deadline {
+                return Err(TakeError::Deadline);
+            }
             use std::os::unix::fs::MetadataExt;
             let modified = metadata.modified().ok();
             let changed = (metadata.ctime(), metadata.ctime_nsec());
@@ -154,8 +212,7 @@ impl Fingerprint {
                 .unwrap_or(UNIX_EPOCH);
             let racy = modified.is_none_or(|time| time >= cutoff) || changed_time >= cutoff;
             let digest = if metadata.is_file() && (racy || hashed.contains(path.as_path())) {
-                let bytes = fs::read(&path).map_err(|e| format!("{}: {e}", path.display()))?;
-                Some(Sha256::digest(&bytes).into())
+                Some(hash_file(&path, deadline)?)
             } else {
                 None
             };
@@ -424,6 +481,10 @@ impl Controller {
                 {
                     continue;
                 }
+                // A reply that arrives after the deadline is never accepted.
+                if Instant::now() >= deadline {
+                    return Err(Wait::Deadline);
+                }
                 if let Some(error) = message.get("error") {
                     return Ok(Reply::Error(
                         error.as_str().unwrap_or("controller error").into(),
@@ -471,9 +532,10 @@ impl Controller {
     /// Success requires every owned process to have exited and been reaped.
     fn terminate(&mut self) -> Result<(), String> {
         let deadline = Instant::now() + Duration::from_millis(CLEANUP_MS);
-        // The unreaped direct child pins its PID and process group.
+        // The unreaped direct child pins its PID; descendants are signalled
+        // individually through verified identities below.
         if !self.reaped {
-            unsafe { libc::kill(-(self.child.id() as i32), libc::SIGKILL) };
+            let _ = self.child.kill();
         }
         loop {
             if !self.reaped && self.child.try_wait().ok().flatten().is_some() {
@@ -489,7 +551,7 @@ impl Controller {
                     self.reaped = true;
                 }
             }
-            let remaining = owned();
+            let remaining = owned()?;
             if remaining.is_empty() && self.reaped {
                 return Ok(());
             }
@@ -507,8 +569,9 @@ impl Controller {
     }
 
     /// Graceful close, falling back to verified cleanup. Either way, success
-    /// requires an empty owned tree afterwards.
-    fn close(mut self) -> Result<(), String> {
+    /// requires an empty owned tree afterwards; `Ok(false)` reports that the
+    /// controller had to be killed (it did not close gracefully).
+    fn close(mut self) -> Result<bool, String> {
         let deadline = Instant::now() + Duration::from_millis(CLOSE_MS);
         let graceful = match self.request("close", &serde_json::json!({}), deadline) {
             Ok(Reply::Result(_)) => {
@@ -527,12 +590,7 @@ impl Controller {
             }
             _ => false,
         };
-        let cleaned = self.terminate();
-        match (graceful, cleaned) {
-            (true, Ok(())) => Ok(()),
-            (_, Err(error)) => Err(error),
-            (false, Ok(())) => Err("Controller did not close; owned processes reaped".into()),
-        }
+        self.terminate().map(|()| graceful)
     }
 }
 
@@ -576,6 +634,12 @@ pub struct Coordinator {
     fingerprint: Option<Fingerprint>,
     jobs: usize,
     pub reuse_modes: BTreeSet<String>,
+    /// Controllers started and jobs run, reported as reuse evidence.
+    pub controllers_started: usize,
+    pub jobs_run: usize,
+    /// Set when cleanup could not prove the slot owns nothing: no later job
+    /// may run beside processes that may have survived.
+    poisoned: Option<String>,
 }
 
 impl Coordinator {
@@ -586,11 +650,38 @@ impl Coordinator {
             fingerprint: None,
             jobs: 0,
             reuse_modes: BTreeSet::new(),
+            controllers_started: 0,
+            jobs_run: 0,
+            poisoned: None,
         }
     }
 
-    fn close(&mut self) -> Result<(), String> {
-        self.controller.take().map_or(Ok(()), Controller::close)
+    /// Retires the controller. Only a failed verified cleanup is an error
+    /// (and poisons the slot); `Ok(false)` means it had to be killed.
+    fn close(&mut self) -> Result<bool, String> {
+        let closed = self.controller.take().map_or(Ok(true), Controller::close);
+        if let Err(error) = &closed {
+            self.poisoned.get_or_insert_with(|| error.clone());
+        }
+        closed
+    }
+
+    /// Verified cleanup of a controller that never joined the coordinator.
+    fn discard(&mut self, mut controller: Controller) -> Result<(), String> {
+        let cleaned = controller.terminate();
+        if let Err(error) = &cleaned {
+            self.poisoned.get_or_insert_with(|| error.clone());
+        }
+        cleaned
+    }
+
+    /// Retire the controller and report `response`, unless cleanup fails:
+    /// then ownership is uncertain and the job is an infrastructure error.
+    fn retire_with(&mut self, request: &Request, response: Response) -> Response {
+        match self.close() {
+            Ok(_) => response,
+            Err(error) => infrastructure(request, error),
+        }
     }
 
     /// Processes owned now that were not owned when the controller started.
@@ -598,12 +689,6 @@ impl Coordinator {
     /// cannot prove disappearance, so every observed PID is checked too.
     fn leaked(&self, deadline: Instant) -> Result<bool, Wait> {
         let baseline = &self.controller.as_ref().expect("controller").baseline;
-        let unexpected = || -> Vec<(u32, u64)> {
-            owned()
-                .into_iter()
-                .filter(|(pid, start)| baseline.get(pid) != Some(start))
-                .collect()
-        };
         let check = || {
             if Instant::now() >= deadline {
                 Err(Wait::Deadline)
@@ -611,13 +696,30 @@ impl Coordinator {
                 Ok(())
             }
         };
+        // Let exiting test forks finish (bounded); a process still present
+        // afterwards is judged by the strict verification below.
+        let grace = (Instant::now() + Duration::from_millis(EXIT_GRACE_MS)).min(deadline);
+        while owned_hint()
+            .iter()
+            .any(|(pid, start)| baseline.get(pid) != Some(start))
+            && Instant::now() < grace
+        {
+            thread::sleep(Duration::from_millis(2));
+        }
+        let unexpected = || -> Result<Vec<(u32, u64)>, Wait> {
+            Ok(owned()
+                .map_err(Wait::Failed)?
+                .into_iter()
+                .filter(|(pid, start)| baseline.get(pid) != Some(start))
+                .collect())
+        };
         check()?;
-        let observed = unexpected();
+        let observed = unexpected()?;
         check()?;
         if observed.is_empty() {
             return Ok(false);
         }
-        if !unexpected().is_empty() {
+        if !unexpected()?.is_empty() {
             return Ok(true);
         }
         for &(pid, start) in &observed {
@@ -629,21 +731,35 @@ impl Coordinator {
         check()?;
         // A fork by an exiting process can be missed while it is reparented
         // mid-scan; every observed process is now gone, so rescan once more.
-        Ok(!unexpected().is_empty())
+        Ok(!unexpected()?.is_empty())
     }
 
     pub fn run(&mut self, options: &Options, request: &Request) -> Response {
         let started = Instant::now();
         let deadline = started + Duration::from_millis(request.deadline_ms);
         let timeout = |message: &str| empty(request, TestOutcome::Timeout, message);
-        let snapshot =
-            match Fingerprint::take(&options.root, &options.config, self.fingerprint.as_ref()) {
-                Ok(snapshot) => snapshot,
-                Err(error) => {
-                    let _ = self.close();
-                    return infrastructure(request, error);
-                }
-            };
+        if let Some(error) = &self.poisoned {
+            return infrastructure(
+                request,
+                format!("slot cleanup could not be verified earlier: {error}"),
+            );
+        }
+        let snapshot = match Fingerprint::take(
+            &options.root,
+            &options.config,
+            self.fingerprint.as_ref(),
+            deadline,
+        ) {
+            Ok(snapshot) => snapshot,
+            // A timed-out job always retires its controller.
+            Err(TakeError::Deadline) => {
+                return self.retire_with(request, timeout("Job deadline exceeded"));
+            }
+            Err(TakeError::Io(error)) => {
+                let failure = infrastructure(request, error);
+                return self.retire_with(request, failure);
+            }
+        };
         let changed = self
             .fingerprint
             .as_ref()
@@ -656,7 +772,7 @@ impl Coordinator {
         let symlink = snapshot.symlink;
         self.fingerprint = Some(snapshot);
         if Instant::now() >= deadline {
-            return timeout("Job deadline exceeded");
+            return self.retire_with(request, timeout("Job deadline exceeded"));
         }
         let args = match serde_json::to_value(request) {
             Ok(args) => args,
@@ -667,7 +783,8 @@ impl Coordinator {
                 Ok(controller) => controller,
                 Err(error) => return infrastructure(request, error),
             };
-            match controller.request("initialize", &args, deadline) {
+            self.controllers_started += 1;
+            let failure = match controller.request("initialize", &args, deadline) {
                 Ok(Reply::Result(initialized)) => {
                     controller.reuse = initialized
                         .get("reuse")
@@ -677,28 +794,30 @@ impl Coordinator {
                     if symlink {
                         controller.reuse = "fresh: symlink inputs require fresh evaluation".into();
                     }
+                    None
                 }
-                Ok(Reply::Error(error)) => {
-                    let detail = controller.diagnostics();
-                    let _ = controller.terminate();
-                    return infrastructure(request, format!("{error}\n{detail}"));
-                }
-                Err(Wait::Deadline) => {
-                    return match controller.terminate() {
-                        Ok(()) => {
-                            timeout("Controller initialization timed out after verified cleanup")
-                        }
-                        Err(error) => infrastructure(request, error),
-                    };
-                }
-                Err(Wait::Failed(error)) => {
-                    let detail = controller.diagnostics();
-                    let _ = controller.terminate();
-                    return infrastructure(request, format!("{error}\n{detail}"));
-                }
+                Ok(Reply::Error(error)) | Err(Wait::Failed(error)) => Some(infrastructure(
+                    request,
+                    format!("{error}\n{}", controller.diagnostics()),
+                )),
+                Err(Wait::Deadline) => Some(timeout(
+                    "Controller initialization timed out after verified cleanup",
+                )),
+            };
+            if let Some(failure) = failure {
+                return match self.discard(controller) {
+                    Ok(()) => failure,
+                    Err(error) => infrastructure(request, error),
+                };
             }
+            controller.baseline = match owned() {
+                Ok(baseline) => baseline,
+                Err(error) => {
+                    let _ = self.discard(controller);
+                    return infrastructure(request, error);
+                }
+            };
             self.reuse_modes.insert(controller.reuse.clone());
-            controller.baseline = owned();
             self.jobs = 0;
             self.controller = Some(controller);
         }
@@ -709,24 +828,23 @@ impl Coordinator {
             controller.request("run", &serde_json::json!({ "request": args }), deadline)
         };
         self.jobs += 1;
-        let result = match reply {
+        self.jobs_run += 1;
+        let response = match reply {
             Ok(Reply::Result(result)) => envelope(request, result),
-            Ok(Reply::Error(error)) => Err(error),
+            Ok(Reply::Error(error)) | Err(Wait::Failed(error)) => Err(error),
             Err(Wait::Deadline) => {
-                let mut controller = self.controller.take().expect("controller");
-                return match controller.terminate() {
-                    Ok(()) => timeout("Job deadline exceeded; owned processes reaped"),
-                    Err(error) => infrastructure(request, error),
-                };
+                return self.retire_with(
+                    request,
+                    timeout("Job deadline exceeded; owned processes reaped"),
+                );
             }
-            Err(Wait::Failed(error)) => Err(error),
         };
-        let response = match result {
+        let response = match response {
             Ok(response) => response,
+            // Never accept another job on a controller with untrusted state.
             Err(error) => {
-                // Never accept another job on a controller with untrusted state.
-                let _ = self.close();
-                return infrastructure(request, error);
+                let failure = infrastructure(request, error);
+                return self.retire_with(request, failure);
             }
         };
         let retire = matches!(
@@ -742,28 +860,36 @@ impl Coordinator {
             match self.leaked(deadline) {
                 Ok(leaked) => leaked,
                 // Verification may cross the deadline; never publish late.
-                Err(_) => {
-                    let _ = self.close();
-                    return timeout("Job deadline exceeded during descendant verification");
+                Err(Wait::Deadline) => {
+                    let late = timeout("Job deadline exceeded during descendant verification");
+                    return self.retire_with(request, late);
+                }
+                Err(Wait::Failed(error)) => {
+                    let failure = infrastructure(request, error);
+                    return self.retire_with(request, failure);
                 }
             }
         };
-        if !retire && Instant::now() >= deadline {
-            let _ = self.close();
-            return timeout("Job deadline exceeded during descendant verification");
+        // Never publish a result after the deadline, retiring or not.
+        if Instant::now() >= deadline {
+            let late = timeout("Job deadline exceeded during descendant verification");
+            return self.retire_with(request, late);
         }
         // Retiring is not job time: cleanup has its own bound.
-        if (retire || leaked)
-            && let Err(error) = self.close()
-        {
-            return infrastructure(request, error);
+        if retire || leaked {
+            return self.retire_with(request, response);
         }
         response
     }
 
     /// Final shutdown: close the controller and prove the slot owns nothing.
     pub fn finish(&mut self) -> Result<(), String> {
-        let closed = self.close();
+        // A controller that must be killed at shutdown invalidates evidence.
+        let closed = self.close().and_then(|graceful| {
+            graceful
+                .then_some(())
+                .ok_or_else(|| "Controller did not close; owned processes reaped".to_string())
+        });
         let deadline = Instant::now() + Duration::from_millis(CLEANUP_MS);
         loop {
             loop {
@@ -772,7 +898,7 @@ impl Coordinator {
                     break;
                 }
             }
-            let remaining = owned();
+            let remaining = owned()?;
             if remaining.is_empty() {
                 break;
             }
@@ -875,6 +1001,31 @@ mod tests {
         assert_eq!(native_worker(&directory.path().join("adapter.mjs")), None);
     }
 
+    fn far() -> Instant {
+        Instant::now() + Duration::from_secs(60)
+    }
+
+    #[test]
+    fn fingerprint_stops_at_the_job_deadline() {
+        let root = tempfile::tempdir().unwrap();
+        let config = root.path().join("vitest.config.ts");
+        fs::write(&config, "export default {}").unwrap();
+        assert!(matches!(
+            Fingerprint::take(root.path(), &config, None, Instant::now()),
+            Err(TakeError::Deadline)
+        ));
+        let big = root.path().join("big.bin");
+        fs::write(&big, vec![7u8; 3 << 16]).unwrap();
+        assert_eq!(
+            hash_file(&big, far()).ok(),
+            Some(Sha256::digest(fs::read(&big).unwrap()).into())
+        );
+        assert!(matches!(
+            hash_file(&big, Instant::now()),
+            Err(TakeError::Deadline)
+        ));
+    }
+
     #[test]
     fn fingerprint_detects_same_size_rewrites_with_restored_timestamps() {
         let root = tempfile::tempdir().unwrap();
@@ -884,7 +1035,7 @@ mod tests {
         fs::write(&source, "export const value = 1;").unwrap();
         fs::create_dir(root.path().join("node_modules")).unwrap();
         fs::write(root.path().join("node_modules/ignored.js"), "a").unwrap();
-        let first = Fingerprint::take(root.path(), &config, None).unwrap();
+        let first = Fingerprint::take(root.path(), &config, None, far()).unwrap();
         // Freshly written files are racy and therefore hashed.
         assert!(first.entries.iter().all(|e| e.racy && e.digest.is_some()));
         assert!(
@@ -893,7 +1044,7 @@ mod tests {
                 .iter()
                 .all(|e| !e.path.starts_with(root.path().join("node_modules")))
         );
-        let unchanged = Fingerprint::take(root.path(), &config, Some(&first)).unwrap();
+        let unchanged = Fingerprint::take(root.path(), &config, Some(&first), far()).unwrap();
         assert!(first.same(&unchanged));
         // Equal size, restored mtime: only the content hash can tell. ctime
         // cannot be restored by user code, so compare against a snapshot whose
@@ -906,7 +1057,8 @@ mod tests {
             .unwrap()
             .set_modified(modified)
             .unwrap();
-        let mut rewritten = Fingerprint::take(root.path(), &config, Some(&unchanged)).unwrap();
+        let mut rewritten =
+            Fingerprint::take(root.path(), &config, Some(&unchanged), far()).unwrap();
         for (entry, before) in rewritten.entries.iter_mut().zip(&unchanged.entries) {
             entry.changed = before.changed;
         }
@@ -922,7 +1074,7 @@ mod tests {
         assert!(unchanged.same(&stale));
         std::os::unix::fs::symlink(&source, root.path().join("link.ts")).unwrap();
         assert!(
-            Fingerprint::take(root.path(), &config, None)
+            Fingerprint::take(root.path(), &config, None, far())
                 .unwrap()
                 .symlink
         );

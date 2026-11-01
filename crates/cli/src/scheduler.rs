@@ -460,6 +460,12 @@ pub fn worker_main() -> Result<(), String> {
                             .into_iter()
                             .map(|mode| format!("adapter observed reuse boundary: {mode}")),
                     );
+                    if let Backend::Native(coordinator) = backend {
+                        diagnostics.push(format!(
+                            "native coordinator: {} controllers for {} jobs",
+                            coordinator.controllers_started, coordinator.jobs_run
+                        ));
+                    }
                 }
                 if let Err(error) = &cleanup {
                     diagnostics.push(error.clone());

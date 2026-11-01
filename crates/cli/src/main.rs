@@ -661,7 +661,7 @@ impl Drop for Session {
 /// A slot's persistent execution: the native coordinator for the reference
 /// adapter, or the file-protocol relay for any other adapter.
 enum Backend {
-    Native(coordinator::Coordinator),
+    Native(Box<coordinator::Coordinator>),
     Relay(Session),
 }
 
@@ -700,7 +700,7 @@ fn execute_local(options: &Options, request: &Request, backend: &mut Option<Back
     }
     if backend.is_none() {
         *backend = Some(match coordinator::native_worker(&options.adapter) {
-            Some(worker) => Backend::Native(coordinator::Coordinator::new(worker)),
+            Some(worker) => Backend::Native(Box::new(coordinator::Coordinator::new(worker))),
             None => match Session::start(options) {
                 Ok(started) => Backend::Relay(started),
                 Err(error) => return infrastructure(request, error),

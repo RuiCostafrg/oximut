@@ -52,7 +52,7 @@ def smoke(prefix, *, reports_dir=None, validator=None, isolated=False):
         observed = Path(temporary) / "adapter-paths.jsonl"
         hook.write_text(
             'import { appendFileSync } from "node:fs";\n'
-            r'if (/\/m[12]-runner\.mjs$/.test(process.argv[1] ?? "")) '
+            r'if (/\/(m1-runner\.mjs|m2-worker\.ts)$/.test(process.argv[1] ?? "")) '
             f'appendFileSync({json.dumps(str(observed))}, JSON.stringify(process.argv[1]) + "\\n");\n'
         )
         environment = dict(os.environ)
@@ -91,7 +91,8 @@ def smoke(prefix, *, reports_dir=None, validator=None, isolated=False):
                                             capture_output=True, text=True, timeout=300)
                     if result.returncode != 0:
                         raise RuntimeError(f"{execution}/{case} exited {result.returncode}: {result.stdout}\n{result.stderr}")
-                runner = "m2-runner.mjs" if execution == "persistent" else "m1-runner.mjs"
+                # Persistent execution drives the controller natively (no relay).
+                runner = "m2-worker.ts" if execution == "persistent" else "m1-runner.mjs"
                 expected = str(prefix / "lib/oximut/packages/vitest-adapter" / runner)
                 paths = [json.loads(line) for line in SANDBOX.read_regular(observed).decode().splitlines()]
                 if not paths or any(path != expected for path in paths):
