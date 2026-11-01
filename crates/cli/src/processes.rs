@@ -60,8 +60,17 @@ fn children(pid: u32) -> Result<Option<Vec<u32>>, String> {
     // is reported like a vanished children file (the tree changed).
     parse_children(
         pid,
-        tasks.map(|task| task.and_then(|task| fs::read_to_string(task.path().join("children")))),
+        tasks.map(|task| task.and_then(|task| read_task_children(&task.path()))),
     )
+}
+
+/// One thread's `children` list. A thread that exits after the file opens can
+/// read as empty; if its task entry is gone after the read, report it as
+/// vanished. A later exit is harmless: this list was already captured.
+fn read_task_children(task: &std::path::Path) -> std::io::Result<String> {
+    let list = fs::read_to_string(task.join("children"))?;
+    fs::metadata(task.join("stat"))?;
+    Ok(list)
 }
 
 /// Combines the per-thread `children` lists. A thread that vanished mid-read
@@ -412,6 +421,19 @@ mod tests {
         }
         drop(_reap);
         let _ = child.wait();
+    }
+
+    #[test]
+    fn a_thread_gone_after_reading_its_children_counts_as_vanished() {
+        let task = tempfile::tempdir().unwrap();
+        fs::write(task.path().join("children"), "").unwrap();
+        // The empty read succeeded, but the task entry is gone afterwards.
+        let error = read_task_children(task.path()).unwrap_err();
+        assert_eq!(error.kind(), std::io::ErrorKind::NotFound);
+        assert_eq!(parse_children(1, [Err(error)]).unwrap(), None);
+        fs::write(task.path().join("stat"), "1 (x) S").unwrap();
+        fs::write(task.path().join("children"), "7 8").unwrap();
+        assert_eq!(read_task_children(task.path()).unwrap(), "7 8");
     }
 
     #[test]
