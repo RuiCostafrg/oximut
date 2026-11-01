@@ -56,15 +56,12 @@ fn children(pid: u32) -> Result<Option<Vec<u32>>, String> {
         Err(error) if gone(&error) => return Ok(None),
         Err(error) => return Err(format!("process tasks unavailable for PID {pid}: {error}")),
     };
-    let mut lists = vec![];
-    for task in tasks {
-        match task {
-            Ok(task) => lists.push(fs::read_to_string(task.path().join("children"))),
-            Err(error) if gone(&error) => return Ok(None),
-            Err(error) => return Err(format!("process task unavailable for PID {pid}: {error}")),
-        }
-    }
-    parse_children(pid, lists)
+    // Read lazily: one thread's list is held at a time. A vanished task entry
+    // is reported like a vanished children file (the tree changed).
+    parse_children(
+        pid,
+        tasks.map(|task| task.and_then(|task| fs::read_to_string(task.path().join("children")))),
+    )
 }
 
 /// Combines the per-thread `children` lists. A thread that vanished mid-read
