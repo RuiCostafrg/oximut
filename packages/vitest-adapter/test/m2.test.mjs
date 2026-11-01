@@ -1,6 +1,15 @@
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
-import { mkdir, mkdtemp, readFile, rename, rm, symlink, writeFile } from 'node:fs/promises';
+import {
+  mkdir,
+  mkdtemp,
+  readdir,
+  readFile,
+  rename,
+  rm,
+  symlink,
+  writeFile,
+} from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import test from 'node:test';
 
@@ -8,7 +17,7 @@ const repository = resolve(import.meta.dirname, '../../..');
 const source = 'export const enabled = true;';
 const switched =
   "export const enabled = process.env.OXIMUT_ACTIVE_MUTANT === 'kill' ? false : true;";
-async function session(t) {
+async function session(t, environment = {}) {
   await mkdir(join(repository, '.oximut'), { recursive: true });
   const root = await mkdtemp(join(repository, '.oximut/m2-test-'));
   const directory = join(root, 'session');
@@ -32,7 +41,7 @@ let state = 0; test('enabled', () => { expect(state++).toBe(0); expect(enabled).
       join(repository, 'packages/vitest-adapter/m2-runner.mjs'),
       directory,
     ],
-    { stdio: ['ignore', 'pipe', 'pipe'] },
+    { stdio: ['ignore', 'pipe', 'pipe'], env: { ...process.env, ...environment } },
   );
   let diagnostics = '';
   child.stderr.on('data', (data) => {
@@ -192,6 +201,25 @@ export const other = process.env.OXIMUT_ACTIVE_MUTANT === 'other' ? 2 : 1;`,
       assert.equal(response.resident, shared?.length, id);
       assert.equal(await count(), evaluations, id);
     }
+  },
+);
+
+test(
+  'M2 test forks populate the provided compile cache while the controller persists',
+  { timeout: 120000 },
+  async (t) => {
+    await mkdir(join(repository, '.oximut'), { recursive: true });
+    const cache = await mkdtemp(join(repository, '.oximut/m2-compile-cache-'));
+    t.after(() => rm(cache, { recursive: true, force: true }));
+    const s = await session(t, { NODE_COMPILE_CACHE: cache });
+    assert.equal((await s.run('disabled')).outcome, 'passed');
+    // The controller only flushes at exit; entries now come from test forks.
+    const entries = await readdir(cache, { recursive: true, withFileTypes: true });
+    assert.ok(
+      entries.some((entry) => entry.isFile()),
+      'fork compile cache was not flushed',
+    );
+    assert.equal((await s.run('kill')).outcome, 'failed');
   },
 );
 

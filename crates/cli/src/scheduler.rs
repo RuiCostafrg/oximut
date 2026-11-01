@@ -43,6 +43,15 @@ impl Worker {
             .stdin(Stdio::null())
             .stdout(Stdio::null())
             .stderr(Stdio::null());
+        // Node, Vitest and every fresh test fork inherit a private per-slot
+        // compile cache, removed with this directory. V8 validates cached code
+        // against source content and flags; a caller's own setting wins.
+        if env::var_os("NODE_COMPILE_CACHE").is_none() {
+            command.env(
+                "NODE_COMPILE_CACHE",
+                directory.path().join("node-compile-cache"),
+            );
+        }
         #[cfg(unix)]
         {
             use std::os::unix::process::CommandExt;

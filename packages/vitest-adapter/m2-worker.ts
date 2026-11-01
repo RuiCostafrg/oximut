@@ -1,11 +1,14 @@
 import { readFile } from 'node:fs/promises';
+import { getCompileCacheDir } from 'node:module';
 import { resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { normalizePath } from 'vite';
 import { createVitest, version, type Reporter } from 'vitest/node';
 import type { Request, Result } from './protocol.ts';
 import { SelectionSupport } from './m3-selection.ts';
 
 const selectionSupport = new SelectionSupport();
+const compileCacheFlush = fileURLToPath(new URL('./compile-cache.cjs', import.meta.url));
 
 let vitest: Awaited<ReturnType<typeof createVitest>> | undefined;
 let currentRun: Parameters<NonNullable<Reporter['onTestRunEnd']>> | undefined;
@@ -93,6 +96,13 @@ async function command(name: string, args: Request): Promise<unknown> {
       },
     );
     await vitest.standalone();
+    // Fresh test forks reuse compiled Vitest runtime code through Node's
+    // compile cache (CLI-provided per-run directory). Forks are stopped by
+    // signal, so a fork-only preload flushes the cache on Vitest's stop
+    // request. V8 validates cached code against source and flags.
+    if (getCompileCacheDir())
+      for (const project of vitest.projects)
+        project.config.execArgv = [...project.config.execArgv, '--require', compileCacheFlush];
     if (
       vitest.projects.length !== 1 ||
       vitest.projects.some(
