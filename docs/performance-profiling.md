@@ -67,7 +67,8 @@ through the per-thread `/proc/<pid>/task/<tid>/children` links. Periodic resourc
 samples and the slots' 50ms ownership snapshots follow those links instead of
 reading every host process. A walk fails when it observes the tree changing:
 a visited or listed process exited (including zombies, whose children have
-already moved to a subreaper), or a listed PID's parent is outside the tree
+already moved to a subreaper), one of its threads vanished mid-read (its
+children moved to a sibling thread), or a listed PID's parent is outside the tree
 (PID reuse or reparenting). That sample then uses broad discovery, as do kernels
 without the links. Forced samples (job completion, admission pressure and final
 accounting) always use broad discovery. The kernel's `children` lists are only

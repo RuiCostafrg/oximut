@@ -31,13 +31,13 @@ fn parse_identity(stat: &str) -> Option<(u32, u64)> {
     Some((parent, start))
 }
 
+fn gone(error: &std::io::Error) -> bool {
+    error.kind() == std::io::ErrorKind::NotFound || error.raw_os_error() == Some(libc::ESRCH)
+}
+
 /// Children of every thread of `pid`, or `None` when the process is gone. An
-/// exited (zombie) process has already handed its children to a subreaper. A
-/// single thread that exits mid-read has no children of its own to report.
+/// exited (zombie) process has already handed its children to a subreaper.
 fn children(pid: u32) -> Result<Option<Vec<u32>>, String> {
-    let gone = |error: &std::io::Error| {
-        error.kind() == std::io::ErrorKind::NotFound || error.raw_os_error() == Some(libc::ESRCH)
-    };
     match fs::read_to_string(format!("/proc/{pid}/stat")) {
         Ok(stat) => {
             let state = stat
@@ -56,14 +56,27 @@ fn children(pid: u32) -> Result<Option<Vec<u32>>, String> {
         Err(error) if gone(&error) => return Ok(None),
         Err(error) => return Err(format!("process tasks unavailable for PID {pid}: {error}")),
     };
-    let mut result = vec![];
+    let mut lists = vec![];
     for task in tasks {
-        let task = match task {
-            Ok(task) => task,
+        match task {
+            Ok(task) => lists.push(fs::read_to_string(task.path().join("children"))),
             Err(error) if gone(&error) => return Ok(None),
             Err(error) => return Err(format!("process task unavailable for PID {pid}: {error}")),
-        };
-        match fs::read_to_string(task.path().join("children")) {
+        }
+    }
+    parse_children(pid, lists)
+}
+
+/// Combines the per-thread `children` lists. A thread that vanished mid-read
+/// handed its children to a sibling thread that may already have been read,
+/// so the tree changed: report it (`None`) instead of a partial list.
+fn parse_children(
+    pid: u32,
+    lists: impl IntoIterator<Item = std::io::Result<String>>,
+) -> Result<Option<Vec<u32>>, String> {
+    let mut result = vec![];
+    for list in lists {
+        match list {
             Ok(list) => {
                 for child in list.split_whitespace() {
                     result.push(
@@ -73,7 +86,7 @@ fn children(pid: u32) -> Result<Option<Vec<u32>>, String> {
                     );
                 }
             }
-            Err(error) if gone(&error) => {}
+            Err(error) if gone(&error) => return Ok(None),
             Err(error) => {
                 return Err(format!(
                     "process children unavailable for PID {pid}: {error}"
@@ -402,6 +415,27 @@ mod tests {
         }
         drop(_reap);
         let _ = child.wait();
+    }
+
+    #[test]
+    fn a_thread_vanishing_mid_read_reports_a_changed_tree() {
+        use std::io::{Error, ErrorKind};
+        let ok = |text: &str| Ok(text.to_string());
+        assert_eq!(
+            parse_children(1, [ok("4 5 "), ok(""), ok("6")]).unwrap(),
+            Some(vec![4, 5, 6])
+        );
+        // Its children moved to a sibling thread that may already be read.
+        assert_eq!(
+            parse_children(1, [ok("4"), Err(Error::from(ErrorKind::NotFound))]).unwrap(),
+            None
+        );
+        assert_eq!(
+            parse_children(1, [Err(Error::from_raw_os_error(libc::ESRCH))]).unwrap(),
+            None
+        );
+        assert!(parse_children(1, [Err(Error::from(ErrorKind::PermissionDenied))]).is_err());
+        assert!(parse_children(1, [ok("4 x")]).is_err());
     }
 
     #[test]
