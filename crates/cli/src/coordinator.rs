@@ -625,7 +625,12 @@ fn envelope(request: &Request, result: serde_json::Value) -> Result<Response, St
     if encoded_len(&value) > MAX_RESPONSE_BYTES {
         return Err("Response exceeds 1 MiB".into());
     }
-    serde_json::from_value(value).map_err(|e| format!("malformed controller result: {e}"))
+    let response: Response =
+        serde_json::from_value(value).map_err(|e| format!("malformed controller result: {e}"))?;
+    // The CLI validates every slot response again; checking here retires an
+    // untrusted controller before its result leaves the slot.
+    response.validate(request)?;
+    Ok(response)
 }
 
 pub struct Coordinator {
@@ -972,6 +977,15 @@ mod tests {
         assert_eq!(response.errors.len(), 8);
         assert!(response.errors.iter().all(|e| e.chars().count() == 2048));
         assert!(envelope(&request(), serde_json::json!([])).is_err());
+        // Semantic validation: a pass without passing tests is not evidence.
+        let empty_pass = serde_json::json!({
+            "outcome": "passed", "tests": {"passed": 0, "failed": 0, "skipped": 0}, "errors": [],
+        });
+        assert!(
+            envelope(&request(), empty_pass)
+                .unwrap_err()
+                .contains("passing response")
+        );
         assert!(
             envelope(
                 &request(),
