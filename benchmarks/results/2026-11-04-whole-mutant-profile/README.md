@@ -2,7 +2,13 @@
 
 Native Ubuntu 24.04 x86_64 [run 41839060730](https://github.com/RuiCostafrg/oximut/actions/runs/41839060730)
 captures PR #38's merge revision `69481738decebabd34a854cb73bf6ddc6d25b2bb`.
-The source archive, full projects, binary and logs remain in that run's artifact.
+The source archive, full project copies, binary and logs are available only in
+that run's workflow artifact, with the workflow's configured **14-day retention**
+window; they may be deleted earlier and are not durably archived in this repo.
+After expiry, committed hashes identify those original files but cannot recover
+them or independently revalidate the full build and workload capture by themselves.
+The committed profile, timeline and extracted resources remain available for
+the narrower controller-capture revalidation described below.
 This capsule retains unmodified controller timeline, CPU profile, original
 diagnostic summary and build metadata; `SHA256SUMS` covers those files and the
 extracted resource evidence. The latter records the original measurements hash
@@ -55,7 +61,7 @@ The first mutant costs 266.273 ms. Inspector startup precedes the fork by about
 processing and GC also appear. This first mutant additionally crosses the
 coverage-to-resident graph invalidation boundary. It is not a typical warmed
 job. The second mutant also has higher controller CPU; later jobs generally
-spend only about 10–36 ms of controller self CPU. Worker CPU remains unprofiled.
+spend only about 10–36 ms of CPU in the controller process. Worker CPU remains unprofiled.
 
 At the first mutant boundaries, controller RSS changes from 207585280 to
 226009088 bytes and used heap from 40943176 to 45098136 bytes, including profiler

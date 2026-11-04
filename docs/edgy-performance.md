@@ -13,9 +13,11 @@ Downloaded both complete artifacts into new empty directories and read their
 summaries, raw rows, build-integrity gates and phase evidence. The extracted
 [evidence capsule](../benchmarks/results/2026-11-04-edgy-baseline/evidence.json)
 retains all measurement rows' resource fields, phases, ratios, gates and SHA-256
-hashes of the original summary/measurement files. Full artifacts remain at
+hashes of the original summary/measurement files. Full artifacts are available at
 [run 41340467516](https://github.com/RuiCostafrg/oximut/actions/runs/41340467516)
 and [run 41797866089](https://github.com/RuiCostafrg/oximut/actions/runs/41797866089).
+Their workflow retention is 14 days; the committed extract persists after expiry,
+but its hashes cannot reconstruct the omitted projects, binary and logs.
 Each campaign has one warmup and five measured pairs on native Ubuntu x86_64.
 
 Raw medians (decimal MB; CPU total and user/sys are independently computed medians):
