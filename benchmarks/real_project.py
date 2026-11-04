@@ -122,6 +122,7 @@ def command(tool, args, project, report, manifest):
         result.extend(['--source', filename])
     if not args.diagnostic_unrestricted:
         result.extend(['--mutators', ','.join(manifest['families'])])
+    result.extend(getattr(args, 'oximut_arg', []))
     return result
 
 
@@ -135,6 +136,7 @@ def execution_inputs(args):
                                           for part in path.relative_to(args.adapter_source_dir).parts):
                 sources[path.relative_to(args.adapter_source_dir).as_posix()] = measurement.file_hash(path)
     return {
+        'oximut_args': getattr(args, 'oximut_arg', []),
         'binary': str(args.binary),
         'binary_sha256': measurement.file_hash(args.binary) if args.binary.is_file() else None,
         'adapter_override': str(args.adapter) if args.adapter is not None else None,
@@ -177,6 +179,7 @@ def compare_rows(rows):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--oximut-arg', action='append', default=[])
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--binary', type=Path, default=ROOT / 'target/release/oximut')
     parser.add_argument('--adapter', type=Path,

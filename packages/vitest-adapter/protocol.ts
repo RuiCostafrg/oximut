@@ -26,6 +26,7 @@ export interface Request {
   config: string;
   deadlineMs: number;
   mutation: null | { id: string; file: string; code: string; map: Record<string, unknown> };
+  pool?: 'threads';
   collectCoverage?: NonNullable<Request['mutation']>[];
   /** Shared switched modules served for every listed file throughout the job. */
   resident?: NonNullable<Request['mutation']>[];

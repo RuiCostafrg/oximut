@@ -86,6 +86,8 @@ pub struct Request {
     pub root: String,
     pub config: String,
     pub deadline_ms: u64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pool: Option<String>,
     pub mutation: Option<Mutation>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub collect_coverage: Option<Vec<Mutation>>,
@@ -424,6 +426,27 @@ mod tests {
     use super::*;
 
     #[test]
+    fn request_pool_is_optional_and_round_trips() {
+        let value = serde_json::json!({"protocol": 1, "runId": "r", "jobId": "j", "generation": 0,
+            "kind": "baseline", "root": "/p", "config": "/p/c", "deadlineMs": 10, "mutation": null});
+        let mut request: Request = serde_json::from_value(value).unwrap();
+        assert!(request.pool.is_none());
+        assert!(
+            serde_json::to_value(&request)
+                .unwrap()
+                .get("pool")
+                .is_none()
+        );
+        request.pool = Some("threads".into());
+        let serialized = serde_json::to_value(&request).unwrap();
+        assert_eq!(serialized["pool"], "threads");
+        assert_eq!(
+            serde_json::from_value::<Request>(serialized).unwrap().pool,
+            request.pool
+        );
+    }
+
+    #[test]
     fn infrastructure_is_never_a_kill_and_empty_pass_is_rejected() {
         let request = Request {
             protocol: 1,
@@ -434,6 +457,7 @@ mod tests {
             root: "/".into(),
             config: "/c".into(),
             deadline_ms: 10,
+            pool: None,
             mutation: None,
             collect_coverage: None,
             resident: None,

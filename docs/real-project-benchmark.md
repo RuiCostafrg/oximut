@@ -298,3 +298,12 @@ The before/after wrapper bounds each subcampaign by the number of tool commands
 times `--timeout`, plus 300 seconds for preparation and validation. A timeout
 retains the attempt error and raw subcampaign directory, stops further
 measurements, and writes a failed global summary with no comparative ratios.
+
+The workflow dispatch input `after_oximut_args` accepts space-separated extra
+Oximut arguments for the after candidate only, for example
+`--isolation fresh-thread`. The default is empty; pull-request campaigns keep
+the existing command. Words are passed literally without shell evaluation;
+quoted values containing spaces are not supported by this input.
+The campaign records the arguments in metadata, summary, and execution inputs.
+For local campaigns use repeatable `--after-oximut-arg=ARG`; `real_project.py`
+accepts repeatable `--oximut-arg=ARG`. Use `=` when ARG begins with `--`.

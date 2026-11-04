@@ -10,6 +10,7 @@ const selectionSupport = new SelectionSupport();
 let vitest: Awaited<ReturnType<typeof createVitest>> | undefined;
 let currentRun: Parameters<NonNullable<Reporter['onTestRunEnd']>> | undefined;
 let busy = false;
+let pool: 'forks' | 'threads' = 'forks';
 let mutation: Request['mutation'] = null;
 let probes: Request['collectCoverage'];
 let resident: Request['resident'];
@@ -49,6 +50,7 @@ async function command(name: string, args: Request): Promise<unknown> {
     if (version !== '4.1.12') throw new Error(`Unsupported Vitest ${version}; expected 4.1.12`);
     // The native coordinator sends requests directly; validate them here.
     validateRequest(args);
+    pool = args.pool === 'threads' ? 'threads' : 'forks';
     mutation = args.mutation;
     probes = args.collectCoverage;
     resident = args.resident;
@@ -61,7 +63,7 @@ async function command(name: string, args: Request): Promise<unknown> {
         root: args.root,
         config: args.config,
         watch: false,
-        pool: 'forks',
+        pool: args.pool === 'threads' ? 'threads' : 'forks',
         maxWorkers: 1,
         maxConcurrency: 1,
         fileParallelism: false,
@@ -99,7 +101,7 @@ async function command(name: string, args: Request): Promise<unknown> {
       vitest.projects.length !== 1 ||
       vitest.projects.some(
         (project) =>
-          project.config.pool !== 'forks' ||
+          project.config.pool !== pool ||
           project.config.isolate !== true ||
           project.config.maxWorkers !== 1 ||
           project.config.maxConcurrency !== 1 ||
@@ -108,18 +110,18 @@ async function command(name: string, args: Request): Promise<unknown> {
       )
     )
       throw new Error(
-        'Unsupported resource configuration: one Node project, one fork, sequential files and tests, and isolation are required',
+        'Unsupported resource configuration: one Node project, one requested worker, sequential files and tests, and isolation are required',
       );
     if (
       vitest.projects.some(
         (project) =>
-          project.config.pool !== 'forks' ||
+          project.config.pool !== pool ||
           project.config.isolate !== true ||
           project.config.maxWorkers !== 1,
       )
     )
       throw new Error(
-        'Unsupported project isolation configuration: forks, isolate and one worker are required',
+        'Unsupported project isolation configuration: requested pool, isolate and one worker are required',
       );
     const multipleProjects = vitest.projects.length !== 1;
     const unsupported = vitest.projects.some(
@@ -148,6 +150,8 @@ async function command(name: string, args: Request): Promise<unknown> {
   if (name !== 'run') throw new Error(`Unknown command: ${name}`);
   const job = (args as unknown as { request: Request }).request;
   validateRequest(job);
+  if ((job.pool === 'threads' ? 'threads' : 'forks') !== pool)
+    throw new Error('Pool cannot change after initialization');
   const next = job.mutation;
   const probesChanged = JSON.stringify(probes) !== JSON.stringify(job.collectCoverage);
   if (probesChanged) {

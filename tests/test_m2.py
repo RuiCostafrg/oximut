@@ -9,20 +9,30 @@ from test_m1 import BINARY, REPO, sources
 
 
 class PersistentEquivalence(unittest.TestCase):
-    def run_fixture(self, fixture, source, mode, seed):
+    def run_fixture(self, fixture, source, mode, seed, extra=()):
         root = REPO / 'fixtures' / fixture
         with tempfile.TemporaryDirectory(prefix='oximut-m2-acceptance-') as temporary:
             report = pathlib.Path(temporary) / 'report.json'
             result = subprocess.run([
                 str(BINARY), '--root', str(root), '--config', str(root / 'vitest.config.ts'),
                 '--source', str(root / 'src' / source), '--execution', mode,
-                '--order-seed', str(seed), '--report', str(report),
+                '--order-seed', str(seed), '--report', str(report), *extra,
             ], cwd=REPO, text=True, capture_output=True, timeout=180)
             self.assertIn(result.returncode, (0, 1), result.stdout + result.stderr)
             payload = json.loads(report.read_text())
             self.assertEqual(payload['baseline']['outcome'], 'passed')
             self.assertTrue(payload['summary']['complete'], payload)
             return payload
+
+    def test_fresh_thread_matches_process_with_selection(self):
+        process = self.run_fixture('m1', 'subject.ts', 'persistent', 17,
+                                   ('--test-selection',))
+        thread = self.run_fixture('m1', 'subject.ts', 'persistent', 17,
+                                  ('--test-selection', '--isolation', 'fresh-thread'))
+        self.assertEqual({m['id']: m['outcome'] for m in thread['mutants']},
+                         {m['id']: m['outcome'] for m in process['mutants']})
+        self.assertEqual(thread['baseline']['tests'], process['baseline']['tests'])
+        self.assertIn('isolation=fresh-test-threads', ' '.join(thread['diagnostics']))
 
     def test_randomized_orders_match_fresh_reference_without_source_edits(self):
         before = sources()

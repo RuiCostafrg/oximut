@@ -376,3 +376,60 @@ test('all dependencies', async () => {
     }
   },
 );
+
+test('M2 fresh-thread switching, coverage and worker isolation', { timeout: 120000 }, async (t) => {
+  const s = await session(t);
+  await writeFile(
+    join(s.root, 'sample.test.ts'),
+    `import { test, expect } from 'vitest';
+import { appendFileSync } from 'node:fs';
+import { threadId } from 'node:worker_threads';
+import * as subject from './source';
+let state = 0;
+appendFileSync(${JSON.stringify(join(s.root, 'session/threads'))}, JSON.stringify({pid: process.pid, threadId, state: state++})+'\\n');
+test('enabled', () => { subject.hit?.(); expect(state).toBe(1); expect(subject.enabled).toBe(true); });`,
+  );
+  const run = (id, code = switched, extra = {}) =>
+    s.run(id, code, 30000, 'source.ts', undefined, { pool: 'threads', ...extra });
+  assert.equal((await run('', null)).outcome, 'passed');
+  const probe = {
+    id: 'probe',
+    file: join(s.root, 'source.ts'),
+    code: `export const enabled = true; export function hit() { globalThis.__oximut_m3_hit__?.("${'a'.repeat(64)}"); }`,
+    map: { version: 3, sources: ['source.ts'], mappings: 'AAAA', names: [] },
+  };
+  const coverage = await run('', null, { collectCoverage: [probe] });
+  assert.equal(coverage.outcome, 'passed');
+  assert.equal(coverage.coverage.complete, true);
+  assert.equal(coverage.coverage.hits[0].mutantId, 'a'.repeat(64));
+  assert.equal(coverage.coverage.hits[0].tests.length, 1);
+  assert.equal(coverage.coverage.hits[0].outsideTest, false);
+  const selection = {
+    mode: 'files',
+    files: [join(s.root, 'sample.test.ts')],
+    selectedTests: 1,
+    totalTests: 1,
+    reasons: [],
+  };
+  assert.equal((await run('disabled', switched, { selection })).outcome, 'passed');
+  assert.equal((await run('kill', switched, { selection })).outcome, 'failed');
+  assert.equal((await run('disabled')).outcome, 'passed');
+  const observations = (await readFile(join(s.root, 'session/threads'), 'utf8'))
+    .trim()
+    .split('\n')
+    .map(JSON.parse);
+  const events = (await readFile(join(s.root, 'session/events.jsonl'), 'utf8'))
+    .trim()
+    .split('\n')
+    .map(JSON.parse);
+  assert.equal(observations.length, 5);
+  assert.equal(events.length, 1);
+  assert.equal(new Set(events.map((e) => e.controllerPid)).size, 1);
+  assert.ok(
+    observations.every((o) => o.pid === events[0].controllerPid && o.threadId > 0 && o.state === 0),
+  );
+  assert.equal(new Set(observations.map((o) => o.threadId)).size, observations.length);
+  const changed = await run('disabled', switched, { pool: undefined });
+  assert.equal(changed.outcome, 'infrastructure-error');
+  assert.match(changed.errors.join(' '), /Pool cannot change/);
+});

@@ -155,6 +155,17 @@ class AdapterProvenanceTests(unittest.TestCase):
                                     {'mutate': ['src/a.ts'], 'families': ['arithmetic']})
         self.assertEqual(command[command.index('--adapter') + 1], str(args.adapter))
 
+    def test_extra_arguments_append_and_are_recorded(self):
+        args = SimpleNamespace(binary=Path('/candidate'), adapter=None,
+                               adapter_source_dir=None, diagnostic_unrestricted=False)
+        manifest = {'mutate': ['src/a.ts'], 'families': ['arithmetic']}
+        original = benchmark.command('oximut', args, Path('/p'), Path('/r'), manifest)
+        self.assertEqual(benchmark.execution_inputs(args)['oximut_args'], [])
+        args.oximut_arg = ['--isolation', 'fresh-thread']
+        self.assertEqual(benchmark.command('oximut', args, Path('/p'), Path('/r'), manifest),
+                         original + args.oximut_arg)
+        self.assertEqual(benchmark.execution_inputs(args)['oximut_args'], args.oximut_arg)
+
     def test_full_adapter_graph_and_binary_changes_are_visible(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
