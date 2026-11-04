@@ -962,6 +962,7 @@ fn fingerprint_inputs(
         &serde_json::to_vec(&(
             options.execution == Execution::Persistent,
             options.test_selection,
+            options.isolation,
             options.timeout_ms,
             options.workers,
             options.memory_budget_mib,
@@ -1034,6 +1035,7 @@ mod tests {
             list: false,
             baseline_only: false,
             execution: Execution::Fresh,
+            isolation: crate::Isolation::default(),
             order_seed: None,
             test_selection: false,
             cache: true,
@@ -1286,6 +1288,14 @@ mod tests {
             key,
             fingerprint_with_runtime(&options, "tool-and-operators-a", &runtime).unwrap()
         );
+        let persistent_key =
+            fingerprint_with_runtime(&options, "tool-and-operators-a", &runtime).unwrap();
+        options.isolation = crate::Isolation::FreshThread;
+        assert_ne!(
+            persistent_key,
+            fingerprint_with_runtime(&options, "tool-and-operators-a", &runtime).unwrap()
+        );
+        options.isolation = crate::Isolation::FreshProcess;
         options.execution = Execution::Fresh;
         options.test_selection = true;
         assert_ne!(

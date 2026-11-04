@@ -123,6 +123,7 @@ export function validateRequest(value) {
     )
       throw new Error('Invalid test selection');
   }
+  if (value.pool !== undefined && value.pool !== 'threads') throw new Error('Invalid pool');
 }
 
 /**

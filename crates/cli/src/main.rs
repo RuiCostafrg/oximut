@@ -19,7 +19,7 @@ use std::{
     time::{Duration, Instant, SystemTime, UNIX_EPOCH},
 };
 
-const HELP: &str = "Usage: oximut [--root DIR] [--config FILE] --source FILE [--source FILE ...]\n  --version           Print the Cargo package version\n  --report FILE       JSON report (- for stdout)\n  --timeout-ms N      Per-job deadline, default 30000 ms\n  --workers N         Maximum simultaneous mutation jobs (default 1; bounded by CPU limits)\n  --memory-budget-mib N Aggregate sampled RSS budget in MiB (1 MiB = 1048576 bytes); default host/container limit\n  --memory-reserve-mib N Reserved admission headroom in MiB (default 64)\n  --execution MODE   fresh (default) or persistent controller with fresh test forks\n  --test-selection    Collect baseline hits and conservatively select hit test files\n  --mutators FAMILIES Repeatable comma-separated union: arithmetic,boolean-literal,comparison-boundary (default: all)\n  --order-seed N     Deterministically shuffle mutant execution order\n  --adapter FILE      Node adapter entry point override (an m2-runner.mjs beside m2-worker.ts runs natively)\n  --cache             Cache instrumentation; outcomes require --cache-inputs-complete\n  --cache-policy MODE  auto (default) learns whether outcome caching saves work; always validates/reuses eligible outcomes\n  --cache-inputs-complete Assert all nondeterministic/external inputs are declared\n  --cache-input FILE  Additional input file/directory (repeatable)\n  --cache-env NAME    Additional environment input (repeatable; values stay private)\n  --no-cache, --force Bypass all cache reads and writes\n  --list              Generate mutants as JSON without executing tests\n  --baseline-only     Run original sources without mutants\nExit: 0 complete/no survivors; 1 survivors/no coverage; 2 incomplete/error.\nScore: killed/(killed+survived+no-coverage)*100; empty denominator => null.\nInvalid/timeout/infrastructure-error/resource-exhausted/skipped are excluded and make a run incomplete.";
+const HELP: &str = "Usage: oximut [--root DIR] [--config FILE] --source FILE [--source FILE ...]\n  --version           Print the Cargo package version\n  --report FILE       JSON report (- for stdout)\n  --timeout-ms N      Per-job deadline, default 30000 ms\n  --workers N         Maximum simultaneous mutation jobs (default 1; bounded by CPU limits)\n  --memory-budget-mib N Aggregate sampled RSS budget in MiB (1 MiB = 1048576 bytes); default host/container limit\n  --memory-reserve-mib N Reserved admission headroom in MiB (default 64)\n  --execution MODE   fresh (default) or persistent controller\n  --isolation MODE   fresh-process (default) or fresh-thread (requires persistent)\n  --test-selection    Collect baseline hits and conservatively select hit test files\n  --mutators FAMILIES Repeatable comma-separated union: arithmetic,boolean-literal,comparison-boundary (default: all)\n  --order-seed N     Deterministically shuffle mutant execution order\n  --adapter FILE      Node adapter entry point override (an m2-runner.mjs beside m2-worker.ts runs natively)\n  --cache             Cache instrumentation; outcomes require --cache-inputs-complete\n  --cache-policy MODE  auto (default) learns whether outcome caching saves work; always validates/reuses eligible outcomes\n  --cache-inputs-complete Assert all nondeterministic/external inputs are declared\n  --cache-input FILE  Additional input file/directory (repeatable)\n  --cache-env NAME    Additional environment input (repeatable; values stay private)\n  --no-cache, --force Bypass all cache reads and writes\n  --list              Generate mutants as JSON without executing tests\n  --baseline-only     Run original sources without mutants\nExit: 0 complete/no survivors; 1 survivors/no coverage; 2 incomplete/error.\nScore: killed/(killed+survived+no-coverage)*100; empty denominator => null.\nInvalid/timeout/infrastructure-error/resource-exhausted/skipped are excluded and make a run incomplete.";
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 enum Execution {
@@ -35,6 +35,14 @@ enum CachePolicy {
     Always,
 }
 
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "kebab-case")]
+enum Isolation {
+    #[default]
+    FreshProcess,
+    FreshThread,
+}
+
 #[derive(serde::Serialize, serde::Deserialize)]
 struct Options {
     root: PathBuf,
@@ -46,6 +54,8 @@ struct Options {
     list: bool,
     baseline_only: bool,
     execution: Execution,
+    #[serde(default)]
+    isolation: Isolation,
     order_seed: Option<u64>,
     test_selection: bool,
     cache: bool,
@@ -63,7 +73,10 @@ struct Options {
 }
 
 fn options() -> Result<Option<Options>, String> {
-    let mut args = env::args().skip(1);
+    parse_options(env::args().skip(1))
+}
+
+fn parse_options(mut args: impl Iterator<Item = String>) -> Result<Option<Options>, String> {
     let mut root = env::current_dir().map_err(|e| e.to_string())?;
     let mut config = PathBuf::from("vitest.config.ts");
     let mut sources = vec![];
@@ -73,6 +86,7 @@ fn options() -> Result<Option<Options>, String> {
         Path::new(env!("CARGO_MANIFEST_DIR")).join("../../packages/vitest-adapter/m1-runner.mjs");
     let mut adapter_override = false;
     let mut execution = Execution::Fresh;
+    let mut isolation = Isolation::default();
     let mut order_seed = None;
     let mut list = false;
     let mut baseline_only = false;
@@ -126,6 +140,7 @@ fn options() -> Result<Option<Options>, String> {
             | "--timeout-ms"
             | "--adapter"
             | "--execution"
+            | "--isolation"
             | "--order-seed"
             | "--cache-policy"
             | "--cache-input"
@@ -176,6 +191,17 @@ fn options() -> Result<Option<Options>, String> {
                         adapter = value.into();
                         adapter_override = true;
                     }
+                    "--isolation" => {
+                        isolation = match value.as_str() {
+                            "fresh-process" => Isolation::FreshProcess,
+                            "fresh-thread" => Isolation::FreshThread,
+                            _ => {
+                                return Err(
+                                    "--isolation must be fresh-process or fresh-thread".into()
+                                );
+                            }
+                        }
+                    }
                     "--execution" => {
                         execution = match value.as_str() {
                             "fresh" => Execution::Fresh,
@@ -199,6 +225,9 @@ fn options() -> Result<Option<Options>, String> {
             }
             _ => return Err(format!("unknown option {arg}\n{HELP}")),
         }
+    }
+    if isolation == Isolation::FreshThread && execution != Execution::Persistent {
+        return Err("--isolation fresh-thread requires --execution persistent".into());
     }
     if execution == Execution::Persistent && !adapter_override {
         adapter = Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -254,6 +283,15 @@ fn options() -> Result<Option<Options>, String> {
             .canonicalize()
             .map_err(|e| format!("adapter: {e}"))?;
     }
+    // Use the same resolved adapter as backend selection, including symlinks.
+    if isolation == Isolation::FreshThread {
+        let canonical_adapter = adapter
+            .canonicalize()
+            .map_err(|e| format!("adapter: {e}"))?;
+        if coordinator::native_worker(&canonical_adapter).is_none() {
+            return Err("--isolation fresh-thread requires the reference persistent adapter (m2-runner.mjs beside m2-worker.ts)".into());
+        }
+    }
     if let Some(path) = &report
         && path != Path::new("-")
         && let Ok(target) = path.canonicalize()
@@ -280,6 +318,7 @@ fn options() -> Result<Option<Options>, String> {
         list,
         baseline_only,
         execution,
+        isolation,
         order_seed,
         test_selection,
         cache,
@@ -918,7 +957,7 @@ fn run_attempt(options: &Options, previous: Option<RetryEvidence>) -> Result<Att
     }
     diagnostics.push(match options.execution {
         Execution::Fresh => "execution=fresh; isolation=fresh-controller-and-test-process".into(),
-        Execution::Persistent => "execution=persistent; isolation=fresh-test-forks; controller reuse only; baseline=original-and-instrumented".into(),
+        Execution::Persistent => format!("execution=persistent; isolation={}; controller reuse only; baseline=original-and-instrumented", if options.isolation == Isolation::FreshThread { "fresh-test-threads" } else { "fresh-test-forks" }),
     });
     diagnostics.push(if options.mutators.is_empty() {
         "mutator families=all".into()
@@ -966,6 +1005,9 @@ fn run_attempt(options: &Options, previous: Option<RetryEvidence>) -> Result<Att
         root: options.root.to_string_lossy().into_owned(),
         config: options.config.to_string_lossy().into_owned(),
         deadline_ms: options.timeout_ms,
+        pool: (options.execution == Execution::Persistent
+            && options.isolation == Isolation::FreshThread)
+            .then(|| "threads".into()),
         mutation: None,
         collect_coverage: None,
         resident: None,
@@ -1571,6 +1613,59 @@ mod tests {
     use super::*;
 
     #[test]
+    fn isolation_options_and_legacy_serialization() {
+        let parse = |args: &[&str]| {
+            parse_options(
+                [
+                    "--root",
+                    concat!(env!("CARGO_MANIFEST_DIR"), "/../../fixtures/m1"),
+                ]
+                .into_iter()
+                .chain(args.iter().copied())
+                .map(str::to_string),
+            )
+        };
+        let default = parse(&[
+            "--source",
+            concat!(
+                env!("CARGO_MANIFEST_DIR"),
+                "/../../fixtures/m1/src/subject.ts"
+            ),
+            "--list",
+        ])
+        .unwrap()
+        .unwrap();
+        assert_eq!(default.isolation, Isolation::FreshProcess);
+        let thread = parse(&[
+            "--source",
+            concat!(
+                env!("CARGO_MANIFEST_DIR"),
+                "/../../fixtures/m1/src/subject.ts"
+            ),
+            "--execution",
+            "persistent",
+            "--isolation",
+            "fresh-thread",
+        ])
+        .unwrap()
+        .unwrap();
+        assert_eq!(thread.isolation, Isolation::FreshThread);
+        assert!(
+            parse(&["--isolation", "fresh-thread"])
+                .err()
+                .unwrap()
+                .contains("requires --execution persistent")
+        );
+        assert!(parse(&["--isolation", "other"]).is_err());
+        let mut legacy = serde_json::to_value(default).unwrap();
+        legacy.as_object_mut().unwrap().remove("isolation");
+        assert_eq!(
+            serde_json::from_value::<Options>(legacy).unwrap().isolation,
+            Isolation::FreshProcess
+        );
+    }
+
+    #[test]
     fn production_budget_maps_to_the_adapter_limit() {
         assert_eq!(REQUEST_LIMIT - REQUEST_HEADROOM, 7 * 1024 * 1024);
         assert_eq!(
@@ -1699,6 +1794,7 @@ mod tests {
             root: "/".into(),
             config: "/config".into(),
             deadline_ms: 100,
+            pool: None,
             mutation: None,
             collect_coverage: None,
             resident: None,

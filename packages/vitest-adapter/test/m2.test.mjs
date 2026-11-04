@@ -376,3 +376,95 @@ test('all dependencies', async () => {
     }
   },
 );
+
+test('M2 fresh-thread switching, coverage and worker isolation', { timeout: 120000 }, async (t) => {
+  const s = await session(t);
+  await writeFile(
+    join(s.root, 'sample.test.ts'),
+    `import { test, expect } from 'vitest';
+import { appendFileSync } from 'node:fs';
+import { threadId } from 'node:worker_threads';
+import * as subject from './source';
+let state = 0;
+appendFileSync(${JSON.stringify(join(s.root, 'session/threads'))}, JSON.stringify({pid: process.pid, threadId, state: state++})+'\\n');
+test('enabled', () => { subject.hit?.(); expect(state).toBe(1); expect(subject.enabled).toBe(true); });`,
+  );
+  const run = (id, code = switched, extra = {}) =>
+    s.run(id, code, 30000, 'source.ts', undefined, { pool: 'threads', ...extra });
+  assert.equal((await run('', null)).outcome, 'passed');
+  const probe = {
+    id: 'probe',
+    file: join(s.root, 'source.ts'),
+    code: `export const enabled = true; export function hit() { globalThis.__oximut_m3_hit__?.("${'a'.repeat(64)}"); }`,
+    map: { version: 3, sources: ['source.ts'], mappings: 'AAAA', names: [] },
+  };
+  const coverage = await run('', null, { collectCoverage: [probe] });
+  assert.equal(coverage.outcome, 'passed');
+  assert.equal(coverage.coverage.complete, true);
+  assert.equal(coverage.coverage.hits[0].mutantId, 'a'.repeat(64));
+  assert.equal(coverage.coverage.hits[0].tests.length, 1);
+  assert.equal(coverage.coverage.hits[0].outsideTest, false);
+  const selection = {
+    mode: 'files',
+    files: [join(s.root, 'sample.test.ts')],
+    selectedTests: 1,
+    totalTests: 1,
+    reasons: [],
+  };
+  assert.equal((await run('disabled', switched, { selection })).outcome, 'passed');
+  assert.equal((await run('kill', switched, { selection })).outcome, 'failed');
+  assert.equal((await run('disabled')).outcome, 'passed');
+  const observations = (await readFile(join(s.root, 'session/threads'), 'utf8'))
+    .trim()
+    .split('\n')
+    .map(JSON.parse);
+  const events = (await readFile(join(s.root, 'session/events.jsonl'), 'utf8'))
+    .trim()
+    .split('\n')
+    .map(JSON.parse);
+  assert.equal(observations.length, 5);
+  assert.equal(events.length, 1);
+  assert.equal(new Set(events.map((e) => e.controllerPid)).size, 1);
+  assert.ok(
+    observations.every((o) => o.pid === events[0].controllerPid && o.threadId > 0 && o.state === 0),
+  );
+  assert.equal(new Set(observations.map((o) => o.threadId)).size, observations.length);
+  const changed = await run('disabled', switched, { pool: undefined });
+  assert.equal(changed.outcome, 'infrastructure-error');
+  assert.match(changed.errors.join(' '), /Pool cannot change/);
+});
+
+// Observe graceful worker shutdown, including a deliberately slow stop listener.
+// Each job gets its own file so a later worker cannot hide an earlier leak.
+test('M2 fresh-thread reply waits for test-thread termination', { timeout: 120000 }, async (t) => {
+  const s = await session(t);
+  for (let job = 0; job < 3; job++) {
+    const marker = join(s.root, `session/thread-${job}`);
+    await writeFile(
+      join(s.root, 'sample.test.ts'),
+      `import { test, expect } from 'vitest';
+import { appendFileSync } from 'node:fs';
+import { parentPort, threadId } from 'node:worker_threads';
+const tick = () => appendFileSync(${JSON.stringify(marker)}, threadId + '\\n');
+tick();
+setInterval(tick, 5).unref();
+// Vitest 4.1.12 sends this message before terminating the thread. Delay its
+// handling so the run/termination gap is observable even on a slow host.
+parentPort.on('message', (message) => {
+  if (!message?.__vitest_worker_request__ || message.type !== 'stop') return;
+  const until = Date.now() + 500;
+  while (Date.now() < until) {
+    tick();
+    Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 5);
+  }
+});
+test('alive', async () => { await new Promise(r => setTimeout(r, 30)); expect(threadId).toBeGreaterThan(0); });`,
+    );
+    const response = await s.run('', null, 30000, 'source.ts', undefined, { pool: 'threads' });
+    assert.equal(response.outcome, 'passed', JSON.stringify(response));
+    const atReply = await readFile(marker, 'utf8');
+    assert.ok(atReply.trim().split('\n').length > 1, 'timer ran in the test thread');
+    await new Promise((resolve) => setTimeout(resolve, 200));
+    assert.equal(await readFile(marker, 'utf8'), atReply, 'thread wrote after its job reply');
+  }
+});
