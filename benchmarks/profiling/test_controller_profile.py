@@ -369,6 +369,7 @@ class ProfileStructureTests(unittest.TestCase):
             lambda p: p['nodes'][0].update(children=[2, 2]),
             lambda p: p['nodes'][0].update(children=[]),
             lambda p: p['nodes'][1].update(children=[1]),
+            lambda p: p['nodes'].reverse(),
             lambda p: p.update(endTime=0),
         ]
         for i, corrupt in enumerate(corruptions):
@@ -376,6 +377,18 @@ class ProfileStructureTests(unittest.TestCase):
                 broken = copy.deepcopy(profile)
                 corrupt(broken)
                 self.assertFalse(diagnostic.node_profile_finalized(broken))
+
+    def test_cumulative_sample_timing_stays_within_profile_window(self):
+        """Individually valid deltas cannot place samples after profiling ended."""
+        profile = self.profile()
+        profile.update(samples=[2, 2], timeDeltas=[10, 10])
+        self.assertTrue(diagnostic.node_profile_finalized(profile))
+        profile['timeDeltas'] = [10, 11]
+        self.assertFalse(diagnostic.node_profile_finalized(profile))
+        profile.update(samples=[2], timeDeltas=[21])
+        self.assertFalse(diagnostic.node_profile_finalized(profile))
+        profile.update(samples=[2, 2], timeDeltas=[1e308, 1e308])
+        self.assertFalse(diagnostic.node_profile_finalized(profile))
 
 
 if __name__ == '__main__':

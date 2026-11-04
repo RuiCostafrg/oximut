@@ -68,7 +68,7 @@ def node_profile_finalized(data):
         if (len(children) != len(set(children)) or any(child not in nodes for child in children)):
             return False
         roots = nodes.keys() - set(children)
-        if len(roots) != 1:
+        if len(roots) != 1 or data['nodes'][0]['id'] not in roots:
             return False
         visited, pending = set(), list(roots)
         while pending:
@@ -83,7 +83,8 @@ def node_profile_finalized(data):
                 and len(samples) == len(deltas)
                 and all(type(sample) is int and sample in nodes for sample in samples)
                 and all(type(delta) in (int, float) and math.isfinite(delta) and delta >= 0
-                        for delta in deltas))
+                        for delta in deltas)
+                and math.fsum(deltas) <= data['endTime'] - data['startTime'])
     except (OverflowError, TypeError, ValueError):
         return False
 
