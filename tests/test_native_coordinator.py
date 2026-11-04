@@ -26,6 +26,8 @@ process.on('message', (message) => {
     log({ event: 'initialize', job: args.jobId });
     if (mode === 'bad-init') return reply({ result: {} });
     return reply({ result: { controllerPid: process.pid,
+      pool: args.pool === 'threads' ? 'threads' : 'forks',
+      ...(mode === 'bad-pool' ? { pool: 'forks' } : {}),
       reuse: mode === 'fresh' ? 'fresh: test' : 'controller' } });
   }
   if (command === 'close') {
@@ -72,7 +74,7 @@ def alive(pid):
 
 
 class NativeCoordinator(unittest.TestCase):
-    def run_cli(self, mode, timeout_ms=5000):
+    def run_cli(self, mode, timeout_ms=5000, extra_args=()):
         with tempfile.TemporaryDirectory(prefix='oximut-native-') as directory:
             adapter = Path(directory) / 'm2-runner.mjs'
             adapter.write_text('throw new Error("the native coordinator must not run this");\n')
@@ -82,7 +84,7 @@ class NativeCoordinator(unittest.TestCase):
                 str(REPO / 'target/debug/oximut'), '--root', str(ROOT),
                 '--source', str(ROOT / 'src/subject.ts'), '--baseline-only',
                 '--execution', 'persistent', '--adapter', str(adapter), '--report', '-',
-                '--timeout-ms', str(timeout_ms), '--no-cache',
+                '--timeout-ms', str(timeout_ms), '--no-cache', *extra_args,
             ], env={**os.environ, 'OXIMUT_FAKE_MODE': mode, 'OXIMUT_FAKE_LOG': str(log)},
                 text=True, capture_output=True, timeout=120)
             events = [json.loads(line) for line in log.read_text().splitlines()]
@@ -114,6 +116,18 @@ class NativeCoordinator(unittest.TestCase):
         self.assertIn('string reuse', json.dumps(report['baseline']['errors']))
         self.assertFalse(any(e['event'] == 'run' for e in events))
         self.assertEqual(len(self.controllers(events)), 1)
+        self.assert_reaped(events)
+
+    def test_pool_mismatch_is_rejected_before_run_and_reaped(self):
+        result, report, events = self.run_cli('bad-pool', extra_args=('--isolation', 'fresh-thread'))
+        self.assertEqual(report['baseline']['outcome'], 'infrastructure-error', result.stderr)
+        self.assertIn('pool', json.dumps(report['baseline']['errors']))
+        self.assertFalse(any(e['event'] == 'run' for e in events))
+        self.assert_reaped(events)
+
+    def test_thread_pool_is_verified(self):
+        result, report, events = self.run_cli('normal', extra_args=('--isolation', 'fresh-thread'))
+        self.assertEqual(report['baseline']['outcome'], 'passed', result.stderr)
         self.assert_reaped(events)
 
     def test_hung_job_times_out_after_verified_cleanup(self):

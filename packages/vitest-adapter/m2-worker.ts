@@ -136,6 +136,7 @@ async function command(name: string, args: Request): Promise<unknown> {
     return {
       versions: { node: process.version, vitest: version },
       controllerPid: process.pid,
+      pool: vitest.projects[0].config.pool,
       reuse: unsupported
         ? `fresh: custom plugins, global setup, projects, or isolation configuration (${vitest.projects.flatMap((project) => project.vite.config.plugins.map((plugin) => plugin.name)).join(',')})`
         : 'controller',

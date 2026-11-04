@@ -848,19 +848,36 @@ impl Coordinator {
             self.controllers_started += 1;
             let failure = match controller.request("initialize", &args, deadline) {
                 Ok(Reply::Result(initialized)) => {
-                    match initialized.get("reuse").and_then(serde_json::Value::as_str) {
-                        Some(reuse) => {
-                            controller.reuse = if symlink {
-                                "fresh: symlink inputs require fresh evaluation".into()
-                            } else {
-                                reuse.into()
-                            };
-                            None
+                    let pool_ok = match request.pool.as_deref() {
+                        Some("threads") => {
+                            initialized.get("pool").and_then(serde_json::Value::as_str)
+                                == Some("threads")
                         }
-                        None => Some(infrastructure(
+                        _ => initialized
+                            .get("pool")
+                            .and_then(serde_json::Value::as_str)
+                            .is_none_or(|pool| pool == "forks"),
+                    };
+                    if !pool_ok {
+                        Some(infrastructure(
                             request,
-                            "controller initialize result must contain a string reuse",
-                        )),
+                            "controller initialize result pool does not match requested pool",
+                        ))
+                    } else {
+                        match initialized.get("reuse").and_then(serde_json::Value::as_str) {
+                            Some(reuse) => {
+                                controller.reuse = if symlink {
+                                    "fresh: symlink inputs require fresh evaluation".into()
+                                } else {
+                                    reuse.into()
+                                };
+                                None
+                            }
+                            None => Some(infrastructure(
+                                request,
+                                "controller initialize result must contain a string reuse",
+                            )),
+                        }
                     }
                 }
                 Ok(Reply::Error(error)) | Err(Wait::Failed(error)) => Some(infrastructure(

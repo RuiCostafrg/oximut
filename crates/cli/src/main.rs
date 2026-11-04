@@ -233,6 +233,9 @@ fn parse_options(mut args: impl Iterator<Item = String>) -> Result<Option<Option
         adapter = Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../packages/vitest-adapter/m2-runner.mjs");
     }
+    if isolation == Isolation::FreshThread && coordinator::native_worker(&adapter).is_none() {
+        return Err("--isolation fresh-thread requires the reference persistent adapter (m2-runner.mjs beside m2-worker.ts)".into());
+    }
     if !(1..=1024).contains(&workers) {
         return Err("--workers must be 1..1024".into());
     }

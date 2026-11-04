@@ -43,6 +43,7 @@ Vitest lifecycle APIs. Resolved settings outside required isolation/resource
 constraints, including non-Node environments, fail explicitly. The runner sets
 sequential-file execution at the root and validates resolved project pool,
 isolation, worker count, concurrency, environment, and single-project scope.
+Persistent execution defaults to fresh forks per test file. `--isolation fresh-thread` opts into fresh Vitest worker threads; see [m2.md](m2.md) for its semantics. The real-project benchmark measures the default unless its dispatch input passes extra arguments.
 Persistent mode falls back to a fresh controller for project features such as
 custom Vite plugins, global setup, or symlinked project inputs. It still uses
 fresh test forks. A controller fallback does not bypass M5
