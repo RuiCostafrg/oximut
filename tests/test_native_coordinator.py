@@ -24,6 +24,7 @@ process.on('message', (message) => {
   const reply = (body) => process.send({ protocol: 1, id, ...body });
   if (command === 'initialize') {
     log({ event: 'initialize', job: args.jobId });
+    if (mode === 'bad-init') return reply({ result: {} });
     return reply({ result: { controllerPid: process.pid,
       reuse: mode === 'fresh' ? 'fresh: test' : 'controller' } });
   }
@@ -105,6 +106,14 @@ class NativeCoordinator(unittest.TestCase):
         self.assertEqual([e['event'] for e in events][-1], 'close')
         self.assertIn('adapter observed reuse boundary: controller', report['diagnostics'])
         self.assertIn('native coordinator: 1 controllers for 2 jobs', report['diagnostics'])
+        self.assert_reaped(events)
+
+    def test_malformed_initialize_is_rejected_before_run_and_reaped(self):
+        result, report, events = self.run_cli('bad-init')
+        self.assertEqual(report['baseline']['outcome'], 'infrastructure-error', result.stderr)
+        self.assertIn('string reuse', json.dumps(report['baseline']['errors']))
+        self.assertFalse(any(e['event'] == 'run' for e in events))
+        self.assertEqual(len(self.controllers(events)), 1)
         self.assert_reaped(events)
 
     def test_hung_job_times_out_after_verified_cleanup(self):

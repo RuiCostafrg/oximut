@@ -99,9 +99,66 @@ fn signal_verified(pid: u32, start: u64) {
 /// Strict: an unreadable process table is a verification failure, never an
 /// empty (clean-looking) tree.
 fn owned() -> Result<BTreeMap<u32, u64>, String> {
-    processes::ProcessTable::read_with(processes::identity)
-        .map(|table| table.descendants(std::process::id()))
-        .map_err(|error| format!("owned-process verification unavailable: {error}"))
+    let discover = || {
+        let entries = fs::read_dir("/proc").map_err(|error| error.to_string())?;
+        let pids = entries.map(|entry| {
+            entry
+                .map(|entry| entry.file_name().to_string_lossy().parse::<u32>().ok())
+                .map_err(|error| error.to_string())
+        });
+        strict_owned(
+            pids,
+            |pid| fs::read_to_string(format!("/proc/{pid}/stat")),
+            std::process::id(),
+        )
+    };
+    discover().map_err(|error| format!("owned-process verification unavailable: {error}"))
+}
+
+/// Unlike accounting's best-effort discovery, verification must not lose a
+/// descendant because its identity could not be read. Permission-denied stats
+/// belong to foreign processes on hardened hosts; owned stats are readable.
+fn strict_owned(
+    pids: impl IntoIterator<Item = Result<Option<u32>, String>>,
+    mut read: impl FnMut(u32) -> std::io::Result<String>,
+    root: u32,
+) -> Result<BTreeMap<u32, u64>, String> {
+    let mut table = BTreeMap::new();
+    for pid in pids {
+        let Some(pid) = pid? else { continue };
+        let stat = match read(pid) {
+            Ok(stat) => stat,
+            Err(error)
+                if matches!(
+                    error.kind(),
+                    std::io::ErrorKind::NotFound | std::io::ErrorKind::PermissionDenied
+                ) || error.raw_os_error() == Some(libc::ESRCH) =>
+            {
+                continue;
+            }
+            Err(error) => {
+                return Err(format!(
+                    "process identity unavailable for PID {pid}: {error}"
+                ));
+            }
+        };
+        // Same field positions and final ')' handling as processes::identity.
+        let identity = || {
+            let mut fields = stat.rsplit_once(')')?.1.split_whitespace();
+            let parent = fields.nth(1)?.parse::<u32>().ok()?;
+            let start = fields.nth(17)?.parse::<u64>().ok()?;
+            Some((parent, start))
+        };
+        table.insert(
+            pid,
+            identity().ok_or_else(|| format!("invalid process identity for PID {pid}"))?,
+        );
+    }
+    // Reuse the shared pure projection only after every identity was verified.
+    processes::ProcessTable::collect(table.keys().map(|&pid| Ok(Some(pid))), |pid| {
+        Ok(table.get(&pid).copied())
+    })
+    .map(|table| table.descendants(root))
 }
 
 /// Cheap polling view of the owned tree for exit waits; never used to
@@ -791,15 +848,20 @@ impl Coordinator {
             self.controllers_started += 1;
             let failure = match controller.request("initialize", &args, deadline) {
                 Ok(Reply::Result(initialized)) => {
-                    controller.reuse = initialized
-                        .get("reuse")
-                        .and_then(serde_json::Value::as_str)
-                        .unwrap_or("fresh: controller did not report reuse")
-                        .into();
-                    if symlink {
-                        controller.reuse = "fresh: symlink inputs require fresh evaluation".into();
+                    match initialized.get("reuse").and_then(serde_json::Value::as_str) {
+                        Some(reuse) => {
+                            controller.reuse = if symlink {
+                                "fresh: symlink inputs require fresh evaluation".into()
+                            } else {
+                                reuse.into()
+                            };
+                            None
+                        }
+                        None => Some(infrastructure(
+                            request,
+                            "controller initialize result must contain a string reuse",
+                        )),
                     }
-                    None
                 }
                 Ok(Reply::Error(error)) | Err(Wait::Failed(error)) => Some(infrastructure(
                     request,
@@ -928,6 +990,78 @@ impl Drop for Coordinator {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn stat(parent: u32, start: u64) -> String {
+        // Include spaces and ')' in comm to exercise the final-delimiter rule.
+        let mut fields = vec!["0".to_string(); 20];
+        fields[0] = "S".into();
+        fields[1] = parent.to_string();
+        fields[19] = start.to_string();
+        format!("42 (name ) with spaces) {}", fields.join(" "))
+    }
+
+    #[test]
+    fn strict_scan_classifies_errors_and_projects_descendants() {
+        use std::io::{Error, ErrorKind};
+        let table = strict_owned(
+            [Ok(None), Ok(Some(1)), Ok(Some(2)), Ok(Some(3)), Ok(Some(4))],
+            |pid| match pid {
+                1 => Err(Error::from(ErrorKind::NotFound)),
+                2 => Err(Error::from(ErrorKind::PermissionDenied)),
+                3 => Err(Error::from_raw_os_error(libc::ESRCH)),
+                4 => Ok(stat(10, 40)),
+                _ => unreachable!(),
+            },
+            10,
+        )
+        .unwrap();
+        assert_eq!(table, BTreeMap::from([(4, 40)]));
+        for kind in [
+            ErrorKind::Interrupted,
+            ErrorKind::InvalidData,
+            ErrorKind::Other,
+        ] {
+            let error = strict_owned([Ok(Some(4))], |_| Err(Error::from(kind)), 10).unwrap_err();
+            assert!(error.contains("process identity unavailable for PID 4"));
+        }
+        for malformed in ["invalid".to_string(), stat(10, 40).replace("40", "bad")] {
+            assert!(
+                strict_owned([Ok(Some(4))], |_| Ok(malformed.clone()), 10)
+                    .unwrap_err()
+                    .contains("invalid process identity for PID 4")
+            );
+        }
+        assert_eq!(
+            strict_owned([Err("directory entry".into())], |_| unreachable!(), 10).unwrap_err(),
+            "directory entry"
+        );
+        let data = BTreeMap::from([
+            (10, (1, 100)),
+            (20, (10, 200)),
+            (15, (20, 300)),
+            (30, (10, 400)),
+            (40, (10, 500)),
+            (90, (1, 600)),
+            (91, (90, 700)),
+        ]);
+        let project = |root| {
+            strict_owned(
+                data.keys().map(|&pid| Ok(Some(pid))),
+                |pid| {
+                    let (parent, start) = data[&pid];
+                    Ok(stat(parent, start))
+                },
+                root,
+            )
+            .unwrap()
+        };
+        assert_eq!(
+            project(10),
+            BTreeMap::from([(15, 300), (20, 200), (30, 400), (40, 500)])
+        );
+        assert_eq!(project(20), BTreeMap::from([(15, 300)]));
+        assert!(project(15).is_empty());
+    }
 
     #[test]
     fn messages_split_on_lines_and_stay_bounded() {
