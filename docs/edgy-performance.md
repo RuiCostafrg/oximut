@@ -1,7 +1,7 @@
 # Performance workstream: measure the isolation boundary
 
-Status: historical diagnostics retained; native capture with baseline and run
-identities pending; optimization experiments pending. No
+Status: native diagnostics with qualified baseline, mutant and run identities
+pass; optimization experiments pending. No
 performance improvement or release claim.
 Starting point: main `d8e0c512eae792d522d3bf47bfa50ee3a9ce5cbc`.
 The native comparison workflow now pins main `74a4972` as
@@ -138,13 +138,23 @@ validation. Its ten captured mutant digests match the qualification report's
 unique executed mutants; baseline/command counts, event sequences, worker exits
 and profile samples validated. Validator and preload matched the native build
 at archival, but this trace lacks baseline job IDs and qualification run IDs and
-fails current reconciliation. A native recapture with those identities is pending.
+fails current reconciliation.
 The capsule retains every resource/phase metric, raw
 timeline/profile and qualification report, with runnable evidence checks.
 Median fork-to-started is 116.640 ms, run-to-collection 40.048 ms, and
 collection-to-completion 78.622 ms on this host. These are independent wall
 intervals, not a CPU partition or measured savings. This diagnostic has no paired
 ratios or bootstrap CIs and does not change the experiment ranking below.
+
+The [current capture with full job identities](../benchmarks/results/2026-11-04-controller-job-identities/README.md)
+(run 41930938613) passes exact workload qualification and current capture
+validation. It records the original and instrumented baseline job IDs and binds
+every execution job to the report run ID; mutant job IDs match their mutations.
+All 14 commands, ten exact mutants and 18 observed fork lifecycles reconcile.
+Validator and preload source hashes match the native build. Raw artifacts, every
+resource and phase metric, independent boundary intervals and runnable evidence
+checks are retained in the capsule. It remains a single overhead-bearing
+diagnostic, with no paired ratios, bootstrap CIs or product performance claim.
 
 These are optimistic ceilings and source-based hypotheses, not measured savings.
 Re-rank as experiments yield new evidence; run one change per PR against
