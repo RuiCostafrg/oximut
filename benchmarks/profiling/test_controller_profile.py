@@ -3,6 +3,7 @@ import copy
 import json
 import os
 from pathlib import Path
+import secrets
 import shutil
 import subprocess
 import sys
@@ -75,9 +76,10 @@ const { fork } = require('node:child_process');
 (async () => {
   const c = fork(process.env.FIXTURE_CONTROLLER, [], {stdio:['ignore','inherit','inherit','ipc']});
   const replies=[];
+  const mutantIds = JSON.parse(process.env.FIXTURE_MUTANT_IDS);
   for (const [id,command,kind] of [[1,'initialize'],[2,'run','baseline'],[3,'run','mutant'],[4,'run','mutant'],[5,'close']]) {
     const response = new Promise(resolve => c.once('message', resolve));
-    const job = {kind, mutation:kind === 'mutant' ? {id:(id === 3 ? 'a' : 'b').repeat(64)} : null};
+    const job = {kind, mutation:kind === 'mutant' ? {id:mutantIds[id === 3 ? 0 : 1]} : null};
     const args = command === 'run' ? {request:job} : command === 'initialize' ? {kind:'baseline',mutation:null} : {};
     c.send({protocol:1,id,command,args});
     replies.push(await response);
@@ -170,12 +172,15 @@ setImmediate(() => {
         return diagnostic.controller_capture_inventory(root, root / 'qualification')
 
     def fixture(self, root, enabled=True, entry='m2-worker.ts', directory=None,
-                duplicate='', defer_profile=False, fail_append=False):
+                duplicate='', defer_profile=False, fail_append=False,
+                request_ids=None, qualification_ids=None):
         """Run real fork IPC and verify replies, callbacks, return values and exit."""
+        request_ids = request_ids if request_ids is not None else [secrets.token_hex(32) for _ in range(2)]
+        qualification_ids = qualification_ids if qualification_ids is not None else list(request_ids)
         qualification = root / 'qualification' / '00-oximut'
         qualification.mkdir(parents=True)
         (qualification / 'report.json').write_text(json.dumps({
-            'mutants': [dict(id=identity * 64, provenance=dict(source='executed')) for identity in ('a', 'b')],
+            'mutants': [dict(id=identity, provenance=dict(source='executed')) for identity in qualification_ids],
             'resources': {'disabledValidationRuns': []}}))
         worker = root / entry
         worker.write_text(CONTROLLER)
@@ -185,6 +190,7 @@ setImmediate(() => {
         launch.write_text(LAUNCHER)
         env = {**os.environ, 'NODE_OPTIONS': f'--require="{PRELOAD}"',
                'FIXTURE_CHILD': str(child), 'FIXTURE_CONTROLLER': str(worker),
+               'FIXTURE_MUTANT_IDS': json.dumps(request_ids),
                'FIXTURE_DUPLICATE': duplicate,
                'FIXTURE_DEFER_PROFILE': '1' if defer_profile else '0'}
         if defer_profile:
@@ -326,6 +332,24 @@ fs.appendFileSync = function(file, data, ...args) {
             self.assertTrue(any('workload reconciliation' in error for error in result['errors']))
             self.assertFalse(result['workload_reconciled'])
 
+    def test_captured_mutant_ids_follow_requests_independently_of_qualification(self):
+        """Observe extraction directly with varied inputs and separate report identities."""
+        for matching in [True, False]:
+            with self.subTest(matching=matching), tempfile.TemporaryDirectory() as tmp:
+                root = Path(tmp)
+                requests = [secrets.token_hex(32) for _ in range(2)]
+                qualified = list(requests) if matching else [secrets.token_hex(32) for _ in range(2)]
+                self.assertEqual(len(set(requests + qualified)), 2 if matching else 4)
+                result = self.fixture(root, request_ids=requests, qualification_ids=qualified)
+                events = [json.loads(line) for line in next(root.glob('controller-*.jsonl')).read_text().splitlines()]
+                captured = [e['mutantId'] for e in events
+                            if e['type'] == 'controller-request' and e.get('kind') == 'mutant']
+                self.assertEqual(captured, requests)
+                report = json.loads((root / 'qualification/00-oximut/report.json').read_text())
+                self.assertEqual([m['id'] for m in report['mutants']], qualified)
+                self.assertEqual(result['workload_reconciled'], matching)
+                self.assertEqual(bool(result['errors']), not matching)
+
     def test_mutant_identities_match_qualification_even_when_counts_match(self):
         """Equal totals cannot hide repeated, substituted or missing mutant identities."""
         with tempfile.TemporaryDirectory() as tmp:
@@ -335,7 +359,9 @@ fs.appendFileSync = function(file, data, ...args) {
             events = [json.loads(line) for line in timeline.read_text().splitlines()]
             request = next(i for i, e in enumerate(events)
                            if e['type'] == 'controller-request' and e['id'] == 4)
-            for identity in ['a' * 64, 'c' * 64, None, True, 'x' * 1000]:
+            first_id = next(e['mutantId'] for e in events
+                            if e['type'] == 'controller-request' and e.get('kind') == 'mutant')
+            for identity in [first_id, 'c' * 64, None, True, 'x' * 1000]:
                 with self.subTest(identity=str(identity)[:10]):
                     broken = copy.deepcopy(events)
                     broken[request]['mutantId'] = identity
