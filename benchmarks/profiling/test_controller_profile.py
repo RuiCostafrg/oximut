@@ -131,6 +131,7 @@ setImmediate(() => { assert.equal(callbacks, 4); console.log('contract passed');
             self.assertEqual(result.stdout.strip(), 'contract passed')
 
     def fixture(self, root, enabled=True, entry='m2-worker.ts', directory=None):
+        """Run real fork IPC and verify replies, callbacks, return values and exit."""
         worker = root / entry
         worker.write_text(CONTROLLER)
         child = root / 'child.cjs'
@@ -154,6 +155,7 @@ setImmediate(() => { assert.equal(callbacks, 4); console.log('contract passed');
         return diagnostic.controller_capture_inventory(root)
 
     def test_complete_first_mutant_and_bounded_worker_boundaries(self):
+        """Accept one complete capture and reject missing or malformed evidence."""
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             inventory = self.fixture(root)
@@ -197,6 +199,7 @@ setImmediate(() => { assert.equal(callbacks, 4); console.log('contract passed');
             self.assertEqual(diagnostic.controller_capture_inventory(root)['errors'], [])
 
     def test_opt_out_and_noncontroller_are_inert(self):
+        """Leave execution and output untouched outside the explicit controller opt-in."""
         for enabled, entry in [(False,'m2-worker.ts'), (True,'ordinary.ts')]:
             with self.subTest(enabled=enabled,entry=entry), tempfile.TemporaryDirectory() as tmp:
                 root = Path(tmp)
@@ -205,6 +208,7 @@ setImmediate(() => { assert.equal(callbacks, 4); console.log('contract passed');
                 self.assertFalse(list(root.glob('*.cpuprofile')))
 
     def test_diagnostic_write_failure_preserves_replies_callbacks_and_exit(self):
+        """Keep workload IPC semantics when every diagnostic write fails."""
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             # ENOTDIR on every diagnostic write, including profile finalization.
@@ -217,13 +221,16 @@ setImmediate(() => { assert.equal(callbacks, 4); console.log('contract passed');
 
 class ProfileStructureTests(unittest.TestCase):
     def profile(self):
+        """Return a minimal connected CPU call tree with one usable sample."""
         def frame(name):
+            """Build the required call-frame fields without source locations."""
             return dict(functionName=name, scriptId='0', url='', lineNumber=-1, columnNumber=-1)
         return dict(nodes=[dict(id=1, callFrame=frame('(root)'), children=[2]),
                            dict(id=2, callFrame=frame('work'))],
                     startTime=0, endTime=20, samples=[2], timeDeltas=[10])
 
     def test_usable_samples_require_valid_call_tree_and_sample_references(self):
+        """Reject corrupt trees, call frames, timing arrays and sample references."""
         profile = self.profile()
         self.assertTrue(diagnostic.node_profile_finalized(profile))
         corruptions = [
