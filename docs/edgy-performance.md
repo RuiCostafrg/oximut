@@ -1,6 +1,7 @@
 # Performance workstream: measure the isolation boundary
 
-Status: diagnostic experiment, not a performance improvement or release claim.
+Status: diagnostic capture complete; optimization experiments pending. No
+performance improvement or release claim.
 Starting point: main `d8e0c512eae792d522d3bf47bfa50ee3a9ce5cbc`.
 The native comparison workflow now pins this revision as `BEFORE_COMMIT` for
 subsequent experiments, replacing the pre-coordinator baseline. This diagnostic
@@ -60,7 +61,7 @@ Median `resources.phaseWallMs` (ms):
 | teardown | 51.6962 | 50.3735 |
 | finalInputValidation | 0.0003 | 0.0001 |
 
-## What is known, and what still needs a profile
+## Source audit and completed diagnostic
 
 The mutation phase costs about 244–245 ms per mutant in both runs. That measures
 the entire job, including adapter, worker and coordinator work. It does not
@@ -72,17 +73,18 @@ spec ten times in a single call would still create ten isolated workers and
 would also require new result/selector/deadline attribution. Batching alone
 therefore has no established large saving.
 
-The existing single 50 ms startup checkpoint cannot explain a complete mutant
-job. First capture the controller's first mutant from incoming request through
-reply, including fork creation, started/run messages, collection RPC, completion,
-stop and exit. Retain an inspector CPU profile of that complete controller job.
-The controller's self CPU is not tree CPU; worker message boundaries include
+The earlier single 50 ms startup checkpoint could not explain a complete mutant
+job. The completed diagnostic captures the controller's first mutant from
+incoming request through reply, including fork creation, started/run messages,
+collection RPC, completion,
+stop and exit, and retains an inspector CPU profile of that controller job.
+CPU consumed by the controller process is not tree CPU; worker boundaries include
 worker startup and RPC wait, not an exact CPU partition. Raw qualification
 resources from this profiled run are overhead-bearing diagnostics, never scored
 ratios. Keep ordinary Vitest/Stryker workload gates, original/instrumented
 baselines and native coordinator cleanup unchanged.
 
-## Ranked experiments after that capture
+## Ranked optimization experiments
 
 The [whole-job native capture](../benchmarks/results/2026-11-04-whole-mutant-profile/README.md)
 now passes qualification and the stronger review-driven capture checks. Its
@@ -95,7 +97,8 @@ fork startup. All resource metrics, phases, limitations and raw profile/timeline
 are retained in the capture capsule. The original baseline capsule is unchanged.
 
 These are optimistic ceilings and source-based hypotheses, not measured savings.
-Re-rank after inspecting the capture; run one change per PR against current main.
+Re-rank as experiments yield new evidence; run one change per PR against
+current main.
 
 1. **Warm runtime with a fresh realm/module graph per mutant (opt-in).** If
    bootstrap dominates, amortize it across jobs using VM contexts or a custom
@@ -122,6 +125,9 @@ Re-rank after inspecting the capture; run one change per PR against current main
    `bail: 1` may help larger/slow suites but must not hide unhandled errors,
    timeouts, teardown failures or baseline inventory changes.
 
-The next concrete experiment is the whole-job diagnostic, followed by the first
-optimization supported by its evidence. No default isolation change, release,
+The next concrete experiment is an opt-in warm runtime with a fresh realm and
+dependency/module graph per mutant (rank 1). Establish its fresh-state guarantee
+against the fresh-process oracle before running the native before/after campaign;
+the remaining experiments retain their order above. No default isolation change,
+release,
 deadline relaxation or gate reduction is authorized by a promising profile.
