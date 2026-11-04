@@ -1,5 +1,6 @@
 //! Sequential fresh-reference and persistent-controller runners.
 mod cache;
+mod coordinator;
 mod processes;
 mod resources;
 mod scheduler;
@@ -18,7 +19,7 @@ use std::{
     time::{Duration, Instant, SystemTime, UNIX_EPOCH},
 };
 
-const HELP: &str = "Usage: oximut [--root DIR] [--config FILE] --source FILE [--source FILE ...]\n  --version           Print the Cargo package version\n  --report FILE       JSON report (- for stdout)\n  --timeout-ms N      Per-job deadline, default 30000 ms\n  --workers N         Maximum simultaneous mutation jobs (default 1; bounded by CPU limits)\n  --memory-budget-mib N Aggregate sampled RSS budget in MiB (1 MiB = 1048576 bytes); default host/container limit\n  --memory-reserve-mib N Reserved admission headroom in MiB (default 64)\n  --execution MODE   fresh (default) or persistent controller with fresh test forks\n  --test-selection    Collect baseline hits and conservatively select hit test files\n  --mutators FAMILIES Repeatable comma-separated union: arithmetic,boolean-literal,comparison-boundary (default: all)\n  --order-seed N     Deterministically shuffle mutant execution order\n  --adapter FILE      Node adapter entry point override\n  --cache             Cache instrumentation; outcomes require --cache-inputs-complete\n  --cache-policy MODE  auto (default) learns whether outcome caching saves work; always validates/reuses eligible outcomes\n  --cache-inputs-complete Assert all nondeterministic/external inputs are declared\n  --cache-input FILE  Additional input file/directory (repeatable)\n  --cache-env NAME    Additional environment input (repeatable; values stay private)\n  --no-cache, --force Bypass all cache reads and writes\n  --list              Generate mutants as JSON without executing tests\n  --baseline-only     Run original sources without mutants\nExit: 0 complete/no survivors; 1 survivors/no coverage; 2 incomplete/error.\nScore: killed/(killed+survived+no-coverage)*100; empty denominator => null.\nInvalid/timeout/infrastructure-error/resource-exhausted/skipped are excluded and make a run incomplete.";
+const HELP: &str = "Usage: oximut [--root DIR] [--config FILE] --source FILE [--source FILE ...]\n  --version           Print the Cargo package version\n  --report FILE       JSON report (- for stdout)\n  --timeout-ms N      Per-job deadline, default 30000 ms\n  --workers N         Maximum simultaneous mutation jobs (default 1; bounded by CPU limits)\n  --memory-budget-mib N Aggregate sampled RSS budget in MiB (1 MiB = 1048576 bytes); default host/container limit\n  --memory-reserve-mib N Reserved admission headroom in MiB (default 64)\n  --execution MODE   fresh (default) or persistent controller with fresh test forks\n  --test-selection    Collect baseline hits and conservatively select hit test files\n  --mutators FAMILIES Repeatable comma-separated union: arithmetic,boolean-literal,comparison-boundary (default: all)\n  --order-seed N     Deterministically shuffle mutant execution order\n  --adapter FILE      Node adapter entry point override (an m2-runner.mjs beside m2-worker.ts runs natively)\n  --cache             Cache instrumentation; outcomes require --cache-inputs-complete\n  --cache-policy MODE  auto (default) learns whether outcome caching saves work; always validates/reuses eligible outcomes\n  --cache-inputs-complete Assert all nondeterministic/external inputs are declared\n  --cache-input FILE  Additional input file/directory (repeatable)\n  --cache-env NAME    Additional environment input (repeatable; values stay private)\n  --no-cache, --force Bypass all cache reads and writes\n  --list              Generate mutants as JSON without executing tests\n  --baseline-only     Run original sources without mutants\nExit: 0 complete/no survivors; 1 survivors/no coverage; 2 incomplete/error.\nScore: killed/(killed+survived+no-coverage)*100; empty denominator => null.\nInvalid/timeout/infrastructure-error/resource-exhausted/skipped are excluded and make a run incomplete.";
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 enum Execution {
@@ -657,27 +658,65 @@ impl Drop for Session {
     }
 }
 
-fn execute_local(options: &Options, request: &Request, session: &mut Option<Session>) -> Response {
+/// A slot's persistent execution: the native coordinator for the reference
+/// adapter, or the file-protocol relay for any other adapter.
+enum Backend {
+    Native(Box<coordinator::Coordinator>),
+    Relay(Session),
+}
+
+impl Backend {
+    fn finish(&mut self) -> Result<(), String> {
+        match self {
+            Backend::Native(coordinator) => coordinator.finish(),
+            Backend::Relay(session) => session.finish(),
+        }
+    }
+
+    /// Distinct controller reuse decisions observed by this slot.
+    fn reuse_modes(&self) -> BTreeSet<String> {
+        match self {
+            Backend::Native(coordinator) => coordinator.reuse_modes.clone(),
+            Backend::Relay(session) => {
+                let mut modes = BTreeSet::new();
+                if let Ok(bytes) = fs::read(session.directory.path().join("events.jsonl")) {
+                    for line in bytes.split(|byte| *byte == b'\n') {
+                        if let Ok(event) = serde_json::from_slice::<serde_json::Value>(line)
+                            && let Some(mode) = event.get("reuse").and_then(|value| value.as_str())
+                        {
+                            modes.insert(mode.to_owned());
+                        }
+                    }
+                }
+                modes
+            }
+        }
+    }
+}
+
+fn execute_local(options: &Options, request: &Request, backend: &mut Option<Backend>) -> Response {
     if options.execution == Execution::Fresh {
         return invoke(options, request);
     }
-    if session.is_none() {
-        match Session::start(options) {
-            Ok(started) => *session = Some(started),
-            Err(error) => return infrastructure(request, error),
-        }
+    if backend.is_none() {
+        *backend = Some(match coordinator::native_worker(&options.adapter) {
+            Some(worker) => Backend::Native(Box::new(coordinator::Coordinator::new(worker))),
+            None => match Session::start(options) {
+                Ok(started) => Backend::Relay(started),
+                Err(error) => return infrastructure(request, error),
+            },
+        });
     }
-    match session
-        .as_mut()
-        .expect("session initialized")
-        .invoke(request)
-    {
-        Ok(response) => response,
-        Err(error) => {
-            // Never accept another job on a session with untrusted protocol state.
-            *session = None;
-            infrastructure(request, error)
-        }
+    match backend.as_mut().expect("backend initialized") {
+        Backend::Native(coordinator) => coordinator.run(options, request),
+        Backend::Relay(session) => match session.invoke(request) {
+            Ok(response) => response,
+            Err(error) => {
+                // Never accept another job on a session with untrusted protocol state.
+                *backend = None;
+                infrastructure(request, error)
+            }
+        },
     }
 }
 

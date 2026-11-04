@@ -176,10 +176,19 @@ build provenance as the workflow does, leave `NODE_OPTIONS` unset, and use the
 pinned dependencies. This is a profiling command, not a timing benchmark.
 
 Minimum usable role evidence requires finalized Node profiles or partial segments
-for each of ordinary Vitest,
-Oximut and Stryker, and a linked Oximut adapter → Python supervisor → Node
-controller → test-fork chain, matched using process identities, argv and project
-cwd. This is minimum role evidence, not proof of complete process coverage.
+for each of ordinary Vitest, Oximut and Stryker, plus a linked Oximut process
+chain, matched using process identities, argv and project
+cwd. The native chain, the default for the reference adapter, is the Rust worker
+slot → Node controller (`m2-worker.ts`) → test forks. The Rust worker is not
+captured, so the controller's parent must not be any captured identity; a
+controller under a captured parent does not count. A capture that contains the
+adapter's `m2-runner.mjs` is the legacy custom-adapter relay: adapter → Python
+supervisor → Node controller → test forks, with no Python-free fallback. A
+capture is classified as native only when the Oximut report contains the
+`native coordinator: ` diagnostic and no relay runner was captured. Otherwise it
+is unclassifiable and must meet the strict legacy requirements, so an uncaptured
+relay can never pass as native. This is
+minimum role evidence, not proof of complete process coverage.
 Unmatched Node/Python profiles are listed as orphans and fail capture validation;
 all raw files remain available. Node exit-record writes are atomic and guarded so
 a profiler write failure cannot replace the workload's original exit status.

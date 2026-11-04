@@ -452,24 +452,19 @@ pub fn worker_main() -> Result<(), String> {
         while !path.exists() {
             if directory.join("stop").exists() {
                 let mut diagnostics = vec![];
-                let cleanup = session.as_mut().map_or(Ok(()), Session::finish);
-                if let Some(session) = &session {
-                    let events = session.directory.path().join("events.jsonl");
-                    if let Ok(bytes) = fs::read(events) {
-                        let mut modes = BTreeSet::new();
-                        for line in bytes.split(|byte| *byte == b'\n') {
-                            if let Ok(event) = serde_json::from_slice::<serde_json::Value>(line)
-                                && let Some(mode) =
-                                    event.get("reuse").and_then(|value| value.as_str())
-                            {
-                                modes.insert(mode.to_owned());
-                            }
-                        }
-                        diagnostics.extend(
-                            modes
-                                .into_iter()
-                                .map(|mode| format!("adapter observed reuse boundary: {mode}")),
-                        );
+                let cleanup = session.as_mut().map_or(Ok(()), Backend::finish);
+                if let Some(backend) = &session {
+                    diagnostics.extend(
+                        backend
+                            .reuse_modes()
+                            .into_iter()
+                            .map(|mode| format!("adapter observed reuse boundary: {mode}")),
+                    );
+                    if let Backend::Native(coordinator) = backend {
+                        diagnostics.push(format!(
+                            "native coordinator: {} controllers for {} jobs",
+                            coordinator.controllers_started, coordinator.jobs_run
+                        ));
                     }
                 }
                 if let Err(error) = &cleanup {

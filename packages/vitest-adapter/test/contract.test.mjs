@@ -29,6 +29,10 @@ test(
         .replace(
           "from './m3-selection.ts'",
           `from '${new URL('../m3-selection.ts', import.meta.url).href}'`,
+        )
+        .replace(
+          "from './protocol.ts'",
+          `from '${new URL('../protocol.ts', import.meta.url).href}'`,
         );
       const path = join(directory, name);
       await writeFile(path, source);
@@ -80,13 +84,35 @@ writeFileSync(${JSON.stringify(marker)}, 'executed'); test('sample', () => {});`
       });
       const exited = once(child, 'exit');
       let id = 0;
-      const request = {
-        root: directory,
-        config,
-        kind: 'baseline',
-        mutation: null,
-        selection: { mode: 'files', files: [file], selectedTests: 1, expectedSkipped: 0 },
+      const selection = {
+        mode: 'files',
+        files: [file],
+        selectedTests: 1,
+        totalTests: 1,
+        expectedSkipped: 0,
+        reasons: [],
       };
+      // The persistent controller validates complete protocol requests.
+      const request =
+        name === 'm1-worker.ts'
+          ? { root: directory, config, kind: 'baseline', mutation: null, selection }
+          : {
+              protocol: 1,
+              runId: 'contract',
+              jobId: 'job',
+              generation: 0,
+              kind: 'mutant',
+              root: directory,
+              config,
+              deadlineMs: 30000,
+              mutation: {
+                id: 'unused',
+                file: join(directory, 'unused.ts'),
+                code: '',
+                map: { version: 3, sources: ['unused.ts'], mappings: '' },
+              },
+              selection,
+            };
       const command = async (command, args) => {
         const response = once(child, 'message', { signal: AbortSignal.timeout(15000) });
         child.send({ protocol: 1, id: ++id, command, args });
