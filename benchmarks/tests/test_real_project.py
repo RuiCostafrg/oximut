@@ -281,9 +281,12 @@ class ModeArgumentTests(unittest.TestCase):
         import compare_candidates as campaign
         for main, flag in [(benchmark.main, '--oximut-arg'),
                            (campaign.main, '--after-oximut-arg')]:
-            with self.subTest(flag=flag), contextlib.redirect_stderr(io.StringIO()):
+            stderr = io.StringIO()
+            with self.subTest(flag=flag), contextlib.redirect_stderr(stderr):
                 with self.assertRaises(SystemExit):
                     main(['--output', '/nonexistent/out', f'{flag}=--adapter=/tmp/other.mjs',
                           *(['--before-binary', 'b', '--before-adapter-dir', 'd',
                              '--after-binary', 'b', '--after-adapter-dir', 'd',
                              '--after-commit', 'a' * 40] if flag.startswith('--after') else [])])
+            # The allowlist, not some later path check, must reject it.
+            self.assertIn(f'{flag}: only --isolation may be passed', stderr.getvalue())
