@@ -260,3 +260,30 @@ class ArgumentValidationTests(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class ModeArgumentTests(unittest.TestCase):
+    def test_only_opt_in_mode_selections_pass_through(self):
+        allowed = [[], ['--isolation', 'fresh-thread'], ['--isolation=fresh-process'],
+                   ['--isolation', 'fresh-process', '--isolation=fresh-thread']]
+        for values in allowed:
+            self.assertIsNone(benchmark.mode_args_error(values), values)
+        rejected = [['--adapter', '/tmp/other.mjs'], ['--adapter=/tmp/other.mjs'],
+                    ['--root=/elsewhere'], ['--source', 'src/x.ts'], ['--workers', '4'],
+                    ['--mutators=all'], ['--isolation'], ['--isolation', 'fork'],
+                    ['--isolation=fork'], ['fresh-thread']]
+        for values in rejected:
+            self.assertIsNotNone(benchmark.mode_args_error(values), values)
+
+    def test_entrypoints_reject_untracked_extra_arguments(self):
+        import contextlib
+        import io
+        import compare_candidates as campaign
+        for main, flag in [(benchmark.main, '--oximut-arg'),
+                           (campaign.main, '--after-oximut-arg')]:
+            with self.subTest(flag=flag), contextlib.redirect_stderr(io.StringIO()):
+                with self.assertRaises(SystemExit):
+                    main(['--output', '/nonexistent/out', f'{flag}=--adapter=/tmp/other.mjs',
+                          *(['--before-binary', 'b', '--before-adapter-dir', 'd',
+                             '--after-binary', 'b', '--after-adapter-dir', 'd',
+                             '--after-commit', 'a' * 40] if flag.startswith('--after') else [])])

@@ -177,6 +177,30 @@ def compare_rows(rows):
     return comparisons, ratios
 
 
+# Extra Oximut arguments may only select opt-in execution modes; workload,
+# adapter, scope and reporting flags stay owned by the harness and provenance.
+MODE_VALUES = {'--isolation': {'fresh-process', 'fresh-thread'}}
+
+
+def mode_args_error(values):
+    """Return why extra Oximut arguments are not an allowed mode selection."""
+    pending = None
+    for value in values:
+        if pending is not None:
+            if value not in MODE_VALUES[pending]:
+                return f'unsupported value for {pending}: {value!r}'
+            pending = None
+        elif value in MODE_VALUES:
+            pending = value
+        elif '=' in value and value.split('=', 1)[0] in MODE_VALUES:
+            flag, choice = value.split('=', 1)
+            if choice not in MODE_VALUES[flag]:
+                return f'unsupported value for {flag}: {choice!r}'
+        else:
+            return f'only {", ".join(sorted(MODE_VALUES))} may be passed as extra Oximut arguments: {value!r}'
+    return f'missing value for {pending}' if pending is not None else None
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--oximut-arg', action='append', default=[])
@@ -196,6 +220,8 @@ def main(argv=None):
     parser.add_argument('--diagnostic-unrestricted', action='store_true',
                         help='Oximut full operator set; mismatches remain ineligible for ratios')
     args = parser.parse_args(argv)
+    if (error := mode_args_error(args.oximut_arg)) is not None:
+        parser.error(f'--oximut-arg: {error}')
     if args.warmups < 0 or args.repetitions < 0 or args.warmups + args.repetitions < 1:
         parser.error('require nonnegative warmups/repetitions and at least one round')
     if not math.isfinite(args.timeout) or args.timeout <= 0:
