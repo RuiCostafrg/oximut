@@ -1,11 +1,11 @@
 {
-  "validator_sha256": "173c1ae007be055c782ec9996c01007a28fa882118e0322726ce81772c1a4959",
-  "source_matches_native_build": {
-    "benchmarks/profile_native.py": true,
-    "benchmarks/profiling/controller-jobs.cjs": true
+  "validator_sha256": "990887a2f18c5434eaa4e689e73fcf4e76397076f3a1b1f20c9ae42b5e995d7f",
+  "current_source_matches_native_build": {
+    "benchmarks/profile_native.py": false,
+    "benchmarks/profiling/controller-jobs.cjs": false
   },
   "qualification_errors": [],
-  "passed": true,
+  "passed": false,
   "capture": {
     "observed": [
       {
@@ -13,6 +13,18 @@
         "request_count": 14,
         "mutant_count": 10,
         "observed_forks": 18,
+        "mutant_ids": [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
         "baseline_count": 2,
         "first_mutant_window": {
           "requestToSendReturnMs": 500.78708200000005,
@@ -21,9 +33,11 @@
         }
       }
     ],
-    "errors": [],
+    "errors": [
+      "workload reconciliation failed: captured mutant identities differ from qualification"
+    ],
     "orphan_profiles": [],
-    "workload_reconciled": true,
+    "workload_reconciled": false,
     "scope": "Request observation to local send return (not recipient delivery/callback completion); partial controller CPU sampling. Sampling starts during profiler activation, omitting some request prefix, and may include inspector overhead. Not full-request or process-tree CPU profiling."
   }
 }

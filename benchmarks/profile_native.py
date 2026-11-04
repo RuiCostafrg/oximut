@@ -89,6 +89,11 @@ def node_profile_finalized(data):
         return False
 
 
+def valid_mutant_identity(value):
+    """Accept only the bounded lowercase digest emitted as an Oximut mutant ID."""
+    return isinstance(value, str) and len(value) == 64 and all(c in '0123456789abcdef' for c in value)
+
+
 def controller_capture_inventory(directory, qualification=None):
     """Validate the deliberately narrow controller capture, never whole-tree coverage."""
     errors, observed, matched = [], [], set()
@@ -205,6 +210,7 @@ def controller_capture_inventory(directory, qualification=None):
                     errors.append(f'invalid worker boundary counts: {timeline.name}/{pid}')
             observed.append({'timeline': timeline.name, 'request_count': len(requests),
                              'mutant_count': len(mutants), 'observed_forks': len(forks),
+                             'mutant_ids': [e.get('mutantId') for e in mutants],
                              'baseline_count': sum(e.get('kind') == 'baseline' for e in requests),
                              'first_mutant_window': profile_window})
         except (OSError, ValueError, KeyError, TypeError, StopIteration, OverflowError) as error:
@@ -228,6 +234,14 @@ def controller_capture_inventory(directory, qualification=None):
         actual = {key: sum(r[key] for r in observed) for key in expected}
         if actual != expected or sum(r['request_count'] for r in observed) != sum(expected.values()) + 2 * len(observed):
             raise ValueError(f'captured workload counts {actual} differ from qualification {expected}')
+        expected_ids = [m['id'] for m in mutants]
+        captured_ids = [identity for row in observed for identity in row['mutant_ids']]
+        if (not all(valid_mutant_identity(identity) for identity in expected_ids)
+                or len(expected_ids) != len(set(expected_ids))):
+            raise ValueError('invalid or duplicate qualified mutant identities')
+        if (not all(valid_mutant_identity(identity) for identity in captured_ids)
+                or sorted(captured_ids) != sorted(expected_ids)):
+            raise ValueError('captured mutant identities differ from qualification')
         reconciled = True
     except (OSError, ValueError, KeyError, TypeError) as error:
         errors.append(f'workload reconciliation failed: {error}')

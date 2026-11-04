@@ -77,7 +77,9 @@ const { fork } = require('node:child_process');
   const replies=[];
   for (const [id,command,kind] of [[1,'initialize'],[2,'run','baseline'],[3,'run','mutant'],[4,'run','mutant'],[5,'close']]) {
     const response = new Promise(resolve => c.once('message', resolve));
-    c.send({protocol:1,id,command,args:{request:{kind}}});
+    const job = {kind, mutation:kind === 'mutant' ? {id:(id === 3 ? 'a' : 'b').repeat(64)} : null};
+    const args = command === 'run' ? {request:job} : command === 'initialize' ? {kind:'baseline',mutation:null} : {};
+    c.send({protocol:1,id,command,args});
     replies.push(await response);
   }
   c.on('exit',(code) => console.log(JSON.stringify({replies,code})));
@@ -173,7 +175,7 @@ setImmediate(() => {
         qualification = root / 'qualification' / '00-oximut'
         qualification.mkdir(parents=True)
         (qualification / 'report.json').write_text(json.dumps({
-            'mutants': [dict(provenance=dict(source='executed')) for _ in range(2)],
+            'mutants': [dict(id=identity * 64, provenance=dict(source='executed')) for identity in ('a', 'b')],
             'resources': {'disabledValidationRuns': []}}))
         worker = root / entry
         worker.write_text(CONTROLLER)
@@ -323,6 +325,32 @@ fs.appendFileSync = function(file, data, ...args) {
             result = self.capture(root)
             self.assertTrue(any('workload reconciliation' in error for error in result['errors']))
             self.assertFalse(result['workload_reconciled'])
+
+    def test_mutant_identities_match_qualification_even_when_counts_match(self):
+        """Equal totals cannot hide repeated, substituted or missing mutant identities."""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self.assertEqual(self.fixture(root)['errors'], [])
+            timeline = next(root.glob('controller-*.jsonl'))
+            events = [json.loads(line) for line in timeline.read_text().splitlines()]
+            request = next(i for i, e in enumerate(events)
+                           if e['type'] == 'controller-request' and e['id'] == 4)
+            for identity in ['a' * 64, 'c' * 64, None, True, 'x' * 1000]:
+                with self.subTest(identity=str(identity)[:10]):
+                    broken = copy.deepcopy(events)
+                    broken[request]['mutantId'] = identity
+                    self.write_events(timeline, broken)
+                    result = self.capture(root)
+                    self.assertTrue(any('mutant identities' in error for error in result['errors']))
+                    self.assertFalse(result['workload_reconciled'])
+            self.write_events(timeline, events)
+            self.assertEqual(self.capture(root)['errors'], [])
+            report_file = root / 'qualification/00-oximut/report.json'
+            report = json.loads(report_file.read_text())
+            report['mutants'][1]['id'] = report['mutants'][0]['id']
+            report_file.write_text(json.dumps(report))
+            self.assertTrue(any('duplicate qualified mutant identities' in error
+                                for error in self.capture(root)['errors']))
 
     def test_transient_timeline_append_failure_is_sticky(self):
         """Losing both sides of one exchange still makes the entire capture invalid."""

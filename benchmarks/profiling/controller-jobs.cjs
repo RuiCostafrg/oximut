@@ -134,9 +134,13 @@ if (dir && process.argv[1]?.endsWith('/m2-worker.ts')) {
   };
   process.prependListener('message', (msg) => observe(() => {
     if (msg?.protocol !== 1 || !Number.isSafeInteger(msg.id)) return;
-    const kind = msg.args?.request?.kind;
+    // initialize takes direct arguments; run wraps the Request in args.request.
+    const job = msg.command === 'run' ? msg.args?.request : undefined;
+    const kind = job?.kind;
+    const mutantId = kind === 'mutant' && typeof job.mutation?.id === 'string'
+      && /^[a-f0-9]{64}$/.test(job.mutation.id) ? job.mutation.id : null;
     emit('controller-request', { id: msg.id, command: msg.command,
-      kind: ['baseline', 'mutant'].includes(kind) ? kind : null });
+      kind: ['baseline', 'mutant'].includes(kind) ? kind : null, mutantId });
     if (msg.command === 'run' && kind === 'mutant' && !attempted) startProfile(msg.id);
   }));
   process.on('exit', (code) => emit('controller-exit', { code }));

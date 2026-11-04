@@ -143,7 +143,12 @@ events, so reordered or replayed exchanges cannot satisfy completeness. Their
 mutant and baseline counts must also match the independent qualification report:
 every executed mutant, one original baseline and every disabled-validation run,
 plus one initialize/close pair per controller. Losing an entire exchange cannot
-pass by leaving a shorter, self-consistent trace. Format-version-1 timelines
+pass by leaving a shorter, self-consistent trace. Each mutant request also records
+its bounded 64-character mutant digest, with no source/test payload. The captured
+IDs must exactly match the qualification report's unique executed-mutant IDs;
+equal totals cannot hide a repeated mutant replacing another. Captures lacking
+this identity evidence fail current validation, even if an older count-only gate
+passed. Format-version-1 timelines
 require contiguous event sequence numbers and a clear sticky write-failure flag;
 any append failure leaves a failure marker and invalidates capture. Historical
 unversioned traces have pre-send timestamps and no append-integrity attestation;

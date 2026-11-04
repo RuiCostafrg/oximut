@@ -1,7 +1,7 @@
 # Performance workstream: measure the isolation boundary
 
 Status: native diagnostics with send-return timestamps and qualified workload
-counts pass; optimization experiments pending. No
+counts passed; recapture with exact mutant identities pending; optimization experiments pending. No
 performance improvement or release claim.
 Starting point: main `d8e0c512eae792d522d3bf47bfa50ee3a9ce5cbc`.
 The native comparison workflow now pins main `74a4972` as
@@ -120,11 +120,13 @@ format and fails current revalidation. Both capsules retain their original raw
 evidence and summaries. Their single profiled runs supply no paired ratios or
 performance claim.
 
-The [current native capture](../benchmarks/results/2026-11-04-controller-send-return/README.md)
-(run 41890546678) passes the new boundary and integrity gate: its versioned
+The [native send-return capture](../benchmarks/results/2026-11-04-controller-send-return/README.md)
+(run 41890546678) passed the boundary and count-integrity gate: its versioned
 timeline has no failed writes, and all ten mutants, both baselines and 14
 commands reconcile against the retained qualification report. Both validator and
-preload match the native build's source hashes. Independent median intervals are
+preload matched the native build's source hashes at archival. It lacks mutant
+IDs and fails current exact-identity reconciliation; another native capture is
+pending. Independent median intervals are
 70.402 ms fork-to-started, 22.242 ms run-to-collection and 42.396 ms
 collection-to-completion. These support the same experiment ranking without
 attributing worker CPU or proving savings. The capsule retains all resource and

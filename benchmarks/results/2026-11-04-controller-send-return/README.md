@@ -1,8 +1,8 @@
-# Native capture with local send-return observations
+# Historical native capture with counts and local send-return observations
 
-[Run 41890546678](https://github.com/RuiCostafrg/oximut/actions/runs/41890546678) captured head `fb47d6c` via merge revision `d25b431704c9b6667d9b1d4bc253164223b24c4f` on Ubuntu 24.04 x86_64. Both the validator and controller preload match the native build's source hashes.
+[Run 41890546678](https://github.com/RuiCostafrg/oximut/actions/runs/41890546678) captured head `fb47d6c` via merge revision `d25b431704c9b6667d9b1d4bc253164223b24c4f` on Ubuntu 24.04 x86_64. Both the validator and controller preload matched the native build's source hashes at archival; the current sources have since added mutant-identity evidence.
 
-Exact workload qualification and current capture validation pass: 41 sources, 102 tests, five mutation files, ten identical killed arithmetic edits; one controller, 14 unique serial commands (initialize, two baselines, ten mutants, close), and 18 observed fork lifecycles. Workload counts reconcile against the retained Oximut report. The version-1 timeline has contiguous event sequences, no append-failure marker/flag, and normal local send-return observations. Historical traces in the earlier capsules remain unchanged and fail this stronger gate.
+Exact workload qualification and the original count-based capture validation passed: 41 sources, 102 tests, five mutation files, ten identical killed arithmetic edits; one controller, 14 unique serial commands (initialize, two baselines, ten mutants, close), and 18 observed fork lifecycles. Workload counts reconcile against the retained Oximut report. The version-1 timeline has contiguous event sequences, no append-failure marker/flag, and normal local send-return observations. **Current capture validation fails:** this trace lacks each request's mutant identity, so matching counts cannot prove every qualified mutant was observed. The original raw summaries remain unchanged as historical evidence; a fresh identity-bearing capture is required.
 
 ## Timing and sampling scope
 
@@ -54,7 +54,8 @@ from pathlib import Path
 from profile_native import controller_capture_inventory, qualification_errors
 root = Path('benchmarks/results/2026-11-04-controller-send-return')
 assert not qualification_errors(root / 'qualification', 0)
-assert not controller_capture_inventory(root / 'profiles', root / 'qualification')['errors']
+capture = controller_capture_inventory(root / 'profiles', root / 'qualification')
+assert capture['errors'] and not capture['workload_reconciled']
 PYTHON
 ```
 
