@@ -87,8 +87,10 @@ therefore has no established large saving.
 The earlier single 50 ms startup checkpoint could not explain a complete mutant
 job. The completed diagnostic captures the controller's first mutant from
 incoming request through reply, including fork creation, started/run messages,
-collection RPC, completion,
-stop and exit, and retains an inspector CPU profile of that controller job.
+collection RPC, completion, stop and exit. The retained controller CPU profile
+samples a shorter interval starting during profiler activation; it omits some
+request prefix and includes diagnostic overhead. The complete request/reply
+timeline and the activation-to-reply CPU window are reported separately.
 CPU consumed by the controller process is not tree CPU; worker boundaries include
 worker startup and RPC wait, not an exact CPU partition. Raw qualification
 resources from this profiled run are overhead-bearing diagnostics, never scored
@@ -106,6 +108,12 @@ ratios or subtracted from older campaigns. They support keeping warm fresh
 realms first in the experiment ranking; batching alone still leaves the measured
 fork startup. All resource metrics, phases, limitations and raw profile/timeline
 are retained in the capture capsule. The original baseline capsule is unchanged.
+
+A [follow-up native capture](../benchmarks/results/2026-11-04-controller-profile-guarded/README.md)
+also passes with the explicit synchronous-inspector guard, serial command checks
+and exact critical worker counts. It reports complete timeline durations and a
+partial CPU sampling window separately, and retains every resource metric and
+phase. Its single profiled run supplies no paired ratios or performance claim.
 
 These are optimistic ceilings and source-based hypotheses, not measured savings.
 Re-rank as experiments yield new evidence; run one change per PR against

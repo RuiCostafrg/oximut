@@ -1,0 +1,21 @@
+{
+  "validator_sha256": "1566cdaf5ab3da636542a6f4d1e5fdfa7c3894ed853f63a498216abdf1deb585",
+  "capture": {
+    "observed": [
+      {
+        "timeline": "controller-5404.jsonl",
+        "request_count": 14,
+        "mutant_count": 10,
+        "observed_forks": 18,
+        "first_mutant_window": {
+          "requestToReplyMs": 363.6707610000003,
+          "requestToProfileAckMs": 79.60327900000038,
+          "profileAckToReplyMs": 284.0674819999999
+        }
+      }
+    ],
+    "errors": [],
+    "orphan_profiles": [],
+    "scope": "Complete observed request/reply timelines; partial controller CPU sampling. Sampling starts during profiler activation, omitting some request prefix, and may include inspector overhead. Not full-request or process-tree CPU profiling."
+  }
+}

@@ -106,6 +106,8 @@ def controller_capture_inventory(directory):
             identities = [e for e in events if e['type'] == 'controller-start']
             exits = [e for e in events if e['type'] == 'controller-exit']
             if (len(identities) != 1 or len(exits) != 1
+                    or events[0]['type'] != 'controller-start'
+                    or events[-1]['type'] != 'controller-exit'
                     or type(identities[0].get('pid')) is not int
                     or identities[0]['pid'] <= 0
                     or identities[0]['pid'] != int(timeline.stem.split('-')[1])
@@ -130,6 +132,7 @@ def controller_capture_inventory(directory):
             mutants = [e for e in requests if e.get('kind') == 'mutant']
             starts = [e for e in events if e['type'] == 'profile-started']
             written = [e for e in events if e['type'] == 'profile-written']
+            profile_window = None
             if (not mutants or len(starts) != 1 or len(written) != 1
                     or starts[0]['jobId'] != mutants[0]['id']
                     or written[0]['jobId'] != mutants[0]['id']):
@@ -145,7 +148,13 @@ def controller_capture_inventory(directory):
                 reply = next(e for e in replies if e['id'] == mutants[0]['id'])
                 if not (mutants[0]['monotonicMs'] <= starts[0]['monotonicMs']
                         <= reply['monotonicMs'] <= written[0]['monotonicMs']):
-                    errors.append(f'profile does not bracket mutant: {timeline.name}')
+                    errors.append(f'CPU sample window outside mutant timeline: {timeline.name}')
+                else:
+                    profile_window = {
+                        'requestToReplyMs': reply['monotonicMs'] - mutants[0]['monotonicMs'],
+                        'requestToProfileAckMs': starts[0]['monotonicMs'] - mutants[0]['monotonicMs'],
+                        'profileAckToReplyMs': reply['monotonicMs'] - starts[0]['monotonicMs'],
+                    }
                 forks = [e for e in events if e['type'] == 'fork'
                          and starts[0]['monotonicMs'] <= e['monotonicMs'] <= reply['monotonicMs']]
                 if not forks:
@@ -179,8 +188,9 @@ def controller_capture_inventory(directory):
                                                        or counts[k] != 1 for k in critical)):
                     errors.append(f'invalid worker boundary counts: {timeline.name}/{pid}')
             observed.append({'timeline': timeline.name, 'request_count': len(requests),
-                             'mutant_count': len(mutants), 'observed_forks': len(forks)})
-        except (OSError, ValueError, KeyError, TypeError, StopIteration) as error:
+                             'mutant_count': len(mutants), 'observed_forks': len(forks),
+                             'first_mutant_window': profile_window})
+        except (OSError, ValueError, KeyError, TypeError, StopIteration, OverflowError) as error:
             errors.append(f'invalid controller capture {timeline.name}: {error}')
     orphans = sorted(p.name for p in set(directory.glob('*.cpuprofile')) - matched)
     if orphans:
@@ -188,7 +198,9 @@ def controller_capture_inventory(directory):
     if not observed:
         errors.append('no usable controller timelines')
     return {'observed': observed, 'errors': errors, 'orphan_profiles': orphans,
-            'scope': 'Controller job CPU and observed fork IPC boundaries only; not complete process-tree profiling.'}
+            'scope': 'Complete observed request/reply timelines; partial controller CPU sampling. '
+                     'Sampling starts during profiler activation, omitting some request prefix, '
+                     'and may include inspector overhead. Not full-request or process-tree CPU profiling.'}
 
 
 def compact_summary(result):
@@ -426,7 +438,7 @@ def main(argv=None):
     modes.add_argument('--segments', action='store_true',
                         help='Use one inspector startup checkpoint per isolate instead of exit-time Node profiles; always partial evidence')
     modes.add_argument('--controller-jobs', action='store_true',
-                       help='Capture controller IPC/worker boundaries and the first whole mutant job; no whole-tree CPU attribution')
+                       help='Trace complete controller jobs with a partial first-mutant CPU sample window; no whole-tree CPU attribution')
     args = parser.parse_args(argv)
     output = args.output.resolve()
     output.mkdir(parents=True, exist_ok=False)

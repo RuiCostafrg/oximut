@@ -1,0 +1,61 @@
+{
+  "admissionPauses": 0,
+  "admissionWorkerCostBytes": 408811520,
+  "broadDiscoveries": 15,
+  "budgetBytes": 16760344576,
+  "cgroups": [
+    {
+      "initialOomEvents": 0,
+      "limitBytes": null,
+      "limitPath": "/sys/fs/cgroup/system.slice/memory.max",
+      "oomEventsPath": "/sys/fs/cgroup/system.slice/memory.events",
+      "usagePath": "/sys/fs/cgroup/system.slice/memory.current"
+    },
+    {
+      "initialOomEvents": 0,
+      "limitBytes": null,
+      "limitPath": "/sys/fs/cgroup/system.slice/hosted-compute-agent.service/memory.max",
+      "oomEventsPath": "/sys/fs/cgroup/system.slice/hosted-compute-agent.service/memory.events",
+      "usagePath": "/sys/fs/cgroup/system.slice/hosted-compute-agent.service/memory.current"
+    }
+  ],
+  "configuredBudgetBytes": null,
+  "configuredWorkers": 1,
+  "cpuLimitWorkers": 4,
+  "disabledValidationRuns": [
+    {
+      "coverage": true,
+      "files": [
+        "/home/runner/work/_temp/native-diagnostic/capture/qualification/00-oximut/project/src/extend.ts",
+        "/home/runner/work/_temp/native-diagnostic/capture/qualification/00-oximut/project/src/manipulate/invert.ts",
+        "/home/runner/work/_temp/native-diagnostic/capture/qualification/00-oximut/project/src/manipulate/lighten.ts",
+        "/home/runner/work/_temp/native-diagnostic/capture/qualification/00-oximut/project/src/manipulate/mix.ts",
+        "/home/runner/work/_temp/native-diagnostic/capture/qualification/00-oximut/project/src/manipulate/saturate.ts"
+      ],
+      "run": "instrumentedBaseline",
+      "wallMs": 931.083285
+    }
+  ],
+  "effectiveWorkers": 1,
+  "enforcement": "best-effort sampled admission and process-tree cancellation; existing cgroup limits are OS-enforced; no new hard cap installed",
+  "exhaustion": null,
+  "maxActiveJobs": 1,
+  "measuredWorkerPeakBytes": 327049216,
+  "measurement": "Linux /proc smaps_rollup Rss sum, approximate stat RSS fallback on older/restricted kernels: main CLI and all worker/adapter/controller/test descendants; shared pages counted per process",
+  "peakAggregateRssBytes": 332480512,
+  "phaseWallMs": {
+    "finalInputValidation": 0.00019999999999999998,
+    "inputAndSchedulerPreparation": 3.657121,
+    "instrumentedBaseline": 932.607478,
+    "mutationExecution": 2743.565884,
+    "mutationPlanning": 0.07454100000000001,
+    "originalBaseline": 1397.0841990000001,
+    "postBaselineValidation": 0.000171,
+    "teardown": 60.975807
+  },
+  "recycledIdleWorkers": 0,
+  "reserveBytes": 67108864,
+  "sampleIntervalMs": 50,
+  "samples": 100,
+  "treeDiscoveries": 85
+}

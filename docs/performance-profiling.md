@@ -100,13 +100,16 @@ controller recycling and verified cleanup. No waiting grace period is added.
 
 ## Opt-in native CPU capture
 
-### Whole controller jobs (current workflow default)
+### Complete job timelines with partial CPU sampling (current default)
 
 The performance workstream's [evidence and ranked experiments](edgy-performance.md)
 start with a narrower `--controller-jobs` capture. It runs the unchanged exact
 three-tool qualification, but preloads instrumentation only in `m2-worker.ts`.
-It records bounded fork IPC boundaries for every job and one inspector CPU
-profile spanning the first mutant request/reply per controller. No product
+It records bounded fork IPC boundaries for every job and a complete observed
+request/reply timeline. One inspector CPU profile samples a shorter interval
+within the first mutant request per controller, starting during profiler
+activation and stopping after the reply. Some request-handling prefix is not
+sampled; inspector startup/stop overhead may also appear in the profile. No product
 adapter code changes. Incoming/outgoing worker control messages separate fork
 creation, bootstrap, collection, test completion, shutdown and exit. Only the
 first occurrence of each known RPC method is timestamped per fork; exit records
@@ -118,10 +121,18 @@ describe the controller alone. They neither measure fork CPU nor partition
 aggregate peak RSS. Profiles contain idle/native frames, so profile duration is
 not CPU consumption. Synchronous diagnostic writes and inspector work perturb
 scheduling and resource measurements; this run publishes no ratios or targets.
+`captures.observed[].first_mutant_window` reports request-to-reply,
+request-to-profiler-activation-acknowledgment and acknowledgment-to-reply wall
+durations separately. The activation latency is not an exact unsampled duration:
+some inspector setup is itself sampled. Complete timeline validation does not
+imply complete request CPU sampling.
 Any missing profile, reply, observed fork exit, worker boundary or controller
 lifecycle invalidates this narrow capture. Its success makes no claim of full
 process-tree profiling; startup-only captures retain their separate incomplete
 lifecycle gate. Neither mode changes workload correctness/cleanup gates.
+Controller-start must be the first event and controller-exit the last, enclosing
+every request, reply and observed worker exit. Malformed timestamps invalidate
+capture rather than preventing diagnostic-summary publication.
 
 Controller commands require unique safe-integer IDs and alternating request/reply
 events, so reordered or replayed exchanges cannot satisfy completeness. Worker

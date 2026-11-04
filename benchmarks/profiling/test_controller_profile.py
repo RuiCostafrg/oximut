@@ -190,6 +190,12 @@ Session.prototype.post = function(method, ...args) {
             root = Path(tmp)
             inventory = self.fixture(root)
             self.assertEqual(inventory['errors'], [])
+            self.assertIn('partial controller CPU', inventory['scope'])
+            window = inventory['observed'][0]['first_mutant_window']
+            self.assertGreater(window['requestToProfileAckMs'], 0)
+            self.assertGreater(window['profileAckToReplyMs'], 0)
+            self.assertAlmostEqual(window['requestToReplyMs'], window['requestToProfileAckMs']
+                                   + window['profileAckToReplyMs'])
             self.assertEqual(len(list(root.glob('controller-*.jsonl'))), 1)
             self.assertEqual(len(list(root.glob('*.cpuprofile'))), 1)
             events = [json.loads(line) for line in next(root.glob('controller-*.jsonl')).read_text().splitlines()]
@@ -295,6 +301,36 @@ Session.prototype.post = function(method, ...args) {
                 cases[f'invalid-id-{value}'] = broken
             for name, broken in cases.items():
                 with self.subTest(corruption=name):
+                    timeline.write_text('\n'.join(json.dumps(e) for e in broken))
+                    self.assertTrue(diagnostic.controller_capture_inventory(root)['errors'])
+            timeline.write_text('\n'.join(json.dumps(e) for e in events))
+            self.assertEqual(diagnostic.controller_capture_inventory(root)['errors'], [])
+
+    def test_lifecycle_brackets_all_events_and_extreme_times_fail_closed(self):
+        """Impossible lifecycle positions and huge timestamps return invalid evidence."""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self.assertEqual(self.fixture(root)['errors'], [])
+            timeline = next(root.glob('controller-*.jsonl'))
+            events = [json.loads(line) for line in timeline.read_text().splitlines()]
+            self.assertEqual(events[0]['type'], 'controller-start')
+            self.assertEqual(events[-1]['type'], 'controller-exit')
+            timestamps = [e['monotonicMs'] for e in events]
+            late_start = copy.deepcopy(events)
+            late_start.insert(2, late_start.pop(0))
+            early_exit = copy.deepcopy(events)
+            early_exit.insert(1, early_exit.pop())
+            for name, broken in [('late-start', late_start), ('early-exit', early_exit)]:
+                with self.subTest(corruption=name):
+                    # Preserve chronological timestamps to exercise lifecycle semantics.
+                    for event, timestamp in zip(broken, timestamps):
+                        event['monotonicMs'] = timestamp
+                    timeline.write_text('\n'.join(json.dumps(e) for e in broken))
+                    self.assertTrue(diagnostic.controller_capture_inventory(root)['errors'])
+            for value in [10**1000, -10**1000, float('inf'), float('nan')]:
+                with self.subTest(timestamp=str(value)[:20]):
+                    broken = copy.deepcopy(events)
+                    broken[-1]['monotonicMs'] = value
                     timeline.write_text('\n'.join(json.dumps(e) for e in broken))
                     self.assertTrue(diagnostic.controller_capture_inventory(root)['errors'])
             timeline.write_text('\n'.join(json.dumps(e) for e in events))
