@@ -433,3 +433,38 @@ test('enabled', () => { subject.hit?.(); expect(state).toBe(1); expect(subject.e
   assert.equal(changed.outcome, 'infrastructure-error');
   assert.match(changed.errors.join(' '), /Pool cannot change/);
 });
+
+// Observe graceful worker shutdown, including a deliberately slow stop listener.
+// Each job gets its own file so a later worker cannot hide an earlier leak.
+test('M2 fresh-thread reply waits for test-thread termination', { timeout: 120000 }, async (t) => {
+  const s = await session(t);
+  for (let job = 0; job < 3; job++) {
+    const marker = join(s.root, `session/thread-${job}`);
+    await writeFile(
+      join(s.root, 'sample.test.ts'),
+      `import { test, expect } from 'vitest';
+import { appendFileSync } from 'node:fs';
+import { parentPort, threadId } from 'node:worker_threads';
+const tick = () => appendFileSync(${JSON.stringify(marker)}, threadId + '\\n');
+tick();
+setInterval(tick, 5).unref();
+// Vitest 4.1.12 sends this message before terminating the thread. Delay its
+// handling so the run/termination gap is observable even on a slow host.
+parentPort.on('message', (message) => {
+  if (!message?.__vitest_worker_request__ || message.type !== 'stop') return;
+  const until = Date.now() + 500;
+  while (Date.now() < until) {
+    tick();
+    Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 5);
+  }
+});
+test('alive', async () => { await new Promise(r => setTimeout(r, 30)); expect(threadId).toBeGreaterThan(0); });`,
+    );
+    const response = await s.run('', null, 30000, 'source.ts', undefined, { pool: 'threads' });
+    assert.equal(response.outcome, 'passed', JSON.stringify(response));
+    const atReply = await readFile(marker, 'utf8');
+    assert.ok(atReply.trim().split('\n').length > 1, 'timer ran in the test thread');
+    await new Promise((resolve) => setTimeout(resolve, 200));
+    assert.equal(await readFile(marker, 'utf8'), atReply, 'thread wrote after its job reply');
+  }
+});

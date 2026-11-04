@@ -233,9 +233,6 @@ fn parse_options(mut args: impl Iterator<Item = String>) -> Result<Option<Option
         adapter = Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../packages/vitest-adapter/m2-runner.mjs");
     }
-    if isolation == Isolation::FreshThread && coordinator::native_worker(&adapter).is_none() {
-        return Err("--isolation fresh-thread requires the reference persistent adapter (m2-runner.mjs beside m2-worker.ts)".into());
-    }
     if !(1..=1024).contains(&workers) {
         return Err("--workers must be 1..1024".into());
     }
@@ -285,6 +282,15 @@ fn parse_options(mut args: impl Iterator<Item = String>) -> Result<Option<Option
         adapter = adapter
             .canonicalize()
             .map_err(|e| format!("adapter: {e}"))?;
+    }
+    // Use the same resolved adapter as backend selection, including symlinks.
+    if isolation == Isolation::FreshThread {
+        let canonical_adapter = adapter
+            .canonicalize()
+            .map_err(|e| format!("adapter: {e}"))?;
+        if coordinator::native_worker(&canonical_adapter).is_none() {
+            return Err("--isolation fresh-thread requires the reference persistent adapter (m2-runner.mjs beside m2-worker.ts)".into());
+        }
     }
     if let Some(path) = &report
         && path != Path::new("-")

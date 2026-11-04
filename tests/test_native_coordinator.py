@@ -74,6 +74,29 @@ def alive(pid):
 
 
 class NativeCoordinator(unittest.TestCase):
+    def test_fresh_thread_checks_canonical_adapter(self):
+        with tempfile.TemporaryDirectory(prefix='oximut-native-symlink-') as directory:
+            directory = Path(directory)
+            target = directory / 'target'
+            target.mkdir()
+            (target / 'm2-runner.mjs').write_text('throw new Error("must not execute");')
+            adapter = directory / 'm2-runner.mjs'
+            adapter.symlink_to(target / 'm2-runner.mjs')
+            (directory / 'm2-worker.ts').write_text(CONTROLLER)
+            args = [str(REPO / 'target/debug/oximut'), '--root', str(ROOT),
+                    '--source', str(ROOT / 'src/subject.ts'), '--baseline-only',
+                    '--execution', 'persistent', '--isolation', 'fresh-thread',
+                    '--adapter', str(adapter), '--report', '-']
+            rejected = subprocess.run(args, cwd=REPO, capture_output=True, text=True, timeout=60)
+            self.assertEqual(rejected.returncode, 2, rejected.stdout + rejected.stderr)
+            self.assertIn('requires the reference persistent adapter', rejected.stderr)
+            adapter.unlink()
+            (directory / 'm2-worker.ts').unlink()
+            adapter.symlink_to(REPO / 'packages/vitest-adapter/m2-runner.mjs')
+            accepted = subprocess.run(args, cwd=REPO, capture_output=True, text=True, timeout=60)
+            self.assertEqual(accepted.returncode, 0, accepted.stdout + accepted.stderr)
+            self.assertEqual(json.loads(accepted.stdout)['baseline']['outcome'], 'passed')
+
     def run_cli(self, mode, timeout_ms=5000, extra_args=()):
         with tempfile.TemporaryDirectory(prefix='oximut-native-') as directory:
             adapter = Path(directory) / 'm2-runner.mjs'

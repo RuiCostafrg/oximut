@@ -44,6 +44,40 @@ function transformError(error: unknown): boolean {
     )
   );
 }
+/** Drain the pinned pool without closing Vite or losing controller transforms. */
+async function awaitWorkerTermination(context: NonNullable<typeof vitest>, remainingMs: number) {
+  // Vitest 4.1.12 createPool() hides its Pool in a closure. Its wrapper.close()
+  // calls Pool.cancel(): it drains activeTasks, sharedRunners and exitPromises,
+  // then resets cancellation so the same pool can run again. runTests() alone
+  // does not await runner.stop(), including Worker.terminate() for threads.
+  // Guard this version-specific handle; never acknowledge a job without it.
+  const handle = (
+    context as unknown as { pool?: { name?: unknown; close?: unknown; runTests?: unknown } }
+  ).pool;
+  if (
+    handle?.name !== 'default' ||
+    typeof handle.close !== 'function' ||
+    typeof handle.runTests !== 'function'
+  )
+    throw new Error('Unsupported Vitest pool: missing default pool termination handle');
+  const timeoutMs = Math.min(2000, remainingMs);
+  if (timeoutMs <= 0) throw new Error('Job deadline exhausted before worker termination');
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    await Promise.race([
+      handle.close(),
+      new Promise<never>((_, reject) => {
+        timer = setTimeout(
+          () => reject(new Error('Timed out waiting for test-worker termination')),
+          timeoutMs,
+        );
+      }),
+    ]);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 async function command(name: string, args: Request): Promise<unknown> {
   if (name === 'initialize') {
     if (vitest) throw new Error('Already initialized');
@@ -149,6 +183,7 @@ async function command(name: string, args: Request): Promise<unknown> {
     return { closed: true };
   }
   if (name !== 'run') throw new Error(`Unknown command: ${name}`);
+  const started = performance.now();
   const job = (args as unknown as { request: Request }).request;
   validateRequest(job);
   if ((job.pool === 'threads' ? 'threads' : 'forks') !== pool)
@@ -200,6 +235,7 @@ async function command(name: string, args: Request): Promise<unknown> {
         );
     }
     await vitest.runTestSpecifications(selected, true);
+    await awaitWorkerTermination(vitest, job.deadlineMs - (performance.now() - started));
   } finally {
     delete process.env.OXIMUT_ACTIVE_MUTANT;
   }
