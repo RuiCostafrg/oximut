@@ -1,7 +1,7 @@
 # Performance workstream: measure the isolation boundary
 
-Status: historical diagnostics retained; a native recapture with send-return
-timestamps and qualified workload counts is pending; optimization experiments pending. No
+Status: native diagnostics with send-return timestamps and qualified workload
+counts pass; optimization experiments pending. No
 performance improvement or release claim.
 Starting point: main `d8e0c512eae792d522d3bf47bfa50ee3a9ce5cbc`.
 The native comparison workflow now pins main `74a4972` as
@@ -117,9 +117,19 @@ A [follow-up native capture](../benchmarks/results/2026-11-04-controller-profile
 verified the explicit synchronous-inspector guard, serial command checks and
 exact critical worker counts. It also predates the post-send/count-reconciliation
 format and fails current revalidation. Both capsules retain their original raw
-evidence and summaries. A fresh native capture is required for the new boundary
-and integrity gate. Their single profiled runs supply no paired ratios or
+evidence and summaries. Their single profiled runs supply no paired ratios or
 performance claim.
+
+The [current native capture](../benchmarks/results/2026-11-04-controller-send-return/README.md)
+(run 41890546678) passes the new boundary and integrity gate: its versioned
+timeline has no failed writes, and all ten mutants, both baselines and 14
+commands reconcile against the retained qualification report. Both validator and
+preload match the native build's source hashes. Independent median intervals are
+70.402 ms fork-to-started, 22.242 ms run-to-collection and 42.396 ms
+collection-to-completion. These support the same experiment ranking without
+attributing worker CPU or proving savings. The capsule retains all resource and
+phase metrics, raw evidence and standalone evidence-revalidation instructions.
+This one profiled run has no paired ratios or bootstrap CIs.
 
 These are optimistic ceilings and source-based hypotheses, not measured savings.
 Re-rank as experiments yield new evidence; run one change per PR against

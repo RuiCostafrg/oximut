@@ -1,0 +1,29 @@
+{
+  "validator_sha256": "173c1ae007be055c782ec9996c01007a28fa882118e0322726ce81772c1a4959",
+  "source_matches_native_build": {
+    "benchmarks/profile_native.py": true,
+    "benchmarks/profiling/controller-jobs.cjs": true
+  },
+  "qualification_errors": [],
+  "passed": true,
+  "capture": {
+    "observed": [
+      {
+        "timeline": "controller-5437.jsonl",
+        "request_count": 14,
+        "mutant_count": 10,
+        "observed_forks": 18,
+        "baseline_count": 2,
+        "first_mutant_window": {
+          "requestToSendReturnMs": 500.78708200000005,
+          "requestToProfileAckMs": 60.339766000000054,
+          "profileAckToSendReturnMs": 440.447316
+        }
+      }
+    ],
+    "errors": [],
+    "orphan_profiles": [],
+    "workload_reconciled": true,
+    "scope": "Request observation to local send return (not recipient delivery/callback completion); partial controller CPU sampling. Sampling starts during profiler activation, omitting some request prefix, and may include inspector overhead. Not full-request or process-tree CPU profiling."
+  }
+}
