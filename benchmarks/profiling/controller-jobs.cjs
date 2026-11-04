@@ -8,13 +8,24 @@ if (dir && process.argv[1]?.endsWith('/m2-worker.ts')) {
   const { syncBuiltinESMExports } = require('node:module');
   const origin = process.hrtime.bigint();
   const timeline = path.join(dir, `controller-${process.pid}.jsonl`);
+  const appendError = path.join(dir, `controller-${process.pid}.timeline-error`);
+  let sequence = 0;
+  let timelineWriteFailed = false;
   const guard = (fn) => { try { return fn(); } catch { /* Missing evidence fails validation. */ } };
-  const emit = (type, meta = {}) => guard(() => fs.appendFileSync(timeline, JSON.stringify({
-    type, monotonicMs: Number(process.hrtime.bigint() - origin) / 1e6,
-    ...(['controller-start', 'controller-request', 'controller-send', 'controller-exit'].includes(type)
-      ? { controllerMemoryBytes: process.memoryUsage() } : {}),
-    selfCpuUsage: process.cpuUsage(), ...meta,
-  }) + '\n'));
+  const emit = (type, meta = {}) => {
+    const seq = ++sequence;
+    try {
+      fs.appendFileSync(timeline, JSON.stringify({
+        type, seq, timelineWriteFailed, monotonicMs: Number(process.hrtime.bigint() - origin) / 1e6,
+        ...(['controller-start', 'controller-request', 'controller-send', 'controller-exit'].includes(type)
+          ? { controllerMemoryBytes: process.memoryUsage() } : {}),
+        selfCpuUsage: process.cpuUsage(), ...meta,
+      }) + '\n');
+    } catch {
+      timelineWriteFailed = true;
+      guard(() => fs.writeFileSync(appendError, 'Timeline append failed; capture incomplete\n'));
+    }
+  };
   const reportError = (error) => emit('profile-error', { error: String(error).slice(0, 500) });
   const observe = (fn) => { try { fn(); } catch (error) { reportError(error); } };
   let attempted = false;
@@ -70,7 +81,7 @@ if (dir && process.argv[1]?.endsWith('/m2-worker.ts')) {
   observe(() => {
     const startTime = fs.readFileSync('/proc/self/stat', 'utf8').split(') ').pop().split(' ')[19];
     if (!/^\d+$/.test(startTime)) throw Error('Invalid process identity');
-    emit('controller-start', { pid: process.pid, ppid: process.ppid, startTime,
+    emit('controller-start', { formatVersion: 1, pid: process.pid, ppid: process.ppid, startTime,
       entrypoint: process.argv[1], cwd: process.cwd(), monotonicOriginNs: String(origin) });
   });
 
@@ -110,12 +121,14 @@ if (dir && process.argv[1]?.endsWith('/m2-worker.ts')) {
   const originalSend = process.send;
   if (typeof originalSend === 'function') process.send = function (...args) {
     const msg = args[0];
-    observe(() => {
-      if (msg?.protocol === 1 && Number.isSafeInteger(msg.id))
-        emit('controller-send', { id: msg.id, result: Object.hasOwn(msg, 'result'), error: Object.hasOwn(msg, 'error') });
-    });
+    // A normal return observes a local send invocation, not delivery or callback completion.
     // Preserve exceptions, return value, receiver, arguments and callback semantics.
     const result = Reflect.apply(originalSend, this, args);
+    observe(() => {
+      if (msg?.protocol === 1 && Number.isSafeInteger(msg.id))
+        emit('controller-send', { id: msg.id, boundary: 'send-return', sendReturn: result,
+          result: Object.hasOwn(msg, 'result'), error: Object.hasOwn(msg, 'error') });
+    });
     observe(() => { if (profileJob !== undefined && msg?.id === profileJob) stopProfile(profileJob); });
     return result;
   };

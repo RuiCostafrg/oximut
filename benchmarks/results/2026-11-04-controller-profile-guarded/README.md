@@ -1,14 +1,14 @@
-# Guarded native capture: complete timelines, partial CPU sampling
+# Historical guarded capture: pre-send observations, partial CPU sampling
 
 [Run 41852828217](https://github.com/RuiCostafrg/oximut/actions/runs/41852828217) captured PR head `96ccf5f` via merge revision `335e15de776e4a5ecec9840eb018d3b52c2eb561` on Ubuntu 24.04 x86_64.
 
-Exact workload qualification passes: 41 sources, 102 tests, five mutation files, ten identical killed edits. Capture and latest revalidation pass with one controller, 14 unique serial commands, 18 observed fork lifecycles and a finalized first-mutant CPU profile. The explicit synchronous-inspector guard succeeds natively. This validates diagnostics, not product speed or target achievement.
+Exact workload qualification passes: 41 sources, 102 tests, five mutation files, ten identical killed edits. The original capture gate passed with one controller, 14 unique serial commands, 18 observed fork lifecycles and a finalized first-mutant CPU profile. The explicit synchronous-inspector guard succeeds natively. **Current capture revalidation fails:** this historical unversioned trace ends reply observations before the send call and lacks sequence/write-failure attestation. Its original successful summary is historical, not proof of completeness under the new gate. A fresh capture is required. This establishes no product speed or target achievement.
 
 This directory durably retains the unmodified diagnostic summary, CPU profile, timeline, measurement rows, workload summary and build metadata, plus extracted Oximut resources and current-validator revalidation. The full source archive, prepared projects, binary and logs remain only in the workflow artifact, with configured 14-day retention; hashes cannot recover omitted files after expiry. `SHA256SUMS` covers the committed files.
 
 ## Sampling scope
 
-The complete observed request/reply interval for the first mutant is **363.671 ms**. The profiler activation acknowledgment arrives **79.603 ms** after the request; acknowledgment-to-reply is **284.067 ms**. CPU sampling starts during profiler activation, omits some request prefix, and may include inspector startup/stop overhead. The activation latency is not an exact unsampled duration. The CPU file describes the controller alone, excludes test-fork CPU, includes idle frames, and is not a full-request or whole-process-tree CPU partition.
+The observed request-to-pre-send interval for the first mutant is **363.671 ms**. This ends before `process.send` is attempted and establishes neither its return nor recipient delivery. The profiler activation acknowledgment arrives **79.603 ms** after the request; acknowledgment-to-pre-send is **284.067 ms**. CPU sampling starts during profiler activation, omits some request prefix, and may include inspector startup/stop overhead. The activation latency is not an exact unsampled duration. The CPU file describes the controller alone, excludes test-fork CPU, includes idle frames, and is not a full-request or whole-process-tree CPU partition.
 
 ## Raw resource metrics (profiler overhead; one run)
 

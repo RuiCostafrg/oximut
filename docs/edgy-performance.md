@@ -1,6 +1,7 @@
 # Performance workstream: measure the isolation boundary
 
-Status: diagnostic capture complete; optimization experiments pending. No
+Status: historical diagnostics retained; a native recapture with send-return
+timestamps and qualified workload counts is pending; optimization experiments pending. No
 performance improvement or release claim.
 Starting point: main `d8e0c512eae792d522d3bf47bfa50ee3a9ce5cbc`.
 The native comparison workflow now pins main `74a4972` as
@@ -72,7 +73,7 @@ summary/measurement row and a reproducible PNG/SVG chart.
 
 ![Native same-engine control ratios with bootstrap 95% confidence intervals](../benchmarks/results/2026-11-04-native-control/native-control.png)
 
-## Source audit and completed diagnostic
+## Source audit and diagnostic scope
 
 The mutation phase costs about 244–245 ms per mutant in both runs. That measures
 the entire job, including adapter, worker and coordinator work. It does not
@@ -85,12 +86,14 @@ would also require new result/selector/deadline attribution. Batching alone
 therefore has no established large saving.
 
 The earlier single 50 ms startup checkpoint could not explain a complete mutant
-job. The completed diagnostic captures the controller's first mutant from
-incoming request through reply, including fork creation, started/run messages,
+job. The diagnostic records the controller's first mutant from
+incoming request through local send return, including fork creation, started/run messages,
 collection RPC, completion, stop and exit. The retained controller CPU profile
 samples a shorter interval starting during profiler activation; it omits some
-request prefix and includes diagnostic overhead. The complete request/reply
-timeline and the activation-to-reply CPU window are reported separately.
+request prefix and includes diagnostic overhead. The request-to-send-return
+timeline and the activation-to-send-return CPU window are reported separately;
+neither observes recipient delivery or callback completion. Historical captures
+below used a timestamp before the send call and lack append-integrity markers.
 CPU consumed by the controller process is not tree CPU; worker boundaries include
 worker startup and RPC wait, not an exact CPU partition. Raw qualification
 resources from this profiled run are overhead-bearing diagnostics, never scored
@@ -100,7 +103,8 @@ baselines and native coordinator cleanup unchanged.
 ## Ranked optimization experiments
 
 The [whole-job native capture](../benchmarks/results/2026-11-04-whole-mutant-profile/README.md)
-now passes qualification and the stronger review-driven capture checks. Its
+passed qualification and its original capture gate. It fails the current
+format-version/count-reconciliation gate and is retained as historical evidence. Its
 median fork-to-ready interval is 74.222 ms, run-to-collection 23.242 ms, and
 collection-to-completion 46.195 ms. Inspector startup adds about 65 ms to the
 first mutant. These single-run diagnostic intervals cannot be used as scored
@@ -110,10 +114,12 @@ fork startup. All resource metrics, phases, limitations and raw profile/timeline
 are retained in the capture capsule. The original baseline capsule is unchanged.
 
 A [follow-up native capture](../benchmarks/results/2026-11-04-controller-profile-guarded/README.md)
-also passes with the explicit synchronous-inspector guard, serial command checks
-and exact critical worker counts. It reports complete timeline durations and a
-partial CPU sampling window separately, and retains every resource metric and
-phase. Its single profiled run supplies no paired ratios or performance claim.
+verified the explicit synchronous-inspector guard, serial command checks and
+exact critical worker counts. It also predates the post-send/count-reconciliation
+format and fails current revalidation. Both capsules retain their original raw
+evidence and summaries. A fresh native capture is required for the new boundary
+and integrity gate. Their single profiled runs supply no paired ratios or
+performance claim.
 
 These are optimistic ceilings and source-based hypotheses, not measured savings.
 Re-rank as experiments yield new evidence; run one change per PR against

@@ -101,7 +101,7 @@ const failure = new Error('original send failure');
 const callbackError = new Error('underlying async callback');
 const original = function(...args) {
   if (args[0].fail) throw failure;
-  records.push({receiver:this,args});
+  records.push({receiver:this,args,completedAt:process.hrtime.bigint()});
   setImmediate(() => args.at(-1)(callbackError));
   return args[0].expected;
 };
@@ -131,10 +131,25 @@ for (const send of [process.send, wrappedChild.send]) {
     for (const [index,value] of [message,handle,options,callback].entries())
       assert.equal(record.args[index], value);
   }
-  assert.throws(() => send({fail:true}), error => error === failure);
+  assert.throws(() => send({protocol:1,id:999,fail:true}), error => error === failure);
 }
 assert.equal(callbacks, 0);
-setImmediate(() => { assert.equal(callbacks, 4); console.log('contract passed'); });
+setImmediate(() => {
+  assert.equal(callbacks, 4);
+  const fs = require('node:fs');
+  const path = require('node:path');
+  const rows = fs.readFileSync(path.join(process.env.OXIMUT_PROFILE_CONTROLLER_DIR,
+    `controller-${process.pid}.jsonl`), 'utf8').trim().split('\n').map(JSON.parse);
+  const sends = rows.filter(row => row.type === 'controller-send');
+  assert.equal(sends.length, 2);
+  assert.deepEqual(sends.map(row => row.sendReturn), [true,false]);
+  assert.ok(!sends.some(row => row.id === 999), 'a throwing send has no return boundary');
+  for (let i=0;i<sends.length;i++) {
+    assert.equal(sends[i].boundary, 'send-return');
+    assert.ok(sends[i].monotonicMs >= Number(records[i].completedAt - BigInt(rows[0].monotonicOriginNs))/1e6);
+  }
+  console.log('contract passed');
+});
 ''')
             env = {**os.environ, 'NODE_OPTIONS': '', 'OXIMUT_PROFILE_CONTROLLER_DIR': str(root),
                    'FIXTURE_PRELOAD': str(PRELOAD)}
@@ -143,9 +158,23 @@ setImmediate(() => { assert.equal(callbacks, 4); console.log('contract passed');
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertEqual(result.stdout.strip(), 'contract passed')
 
+    def write_events(self, timeline, events):
+        """Preserve sequence integrity when testing independent semantic corruptions."""
+        timeline.write_text('\n'.join(json.dumps(dict(e, seq=i))
+                                      for i, e in enumerate(events, 1)))
+
+    def capture(self, root):
+        """Reconcile fixture events against their separate product-report evidence."""
+        return diagnostic.controller_capture_inventory(root, root / 'qualification')
+
     def fixture(self, root, enabled=True, entry='m2-worker.ts', directory=None,
-                duplicate='', defer_profile=False):
+                duplicate='', defer_profile=False, fail_append=False):
         """Run real fork IPC and verify replies, callbacks, return values and exit."""
+        qualification = root / 'qualification' / '00-oximut'
+        qualification.mkdir(parents=True)
+        (qualification / 'report.json').write_text(json.dumps({
+            'mutants': [dict(provenance=dict(source='executed')) for _ in range(2)],
+            'resources': {'disabledValidationRuns': []}}))
         worker = root / entry
         worker.write_text(CONTROLLER)
         child = root / 'child.cjs'
@@ -170,6 +199,21 @@ Session.prototype.post = function(method, ...args) {
 };
 ''')
             env['NODE_OPTIONS'] = f'--require="{sabotage}" ' + env['NODE_OPTIONS']
+        if fail_append:
+            sabotage = root / 'lost-pair.cjs'
+            sabotage.write_text(r'''
+const fs = require('node:fs');
+const append = fs.appendFileSync;
+fs.appendFileSync = function(file, data, ...args) {
+  if (String(file).endsWith('.jsonl')) {
+    const event = JSON.parse(String(data));
+    if (event.id === 4 && ['controller-request','controller-send'].includes(event.type))
+      throw Error('transient pair append failure');
+  }
+  return Reflect.apply(append, this, [file,data,...args]);
+};
+''')
+            env['NODE_OPTIONS'] = f'--require="{sabotage}" ' + env['NODE_OPTIONS']
         env.pop('OXIMUT_PROFILE_CONTROLLER_DIR', None)
         if enabled:
             env['OXIMUT_PROFILE_CONTROLLER_DIR'] = str(directory or root)
@@ -182,7 +226,7 @@ Session.prototype.post = function(method, ...args) {
         self.assertEqual(data['replies'], [dict(protocol=1,id=i,result=dict(ok=True)) for i in range(1,6)])
         self.assertEqual(lines.count('callback'), 5)
         self.assertEqual(lines.count('returned:true'), 5)
-        return diagnostic.controller_capture_inventory(root)
+        return self.capture(root)
 
     def test_complete_first_mutant_and_bounded_worker_boundaries(self):
         """Accept one complete capture and reject missing or malformed evidence."""
@@ -193,9 +237,9 @@ Session.prototype.post = function(method, ...args) {
             self.assertIn('partial controller CPU', inventory['scope'])
             window = inventory['observed'][0]['first_mutant_window']
             self.assertGreater(window['requestToProfileAckMs'], 0)
-            self.assertGreater(window['profileAckToReplyMs'], 0)
-            self.assertAlmostEqual(window['requestToReplyMs'], window['requestToProfileAckMs']
-                                   + window['profileAckToReplyMs'])
+            self.assertGreater(window['profileAckToSendReturnMs'], 0)
+            self.assertAlmostEqual(window['requestToSendReturnMs'], window['requestToProfileAckMs']
+                                   + window['profileAckToSendReturnMs'])
             self.assertEqual(len(list(root.glob('controller-*.jsonl'))), 1)
             self.assertEqual(len(list(root.glob('*.cpuprofile'))), 1)
             events = [json.loads(line) for line in next(root.glob('controller-*.jsonl')).read_text().splitlines()]
@@ -214,13 +258,13 @@ Session.prototype.post = function(method, ...args) {
             for bad in [{}, {'nodes':[], 'startTime':0, 'endTime':1},
                         {'nodes':[{}], 'startTime':0, 'endTime':1}]:
                 profile.write_text(json.dumps(bad))
-                self.assertTrue(diagnostic.controller_capture_inventory(root)['errors'])
+                self.assertTrue(self.capture(root)['errors'])
             profile.write_text(raw)
             timeline = next(root.glob('controller-*.jsonl'))
             for kind in ['controller-send','profile-started','profile-written','child-exit','controller-start','controller-exit']:
                 with self.subTest(missing=kind):
-                    timeline.write_text('\n'.join(json.dumps(e) for e in events if e['type'] != kind))
-                    self.assertTrue(diagnostic.controller_capture_inventory(root)['errors'])
+                    self.write_events(timeline, [e for e in events if e['type'] != kind])
+                    self.assertTrue(self.capture(root)['errors'])
             for boundary in ['start', 'run', 'stop', 'onCollected']:
                 with self.subTest(missing=boundary):
                     # Remove just one worker's event, leaving all responses intact.
@@ -229,10 +273,10 @@ Session.prototype.post = function(method, ...args) {
                                  (e['type'] == 'child-send' and e.get('messageType') == boundary)
                                  or (e['type'] == 'child-message' and e.get('rpcMethod') == boundary))
                     del broken[index]
-                    timeline.write_text('\n'.join(json.dumps(e) for e in broken))
-                    self.assertTrue(diagnostic.controller_capture_inventory(root)['errors'])
-            timeline.write_text('\n'.join(json.dumps(e) for e in events))
-            self.assertEqual(diagnostic.controller_capture_inventory(root)['errors'], [])
+                    self.write_events(timeline, broken)
+                    self.assertTrue(self.capture(root)['errors'])
+            self.write_events(timeline, events)
+            self.assertEqual(self.capture(root)['errors'], [])
 
     def test_opt_out_and_noncontroller_are_inert(self):
         """Leave execution and output untouched outside the explicit controller opt-in."""
@@ -265,6 +309,30 @@ Session.prototype.post = function(method, ...args) {
                                 for e in events))
             self.assertFalse(list(root.glob('*.cpuprofile')))
             self.assertFalse(any(e['type'] == 'profile-started' for e in events))
+
+    def test_missing_mutant_pair_fails_qualification_reconciliation(self):
+        """A self-consistent shorter trace cannot replace the qualified workload."""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self.assertEqual(self.fixture(root)['errors'], [])
+            timeline = next(root.glob('controller-*.jsonl'))
+            events = [json.loads(line) for line in timeline.read_text().splitlines()]
+            missing = [e for e in events if e.get('id') != 4]
+            # Neutralize sequence validation to independently test qualification counts.
+            self.write_events(timeline, missing)
+            result = self.capture(root)
+            self.assertTrue(any('workload reconciliation' in error for error in result['errors']))
+            self.assertFalse(result['workload_reconciled'])
+
+    def test_transient_timeline_append_failure_is_sticky(self):
+        """Losing both sides of one exchange still makes the entire capture invalid."""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            result = self.fixture(root, fail_append=True)
+            self.assertTrue(result['errors'])
+            events = [json.loads(line) for line in next(root.glob('controller-*.jsonl')).read_text().splitlines()]
+            self.assertTrue(events[-1]['timelineWriteFailed'])
+            self.assertTrue(list(root.glob('controller-*.timeline-error')))
 
     def test_duplicate_lifecycle_or_collection_messages_invalidate_capture(self):
         """Bounded first-event logging must not hide duplicate critical responses."""
@@ -301,10 +369,10 @@ Session.prototype.post = function(method, ...args) {
                 cases[f'invalid-id-{value}'] = broken
             for name, broken in cases.items():
                 with self.subTest(corruption=name):
-                    timeline.write_text('\n'.join(json.dumps(e) for e in broken))
-                    self.assertTrue(diagnostic.controller_capture_inventory(root)['errors'])
-            timeline.write_text('\n'.join(json.dumps(e) for e in events))
-            self.assertEqual(diagnostic.controller_capture_inventory(root)['errors'], [])
+                    self.write_events(timeline, broken)
+                    self.assertTrue(self.capture(root)['errors'])
+            self.write_events(timeline, events)
+            self.assertEqual(self.capture(root)['errors'], [])
 
     def test_lifecycle_brackets_all_events_and_extreme_times_fail_closed(self):
         """Impossible lifecycle positions and huge timestamps return invalid evidence."""
@@ -325,16 +393,16 @@ Session.prototype.post = function(method, ...args) {
                     # Preserve chronological timestamps to exercise lifecycle semantics.
                     for event, timestamp in zip(broken, timestamps):
                         event['monotonicMs'] = timestamp
-                    timeline.write_text('\n'.join(json.dumps(e) for e in broken))
-                    self.assertTrue(diagnostic.controller_capture_inventory(root)['errors'])
+                    self.write_events(timeline, broken)
+                    self.assertTrue(self.capture(root)['errors'])
             for value in [10**1000, -10**1000, float('inf'), float('nan')]:
                 with self.subTest(timestamp=str(value)[:20]):
                     broken = copy.deepcopy(events)
                     broken[-1]['monotonicMs'] = value
-                    timeline.write_text('\n'.join(json.dumps(e) for e in broken))
-                    self.assertTrue(diagnostic.controller_capture_inventory(root)['errors'])
-            timeline.write_text('\n'.join(json.dumps(e) for e in events))
-            self.assertEqual(diagnostic.controller_capture_inventory(root)['errors'], [])
+                    self.write_events(timeline, broken)
+                    self.assertTrue(self.capture(root)['errors'])
+            self.write_events(timeline, events)
+            self.assertEqual(self.capture(root)['errors'], [])
 
 
 class ProfileStructureTests(unittest.TestCase):

@@ -1,21 +1,19 @@
 {
-  "validator_sha256": "329ee7467fb67dfa4db7c5a155eb598ad994bc76f9abef97afc0c29cb36df05d",
+  "validator_sha256": "173c1ae007be055c782ec9996c01007a28fa882118e0322726ce81772c1a4959",
+  "qualification_report_sha256": "9978afdc5c9939e95cdee61b3ae6596c35bdad0ff6b0d75a2adf87fda235373f",
+  "passed": false,
   "capture": {
-    "observed": [
-      {
-        "timeline": "controller-5404.jsonl",
-        "request_count": 14,
-        "mutant_count": 10,
-        "observed_forks": 18,
-        "first_mutant_window": {
-          "requestToReplyMs": 363.6707610000003,
-          "requestToProfileAckMs": 79.60327900000038,
-          "profileAckToReplyMs": 284.0674819999999
-        }
-      }
+    "observed": [],
+    "errors": [
+      "invalid controller capture controller-5404.jsonl: unsupported legacy timeline: pre-send boundary/no append-integrity attestation",
+      "orphan controller profiles: controller-mutant-5404-4.cpuprofile",
+      "no usable controller timelines",
+      "workload reconciliation failed: captured workload counts {'mutant_count': 0, 'baseline_count': 0} differ from qualification {'mutant_count': 10, 'baseline_count': 2}"
     ],
-    "errors": [],
-    "orphan_profiles": [],
-    "scope": "Complete observed request/reply timelines; partial controller CPU sampling. Sampling starts during profiler activation, omitting some request prefix, and may include inspector overhead. Not full-request or process-tree CPU profiling."
+    "orphan_profiles": [
+      "controller-mutant-5404-4.cpuprofile"
+    ],
+    "workload_reconciled": false,
+    "scope": "Request observation to local send return (not recipient delivery/callback completion); partial controller CPU sampling. Sampling starts during profiler activation, omitting some request prefix, and may include inspector overhead. Not full-request or process-tree CPU profiling."
   }
 }

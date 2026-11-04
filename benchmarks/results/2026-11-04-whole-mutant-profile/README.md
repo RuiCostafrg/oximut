@@ -1,4 +1,4 @@
-# Complete mutant timelines with partial controller CPU sampling
+# Historical mutant pre-send observations with partial controller CPU sampling
 
 Native Ubuntu 24.04 x86_64 [run 41839060730](https://github.com/RuiCostafrg/oximut/actions/runs/41839060730)
 captures PR #38's merge revision `69481738decebabd34a854cb73bf6ddc6d25b2bb`.
@@ -13,10 +13,16 @@ This capsule retains unmodified controller timeline, CPU profile, original
 diagnostic summary and build metadata; `SHA256SUMS` covers those files and the
 extracted resource evidence. The latter records the original measurements hash
 and revalidation with the strengthened validator from the Sourcery review fixes.
-Both workload qualification and the stronger capture gate pass: 102 tests,
+Workload qualification and the original capture gate passed: 102 tests,
 ten identical killed arithmetic edits, 14 controller commands, 18 observed forks
 and exits, one finalized first-mutant CPU profile. No automatic retry was performed;
 the duplicate queued label/open-event workflow was cancelled before capture.
+
+**Current capture validation fails.** This unversioned trace timestamps outgoing
+replies before the send call and has no event sequence/write-failure attestation.
+The successful revalidation stored in the extracted resource evidence is
+historical. It cannot establish completeness under the current count-reconciled,
+post-send gate. Raw evidence is unchanged; a fresh native capture is required.
 
 ## Resources (profiler overhead, one run, no ratios or CIs)
 
@@ -38,15 +44,16 @@ finalInputValidation 0.000314. No phase gate was relaxed.
 
 ## Interpretation
 
-The timeline covers the full observed request/reply interval. CPU sampling starts
+The timeline covers request observation to a pre-send timestamp, before the send
+is attempted; it establishes neither local send return nor recipient delivery. CPU sampling starts
 during profiler activation and therefore omits some request-handling prefix;
-startup/stop overhead may also be sampled. For the first mutant, request-to-reply
+startup/stop overhead may also be sampled. For the first mutant, request-to-pre-send
 is 266.273 ms, request-to-profile-acknowledgment is 64.534 ms, and
-acknowledgment-to-reply is 201.738 ms. The acknowledgment latency is not an exact
+acknowledgment-to-pre-send is 201.738 ms. The acknowledgment latency is not an exact
 unsampled duration: the profile itself contains inspector setup samples. A valid
 timeline is not proof of complete request CPU sampling.
 
-Across ten mutant requests, the median request/reply duration is 147.865 ms
+Across ten mutant requests, the median request-to-pre-send duration is 147.865 ms
 (143.296–266.273). Independently computed boundary medians are:
 
 | Interval | Median ms | Range ms |
@@ -55,7 +62,7 @@ Across ten mutant requests, the median request/reply duration is 147.865 ms
 | Fork to started response | 74.222 | 69.663–76.501 |
 | Run dispatch to collection RPC | 23.242 | 21.899–91.857 |
 | Collection to testfileFinished | 46.195 | 44.244–60.146 |
-| testfileFinished to controller reply | 1.025 | 0.641–10.854 |
+| testfileFinished to controller pre-send observation | 1.025 | 0.641–10.854 |
 
 These are observed wall intervals, not a CPU partition, and their medians are
 not additive. Collection/completion includes Vitest/RPC/reporting work, not just

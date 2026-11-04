@@ -89,15 +89,22 @@ def node_profile_finalized(data):
         return False
 
 
-def controller_capture_inventory(directory):
+def controller_capture_inventory(directory, qualification=None):
     """Validate the deliberately narrow controller capture, never whole-tree coverage."""
     errors, observed, matched = [], [], set()
+    if list(directory.glob('controller-*.timeline-error')):
+        errors.append('timeline append failure marker present')
     timelines = sorted(directory.glob('controller-*.jsonl'))
     for timeline in timelines:
         try:
             events = [json.loads(line) for line in timeline.read_text().splitlines()]
             if not events or any(not isinstance(e, dict) for e in events):
                 raise ValueError('empty or malformed timeline')
+            if type(events[0].get('formatVersion')) is not int or events[0]['formatVersion'] != 1:
+                raise ValueError('unsupported legacy timeline: pre-send boundary/no append-integrity attestation')
+            if any(type(e.get('seq')) is not int or e['seq'] != i
+                   or e.get('timelineWriteFailed') is not False for i, e in enumerate(events, 1)):
+                raise ValueError('missing event sequence or timeline append failure')
             times = [e['monotonicMs'] for e in events]
             if (not all(type(t) in (int, float) and math.isfinite(t) and t >= 0 for t in times)
                     or times != sorted(times)):
@@ -117,6 +124,14 @@ def controller_capture_inventory(directory):
                 errors.append(f'incomplete controller identity/lifecycle: {timeline.name}')
             requests = [e for e in events if e['type'] == 'controller-request']
             replies = [e for e in events if e['type'] == 'controller-send']
+            if (not requests or requests[0].get('command') != 'initialize'
+                    or requests[-1].get('command') != 'close'
+                    or any(e.get('command') != 'run' or e.get('kind') not in ('baseline', 'mutant')
+                           for e in requests[1:-1])):
+                errors.append(f'invalid controller command sequence: {timeline.name}')
+            if any(e.get('boundary') != 'send-return' or type(e.get('sendReturn')) is not bool
+                   for e in replies):
+                errors.append(f'missing local send-return boundary: {timeline.name}')
             ids = [e['id'] for e in requests]
             reply_ids = [e['id'] for e in replies]
             if (not ids or any(type(i) is not int or abs(i) > 2**53 - 1 for i in ids + reply_ids)
@@ -152,9 +167,9 @@ def controller_capture_inventory(directory):
                     errors.append(f'CPU sample window outside mutant timeline: {timeline.name}')
                 else:
                     profile_window = {
-                        'requestToReplyMs': reply['monotonicMs'] - mutants[0]['monotonicMs'],
+                        'requestToSendReturnMs': reply['monotonicMs'] - mutants[0]['monotonicMs'],
                         'requestToProfileAckMs': starts[0]['monotonicMs'] - mutants[0]['monotonicMs'],
-                        'profileAckToReplyMs': reply['monotonicMs'] - starts[0]['monotonicMs'],
+                        'profileAckToSendReturnMs': reply['monotonicMs'] - starts[0]['monotonicMs'],
                     }
                 forks = [e for e in events if e['type'] == 'fork'
                          and starts[0]['monotonicMs'] <= e['monotonicMs'] <= reply['monotonicMs']]
@@ -190,6 +205,7 @@ def controller_capture_inventory(directory):
                     errors.append(f'invalid worker boundary counts: {timeline.name}/{pid}')
             observed.append({'timeline': timeline.name, 'request_count': len(requests),
                              'mutant_count': len(mutants), 'observed_forks': len(forks),
+                             'baseline_count': sum(e.get('kind') == 'baseline' for e in requests),
                              'first_mutant_window': profile_window})
         except (OSError, ValueError, KeyError, TypeError, StopIteration, OverflowError) as error:
             errors.append(f'invalid controller capture {timeline.name}: {error}')
@@ -198,8 +214,26 @@ def controller_capture_inventory(directory):
         errors.append('orphan controller profiles: ' + ', '.join(orphans))
     if not observed:
         errors.append('no usable controller timelines')
+    reconciled = False
+    try:
+        if qualification is None:
+            raise ValueError('qualification report required for workload completeness')
+        report = json.loads((qualification / '00-oximut/report.json').read_text())
+        mutants = report['mutants']
+        baselines = report['resources']['disabledValidationRuns']
+        if (not isinstance(mutants, list) or not mutants or not isinstance(baselines, list)
+                or any(m['provenance']['source'] != 'executed' for m in mutants)):
+            raise ValueError('require executed-mutant and validation-run evidence')
+        expected = {'mutant_count': len(mutants), 'baseline_count': 1 + len(baselines)}
+        actual = {key: sum(r[key] for r in observed) for key in expected}
+        if actual != expected or sum(r['request_count'] for r in observed) != sum(expected.values()) + 2 * len(observed):
+            raise ValueError(f'captured workload counts {actual} differ from qualification {expected}')
+        reconciled = True
+    except (OSError, ValueError, KeyError, TypeError) as error:
+        errors.append(f'workload reconciliation failed: {error}')
     return {'observed': observed, 'errors': errors, 'orphan_profiles': orphans,
-            'scope': 'Complete observed request/reply timelines; partial controller CPU sampling. '
+            'workload_reconciled': reconciled,
+            'scope': 'Request observation to local send return (not recipient delivery/callback completion); partial controller CPU sampling. '
                      'Sampling starts during profiler activation, omitting some request prefix, '
                      'and may include inspector overhead. Not full-request or process-tree CPU profiling.'}
 
@@ -493,7 +527,7 @@ def main(argv=None):
     except Exception as error:
         result['failure'] = f'{type(error).__name__}: {error}'
     finally:
-        result['captures'] = (controller_capture_inventory(profiles) if args.controller_jobs else
+        result['captures'] = (controller_capture_inventory(profiles, output / 'qualification') if args.controller_jobs else
                               capture_inventory(profiles, output / 'qualification'))
         result['passed'] = not (result['failure'] or result['qualification_errors'] or result['captures']['errors'])
         workload.m6.write_json(output / 'diagnostic.json', result)

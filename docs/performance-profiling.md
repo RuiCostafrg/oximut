@@ -100,15 +100,19 @@ controller recycling and verified cleanup. No waiting grace period is added.
 
 ## Opt-in native CPU capture
 
-### Complete job timelines with partial CPU sampling (current default)
+### Qualified job observations with partial CPU sampling (current default)
 
 The performance workstream's [evidence and ranked experiments](edgy-performance.md)
 start with a narrower `--controller-jobs` capture. It runs the unchanged exact
 three-tool qualification, but preloads instrumentation only in `m2-worker.ts`.
-It records bounded fork IPC boundaries for every job and a complete observed
-request/reply timeline. One inspector CPU profile samples a shorter interval
+It records bounded fork IPC boundaries for every job and a timeline from request
+observation to the local `process.send` return. This boundary is recorded only
+after a normal return; it proves neither recipient delivery nor callback
+completion. The boolean return is retained unchanged, including `false` for
+backpressure, and exceptions/callback semantics are preserved. One inspector CPU
+profile samples a shorter interval
 within the first mutant request per controller, starting during profiler
-activation and stopping after the reply. Some request-handling prefix is not
+activation and stopping after the send returns. Some request-handling prefix is not
 sampled; inspector startup/stop overhead may also appear in the profile. No product
 adapter code changes. Incoming/outgoing worker control messages separate fork
 creation, bootstrap, collection, test completion, shutdown and exit. Only the
@@ -121,9 +125,9 @@ describe the controller alone. They neither measure fork CPU nor partition
 aggregate peak RSS. Profiles contain idle/native frames, so profile duration is
 not CPU consumption. Synchronous diagnostic writes and inspector work perturb
 scheduling and resource measurements; this run publishes no ratios or targets.
-`captures.observed[].first_mutant_window` reports request-to-reply,
-request-to-profiler-activation-acknowledgment and acknowledgment-to-reply wall
-durations separately. The activation latency is not an exact unsampled duration:
+`captures.observed[].first_mutant_window` reports `requestToSendReturnMs`,
+`requestToProfileAckMs` and `profileAckToSendReturnMs` separately.
+The activation latency is not an exact unsampled duration:
 some inspector setup is itself sampled. Complete timeline validation does not
 imply complete request CPU sampling.
 Any missing profile, reply, observed fork exit, worker boundary or controller
@@ -135,8 +139,16 @@ every request, reply and observed worker exit. Malformed timestamps invalidate
 capture rather than preventing diagnostic-summary publication.
 
 Controller commands require unique safe-integer IDs and alternating request/reply
-events, so reordered or replayed exchanges cannot satisfy completeness. Worker
-exit counters must report exactly one start, completion, stop and collection
+events, so reordered or replayed exchanges cannot satisfy completeness. Their
+mutant and baseline counts must also match the independent qualification report:
+every executed mutant, one original baseline and every disabled-validation run,
+plus one initialize/close pair per controller. Losing an entire exchange cannot
+pass by leaving a shorter, self-consistent trace. Format-version-1 timelines
+require contiguous event sequence numbers and a clear sticky write-failure flag;
+any append failure leaves a failure marker and invalidates capture. Historical
+unversioned traces have pre-send timestamps and no append-integrity attestation;
+their original summaries are retained, but they fail this stronger capture gate.
+Worker exit counters must report exactly one start, completion, stop and collection
 response per observed fork; high-volume RPCs remain bounded first-event records.
 The local inspector commands must complete synchronously before application
 dispatch continues. An asynchronous inspector callback invalidates capture and
