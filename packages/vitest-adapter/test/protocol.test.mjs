@@ -252,3 +252,12 @@ test('diagnostic envelopes preserve identity fallbacks, result fields and error 
   assert.equal(response.errors[0].length, 2048);
   assert.deepEqual(result, before);
 });
+
+test('pool accepts only omitted or threads', () => {
+  runtime.validateRequest(baseline);
+  runtime.validateRequest({ ...baseline, pool: 'threads' });
+  for (const pool of [null, 'forks', '', 1, [], {}])
+    assert.throws(() => runtime.validateRequest({ ...baseline, pool }), {
+      message: 'Invalid pool',
+    });
+});
