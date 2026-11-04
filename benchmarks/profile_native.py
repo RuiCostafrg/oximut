@@ -44,14 +44,47 @@ def qualification_errors(directory, code):
 
 
 def node_profile_finalized(data):
-    """Check that parsed Node evidence has nodes and finite ordered timestamps."""
+    """Require a connected CPU call tree and usable, internally consistent samples."""
     try:
-        return (isinstance(data, dict) and isinstance(data.get('nodes'), list) and bool(data['nodes'])
-                and all(isinstance(node, dict) for node in data['nodes'])
-                and all(type(data.get(key)) in (int, float) and math.isfinite(data[key])
-                        for key in ('startTime', 'endTime'))
-                and data['endTime'] >= data['startTime'] >= 0)
-    except OverflowError:
+        if (not isinstance(data, dict) or not isinstance(data.get('nodes'), list) or not data['nodes']
+                or not all(type(data.get(k)) in (int, float) and math.isfinite(data[k])
+                           for k in ('startTime', 'endTime'))
+                or not data['endTime'] > data['startTime'] >= 0):
+            return False
+        nodes = {}
+        for node in data['nodes']:
+            if not isinstance(node, dict) or type(node.get('id')) is not int or node['id'] <= 0:
+                return False
+            frame = node.get('callFrame')
+            if (node['id'] in nodes or not isinstance(frame, dict)
+                    or not all(isinstance(frame.get(k), str) for k in ('functionName', 'scriptId', 'url'))
+                    or not all(type(frame.get(k)) is int and frame[k] >= -1
+                               for k in ('lineNumber', 'columnNumber'))
+                    or not isinstance(node.get('children', []), list)
+                    or not all(type(child) is int for child in node.get('children', []))):
+                return False
+            nodes[node['id']] = node
+        children = [child for node in nodes.values() for child in node.get('children', [])]
+        if (len(children) != len(set(children)) or any(child not in nodes for child in children)):
+            return False
+        roots = nodes.keys() - set(children)
+        if len(roots) != 1:
+            return False
+        visited, pending = set(), list(roots)
+        while pending:
+            node_id = pending.pop()
+            if node_id in visited:
+                return False
+            visited.add(node_id)
+            pending.extend(nodes[node_id].get('children', []))
+        samples, deltas = data.get('samples'), data.get('timeDeltas')
+        return (len(visited) == len(nodes)
+                and isinstance(samples, list) and bool(samples) and isinstance(deltas, list)
+                and len(samples) == len(deltas)
+                and all(type(sample) is int and sample in nodes for sample in samples)
+                and all(type(delta) in (int, float) and math.isfinite(delta) and delta >= 0
+                        for delta in deltas))
+    except (OverflowError, TypeError, ValueError):
         return False
 
 
@@ -113,10 +146,22 @@ def controller_capture_inventory(directory):
             if not forks or sorted(forks) != sorted(exited):
                 errors.append(f'incomplete observed worker exits: {timeline.name}')
             for pid in forks:
-                types = [e.get('messageType') for e in events
-                         if e['type'] == 'child-message' and e.get('childPid') == pid
-                         and e.get('messageType')]
-                if types != ['started', 'testfileFinished', 'stopped']:
+                boundaries = []
+                for event in events:
+                    if event.get('childPid') != pid:
+                        continue
+                    if event['type'] in ('fork', 'child-exit'):
+                        boundaries.append(event['type'])
+                    elif event['type'] == 'child-send':
+                        boundaries.append('send:' + str(event.get('messageType')))
+                    elif event['type'] == 'child-message':
+                        if event.get('messageType'):
+                            boundaries.append('receive:' + str(event['messageType']))
+                        elif event.get('rpcMethod') == 'onCollected':
+                            boundaries.append('collection')
+                if boundaries != ['fork', 'send:start', 'receive:started', 'send:run',
+                                   'collection', 'receive:testfileFinished', 'send:stop',
+                                   'receive:stopped', 'child-exit']:
                     errors.append(f'incomplete worker boundaries: {timeline.name}/{pid}')
             observed.append({'timeline': timeline.name, 'request_count': len(requests),
                              'mutant_count': len(mutants), 'observed_forks': len(forks)})

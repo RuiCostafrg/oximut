@@ -47,6 +47,8 @@ jobs:
       - run: npm run lint
       - run: npm run typecheck
       - run: npm test
+      - name: Controller profiling IPC and evidence regressions
+        run: python3 -m unittest discover -s benchmarks/profiling -p 'test_*.py' -v
       - name: Report and list schema validator contract
         run: node --test scripts/tests/validate-*.test.mjs
       - run: npm run experiment
