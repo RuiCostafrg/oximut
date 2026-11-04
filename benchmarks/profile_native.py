@@ -55,6 +55,82 @@ def node_profile_finalized(data):
         return False
 
 
+def controller_capture_inventory(directory):
+    """Validate the deliberately narrow controller capture, never whole-tree coverage."""
+    errors, observed, matched = [], [], set()
+    timelines = sorted(directory.glob('controller-*.jsonl'))
+    for timeline in timelines:
+        try:
+            events = [json.loads(line) for line in timeline.read_text().splitlines()]
+            if not events or any(not isinstance(e, dict) for e in events):
+                raise ValueError('empty or malformed timeline')
+            times = [e['monotonicMs'] for e in events]
+            if (not all(type(t) in (int, float) and math.isfinite(t) and t >= 0 for t in times)
+                    or times != sorted(times)):
+                raise ValueError('invalid monotonic timeline')
+            if any(e['type'] == 'profile-error' for e in events):
+                errors.append(f'diagnostic helper error: {timeline.name}')
+            identities = [e for e in events if e['type'] == 'controller-start']
+            exits = [e for e in events if e['type'] == 'controller-exit']
+            if (len(identities) != 1 or len(exits) != 1
+                    or type(identities[0].get('pid')) is not int
+                    or identities[0]['pid'] <= 0
+                    or identities[0]['pid'] != int(timeline.stem.split('-')[1])
+                    or not str(identities[0].get('startTime', '')).isascii()
+                    or not str(identities[0].get('startTime', '')).isdecimal()):
+                errors.append(f'incomplete controller identity/lifecycle: {timeline.name}')
+            requests = [e for e in events if e['type'] == 'controller-request']
+            replies = [e for e in events if e['type'] == 'controller-send']
+            if not requests or [e['id'] for e in requests] != [e['id'] for e in replies]:
+                errors.append(f'missing or reordered controller replies: {timeline.name}')
+            if any(e.get('error') or not e.get('result') for e in replies):
+                errors.append(f'controller error reply: {timeline.name}')
+            mutants = [e for e in requests if e.get('kind') == 'mutant']
+            starts = [e for e in events if e['type'] == 'profile-started']
+            written = [e for e in events if e['type'] == 'profile-written']
+            if (not mutants or len(starts) != 1 or len(written) != 1
+                    or starts[0]['jobId'] != mutants[0]['id']
+                    or written[0]['jobId'] != mutants[0]['id']):
+                errors.append(f'first mutant profile missing/duplicated: {timeline.name}')
+            else:
+                name = written[0]['profile']
+                if not isinstance(name, str) or Path(name).name != name or not name.endswith('.cpuprofile'):
+                    raise ValueError('unsafe profile filename')
+                profile = directory / name
+                matched.add(profile)
+                if not node_profile_finalized(json.loads(profile.read_text())):
+                    errors.append(f'invalid CPU profile: {name}')
+                reply = next(e for e in replies if e['id'] == mutants[0]['id'])
+                if not (mutants[0]['monotonicMs'] <= starts[0]['monotonicMs']
+                        <= reply['monotonicMs'] <= written[0]['monotonicMs']):
+                    errors.append(f'profile does not bracket mutant: {timeline.name}')
+                forks = [e for e in events if e['type'] == 'fork'
+                         and starts[0]['monotonicMs'] <= e['monotonicMs'] <= reply['monotonicMs']]
+                if not forks:
+                    errors.append(f'no first-mutant fork evidence: {timeline.name}')
+            forks = [e['childPid'] for e in events if e['type'] == 'fork']
+            exited = [e['childPid'] for e in events if e['type'] == 'child-exit']
+            if not forks or sorted(forks) != sorted(exited):
+                errors.append(f'incomplete observed worker exits: {timeline.name}')
+            for pid in forks:
+                types = [e.get('messageType') for e in events
+                         if e['type'] == 'child-message' and e.get('childPid') == pid
+                         and e.get('messageType')]
+                if types != ['started', 'testfileFinished', 'stopped']:
+                    errors.append(f'incomplete worker boundaries: {timeline.name}/{pid}')
+            observed.append({'timeline': timeline.name, 'request_count': len(requests),
+                             'mutant_count': len(mutants), 'observed_forks': len(forks)})
+        except (OSError, ValueError, KeyError, TypeError, StopIteration) as error:
+            errors.append(f'invalid controller capture {timeline.name}: {error}')
+    orphans = sorted(p.name for p in set(directory.glob('*.cpuprofile')) - matched)
+    if orphans:
+        errors.append('orphan controller profiles: ' + ', '.join(orphans))
+    if not observed:
+        errors.append('no usable controller timelines')
+    return {'observed': observed, 'errors': errors, 'orphan_profiles': orphans,
+            'scope': 'Controller job CPU and observed fork IPC boundaries only; not complete process-tree profiling.'}
+
+
 def compact_summary(result):
     """Bound displayed diagnostics while retaining the full inventory in artifacts."""
     captures = result.get('captures', {})
@@ -286,15 +362,19 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--binary', type=Path, required=True)
     parser.add_argument('--output', type=Path, required=True)
-    parser.add_argument('--segments', action='store_true',
+    modes = parser.add_mutually_exclusive_group()
+    modes.add_argument('--segments', action='store_true',
                         help='Use one inspector startup checkpoint per isolate instead of exit-time Node profiles; always partial evidence')
+    modes.add_argument('--controller-jobs', action='store_true',
+                       help='Capture controller IPC/worker boundaries and the first whole mutant job; no whole-tree CPU attribution')
     args = parser.parse_args(argv)
     output = args.output.resolve()
     output.mkdir(parents=True, exist_ok=False)
     profiles = output / 'profiles'
     profiles.mkdir()
     result = {'diagnostic_only': True, 'profiler_overhead': True,
-              'node_capture_mode': 'partial-inspector-startup' if args.segments else 'exit-time-cpu-prof',
+              'node_capture_mode': ('controller-jobs' if args.controller_jobs else
+                                    'partial-inspector-startup' if args.segments else 'exit-time-cpu-prof'),
               'qualification_errors': [], 'failure': None,
               'scope': 'Unchanged colord: 41 sources, 102 tests, five mutation sources, ten arithmetic edits. One capture, no warmup campaign.',
               'limits': 'Node sampling and Python supervisor self CPU only; no complete process-tree CPU partition. Rust resource sampling remains unattributed. External benchmark sampler CPU is outside wait4 product-tree CPU; it perturbs wall time.'}
@@ -320,6 +400,11 @@ def main(argv=None):
                'OXIMUT_PROFILE_SEGMENTS': '1' if args.segments else '0',
                'NODE_OPTIONS': ('' if args.segments else f'--cpu-prof --cpu-prof-dir="{profiles}" ') +
                                f'--require="{SUPPORT / "node-identity.cjs"}"'}
+        if args.controller_jobs:
+            # Keep this capture separate from the startup/exit-time profilers:
+            # two inspector sessions would otherwise stop each other's samples.
+            env['OXIMUT_PROFILE_CONTROLLER_DIR'] = str(profiles)
+            env['NODE_OPTIONS'] = f'--require="{SUPPORT / "controller-jobs.cjs"}"'
         result['node_options'] = env['NODE_OPTIONS']
         cmd = [sys.executable, str(ROOT / 'benchmarks/real_project.py'),
                '--binary', str(inputs.binary), '--adapter', str(inputs.adapter),
@@ -335,7 +420,8 @@ def main(argv=None):
     except Exception as error:
         result['failure'] = f'{type(error).__name__}: {error}'
     finally:
-        result['captures'] = capture_inventory(profiles, output / 'qualification')
+        result['captures'] = (controller_capture_inventory(profiles) if args.controller_jobs else
+                              capture_inventory(profiles, output / 'qualification'))
         result['passed'] = not (result['failure'] or result['qualification_errors'] or result['captures']['errors'])
         workload.m6.write_json(output / 'diagnostic.json', result)
     print(json.dumps(result, indent=2))

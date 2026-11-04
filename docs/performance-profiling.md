@@ -100,6 +100,39 @@ controller recycling and verified cleanup. No waiting grace period is added.
 
 ## Opt-in native CPU capture
 
+### Whole controller jobs (current workflow default)
+
+The performance workstream's [evidence and ranked experiments](edgy-performance.md)
+start with a narrower `--controller-jobs` capture. It runs the unchanged exact
+three-tool qualification, but preloads instrumentation only in `m2-worker.ts`.
+It records bounded fork IPC boundaries for every job and one inspector CPU
+profile spanning the first mutant request/reply per controller. No product
+adapter code changes. Incoming/outgoing worker control messages separate fork
+creation, bootstrap, collection, test completion, shutdown and exit. Only the
+first occurrence of each known RPC method is timestamped per fork; exit records
+retain its total count. No user request/test/source payloads are logged.
+
+Controller request/reply records also retain `process.cpuUsage()` and
+`process.memoryUsage()` (RSS, V8 heap and external allocations). These counters
+describe the controller alone. They neither measure fork CPU nor partition
+aggregate peak RSS. Profiles contain idle/native frames, so profile duration is
+not CPU consumption. Synchronous diagnostic writes and inspector work perturb
+scheduling and resource measurements; this run publishes no ratios or targets.
+Any missing profile, reply, observed fork exit, worker boundary or controller
+lifecycle invalidates this narrow capture. Its success makes no claim of full
+process-tree profiling; startup-only captures retain their separate incomplete
+lifecycle gate. Neither mode changes workload correctness/cleanup gates.
+
+Use the `native-profile` PR label for this mode, or dispatch with
+`capture_mode: controller-jobs`. Dispatch with `capture_mode: segments` to retain
+the startup experiment described below. Locally, select `--controller-jobs` in
+place of `--segments`; the modes are mutually exclusive to avoid inspector
+sessions stopping each other's samples. Diagnostic fixture tests live beside
+the preload and run with `python3 -m unittest discover -s benchmarks/profiling
+-p 'test_*.py' -v` before the workflow builds or captures anything.
+
+### Startup and exit-time captures
+
 `Native diagnostic CPU profiles` is a separate Ubuntu 24.04 workflow. After this
 change is in a PR, add the **`native-profile`** label to that PR (every push while it is
 present reruns the job, so remove it after the desired capture and before
@@ -220,7 +253,7 @@ incomplete diagnostic evidence, not a product correctness failure or a valid
 performance comparison. Raw evidence is archived under
 [`2026-10-28-native-profile-incomplete`](../benchmarks/results/2026-10-28-native-profile-incomplete/README.md).
 
-The native workflow now selects explicit `--segments` mode to collect useful
+The startup capture selects explicit `--segments` mode to collect useful
 partial stacks from these workers. This mode uses an inspector session per isolate
 **instead of** the built-in exit-time profiler. It starts once during preload and
 requests **one** unreferenced checkpoint after 50ms: stop → disconnect → atomic
