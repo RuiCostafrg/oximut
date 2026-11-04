@@ -114,8 +114,17 @@ def controller_capture_inventory(directory):
                 errors.append(f'incomplete controller identity/lifecycle: {timeline.name}')
             requests = [e for e in events if e['type'] == 'controller-request']
             replies = [e for e in events if e['type'] == 'controller-send']
-            if not requests or [e['id'] for e in requests] != [e['id'] for e in replies]:
-                errors.append(f'missing or reordered controller replies: {timeline.name}')
+            ids = [e['id'] for e in requests]
+            reply_ids = [e['id'] for e in replies]
+            if (not ids or any(type(i) is not int or abs(i) > 2**53 - 1 for i in ids + reply_ids)
+                    or len(ids) != len(set(ids)) or len(reply_ids) != len(set(reply_ids))):
+                errors.append(f'invalid or duplicate controller IDs: {timeline.name}')
+            exchanges = [(e['type'], e['id']) for e in events
+                         if e['type'] in ('controller-request', 'controller-send')]
+            expected = [pair for i in ids for pair in
+                        [('controller-request', i), ('controller-send', i)]]
+            if exchanges != expected:
+                errors.append(f'unmatched or nonserial controller exchange: {timeline.name}')
             if any(e.get('error') or not e.get('result') for e in replies):
                 errors.append(f'controller error reply: {timeline.name}')
             mutants = [e for e in requests if e.get('kind') == 'mutant']
@@ -163,6 +172,12 @@ def controller_capture_inventory(directory):
                                    'collection', 'receive:testfileFinished', 'send:stop',
                                    'receive:stopped', 'child-exit']:
                     errors.append(f'incomplete worker boundaries: {timeline.name}/{pid}')
+                counts = next(e for e in events if e['type'] == 'child-exit'
+                              and e.get('childPid') == pid).get('counts')
+                critical = ('started', 'testfileFinished', 'stopped', 'onCollected')
+                if (not isinstance(counts, dict) or any(type(counts.get(k)) is not int
+                                                       or counts[k] != 1 for k in critical)):
+                    errors.append(f'invalid worker boundary counts: {timeline.name}/{pid}')
             observed.append({'timeline': timeline.name, 'request_count': len(requests),
                              'mutant_count': len(mutants), 'observed_forks': len(forks)})
         except (OSError, ValueError, KeyError, TypeError, StopIteration) as error:

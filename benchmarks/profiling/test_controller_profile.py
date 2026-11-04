@@ -21,11 +21,18 @@ const assert = require('node:assert/strict');
 const { fork } = require('node:child_process');
 process.on('message', async msg => {
   if (msg.command === 'run') {
+    if (process.env.FIXTURE_DEFER_PROFILE === '1') await new Promise(setImmediate);
     const child = fork(process.env.FIXTURE_CHILD, [], { stdio: ['ignore','ignore','inherit','ipc'] });
     await new Promise(resolve => {
+      let running = false;
+      let stopping = false;
       child.on('message', m => {
-        if (m.type === 'started') child.send({__vitest_worker_request__:true,type:'run'});
-        if (m.type === 'testfileFinished') child.send({__vitest_worker_request__:true,type:'stop'});
+        if (m.type === 'started' && !running) {
+          running = true; child.send({__vitest_worker_request__:true,type:'run'});
+        }
+        if (m.type === 'testfileFinished' && !stopping) {
+          stopping = true; child.send({__vitest_worker_request__:true,type:'stop'});
+        }
       });
       child.once('exit', resolve);
       child.send({__vitest_worker_request__:true,type:'start'});
@@ -44,15 +51,21 @@ process.on('message', async msg => {
 process.once('disconnect', () => { process.exitCode = 23; });
 '''
 CHILD = r'''
+function reply(type) {
+  const value = {__vitest_worker_response__:true,type};
+  process.send(value);
+  if (process.env.FIXTURE_DUPLICATE === type) process.send(value);
+}
 process.on('message', m => {
-  if (m.type === 'start') process.send({__vitest_worker_response__:true,type:'started'});
+  if (m.type === 'start') reply('started');
   if (m.type === 'run') {
     process.send({m:'onCollected',a:['DO NOT LOG PAYLOAD']});
+    if (process.env.FIXTURE_DUPLICATE === 'onCollected') process.send({m:'onCollected'});
     for(let i=0;i<30;i++) process.send({m:'onTaskUpdate',a:['DO NOT LOG PAYLOAD']});
-    process.send({__vitest_worker_response__:true,type:'testfileFinished'});
+    reply('testfileFinished');
   }
   if (m.type === 'stop') {
-    process.send({__vitest_worker_response__:true,type:'stopped'});
+    reply('stopped');
     process.disconnect();
   }
 });
@@ -130,7 +143,8 @@ setImmediate(() => { assert.equal(callbacks, 4); console.log('contract passed');
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertEqual(result.stdout.strip(), 'contract passed')
 
-    def fixture(self, root, enabled=True, entry='m2-worker.ts', directory=None):
+    def fixture(self, root, enabled=True, entry='m2-worker.ts', directory=None,
+                duplicate='', defer_profile=False):
         """Run real fork IPC and verify replies, callbacks, return values and exit."""
         worker = root / entry
         worker.write_text(CONTROLLER)
@@ -139,7 +153,23 @@ setImmediate(() => { assert.equal(callbacks, 4); console.log('contract passed');
         launch = root / 'launch.cjs'
         launch.write_text(LAUNCHER)
         env = {**os.environ, 'NODE_OPTIONS': f'--require="{PRELOAD}"',
-               'FIXTURE_CHILD': str(child), 'FIXTURE_CONTROLLER': str(worker)}
+               'FIXTURE_CHILD': str(child), 'FIXTURE_CONTROLLER': str(worker),
+               'FIXTURE_DUPLICATE': duplicate,
+               'FIXTURE_DEFER_PROFILE': '1' if defer_profile else '0'}
+        if defer_profile:
+            sabotage = root / 'deferred-inspector.cjs'
+            sabotage.write_text(r'''
+const { Session } = require('node:inspector');
+const post = Session.prototype.post;
+Session.prototype.post = function(method, ...args) {
+  if (method !== 'Profiler.start') return Reflect.apply(post, this, [method,...args]);
+  setImmediate(() => {
+    try { Reflect.apply(post, this, [method,...args]); }
+    catch (error) { args.at(-1)(error); }
+  });
+};
+''')
+            env['NODE_OPTIONS'] = f'--require="{sabotage}" ' + env['NODE_OPTIONS']
         env.pop('OXIMUT_PROFILE_CONTROLLER_DIR', None)
         if enabled:
             env['OXIMUT_PROFILE_CONTROLLER_DIR'] = str(directory or root)
@@ -217,6 +247,58 @@ setImmediate(() => { assert.equal(callbacks, 4); console.log('contract passed');
             inventory = self.fixture(root, directory=blocked)
             self.assertTrue(inventory['errors'])
             self.assertFalse(list(root.glob('*.cpuprofile')))
+
+    def test_asynchronous_profiler_start_is_incomplete_without_changing_ipc(self):
+        """Reject a late inspector callback instead of retiming the application."""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            inventory = self.fixture(root, defer_profile=True)
+            self.assertTrue(inventory['errors'])
+            events = [json.loads(line) for line in next(root.glob('controller-*.jsonl')).read_text().splitlines()]
+            self.assertTrue(any(e['type'] == 'profile-error' and 'synchronously' in e['error']
+                                for e in events))
+            self.assertFalse(list(root.glob('*.cpuprofile')))
+            self.assertFalse(any(e['type'] == 'profile-started' for e in events))
+
+    def test_duplicate_lifecycle_or_collection_messages_invalidate_capture(self):
+        """Bounded first-event logging must not hide duplicate critical responses."""
+        for kind in ['started', 'testfileFinished', 'stopped', 'onCollected']:
+            with self.subTest(duplicate=kind), tempfile.TemporaryDirectory() as tmp:
+                root = Path(tmp)
+                inventory = self.fixture(root, duplicate=kind)
+                self.assertTrue(any('boundary counts' in error for error in inventory['errors']))
+                events = [json.loads(line) for line in next(root.glob('controller-*.jsonl')).read_text().splitlines()]
+                self.assertTrue(all(e['counts'][kind] == 2 for e in events if e['type'] == 'child-exit'))
+
+    def test_controller_exchanges_require_serial_unique_safe_integer_ids(self):
+        """Reject reversed and duplicated exchanges despite matching separate ID lists."""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self.assertEqual(self.fixture(root)['errors'], [])
+            timeline = next(root.glob('controller-*.jsonl'))
+            events = [json.loads(line) for line in timeline.read_text().splitlines()]
+            request = next(i for i, e in enumerate(events) if e['type'] == 'controller-request' and e['id'] == 1)
+            reply = next(i for i, e in enumerate(events) if e['type'] == 'controller-send' and e['id'] == 1)
+            cases = {}
+            broken = copy.deepcopy(events)
+            before, after = broken[request]['monotonicMs'], broken[reply]['monotonicMs']
+            broken[request], broken[reply] = broken[reply], broken[request]
+            broken[request]['monotonicMs'], broken[reply]['monotonicMs'] = before, after
+            cases['reply-before-request'] = broken
+            broken = copy.deepcopy(events)
+            extra = [dict(broken[request], monotonicMs=after), dict(broken[reply])]
+            broken[reply + 1:reply + 1] = extra
+            cases['duplicate-paired-id'] = broken
+            for value in [True, 1.5, 2**53]:
+                broken = copy.deepcopy(events)
+                broken[request]['id'] = broken[reply]['id'] = value
+                cases[f'invalid-id-{value}'] = broken
+            for name, broken in cases.items():
+                with self.subTest(corruption=name):
+                    timeline.write_text('\n'.join(json.dumps(e) for e in broken))
+                    self.assertTrue(diagnostic.controller_capture_inventory(root)['errors'])
+            timeline.write_text('\n'.join(json.dumps(e) for e in events))
+            self.assertEqual(diagnostic.controller_capture_inventory(root)['errors'], [])
 
 
 class ProfileStructureTests(unittest.TestCase):

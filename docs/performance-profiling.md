@@ -123,6 +123,16 @@ lifecycle invalidates this narrow capture. Its success makes no claim of full
 process-tree profiling; startup-only captures retain their separate incomplete
 lifecycle gate. Neither mode changes workload correctness/cleanup gates.
 
+Controller commands require unique safe-integer IDs and alternating request/reply
+events, so reordered or replayed exchanges cannot satisfy completeness. Worker
+exit counters must report exactly one start, completion, stop and collection
+response per observed fork; high-volume RPCs remain bounded first-event records.
+The local inspector commands must complete synchronously before application
+dispatch continues. An asynchronous inspector callback invalidates capture and
+disconnects the profiler; no asynchronous waiting or redispatch of application
+messages is introduced. Synchronous inspector overhead still perturbs timing as
+described above. A profile is stopped only after startup has completed.
+
 Use the `native-profile` PR label for this mode, or dispatch with
 `capture_mode: controller-jobs`. Dispatch with `capture_mode: segments` to retain
 the startup experiment described below. Locally, select `--controller-jobs` in

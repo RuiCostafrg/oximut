@@ -20,21 +20,41 @@ if (dir && process.argv[1]?.endsWith('/m2-worker.ts')) {
   let attempted = false;
   let profileJob;
   let session;
-  const disconnect = () => guard(() => session?.disconnect());
+  const disconnect = () => {
+    profileJob = undefined;
+    guard(() => session?.disconnect());
+  };
   const post = (method, cb) => {
+    let inPost = true;
+    let responded = false;
     try {
       session.post(method, (error, result) => {
+        if (!inPost) {
+          reportError(`${method} callback did not complete synchronously; capture incomplete`);
+          disconnect();
+          return;
+        }
+        responded = true;
         if (error) { reportError(error); disconnect(); return; }
         observe(() => cb(result));
       });
+      if (!responded) {
+        reportError(`${method} did not complete synchronously; capture incomplete`);
+        disconnect();
+      }
     } catch (error) { reportError(error); disconnect(); }
+    finally { inPost = false; }
   };
   const startProfile = (jobId) => {
     attempted = true;
-    profileJob = jobId;
     session = new inspector.Session();
     session.connect();
-    post('Profiler.enable', () => post('Profiler.start', () => emit('profile-started', { jobId })));
+    // Local inspector commands normally complete inside post(). Never defer
+    // application dispatch: if that changes, reject this capture instead.
+    post('Profiler.enable', () => post('Profiler.start', () => {
+      profileJob = jobId;
+      emit('profile-started', { jobId });
+    }));
   };
   const stopProfile = (jobId) => {
     profileJob = undefined;
