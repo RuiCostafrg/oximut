@@ -1,5 +1,5 @@
 {
-  "validator_sha256": "990887a2f18c5434eaa4e689e73fcf4e76397076f3a1b1f20c9ae42b5e995d7f",
+  "validator_sha256": "1d690d19fd825b8f4437b25dacfcf1e7afd64c8002880c92525de019ee42f44f",
   "current_source_matches_native_build": {
     "benchmarks/profile_native.py": false,
     "benchmarks/profiling/controller-jobs.cjs": false
@@ -26,6 +26,80 @@
           null
         ],
         "baseline_count": 2,
+        "jobs": [
+          {
+            "kind": "baseline",
+            "job_id": null,
+            "run_id": null,
+            "mutant_id": null
+          },
+          {
+            "kind": "baseline",
+            "job_id": null,
+            "run_id": null,
+            "mutant_id": null
+          },
+          {
+            "kind": "mutant",
+            "job_id": null,
+            "run_id": null,
+            "mutant_id": null
+          },
+          {
+            "kind": "mutant",
+            "job_id": null,
+            "run_id": null,
+            "mutant_id": null
+          },
+          {
+            "kind": "mutant",
+            "job_id": null,
+            "run_id": null,
+            "mutant_id": null
+          },
+          {
+            "kind": "mutant",
+            "job_id": null,
+            "run_id": null,
+            "mutant_id": null
+          },
+          {
+            "kind": "mutant",
+            "job_id": null,
+            "run_id": null,
+            "mutant_id": null
+          },
+          {
+            "kind": "mutant",
+            "job_id": null,
+            "run_id": null,
+            "mutant_id": null
+          },
+          {
+            "kind": "mutant",
+            "job_id": null,
+            "run_id": null,
+            "mutant_id": null
+          },
+          {
+            "kind": "mutant",
+            "job_id": null,
+            "run_id": null,
+            "mutant_id": null
+          },
+          {
+            "kind": "mutant",
+            "job_id": null,
+            "run_id": null,
+            "mutant_id": null
+          },
+          {
+            "kind": "mutant",
+            "job_id": null,
+            "run_id": null,
+            "mutant_id": null
+          }
+        ],
         "first_mutant_window": {
           "requestToSendReturnMs": 500.78708200000005,
           "requestToProfileAckMs": 60.339766000000054,

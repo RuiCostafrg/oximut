@@ -77,10 +77,17 @@ const { fork } = require('node:child_process');
   const c = fork(process.env.FIXTURE_CONTROLLER, [], {stdio:['ignore','inherit','inherit','ipc']});
   const replies=[];
   const mutantIds = JSON.parse(process.env.FIXTURE_MUTANT_IDS);
-  for (const [id,command,kind] of [[1,'initialize'],[2,'run','baseline'],[3,'run','mutant'],[4,'run','mutant'],[5,'close']]) {
+  const mutantJobIds = JSON.parse(process.env.FIXTURE_MUTANT_JOB_IDS);
+  const baselineIds = JSON.parse(process.env.FIXTURE_BASELINE_IDS);
+  const runId = process.env.FIXTURE_RUN_ID;
+  const commands = [['initialize'], ...baselineIds.map(id => ['run','baseline',id]),
+    ...mutantIds.map((id,i) => ['run','mutant',mutantJobIds[i],id]), ['close']];
+  for (const [index,[command,kind,jobId,mutantId]] of commands.entries()) {
+    const id = index + 1;
     const response = new Promise(resolve => c.once('message', resolve));
-    const job = {kind, mutation:kind === 'mutant' ? {id:mutantIds[id === 3 ? 0 : 1]} : null};
-    const args = command === 'run' ? {request:job} : command === 'initialize' ? {kind:'baseline',mutation:null} : {};
+    const job = {kind, jobId, runId, mutation:kind === 'mutant' ? {id:mutantId} : null};
+    const args = command === 'run' ? {request:job} : command === 'initialize'
+      ? {kind:'baseline',jobId:'baseline',runId,mutation:null} : {};
     c.send({protocol:1,id,command,args});
     replies.push(await response);
   }
@@ -105,8 +112,9 @@ const failure = new Error('original send failure');
 const callbackError = new Error('underlying async callback');
 const original = function(...args) {
   if (args[0].fail) throw failure;
-  records.push({receiver:this,args,completedAt:process.hrtime.bigint()});
-  setImmediate(() => args.at(-1)(callbackError));
+  const record = {receiver:this,args,completedAt:process.hrtime.bigint()};
+  records.push(record);
+  setImmediate(() => { record.callbackAt = process.hrtime.bigint(); args.at(-1)(callbackError); });
   return args[0].expected;
 };
 process.send = original;
@@ -138,12 +146,15 @@ for (const send of [process.send, wrappedChild.send]) {
   assert.throws(() => send({protocol:1,id:999,fail:true}), error => error === failure);
 }
 assert.equal(callbacks, 0);
+const fs = require('node:fs');
+const path = require('node:path');
+const readTimeline = () => fs.readFileSync(path.join(process.env.OXIMUT_PROFILE_CONTROLLER_DIR,
+    `controller-${process.pid}.jsonl`), 'utf8').trim().split('\n').map(JSON.parse);
+assert.equal(readTimeline().filter(row => row.type === 'controller-send').length, 2,
+  'send observations must be synchronous before callbacks');
 setImmediate(() => {
   assert.equal(callbacks, 4);
-  const fs = require('node:fs');
-  const path = require('node:path');
-  const rows = fs.readFileSync(path.join(process.env.OXIMUT_PROFILE_CONTROLLER_DIR,
-    `controller-${process.pid}.jsonl`), 'utf8').trim().split('\n').map(JSON.parse);
+  const rows = readTimeline();
   const sends = rows.filter(row => row.type === 'controller-send');
   assert.equal(sends.length, 2);
   assert.deepEqual(sends.map(row => row.sendReturn), [true,false]);
@@ -151,6 +162,7 @@ setImmediate(() => {
   for (let i=0;i<sends.length;i++) {
     assert.equal(sends[i].boundary, 'send-return');
     assert.ok(sends[i].monotonicMs >= Number(records[i].completedAt - BigInt(rows[0].monotonicOriginNs))/1e6);
+    assert.ok(sends[i].monotonicMs < Number(records[i].callbackAt - BigInt(rows[0].monotonicOriginNs))/1e6);
   }
   console.log('contract passed');
 });
@@ -173,15 +185,25 @@ setImmediate(() => {
 
     def fixture(self, root, enabled=True, entry='m2-worker.ts', directory=None,
                 duplicate='', defer_profile=False, fail_append=False,
-                request_ids=None, qualification_ids=None):
+                request_ids=None, qualification_ids=None, validation_runs=0,
+                baseline_ids=None, request_run_id=None, qualification_run_id=None,
+                mutant_job_ids=None):
         """Run real fork IPC and verify replies, callbacks, return values and exit."""
         request_ids = request_ids if request_ids is not None else [secrets.token_hex(32) for _ in range(2)]
         qualification_ids = qualification_ids if qualification_ids is not None else list(request_ids)
+        mutant_job_ids = mutant_job_ids if mutant_job_ids is not None else list(request_ids)
+        request_run_id = request_run_id if request_run_id is not None else f'{os.getpid()}-{secrets.randbits(64)}'
+        qualification_run_id = qualification_run_id if qualification_run_id is not None else request_run_id
+        if baseline_ids is None:
+            baseline_ids = ['baseline'] + (['instrumented-baseline'] if validation_runs == 1 else
+                                           [f'instrumented-baseline-{i}' for i in range(validation_runs)])
         qualification = root / 'qualification' / '00-oximut'
         qualification.mkdir(parents=True)
         (qualification / 'report.json').write_text(json.dumps({
+            'runId': qualification_run_id,
+            'baseline': {'jobId': 'baseline', 'runId': qualification_run_id},
             'mutants': [dict(id=identity, provenance=dict(source='executed')) for identity in qualification_ids],
-            'resources': {'disabledValidationRuns': []}}))
+            'resources': {'disabledValidationRuns': [{'run':'instrumentedBaseline'} for _ in range(validation_runs)]}}))
         worker = root / entry
         worker.write_text(CONTROLLER)
         child = root / 'child.cjs'
@@ -191,6 +213,8 @@ setImmediate(() => {
         env = {**os.environ, 'NODE_OPTIONS': f'--require="{PRELOAD}"',
                'FIXTURE_CHILD': str(child), 'FIXTURE_CONTROLLER': str(worker),
                'FIXTURE_MUTANT_IDS': json.dumps(request_ids),
+               'FIXTURE_MUTANT_JOB_IDS': json.dumps(mutant_job_ids),
+               'FIXTURE_BASELINE_IDS': json.dumps(baseline_ids), 'FIXTURE_RUN_ID': request_run_id,
                'FIXTURE_DUPLICATE': duplicate,
                'FIXTURE_DEFER_PROFILE': '1' if defer_profile else '0'}
         if defer_profile:
@@ -231,9 +255,10 @@ fs.appendFileSync = function(file, data, ...args) {
         lines = result.stdout.splitlines()
         data = next(json.loads(line) for line in lines if line.startswith('{'))
         self.assertEqual(data['code'], 23)
-        self.assertEqual(data['replies'], [dict(protocol=1,id=i,result=dict(ok=True)) for i in range(1,6)])
-        self.assertEqual(lines.count('callback'), 5)
-        self.assertEqual(lines.count('returned:true'), 5)
+        command_count = len(baseline_ids) + len(request_ids) + 2
+        self.assertEqual(data['replies'], [dict(protocol=1,id=i,result=dict(ok=True)) for i in range(1,command_count + 1)])
+        self.assertEqual(lines.count('callback'), command_count)
+        self.assertEqual(lines.count('returned:true'), command_count)
         return self.capture(root)
 
     def test_complete_first_mutant_and_bounded_worker_boundaries(self):
@@ -349,6 +374,38 @@ fs.appendFileSync = function(file, data, ...args) {
                 self.assertEqual([m['id'] for m in report['mutants']], qualified)
                 self.assertEqual(result['workload_reconciled'], matching)
                 self.assertEqual(bool(result['errors']), not matching)
+
+    def test_baseline_and_run_identities_match_qualified_jobs(self):
+        """Repeated baselines and foreign run/job IDs cannot hide behind equal counts."""
+        cases = [
+            (1, ['baseline','instrumented-baseline'], True),
+            (1, ['baseline','baseline'], False),
+            (1, ['instrumented-baseline','instrumented-baseline'], False),
+            (1, ['baseline','instrumented-baseline-9'], False),
+            (2, ['baseline','instrumented-baseline-0','instrumented-baseline-1'], True),
+            (2, ['baseline','instrumented-baseline-0','instrumented-baseline-0'], False),
+        ]
+        for count, identities, matching in cases:
+            with self.subTest(baselines=identities), tempfile.TemporaryDirectory() as tmp:
+                root = Path(tmp)
+                result = self.fixture(root, validation_runs=count, baseline_ids=identities)
+                events = [json.loads(line) for line in next(root.glob('controller-*.jsonl')).read_text().splitlines()]
+                self.assertEqual([e['jobId'] for e in events if e.get('kind') == 'baseline'], identities)
+                self.assertEqual(result['workload_reconciled'], matching)
+                self.assertEqual(bool(result['errors']), not matching)
+        with self.subTest(foreign_run=True), tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            result = self.fixture(root, request_run_id='123-456', qualification_run_id='123-789')
+            events = [json.loads(line) for line in next(root.glob('controller-*.jsonl')).read_text().splitlines()]
+            self.assertEqual({e['runId'] for e in events if e.get('command') == 'run'}, {'123-456'})
+            self.assertTrue(any('different qualification run' in e for e in result['errors']))
+            self.assertFalse(result['workload_reconciled'])
+        with self.subTest(wrong_mutant_job=True), tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            identities = [secrets.token_hex(32) for _ in range(2)]
+            result = self.fixture(root, request_ids=identities, mutant_job_ids=list(reversed(identities)))
+            self.assertTrue(any('job identity differs' in e for e in result['errors']))
+            self.assertFalse(result['workload_reconciled'])
 
     def test_mutant_identities_match_qualification_even_when_counts_match(self):
         """Equal totals cannot hide repeated, substituted or missing mutant identities."""

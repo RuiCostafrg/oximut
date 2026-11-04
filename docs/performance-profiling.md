@@ -148,7 +148,14 @@ its bounded 64-character mutant digest, with no source/test payload. The capture
 IDs must exactly match the qualification report's unique executed-mutant IDs;
 equal totals cannot hide a repeated mutant replacing another. Captures lacking
 this identity evidence fail current validation, even if an older count-only gate
-passed. Format-version-1 timelines
+passed. Every run also records bounded `jobId` and `runId` identities. The original
+baseline must match the report's `baseline` job; disabled-validation jobs must
+match the CLI's single `instrumented-baseline` or indexed
+`instrumented-baseline-N` names, according to its recorded validation runs.
+Every job belongs to the qualification report's run ID, and mutant job IDs must
+match their mutation IDs. Repeated baselines or jobs from another run therefore
+cannot satisfy reconciliation. Captures without these identities fail current
+validation. Format-version-1 timelines
 require contiguous event sequence numbers and a clear sticky write-failure flag;
 any append failure leaves a failure marker and invalidates capture. Historical
 unversioned traces have pre-send timestamps and no append-integrity attestation;

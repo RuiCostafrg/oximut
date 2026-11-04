@@ -1,7 +1,7 @@
 # Performance workstream: measure the isolation boundary
 
-Status: native diagnostics with send-return timestamps and exact qualified
-mutant identities pass; optimization experiments pending. No
+Status: historical diagnostics retained; native capture with baseline and run
+identities pending; optimization experiments pending. No
 performance improvement or release claim.
 Starting point: main `d8e0c512eae792d522d3bf47bfa50ee3a9ce5cbc`.
 The native comparison workflow now pins main `74a4972` as
@@ -132,12 +132,14 @@ attributing worker CPU or proving savings. The capsule retains all resource and
 phase metrics, raw evidence and standalone evidence-revalidation instructions.
 This one profiled run has no paired ratios or bootstrap CIs.
 
-The [current capture with mutant identities](../benchmarks/results/2026-11-04-controller-mutant-identities/README.md)
-(run 41892806213) passes exact workload qualification and current capture
+The [capture with mutant identities](../benchmarks/results/2026-11-04-controller-mutant-identities/README.md)
+(run 41892806213) passed exact workload qualification and its original capture
 validation. Its ten captured mutant digests match the qualification report's
 unique executed mutants; baseline/command counts, event sequences, worker exits
-and profile samples also validate. Both validator and preload match the native
-build's source hashes. The capsule retains every resource/phase metric, raw
+and profile samples validated. Validator and preload matched the native build
+at archival, but this trace lacks baseline job IDs and qualification run IDs and
+fails current reconciliation. A native recapture with those identities is pending.
+The capsule retains every resource/phase metric, raw
 timeline/profile and qualification report, with runnable evidence checks.
 Median fork-to-started is 116.640 ms, run-to-collection 40.048 ms, and
 collection-to-completion 78.622 ms on this host. These are independent wall

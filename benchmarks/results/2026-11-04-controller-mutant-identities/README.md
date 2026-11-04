@@ -1,8 +1,8 @@
-# Native capture reconciled against exact mutant identities
+# Historical native capture with exact mutant identities
 
-[Run 41892806213](https://github.com/RuiCostafrg/oximut/actions/runs/41892806213) captured head `7ae4b25` via merge revision `f9aaa3ce87025679a0628146acbe19e36d2d884a` on Ubuntu 24.04 x86_64. Both the validator and controller preload match the native build's source hashes.
+[Run 41892806213](https://github.com/RuiCostafrg/oximut/actions/runs/41892806213) captured head `7ae4b25` via merge revision `f9aaa3ce87025679a0628146acbe19e36d2d884a` on Ubuntu 24.04 x86_64. Validator and preload source hashes matched the native build at archival; current sources have since added baseline and run identities.
 
-Exact workload qualification and current capture validation pass: 41 sources, 102 tests, five mutation files and ten identical killed arithmetic edits. The capture contains one controller, 14 unique serial commands (initialize, two baselines, ten mutants, close), 18 observed fork lifecycles and one finalized first-mutant CPU profile. Every captured mutant digest matches one unique executed mutant in the retained qualification report; counts also reconcile. Event sequences are contiguous, write-failure flags are clear and all reply observations follow normal local send returns. Earlier captures remain unchanged as historical raw evidence and fail the current identity/integrity gates.
+Exact workload qualification and the original mutant-identity capture gate passed: 41 sources, 102 tests, five mutation files and ten identical killed arithmetic edits. The capture contains one controller, 14 unique serial commands (initialize, two baselines, ten mutants, close), 18 observed fork lifecycles and one finalized first-mutant CPU profile. Every captured mutant digest matches one unique executed mutant in the retained qualification report; counts also reconcile. Event sequences are contiguous, write-failure flags are clear and all reply observations follow normal local send returns. **Current capture validation fails:** baseline job identities and qualification run IDs were not recorded. Counts alone cannot prove that the original and instrumented baselines were each observed. Raw evidence and original summaries remain unchanged; a fresh capture with those identities is required.
 
 ## Sampling scope and job observations
 
@@ -55,7 +55,7 @@ from profile_native import controller_capture_inventory, qualification_errors
 root = Path('benchmarks/results/2026-11-04-controller-mutant-identities')
 assert not qualification_errors(root / 'qualification', 0)
 capture = controller_capture_inventory(root / 'profiles', root / 'qualification')
-assert not capture['errors'] and capture['workload_reconciled']
+assert capture['errors'] and not capture['workload_reconciled']
 PYTHON
 ```
 

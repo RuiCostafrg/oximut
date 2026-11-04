@@ -8,6 +8,7 @@ import math
 import os
 from pathlib import Path
 import pstats
+import re
 import subprocess
 import sys
 from types import SimpleNamespace
@@ -212,6 +213,9 @@ def controller_capture_inventory(directory, qualification=None):
                              'mutant_count': len(mutants), 'observed_forks': len(forks),
                              'mutant_ids': [e.get('mutantId') for e in mutants],
                              'baseline_count': sum(e.get('kind') == 'baseline' for e in requests),
+                             'jobs': [{'kind': e.get('kind'), 'job_id': e.get('jobId'),
+                                       'run_id': e.get('runId'), 'mutant_id': e.get('mutantId')}
+                                      for e in requests if e.get('command') == 'run'],
                              'first_mutant_window': profile_window})
         except (OSError, ValueError, KeyError, TypeError, StopIteration, OverflowError) as error:
             errors.append(f'invalid controller capture {timeline.name}: {error}')
@@ -228,6 +232,8 @@ def controller_capture_inventory(directory, qualification=None):
         mutants = report['mutants']
         baselines = report['resources']['disabledValidationRuns']
         if (not isinstance(mutants, list) or not mutants or not isinstance(baselines, list)
+                or any(not isinstance(run, dict) or run.get('run') != 'instrumentedBaseline'
+                       for run in baselines)
                 or any(m['provenance']['source'] != 'executed' for m in mutants)):
             raise ValueError('require executed-mutant and validation-run evidence')
         expected = {'mutant_count': len(mutants), 'baseline_count': 1 + len(baselines)}
@@ -242,6 +248,25 @@ def controller_capture_inventory(directory, qualification=None):
         if (not all(valid_mutant_identity(identity) for identity in captured_ids)
                 or sorted(captured_ids) != sorted(expected_ids)):
             raise ValueError('captured mutant identities differ from qualification')
+        run_id = report['runId']
+        baseline = report['baseline']
+        if (not isinstance(run_id, str) or len(run_id) > 128
+                or re.fullmatch(r'[0-9]+-[0-9]+', run_id) is None
+                or baseline['jobId'] != 'baseline' or baseline['runId'] != run_id):
+            raise ValueError('invalid qualified original baseline identity')
+        jobs = [job for row in observed for job in row['jobs']]
+        if any(job['run_id'] != run_id for job in jobs):
+            raise ValueError('captured jobs belong to a different qualification run')
+        # CLI original job ID plus its single or indexed instrumented-baseline IDs.
+        expected_baselines = ['baseline'] + (
+            ['instrumented-baseline'] if len(baselines) == 1 else
+            [f'instrumented-baseline-{i}' for i in range(len(baselines))])
+        baseline_ids = [job['job_id'] for job in jobs if job['kind'] == 'baseline']
+        if (not all(isinstance(identity, str) for identity in baseline_ids)
+                or sorted(baseline_ids) != sorted(expected_baselines)):
+            raise ValueError('captured baseline identities differ from qualification')
+        if any(job['job_id'] != job['mutant_id'] for job in jobs if job['kind'] == 'mutant'):
+            raise ValueError('captured mutant job identity differs from its mutation')
         reconciled = True
     except (OSError, ValueError, KeyError, TypeError) as error:
         errors.append(f'workload reconciliation failed: {error}')

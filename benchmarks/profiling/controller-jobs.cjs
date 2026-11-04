@@ -139,8 +139,12 @@ if (dir && process.argv[1]?.endsWith('/m2-worker.ts')) {
     const kind = job?.kind;
     const mutantId = kind === 'mutant' && typeof job.mutation?.id === 'string'
       && /^[a-f0-9]{64}$/.test(job.mutation.id) ? job.mutation.id : null;
+    const jobId = typeof job?.jobId === 'string' && job.jobId.length <= 128
+      && /^(?:baseline|instrumented-baseline(?:-[0-9]+)?|[a-f0-9]{64})$/.test(job.jobId) ? job.jobId : null;
+    const runId = typeof job?.runId === 'string' && job.runId.length <= 128
+      && /^[0-9]+-[0-9]+$/.test(job.runId) ? job.runId : null;
     emit('controller-request', { id: msg.id, command: msg.command,
-      kind: ['baseline', 'mutant'].includes(kind) ? kind : null, mutantId });
+      kind: ['baseline', 'mutant'].includes(kind) ? kind : null, mutantId, jobId, runId });
     if (msg.command === 'run' && kind === 'mutant' && !attempted) startProfile(msg.id);
   }));
   process.on('exit', (code) => emit('controller-exit', { code }));
