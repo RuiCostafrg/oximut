@@ -31,13 +31,13 @@ fn parse_identity(stat: &str) -> Option<(u32, u64)> {
     Some((parent, start))
 }
 
+fn gone(error: &std::io::Error) -> bool {
+    error.kind() == std::io::ErrorKind::NotFound || error.raw_os_error() == Some(libc::ESRCH)
+}
+
 /// Children of every thread of `pid`, or `None` when the process is gone. An
-/// exited (zombie) process has already handed its children to a subreaper. A
-/// single thread that exits mid-read has no children of its own to report.
+/// exited (zombie) process has already handed its children to a subreaper.
 fn children(pid: u32) -> Result<Option<Vec<u32>>, String> {
-    let gone = |error: &std::io::Error| {
-        error.kind() == std::io::ErrorKind::NotFound || error.raw_os_error() == Some(libc::ESRCH)
-    };
     match fs::read_to_string(format!("/proc/{pid}/stat")) {
         Ok(stat) => {
             let state = stat
@@ -56,14 +56,33 @@ fn children(pid: u32) -> Result<Option<Vec<u32>>, String> {
         Err(error) if gone(&error) => return Ok(None),
         Err(error) => return Err(format!("process tasks unavailable for PID {pid}: {error}")),
     };
+    // Read lazily: one thread's list is held at a time. A vanished task entry
+    // is reported like a vanished children file (the tree changed).
+    parse_children(
+        pid,
+        tasks.map(|task| task.and_then(|task| read_task_children(&task.path()))),
+    )
+}
+
+/// One thread's `children` list. A thread that exits after the file opens can
+/// read as empty; if its task entry is gone after the read, report it as
+/// vanished. A later exit is harmless: this list was already captured.
+fn read_task_children(task: &std::path::Path) -> std::io::Result<String> {
+    let list = fs::read_to_string(task.join("children"))?;
+    fs::metadata(task.join("stat"))?;
+    Ok(list)
+}
+
+/// Combines the per-thread `children` lists. A thread that vanished mid-read
+/// handed its children to a sibling thread that may already have been read,
+/// so the tree changed: report it (`None`) instead of a partial list.
+fn parse_children(
+    pid: u32,
+    lists: impl IntoIterator<Item = std::io::Result<String>>,
+) -> Result<Option<Vec<u32>>, String> {
     let mut result = vec![];
-    for task in tasks {
-        let task = match task {
-            Ok(task) => task,
-            Err(error) if gone(&error) => return Ok(None),
-            Err(error) => return Err(format!("process task unavailable for PID {pid}: {error}")),
-        };
-        match fs::read_to_string(task.path().join("children")) {
+    for list in lists {
+        match list {
             Ok(list) => {
                 for child in list.split_whitespace() {
                     result.push(
@@ -73,7 +92,7 @@ fn children(pid: u32) -> Result<Option<Vec<u32>>, String> {
                     );
                 }
             }
-            Err(error) if gone(&error) => {}
+            Err(error) if gone(&error) => return Ok(None),
             Err(error) => {
                 return Err(format!(
                     "process children unavailable for PID {pid}: {error}"
@@ -402,6 +421,40 @@ mod tests {
         }
         drop(_reap);
         let _ = child.wait();
+    }
+
+    #[test]
+    fn a_thread_gone_after_reading_its_children_counts_as_vanished() {
+        let task = tempfile::tempdir().unwrap();
+        fs::write(task.path().join("children"), "").unwrap();
+        // The empty read succeeded, but the task entry is gone afterwards.
+        let error = read_task_children(task.path()).unwrap_err();
+        assert_eq!(error.kind(), std::io::ErrorKind::NotFound);
+        assert_eq!(parse_children(1, [Err(error)]).unwrap(), None);
+        fs::write(task.path().join("stat"), "1 (x) S").unwrap();
+        fs::write(task.path().join("children"), "7 8").unwrap();
+        assert_eq!(read_task_children(task.path()).unwrap(), "7 8");
+    }
+
+    #[test]
+    fn a_thread_vanishing_mid_read_reports_a_changed_tree() {
+        use std::io::{Error, ErrorKind};
+        let ok = |text: &str| Ok(text.to_string());
+        assert_eq!(
+            parse_children(1, [ok("4 5 "), ok(""), ok("6")]).unwrap(),
+            Some(vec![4, 5, 6])
+        );
+        // Its children moved to a sibling thread that may already be read.
+        assert_eq!(
+            parse_children(1, [ok("4"), Err(Error::from(ErrorKind::NotFound))]).unwrap(),
+            None
+        );
+        assert_eq!(
+            parse_children(1, [Err(Error::from_raw_os_error(libc::ESRCH))]).unwrap(),
+            None
+        );
+        assert!(parse_children(1, [Err(Error::from(ErrorKind::PermissionDenied))]).is_err());
+        assert!(parse_children(1, [ok("4 x")]).is_err());
     }
 
     #[test]
