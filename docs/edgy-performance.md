@@ -1,7 +1,7 @@
 # Performance workstream: measure the isolation boundary
 
-Status: native diagnostics with send-return timestamps and qualified workload
-counts passed; recapture with exact mutant identities pending; optimization experiments pending. No
+Status: native diagnostics with send-return timestamps and exact qualified
+mutant identities pass; optimization experiments pending. No
 performance improvement or release claim.
 Starting point: main `d8e0c512eae792d522d3bf47bfa50ee3a9ce5cbc`.
 The native comparison workflow now pins main `74a4972` as
@@ -125,13 +125,24 @@ The [native send-return capture](../benchmarks/results/2026-11-04-controller-sen
 timeline has no failed writes, and all ten mutants, both baselines and 14
 commands reconcile against the retained qualification report. Both validator and
 preload matched the native build's source hashes at archival. It lacks mutant
-IDs and fails current exact-identity reconciliation; another native capture is
-pending. Independent median intervals are
+IDs and fails current exact-identity reconciliation. Independent median intervals are
 70.402 ms fork-to-started, 22.242 ms run-to-collection and 42.396 ms
 collection-to-completion. These support the same experiment ranking without
 attributing worker CPU or proving savings. The capsule retains all resource and
 phase metrics, raw evidence and standalone evidence-revalidation instructions.
 This one profiled run has no paired ratios or bootstrap CIs.
+
+The [current capture with mutant identities](../benchmarks/results/2026-11-04-controller-mutant-identities/README.md)
+(run 41892806213) passes exact workload qualification and current capture
+validation. Its ten captured mutant digests match the qualification report's
+unique executed mutants; baseline/command counts, event sequences, worker exits
+and profile samples also validate. Both validator and preload match the native
+build's source hashes. The capsule retains every resource/phase metric, raw
+timeline/profile and qualification report, with runnable evidence checks.
+Median fork-to-started is 116.640 ms, run-to-collection 40.048 ms, and
+collection-to-completion 78.622 ms on this host. These are independent wall
+intervals, not a CPU partition or measured savings. This diagnostic has no paired
+ratios or bootstrap CIs and does not change the experiment ranking below.
 
 These are optimistic ceilings and source-based hypotheses, not measured savings.
 Re-rank as experiments yield new evidence; run one change per PR against

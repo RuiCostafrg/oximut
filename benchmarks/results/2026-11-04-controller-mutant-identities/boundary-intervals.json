@@ -1,0 +1,113 @@
+{
+  "units": "wall milliseconds; independent medians are not additive; controller CPU is not partitioned",
+  "jobs": [
+    {
+      "jobId": 4,
+      "mutantId": "c8fb72bec90d9a783caf7ef8479772865cadc5338cbace358a9a173db7fcf175",
+      "requestToSendReturnMs": 430.05611499999986,
+      "requestToForkMs": 93.87134799999967,
+      "forkToStartedMs": 124.0756150000002,
+      "runToCollectionMs": 126.12193500000012,
+      "collectionToFinishedMs": 78.77846700000009,
+      "finishedToSendReturnMs": 7.00970899999993
+    },
+    {
+      "jobId": 5,
+      "mutantId": "9fd7cd8a8c7b265bb46410e0ca0429f59067d4a2e458cd743941c88ea05ee378",
+      "requestToSendReturnMs": 348.01226399999996,
+      "requestToForkMs": 6.023951000000125,
+      "forkToStartedMs": 114.50014999999985,
+      "runToCollectionMs": 132.95270300000038,
+      "collectionToFinishedMs": 89.1577199999997,
+      "finishedToSendReturnMs": 5.224333999999999
+    },
+    {
+      "jobId": 6,
+      "mutantId": "82b44c30bb77459ea1aa962c8f328ae2ee1aedcdd0ef3982cef07e398229385e",
+      "requestToSendReturnMs": 262.7176840000002,
+      "requestToForkMs": 4.991827000000285,
+      "forkToStartedMs": 124.08995000000004,
+      "runToCollectionMs": 40.34821399999964,
+      "collectionToFinishedMs": 85.27984000000015,
+      "finishedToSendReturnMs": 7.892068000000108
+    },
+    {
+      "jobId": 7,
+      "mutantId": "c59a734f77d74a37da696a4904f169a3a119a78a22d2732ca87f3c08b0a3cebd",
+      "requestToSendReturnMs": 253.3144910000001,
+      "requestToForkMs": 5.656386000000111,
+      "forkToStartedMs": 115.78267099999994,
+      "runToCollectionMs": 52.11031899999989,
+      "collectionToFinishedMs": 74.0208749999997,
+      "finishedToSendReturnMs": 5.603137000000061
+    },
+    {
+      "jobId": 8,
+      "mutantId": "d608232f1dad0bf6337abb58c011a8da27269951d412bc352dacf25828e209d3",
+      "requestToSendReturnMs": 232.81902900000023,
+      "requestToForkMs": 5.532474999999977,
+      "forkToStartedMs": 113.19196000000011,
+      "runToCollectionMs": 34.41334999999981,
+      "collectionToFinishedMs": 72.9388700000004,
+      "finishedToSendReturnMs": 6.6394719999998415
+    },
+    {
+      "jobId": 9,
+      "mutantId": "211c64945c6ed85c7fe4073b36288ffc39e3697f07c009e14edcf98b8d0f84b0",
+      "requestToSendReturnMs": 259.87088400000084,
+      "requestToForkMs": 5.481420000000071,
+      "forkToStartedMs": 124.74858900000072,
+      "runToCollectionMs": 39.03375500000038,
+      "collectionToFinishedMs": 82.99633300000005,
+      "finishedToSendReturnMs": 7.489722000000256
+    },
+    {
+      "jobId": 10,
+      "mutantId": "cf4748d0c363684160adae8ce709b2c871449b782017d3e7ad704525d7b51154",
+      "requestToSendReturnMs": 247.8060770000002,
+      "requestToForkMs": 5.893318000000363,
+      "forkToStartedMs": 113.05146100000002,
+      "runToCollectionMs": 37.917413000000124,
+      "collectionToFinishedMs": 82.04539399999976,
+      "finishedToSendReturnMs": 8.783696999999847
+    },
+    {
+      "jobId": 11,
+      "mutantId": "b115f5372f2edf03e51a8f712460addaed3513a89703cc1fe8500eee367aba65",
+      "requestToSendReturnMs": 281.9536629999993,
+      "requestToForkMs": 5.904168000000027,
+      "forkToStartedMs": 135.66764499999954,
+      "runToCollectionMs": 56.442447999999786,
+      "collectionToFinishedMs": 78.46505700000034,
+      "finishedToSendReturnMs": 5.321959999999308
+    },
+    {
+      "jobId": 12,
+      "mutantId": "c88a30c6f5f3ccc6db4c6c87bf61459c5b328fc5b7df59aa03dde1ca099aa3db",
+      "requestToSendReturnMs": 245.83929999999964,
+      "requestToForkMs": 6.780842000000121,
+      "forkToStartedMs": 115.3248509999994,
+      "runToCollectionMs": 37.08418299999994,
+      "collectionToFinishedMs": 77.95056000000022,
+      "finishedToSendReturnMs": 8.580853999999817
+    },
+    {
+      "jobId": 13,
+      "mutantId": "8a49a888d6e614ce683525b9bd586b4271285324ddac088829d4a8beec90c2a5",
+      "requestToSendReturnMs": 250.4054040000001,
+      "requestToForkMs": 6.3110960000003615,
+      "forkToStartedMs": 117.49643299999934,
+      "runToCollectionMs": 39.748765000000276,
+      "collectionToFinishedMs": 77.62944100000004,
+      "finishedToSendReturnMs": 9.102840999999898
+    }
+  ],
+  "medians": {
+    "requestToSendReturnMs": 256.59268750000047,
+    "requestToForkMs": 5.898743000000195,
+    "forkToStartedMs": 116.63955199999964,
+    "runToCollectionMs": 40.04848949999996,
+    "collectionToFinishedMs": 78.62176200000022,
+    "finishedToSendReturnMs": 7.249715500000093
+  }
+}
