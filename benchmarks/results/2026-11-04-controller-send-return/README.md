@@ -55,7 +55,9 @@ from profile_native import controller_capture_inventory, qualification_errors
 root = Path('benchmarks/results/2026-11-04-controller-send-return')
 assert not qualification_errors(root / 'qualification', 0)
 capture = controller_capture_inventory(root / 'profiles', root / 'qualification')
-assert capture['errors'] and not capture['workload_reconciled']
+assert not capture['workload_reconciled']
+assert any('captured mutant identities differ from qualification' in error
+           for error in capture['errors'])
 PYTHON
 ```
 
