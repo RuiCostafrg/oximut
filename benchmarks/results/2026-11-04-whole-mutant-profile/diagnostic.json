@@ -1,0 +1,88 @@
+{
+  "captures": {
+    "errors": [],
+    "observed": [
+      {
+        "mutant_count": 10,
+        "observed_forks": 18,
+        "request_count": 14,
+        "timeline": "controller-5102.jsonl"
+      }
+    ],
+    "orphan_profiles": [],
+    "scope": "Controller job CPU and observed fork IPC boundaries only; not complete process-tree profiling."
+  },
+  "command": [
+    "/opt/hostedtoolcache/Python/3.13.18/x64/bin/python3",
+    "/home/runner/work/oximut/oximut/benchmarks/real_project.py",
+    "--binary",
+    "/home/runner/work/_temp/native-diagnostic/oximut",
+    "--adapter",
+    "/home/runner/work/oximut/oximut/packages/vitest-adapter/m2-runner.mjs",
+    "--adapter-source-dir",
+    "/home/runner/work/oximut/oximut/packages/vitest-adapter",
+    "--defer-ratios",
+    "--tools",
+    "vitest",
+    "oximut",
+    "stryker",
+    "--warmups",
+    "0",
+    "--repetitions",
+    "1",
+    "--timeout",
+    "600",
+    "--output",
+    "/home/runner/work/_temp/native-diagnostic/capture/qualification"
+  ],
+  "diagnostic_only": true,
+  "execution_inputs": {
+    "adapter_override": "/home/runner/work/oximut/oximut/packages/vitest-adapter/m2-runner.mjs",
+    "adapter_pairing": "explicit override",
+    "adapter_source_dir": "/home/runner/work/oximut/oximut/packages/vitest-adapter",
+    "adapter_source_sha256": {
+      "biome.json": "8c92ece24bbe3dd56abdf7d1ba097447556090156673af0f7de8366b93e9edd4",
+      "experiment.mjs": "8aef7cae2ef734311a1998ec6928f389a8887b59e32979c27c0ebe87d77468fe",
+      "index.mjs": "2e973f5cfc91fddb39b2dadac8a0b65d1a23bbf5912d028eb8b2e12e84e40031",
+      "m1-runner.mjs": "7971936fa754d55ce2d0e364469d3973dc1e5b615ca71692fe623c66c4ab9fb9",
+      "m1-worker.ts": "0f23740ee45d047cc1d77900347c922873c03b4acb57bdce60564f42865b5ee4",
+      "m2-runner.mjs": "c513d90785daeb737df03b64d74b80fb18be4baa09a6ff498cde8b009430ad9b",
+      "m2-worker.ts": "c307db33b4607adf86ba9f470b31008e261f3c32b3e16b1055c997b8452f548d",
+      "m3-selection.ts": "e3df6ad0ef9050393c20fd4c5f7b1d3f3a931e87ffeb5efb722dfe6c55e1f567",
+      "m3-setup.ts": "23e46f230e438e9c080d73173760b1340c02506ebe03a7d7ed725d1dc1dd8f7f",
+      "package.json": "5cd6bd7d4af022c372c0d305b2a6d1826818c35929e2984b2fee526168552056",
+      "protocol.mjs": "8201596c5e25b3aca3f2b37d111e966a26d4f0a9446602e6246c7af563b3c733",
+      "protocol.ts": "ab8afe63a13e06addf6a832fd82e24ee6fbade45cc1b5eeea44873e65cc5a8fc",
+      "supervisor.py": "0cb9de6e2aa1084a987e62d51725ad810dd995524948f886aacab6a394e4c1cd",
+      "test/contract.test.mjs": "8bc30b038eb2631f1f8817032ff20021e08849c6b92e45a241f5c21b3036ec22",
+      "test/descendants.test.mjs": "528a74c9e29128a1221bd15b9f41148aeea9dcc40e5e63d03cff1b51d66ff789",
+      "test/lifecycle.test.mjs": "7ec6fe62792f4564b8af74d331297317bce8f64abf002456738a3fcd5b9c7d07",
+      "test/m1.test.mjs": "b8b81a52f22532f5fd39cadf2aa13e2b5d8df9707ffee52f633eb9e665be69cb",
+      "test/m2.test.mjs": "b6e6ed01c87a1825845c6be90189e923dedc3084f2ff58edbd2cf24478a9f18b",
+      "test/m3.test.mjs": "dc08829807dcfcdad5e64001fdf3f6893833c6fa86c5a938a1f244a3a8f898fa",
+      "test/protocol-types.ts": "9905afca7fb4274a0dcc5350fa8601e4e8dd76b963e6ccc9f6f6da7692830265",
+      "test/protocol.test.mjs": "8c4018eff8e9ba874fcdff85312968820c8fb52b301d87efe707e0eb33ccb622",
+      "tsconfig.json": "6d53a48c0a6f2181c3a65c999e9288aa74ce9470c732ea86b157ae584cf91b77",
+      "worker.mjs": "26eee9f48e37250c52a6662fc0efdc30f9678cf7541f55c5b89d68dd97d79281"
+    },
+    "binary": "/home/runner/work/_temp/native-diagnostic/oximut",
+    "binary_sha256": "f67f928f9fbaa7693dcb7eef7a63e2838dd02576ba0d79af95e28353483934b1"
+  },
+  "failure": null,
+  "helper_sha256": {
+    "benchmarks/profile_native.py": "68c7a119c425d05c2b627fbeabfb3fb71ef8e500681a5aad9f4924cee6331363",
+    "benchmarks/profiling/controller-jobs.cjs": "708acce3141eea5a45886600e2897bac51cd017f318eeffcfe7c9beecf5316cb",
+    "benchmarks/profiling/node-identity.cjs": "2046d70bac7db57bc53f7a31f43a63c2a36190c570e23662ac1183a5371a600f",
+    "benchmarks/profiling/node-segments.cjs": "ad5ca48917af6d77e06c14c07f117f104d5f5199f0776b1c7ea530c25764fa83",
+    "benchmarks/profiling/python-shim.py": "6c54882a40842cc233713a84cdf905cea7e46c553914e4459be53d05e140e806",
+    "benchmarks/profiling/test_controller_profile.py": "3faca5e72730e3dd6816ebdc57f9b1315f6df3539b472b4ec0a3c4024241cfd5"
+  },
+  "limits": "Node sampling and Python supervisor self CPU only; no complete process-tree CPU partition. Rust resource sampling remains unattributed. External benchmark sampler CPU is outside wait4 product-tree CPU; it perturbs wall time.",
+  "node_capture_mode": "controller-jobs",
+  "node_options": "--require=\"/home/runner/work/oximut/oximut/benchmarks/profiling/controller-jobs.cjs\"",
+  "passed": true,
+  "profiler_overhead": true,
+  "qualification_errors": [],
+  "scope": "Unchanged colord: 41 sources, 102 tests, five mutation sources, ten arithmetic edits. One capture, no warmup campaign.",
+  "source_commit": "69481738decebabd34a854cb73bf6ddc6d25b2bb"
+}

@@ -2,6 +2,10 @@
 
 Status: diagnostic experiment, not a performance improvement or release claim.
 Starting point: main `d8e0c512eae792d522d3bf47bfa50ee3a9ce5cbc`.
+The native comparison workflow now pins this revision as `BEFORE_COMMIT` for
+subsequent experiments, replacing the pre-coordinator baseline. This diagnostic
+PR changes no product execution code; any same-engine before/after timings are
+control evidence, not an optimization attributable to the capture tooling.
 
 ## Rechecked native evidence
 
@@ -77,6 +81,16 @@ ratios. Keep ordinary Vitest/Stryker workload gates, original/instrumented
 baselines and native coordinator cleanup unchanged.
 
 ## Ranked experiments after that capture
+
+The [whole-job native capture](../benchmarks/results/2026-11-04-whole-mutant-profile/README.md)
+now passes qualification and the stronger review-driven capture checks. Its
+median fork-to-ready interval is 74.222 ms, run-to-collection 23.242 ms, and
+collection-to-completion 46.195 ms. Inspector startup adds about 65 ms to the
+first mutant. These single-run diagnostic intervals cannot be used as scored
+ratios or subtracted from older campaigns. They support keeping warm fresh
+realms first in the experiment ranking; batching alone still leaves the measured
+fork startup. All resource metrics, phases, limitations and raw profile/timeline
+are retained in the capture capsule. The original baseline capsule is unchanged.
 
 These are optimistic ceilings and source-based hypotheses, not measured savings.
 Re-rank after inspecting the capture; run one change per PR against current main.

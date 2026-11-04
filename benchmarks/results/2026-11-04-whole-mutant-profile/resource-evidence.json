@@ -1,0 +1,117 @@
+{
+  "diagnostic_only": true,
+  "run": 41839060730,
+  "qualification_correctness_gate": true,
+  "ratios_published": [],
+  "measurements": [
+    {
+      "tool": "vitest",
+      "wall_seconds": 0.9229618819999814,
+      "cpu_seconds": 1.195662,
+      "cpu_user_seconds": 1.017372,
+      "cpu_system_seconds": 0.17829,
+      "peak_aggregate_rss_bytes": 283717632,
+      "peak_process_count": 2,
+      "observed_process_count": 5,
+      "success": true
+    },
+    {
+      "tool": "oximut",
+      "wall_seconds": 3.485371805999989,
+      "cpu_seconds": 4.7989619999999995,
+      "cpu_user_seconds": 3.8748,
+      "cpu_system_seconds": 0.9241619999999999,
+      "peak_aggregate_rss_bytes": 344846336,
+      "peak_process_count": 4,
+      "observed_process_count": 21,
+      "success": true
+    },
+    {
+      "tool": "stryker",
+      "wall_seconds": 3.0995261770000013,
+      "cpu_seconds": 4.316967,
+      "cpu_user_seconds": 3.960359,
+      "cpu_system_seconds": 0.356608,
+      "peak_aggregate_rss_bytes": 578162688,
+      "peak_process_count": 4,
+      "observed_process_count": 4,
+      "success": true
+    }
+  ],
+  "oximut_resources": {
+    "admissionPauses": 0,
+    "admissionWorkerCostBytes": 414120960,
+    "broadDiscoveries": 14,
+    "budgetBytes": 16464306176,
+    "cgroups": [
+      {
+        "initialOomEvents": 0,
+        "limitBytes": null,
+        "limitPath": "/sys/fs/cgroup/system.slice/memory.max",
+        "oomEventsPath": "/sys/fs/cgroup/system.slice/memory.events",
+        "usagePath": "/sys/fs/cgroup/system.slice/memory.current"
+      },
+      {
+        "initialOomEvents": 0,
+        "limitBytes": null,
+        "limitPath": "/sys/fs/cgroup/system.slice/hosted-compute-agent.service/memory.max",
+        "oomEventsPath": "/sys/fs/cgroup/system.slice/hosted-compute-agent.service/memory.events",
+        "usagePath": "/sys/fs/cgroup/system.slice/hosted-compute-agent.service/memory.current"
+      }
+    ],
+    "configuredBudgetBytes": null,
+    "configuredWorkers": 1,
+    "cpuLimitWorkers": 4,
+    "disabledValidationRuns": [
+      {
+        "coverage": true,
+        "files": [
+          "/home/runner/work/_temp/native-diagnostic/capture/qualification/00-oximut/project/src/extend.ts",
+          "/home/runner/work/_temp/native-diagnostic/capture/qualification/00-oximut/project/src/manipulate/invert.ts",
+          "/home/runner/work/_temp/native-diagnostic/capture/qualification/00-oximut/project/src/manipulate/lighten.ts",
+          "/home/runner/work/_temp/native-diagnostic/capture/qualification/00-oximut/project/src/manipulate/mix.ts",
+          "/home/runner/work/_temp/native-diagnostic/capture/qualification/00-oximut/project/src/manipulate/saturate.ts"
+        ],
+        "run": "instrumentedBaseline",
+        "wallMs": 649.975114
+      }
+    ],
+    "effectiveWorkers": 1,
+    "enforcement": "best-effort sampled admission and process-tree cancellation; existing cgroup limits are OS-enforced; no new hard cap installed",
+    "exhaustion": null,
+    "maxActiveJobs": 1,
+    "measuredWorkerPeakBytes": 331296768,
+    "measurement": "Linux /proc smaps_rollup Rss sum, approximate stat RSS fallback on older/restricted kernels: main CLI and all worker/adapter/controller/test descendants; shared pages counted per process",
+    "peakAggregateRssBytes": 336527360,
+    "phaseWallMs": {
+      "finalInputValidation": 0.000314,
+      "inputAndSchedulerPreparation": 1.854514,
+      "instrumentedBaseline": 650.503575,
+      "mutationExecution": 1883.348749,
+      "mutationPlanning": 0.058415,
+      "originalBaseline": 918.35166,
+      "postBaselineValidation": 0.000305,
+      "teardown": 26.216231
+    },
+    "recycledIdleWorkers": 0,
+    "reserveBytes": 67108864,
+    "sampleIntervalMs": 50,
+    "samples": 72,
+    "treeDiscoveries": 58
+  },
+  "stronger_capture_revalidation": {
+    "observed": [
+      {
+        "timeline": "controller-5102.jsonl",
+        "request_count": 14,
+        "mutant_count": 10,
+        "observed_forks": 18
+      }
+    ],
+    "errors": [],
+    "orphan_profiles": [],
+    "scope": "Controller job CPU and observed fork IPC boundaries only; not complete process-tree profiling."
+  },
+  "validator_sha256": "6d829fb5b492e1c3515ee0cbcc77d392d6bfcc99fb8a980e7345a7c5144c0b5b",
+  "original_measurements_sha256": "12bfdffd55263a732505f1c1dbbfa8a01a086e476d26683b4581a8583517ca47"
+}
