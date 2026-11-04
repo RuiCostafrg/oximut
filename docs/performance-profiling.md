@@ -141,7 +141,8 @@ capture rather than preventing diagnostic-summary publication.
 Controller commands require unique safe-integer IDs and alternating request/reply
 events, so reordered or replayed exchanges cannot satisfy completeness. Their
 mutant and baseline counts must also match the independent qualification report:
-every executed mutant, one original baseline and every disabled-validation run,
+every executed mutant, one original baseline, every disabled-validation run and
+any separate coverage-only run,
 plus one initialize/close pair per controller. Losing an entire exchange cannot
 pass by leaving a shorter, self-consistent trace. Each mutant request also records
 its bounded 64-character mutant digest, with no source/test payload. The captured
@@ -151,7 +152,10 @@ this identity evidence fail current validation, even if an older count-only gate
 passed. Every run also records bounded `jobId` and `runId` identities. The original
 baseline must match the report's `baseline` job; disabled-validation jobs must
 match the CLI's single `instrumented-baseline` or indexed
-`instrumented-baseline-N` names, according to its recorded validation runs.
+`instrumented-baseline-N` names. Complete qualified coverage with no group record
+marked `coverage: true` proves a separate coverage-only baseline, which precedes
+the group runs and is absent from `disabledValidationRuns`; count it when deriving
+these job IDs.
 Every job belongs to the qualification report's run ID, and mutant job IDs must
 match their mutation IDs. Repeated baselines or jobs from another run therefore
 cannot satisfy reconciliation. Captures without these identities fail current
@@ -162,6 +166,11 @@ unversioned traces have pre-send timestamps and no append-integrity attestation;
 their original summaries are retained, but they fail this stronger capture gate.
 Worker exit counters must report exactly one start, completion, stop and collection
 response per observed fork; high-volume RPCs remain bounded first-event records.
+Controller exit must be code 0. Workers must exit with code 0 and no signal, or
+with Vitest's normal SIGTERM after the complete `stopped` acknowledgment.
+Nonzero codes, unexpected signals and missing exit-status fields invalidate
+capture. The SIGTERM case is verified in the retained native traces; requiring
+code 0 for every fork would reject normal isolated Vitest shutdown.
 The local inspector commands must complete synchronously before application
 dispatch continues. An asynchronous inspector callback invalidates capture and
 disconnects the profiler; no asynchronous waiting or redispatch of application

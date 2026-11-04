@@ -151,7 +151,10 @@ The [current capture with full job identities](../benchmarks/results/2026-11-04-
 validation. It records the original and instrumented baseline job IDs and binds
 every execution job to the report run ID; mutant job IDs match their mutations.
 All 14 commands, ten exact mutants and 18 observed fork lifecycles reconcile.
-Validator and preload source hashes match the native build. Raw artifacts, every
+The preload source hash matches the native build; its original validator hash
+and the current revalidator hash are recorded separately. Current revalidation
+also checks exit statuses while allowing Vitest's acknowledged SIGTERM shutdown,
+and accounts for separate coverage-only baselines. Raw artifacts, every
 resource and phase metric, independent boundary intervals and runnable evidence
 checks are retained in the capsule. It remains a single overhead-bearing
 diagnostic, with no paired ratios, bootstrap CIs or product performance claim.

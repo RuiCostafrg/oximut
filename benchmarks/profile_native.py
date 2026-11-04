@@ -128,6 +128,8 @@ def controller_capture_inventory(directory, qualification=None):
                     or not str(identities[0].get('startTime', '')).isascii()
                     or not str(identities[0].get('startTime', '')).isdecimal()):
                 errors.append(f'incomplete controller identity/lifecycle: {timeline.name}')
+            if len(exits) == 1 and (type(exits[0].get('code')) is not int or exits[0]['code'] != 0):
+                errors.append(f'abnormal controller exit: {timeline.name}')
             requests = [e for e in events if e['type'] == 'controller-request']
             replies = [e for e in events if e['type'] == 'controller-send']
             if (not requests or requests[0].get('command') != 'initialize'
@@ -203,8 +205,18 @@ def controller_capture_inventory(directory, qualification=None):
                                    'collection', 'receive:testfileFinished', 'send:stop',
                                    'receive:stopped', 'child-exit']:
                     errors.append(f'incomplete worker boundaries: {timeline.name}/{pid}')
-                counts = next(e for e in events if e['type'] == 'child-exit'
-                              and e.get('childPid') == pid).get('counts')
+                worker_exit = next(e for e in events if e['type'] == 'child-exit'
+                                   and e.get('childPid') == pid)
+                # Vitest terminates isolated forks with SIGTERM after 'stopped'.
+                clean_exit = ('signal' in worker_exit
+                              and type(worker_exit.get('code')) is int and worker_exit['code'] == 0
+                              and worker_exit.get('signal') is None)
+                stopped_term = ('code' in worker_exit and worker_exit['code'] is None
+                                and worker_exit.get('signal') == 'SIGTERM'
+                                and 'receive:stopped' in boundaries)
+                if not (clean_exit or stopped_term):
+                    errors.append(f'abnormal observed worker exit: {timeline.name}/{pid}')
+                counts = worker_exit.get('counts')
                 critical = ('started', 'testfileFinished', 'stopped', 'onCollected')
                 if (not isinstance(counts, dict) or any(type(counts.get(k)) is not int
                                                        or counts[k] != 1 for k in critical)):
@@ -233,10 +245,24 @@ def controller_capture_inventory(directory, qualification=None):
         baselines = report['resources']['disabledValidationRuns']
         if (not isinstance(mutants, list) or not mutants or not isinstance(baselines, list)
                 or any(not isinstance(run, dict) or run.get('run') != 'instrumentedBaseline'
+                       or type(run.get('coverage')) is not bool
                        for run in baselines)
                 or any(m['provenance']['source'] != 'executed' for m in mutants)):
             raise ValueError('require executed-mutant and validation-run evidence')
-        expected = {'mutant_count': len(mutants), 'baseline_count': 1 + len(baselines)}
+        # Complete attribution is required by qualification. If none of the
+        # mutation groups collected it, the CLI ran a separate coverage baseline,
+        # which disabledValidationRuns intentionally does not include.
+        baseline = report['baseline']
+        if not isinstance(baseline, dict):
+            raise ValueError('invalid qualified baseline evidence')
+        coverage = baseline.get('coverage')
+        coverage = {} if coverage is None else coverage
+        if not isinstance(coverage, dict) or type(coverage.get('complete', False)) is not bool:
+            raise ValueError('invalid qualified coverage evidence')
+        coverage_only = (coverage.get('complete') is True
+                         and not any(run['coverage'] for run in baselines))
+        instrumented_count = len(baselines) + int(coverage_only)
+        expected = {'mutant_count': len(mutants), 'baseline_count': 1 + instrumented_count}
         actual = {key: sum(r[key] for r in observed) for key in expected}
         if actual != expected or sum(r['request_count'] for r in observed) != sum(expected.values()) + 2 * len(observed):
             raise ValueError(f'captured workload counts {actual} differ from qualification {expected}')
@@ -249,7 +275,6 @@ def controller_capture_inventory(directory, qualification=None):
                 or sorted(captured_ids) != sorted(expected_ids)):
             raise ValueError('captured mutant identities differ from qualification')
         run_id = report['runId']
-        baseline = report['baseline']
         if (not isinstance(run_id, str) or len(run_id) > 128
                 or re.fullmatch(r'[0-9]+-[0-9]+', run_id) is None
                 or baseline['jobId'] != 'baseline' or baseline['runId'] != run_id):
@@ -259,8 +284,8 @@ def controller_capture_inventory(directory, qualification=None):
             raise ValueError('captured jobs belong to a different qualification run')
         # CLI original job ID plus its single or indexed instrumented-baseline IDs.
         expected_baselines = ['baseline'] + (
-            ['instrumented-baseline'] if len(baselines) == 1 else
-            [f'instrumented-baseline-{i}' for i in range(len(baselines))])
+            ['instrumented-baseline'] if instrumented_count == 1 else
+            [f'instrumented-baseline-{i}' for i in range(instrumented_count)])
         baseline_ids = [job['job_id'] for job in jobs if job['kind'] == 'baseline']
         if (not all(isinstance(identity, str) for identity in baseline_ids)
                 or sorted(baseline_ids) != sorted(expected_baselines)):

@@ -49,7 +49,7 @@ process.on('message', async msg => {
   console.log('returned:' + returned);
   if (msg.command === 'close') process.disconnect();
 });
-process.once('disconnect', () => { process.exitCode = 23; });
+process.once('disconnect', () => { process.exitCode = Number(process.env.FIXTURE_CONTROLLER_EXIT); });
 '''
 CHILD = r'''
 function reply(type) {
@@ -187,7 +187,7 @@ setImmediate(() => {
                 duplicate='', defer_profile=False, fail_append=False,
                 request_ids=None, qualification_ids=None, validation_runs=0,
                 baseline_ids=None, request_run_id=None, qualification_run_id=None,
-                mutant_job_ids=None):
+                mutant_job_ids=None, coverage_mode="none", controller_exit_code=0):
         """Run real fork IPC and verify replies, callbacks, return values and exit."""
         request_ids = request_ids if request_ids is not None else [secrets.token_hex(32) for _ in range(2)]
         qualification_ids = qualification_ids if qualification_ids is not None else list(request_ids)
@@ -201,9 +201,11 @@ setImmediate(() => {
         qualification.mkdir(parents=True)
         (qualification / 'report.json').write_text(json.dumps({
             'runId': qualification_run_id,
-            'baseline': {'jobId': 'baseline', 'runId': qualification_run_id},
+            'baseline': {'jobId': 'baseline', 'runId': qualification_run_id,
+                         'coverage': {'complete':True} if coverage_mode != 'none' else None},
             'mutants': [dict(id=identity, provenance=dict(source='executed')) for identity in qualification_ids],
-            'resources': {'disabledValidationRuns': [{'run':'instrumentedBaseline'} for _ in range(validation_runs)]}}))
+            'resources': {'disabledValidationRuns': [{'run':'instrumentedBaseline', 'coverage':coverage_mode == 'combined'}
+                                                       for _ in range(validation_runs)]}}))
         worker = root / entry
         worker.write_text(CONTROLLER)
         child = root / 'child.cjs'
@@ -215,6 +217,7 @@ setImmediate(() => {
                'FIXTURE_MUTANT_IDS': json.dumps(request_ids),
                'FIXTURE_MUTANT_JOB_IDS': json.dumps(mutant_job_ids),
                'FIXTURE_BASELINE_IDS': json.dumps(baseline_ids), 'FIXTURE_RUN_ID': request_run_id,
+               'FIXTURE_CONTROLLER_EXIT': str(controller_exit_code),
                'FIXTURE_DUPLICATE': duplicate,
                'FIXTURE_DEFER_PROFILE': '1' if defer_profile else '0'}
         if defer_profile:
@@ -254,7 +257,7 @@ fs.appendFileSync = function(file, data, ...args) {
         self.assertEqual(result.returncode, 0, result.stderr)
         lines = result.stdout.splitlines()
         data = next(json.loads(line) for line in lines if line.startswith('{'))
-        self.assertEqual(data['code'], 23)
+        self.assertEqual(data['code'], controller_exit_code)
         command_count = len(baseline_ids) + len(request_ids) + 2
         self.assertEqual(data['replies'], [dict(protocol=1,id=i,result=dict(ok=True)) for i in range(1,command_count + 1)])
         self.assertEqual(lines.count('callback'), command_count)
@@ -327,7 +330,7 @@ fs.appendFileSync = function(file, data, ...args) {
             # ENOTDIR on every diagnostic write, including profile finalization.
             blocked = root / 'blocked'
             blocked.write_text('not a directory')
-            inventory = self.fixture(root, directory=blocked)
+            inventory = self.fixture(root, directory=blocked, controller_exit_code=23)
             self.assertTrue(inventory['errors'])
             self.assertFalse(list(root.glob('*.cpuprofile')))
 
@@ -406,6 +409,83 @@ fs.appendFileSync = function(file, data, ...args) {
             result = self.fixture(root, request_ids=identities, mutant_job_ids=list(reversed(identities)))
             self.assertTrue(any('job identity differs' in e for e in result['errors']))
             self.assertFalse(result['workload_reconciled'])
+
+    def test_coverage_only_baseline_is_included_in_counts_and_job_ids(self):
+        """Reconcile separate coverage even though disabled group records omit it."""
+        cases = [
+            (1, 'combined', ['baseline','instrumented-baseline'], True),
+            (1, 'separate', ['baseline','instrumented-baseline-0','instrumented-baseline-1'], True),
+            (2, 'separate', ['baseline','instrumented-baseline-0','instrumented-baseline-1','instrumented-baseline-2'], True),
+            (0, 'separate', ['baseline','instrumented-baseline'], True),
+            (2, 'separate', ['baseline','instrumented-baseline-0','instrumented-baseline-1'], False),
+            (1, 'separate', ['baseline','instrumented-baseline-0','instrumented-baseline-0'], False),
+        ]
+        for groups, mode, jobs, matching in cases:
+            with self.subTest(groups=groups, mode=mode, jobs=jobs), tempfile.TemporaryDirectory() as tmp:
+                result = self.fixture(Path(tmp), validation_runs=groups, baseline_ids=jobs, coverage_mode=mode)
+                self.assertEqual(result['workload_reconciled'], matching)
+                self.assertEqual(bool(result['errors']), not matching)
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self.assertEqual(self.fixture(root, validation_runs=1, coverage_mode='combined')['errors'], [])
+            path = root / 'qualification/00-oximut/report.json'
+            report = json.loads(path.read_text())
+            for invalid in [None, [], {'coverage': []}, {'coverage': {'complete': 'yes'}}]:
+                with self.subTest(malformed_baseline=invalid):
+                    bad = copy.deepcopy(report)
+                    bad['baseline'] = invalid
+                    path.write_text(json.dumps(bad))
+                    self.assertTrue(self.capture(root)['errors'])
+
+    def test_failed_controller_exit_preserves_workload_but_rejects_capture(self):
+        """Complete replies do not hide an abnormal final controller status."""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            result = self.fixture(root, controller_exit_code=23)
+            self.assertTrue(any('abnormal controller exit' in e for e in result['errors']))
+            timeline = next(root.glob('controller-*.jsonl'))
+            events = [json.loads(line) for line in timeline.read_text().splitlines()]
+            for code in [None, False, '0']:
+                with self.subTest(malformed_exit=code):
+                    broken = copy.deepcopy(events)
+                    broken[-1]['code'] = code
+                    self.write_events(timeline, broken)
+                    self.assertTrue(any('abnormal controller exit' in e for e in self.capture(root)['errors']))
+
+    def test_worker_exit_status_requires_clean_or_acknowledged_vitest_stop(self):
+        """Expected IPC cannot hide a failed exit; acknowledged SIGTERM is normal."""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self.assertEqual(self.fixture(root)['errors'], [])
+            timeline = next(root.glob('controller-*.jsonl'))
+            events = [json.loads(line) for line in timeline.read_text().splitlines()]
+            index = next(i for i, e in enumerate(events) if e['type'] == 'child-exit')
+            for code, signal, valid in [(0,None,True), (None,'SIGTERM',True),
+                                        (7,None,False), (None,'SIGKILL',False),
+                                        (None,'SIGABRT',False), (None,None,False),
+                                        (False,None,False), (0,'SIGTERM',False)]:
+                with self.subTest(code=code,signal=signal):
+                    broken = copy.deepcopy(events)
+                    broken[index].update(code=code, signal=signal)
+                    self.write_events(timeline, broken)
+                    result = self.capture(root)
+                    self.assertEqual(not result['errors'], valid)
+                    if not valid:
+                        self.assertTrue(any('abnormal observed worker exit' in e for e in result['errors']))
+            for missing in ['code', 'signal']:
+                with self.subTest(missing_exit_field=missing):
+                    broken = copy.deepcopy(events)
+                    broken[index].pop(missing)
+                    self.write_events(timeline, broken)
+                    self.assertTrue(any('abnormal observed worker exit' in e for e in self.capture(root)['errors']))
+            broken = copy.deepcopy(events)
+            pid = broken[index]['childPid']
+            broken[index].update(code=None, signal='SIGTERM')
+            broken = [e for e in broken if not (e['type'] == 'child-message'
+                      and e.get('childPid') == pid and e.get('messageType') == 'stopped')]
+            self.write_events(timeline, broken)
+            self.assertTrue(self.capture(root)['errors'])
 
     def test_mutant_identities_match_qualification_even_when_counts_match(self):
         """Equal totals cannot hide repeated, substituted or missing mutant identities."""

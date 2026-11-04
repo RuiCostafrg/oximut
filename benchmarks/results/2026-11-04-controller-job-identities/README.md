@@ -1,8 +1,10 @@
 # Native capture reconciled against qualified job and run identities
 
-[Run 41930938613](https://github.com/RuiCostafrg/oximut/actions/runs/41930938613) captured head `24f21ae` via merge revision `cccafbd502aa533b4b66627bf8bff0a356837797` on Ubuntu 24.04 x86_64. Both the validator and controller preload match the native build's source hashes.
+[Run 41930938613](https://github.com/RuiCostafrg/oximut/actions/runs/41930938613) captured head `24f21ae` via merge revision `cccafbd502aa533b4b66627bf8bff0a356837797` on Ubuntu 24.04 x86_64. The controller preload still matches the native build's source hash. Build metadata records the original validator hash; `revalidation.json` records the current validator hash and its comparison with that build. The current validator rechecks the unchanged raw evidence.
 
 Exact workload qualification and current capture validation pass: 41 sources, 102 tests, five mutation files and ten identical killed arithmetic edits. The capture contains one controller, 14 unique serial commands (initialize, two baselines, ten mutants, close), 18 observed fork lifecycles and one finalized first-mutant CPU profile. Every captured mutant digest matches one unique executed mutant in the retained qualification report. The baseline job IDs are `baseline` and `instrumented-baseline`; every execution job belongs to the report run ID, and each mutant job ID matches its mutation. Counts also reconcile. Event sequences are contiguous, write-failure flags are clear and all reply observations follow normal local send returns. Earlier captures remain unchanged as historical raw evidence and fail the current identity/integrity gates.
+
+All 18 forks acknowledge `stopped` and then exit by SIGTERM, matching Vitest 4.1.12's normal isolated-fork termination. The controller exits with code 0. Revalidation rejects nonzero exits, unexpected signals and missing statuses; it preserves this acknowledged SIGTERM case. Coverage here is collected in the single mutation-group baseline, so there is no additional coverage-only run. Separate coverage is covered by the validator's fixtures and inferred from complete qualified coverage when no group collected it.
 
 ## Sampling scope and job observations
 

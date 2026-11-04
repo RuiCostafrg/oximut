@@ -1,5 +1,5 @@
 {
-  "validator_sha256": "1d690d19fd825b8f4437b25dacfcf1e7afd64c8002880c92525de019ee42f44f",
+  "validator_sha256": "c57f28c32cf204eeae967475d6fd72963f964fc8e693fe7a901ebad0995def01",
   "qualification_report_sha256": "9978afdc5c9939e95cdee61b3ae6596c35bdad0ff6b0d75a2adf87fda235373f",
   "passed": false,
   "capture": {
@@ -15,5 +15,10 @@
     ],
     "workload_reconciled": false,
     "scope": "Request observation to local send return (not recipient delivery/callback completion); partial controller CPU sampling. Sampling starts during profiler activation, omitting some request prefix, and may include inspector overhead. Not full-request or process-tree CPU profiling."
+  },
+  "native_validator_sha256": "39e0aa6cfde2c605edcdb157e7bcf17eb6431884f4fdc37a7cca6e3c86aa2cdf",
+  "current_source_matches_native_build": {
+    "benchmarks/profile_native.py": false,
+    "benchmarks/profiling/controller-jobs.cjs": false
   }
 }

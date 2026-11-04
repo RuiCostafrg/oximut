@@ -1,5 +1,5 @@
 {
-  "validator_sha256": "1d690d19fd825b8f4437b25dacfcf1e7afd64c8002880c92525de019ee42f44f",
+  "validator_sha256": "c57f28c32cf204eeae967475d6fd72963f964fc8e693fe7a901ebad0995def01",
   "qualification_errors": [],
   "passed": false,
   "capture": {
@@ -113,5 +113,6 @@
   "current_source_matches_native_build": {
     "benchmarks/profile_native.py": false,
     "benchmarks/profiling/controller-jobs.cjs": false
-  }
+  },
+  "native_validator_sha256": "990887a2f18c5434eaa4e689e73fcf4e76397076f3a1b1f20c9ae42b5e995d7f"
 }
