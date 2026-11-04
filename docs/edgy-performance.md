@@ -61,6 +61,15 @@ Median `resources.phaseWallMs` (ms):
 | teardown | 51.6962 | 50.3735 |
 | finalInputValidation | 0.0003 | 0.0001 |
 
+The later [native same-engine control](../benchmarks/results/2026-11-04-native-control/README.md)
+(run 41844675894) also passes the exact workload and strict build-integrity gates.
+All after/before confidence intervals include 1; this diagnostic PR changes no
+engine behavior and establishes no attributable performance improvement. The
+capsule retains every resource metric, phase timing, paired interval, original
+summary/measurement row and a reproducible PNG/SVG chart.
+
+![Native same-engine control ratios with bootstrap 95% confidence intervals](../benchmarks/results/2026-11-04-native-control/native-control.png)
+
 ## Source audit and completed diagnostic
 
 The mutation phase costs about 244–245 ms per mutant in both runs. That measures
