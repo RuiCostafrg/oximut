@@ -99,7 +99,7 @@ class PerformanceReportTests(unittest.TestCase):
         data['accounting_run']={'rows':[row],'phases':data['controller']['phases']}
         page=report.render(data)
         self.assertNotIn('Pending native capture',page)
-        self.assertIn('sampling; coordinator fingerprint',page)
+        self.assertIn('stage totals cover only sampling;',page)
         self.assertIn('fixture&lt;script&gt;',page)
         self.assertIn('not independent per-process peaks',page)
 
@@ -113,6 +113,48 @@ class PerformanceReportTests(unittest.TestCase):
         self.assertIn('Clock-boundary limitation observed in identityReads',page)
         self.assertIn('42006490326',page)
         self.assertIn('node-MainThread',page)
+
+    def test_precise_cpu_is_distinct_from_raw_splits_and_budget_remainder(self):
+        """Label precise totals and the bounded CLI remainder without worker attribution."""
+        accounting=report.ROOT/'benchmarks/results/2026-11-05-accounting-profile'
+        comparison=report.ROOT/'benchmarks/results/2026-11-05-accounting-control'
+        data=report.collect(comparison,CONTROLLER,accounting)
+        diag=data['accounting'];diag['clockVersion']=2;diag['threadCpuSinceBudgetStartNs']=3_000_000
+        for name in ('sampling','discovery','identityReads','rssReads'): diag[name]['selfCpuNs']=100_000
+        diag['sampling']['selfCpuNs']=2_000_000
+        page=report.render(data)
+        self.assertIn('Precise self CPU ms',page)
+        self.assertIn('Budget intervals through resource snapshots',page)
+        self.assertIn('Outside sampling, within Budget intervals</td><td>1.000',page)
+        self.assertIn('not worker CPU',page)
+        self.assertNotIn('Legacy capture: precise thread CPU',page)
+
+    def test_versioned_precise_capture_is_revalidated_before_rendering(self):
+        """Accept complete version 2 input and reject missing precise fields."""
+        original=report.ROOT/'benchmarks/results/2026-11-05-accounting-profile'
+        comparison=report.ROOT/'benchmarks/results/2026-11-05-accounting-control'
+        root=Path(self.temp.name)/'precise'
+        shutil.copytree(original,root)
+        record=json.loads((root/'diagnostic.json').read_text());record['accounting_clock_version']=2
+        (root/'diagnostic.json').write_text(json.dumps(record)+'\n')
+        report_path=root/'qualification/00-oximut/report.json'
+        native=json.loads(report_path.read_text());diag=native['resources']['accountingDiagnostics']
+        diag.update(clockVersion=2,threadCpuSinceBudgetStartNs=1_000_000,threadCpuFailures=0)
+        for name in ('sampling','discovery','identityReads','rssReads'):
+            diag[name].update(selfCpuNs=100_000,selfCpuFailures=0)
+        diag['sampling']['selfCpuNs']=500_000
+        for missing in (False,True):
+            if missing: del diag['rssReads']['selfCpuNs']
+            report_path.write_text(json.dumps(native)+'\n')
+            names=[line.split('  ',1)[1] for line in (root/'SHA256SUMS').read_text().splitlines()]
+            (root/'SHA256SUMS').write_text(''.join(hashlib.sha256((root/name).read_bytes()).hexdigest()+'  '+name+'\n' for name in names))
+            if missing:
+                with self.assertRaisesRegex(ValueError,'accounting evidence incomplete'):
+                    report.collect(comparison,CONTROLLER,root)
+            else:
+                data=report.collect(comparison,CONTROLLER,root)
+                self.assertEqual(data['accounting']['clockVersion'],2)
+                self.assertIn('CLOCK_THREAD_CPUTIME_ID',report.render(data))
 
     def test_ordered_but_invented_confidence_bounds_are_rejected(self):
         """Require confidence bounds to reproduce the deterministic bootstrap."""

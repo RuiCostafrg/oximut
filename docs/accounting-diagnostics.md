@@ -13,14 +13,25 @@ variable unset or set to any other value, the key is omitted and sampling does
 not read diagnostic clocks or thread CPU counters. The diagnostic is bounded:
 it contains four stage totals and no per-process records, paths, or environment
 values.
-Only `Budget::sample_with_readers` windows are measured. Coordinator input
-fingerprints, coordinator cleanup, and other CLI work remain outside this
-accounting profile; unmeasured CPU must not be relabeled as worker CPU.
+The four stage counters cover only `Budget::sample_with_readers` windows.
+Version 2 also measures the same thread across each Budget lifetime through
+its resource-report snapshot. That larger interval includes other CLI work;
+its remainder is not a worker CPU measurement. CLI startup before the Budget,
+other processes and gaps between retry intervals remain outside that total.
 
-`sampling` counts admitted sample attempts, including attempts that fail, and
+`clockVersion: 2` identifies the precision-clock format. `sampling` counts admitted sample attempts, including attempts that fail, and
 measures the complete sampling operation. `discovery`, `identityReads`, and
-`rssReads` count each instrumented invocation and accumulate its monotonic wall
-time and Linux `getrusage(RUSAGE_THREAD)` user/system CPU time. Discovery
+`rssReads` count each instrumented invocation and accumulate monotonic wall
+time, Linux `getrusage(RUSAGE_THREAD)` user/system CPU time, and
+`CLOCK_THREAD_CPUTIME_ID` total CPU time (`selfCpuNs`). `selfUserNs` and
+`selfSystemNs` are retained raw counters. They have microsecond granularity and
+their charging/endpoints can disagree with short wall windows; do not interpret
+them as exact stage attribution or clamp values to wall time. Missing precise
+readings make totals null and increment `selfCpuFailures`.
+`threadCpuSinceBudgetStartNs` measures the same CLI sampling thread from this
+Budget lifetime's start through report serialization. It is not worker CPU and
+does not cover program startup before Budget creation. Failures are counted in
+`threadCpuFailures`. Discovery
 includes identity reads performed internally while building the process table;
 `identityReads` counts the separate fresh identity validations before RSS reads.
 Durations are integer nanoseconds. Identity and RSS reads include failed calls. A rate-limited call is
@@ -31,12 +42,14 @@ Node, controllers, test forks, or an external benchmark sampler.
 
 Stage totals are nested within `sampling`: discovery and read work is included
 in the overall sample. Clock/getrusage and instrumentation framework overhead
-is not separately measured. These categories therefore are not an exact
+is included in enclosing windows and is not separately measured. These categories therefore are not an exact
 partition of process-tree CPU or wall time. The retained native capture below
 provides measured sampling windows and exposes a clock-boundary limitation.
 It makes no optimization or savings claim; paired scored results use a separate
-campaign with these clocks disabled. Retry reports add both attempts' stage
-totals alongside their resource samples; missing timings remain null.
+campaign with these clocks disabled. Retry reports add both attempts' stage and
+per-Budget thread totals alongside their resource samples. Gaps between
+discarded Budget lifetimes are outside both intervals; missing totals remain
+null and overflow increments failure evidence.
 
 The native workflow now defaults to `capture_mode: accounting`; the existing
 controller-job and startup-segment modes remain selectable. The `native-profile`
@@ -49,11 +62,19 @@ python3 benchmarks/profile_native.py --binary /path/to/release/oximut \
   --accounting --output /tmp/oximut-accounting-capture-new
 ```
 
+The separate `capture_mode: cpu-prof` dispatch exposes the harness's existing
+exit-time Node CPU profiler, including worker profiles when they finalize.
+Its identity/finalization/workload gates remain in place; incomplete files do
+not become qualified evidence. Use it to investigate worker startup and
+collection, separately from accounting mode and scored paired campaigns.
+
 It enables the environment switch for the unchanged three-tool colord workload,
 without Node inspector or Python profiler preloads. Acceptance still requires
 the exact 102 tests and ten killed edits, healthy native resource accounting,
-all four measured stages, reconciled admitted/discovery counts, and non-null
-wall/user/system totals with zero failure counters. Zero-valued sub-millisecond
+all four measured stages, reconciled admitted/discovery counts, version 2
+precise CPU and Budget totals, and non-null wall/user/system totals with zero
+failure counters. The HTML reader accepts legacy captures explicitly as
+historical evidence; the new capture path requires version 2. Zero-valued sub-millisecond
 CPU deltas are allowed; missing or overflowed values are not zero measurements.
 The output remains one diagnostic, with no paired ratios or savings claim.
 Accounting mode also enables `OXIMUT_PROFILE_MEMORY=1` in the external benchmark
@@ -91,6 +112,7 @@ The first native capture is retained in
 It qualifies the workload and complete counter collection, but exposes a
 fine-grained clock-boundary limitation: `identityReads` user+sys exceeds its wall
 interval. Preserve those raw values; do not interpret the per-stage user/sys
-split as exact CPU attribution. The next timing refinement should align interval
-endpoints and add `CLOCK_THREAD_CPUTIME_ID` totals. Getrusage CPU fields are
+split as exact CPU attribution. Version 2 aligns interval endpoints and adds
+`CLOCK_THREAD_CPUTIME_ID` totals; that precision format needs its own native
+capture before interpreting sampling CPU. Getrusage CPU fields are
 microsecond counters converted to nanosecond units, not nanosecond precision.

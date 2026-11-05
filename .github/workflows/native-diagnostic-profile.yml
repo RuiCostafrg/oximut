@@ -11,6 +11,7 @@ on:
           - accounting
           - controller-jobs
           - segments
+          - cpu-prof
   pull_request:
     types: [opened, reopened, synchronize, labeled]
 
@@ -87,13 +88,14 @@ jobs:
         run: |
           set -euo pipefail
           case "$CAPTURE_MODE" in
-            accounting) CAPTURE_ARG=--accounting ;;
-            controller-jobs) CAPTURE_ARG=--controller-jobs ;;
-            segments) CAPTURE_ARG=--segments ;;
+            accounting) CAPTURE_ARGS=(--accounting) ;;
+            controller-jobs) CAPTURE_ARGS=(--controller-jobs) ;;
+            segments) CAPTURE_ARGS=(--segments) ;;
+            cpu-prof) CAPTURE_ARGS=() ;;
             *) echo 'Unsupported capture mode' >&2; exit 1 ;;
           esac
           python3 benchmarks/profile_native.py --binary "$PROFILE_ROOT/oximut" \
-            "$CAPTURE_ARG" --output "$PROFILE_ROOT/capture" 2>&1 | tee "$PROFILE_ROOT/diagnostic.log"
+            "${CAPTURE_ARGS[@]}" --output "$PROFILE_ROOT/capture" 2>&1 | tee "$PROFILE_ROOT/diagnostic.log"
       - name: Publish diagnostic status and remove dependency symlinks
         if: always()
         shell: bash

@@ -49,6 +49,8 @@
         "wallNs": { "type": ["integer", "null"], "minimum": 0 },
         "selfUserNs": { "type": ["integer", "null"], "minimum": 0 },
         "selfSystemNs": { "type": ["integer", "null"], "minimum": 0 },
+        "selfCpuNs": { "type": ["integer", "null"], "minimum": 0 },
+        "selfCpuFailures": { "type": "integer", "minimum": 0 },
         "cpuFailures": { "type": "integer", "minimum": 0 },
         "timingFailures": { "type": "integer", "minimum": 0 }
       }
@@ -56,8 +58,12 @@
     "accountingDiagnostics": {
       "type": "object", "additionalProperties": false,
       "required": ["scope", "evidence", "sampling", "discovery", "identityReads", "rssReads", "timingNote"],
+      "allOf": [{"if":{"type":"object","required":["clockVersion"]},"then":{"type":"object","required":["threadCpuSinceBudgetStartNs","threadCpuFailures"],"properties":{"sampling":{"type":"object","required":["selfCpuNs","selfCpuFailures"]},"discovery":{"type":"object","required":["selfCpuNs","selfCpuFailures"]},"identityReads":{"type":"object","required":["selfCpuNs","selfCpuFailures"]},"rssReads":{"type":"object","required":["selfCpuNs","selfCpuFailures"]}}}}],
       "properties": {
         "scope": { "type": "string" }, "evidence": { "type": "string" },
+        "clockVersion": { "const": 2 },
+        "threadCpuSinceBudgetStartNs": { "type": ["integer", "null"], "minimum": 0 },
+        "threadCpuFailures": { "type": "integer", "minimum": 0 },
         "sampling": { "$ref": "#/$defs/accountingStage" },
         "discovery": { "$ref": "#/$defs/accountingStage" },
         "identityReads": { "$ref": "#/$defs/accountingStage" },

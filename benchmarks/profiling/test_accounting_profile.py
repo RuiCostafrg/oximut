@@ -18,14 +18,16 @@ class AccountingCaptureTests(unittest.TestCase):
         self.root = Path(self.temporary.name)
         (self.root / '00-oximut').mkdir()
         stage = {'calls': 3, 'wallNs': 40, 'selfUserNs': 10,
-                 'selfSystemNs': 5, 'cpuFailures': 0, 'timingFailures': 0}
+                 'selfSystemNs': 5, 'selfCpuNs':5, 'selfCpuFailures':0, 'cpuFailures': 0, 'timingFailures': 0}
         self.report = {
             'diagnostics': ['native coordinator: fixture'],
             'resources': {'samples': 3, 'exhaustion': None, 'accountingDiagnostics': {
                 'scope': 'CLI sampling thread only', 'evidence': 'complete counters', 'timingNote': 'nested',
+                'clockVersion':2,'threadCpuSinceBudgetStartNs':60,'threadCpuFailures':0,
                 **{key: copy.deepcopy(stage) for key in ('sampling','discovery','identityReads','rssReads')},
             }},
         }
+        self.report['resources']['accountingDiagnostics']['sampling']['selfCpuNs']=20
 
     def capture(self, report):
         """Write a three-tool fixture and validate its accounting inventory."""
@@ -50,19 +52,52 @@ class AccountingCaptureTests(unittest.TestCase):
     def test_missing_negative_noninteger_null_and_failure_totals_are_rejected(self):
         """Reject incomplete or invalid stage counters instead of inventing zeros."""
         for stage in ('sampling','discovery','identityReads','rssReads'):
-            for key in ('calls','wallNs','selfUserNs','selfSystemNs','cpuFailures','timingFailures'):
+            for key in ('calls','wallNs','selfUserNs','selfSystemNs','selfCpuNs','selfCpuFailures','cpuFailures','timingFailures'):
                 for invalid in (None, True, -1, 1.5, 2**64):
                     with self.subTest(stage=stage, key=key, value=invalid):
                         report = copy.deepcopy(self.report)
                         report['resources']['accountingDiagnostics'][stage][key] = invalid
                         self.assertTrue(self.capture(report)['errors'])
-            for key in ('cpuFailures','timingFailures'):
+            for key in ('cpuFailures','timingFailures','selfCpuFailures'):
                 report = copy.deepcopy(self.report)
                 report['resources']['accountingDiagnostics'][stage][key] = 1
                 self.assertTrue(self.capture(report)['errors'])
             report = copy.deepcopy(self.report)
             del report['resources']['accountingDiagnostics'][stage]['wallNs']
             self.assertTrue(self.capture(report)['errors'])
+
+    def test_legacy_counters_require_explicit_archival_mode(self):
+        """Keep historical captures readable while requiring precise new captures."""
+        legacy=copy.deepcopy(self.report)
+        diag=legacy['resources']['accountingDiagnostics']
+        for key in ('clockVersion','threadCpuSinceBudgetStartNs','threadCpuFailures'):
+            del diag[key]
+        for name in ('sampling','discovery','identityReads','rssReads'):
+            del diag[name]['selfCpuNs']; del diag[name]['selfCpuFailures']
+        self.assertTrue(self.capture(legacy)['errors'])
+        result=diagnostic.accounting_capture_inventory(self.root,allow_legacy=True)
+        self.assertEqual(result['errors'],[])
+        self.assertEqual(result['clock_version'],1)
+
+    def test_precise_version_thread_interval_and_nested_totals_fail_closed(self):
+        """Reject missing clocks and impossible precise CPU interval relationships."""
+        faults=[('clockVersion',value) for value in (None,True,1,3)]
+        faults += [('threadCpuSinceBudgetStartNs',value) for value in (None,True,-1,1.5,2**64,19)]
+        faults += [('threadCpuFailures',value) for value in (None,True,-1,1,1.5,2**64)]
+        for key,value in faults:
+            data=copy.deepcopy(self.report); data['resources']['accountingDiagnostics'][key]=value
+            with self.subTest(key=key,value=value): self.assertTrue(self.capture(data)['errors'])
+        for key in ('clockVersion','threadCpuSinceBudgetStartNs','threadCpuFailures'):
+            data=copy.deepcopy(self.report); del data['resources']['accountingDiagnostics'][key]
+            self.assertTrue(self.capture(data)['errors'])
+        for name in ('sampling','discovery','identityReads','rssReads'):
+            data=copy.deepcopy(self.report); data['resources']['accountingDiagnostics'][name]['selfCpuNs']=41
+            self.assertTrue(self.capture(data)['errors'])
+            for key in ('selfCpuNs','selfCpuFailures'):
+                data=copy.deepcopy(self.report); del data['resources']['accountingDiagnostics'][name][key]
+                self.assertTrue(self.capture(data)['errors'])
+        data=copy.deepcopy(self.report); data['resources']['accountingDiagnostics']['sampling']['selfCpuNs']=14
+        self.assertTrue(self.capture(data)['errors'])
 
     def test_missing_profile_empty_stages_and_mismatched_sample_counts_are_rejected(self):
         """Reconcile all measured stages with the admitted resource samples."""

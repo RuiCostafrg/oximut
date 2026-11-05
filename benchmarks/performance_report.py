@@ -149,8 +149,10 @@ def collect(comparison, controller, accounting=None):
         for key in ('binary_sha256','adapter_source_sha256','adapter_pairing','oximut_args'):
             require(record['execution_inputs'][key] == provenance['after'][key], 'accounting execution inputs differ from paired candidate')
         require(not profile_native.qualification_errors(accounting / 'qualification', 0), 'accounting workload not qualified')
-        inventory = profile_native.accounting_capture_inventory(accounting / 'qualification')
-        require(not inventory['errors'], 'accounting evidence incomplete')
+        clock_version = record.get('accounting_clock_version',1)
+        require(type(clock_version) is int and clock_version in (1,2), 'invalid accounting clock version')
+        inventory = profile_native.accounting_capture_inventory(accounting / 'qualification',allow_legacy=clock_version==1)
+        require(not inventory['errors'] and inventory['clock_version']==clock_version, 'accounting evidence incomplete')
         accounting_data = inventory['accounting_diagnostics']
         accounting_run = {'rows': [json.loads(line) for line in (accounting/'qualification/measurements.jsonl').read_text().splitlines()],
                           'phases': read_json(accounting/'qualification/00-oximut/report.json')['resources']['phaseWallMs'],
@@ -230,7 +232,18 @@ def render(data):
         """Keep one profiled run separate from paired performance comparisons."""
         return table(['Tool','Wall s','CPU s','User / sys s','RSS MB','Peak / observed'], [[r['tool'],f'{r["wall_seconds"]:.6f}',f'{r["cpu_seconds"]:.6f}',f'{r["cpu_user_seconds"]:.6f} / {r["cpu_system_seconds"]:.6f}',f'{r["peak_aggregate_rss_bytes"]/1e6:.3f}',f'{r["peak_process_count"]} / {r["observed_process_count"]}'] for r in run['rows']])+table(['Diagnostic resources.phaseWallMs','ms'],[[key,f'{value:.6f}'] for key,value in run['phases'].items()])+'<p>One overhead-bearing run: paired ratios and bootstrap CIs are unavailable.</p>'
     if data['accounting']:
-        accounting = table(['Nested stage','Calls','Wall ms','Self user ms','Self sys ms'], [[key,d['calls'],f'{d["wallNs"]/1e6:.3f}',f'{d["selfUserNs"]/1e6:.3f}',f'{d["selfSystemNs"]/1e6:.3f}'] for key,d in data['accounting'].items() if isinstance(d,dict)])
+        precise = data['accounting'].get('clockVersion') == 2
+        accounting = table(['Nested stage','Calls','Wall ms','Precise self CPU ms','Raw user ms','Raw sys ms'], [[key,d['calls'],f'{d["wallNs"]/1e6:.3f}',f'{d["selfCpuNs"]/1e6:.3f}' if precise else 'N/A (legacy)',f'{d["selfUserNs"]/1e6:.3f}',f'{d["selfSystemNs"]/1e6:.3f}'] for key,d in data['accounting'].items() if isinstance(d,dict)])
+        if precise:
+            total=data['accounting']['threadCpuSinceBudgetStartNs']
+            windows=data['accounting']['sampling']['selfCpuNs']
+            accounting += table(['CLI sampling thread interval','CPU ms'],[
+                ['Budget intervals through resource snapshots',f'{total/1e6:.3f}'],
+                ['Sampling windows',f'{windows/1e6:.3f}'],
+                ['Outside sampling, within Budget intervals',f'{(total-windows)/1e6:.3f}']])
+            accounting += '<p>Version 2 uses CLOCK_THREAD_CPUTIME_ID with CPU endpoints inside wall endpoints. Budget intervals cover the same thread through the resource snapshot; they exclude earlier startup, other processes and gaps between retry intervals. The remainder above is unwindowed CLI work, not worker CPU.</p>'
+        else:
+            accounting += '<p class="notice">Legacy capture: precise thread CPU was not recorded. A version 2 native capture is required before interpreting exact sampling CPU totals.</p>'
         if data['accounting_run'].get('native_run'):
             run=data['accounting_run']['native_run']
             accounting='<p>Separate native accounting diagnostic <a href="https://github.com/RuiCostafrg/oximut/actions/runs/'+str(run)+'">'+str(run)+'</a>, with profiler overhead and no scored ratios.</p>'+accounting
@@ -238,7 +251,7 @@ def render(data):
         skewed=[key for key,d in data['accounting'].items() if isinstance(d,dict)
                 and d['selfUserNs']+d['selfSystemNs'] > d['wallNs']]
         if skewed:
-            accounting += '<p class="notice">Clock-boundary limitation observed in '+html.escape(', '.join(skewed))+': reported user + sys exceeds measured wall time. These fine-grained getrusage splits are not reliable exact stage attribution. Raw counters are retained; do not use them for CPU-share percentages. Review the interval boundaries and add high-resolution thread CPU totals before that interpretation.</p>'
+            accounting += '<p class="notice">Clock-boundary limitation observed in '+html.escape(', '.join(skewed))+': reported user + sys exceeds measured wall time. These fine-grained getrusage splits are not reliable exact stage attribution. Raw counters are retained; do not use them for CPU-share percentages. The cause is not established by these counters.</p>'
         for row in data['accounting_run']['rows']:
             snapshot=row['peak_rss_snapshot']
             accounting += '<h3>'+html.escape(row['tool'])+' peak RSS sample</h3>'+table(
@@ -246,10 +259,12 @@ def render(data):
                 [[p['pid'],p['ppid'],p['comm'],p['starttime'],f'{p["rss_bytes"]/1e6:.3f}']
                  for p in sorted(snapshot['processes'],key=lambda p:-p['rss_bytes'])])
         accounting += '<p class="muted">Process RSS values come from the same verified peak sample, not independent per-process peaks. Shared pages count per process; sampling across PIDs is not atomic. No command-line arguments or environment values are collected.</p>'
-    accounting_note = ('Measured stage totals above cover only sampling; coordinator fingerprint/cleanup and other CLI work remain unmeasured. A saving still requires a paired optimization campaign.' if data['accounting'] else 'Repeated smaps_rollup reads are a source-supported cost hypothesis. Do not label them a measured CPU hotspot until the native capture arrives.')
+    accounting_note = ('Measured stage totals cover only sampling; Budget totals, when present, bound a larger CLI thread interval without partitioning its remainder. No per-process worker CPU attribution is established. A saving still requires a paired optimization campaign.' if data['accounting'] else 'Repeated smaps_rollup reads are a source-supported cost hypothesis. Do not label them a measured CPU hotspot until the native capture arrives.')
     frames=table(['Controller sampled frame','File','Weighted sample ms'], [[r['function'],r['file'].rsplit('/',1)[-1],f'{r["sampled_ms"]:.3f}'] for r in data['controller']['frames']])
     raw_table=table(['Pair','Side','Tool','Warmup','Wall s','CPU s','User / sys s','RSS MB','Peak / observed'],[[r['campaign_round'],r['side'],r['tool'],r['warmup'],f'{r["wall_seconds"]:.6f}',f'{r["cpu_seconds"]:.6f}',f'{r["cpu_user_seconds"]:.6f} / {r["cpu_system_seconds"]:.6f}',f'{r["peak_aggregate_rss_bytes"]/1e6:.3f}',f'{r["peak_process_count"]} / {r["observed_process_count"]}'] for r in data['raw']])
-    priority=('Use measured RSS-read wall cost to design one safe experiment. Keep current precision, read freshness, admission and cleanup guarantees; first resolve fine-grained CPU clock-boundary limitations.' if data['accounting'] else 'Attribute Rust sampling CPU. Keep current RSS reads, cadence, ownership and admission/cleanup gates. Its CPU cost is still unknown.')
+    priority=('Measure forced-sample delay and worker bootstrap CPU, then choose an experiment from precise CPU totals. Preserve current RSS read freshness, admission and cleanup guarantees.' if data['accounting'] and data['accounting'].get('clockVersion')==2 else
+              'Collect a version 2 native capture before attributing sampling CPU. The legacy RSS-read wall windows are measured; recoverable wall savings remain unknown. Keep current precision, read freshness, admission and cleanup guarantees.' if data['accounting'] else
+              'Attribute Rust sampling CPU. Keep current RSS reads, cadence, ownership and admission/cleanup gates. Its CPU cost is still unknown.')
     unchanged=all(metric['bootstrap_95_percent'][0] <= 1 <= metric['bootstrap_95_percent'][1]
                   for metric in data['comparisons']['after_vs_before']['metrics'].values())
     control_note=('Every after/before interval includes 1. No measured speedup is established.' if unchanged else
