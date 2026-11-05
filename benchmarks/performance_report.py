@@ -12,6 +12,7 @@ from pathlib import Path
 import statistics
 
 import profile_native
+import compare_candidates
 
 ROOT = Path(__file__).resolve().parents[1]
 FIELDS = ('wall_seconds', 'cpu_seconds', 'cpu_user_seconds', 'cpu_system_seconds',
@@ -29,22 +30,25 @@ def read_json(path):
     return json.loads(path.read_text())
 
 
-def verify_manifest(root):
+def verify_manifest(root, required):
     """Verify retained bytes before deriving anything for display."""
     hashes = {}
     for line in (root / 'SHA256SUMS').read_text().splitlines():
         digest, name = line.split('  ', 1)
+        require(name not in hashes, 'duplicate evidence manifest entry')
         path = root / name
         require(not path.is_symlink() and path.resolve().is_relative_to(root.resolve()), 'unsafe evidence path')
         require(hashlib.sha256(path.read_bytes()).hexdigest() == digest, f'evidence digest mismatch: {name}')
         hashes[name] = digest
     require(bool(hashes), 'empty evidence manifest')
+    require(set(required) <= hashes.keys(), 'unhashed evidence: '+', '.join(sorted(set(required)-hashes.keys())))
     return hashes
 
 
 def collect(comparison, controller, accounting=None):
     """Keep paired controls and overhead-bearing diagnostics in separate scopes."""
-    hashes = verify_manifest(comparison)
+    hashes = verify_manifest(comparison, ('original-summary.json','original-metadata.json',
+                                         'original-measurements.jsonl','evidence-source.json'))
     summary = read_json(comparison / 'original-summary.json')
     metadata = read_json(comparison / 'original-metadata.json')
     source = read_json(comparison / 'evidence-source.json')
@@ -75,6 +79,9 @@ def collect(comparison, controller, accounting=None):
     expected = {(r, side, tool) for r in range(summary['warmup_pairs'] + summary['measured_pairs'])
                 for side in ('after','before') for tool in ('oximut','stryker','vitest')}
     require(seen == expected, 'measurement inventory differs from paired campaign')
+    provenance = {side: groups[side,'oximut'][0]['execution_inputs'] for side in ('after','before')}
+    qualified = compare_candidates.evaluate(raw, summary['warmup_pairs'], summary['measured_pairs'], provenance)
+    require(qualified['correctness_gate']['passed'], 'raw workload requalification failed')
     medians = {}
     for (side, tool), rows in groups.items():
         require(len(rows) == summary['measured_pairs'], 'incomplete measured group')
@@ -93,6 +100,9 @@ def collect(comparison, controller, accounting=None):
             lo, hi = stated['bootstrap_95_percent']
             require(all(type(x) in (int,float) and math.isfinite(x) for x in (lo, hi, stated['median']))
                     and 0 <= lo <= stated['median'] <= hi and math.isclose(statistics.median(pairs),stated['median']), 'invalid paired interval')
+            recomputed = qualified['comparisons'][name]['metrics'][field]['bootstrap_95_percent']
+            require(all(math.isclose(x,y,rel_tol=1e-12,abs_tol=1e-12) for x,y in zip((lo,hi),recomputed)),
+                    'bootstrap bounds differ from raw paired evidence')
     phases = {}
     for side in ('after','before'):
         rows = [row for row in summary['phase_evidence'][side] if not row['warmup']]
@@ -103,7 +113,9 @@ def collect(comparison, controller, accounting=None):
                 type(v) in (int,float) and math.isfinite(v) and v >= 0 for v in row['phaseWallMs'].values()), 'invalid phase observation')
         phases[side] = {key: statistics.median(row['phaseWallMs'][key] for row in rows) for key in rows[0]['phaseWallMs']}
         require(all(math.isfinite(v) and v >= 0 for v in phases[side].values()), 'invalid phase timing')
-    verify_manifest(controller)
+    verify_manifest(controller, ['boundary-intervals.json','qualification/summary.json',
+                                'qualification/measurements.jsonl','qualification/00-oximut/report.json']+
+                    [str(p.relative_to(controller)) for p in (controller/'profiles').iterdir() if p.is_file()])
     require(not profile_native.qualification_errors(controller / 'qualification', 0), 'controller workload not qualified')
     capture = profile_native.controller_capture_inventory(controller / 'profiles', controller / 'qualification')
     require(not capture['errors'] and capture['workload_reconciled'], 'controller capture invalid')
@@ -122,14 +134,29 @@ def collect(comparison, controller, accounting=None):
     accounting_data = None
     accounting_run = None
     if accounting:
+        verify_manifest(accounting, ('diagnostic.json','build-metadata.json','qualification/metadata.json',
+                                     'qualification/summary.json','qualification/measurements.jsonl',
+                                     'qualification/00-oximut/report.json','evidence-source.json'))
         record = read_json(accounting / 'diagnostic.json')
         require(record.get('passed') is True and record.get('node_capture_mode') == 'rust-accounting-self', 'accounting capture incomplete or wrong mode')
+        build = read_json(accounting/'build-metadata.json')
+        capture_metadata = read_json(accounting/'qualification/metadata.json')
+        require(record['source_commit'] == build['commit'] == metadata['after_commit'], 'accounting source differs from paired candidate')
+        require(record['execution_inputs'] == capture_metadata['execution_inputs'], 'accounting execution provenance differs')
+        require(record['execution_inputs']['binary_sha256'] == build['binary_sha256'] == metadata['binary_sha256']['after'], 'accounting binary differs from paired candidate')
+        for key in ('binary_sha256','adapter_source_sha256','adapter_pairing','oximut_args'):
+            require(record['execution_inputs'][key] == provenance['after'][key], 'accounting execution inputs differ from paired candidate')
         require(not profile_native.qualification_errors(accounting / 'qualification', 0), 'accounting workload not qualified')
         inventory = profile_native.accounting_capture_inventory(accounting / 'qualification')
         require(not inventory['errors'], 'accounting evidence incomplete')
         accounting_data = inventory['accounting_diagnostics']
         accounting_run = {'rows': [json.loads(line) for line in (accounting/'qualification/measurements.jsonl').read_text().splitlines()],
-                          'phases': read_json(accounting/'qualification/00-oximut/report.json')['resources']['phaseWallMs']}
+                          'phases': read_json(accounting/'qualification/00-oximut/report.json')['resources']['phaseWallMs'],
+                          'source_commit': record['source_commit']}
+        if (accounting/'evidence-source.json').exists():
+            provenance=read_json(accounting/'evidence-source.json')
+            require(type(provenance['run']) is int and provenance['run'] > 0, 'invalid accounting run provenance')
+            accounting_run['native_run']=provenance['run']
     return {'medians': medians, 'phases': phases, 'comparisons': summary['comparisons'],
             'pairs': summary['measured_pairs'], 'warmups': summary['warmup_pairs'], 'build': metadata,
             'hashes': hashes, 'source': source, 'raw': [{k: row[k] for k in (*FIELDS,'tool','campaign_round','warmup')} |
@@ -190,7 +217,14 @@ def render(data):
         return table(['Tool','Wall s','CPU s','User / sys s','RSS MB','Peak / observed'], [[r['tool'],f'{r["wall_seconds"]:.6f}',f'{r["cpu_seconds"]:.6f}',f'{r["cpu_user_seconds"]:.6f} / {r["cpu_system_seconds"]:.6f}',f'{r["peak_aggregate_rss_bytes"]/1e6:.3f}',f'{r["peak_process_count"]} / {r["observed_process_count"]}'] for r in run['rows']])+table(['Diagnostic resources.phaseWallMs','ms'],[[key,f'{value:.6f}'] for key,value in run['phases'].items()])+'<p>One overhead-bearing run: paired ratios and bootstrap CIs are unavailable.</p>'
     if data['accounting']:
         accounting = table(['Nested stage','Calls','Wall ms','Self user ms','Self sys ms'], [[key,d['calls'],f'{d["wallNs"]/1e6:.3f}',f'{d["selfUserNs"]/1e6:.3f}',f'{d["selfSystemNs"]/1e6:.3f}'] for key,d in data['accounting'].items() if isinstance(d,dict)])
+        if data['accounting_run'].get('native_run'):
+            run=data['accounting_run']['native_run']
+            accounting='<p>Separate native accounting diagnostic <a href="https://github.com/RuiCostafrg/oximut/actions/runs/'+str(run)+'">'+str(run)+'</a>, with profiler overhead and no scored ratios.</p>'+accounting
         accounting += '<details><summary>Accounting capture resources and phases</summary>'+diagnostic_resources(data['accounting_run'])+'</details>'
+        skewed=[key for key,d in data['accounting'].items() if isinstance(d,dict)
+                and d['selfUserNs']+d['selfSystemNs'] > d['wallNs']]
+        if skewed:
+            accounting += '<p class="notice">Clock-boundary limitation observed in '+html.escape(', '.join(skewed))+': reported user + sys exceeds measured wall time. These fine-grained getrusage splits are not reliable exact stage attribution. Raw counters are retained; do not use them for CPU-share percentages. Review the interval boundaries and add high-resolution thread CPU totals before that interpretation.</p>'
         for row in data['accounting_run']['rows']:
             snapshot=row['peak_rss_snapshot']
             accounting += '<h3>'+html.escape(row['tool'])+' peak RSS sample</h3>'+table(
@@ -201,16 +235,21 @@ def render(data):
     accounting_note = ('Measured stage totals above cover only sampling; coordinator fingerprint/cleanup and other CLI work remain unmeasured. A saving still requires a paired optimization campaign.' if data['accounting'] else 'Repeated smaps_rollup reads are a source-supported cost hypothesis. Do not label them a measured CPU hotspot until the native capture arrives.')
     frames=table(['Controller sampled frame','File','Weighted sample ms'], [[r['function'],r['file'].rsplit('/',1)[-1],f'{r["sampled_ms"]:.3f}'] for r in data['controller']['frames']])
     raw_table=table(['Pair','Side','Tool','Warmup','Wall s','CPU s','User / sys s','RSS MB','Peak / observed'],[[r['campaign_round'],r['side'],r['tool'],r['warmup'],f'{r["wall_seconds"]:.6f}',f'{r["cpu_seconds"]:.6f}',f'{r["cpu_user_seconds"]:.6f} / {r["cpu_system_seconds"]:.6f}',f'{r["peak_aggregate_rss_bytes"]/1e6:.3f}',f'{r["peak_process_count"]} / {r["observed_process_count"]}'] for r in data['raw']])
+    priority=('Use measured RSS-read wall cost to design one safe experiment. Keep current precision, read freshness, admission and cleanup guarantees; first resolve fine-grained CPU clock-boundary limitations.' if data['accounting'] else 'Attribute Rust sampling CPU. Keep current RSS reads, cadence, ownership and admission/cleanup gates. Its CPU cost is still unknown.')
+    unchanged=all(metric['bootstrap_95_percent'][0] <= 1 <= metric['bootstrap_95_percent'][1]
+                  for metric in data['comparisons']['after_vs_before']['metrics'].values())
+    control_note=('Every after/before interval includes 1. No measured speedup is established.' if unchanged else
+                  'Some after/before intervals exclude 1; inspect the control change and uncertainty. This profiling PR claims no optimization.')
     content = f'''<p class="muted">Oximut · native Ubuntu 24.04 x86_64 · colord · {data['warmups']} warmup + {data['pairs']} pairs · <a href="https://github.com/RuiCostafrg/oximut/actions/runs/{data['source']['benchmark_run']}">benchmark {data['source']['benchmark_run']}</a></p>
 <section><h2>Performance goal is still unmet</h2><p>Exact workload and strict build integrity pass: 41 sources, 102 tests, five mutation files, ten exact killed arithmetic edits. Fresh forks remain the default. This is a same-engine control, with no attributable optimization.</p>{table(['Metric','Required CI upper bound','Oximut / Stryker [95% CI]','Gate'],target_rows)}</section>
-<section><h2>Paired ratios, not cross-run subtraction</h2><p class="muted">Median paired ratios and bootstrap 95% intervals. The mission thresholds supersede the older evaluator thresholds.</p><h3>After / Stryker</h3>{ratio_chart(data,'after_vs_stryker')}<details><summary>After / before — same-engine control</summary>{ratio_chart(data,'after_vs_before')}<p>Every after/before interval includes 1. No measured speedup is established.</p></details></section>
+<section><h2>Paired ratios, not cross-run subtraction</h2><p class="muted">Median paired ratios and bootstrap 95% intervals. The mission thresholds supersede the older evaluator thresholds.</p><h3>After / Stryker</h3>{ratio_chart(data,'after_vs_stryker')}<details><summary>After / before — control</summary>{ratio_chart(data,'after_vs_before')}<p>{control_note}</p></details><details><summary>Before / Stryker</summary>{ratio_chart(data,'before_vs_stryker')}</details></section>
 <section><h2>Wall, CPU, memory and processes</h2>{table(['Candidate','Tool','Wall s','CPU s','User / sys s','Aggregate RSS MB','Peak / observed processes'],metrics)}<p class="muted">Decimal MB. Each column is an independent median, so median user + median sys need not equal median total CPU. RSS is the peak sum across the owned process tree; shared pages count per process.</p></section>
 <section><h2>Where wall time goes</h2>{bars([(k,phases[k]) for k in ('mutationExecution','originalBaseline','instrumentedBaseline','teardown')])}<details><summary>Every resources.phaseWallMs timing</summary>{table(['Phase','After median ms','Before median ms'],[[key,f'{value:.6f}',f'{data["phases"]["before"][key]:.6f}'] for key,value in phases.items()])}</details><p class="muted">Independent phase medians are not additive. The original baseline includes controller/Vitest initialization; mutation execution includes scheduling, sampling, workers, tests and cleanup. These are wall intervals, not CPU attribution.</p></section>
 <section><h2>Inside a mutant job</h2><p class="muted">Separate overhead-bearing native diagnostic <a href="https://github.com/RuiCostafrg/oximut/actions/runs/{data['source']['controller_run']}">{data['source']['controller_run']}</a>. These observations cannot be subtracted from the paired control above.</p>{bars(boundaries)}<p>Fork startup and collection are material observed intervals. Request → send measures normal local send return, not recipient delivery. Intervals are independent medians and are not additive.</p><details><summary>All ten jobs, including profiler startup overhead</summary>{table(['Command','Request → send ms','Fork → started ms','Run → collection ms','Collection → finished ms'],[[j['commandId'],f'{j["requestToSendReturnMs"]:.3f}',f'{j["forkToStartedMs"]:.3f}',f'{j["runToCollectionMs"]:.3f}',f'{j["collectionToFinishedMs"]:.3f}'] for j in intervals['jobs']])}</details></section>
 <section><h2>TypeScript / Node profiler</h2><p>V8 inspector CPU sampling covers a partial first-mutant controller window ({data['controller']['sampled_window_ms']:.3f} ms). It excludes worker CPU, omits a request prefix and can include inspector overhead. Weighted sample time below includes idle frames and is not process-tree CPU seconds.</p><details><summary>Top sampled controller frames</summary>{frames}</details><details><summary>Diagnostic resources and phase timings</summary>{diagnostic_resources(data['controller'])}</details></section>
 <section><h2>Rust resource accountant</h2>{accounting}<p>Opt-in getrusage(RUSAGE_THREAD) + monotonic clocks measure admitted sampling, discovery, fresh identity checks and RSS reads. Stages are nested; clock/framework overhead is not separately partitioned. No Node/Python profiler runs in accounting-only mode.</p><p>{accounting_note}</p></section>
 <section><h2>Isolation experiments</h2><p>Native structural oracle <a href="https://github.com/RuiCostafrg/oximut/actions/runs/{data['source']['structural_run']}">{data['source']['structural_run']}</a> preserves the raw warm-host leak counterexample. The narrow guard passes its tested fixture scope by recycling dirty hosts. Async/native resources and nested host state remain unproven. No product warm-reuse mode is enabled. Structural wall/CPU/RSS/process counts, phase timings, ratios and CIs are unmeasured/N/A.</p></section>
-<section><h2>Next decisions, ranked by current evidence</h2><ol><li><b>Attribute Rust sampling CPU.</b> Keep current RSS reads, cadence, ownership and admission/cleanup gates. Its CPU cost is still unknown.</li><li><b>Profile worker bootstrap and collection.</b> Controller samples do not explain fork CPU. Warm fresh realms are promising but blocked by isolation gaps.</li><li><b>Reduce baseline overhead safely.</b> Preserve the original oracle and inactive-transform/coverage validation; identify initialization work that can be amortized.</li><li><b>Measure per-test selection and bail.</b> These cannot remove worker startup; validate that early failure never masks teardown or infrastructure errors.</li></ol><p>These are hypotheses and measurement priorities, not promised savings. After a supported optimization, rerun the exact native paired wall/CPU/RSS campaign with bootstrap CIs.</p></section>
+<section><h2>Next decisions, ranked by current evidence</h2><ol><li>{priority}</li><li><b>Profile worker bootstrap and collection.</b> Controller samples do not explain fork CPU. Warm fresh realms are promising but blocked by isolation gaps.</li><li><b>Reduce baseline overhead safely.</b> Preserve the original oracle and inactive-transform/coverage validation; identify initialization work that can be amortized.</li><li><b>Measure per-test selection and bail.</b> These cannot remove worker startup; validate that early failure never masks teardown or infrastructure errors.</li></ol><p>These are hypotheses and measurement priorities, not promised savings. After a supported optimization, rerun the exact native paired wall/CPU/RSS campaign with bootstrap CIs.</p></section>
 <details><summary>Raw resource observations and provenance</summary>{raw_table}<pre>{html.escape(json.dumps({'before':data['build']['before_commit'],'after_test_merge':data['build']['after_commit'],'source_hashes':data['hashes']},indent=2))}</pre><p>Full original artifacts have 14-day workflow retention. The retained summary, raw resource rows, build metadata, and native oracle records persist in the repo; hashes cannot reconstruct omitted binaries/projects/logs.</p></details>'''
     css='''html,body{margin:0;padding:0}body{font:14px/1.55 var(--font-sans,system-ui);color:var(--foreground,#202a37)}:root{--report-space:16px}section{background:var(--card,#f3f6fa);border:1px solid var(--border,#d5dce5);border-radius:var(--radius,12px);padding:16px;margin:14px 0}h2{font-size:19px;margin:0 0 10px}h3{font-size:15px}p{margin:10px 0}.muted{color:var(--muted-foreground,#5c6876);font-size:12px}.notice{border-left:3px solid var(--warning,#a96300);padding:10px}a{color:var(--primary,#3466ba)}table{border-collapse:collapse;width:100%;font-size:12px;font-variant-numeric:tabular-nums}th,td{text-align:left;padding:8px;border-bottom:1px solid var(--border,#d5dce5);white-space:nowrap}th{color:var(--muted-foreground,#5c6876)}.scroll{overflow:auto}svg{width:100%;min-width:620px;display:block}.axis{fill:var(--foreground,#202a37);font:12px var(--font-sans,system-ui)}.bar{fill:var(--chart-1,#517ec0)}.interval{stroke:var(--chart-2,#bd7850);stroke-width:3}.point{fill:var(--chart-2,#bd7850)}.parity{stroke:var(--border,#9ba8b5);stroke-width:1}.target{stroke:var(--success,#37856a);stroke-width:2;stroke-dasharray:4 3}summary{cursor:pointer;font-weight:600;padding:7px 0}details{margin:8px 0}pre{overflow:auto;background:var(--code-background,#eef1f5);padding:12px;border-radius:var(--radius,8px);font-size:11px}li{margin:8px 0}'''
     return '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Oximut performance evidence</title><style>'+css+'</style></head><body>'+content+'</body></html>\n'
@@ -218,9 +257,11 @@ def render(data):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--comparison', type=Path, default=ROOT/'benchmarks/results/2026-11-05-native-control')
+    recent_control=ROOT/'benchmarks/results/2026-11-05-accounting-control'
+    parser.add_argument('--comparison', type=Path, default=recent_control if recent_control.exists() else ROOT/'benchmarks/results/2026-11-05-native-control')
     parser.add_argument('--controller', type=Path, default=ROOT/'benchmarks/results/2026-11-04-controller-job-identities')
-    parser.add_argument('--accounting', type=Path)
+    known_accounting=ROOT/'benchmarks/results/2026-11-05-accounting-profile'
+    parser.add_argument('--accounting', type=Path, default=known_accounting if known_accounting.exists() else None)
     parser.add_argument('--output', type=Path, required=True)
     args = parser.parse_args()
     data = collect(args.comparison,args.controller,args.accounting)

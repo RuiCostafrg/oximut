@@ -159,7 +159,7 @@ def run_command(command: list[str], cwd: Path, log_path: Path,
         'output_bytes': 0, 'captured_output_bytes': 0, 'output_truncated': False,
         'log_file': str(log_path), 'spawn_error': None,
     }
-    profile_memory = os.environ.get('OXIMUT_PROFILE_MEMORY') == '1'
+    profile_memory = (os.environ if env is None else env).get('OXIMUT_PROFILE_MEMORY') == '1'
     if profile_memory:
         result['peak_rss_snapshot'] = None
     try:

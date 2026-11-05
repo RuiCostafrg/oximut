@@ -149,6 +149,17 @@ class CommandTests(unittest.TestCase):
         self.assertGreater(snapshot['root_pid'],0)
         self.assertLessEqual(snapshot['sampled_wall_seconds'],result['wall_seconds'])
 
+    def test_explicit_environment_controls_peak_capture_in_both_directions(self):
+        script='import time; time.sleep(.05)'
+        with mock.patch.dict(os.environ,{'OXIMUT_PROFILE_MEMORY':'0'}):
+            result=self.run_python(script,env={**os.environ,'OXIMUT_PROFILE_MEMORY':'1'})
+        self.assertTrue(result['success'])
+        self.assertIsNotNone(result.get('peak_rss_snapshot'))
+        with mock.patch.dict(os.environ,{'OXIMUT_PROFILE_MEMORY':'1'}):
+            result=self.run_python(script,env={**os.environ,'OXIMUT_PROFILE_MEMORY':'0'})
+        self.assertTrue(result['success'])
+        self.assertNotIn('peak_rss_snapshot',result)
+
 
 class ArtifactTests(unittest.TestCase):
     @staticmethod

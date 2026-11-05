@@ -380,6 +380,19 @@ def accounting_capture_inventory(qualification):
                         or process['pid'] <= 0 or process['starttime'] <= 0 or process['pid'] in ids):
                     raise ValueError('invalid/duplicate peak process identity')
                 ids.add(process['pid'])
+            by_pid = {process['pid']:process for process in processes}
+            if snapshot['root_pid'] not in by_pid:
+                raise ValueError('peak snapshot lacks its root identity')
+            for process in processes:
+                chain = set()
+                while process['pid'] != snapshot['root_pid']:
+                    if process['pid'] in chain or process['ppid'] not in by_pid:
+                        raise ValueError('peak process ancestry does not reach the captured root')
+                    chain.add(process['pid'])
+                    parent = by_pid[process['ppid']]
+                    if parent['starttime'] > process['starttime']:
+                        raise ValueError('peak parent identity starts after its child')
+                    process = parent
             if sum(process['rss_bytes'] for process in processes) != row['peak_aggregate_rss_bytes']:
                 raise ValueError('memory peak process sum differs from aggregate RSS')
             snapshots.append({'tool':row['tool'], **snapshot})

@@ -32,15 +32,17 @@ Node, controllers, test forks, or an external benchmark sampler.
 Stage totals are nested within `sampling`: discovery and read work is included
 in the overall sample. Clock/getrusage and instrumentation framework overhead
 is not separately measured. These categories therefore are not an exact
-partition of process-tree CPU or wall time. This implementation supplies only
-structural local evidence that counters and timings are emitted; wall time,
-process-tree CPU/RSS/process counts, phase ratios, and confidence intervals are
-unmeasured here. It makes no native comparison or savings claim. Collect
-qualified evidence later on unchanged native CI workload.
+partition of process-tree CPU or wall time. The retained native capture below
+provides measured sampling windows and exposes a clock-boundary limitation.
+It makes no optimization or savings claim; paired scored results use a separate
+campaign with these clocks disabled. Retry reports add both attempts' stage
+totals alongside their resource samples; missing timings remain null.
 
 The native workflow now defaults to `capture_mode: accounting`; the existing
 controller-job and startup-segment modes remain selectable. The `native-profile`
-PR label starts the default diagnostic. Accounting mode runs:
+PR label starts the default diagnostic. Every push while the label remains
+attached reruns it; remove the label after the desired capture and before
+evidence-only archival pushes. Accounting mode runs:
 
 ```sh
 python3 benchmarks/profile_native.py --binary /path/to/release/oximut \
@@ -59,10 +61,13 @@ sampler. Each tool's row retains the PID, parent PID, start ticks, short command
 name and RSS bytes from the sample that sets its aggregate peak. The component
 sum must reconcile with that reported peak; identity validation, read ordering,
 and memory error handling are unchanged, and no extra RSS reads are performed.
+Diagnostic acceptance also requires a complete current parent chain to the
+captured root with consistent start times. A reparented or racing snapshot
+without that chain remains unqualified; this does not change owned-tree tracking.
 The snapshot is sampled across processes, not atomic. Shared pages count in
 each process; independent per-process peaks must not be summed instead.
 
-The [HTML evidence report](../benchmarks/results/2026-11-05-native-control/report.html)
+The [HTML evidence report](../benchmarks/results/performance.html)
 can be rebuilt from retained native inputs:
 
 ```sh
@@ -72,6 +77,20 @@ python3 benchmarks/performance_report.py --accounting /path/to/capture \
   --output /tmp/oximut-performance-with-accounting.html
 ```
 
+For an external capture, retain `build-metadata.json`, `evidence-source.json`,
+and a `SHA256SUMS` covering all consumed inputs as in the retained example.
+The accounting build must match the paired after candidate by revision, binary
+hash, adapter source hashes and execution options; filesystem paths may differ.
+
 The page preserves the full metrics, phase medians, bootstrap intervals,
 controller sampling limits and unknown worker/accountant CPU attribution.
 It never treats local Android/PRoot execution as qualified timing evidence.
+
+The first native capture is retained in
+[`2026-11-05-accounting-profile`](../benchmarks/results/2026-11-05-accounting-profile/README.md).
+It qualifies the workload and complete counter collection, but exposes a
+fine-grained clock-boundary limitation: `identityReads` user+sys exceeds its wall
+interval. Preserve those raw values; do not interpret the per-stage user/sys
+split as exact CPU attribution. The next timing refinement should align interval
+endpoints and add `CLOCK_THREAD_CPUTIME_ID` totals. Getrusage CPU fields are
+microsecond counters converted to nanosecond units, not nanosecond precision.

@@ -92,6 +92,46 @@ class PerformanceReportTests(unittest.TestCase):
         self.assertIn('fixture&lt;script&gt;',page)
         self.assertIn('not independent per-process peaks',page)
 
+    def test_native_accounting_is_revalidated_and_clock_skew_is_visible(self):
+        accounting=report.ROOT/'benchmarks/results/2026-11-05-accounting-profile'
+        comparison=report.ROOT/'benchmarks/results/2026-11-05-accounting-control'
+        data=report.collect(comparison,CONTROLLER,accounting)
+        self.assertEqual(data['accounting']['sampling']['calls'],106)
+        page=report.render(data)
+        self.assertIn('Clock-boundary limitation observed in identityReads',page)
+        self.assertIn('42006490326',page)
+        self.assertIn('node-MainThread',page)
+
+    def test_ordered_but_invented_confidence_bounds_are_rejected(self):
+        data=json.loads((COMPARISON/'original-summary.json').read_text())
+        metric=data['comparisons']['after_vs_stryker']['metrics']['cpu_seconds']
+        metric['bootstrap_95_percent']=[metric['median']-.001,metric['median']+.001]
+        self.update('original-summary.json',data)
+        with self.assertRaisesRegex(ValueError,'bootstrap bounds differ'):
+            report.collect(self.root,CONTROLLER)
+
+    def test_every_consumed_input_requires_a_manifest_entry(self):
+        for name in ('original-summary.json','original-measurements.jsonl','original-metadata.json','evidence-source.json'):
+            lines=(COMPARISON/'SHA256SUMS').read_text().splitlines()
+            (self.root/'SHA256SUMS').write_text('\n'.join(line for line in lines if not line.endswith('  '+name))+'\n')
+            with self.subTest(name=name),self.assertRaisesRegex(ValueError,'unhashed evidence'):
+                report.collect(self.root,CONTROLLER)
+
+    def test_workload_is_requalified_instead_of_trusting_summary_booleans(self):
+        path=self.root/'original-measurements.jsonl'
+        rows=[json.loads(line) for line in path.read_text().splitlines()]
+        rows[0]['workload_sha256']='0'*64
+        path.write_text(''.join(json.dumps(row)+'\n' for row in rows))
+        manifest=self.root/'SHA256SUMS'
+        manifest.write_text('\n'.join(hashlib.sha256(path.read_bytes()).hexdigest()+'  original-measurements.jsonl' if line.endswith('  original-measurements.jsonl') else line for line in manifest.read_text().splitlines())+'\n')
+        with self.assertRaisesRegex(ValueError,'raw workload requalification'):
+            report.collect(self.root,CONTROLLER)
+
+    def test_accounting_from_another_engine_build_cannot_be_joined_to_control(self):
+        accounting=report.ROOT/'benchmarks/results/2026-11-05-accounting-profile'
+        with self.assertRaisesRegex(ValueError,'accounting source differs'):
+            report.collect(COMPARISON,CONTROLLER,accounting)
+
 
 if __name__ == '__main__':
     unittest.main()

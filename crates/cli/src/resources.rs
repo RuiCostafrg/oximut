@@ -31,7 +31,7 @@ pub struct AccountingDiagnostics {
     pub rss_reads: StageTotals,
     pub timing_note: &'static str,
 }
-#[derive(Clone, Debug, Default, Serialize)]
+#[derive(Clone, Debug, Default, Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct StageTotals {
     pub calls: u64,
@@ -50,6 +50,39 @@ fn totals() -> StageTotals {
     }
 }
 impl StageTotals {
+    fn merge(&mut self, previous: Self) {
+        self.cpu_failures = self.cpu_failures.saturating_add(previous.cpu_failures);
+        self.timing_failures = self
+            .timing_failures
+            .saturating_add(previous.timing_failures);
+        match self.calls.checked_add(previous.calls) {
+            Some(calls) => self.calls = calls,
+            None => {
+                self.calls = u64::MAX;
+                self.timing_failures = self.timing_failures.saturating_add(1);
+                self.wall_ns = None;
+            }
+        }
+        fn merge_total(current: &mut Option<u64>, previous: Option<u64>) -> bool {
+            let overflow = current
+                .zip(previous)
+                .is_some_and(|(a, b)| a.checked_add(b).is_none());
+            *current = current.zip(previous).and_then(|(a, b)| a.checked_add(b));
+            overflow
+        }
+        if merge_total(&mut self.wall_ns, previous.wall_ns) {
+            self.timing_failures = self.timing_failures.saturating_add(1);
+        }
+        let user_overflow = merge_total(&mut self.self_user_ns, previous.self_user_ns);
+        let system_overflow = merge_total(&mut self.self_system_ns, previous.self_system_ns);
+        if user_overflow || system_overflow {
+            self.cpu_failures = self.cpu_failures.saturating_add(1);
+        }
+        if self.self_user_ns.is_none() || self.self_system_ns.is_none() {
+            self.self_user_ns = None;
+            self.self_system_ns = None;
+        }
+    }
     fn start(&mut self) -> Option<(u64, u64)> {
         match self.calls.checked_add(1) {
             Some(calls) => self.calls = calls,
@@ -98,6 +131,45 @@ impl StageTotals {
             self.cpu_failures = self.cpu_failures.saturating_add(1);
             self.self_user_ns = None;
             self.self_system_ns = None;
+        }
+    }
+}
+
+/// Combine both attempts' observations while retaining final configuration.
+pub fn merge_retry_resources(current: &mut serde_json::Value, previous: &serde_json::Value) {
+    for field in [
+        "peakAggregateRssBytes",
+        "measuredWorkerPeakBytes",
+        "admissionWorkerCostBytes",
+        "maxActiveJobs",
+    ] {
+        if let (Some(old), Some(now)) = (previous[field].as_u64(), current[field].as_u64()) {
+            current[field] = old.max(now).into();
+        }
+    }
+    for field in [
+        "samples",
+        "treeDiscoveries",
+        "broadDiscoveries",
+        "admissionPauses",
+        "recycledIdleWorkers",
+    ] {
+        if let (Some(old), Some(now)) = (previous[field].as_u64(), current[field].as_u64()) {
+            current[field] = old.saturating_add(now).into();
+        }
+    }
+    if let (Some(now), Some(old)) = (
+        current.get_mut("accountingDiagnostics"),
+        previous.get("accountingDiagnostics"),
+    ) {
+        for name in ["sampling", "discovery", "identityReads", "rssReads"] {
+            // Both values were serialized from StageTotals by this process.
+            let mut merged: StageTotals =
+                serde_json::from_value(now[name].clone()).expect("serialized current stage");
+            let old: StageTotals =
+                serde_json::from_value(old[name].clone()).expect("serialized previous stage");
+            merged.merge(old);
+            now[name] = serde_json::to_value(merged).expect("serializable stage");
         }
     }
 }
@@ -1146,6 +1218,124 @@ mod tests {
         assert_eq!(state.samples, 2);
         assert_eq!(state.exhaustion.as_deref(), Some("discovery failed"));
         assert_eq!(state.capacity(&[]), 0);
+    }
+
+    #[test]
+    fn retry_resources_keep_samples_and_diagnostics_aligned() {
+        let mut state = budget();
+        state.samples = 2;
+        state.accounting_diagnostics = Some(AccountingDiagnostics {
+            sampling: StageTotals {
+                calls: 2,
+                wall_ns: Some(40),
+                self_user_ns: Some(10),
+                self_system_ns: Some(20),
+                ..StageTotals::default()
+            },
+            discovery: totals(),
+            identity_reads: totals(),
+            rss_reads: totals(),
+            ..AccountingDiagnostics::default()
+        });
+        let previous = serde_json::to_value(&state).unwrap();
+        let mut current = previous.clone();
+        merge_retry_resources(&mut current, &previous);
+        assert_eq!(current["samples"], 4);
+        assert_eq!(current["accountingDiagnostics"]["sampling"]["calls"], 4);
+        assert_eq!(current["accountingDiagnostics"]["sampling"]["wallNs"], 80);
+        assert_eq!(
+            current["accountingDiagnostics"]["sampling"]["selfSystemNs"],
+            40
+        );
+        let mut invalid = previous.clone();
+        invalid["accountingDiagnostics"]["sampling"]["selfUserNs"] = serde_json::Value::Null;
+        invalid["accountingDiagnostics"]["sampling"]["cpuFailures"] = 1.into();
+        merge_retry_resources(&mut current, &invalid);
+        assert!(current["accountingDiagnostics"]["sampling"]["selfUserNs"].is_null());
+        assert!(current["accountingDiagnostics"]["sampling"]["selfSystemNs"].is_null());
+        assert_eq!(
+            current["accountingDiagnostics"]["sampling"]["cpuFailures"],
+            1
+        );
+        let mut overflowing = totals();
+        overflowing.wall_ns = Some(u64::MAX);
+        overflowing.self_user_ns = Some(u64::MAX);
+        overflowing.merge(StageTotals {
+            wall_ns: Some(1),
+            self_user_ns: Some(1),
+            ..totals()
+        });
+        assert_eq!(
+            (
+                overflowing.wall_ns,
+                overflowing.self_user_ns,
+                overflowing.self_system_ns
+            ),
+            (None, None, None)
+        );
+        assert_eq!(
+            (overflowing.timing_failures, overflowing.cpu_failures),
+            (1, 1)
+        );
+        let mut disabled = serde_json::to_value(budget()).unwrap();
+        merge_retry_resources(&mut disabled, &serde_json::to_value(budget()).unwrap());
+        assert!(disabled.get("accountingDiagnostics").is_none());
+    }
+
+    #[test]
+    fn accounting_profile_switch_initializes_budget() {
+        const CHILD: &str = "OXIMUT_ACCOUNTING_SWITCH_CHILD";
+        if let Some(expected) = std::env::var_os(CHILD) {
+            let options = super::super::parse_options(
+                [
+                    "--root".into(),
+                    Path::new(env!("CARGO_MANIFEST_DIR"))
+                        .join("../../fixtures/m1")
+                        .to_string_lossy()
+                        .into_owned(),
+                    "--baseline-only".into(),
+                ]
+                .into_iter(),
+            )
+            .unwrap()
+            .unwrap();
+            let state = Budget::new(&options).unwrap();
+            let enabled = expected == "1";
+            assert_eq!(state.accounting_diagnostics.is_some(), enabled);
+            assert_eq!(
+                serde_json::to_value(&state)
+                    .unwrap()
+                    .get("accountingDiagnostics")
+                    .is_some(),
+                enabled
+            );
+            if enabled {
+                assert_eq!(
+                    state.accounting_diagnostics.unwrap().sampling.calls,
+                    state.samples
+                );
+            }
+            return;
+        }
+        for flag in [None, Some("0"), Some("1"), Some("true")] {
+            let mut command = std::process::Command::new(std::env::current_exe().unwrap());
+            command
+                .args([
+                    "--exact",
+                    "resources::tests::accounting_profile_switch_initializes_budget",
+                ])
+                .env(CHILD, if flag == Some("1") { "1" } else { "0" })
+                .env_remove("OXIMUT_PROFILE_ACCOUNTING");
+            if let Some(flag) = flag {
+                command.env("OXIMUT_PROFILE_ACCOUNTING", flag);
+            }
+            let output = command.output().unwrap();
+            assert!(
+                output.status.success(),
+                "{flag:?}: {}",
+                String::from_utf8_lossy(&output.stdout)
+            );
+        }
     }
 
     #[test]

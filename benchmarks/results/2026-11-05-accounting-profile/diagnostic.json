@@ -1,0 +1,207 @@
+{
+  "captures": {
+    "accounting_diagnostics": {
+      "discovery": {
+        "calls": 106,
+        "cpuFailures": 0,
+        "selfSystemNs": 38940000,
+        "selfUserNs": 10606000,
+        "timingFailures": 0,
+        "wallNs": 76701333
+      },
+      "evidence": "review wallNs and CPU failure counters; null CPU totals mean incomplete evidence",
+      "identityReads": {
+        "calls": 787,
+        "cpuFailures": 0,
+        "selfSystemNs": 73963000,
+        "selfUserNs": 3774000,
+        "timingFailures": 0,
+        "wallNs": 15782672
+      },
+      "rssReads": {
+        "calls": 784,
+        "cpuFailures": 0,
+        "selfSystemNs": 1121165000,
+        "selfUserNs": 6383000,
+        "timingFailures": 0,
+        "wallNs": 1196798264
+      },
+      "sampling": {
+        "calls": 106,
+        "cpuFailures": 0,
+        "selfSystemNs": 1236656000,
+        "selfUserNs": 21183000,
+        "timingFailures": 0,
+        "wallNs": 1303983687
+      },
+      "scope": "CLI sampling thread only; excludes Node/controllers/test forks and external benchmark sampler",
+      "timingNote": "stage totals are nested within inclusive sampling totals; getrusage/clock/framework overhead is not separately measured, so categories are not a process-tree CPU partition"
+    },
+    "errors": [],
+    "observed": [],
+    "orphan_profiles": [],
+    "peak_rss_snapshots": [
+      {
+        "processes": [
+          {
+            "comm": "node-MainThread",
+            "pid": 6510,
+            "ppid": 6473,
+            "rss_bytes": 198492160,
+            "starttime": 12053
+          },
+          {
+            "comm": "node-MainThread",
+            "pid": 6537,
+            "ppid": 6510,
+            "rss_bytes": 83402752,
+            "starttime": 12126
+          }
+        ],
+        "root_pid": 6510,
+        "sampled_wall_seconds": 0.9484505219999875,
+        "tool": "vitest"
+      },
+      {
+        "processes": [
+          {
+            "comm": "oximut",
+            "pid": 6558,
+            "ppid": 6473,
+            "rss_bytes": 5218304,
+            "starttime": 12189
+          },
+          {
+            "comm": "oximut",
+            "pid": 6559,
+            "ppid": 6558,
+            "rss_bytes": 4927488,
+            "starttime": 12189
+          },
+          {
+            "comm": "node-MainThread",
+            "pid": 6560,
+            "ppid": 6559,
+            "rss_bytes": 249303040,
+            "starttime": 12190
+          },
+          {
+            "comm": "node-MainThread",
+            "pid": 6690,
+            "ppid": 6560,
+            "rss_bytes": 89206784,
+            "starttime": 12662
+          }
+        ],
+        "root_pid": 6558,
+        "sampled_wall_seconds": 4.962180678999999,
+        "tool": "oximut"
+      },
+      {
+        "processes": [
+          {
+            "comm": "stryker",
+            "pid": 6715,
+            "ppid": 6473,
+            "rss_bytes": 183791616,
+            "starttime": 12740
+          },
+          {
+            "comm": "node-MainThread",
+            "pid": 6730,
+            "ppid": 6715,
+            "rss_bytes": 122523648,
+            "starttime": 12841
+          },
+          {
+            "comm": "node-MainThread",
+            "pid": 6745,
+            "ppid": 6715,
+            "rss_bytes": 259936256,
+            "starttime": 12891
+          }
+        ],
+        "root_pid": 6715,
+        "sampled_wall_seconds": 3.014837565999997,
+        "tool": "stryker"
+      }
+    ],
+    "scope": "CLI sampling-thread self CPU only; four nested stage totals, not a tree CPU partition. Diagnostic clocks add overhead. No Node/Python sampling enabled in this mode."
+  },
+  "command": [
+    "/opt/hostedtoolcache/Python/3.13.18/x64/bin/python3",
+    "/home/runner/work/oximut/oximut/benchmarks/real_project.py",
+    "--binary",
+    "/home/runner/work/_temp/native-diagnostic/oximut",
+    "--adapter",
+    "/home/runner/work/oximut/oximut/packages/vitest-adapter/m2-runner.mjs",
+    "--adapter-source-dir",
+    "/home/runner/work/oximut/oximut/packages/vitest-adapter",
+    "--defer-ratios",
+    "--tools",
+    "vitest",
+    "oximut",
+    "stryker",
+    "--warmups",
+    "0",
+    "--repetitions",
+    "1",
+    "--timeout",
+    "600",
+    "--output",
+    "/home/runner/work/_temp/native-diagnostic/capture/qualification"
+  ],
+  "diagnostic_only": true,
+  "execution_inputs": {
+    "adapter_override": "/home/runner/work/oximut/oximut/packages/vitest-adapter/m2-runner.mjs",
+    "adapter_pairing": "explicit override",
+    "adapter_source_dir": "/home/runner/work/oximut/oximut/packages/vitest-adapter",
+    "adapter_source_sha256": {
+      "biome.json": "8c92ece24bbe3dd56abdf7d1ba097447556090156673af0f7de8366b93e9edd4",
+      "experiment.mjs": "8aef7cae2ef734311a1998ec6928f389a8887b59e32979c27c0ebe87d77468fe",
+      "index.mjs": "2e973f5cfc91fddb39b2dadac8a0b65d1a23bbf5912d028eb8b2e12e84e40031",
+      "m1-runner.mjs": "7971936fa754d55ce2d0e364469d3973dc1e5b615ca71692fe623c66c4ab9fb9",
+      "m1-worker.ts": "0f23740ee45d047cc1d77900347c922873c03b4acb57bdce60564f42865b5ee4",
+      "m2-runner.mjs": "c513d90785daeb737df03b64d74b80fb18be4baa09a6ff498cde8b009430ad9b",
+      "m2-worker.ts": "10f21727c81067b3136084b6551c62b45bf0fd52ea79f28db61de43eaa4c948a",
+      "m3-selection.ts": "e3df6ad0ef9050393c20fd4c5f7b1d3f3a931e87ffeb5efb722dfe6c55e1f567",
+      "m3-setup.ts": "23e46f230e438e9c080d73173760b1340c02506ebe03a7d7ed725d1dc1dd8f7f",
+      "package.json": "5cd6bd7d4af022c372c0d305b2a6d1826818c35929e2984b2fee526168552056",
+      "protocol.mjs": "c54e18bc60aea53fa245d76d94b5e54b3980583a42b12559f0e84013564fca06",
+      "protocol.ts": "add184ef5a38ad935918c329207e08aaa74373c8770305a6a2b622666ee10336",
+      "supervisor.py": "0cb9de6e2aa1084a987e62d51725ad810dd995524948f886aacab6a394e4c1cd",
+      "test/contract.test.mjs": "8bc30b038eb2631f1f8817032ff20021e08849c6b92e45a241f5c21b3036ec22",
+      "test/descendants.test.mjs": "528a74c9e29128a1221bd15b9f41148aeea9dcc40e5e63d03cff1b51d66ff789",
+      "test/lifecycle.test.mjs": "7ec6fe62792f4564b8af74d331297317bce8f64abf002456738a3fcd5b9c7d07",
+      "test/m1.test.mjs": "b8b81a52f22532f5fd39cadf2aa13e2b5d8df9707ffee52f633eb9e665be69cb",
+      "test/m2.test.mjs": "f2335bdd5420179ddd20eacb9310ab12b0848219370a78a9b56b857a14731b57",
+      "test/m3.test.mjs": "dc08829807dcfcdad5e64001fdf3f6893833c6fa86c5a938a1f244a3a8f898fa",
+      "test/protocol-types.ts": "9905afca7fb4274a0dcc5350fa8601e4e8dd76b963e6ccc9f6f6da7692830265",
+      "test/protocol.test.mjs": "e734cfd83f6047b77f93acf07daf31d4f844a24e556b968de4e4fc95d75a64a8",
+      "tsconfig.json": "6d53a48c0a6f2181c3a65c999e9288aa74ce9470c732ea86b157ae584cf91b77",
+      "worker.mjs": "26eee9f48e37250c52a6662fc0efdc30f9678cf7541f55c5b89d68dd97d79281"
+    },
+    "binary": "/home/runner/work/_temp/native-diagnostic/oximut",
+    "binary_sha256": "b7e3e3e781073eb7e5dd25a97155f366ebb169f259f6a15b7143b7b98ebe175a",
+    "oximut_args": []
+  },
+  "failure": null,
+  "helper_sha256": {
+    "benchmarks/profile_native.py": "64bfe4de0062430f75a30337eb910dac00d2f1408061e7ba449bd5693e12d934",
+    "benchmarks/profiling/controller-jobs.cjs": "41d7dc2307aaad6f562cc12d643b140321386d0b5c0b99a834a8550ba948a8ff",
+    "benchmarks/profiling/node-identity.cjs": "2046d70bac7db57bc53f7a31f43a63c2a36190c570e23662ac1183a5371a600f",
+    "benchmarks/profiling/node-segments.cjs": "ad5ca48917af6d77e06c14c07f117f104d5f5199f0776b1c7ea530c25764fa83",
+    "benchmarks/profiling/python-shim.py": "6c54882a40842cc233713a84cdf905cea7e46c553914e4459be53d05e140e806",
+    "benchmarks/profiling/test_accounting_profile.py": "4bdd33b9f6f8dd3ab29caddccedc824d95b2aa229ce5c1000c13185e4c6fcbab",
+    "benchmarks/profiling/test_controller_profile.py": "fae12bb37bb17832ca2841d3be1bf8c7d4374a67615adf7d401ee565ad0e0e9a",
+    "benchmarks/profiling/test_performance_report.py": "9f79b2b0b806799c7eaaf658eecf271b03d5e7de932fe1b6dc4ccc887496ef40"
+  },
+  "limits": "CLI sampling-thread self CPU, excluding worker CPU; clock overhead is included, no complete process-tree CPU partition. External benchmark sampler CPU is outside wait4 product-tree CPU; it perturbs wall time.",
+  "node_capture_mode": "rust-accounting-self",
+  "node_options": "",
+  "passed": true,
+  "profiler_overhead": true,
+  "qualification_errors": [],
+  "scope": "Unchanged colord: 41 sources, 102 tests, five mutation sources, ten arithmetic edits. One capture, no warmup campaign.",
+  "source_commit": "3b3af02a5196c6ba9a3dd7784f4400cc3eb34ec7"
+}

@@ -96,8 +96,29 @@ class AccountingCaptureTests(unittest.TestCase):
             elif fault=='sum': rows[0]['peak_rss_snapshot']['processes'][0]['rss_bytes']=99
             elif fault=='duplicate':
                 rows[0]['peak_process_count']=2
+                rows[0]['observed_process_count']=2
+                rows[0]['peak_aggregate_rss_bytes']=200
                 rows[0]['peak_rss_snapshot']['processes'] *= 2
             else: rows[0]['peak_rss_snapshot']['processes'][0]['starttime']=True
+            path.write_text(''.join(json.dumps(row)+'\n' for row in rows))
+            with self.subTest(fault=fault):
+                self.assertTrue(diagnostic.accounting_capture_inventory(self.root)['errors'])
+
+    def test_peak_processes_must_have_an_acyclic_start_ordered_chain_to_the_root(self):
+        for fault in ('root','unrelated','cycle','start'):
+            self.capture(self.report)
+            path=self.root/'measurements.jsonl'
+            rows=[json.loads(line) for line in path.read_text().splitlines()]
+            row=rows[0]
+            row.update(peak_process_count=3,observed_process_count=3,peak_aggregate_rss_bytes=300)
+            snapshot=row['peak_rss_snapshot']
+            snapshot['processes'] += [
+                {'pid':2,'ppid':1,'starttime':2,'rss_bytes':100,'comm':'child'},
+                {'pid':3,'ppid':2,'starttime':3,'rss_bytes':100,'comm':'grandchild'}]
+            if fault=='root': snapshot['root_pid']=4
+            elif fault=='unrelated': snapshot['processes'][2]['ppid']=99
+            elif fault=='cycle': snapshot['processes'][1]['ppid']=3
+            else: snapshot['processes'][1]['starttime']=4
             path.write_text(''.join(json.dumps(row)+'\n' for row in rows))
             with self.subTest(fault=fault):
                 self.assertTrue(diagnostic.accounting_capture_inventory(self.root)['errors'])

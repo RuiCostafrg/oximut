@@ -1,6 +1,6 @@
 # Native control and hotspot report
 
-[Open the offline HTML report](report.html). Rebuild with `python3 benchmarks/performance_report.py --output /tmp/oximut-performance.html`.
+[Open the offline HTML report](../performance.html). Rebuild with `python3 benchmarks/performance_report.py --output /tmp/oximut-performance.html`. On GitHub, choose **Raw**, save the HTML file, then open the saved file in a browser; a local checkout can open `benchmarks/results/performance.html` directly.
 
 [Benchmark 41973869522](https://github.com/RuiCostafrg/oximut/actions/runs/41973869522), Ubuntu 24.04 x86_64, one warmup and five measured pairs. Exact 41-source/102-test/five-file/ten-killed-edit workload and strict build integrity pass. This is the experimental-only PR #39 control, not an engine optimization.
 
@@ -46,4 +46,4 @@ The HTML separately revalidates retained [controller capture 41930938613](../202
 
 Original summary/resource rows/build metadata and native structural result records are retained unchanged with SHA-256 checksums. Prepared projects, source archives, binary, logs and full validation artifacts remain only in workflow artifacts with 14-day retention. Hashes cannot reconstruct omitted files after expiry. The generated HTML is derived output and intentionally excluded from the input checksum manifest.
 
-Native Rust accounting/per-process peak RSS attribution is pending. Local Android/PRoot runs establish only structural correctness. Regenerate the same page with `--accounting /path/to/qualified/capture` after the new diagnostic passes.
+Native Rust accounting/per-process peak RSS attribution is now retained in [the separate diagnostic](../2026-11-05-accounting-profile/README.md). The canonical HTML uses the latest paired control and qualified diagnostic; the raw control files in this directory remain historical and unchanged. Local Android/PRoot runs establish only structural correctness. Regenerate the same page with `--accounting /path/to/qualified/capture` after the new diagnostic passes.
