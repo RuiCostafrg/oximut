@@ -1424,33 +1424,7 @@ fn run_attempt(options: &Options, previous: Option<RetryEvidence>) -> Result<Att
         // Peak observations cover both attempts; accounting counters are additive.
         // Configuration and exhaustion describe the final attempt; the discarded
         // attempt's complete resource report remains in diagnostics above.
-        for field in [
-            "peakAggregateRssBytes",
-            "measuredWorkerPeakBytes",
-            "admissionWorkerCostBytes",
-            "maxActiveJobs",
-        ] {
-            if let (Some(old), Some(current)) = (
-                previous_resources[field].as_u64(),
-                resources[field].as_u64(),
-            ) {
-                resources[field] = old.max(current).into();
-            }
-        }
-        for field in [
-            "samples",
-            "treeDiscoveries",
-            "broadDiscoveries",
-            "admissionPauses",
-            "recycledIdleWorkers",
-        ] {
-            if let (Some(old), Some(current)) = (
-                previous_resources[field].as_u64(),
-                resources[field].as_u64(),
-            ) {
-                resources[field] = old.saturating_add(current).into();
-            }
-        }
+        resources::merge_retry_resources(&mut resources, &previous_resources);
         cache.add_previous_runner_hash_ms(previous_runner_hash_ms);
         let mut profiles = previous_profiles;
         profiles.append(&mut cache.report.fingerprint_profiles);

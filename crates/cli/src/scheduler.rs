@@ -429,7 +429,7 @@ impl<'a> Scheduler<'a> {
         self.cleanup_ok && self.budget.exhaustion.is_none()
     }
     pub fn report(&self) -> serde_json::Value {
-        serde_json::to_value(&self.budget).expect("resource report")
+        self.budget.report_snapshot()
     }
 }
 

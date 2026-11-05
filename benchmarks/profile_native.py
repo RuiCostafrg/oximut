@@ -311,12 +311,115 @@ def compact_summary(result):
         'passed': result.get('passed', False),
         'node_capture_mode': result.get('node_capture_mode'),
         'failure': str(result['failure'])[:500] if result.get('failure') else None,
-        'observed_identity_count': len(captures.get('observed', [])),
+        'observed_identity_count': (None if result.get('node_capture_mode') == 'rust-accounting-self'
+                                    else len(captures.get('observed', []))),
+        'accounting_diagnostics': captures.get('accounting_diagnostics'),
+        'accounting_clock_version': captures.get('clock_version'),
+        'peak_memory_process_counts': {row['tool']:len(row['processes'])
+                                       for row in captures.get('peak_rss_snapshots',[])},
         'orphan_profile_count': len(captures.get('orphan_profiles', [])),
         'error_count': len(errors),
         'first_errors': [str(error)[:500] for error in errors[:5]],
         'full_evidence': 'capture/diagnostic.json and raw files in the uploaded artifact',
     }
+
+
+def accounting_capture_inventory(qualification, *, allow_legacy=False):
+    """Reject incomplete self-accounting, without attributing worker/tree CPU."""
+    errors, diagnostics, snapshots = [], None, []
+    try:
+        report = json.loads((qualification / '00-oximut' / 'report.json').read_text())
+        resources = report['resources']
+        diagnostics = resources['accountingDiagnostics']
+        old_fields = {'scope','evidence','sampling','discovery','identityReads','rssReads','timingNote'}
+        precise = isinstance(diagnostics,dict) and type(diagnostics.get('clockVersion')) is int and diagnostics['clockVersion']==2
+        expected_fields = old_fields | ({'clockVersion','threadCpuSinceBudgetStartNs','threadCpuFailures'} if precise else set())
+        if (not isinstance(diagnostics, dict) or set(diagnostics) != expected_fields
+                or not precise and not allow_legacy):
+            raise ValueError('missing/invalid accounting object')
+        if any(not isinstance(diagnostics[key], str) or not 0 < len(diagnostics[key]) <= 2048
+               for key in ('scope', 'evidence', 'timingNote')):
+            raise ValueError('invalid accounting scope/notes')
+        samples = resources['samples']
+        if type(samples) is not int or not 0 < samples <= 2**64-1:
+            raise ValueError('invalid admitted sample count')
+        for name in ('sampling', 'discovery', 'identityReads', 'rssReads'):
+            stage = diagnostics[name]
+            fields = {'calls','wallNs','selfUserNs','selfSystemNs','cpuFailures','timingFailures'}
+            if precise:
+                fields |= {'selfCpuNs','selfCpuFailures'}
+            if not isinstance(stage, dict) or set(stage) != fields:
+                raise ValueError(f'invalid accounting stage: {name}')
+            if any(type(value) is not int or not 0 <= value <= 2**64-1 for value in stage.values()):
+                raise ValueError(f'incomplete/invalid accounting totals: {name}')
+            if stage['calls'] == 0 or stage['cpuFailures'] != 0 or stage['timingFailures'] != 0:
+                raise ValueError(f'empty or failed accounting stage: {name}')
+            if precise and (stage['selfCpuFailures'] != 0 or stage['selfCpuNs'] > stage['wallNs']):
+                raise ValueError(f'invalid precise CPU interval: {name}')
+        if precise:
+            total = diagnostics['threadCpuSinceBudgetStartNs']
+            failures = diagnostics['threadCpuFailures']
+            if (type(total) is not int or not 0 <= total <= 2**64-1
+                    or type(failures) is not int or failures != 0
+                    or total < diagnostics['sampling']['selfCpuNs']
+                    or sum(diagnostics[name]['selfCpuNs'] for name in ('discovery','identityReads','rssReads')) > diagnostics['sampling']['selfCpuNs']):
+                raise ValueError('invalid Budget thread CPU interval')
+        if (diagnostics['sampling']['calls'] != samples
+                or diagnostics['discovery']['calls'] != samples
+                or diagnostics['rssReads']['calls'] > diagnostics['identityReads']['calls']):
+            raise ValueError('accounting counts differ from resource observations')
+        if resources['exhaustion'] is not None or not native_coordinator_evidence(qualification):
+            raise ValueError('require healthy native resource accounting')
+        rows = [json.loads(line) for line in (qualification/'measurements.jsonl').read_text().splitlines()]
+        if sorted(row['tool'] for row in rows) != ['oximut','stryker','vitest']:
+            raise ValueError('require three-tool peak memory evidence')
+        for row in rows:
+            if (type(row['peak_process_count']) is not int or row['peak_process_count'] <= 0
+                    or type(row['observed_process_count']) is not int or row['observed_process_count'] < row['peak_process_count']
+                    or type(row['peak_aggregate_rss_bytes']) is not int or not 0 < row['peak_aggregate_rss_bytes'] <= 2**64-1
+                    or type(row['wall_seconds']) not in (int,float) or not math.isfinite(row['wall_seconds']) or row['wall_seconds'] <= 0):
+                raise ValueError('invalid peak resource metrics')
+            snapshot = row['peak_rss_snapshot']
+            if (not isinstance(snapshot,dict) or set(snapshot) != {'root_pid','sampled_wall_seconds','processes'}
+                    or type(snapshot.get('root_pid')) is not int or snapshot['root_pid'] <= 0
+                    or type(snapshot.get('sampled_wall_seconds')) not in (int,float)
+                    or not 0 <= snapshot['sampled_wall_seconds'] <= row['wall_seconds']):
+                raise ValueError('invalid memory peak snapshot')
+            processes = snapshot['processes']
+            if not isinstance(processes,list) or not 0 < len(processes) <= min(4096,row['peak_process_count']):
+                raise ValueError('incomplete memory peak process inventory')
+            ids = set()
+            for process in processes:
+                if (not isinstance(process,dict) or set(process) != {'pid','ppid','starttime','rss_bytes','comm'}
+                        or any(type(process[k]) is not int or not 0 <= process[k] <= 2**64-1 for k in ('pid','ppid','starttime','rss_bytes'))
+                        or not isinstance(process['comm'],str) or len(process['comm']) > 64
+                        or process['pid'] <= 0 or process['starttime'] <= 0 or process['pid'] in ids):
+                    raise ValueError('invalid/duplicate peak process identity')
+                ids.add(process['pid'])
+            by_pid = {process['pid']:process for process in processes}
+            if snapshot['root_pid'] not in by_pid:
+                raise ValueError('peak snapshot lacks its root identity')
+            for process in processes:
+                chain = set()
+                while process['pid'] != snapshot['root_pid']:
+                    if process['pid'] in chain or process['ppid'] not in by_pid:
+                        raise ValueError('peak process ancestry does not reach the captured root')
+                    chain.add(process['pid'])
+                    parent = by_pid[process['ppid']]
+                    if parent['starttime'] > process['starttime']:
+                        raise ValueError('peak parent identity starts after its child')
+                    process = parent
+            if sum(process['rss_bytes'] for process in processes) != row['peak_aggregate_rss_bytes']:
+                raise ValueError('memory peak process sum differs from aggregate RSS')
+            snapshots.append({'tool':row['tool'], **snapshot})
+    except (OSError, ValueError, KeyError, TypeError) as error:
+        errors.append(f'accounting capture validation failed: {error}')
+    return {'observed': [], 'orphan_profiles': [], 'errors': errors,
+            'clock_version': 2 if isinstance(diagnostics,dict) and diagnostics.get('clockVersion')==2 else 1,
+            'accounting_diagnostics': diagnostics,
+            'peak_rss_snapshots': snapshots,
+            'scope': 'CLI sampling-thread self CPU only; four nested stage totals, not a tree CPU partition. '
+                     'Diagnostic clocks add overhead. No Node/Python sampling enabled in this mode.'}
 
 
 # node-segments.cjs captures one checkpoint per isolate; events cannot raise this.
@@ -538,17 +641,23 @@ def main(argv=None):
                         help='Use one inspector startup checkpoint per isolate instead of exit-time Node profiles; always partial evidence')
     modes.add_argument('--controller-jobs', action='store_true',
                        help='Trace complete controller jobs with a partial first-mutant CPU sample window; no whole-tree CPU attribution')
+    modes.add_argument('--accounting', action='store_true',
+                       help='Measure Rust sampling-thread self CPU, without Node or Python profilers')
     args = parser.parse_args(argv)
     output = args.output.resolve()
     output.mkdir(parents=True, exist_ok=False)
     profiles = output / 'profiles'
     profiles.mkdir()
     result = {'diagnostic_only': True, 'profiler_overhead': True,
-              'node_capture_mode': ('controller-jobs' if args.controller_jobs else
+              'node_capture_mode': ('rust-accounting-self' if args.accounting else 'controller-jobs' if args.controller_jobs else
                                     'partial-inspector-startup' if args.segments else 'exit-time-cpu-prof'),
               'qualification_errors': [], 'failure': None,
               'scope': 'Unchanged colord: 41 sources, 102 tests, five mutation sources, ten arithmetic edits. One capture, no warmup campaign.',
-              'limits': 'Node sampling and Python supervisor self CPU only; no complete process-tree CPU partition. Rust resource sampling remains unattributed. External benchmark sampler CPU is outside wait4 product-tree CPU; it perturbs wall time.'}
+              'limits': ('CLI sampling-thread self CPU, excluding worker CPU; clock overhead is included, no complete process-tree CPU partition.' if args.accounting else
+                         'Node sampling and Python supervisor self CPU only; no complete process-tree CPU partition. Rust resource sampling remains unattributed.') +
+                        ' External benchmark sampler CPU is outside wait4 product-tree CPU; it perturbs wall time.'}
+    if args.accounting:
+        result['accounting_clock_version'] = 2
     try:
         if os.environ.get('NODE_OPTIONS'):
             raise ValueError('start with NODE_OPTIONS unset to keep profiler options explicit')
@@ -576,6 +685,11 @@ def main(argv=None):
             # two inspector sessions would otherwise stop each other's samples.
             env['OXIMUT_PROFILE_CONTROLLER_DIR'] = str(profiles)
             env['NODE_OPTIONS'] = f'--require="{SUPPORT / "controller-jobs.cjs"}"'
+        if args.accounting:
+            # No shim/preload/profiling variables: isolate the accountant cost
+            # from inspector startup and Node/Python CPU sampling overhead.
+            env = {**os.environ, 'NODE_OPTIONS': '', 'OXIMUT_PROFILE_ACCOUNTING': '1',
+                   'OXIMUT_PROFILE_MEMORY': '1'}
         result['node_options'] = env['NODE_OPTIONS']
         cmd = [sys.executable, str(ROOT / 'benchmarks/real_project.py'),
                '--binary', str(inputs.binary), '--adapter', str(inputs.adapter),
@@ -591,7 +705,8 @@ def main(argv=None):
     except Exception as error:
         result['failure'] = f'{type(error).__name__}: {error}'
     finally:
-        result['captures'] = (controller_capture_inventory(profiles, output / 'qualification') if args.controller_jobs else
+        result['captures'] = (accounting_capture_inventory(output / 'qualification') if args.accounting else
+                              controller_capture_inventory(profiles, output / 'qualification') if args.controller_jobs else
                               capture_inventory(profiles, output / 'qualification'))
         result['passed'] = not (result['failure'] or result['qualification_errors'] or result['captures']['errors'])
         workload.m6.write_json(output / 'diagnostic.json', result)

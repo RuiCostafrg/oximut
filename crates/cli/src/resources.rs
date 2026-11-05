@@ -11,6 +11,276 @@ use std::{
     time::{Duration, Instant},
 };
 
+// Profiling is process-wide configuration and is read once. In the default
+// path no diagnostic clock or getrusage reads occur.
+static ACCOUNTING_PROFILE: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
+fn profile_enabled() -> bool {
+    *ACCOUNTING_PROFILE.get_or_init(|| {
+        std::env::var_os("OXIMUT_PROFILE_ACCOUNTING").as_deref() == Some(std::ffi::OsStr::new("1"))
+    })
+}
+
+#[derive(Clone, Debug, Default, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AccountingDiagnostics {
+    pub clock_version: u8,
+    pub thread_cpu_since_budget_start_ns: Option<u64>,
+    pub thread_cpu_failures: u64,
+    pub scope: &'static str,
+    pub evidence: &'static str,
+    pub sampling: StageTotals,
+    pub discovery: StageTotals,
+    pub identity_reads: StageTotals,
+    pub rss_reads: StageTotals,
+    pub timing_note: &'static str,
+}
+#[derive(Clone, Debug, Default, Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase", default)]
+pub struct StageTotals {
+    pub calls: u64,
+    pub wall_ns: Option<u64>,
+    pub self_user_ns: Option<u64>,
+    pub self_system_ns: Option<u64>,
+    pub self_cpu_ns: Option<u64>,
+    pub self_cpu_failures: u64,
+    pub cpu_failures: u64,
+    pub timing_failures: u64,
+}
+fn totals() -> StageTotals {
+    StageTotals {
+        wall_ns: Some(0),
+        self_user_ns: Some(0),
+        self_system_ns: Some(0),
+        self_cpu_ns: Some(0),
+        ..StageTotals::default()
+    }
+}
+impl StageTotals {
+    fn merge(&mut self, previous: Self) {
+        self.cpu_failures = self.cpu_failures.saturating_add(previous.cpu_failures);
+        self.timing_failures = self
+            .timing_failures
+            .saturating_add(previous.timing_failures);
+        match self.calls.checked_add(previous.calls) {
+            Some(calls) => self.calls = calls,
+            None => {
+                self.calls = u64::MAX;
+                self.timing_failures = self.timing_failures.saturating_add(1);
+                self.wall_ns = None;
+            }
+        }
+        fn merge_total(current: &mut Option<u64>, previous: Option<u64>) -> bool {
+            let overflow = current
+                .zip(previous)
+                .is_some_and(|(a, b)| a.checked_add(b).is_none());
+            *current = current.zip(previous).and_then(|(a, b)| a.checked_add(b));
+            overflow
+        }
+        if merge_total(&mut self.wall_ns, previous.wall_ns) {
+            self.timing_failures = self.timing_failures.saturating_add(1);
+        }
+        let user_overflow = merge_total(&mut self.self_user_ns, previous.self_user_ns);
+        let system_overflow = merge_total(&mut self.self_system_ns, previous.self_system_ns);
+        if user_overflow || system_overflow {
+            self.cpu_failures = self.cpu_failures.saturating_add(1);
+        }
+        let precise_overflow = merge_total(&mut self.self_cpu_ns, previous.self_cpu_ns);
+        self.self_cpu_failures = self
+            .self_cpu_failures
+            .saturating_add(previous.self_cpu_failures);
+        if precise_overflow || (self.self_cpu_ns.is_none() && self.self_cpu_failures == 0) {
+            self.self_cpu_failures = self.self_cpu_failures.saturating_add(1);
+        }
+        if self.self_user_ns.is_none() || self.self_system_ns.is_none() {
+            self.self_user_ns = None;
+            self.self_system_ns = None;
+        }
+    }
+    fn start(&mut self) -> StageMark {
+        match self.calls.checked_add(1) {
+            Some(calls) => self.calls = calls,
+            None => {
+                self.timing_failures = self.timing_failures.saturating_add(1);
+                self.wall_ns = None;
+            }
+        }
+        StageMark {
+            raw: thread_cpu_ns(),
+            precise: precise_thread_cpu_ns(),
+        }
+    }
+    fn end(&mut self, mark: StageMark, wall_start: Instant) {
+        let precise_end = precise_thread_cpu_ns();
+        let raw_end = thread_cpu_ns();
+        self.record_elapsed(
+            u64::try_from(wall_start.elapsed().as_nanos()).ok(),
+            mark.raw,
+            raw_end,
+        );
+        let delta = mark
+            .precise
+            .zip(precise_end)
+            .and_then(|(a, b)| b.checked_sub(a));
+        self.record_precise_delta(delta);
+    }
+    fn record_precise_delta(&mut self, delta: Option<u64>) {
+        if !add_delta(&mut self.self_cpu_ns, delta) {
+            self.self_cpu_failures = self.self_cpu_failures.saturating_add(1);
+        }
+    }
+    fn record_elapsed(
+        &mut self,
+        wall_ns: Option<u64>,
+        before: Option<(u64, u64)>,
+        after: Option<(u64, u64)>,
+    ) {
+        // Once a total is incomplete it stays null. Count new failed frames or
+        // overflows, without treating an already invalid total as another fault.
+        fn add(total: &mut Option<u64>, delta: Option<u64>) -> bool {
+            let Some(delta) = delta else {
+                *total = None;
+                return false;
+            };
+            let Some(previous) = *total else {
+                return true;
+            };
+            *total = previous.checked_add(delta);
+            total.is_some()
+        }
+        if !add(&mut self.wall_ns, wall_ns) {
+            self.timing_failures = self.timing_failures.saturating_add(1);
+        }
+        let delta = before
+            .zip(after)
+            .and_then(|((u0, s0), (u1, s1))| Some((u1.checked_sub(u0)?, s1.checked_sub(s0)?)));
+        let user_valid = add(&mut self.self_user_ns, delta.map(|v| v.0));
+        let system_valid = add(&mut self.self_system_ns, delta.map(|v| v.1));
+        if !user_valid || !system_valid {
+            self.cpu_failures = self.cpu_failures.saturating_add(1);
+            self.self_user_ns = None;
+            self.self_system_ns = None;
+        }
+    }
+}
+#[derive(Clone, Copy)]
+struct StageMark {
+    raw: Option<(u64, u64)>,
+    precise: Option<u64>,
+}
+fn add_delta(total: &mut Option<u64>, delta: Option<u64>) -> bool {
+    let Some(delta) = delta else {
+        *total = None;
+        return false;
+    };
+    let Some(old) = *total else {
+        return true;
+    };
+    *total = old.checked_add(delta);
+    total.is_some()
+}
+
+/// Combine both attempts' observations while retaining final configuration.
+pub fn merge_retry_resources(current: &mut serde_json::Value, previous: &serde_json::Value) {
+    for field in [
+        "peakAggregateRssBytes",
+        "measuredWorkerPeakBytes",
+        "admissionWorkerCostBytes",
+        "maxActiveJobs",
+    ] {
+        if let (Some(old), Some(now)) = (previous[field].as_u64(), current[field].as_u64()) {
+            current[field] = old.max(now).into();
+        }
+    }
+    for field in [
+        "samples",
+        "treeDiscoveries",
+        "broadDiscoveries",
+        "admissionPauses",
+        "recycledIdleWorkers",
+    ] {
+        if let (Some(old), Some(now)) = (previous[field].as_u64(), current[field].as_u64()) {
+            current[field] = old.saturating_add(now).into();
+        }
+    }
+    if let (Some(now), Some(old)) = (
+        current.get_mut("accountingDiagnostics"),
+        previous.get("accountingDiagnostics"),
+    ) {
+        for name in ["sampling", "discovery", "identityReads", "rssReads"] {
+            // Both values were serialized from StageTotals by this process.
+            let mut merged: StageTotals =
+                serde_json::from_value(now[name].clone()).expect("serialized current stage");
+            let old: StageTotals =
+                serde_json::from_value(old[name].clone()).expect("serialized previous stage");
+            merged.merge(old);
+            now[name] = serde_json::to_value(merged).expect("serializable stage");
+        }
+        let mut thread_merge_failure = false;
+        {
+            let field = "threadCpuSinceBudgetStartNs";
+            let a = now[field].as_u64();
+            let b = old[field].as_u64();
+            now[field] = match (a, b) {
+                (Some(a), Some(b)) => match a.checked_add(b) {
+                    Some(sum) => sum.into(),
+                    None => {
+                        thread_merge_failure = true;
+                        serde_json::Value::Null
+                    }
+                },
+                _ => serde_json::Value::Null,
+            };
+        }
+        if let (Some(a), Some(b)) = (
+            now["threadCpuFailures"].as_u64(),
+            old["threadCpuFailures"].as_u64(),
+        ) {
+            now["threadCpuFailures"] = a
+                .saturating_add(b)
+                .saturating_add(u64::from(
+                    thread_merge_failure
+                        || (now["threadCpuSinceBudgetStartNs"].is_null()
+                            && a.saturating_add(b) == 0),
+                ))
+                .into();
+        }
+    }
+}
+fn thread_cpu_ns() -> Option<(u64, u64)> {
+    let mut usage = std::mem::MaybeUninit::<libc::rusage>::zeroed();
+    // RUSAGE_THREAD measures only this Linux thread, excluding workers/forks.
+    // Linux UAPI defines RUSAGE_THREAD as 1 (some libc targets omit the name).
+    if unsafe { libc::getrusage(1, usage.as_mut_ptr()) } != 0 {
+        return None;
+    }
+    let usage = unsafe { usage.assume_init() };
+    Some((timeval_ns(usage.ru_utime)?, timeval_ns(usage.ru_stime)?))
+}
+fn timeval_ns(t: libc::timeval) -> Option<u64> {
+    let sec: u64 = t.tv_sec.try_into().ok()?;
+    let usec: u64 = t.tv_usec.try_into().ok()?;
+    if usec >= 1_000_000 {
+        return None;
+    }
+    sec.checked_mul(1_000_000_000)?
+        .checked_add(usec.checked_mul(1_000)?)
+}
+fn precise_thread_cpu_ns() -> Option<u64> {
+    let mut ts = std::mem::MaybeUninit::<libc::timespec>::uninit();
+    if unsafe { libc::clock_gettime(libc::CLOCK_THREAD_CPUTIME_ID, ts.as_mut_ptr()) } != 0 {
+        return None;
+    }
+    timespec_ns(unsafe { ts.assume_init() })
+}
+fn timespec_ns(ts: libc::timespec) -> Option<u64> {
+    let sec: u64 = ts.tv_sec.try_into().ok()?;
+    let nsec: u64 = ts.tv_nsec.try_into().ok()?;
+    if nsec >= 1_000_000_000 {
+        return None;
+    }
+    sec.checked_mul(1_000_000_000)?.checked_add(nsec)
+}
+
 pub const MIB: u64 = 1024 * 1024;
 pub const SAMPLE_MS: u64 = 50;
 
@@ -345,6 +615,14 @@ pub struct Budget {
     pub tree_discoveries: u64,
     pub broad_discoveries: u64,
     pub exhaustion: Option<String>,
+    #[serde(skip)]
+    budget_cpu_start: Option<u64>,
+    #[serde(skip)]
+    budget_cpu_failures: u64,
+    #[serde(skip)]
+    budget_thread: std::thread::ThreadId,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub accounting_diagnostics: Option<AccountingDiagnostics>,
     /// The latest sample's discovery, so slot ownership needs no extra scan.
     #[serde(skip)]
     pub table: Option<ProcessTable>,
@@ -365,6 +643,9 @@ pub struct Budget {
 }
 impl Budget {
     pub fn new(options: &Options) -> Result<Self, String> {
+        let profiling = profile_enabled();
+        let budget_cpu_start = profiling.then(precise_thread_cpu_ns).flatten();
+        let budget_cpu_failures = u64::from(profiling && budget_cpu_start.is_none());
         fs::read_dir("/proc").map_err(|e| format!("Linux /proc accounting required: {e}"))?;
         let cgroups = memory_cgroups()?;
         let physical = meminfo("MemTotal").ok_or("host memory accounting unavailable")?;
@@ -394,6 +675,18 @@ impl Budget {
             tree_discoveries: 0,
             broad_discoveries: 0,
             exhaustion: None,
+            budget_cpu_start,
+            budget_cpu_failures,
+            budget_thread: std::thread::current().id(),
+            accounting_diagnostics: profiling.then(|| AccountingDiagnostics {
+                clock_version: 2,
+                thread_cpu_since_budget_start_ns: None,
+                thread_cpu_failures: 0,
+                scope: "CLI sampling thread only; excludes Node/controllers/test forks and external benchmark sampler",
+                evidence: "incomplete until each CPU and wall measurement succeeds",
+                sampling: totals(), discovery: totals(), identity_reads: totals(), rss_reads: totals(),
+                timing_note: "stage totals are nested within inclusive sampling totals; getrusage/clock/framework overhead is not separately measured, so categories are not a process-tree CPU partition",
+            }),
             table: None,
             last_sample: Instant::now() - Duration::from_secs(1),
             last_broad: Instant::now() - Duration::from_secs(1),
@@ -456,20 +749,63 @@ impl Budget {
         self.last_sample = Instant::now();
         self.samples += 1;
         self.table = None;
+        let mut profile = std::cell::RefCell::new(self.accounting_diagnostics.take());
+        let profiling = profile.borrow().is_some();
+        let sample_start = profiling.then(|| {
+            let wall = Instant::now();
+            let cpu = profile.borrow_mut().as_mut().unwrap().sampling.start();
+            (wall, cpu)
+        });
+        let profiled_discover = || {
+            if !profiling {
+                return discover();
+            }
+            let mut profile = profile.borrow_mut();
+            let d = profile.as_mut().unwrap();
+            let wall = Instant::now();
+            let cpu = d.discovery.start();
+            let result = discover();
+            d.discovery.end(cpu, wall);
+            result
+        };
+        let mut profiled_identity = |pid| {
+            if !profiling {
+                return read_identity(pid);
+            }
+            let mut profile = profile.borrow_mut();
+            let d = profile.as_mut().unwrap();
+            let wall = Instant::now();
+            let cpu = d.identity_reads.start();
+            let result = read_identity(pid);
+            d.identity_reads.end(cpu, wall);
+            result
+        };
+        let mut profiled_rss = |pid| {
+            if !profiling {
+                return read_rss(pid);
+            }
+            let mut profile = profile.borrow_mut();
+            let d = profile.as_mut().unwrap();
+            let wall = Instant::now();
+            let cpu = d.rss_reads.start();
+            let result = read_rss(pid);
+            d.rss_reads.end(cpu, wall);
+            result
+        };
         let observed = (|| -> Result<(), String> {
             // Exactly one fresh broad discovery per admitted sample. This also
             // includes adopted descendants outside any live worker branch.
-            let table = discover()?;
+            let table = profiled_discover()?;
             self.current = tree_rss(
                 std::process::id(),
                 &table,
-                &mut read_identity,
-                &mut read_rss,
+                &mut profiled_identity,
+                &mut profiled_rss,
             )?;
             self.peak_aggregate_rss_bytes = self.peak_aggregate_rss_bytes.max(self.current);
             self.observed_workers.clear();
             for &pid in workers {
-                let bytes = tree_rss(pid, &table, &mut read_identity, &mut read_rss)?;
+                let bytes = tree_rss(pid, &table, &mut profiled_identity, &mut profiled_rss)?;
                 self.measured_worker_peak_bytes = self.measured_worker_peak_bytes.max(bytes);
                 self.admission_worker_cost_bytes = self
                     .measured_worker_peak_bytes
@@ -484,8 +820,8 @@ impl Budget {
                 checked_rss(
                     std::process::id(),
                     table.start(std::process::id()),
-                    &mut read_identity,
-                    &mut read_rss,
+                    &mut profiled_identity,
+                    &mut profiled_rss,
                 )?,
                 |total, bytes| total.saturating_add(*bytes),
             );
@@ -520,11 +856,38 @@ impl Budget {
             self.table = Some(table);
             Ok(())
         })();
+        if let Some((wall, cpu)) = sample_start {
+            let d = profile.get_mut().as_mut().unwrap();
+            d.sampling.end(cpu, wall);
+            d.evidence =
+                "review wallNs and CPU failure counters; null CPU totals mean incomplete evidence";
+        }
+        self.accounting_diagnostics = profile.into_inner();
         if let Err(error) = observed
             && self.exhaustion.is_none()
         {
             self.exhaustion = Some(error);
         }
+    }
+    pub fn report_snapshot(&self) -> serde_json::Value {
+        let mut value = serde_json::to_value(self).expect("resource report");
+        if let (Some(diag), Some(start)) = (
+            value.get_mut("accountingDiagnostics"),
+            self.budget_cpu_start,
+        ) {
+            let same_thread = std::thread::current().id() == self.budget_thread;
+            let end = same_thread.then(precise_thread_cpu_ns).flatten();
+            let delta = end.and_then(|v| v.checked_sub(start));
+            diag["threadCpuSinceBudgetStartNs"] =
+                delta.map_or(serde_json::Value::Null, |v| v.into());
+            diag["threadCpuFailures"] = self
+                .budget_cpu_failures
+                .saturating_add(u64::from(delta.is_none()))
+                .into();
+        } else if let Some(diag) = value.get_mut("accountingDiagnostics") {
+            diag["threadCpuFailures"] = self.budget_cpu_failures.into();
+        }
+        value
     }
     pub fn capacity(&self, active_pids: &[u32]) -> usize {
         if self.exhaustion.is_some() {
@@ -590,6 +953,10 @@ mod tests {
             tree_discoveries: 0,
             broad_discoveries: 0,
             exhaustion: None,
+            budget_cpu_start: None,
+            budget_cpu_failures: 0,
+            budget_thread: std::thread::current().id(),
+            accounting_diagnostics: None,
             table: None,
             last_sample: Instant::now() - Duration::from_secs(1),
             last_broad: Instant::now() - Duration::from_secs(1),
@@ -980,6 +1347,323 @@ mod tests {
     }
 
     #[test]
+    fn retry_resources_keep_samples_and_diagnostics_aligned() {
+        let mut state = budget();
+        state.samples = 2;
+        state.accounting_diagnostics = Some(AccountingDiagnostics {
+            clock_version: 2,
+            thread_cpu_since_budget_start_ns: None,
+            thread_cpu_failures: 0,
+            sampling: StageTotals {
+                calls: 2,
+                wall_ns: Some(40),
+                self_user_ns: Some(10),
+                self_system_ns: Some(20),
+                ..StageTotals::default()
+            },
+            discovery: totals(),
+            identity_reads: totals(),
+            rss_reads: totals(),
+            ..AccountingDiagnostics::default()
+        });
+        let previous = serde_json::to_value(&state).unwrap();
+        let mut current = previous.clone();
+        merge_retry_resources(&mut current, &previous);
+        assert_eq!(current["samples"], 4);
+        assert_eq!(current["accountingDiagnostics"]["sampling"]["calls"], 4);
+        assert_eq!(current["accountingDiagnostics"]["sampling"]["wallNs"], 80);
+        assert_eq!(
+            current["accountingDiagnostics"]["sampling"]["selfSystemNs"],
+            40
+        );
+        let mut invalid = previous.clone();
+        invalid["accountingDiagnostics"]["sampling"]["selfUserNs"] = serde_json::Value::Null;
+        invalid["accountingDiagnostics"]["sampling"]["cpuFailures"] = 1.into();
+        merge_retry_resources(&mut current, &invalid);
+        assert!(current["accountingDiagnostics"]["sampling"]["selfUserNs"].is_null());
+        assert!(current["accountingDiagnostics"]["sampling"]["selfSystemNs"].is_null());
+        assert_eq!(
+            current["accountingDiagnostics"]["sampling"]["cpuFailures"],
+            1
+        );
+        let mut overflowing = totals();
+        overflowing.wall_ns = Some(u64::MAX);
+        overflowing.self_user_ns = Some(u64::MAX);
+        overflowing.merge(StageTotals {
+            wall_ns: Some(1),
+            self_user_ns: Some(1),
+            ..totals()
+        });
+        assert_eq!(
+            (
+                overflowing.wall_ns,
+                overflowing.self_user_ns,
+                overflowing.self_system_ns
+            ),
+            (None, None, None)
+        );
+        assert_eq!(
+            (overflowing.timing_failures, overflowing.cpu_failures),
+            (1, 1)
+        );
+        let mut disabled = serde_json::to_value(budget()).unwrap();
+        merge_retry_resources(&mut disabled, &serde_json::to_value(budget()).unwrap());
+        assert!(disabled.get("accountingDiagnostics").is_none());
+    }
+
+    #[test]
+    fn accounting_profile_switch_initializes_budget() {
+        const CHILD: &str = "OXIMUT_ACCOUNTING_SWITCH_CHILD";
+        if let Some(expected) = std::env::var_os(CHILD) {
+            let options = super::super::parse_options(
+                [
+                    "--root".into(),
+                    Path::new(env!("CARGO_MANIFEST_DIR"))
+                        .join("../../fixtures/m1")
+                        .to_string_lossy()
+                        .into_owned(),
+                    "--baseline-only".into(),
+                ]
+                .into_iter(),
+            )
+            .unwrap()
+            .unwrap();
+            let state = Budget::new(&options).unwrap();
+            let enabled = expected == "1";
+            assert_eq!(state.accounting_diagnostics.is_some(), enabled);
+            assert_eq!(
+                serde_json::to_value(&state)
+                    .unwrap()
+                    .get("accountingDiagnostics")
+                    .is_some(),
+                enabled
+            );
+            if enabled {
+                assert_eq!(
+                    state.accounting_diagnostics.as_ref().unwrap().clock_version,
+                    2
+                );
+                assert_eq!(
+                    state
+                        .accounting_diagnostics
+                        .as_ref()
+                        .unwrap()
+                        .sampling
+                        .calls,
+                    state.samples
+                );
+                let report = state.report_snapshot();
+                assert!(report["accountingDiagnostics"]["threadCpuSinceBudgetStartNs"].is_number());
+                assert!(report["accountingDiagnostics"]["threadCpuFailures"].is_number());
+            }
+            return;
+        }
+        for flag in [None, Some("0"), Some("1"), Some("true")] {
+            let mut command = std::process::Command::new(std::env::current_exe().unwrap());
+            command
+                .args([
+                    "--exact",
+                    "resources::tests::accounting_profile_switch_initializes_budget",
+                ])
+                .env(CHILD, if flag == Some("1") { "1" } else { "0" })
+                .env_remove("OXIMUT_PROFILE_ACCOUNTING");
+            if let Some(flag) = flag {
+                command.env("OXIMUT_PROFILE_ACCOUNTING", flag);
+            }
+            let output = command.output().unwrap();
+            assert!(
+                output.status.success(),
+                "{flag:?}: {}",
+                String::from_utf8_lossy(&output.stdout)
+            );
+        }
+    }
+
+    #[test]
+    fn accounting_profile_is_optional_bounded_and_counts_admitted_failed_reads() {
+        let mut state = budget();
+        let disabled = serde_json::to_value(&state).unwrap();
+        assert!(disabled.get("accountingDiagnostics").is_none());
+        state.accounting_diagnostics = Some(AccountingDiagnostics {
+            clock_version: 2,
+            thread_cpu_since_budget_start_ns: None,
+            thread_cpu_failures: 0,
+            scope: "CLI sampling thread only",
+            evidence: "incomplete",
+            sampling: totals(),
+            discovery: totals(),
+            identity_reads: totals(),
+            rss_reads: totals(),
+            timing_note: "nested",
+        });
+        let cli = std::process::id();
+        let mut discovers = 0;
+        let mut identities = 0;
+        let mut rss_reads = 0;
+        state.sample_with_readers(
+            &[],
+            false,
+            || {
+                discovers += 1;
+                ProcessTable::collect([Ok(Some(cli))], |_| Ok(Some((0, 1))))
+            },
+            |_| {
+                identities += 1;
+                Err("injected identity error".into())
+            },
+            |_| {
+                rss_reads += 1;
+                Ok(Some(1))
+            },
+        );
+        let prof = state.accounting_diagnostics.as_ref().unwrap();
+        assert_eq!((discovers, identities, rss_reads), (1, 1, 0));
+        assert_eq!(
+            (
+                prof.sampling.calls,
+                prof.discovery.calls,
+                prof.identity_reads.calls,
+                prof.rss_reads.calls
+            ),
+            (1, 1, 1, 0)
+        );
+        assert!(
+            state
+                .exhaustion
+                .as_deref()
+                .unwrap()
+                .contains("injected identity error")
+        );
+        let encoded = serde_json::to_value(&state).unwrap();
+        assert_eq!(
+            encoded["accountingDiagnostics"]["identityReads"]["calls"],
+            1
+        );
+        assert!(
+            encoded["accountingDiagnostics"]["identityReads"]["wallNs"]
+                .as_u64()
+                .is_some()
+        );
+
+        state.last_sample = Instant::now();
+        state.sample_with_readers(
+            &[],
+            false,
+            || panic!("rate-limited discovery"),
+            |_| panic!("rate-limited identity"),
+            |_| panic!("rate-limited RSS"),
+        );
+        assert_eq!(
+            state
+                .accounting_diagnostics
+                .as_ref()
+                .unwrap()
+                .sampling
+                .calls,
+            1
+        );
+    }
+
+    #[test]
+    fn accounting_profile_measures_fresh_rss_calls_including_errors() {
+        let mut state = budget();
+        state.accounting_diagnostics = Some(AccountingDiagnostics {
+            sampling: totals(),
+            discovery: totals(),
+            identity_reads: totals(),
+            rss_reads: totals(),
+            ..AccountingDiagnostics::default()
+        });
+        let cli = std::process::id();
+        let mut rss_calls = 0;
+        for fail in [false, true] {
+            state.sample_with_readers(
+                &[],
+                true,
+                || ProcessTable::collect([Ok(Some(cli))], |_| Ok(Some((0, 1)))),
+                |_| Ok(Some((0, 1))),
+                |_| {
+                    rss_calls += 1;
+                    if fail {
+                        Err("injected RSS error".into())
+                    } else {
+                        Ok(Some(10))
+                    }
+                },
+            );
+        }
+        assert!(
+            rss_calls > 1,
+            "successful aggregate and final CLI reads stay fresh"
+        );
+        let profile = state.accounting_diagnostics.as_ref().unwrap();
+        assert_eq!(profile.rss_reads.calls, rss_calls);
+        assert_eq!(profile.sampling.calls, state.samples);
+        assert_eq!(profile.discovery.calls, 2);
+        assert_eq!(profile.identity_reads.calls, rss_calls);
+        assert!(profile.rss_reads.wall_ns.is_some());
+        assert_eq!(state.exhaustion.as_deref(), Some("injected RSS error"));
+    }
+
+    #[test]
+    fn accounting_clock_faults_and_overflows_never_become_zero_evidence() {
+        let mut stage = totals();
+        stage.record_elapsed(Some(7), Some((10, 20)), Some((13, 25)));
+        assert_eq!(
+            (stage.wall_ns, stage.self_user_ns, stage.self_system_ns),
+            (Some(7), Some(3), Some(5))
+        );
+        stage.record_elapsed(Some(1), None, Some((14, 26)));
+        assert_eq!(
+            (stage.self_user_ns, stage.self_system_ns, stage.cpu_failures),
+            (None, None, 1)
+        );
+        stage.record_elapsed(None, Some((14, 26)), Some((13, 26)));
+        assert_eq!(
+            (stage.wall_ns, stage.timing_failures, stage.cpu_failures),
+            (None, 1, 2)
+        );
+        stage.record_elapsed(Some(1), Some((14, 26)), Some((15, 27)));
+        assert_eq!(
+            (stage.wall_ns, stage.self_user_ns, stage.self_system_ns),
+            (None, None, None)
+        );
+
+        let mut overflow = totals();
+        overflow.wall_ns = Some(u64::MAX);
+        overflow.self_user_ns = Some(u64::MAX);
+        overflow.record_elapsed(Some(1), Some((0, 0)), Some((1, 0)));
+        assert_eq!(
+            (
+                overflow.wall_ns,
+                overflow.self_user_ns,
+                overflow.self_system_ns
+            ),
+            (None, None, None)
+        );
+        assert_eq!((overflow.timing_failures, overflow.cpu_failures), (1, 1));
+        let mut counter = totals();
+        counter.calls = u64::MAX;
+        counter.start();
+        assert_eq!(counter.calls, u64::MAX);
+        assert_eq!((counter.wall_ns, counter.timing_failures), (None, 1));
+        assert!(
+            timeval_ns(libc::timeval {
+                tv_sec: 0,
+                tv_usec: 1_000_000
+            })
+            .is_none()
+        );
+        assert!(
+            timeval_ns(libc::timeval {
+                tv_sec: -1,
+                tv_usec: 0
+            })
+            .is_none()
+        );
+    }
+
+    #[test]
     fn next_sample_rediscovers_births_and_reparented_children() {
         let cli = std::process::id();
         let worker = cli + 1;
@@ -1242,5 +1926,120 @@ mod tests {
             assert!(group.limit_bytes.is_none_or(|n| n < 1 << 60));
             assert!(group.usage_path.is_absolute());
         }
+    }
+    #[test]
+    fn precise_cpu_delta_failure_backward_and_overflow_are_sticky() {
+        let mut s = StageTotals {
+            self_cpu_ns: Some(7),
+            ..StageTotals::default()
+        };
+        s.record_precise_delta(Some(5));
+        assert_eq!(s.self_cpu_ns, Some(12));
+        s.record_precise_delta(None);
+        assert_eq!(s.self_cpu_ns, None);
+        assert_eq!(s.self_cpu_failures, 1);
+        let mut backward = StageTotals::default();
+        backward.record_precise_delta(9u64.checked_sub(10));
+        assert_eq!(backward.self_cpu_ns, None);
+        assert_eq!(backward.self_cpu_failures, 1);
+        let mut overflow = StageTotals {
+            self_cpu_ns: Some(u64::MAX),
+            ..StageTotals::default()
+        };
+        overflow.record_precise_delta(Some(1));
+        assert_eq!(overflow.self_cpu_ns, None);
+        assert_eq!(overflow.self_cpu_failures, 1);
+    }
+    #[test]
+    fn precise_retry_failures_are_not_counted_again_when_nulls_are_preserved() {
+        let mut failed = totals();
+        failed.record_precise_delta(None);
+        let mut merged = totals();
+        merged.merge(failed);
+        assert_eq!(merged.self_cpu_failures, 1);
+        merged.merge(totals());
+        assert_eq!((merged.self_cpu_ns, merged.self_cpu_failures), (None, 1));
+        let mut current = serde_json::json!({"accountingDiagnostics": {
+            "sampling": totals(), "discovery": totals(), "identityReads": totals(), "rssReads": totals(),
+            "threadCpuSinceBudgetStartNs": 3, "threadCpuFailures": 0}});
+        let valid = current.clone();
+        let mut previous = valid.clone();
+        previous["accountingDiagnostics"]["threadCpuSinceBudgetStartNs"] = serde_json::Value::Null;
+        previous["accountingDiagnostics"]["threadCpuFailures"] = 1.into();
+        merge_retry_resources(&mut current, &previous);
+        assert_eq!(current["accountingDiagnostics"]["threadCpuFailures"], 1);
+        merge_retry_resources(&mut current, &valid);
+        assert_eq!(current["accountingDiagnostics"]["threadCpuFailures"], 1);
+        assert!(current["accountingDiagnostics"]["threadCpuSinceBudgetStartNs"].is_null());
+    }
+
+    #[test]
+    fn precise_stage_clock_records_work_inside_its_wall_interval() {
+        let mut stage = totals();
+        let wall = Instant::now();
+        let mark = stage.start();
+        let mut value = 0u64;
+        for i in 0..std::hint::black_box(100_000u64) {
+            value = std::hint::black_box(value.wrapping_add(i));
+        }
+        std::hint::black_box(value);
+        stage.end(mark, wall);
+        assert!(stage.self_cpu_ns.unwrap() > 0);
+        assert!(stage.self_cpu_ns.unwrap() <= stage.wall_ns.unwrap());
+        assert_eq!(stage.self_cpu_failures, 0);
+    }
+
+    #[test]
+    fn precise_timespec_rejects_negative_noncanonical_and_overflowed_values() {
+        assert_eq!(
+            timespec_ns(libc::timespec {
+                tv_sec: 2,
+                tv_nsec: 3
+            }),
+            Some(2_000_000_003)
+        );
+        for (sec, nsec) in [(-1, 0), (0, -1), (0, 1_000_000_000), (libc::time_t::MAX, 0)] {
+            assert_eq!(
+                timespec_ns(libc::timespec {
+                    tv_sec: sec,
+                    tv_nsec: nsec
+                }),
+                None
+            );
+        }
+    }
+
+    #[test]
+    fn budget_snapshot_rejects_another_thread_and_preserves_start_failure() {
+        let mut state = budget();
+        state.accounting_diagnostics = Some(AccountingDiagnostics {
+            clock_version: 2,
+            ..AccountingDiagnostics::default()
+        });
+        state.budget_cpu_failures = 1;
+        let missing = state.report_snapshot();
+        assert!(missing["accountingDiagnostics"]["threadCpuSinceBudgetStartNs"].is_null());
+        assert_eq!(missing["accountingDiagnostics"]["threadCpuFailures"], 1);
+        state.budget_cpu_start = Some(precise_thread_cpu_ns().unwrap());
+        state.budget_cpu_failures = 0;
+        let wrong_thread = std::thread::spawn(move || state.report_snapshot())
+            .join()
+            .unwrap();
+        assert!(wrong_thread["accountingDiagnostics"]["threadCpuSinceBudgetStartNs"].is_null());
+        assert_eq!(
+            wrong_thread["accountingDiagnostics"]["threadCpuFailures"],
+            1
+        );
+    }
+    #[test]
+    fn retry_merge_sums_precise_and_budget_thread_cpu() {
+        let mut current = serde_json::json!({"accountingDiagnostics":{"sampling":{"calls":1,"wallNs":3,"selfUserNs":1,"selfSystemNs":1,"selfCpuNs":2,"selfCpuFailures":0,"cpuFailures":0,"timingFailures":0},"discovery":{"calls":0,"wallNs":0,"selfUserNs":0,"selfSystemNs":0,"selfCpuNs":0,"selfCpuFailures":0,"cpuFailures":0,"timingFailures":0},"identityReads":{"calls":0,"wallNs":0,"selfUserNs":0,"selfSystemNs":0,"selfCpuNs":0,"selfCpuFailures":0,"cpuFailures":0,"timingFailures":0},"rssReads":{"calls":0,"wallNs":0,"selfUserNs":0,"selfSystemNs":0,"selfCpuNs":0,"selfCpuFailures":0,"cpuFailures":0,"timingFailures":0},"threadCpuSinceBudgetStartNs":5,"threadCpuFailures":0}});
+        let previous = current.clone();
+        merge_retry_resources(&mut current, &previous);
+        assert_eq!(current["accountingDiagnostics"]["sampling"]["selfCpuNs"], 4);
+        assert_eq!(
+            current["accountingDiagnostics"]["threadCpuSinceBudgetStartNs"],
+            10
+        );
     }
 }

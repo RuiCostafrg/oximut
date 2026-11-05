@@ -34,12 +34,59 @@
         "admissionPauses": { "type": "integer", "minimum": 0 },
         "recycledIdleWorkers": { "type": "integer", "minimum": 0 },
         "samples": { "type": "integer", "minimum": 0 },
-        "exhaustion": { "type": ["string", "null"] }
+        "exhaustion": { "type": ["string", "null"] },
+        "accountingDiagnostics": { "$ref": "#/$defs/accountingDiagnostics" }
       },
       "required": ["configuredWorkers", "effectiveWorkers", "cpuLimitWorkers", "configuredBudgetBytes", "budgetBytes", "reserveBytes", "cgroups", "measurement", "enforcement", "sampleIntervalMs", "peakAggregateRssBytes", "measuredWorkerPeakBytes", "admissionWorkerCostBytes", "maxActiveJobs", "admissionPauses", "recycledIdleWorkers", "samples", "exhaustion"]
     }
   },
   "$defs": {
+    "accountingStage": {
+      "type": "object", "additionalProperties": false,
+      "required": ["calls", "wallNs", "selfUserNs", "selfSystemNs", "cpuFailures", "timingFailures"],
+      "properties": {
+        "calls": { "type": "integer", "minimum": 0 },
+        "wallNs": { "type": ["integer", "null"], "minimum": 0 },
+        "selfUserNs": { "type": ["integer", "null"], "minimum": 0 },
+        "selfSystemNs": { "type": ["integer", "null"], "minimum": 0 },
+        "selfCpuNs": { "type": ["integer", "null"], "minimum": 0 },
+        "selfCpuFailures": { "type": "integer", "minimum": 0 },
+        "cpuFailures": { "type": "integer", "minimum": 0 },
+        "timingFailures": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "accountingDiagnostics": {
+      "type": "object", "additionalProperties": false,
+      "required": ["scope", "evidence", "sampling", "discovery", "identityReads", "rssReads", "timingNote"],
+      "allOf": [{
+        "if": {"type":"object","anyOf":[
+          {"required":["clockVersion"]},
+          {"required":["threadCpuSinceBudgetStartNs"]},
+          {"required":["threadCpuFailures"]},
+          {"required":["sampling"],"properties":{"sampling":{"type":"object","anyOf":[{"required":["selfCpuNs"]},{"required":["selfCpuFailures"]}]}}},
+          {"required":["discovery"],"properties":{"discovery":{"type":"object","anyOf":[{"required":["selfCpuNs"]},{"required":["selfCpuFailures"]}]}}},
+          {"required":["identityReads"],"properties":{"identityReads":{"type":"object","anyOf":[{"required":["selfCpuNs"]},{"required":["selfCpuFailures"]}]}}},
+          {"required":["rssReads"],"properties":{"rssReads":{"type":"object","anyOf":[{"required":["selfCpuNs"]},{"required":["selfCpuFailures"]}]}}}
+        ]},
+        "then": {"type":"object","required":["clockVersion","threadCpuSinceBudgetStartNs","threadCpuFailures"],"properties":{
+          "sampling":{"type":"object","required":["selfCpuNs","selfCpuFailures"]},
+          "discovery":{"type":"object","required":["selfCpuNs","selfCpuFailures"]},
+          "identityReads":{"type":"object","required":["selfCpuNs","selfCpuFailures"]},
+          "rssReads":{"type":"object","required":["selfCpuNs","selfCpuFailures"]}
+        }}
+      }],
+      "properties": {
+        "scope": { "type": "string" }, "evidence": { "type": "string" },
+        "clockVersion": { "const": 2 },
+        "threadCpuSinceBudgetStartNs": { "type": ["integer", "null"], "minimum": 0 },
+        "threadCpuFailures": { "type": "integer", "minimum": 0 },
+        "sampling": { "$ref": "#/$defs/accountingStage" },
+        "discovery": { "$ref": "#/$defs/accountingStage" },
+        "identityReads": { "$ref": "#/$defs/accountingStage" },
+        "rssReads": { "$ref": "#/$defs/accountingStage" },
+        "timingNote": { "type": "string" }
+      }
+    },
     "position": {
       "type": "object",
       "additionalProperties": false,

@@ -6,8 +6,9 @@ on:
       capture_mode:
         description: Diagnostic scope (profiler overhead; never scored ratios)
         type: choice
-        default: controller-jobs
+        default: accounting
         options:
+          - accounting
           - controller-jobs
           - segments
   pull_request:
@@ -82,10 +83,11 @@ jobs:
       - name: Capture unchanged workload with profiler overhead, no ratios or targets
         shell: bash
         env:
-          CAPTURE_MODE: ${{ inputs.capture_mode || 'controller-jobs' }}
+          CAPTURE_MODE: ${{ inputs.capture_mode || 'accounting' }}
         run: |
           set -euo pipefail
           case "$CAPTURE_MODE" in
+            accounting) CAPTURE_ARG=--accounting ;;
             controller-jobs) CAPTURE_ARG=--controller-jobs ;;
             segments) CAPTURE_ARG=--segments ;;
             *) echo 'Unsupported capture mode' >&2; exit 1 ;;
@@ -99,7 +101,7 @@ jobs:
           {
             echo '### Diagnostic CPU capture (profiler overhead; no performance score)'
             echo 'Qualification failures and incomplete profiles are retained. No automatic retries.'
-            echo 'Node sampling and Python self CPU do not partition whole product CPU; Rust resource sampler CPU remains unattributed.'
+            echo 'Accounting mode measures CLI sampling-thread self CPU only; Node/Python modes remain separate. No mode partitions whole product CPU.'
             if test -f "$RUNNER_TEMP/native-diagnostic/capture/diagnostic.json"; then
               echo '```json'
               python3 - <<'PY'

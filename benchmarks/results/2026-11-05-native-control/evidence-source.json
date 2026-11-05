@@ -1,0 +1,10 @@
+{
+  "benchmark_run": 41973869522,
+  "structural_run": 41973869479,
+  "controller_run": 41930938613,
+  "controller_profile_sha256": "516ca4404f690ecccaf824c037b8758093806618962c36302de15c7e765875b8",
+  "head_commit": "2b4c20fe2dbafa739196561e533f23b54053f97f",
+  "test_merge_commit": "df4a6a9d9d3e5ef5ee1968567ec5d8a3abe4ea44",
+  "merged_main_commit": "873c85ff46064f582e057cc82d90b45f29821ec5",
+  "artifact_retention_days": 14
+}

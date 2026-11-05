@@ -1,0 +1,19 @@
+{
+  "version": "4.1.12",
+  "node": "v26.3.1",
+  "platform": "linux",
+  "arch": "x64",
+  "output": "/home/runner/work/_temp/warm-runtime-probe/guard-fs-only",
+  "command": "/opt/hostedtoolcache/node/26.3.1/x64/bin/node /home/runner/work/oximut/oximut/benchmarks/experiments/warm-runtime-probe/probe.mjs --case guardedVm-true-separate --mode fs-only --output /home/runner/work/_temp/warm-runtime-probe/guard-fs-only",
+  "sourceHashes": {
+    "experiments/warm-runtime-probe/probe.mjs": "279ba3e4f2ca2d90268c866516921b3b92002d25333ddfd66169280214d6f67b",
+    "experiments/warm-runtime-probe/warm-pool.mjs": "38aac848f506e07c02174196d463c6c6653deced97fa1aa49290feae61477f3a",
+    "experiments/warm-runtime-probe/warm-vm-worker.mjs": "4e4f1a08d546864bd53c03ffd89338b726087bb506aaad6aff559dffe721e516",
+    "experiments/warm-runtime-probe/validation.mjs": "f28d1967074cfb39622addefa22404d42919ea70b66c0d4045718f636e8bc05e"
+  },
+  "cleanup": {
+    "controllerProcessGroupGone": true,
+    "vitestClosed": true
+  },
+  "measurement": "structural only; wall/CPU/RSS/process-tree/phase ratios/CIs are unmeasured/N/A"
+}
