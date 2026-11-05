@@ -5,7 +5,10 @@ pass; optimization experiments pending. No
 performance improvement or release claim.
 Starting point: main `d8e0c512eae792d522d3bf47bfa50ee3a9ce5cbc`.
 The native comparison workflow now pins main `74a4972` as
-`BEFORE_COMMIT`, after the opt-in isolation work in #37 merged. The retained
+`BEFORE_COMMIT`, after the opt-in isolation work in #37 merged. The warm-runtime
+experiment PR advances the pin to main `9dc25e0`, after #38, as a deliberate
+same-engine control: neither the capture tooling nor the standalone state probe
+changes product execution. The retained
 same-engine control below used the earlier `d8e0c51` baseline; future campaigns
 compare against the updated main revision. Fresh forks remain the default. This diagnostic
 PR changes no product execution code; any same-engine before/after timings are
