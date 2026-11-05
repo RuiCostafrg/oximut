@@ -25,8 +25,8 @@ clock after its assertions. The next file requires initial state again.
 | vmThreads, either request | false | batch | yes | 9 / 16 |
 | experimental warm host, requested true | true | separate | yes | 14 / 16 |
 
-Raw records are in `evidence/stock-results.jsonl` (12 cases) and
-`evidence/warm-host-results.jsonl` (one case). Every case completed, closed its
+Raw records are in [stock-results.jsonl](../../results/2026-11-05-warm-runtime-probe/stock-results.jsonl) (12 cases) and
+[warm-host-results.jsonl](../../results/2026-11-05-warm-runtime-probe/warm-host-results.jsonl) (one case). Every case completed, closed its
 Vitest instance, and left no live controller process group. Different thread IDs
 in one PID count as different workers; PID equality alone does not prove reuse.
 
@@ -78,10 +78,12 @@ async leaks and selectors still need investigation before any product mode.
 Only after the fresh-process oracle passes a declared supported scope should a
 native paired wall/CPU/RSS campaign be run. No speedup, goal or release is claimed.
 
-## Guarded warm-host structural probe
+## Historical delegated guarded probe (`cb10fbd`)
 
-The probe now has an explicitly experimental `warmVm` pool with a per-job host
-guard. Pinned Vitest `onModuleRunner` is the snapshot point after VM setup and
+At delegated revision `cb10fbd`, the experimental `warmVm` pool had a per-job host
+guard. This section describes that historical source; the current guarded pool
+is `guardedVm` and current rerun commands appear below. Pinned Vitest
+`onModuleRunner` is the snapshot point after VM setup and
 before user imports. The pinned VM runtime changes `SSR` from absent to `1` after
 that callback; the guard accepts only that known startup transition. Other
 environment key additions, deletions and value changes are reported by key
@@ -118,10 +120,11 @@ For module-only, the two observations have different realm UUIDs while sharing
 the same worker. For each dirty mode, the second observation uses a different
 threadId and realm UUID; both jobs begin with clean module/global/env/fs/spy/timer
 state. Dirty channel summaries contain only names and descriptor-change keys, no
-secret values. Full evidence is under `evidence/final2-*`; the fs-only fork oracle
-rerun is `evidence/final2-fork-fs-rerun`.
+secret values. Full evidence is under `benchmarks/results/2026-11-05-warm-runtime-probe/final2-*`;
+the fs-only fork oracle rerun is `final2-fork-fs-rerun` there.
 
-Exact commands (with the pinned Node directory on `PATH`):
+Historical commands at the delegated revision `cb10fbd`, with the pinned Node
+directory on `PATH` (not reproduction commands for the current checkout):
 
 ```sh
 node benchmarks/experiments/warm-runtime-probe/probe.mjs --case warmVm-true-separate --mode module-only --output benchmarks/experiments/warm-runtime-probe/evidence/final2-warm-module
@@ -167,7 +170,8 @@ records and source hashes above remain unchanged and do not describe the updated
 source.
 
 The parent reran the entire stock matrix, the raw warm counterexample, and the
-four guarded modes plus matching fork oracles into `evidence/parent-reviewed/`.
+four guarded modes plus matching fork oracles into the original
+`benchmarks/experiments/warm-runtime-probe/evidence/parent-reviewed/` location.
 The new metadata hashes the executed sources independently. All guarded and
 fresh-fork cases pass all assertions; clean guarded jobs reuse one host with
 distinct realms and dirty guarded jobs recycle it. The guarded harness now also
@@ -184,6 +188,29 @@ assertion and is correctly retained as a failing-state control by the fixed
 probe. The injected sources were restored before recording normal evidence.
 The native `warm-runtime-probe.yml` workflow repeats this structural matrix and
 preserves its source archive and raw outputs, with no performance score.
+
+All retained captures now live under `benchmarks/results/2026-11-05-warm-runtime-probe/`.
+Their bytes and original invocation/source metadata are unchanged. Moving them
+to the existing results area excludes raw captures from source releases without
+relaxing the archive validator's extended-header rejection. The historical
+delegated sources are retained alongside the captures under `sources/cb10fbd/`.
+The current validation helper is also source-hashed in new runs. It requires
+observed leak fields, expected worker/realm identities, exact outcomes, exact
+scenario inventory and matching controller exit status; counts alone do not
+establish a leak.
+
+To rerun the current matrix into new directories, without overwriting retained
+evidence (first export the pinned Node directory on `PATH`):
+
+```sh
+probe_output=$(mktemp -d /tmp/oximut-warm-reproduction.XXXXXX)
+node benchmarks/experiments/warm-runtime-probe/probe.mjs --output "$probe_output/stock"
+node benchmarks/experiments/warm-runtime-probe/probe.mjs --case warmVm-true-separate --output "$probe_output/raw-warm"
+for mode in module-only env-only fs-only host-dirty; do
+  node benchmarks/experiments/warm-runtime-probe/probe.mjs --case guardedVm-true-separate --mode "$mode" --output "$probe_output/guard-$mode"
+  node benchmarks/experiments/warm-runtime-probe/probe.mjs --case forks-true-separate --mode "$mode" --output "$probe_output/fork-$mode"
+done
+```
 
 This experiment establishes only the tested detection/recycling mechanism. It
 does not justify a product mode or further optimization of this shallow guard.

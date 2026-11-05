@@ -7,6 +7,9 @@ on:
       - '.github/workflows/warm-runtime-probe.yml'
       - 'benchmarks/experiments/warm-runtime-probe/**'
       - 'package-lock.json'
+      - 'package.json'
+      - '.node-version'
+      - 'benchmarks/results/2026-11-05-warm-runtime-probe/**'
 
 permissions:
   contents: read
@@ -24,6 +27,7 @@ jobs:
           node-version-file: .node-version
           cache: npm
       - run: npm ci --ignore-scripts
+      - run: node --test benchmarks/experiments/warm-runtime-probe/test-validation.mjs
       - name: Preserve executed source and run state oracles (no timing claims)
         shell: bash
         run: |
@@ -45,18 +49,8 @@ jobs:
                   subprocess.run(['node', script, *args, '--output', str(root / name)],
                                  stdout=log, stderr=subprocess.STDOUT, check=True, timeout=180)
               rows = [json.loads(line) for line in (root / name / 'results.jsonl').read_text().splitlines()]
-              if name == 'stock':
-                  assert len(rows) == 12
-                  for row in rows:
-                      negative = row['schedule'] == 'batch' and not (row['pool'] == 'forks' and row['isolate'])
-                      assert row['counts'] == ({'passed': 9, 'failed': 7} if negative else {'passed': 16, 'failed': 0})
-                      assert row['fresh'] is not negative
-              elif name == 'raw-warm':
-                  assert len(rows) == 1 and rows[0]['counts'] == {'passed': 14, 'failed': 2}
-                  assert rows[0]['reusedWorker'] and not rows[0]['fresh']
-              else:
-                  assert len(rows) == 1 and rows[0]['counts'] == {'passed': 16, 'failed': 0}
-                  assert rows[0]['fresh']
+              subprocess.run(['node', 'benchmarks/experiments/warm-runtime-probe/validation.mjs',
+                              name, str(root / name / 'results.jsonl')], check=True, timeout=30)
               print(name, [row['counts'] for row in rows], flush=True)
           PY
       - name: Declare diagnostic scope

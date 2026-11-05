@@ -52,3 +52,6 @@ specified evidence directory.
 
 [Observed results and limits](REPORT.md) and [latest native control metrics](BASELINE.md)
 are kept separate. Local Android/PRoot timings are not qualified performance evidence.
+Retained captures are under [benchmarks/results](../../results/2026-11-05-warm-runtime-probe/).
+The native workflow also runs `node --test benchmarks/experiments/warm-runtime-probe/test-validation.mjs`
+to check that corrupted observations, counts, identities and exit statuses are rejected.

@@ -8,6 +8,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { setTimeout as delay } from 'node:timers/promises';
+import { validateControllerStatus, validateCase } from './validation.mjs';
 
 const script = fileURLToPath(import.meta.url);
 const require = createRequire(import.meta.url);
@@ -113,7 +114,7 @@ async function runController(input, folder) {
   assert.equal(result.closed, true);
   // Vitest sets exitCode=1 for deliberately failing isolation controls. Retain
   // that status, and accept it only with a complete/drained result and failures.
-  if (status.code === 1) assert.ok(result.runs.some(r=>r.counts.failed > 0));
+  validateControllerStatus(status, result.runs);
   return { ...result, controllerExitCode: status.code };
 }
 
@@ -227,6 +228,7 @@ async function main() {
         results.push({ name,pool,isolate,schedule,fixtureMode,controllerExitCode:result.controllerExitCode,
           effectiveConfig:result.effectiveConfig, counts,fresh,
           reusedWorker:identities[0]===identities[1],guard:result.guard ?? [],events });
+        validateCase(results.at(-1));
         await appendFile(join(output,'results.jsonl'), JSON.stringify(results.at(-1))+'\n');
         console.log(JSON.stringify(results.at(-1)));
       } finally {
@@ -236,7 +238,8 @@ async function main() {
   }
   assert.ok(results.length, 'no matching cases');
   const sourceHashes = {};
-  for (const source of [script, fileURLToPath(new URL('./warm-pool.mjs', import.meta.url)), fileURLToPath(new URL('./warm-vm-worker.mjs', import.meta.url))]) {
+  for (const name of ['probe.mjs','warm-pool.mjs','warm-vm-worker.mjs','validation.mjs']) {
+    const source = fileURLToPath(new URL(name, import.meta.url));
     sourceHashes[source.slice(dirname(dirname(dirname(script))).length + 1)] = createHash('sha256').update(await readFile(source)).digest('hex');
   }
   await writeFile(join(output,'metadata.json'), JSON.stringify({version,node:process.version,platform:process.platform,arch:process.arch,output,command:process.argv.join(' '),sourceHashes,cleanup:{controllerProcessGroupGone:true,vitestClosed:true},measurement:'structural only; wall/CPU/RSS/process-tree/phase ratios/CIs are unmeasured/N/A'},null,2)+'\n');
