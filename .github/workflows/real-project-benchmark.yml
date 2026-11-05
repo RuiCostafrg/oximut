@@ -40,7 +40,8 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 90
     env:
-      BEFORE_COMMIT: 74a4972034d9ad7a31566d693d3762ac42c187fc
+      # Main after #38; this experimental-only PR is a same-engine control.
+      BEFORE_COMMIT: 9dc25e00819fa278332d6c16cc9b81d35010a90b
       BUILD_FLAGS: --locked --release -p oximut-cli
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
