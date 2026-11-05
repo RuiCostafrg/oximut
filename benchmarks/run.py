@@ -31,9 +31,10 @@ FIXTURE_TEST_SCOPE = {
 def parse_proc_stat(value: str) -> dict:
     """Parse /proc/PID/stat, including command names containing spaces or ')'."""
     head, tail = value.rsplit(')', 1)
+    pid, comm = head.split('(', 1)
     fields = tail.split()
     return {
-        'pid': int(head.split('(', 1)[0]),
+        'pid': int(pid), 'comm': comm,
         'state': fields[0], 'ppid': int(fields[1]), 'pgrp': int(fields[2]),
         'starttime': int(fields[19]), 'rss_bytes': max(0, int(fields[21])) * PAGE_SIZE,
     }
@@ -77,7 +78,7 @@ def parse_rollup_rss(value: str) -> int:
     return int(rows[0][1]) * 1024
 
 
-def aggregate_rollup_rss(tree: dict[int, dict]) -> tuple[int, list[str]]:
+def aggregate_rollup_rss(tree: dict[int, dict], details: list | None = None) -> tuple[int, list[str]]:
     """Sample owned live processes; reject unavailable live-process accounting.
 
     PID identity is checked after reading so a reused PID cannot contribute.
@@ -109,6 +110,10 @@ def aggregate_rollup_rss(tree: dict[int, dict]) -> tuple[int, list[str]]:
             errors.append(f'{pid}: RSS unavailable: {failure}')
         else:
             total += rss
+            if details is not None:
+                details.append({'pid': pid, 'ppid': current['ppid'],
+                                'starttime': current['starttime'], 'rss_bytes': rss,
+                                'comm': current['comm']})
     return total, errors
 
 
@@ -154,6 +159,9 @@ def run_command(command: list[str], cwd: Path, log_path: Path,
         'output_bytes': 0, 'captured_output_bytes': 0, 'output_truncated': False,
         'log_file': str(log_path), 'spawn_error': None,
     }
+    profile_memory = os.environ.get('OXIMUT_PROFILE_MEMORY') == '1'
+    if profile_memory:
+        result['peak_rss_snapshot'] = None
     try:
         proc = subprocess.Popen(command, cwd=cwd, env=env, stdout=subprocess.PIPE,
                                 stderr=subprocess.STDOUT, start_new_session=True)
@@ -182,13 +190,19 @@ def run_command(command: list[str], cwd: Path, log_path: Path,
             live = {pid: stat for pid, stat in tree.items() if stat['state'] != 'Z'}
             result['samples'] += 1
             memory_started = time.monotonic()
-            rss, memory_errors = aggregate_rollup_rss(live)
+            details = [] if profile_memory else None
+            rss, memory_errors = aggregate_rollup_rss(live, details)
             result['max_memory_sample_seconds'] = max(
                 result['max_memory_sample_seconds'], time.monotonic() - memory_started)
             # Bound diagnostics without accepting an incomplete memory sample.
             result['memory_errors'] = (result['memory_errors'] + memory_errors)[:20]
-            result['peak_aggregate_rss_bytes'] = max(
-                result['peak_aggregate_rss_bytes'], rss)
+            if rss > result['peak_aggregate_rss_bytes']:
+                result['peak_aggregate_rss_bytes'] = rss
+                if profile_memory:
+                    result['peak_rss_snapshot'] = {
+                        'root_pid': proc.pid, 'sampled_wall_seconds': time.monotonic()-started,
+                        'processes': details,
+                    }
             result['peak_process_count'] = max(result['peak_process_count'], len(live))
             # wait4 returns each child once. Its rusage includes descendants it reaped;
             # adopted children contribute their own subtree once, with no RSS/CPU sampling sum.

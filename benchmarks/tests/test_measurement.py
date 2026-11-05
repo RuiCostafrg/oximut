@@ -47,6 +47,20 @@ class ProcessStatsTests(unittest.TestCase):
         self.assertEqual(result['starttime'], 9876)
         self.assertEqual(result['rss_bytes'], 7 * runner.PAGE_SIZE)
 
+    def test_optional_peak_details_use_the_same_verified_rss_reads(self):
+        tail = ['S', '12', '34'] + ['0'] * 16 + ['9876', '1234', '7']
+        stat = '99 (worker) ' + ' '.join(tail)
+        details=[]
+        with mock.patch.object(Path,'read_text',side_effect=['Rss: 123 kB',stat]) as reader:
+            total,errors=runner.aggregate_rollup_rss({99:{'starttime':9876}},details)
+        self.assertEqual(reader.call_count,2)
+        self.assertEqual(errors,[])
+        self.assertEqual(details,[{'pid':99,'ppid':12,'starttime':9876,'rss_bytes':total,'comm':'worker'}])
+        details=[]
+        with mock.patch.object(Path,'read_text',side_effect=['Rss: 123 kB',stat]):
+            self.assertEqual(runner.aggregate_rollup_rss({99:{'starttime':9875}},details),(0,[]))
+        self.assertEqual(details,[])
+
     def test_tree_tracks_reparented_and_nested_children_but_excludes_other_jobs(self):
         def stat(pid, ppid, pgrp=10, start=100):
             return dict(pid=pid, ppid=ppid, pgrp=pgrp, starttime=start)
@@ -125,6 +139,15 @@ class CommandTests(unittest.TestCase):
         self.assertEqual(result['memory_method'], 'sum-live-smaps_rollup-rss')
         self.assertEqual(result['memory_errors'], [])
         self.assertGreaterEqual(result['peak_process_count'], 2)
+
+    def test_opt_in_peak_snapshot_reconciles_with_the_reported_memory_peak(self):
+        with mock.patch.dict(os.environ,{'OXIMUT_PROFILE_MEMORY':'1'}):
+            result=self.run_python('import time; data=bytearray(8000000); time.sleep(.05)')
+        self.assertTrue(result['success'])
+        snapshot=result['peak_rss_snapshot']
+        self.assertEqual(sum(p['rss_bytes'] for p in snapshot['processes']),result['peak_aggregate_rss_bytes'])
+        self.assertGreater(snapshot['root_pid'],0)
+        self.assertLessEqual(snapshot['sampled_wall_seconds'],result['wall_seconds'])
 
 
 class ArtifactTests(unittest.TestCase):

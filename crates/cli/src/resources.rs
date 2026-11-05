@@ -11,6 +11,116 @@ use std::{
     time::{Duration, Instant},
 };
 
+// Profiling is process-wide configuration and is read once. In the default
+// path no diagnostic clock or getrusage reads occur.
+static ACCOUNTING_PROFILE: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
+fn profile_enabled() -> bool {
+    *ACCOUNTING_PROFILE.get_or_init(|| {
+        std::env::var_os("OXIMUT_PROFILE_ACCOUNTING").as_deref() == Some(std::ffi::OsStr::new("1"))
+    })
+}
+
+#[derive(Clone, Debug, Default, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AccountingDiagnostics {
+    pub scope: &'static str,
+    pub evidence: &'static str,
+    pub sampling: StageTotals,
+    pub discovery: StageTotals,
+    pub identity_reads: StageTotals,
+    pub rss_reads: StageTotals,
+    pub timing_note: &'static str,
+}
+#[derive(Clone, Debug, Default, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct StageTotals {
+    pub calls: u64,
+    pub wall_ns: Option<u64>,
+    pub self_user_ns: Option<u64>,
+    pub self_system_ns: Option<u64>,
+    pub cpu_failures: u64,
+    pub timing_failures: u64,
+}
+fn totals() -> StageTotals {
+    StageTotals {
+        wall_ns: Some(0),
+        self_user_ns: Some(0),
+        self_system_ns: Some(0),
+        ..StageTotals::default()
+    }
+}
+impl StageTotals {
+    fn start(&mut self) -> Option<(u64, u64)> {
+        match self.calls.checked_add(1) {
+            Some(calls) => self.calls = calls,
+            None => {
+                self.timing_failures = self.timing_failures.saturating_add(1);
+                self.wall_ns = None;
+            }
+        }
+        thread_cpu_ns()
+    }
+    fn end(&mut self, cpu_start: Option<(u64, u64)>, wall_start: Instant) {
+        self.record_elapsed(
+            u64::try_from(wall_start.elapsed().as_nanos()).ok(),
+            cpu_start,
+            thread_cpu_ns(),
+        );
+    }
+    fn record_elapsed(
+        &mut self,
+        wall_ns: Option<u64>,
+        before: Option<(u64, u64)>,
+        after: Option<(u64, u64)>,
+    ) {
+        // Once a total is incomplete it stays null. Count new failed frames or
+        // overflows, without treating an already invalid total as another fault.
+        fn add(total: &mut Option<u64>, delta: Option<u64>) -> bool {
+            let Some(delta) = delta else {
+                *total = None;
+                return false;
+            };
+            let Some(previous) = *total else {
+                return true;
+            };
+            *total = previous.checked_add(delta);
+            total.is_some()
+        }
+        if !add(&mut self.wall_ns, wall_ns) {
+            self.timing_failures = self.timing_failures.saturating_add(1);
+        }
+        let delta = before
+            .zip(after)
+            .and_then(|((u0, s0), (u1, s1))| Some((u1.checked_sub(u0)?, s1.checked_sub(s0)?)));
+        let user_valid = add(&mut self.self_user_ns, delta.map(|v| v.0));
+        let system_valid = add(&mut self.self_system_ns, delta.map(|v| v.1));
+        if !user_valid || !system_valid {
+            self.cpu_failures = self.cpu_failures.saturating_add(1);
+            self.self_user_ns = None;
+            self.self_system_ns = None;
+        }
+    }
+}
+fn thread_cpu_ns() -> Option<(u64, u64)> {
+    let mut usage = std::mem::MaybeUninit::<libc::rusage>::zeroed();
+    // RUSAGE_THREAD measures only this Linux thread, excluding workers/forks.
+    // Linux UAPI defines RUSAGE_THREAD as 1 (some libc targets omit the name).
+    if unsafe { libc::getrusage(1, usage.as_mut_ptr()) } != 0 {
+        return None;
+    }
+    let usage = unsafe { usage.assume_init() };
+    Some((timeval_ns(usage.ru_utime)?, timeval_ns(usage.ru_stime)?))
+}
+fn timeval_ns(t: libc::timeval) -> Option<u64> {
+    let sec: u64 = t.tv_sec.try_into().ok()?;
+    let usec: u64 = t.tv_usec.try_into().ok()?;
+    if usec >= 1_000_000 {
+        return None;
+    }
+    sec.checked_mul(1_000_000_000)?
+        .checked_add(usec.checked_mul(1_000)?)
+}
+
 pub const MIB: u64 = 1024 * 1024;
 pub const SAMPLE_MS: u64 = 50;
 
@@ -345,6 +455,8 @@ pub struct Budget {
     pub tree_discoveries: u64,
     pub broad_discoveries: u64,
     pub exhaustion: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub accounting_diagnostics: Option<AccountingDiagnostics>,
     /// The latest sample's discovery, so slot ownership needs no extra scan.
     #[serde(skip)]
     pub table: Option<ProcessTable>,
@@ -394,6 +506,12 @@ impl Budget {
             tree_discoveries: 0,
             broad_discoveries: 0,
             exhaustion: None,
+            accounting_diagnostics: profile_enabled().then(|| AccountingDiagnostics {
+                scope: "CLI sampling thread only; excludes Node/controllers/test forks and external benchmark sampler",
+                evidence: "incomplete until each CPU and wall measurement succeeds",
+                sampling: totals(), discovery: totals(), identity_reads: totals(), rss_reads: totals(),
+                timing_note: "stage totals are nested within inclusive sampling totals; getrusage/clock/framework overhead is not separately measured, so categories are not a process-tree CPU partition",
+            }),
             table: None,
             last_sample: Instant::now() - Duration::from_secs(1),
             last_broad: Instant::now() - Duration::from_secs(1),
@@ -456,20 +574,63 @@ impl Budget {
         self.last_sample = Instant::now();
         self.samples += 1;
         self.table = None;
+        let mut profile = std::cell::RefCell::new(self.accounting_diagnostics.take());
+        let profiling = profile.borrow().is_some();
+        let sample_start = profiling.then(|| {
+            let wall = Instant::now();
+            let cpu = profile.borrow_mut().as_mut().unwrap().sampling.start();
+            (wall, cpu)
+        });
+        let profiled_discover = || {
+            if !profiling {
+                return discover();
+            }
+            let mut profile = profile.borrow_mut();
+            let d = profile.as_mut().unwrap();
+            let wall = Instant::now();
+            let cpu = d.discovery.start();
+            let result = discover();
+            d.discovery.end(cpu, wall);
+            result
+        };
+        let mut profiled_identity = |pid| {
+            if !profiling {
+                return read_identity(pid);
+            }
+            let mut profile = profile.borrow_mut();
+            let d = profile.as_mut().unwrap();
+            let wall = Instant::now();
+            let cpu = d.identity_reads.start();
+            let result = read_identity(pid);
+            d.identity_reads.end(cpu, wall);
+            result
+        };
+        let mut profiled_rss = |pid| {
+            if !profiling {
+                return read_rss(pid);
+            }
+            let mut profile = profile.borrow_mut();
+            let d = profile.as_mut().unwrap();
+            let wall = Instant::now();
+            let cpu = d.rss_reads.start();
+            let result = read_rss(pid);
+            d.rss_reads.end(cpu, wall);
+            result
+        };
         let observed = (|| -> Result<(), String> {
             // Exactly one fresh broad discovery per admitted sample. This also
             // includes adopted descendants outside any live worker branch.
-            let table = discover()?;
+            let table = profiled_discover()?;
             self.current = tree_rss(
                 std::process::id(),
                 &table,
-                &mut read_identity,
-                &mut read_rss,
+                &mut profiled_identity,
+                &mut profiled_rss,
             )?;
             self.peak_aggregate_rss_bytes = self.peak_aggregate_rss_bytes.max(self.current);
             self.observed_workers.clear();
             for &pid in workers {
-                let bytes = tree_rss(pid, &table, &mut read_identity, &mut read_rss)?;
+                let bytes = tree_rss(pid, &table, &mut profiled_identity, &mut profiled_rss)?;
                 self.measured_worker_peak_bytes = self.measured_worker_peak_bytes.max(bytes);
                 self.admission_worker_cost_bytes = self
                     .measured_worker_peak_bytes
@@ -484,8 +645,8 @@ impl Budget {
                 checked_rss(
                     std::process::id(),
                     table.start(std::process::id()),
-                    &mut read_identity,
-                    &mut read_rss,
+                    &mut profiled_identity,
+                    &mut profiled_rss,
                 )?,
                 |total, bytes| total.saturating_add(*bytes),
             );
@@ -520,6 +681,13 @@ impl Budget {
             self.table = Some(table);
             Ok(())
         })();
+        if let Some((wall, cpu)) = sample_start {
+            let d = profile.get_mut().as_mut().unwrap();
+            d.sampling.end(cpu, wall);
+            d.evidence =
+                "review wallNs and CPU failure counters; null CPU totals mean incomplete evidence";
+        }
+        self.accounting_diagnostics = profile.into_inner();
         if let Err(error) = observed
             && self.exhaustion.is_none()
         {
@@ -590,6 +758,7 @@ mod tests {
             tree_discoveries: 0,
             broad_discoveries: 0,
             exhaustion: None,
+            accounting_diagnostics: None,
             table: None,
             last_sample: Instant::now() - Duration::from_secs(1),
             last_broad: Instant::now() - Duration::from_secs(1),
@@ -977,6 +1146,187 @@ mod tests {
         assert_eq!(state.samples, 2);
         assert_eq!(state.exhaustion.as_deref(), Some("discovery failed"));
         assert_eq!(state.capacity(&[]), 0);
+    }
+
+    #[test]
+    fn accounting_profile_is_optional_bounded_and_counts_admitted_failed_reads() {
+        let mut state = budget();
+        let disabled = serde_json::to_value(&state).unwrap();
+        assert!(disabled.get("accountingDiagnostics").is_none());
+        state.accounting_diagnostics = Some(AccountingDiagnostics {
+            scope: "CLI sampling thread only",
+            evidence: "incomplete",
+            sampling: totals(),
+            discovery: totals(),
+            identity_reads: totals(),
+            rss_reads: totals(),
+            timing_note: "nested",
+        });
+        let cli = std::process::id();
+        let mut discovers = 0;
+        let mut identities = 0;
+        let mut rss_reads = 0;
+        state.sample_with_readers(
+            &[],
+            false,
+            || {
+                discovers += 1;
+                ProcessTable::collect([Ok(Some(cli))], |_| Ok(Some((0, 1))))
+            },
+            |_| {
+                identities += 1;
+                Err("injected identity error".into())
+            },
+            |_| {
+                rss_reads += 1;
+                Ok(Some(1))
+            },
+        );
+        let prof = state.accounting_diagnostics.as_ref().unwrap();
+        assert_eq!((discovers, identities, rss_reads), (1, 1, 0));
+        assert_eq!(
+            (
+                prof.sampling.calls,
+                prof.discovery.calls,
+                prof.identity_reads.calls,
+                prof.rss_reads.calls
+            ),
+            (1, 1, 1, 0)
+        );
+        assert!(
+            state
+                .exhaustion
+                .as_deref()
+                .unwrap()
+                .contains("injected identity error")
+        );
+        let encoded = serde_json::to_value(&state).unwrap();
+        assert_eq!(
+            encoded["accountingDiagnostics"]["identityReads"]["calls"],
+            1
+        );
+        assert!(
+            encoded["accountingDiagnostics"]["identityReads"]["wallNs"]
+                .as_u64()
+                .is_some()
+        );
+
+        state.last_sample = Instant::now();
+        state.sample_with_readers(
+            &[],
+            false,
+            || panic!("rate-limited discovery"),
+            |_| panic!("rate-limited identity"),
+            |_| panic!("rate-limited RSS"),
+        );
+        assert_eq!(
+            state
+                .accounting_diagnostics
+                .as_ref()
+                .unwrap()
+                .sampling
+                .calls,
+            1
+        );
+    }
+
+    #[test]
+    fn accounting_profile_measures_fresh_rss_calls_including_errors() {
+        let mut state = budget();
+        state.accounting_diagnostics = Some(AccountingDiagnostics {
+            sampling: totals(),
+            discovery: totals(),
+            identity_reads: totals(),
+            rss_reads: totals(),
+            ..AccountingDiagnostics::default()
+        });
+        let cli = std::process::id();
+        let mut rss_calls = 0;
+        for fail in [false, true] {
+            state.sample_with_readers(
+                &[],
+                true,
+                || ProcessTable::collect([Ok(Some(cli))], |_| Ok(Some((0, 1)))),
+                |_| Ok(Some((0, 1))),
+                |_| {
+                    rss_calls += 1;
+                    if fail {
+                        Err("injected RSS error".into())
+                    } else {
+                        Ok(Some(10))
+                    }
+                },
+            );
+        }
+        assert!(
+            rss_calls > 1,
+            "successful aggregate and final CLI reads stay fresh"
+        );
+        let profile = state.accounting_diagnostics.as_ref().unwrap();
+        assert_eq!(profile.rss_reads.calls, rss_calls);
+        assert_eq!(profile.sampling.calls, state.samples);
+        assert_eq!(profile.discovery.calls, 2);
+        assert_eq!(profile.identity_reads.calls, rss_calls);
+        assert!(profile.rss_reads.wall_ns.is_some());
+        assert_eq!(state.exhaustion.as_deref(), Some("injected RSS error"));
+    }
+
+    #[test]
+    fn accounting_clock_faults_and_overflows_never_become_zero_evidence() {
+        let mut stage = totals();
+        stage.record_elapsed(Some(7), Some((10, 20)), Some((13, 25)));
+        assert_eq!(
+            (stage.wall_ns, stage.self_user_ns, stage.self_system_ns),
+            (Some(7), Some(3), Some(5))
+        );
+        stage.record_elapsed(Some(1), None, Some((14, 26)));
+        assert_eq!(
+            (stage.self_user_ns, stage.self_system_ns, stage.cpu_failures),
+            (None, None, 1)
+        );
+        stage.record_elapsed(None, Some((14, 26)), Some((13, 26)));
+        assert_eq!(
+            (stage.wall_ns, stage.timing_failures, stage.cpu_failures),
+            (None, 1, 2)
+        );
+        stage.record_elapsed(Some(1), Some((14, 26)), Some((15, 27)));
+        assert_eq!(
+            (stage.wall_ns, stage.self_user_ns, stage.self_system_ns),
+            (None, None, None)
+        );
+
+        let mut overflow = totals();
+        overflow.wall_ns = Some(u64::MAX);
+        overflow.self_user_ns = Some(u64::MAX);
+        overflow.record_elapsed(Some(1), Some((0, 0)), Some((1, 0)));
+        assert_eq!(
+            (
+                overflow.wall_ns,
+                overflow.self_user_ns,
+                overflow.self_system_ns
+            ),
+            (None, None, None)
+        );
+        assert_eq!((overflow.timing_failures, overflow.cpu_failures), (1, 1));
+        let mut counter = totals();
+        counter.calls = u64::MAX;
+        counter.start();
+        assert_eq!(counter.calls, u64::MAX);
+        assert_eq!((counter.wall_ns, counter.timing_failures), (None, 1));
+        assert!(
+            timeval_ns(libc::timeval {
+                tv_sec: 0,
+                tv_usec: 1_000_000
+            })
+            .is_none()
+        );
+        assert!(
+            timeval_ns(libc::timeval {
+                tv_sec: -1,
+                tv_usec: 0
+            })
+            .is_none()
+        );
     }
 
     #[test]
