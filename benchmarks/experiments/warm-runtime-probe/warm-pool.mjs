@@ -3,23 +3,36 @@ import assert from 'node:assert/strict';
 import { fileURLToPath } from 'node:url';
 import { VmThreadsPoolWorker } from 'vitest/node';
 
-export function createWarmPool() {
+export function createWarmPool({ guarded = false } = {}) {
   let worker;
   class WarmWorker extends VmThreadsPoolWorker {
     name = 'oximut-warm-vm-probe';
     callbacks = new Map();
     piped = false;
+    guard = undefined;
+    lifecycle = [];
     constructor(options) {
       super(options);
       this.entrypoint = fileURLToPath(new URL('./warm-vm-worker.mjs', import.meta.url));
     }
     on(event, callback) {
-      super.on(event, callback);
-      this.callbacks.set(callback, event);
+      const wrapped = event === 'message' ? message => {
+        if (message?.type === 'stopped') {
+          this.guard = message.__oximutWarmGuard;
+          this.lifecycle.push({ pid: process.pid, threadId: this.thread.threadId,
+            available: this.guard?.available === true, dirty: this.guard?.dirty !== false,
+            envChanges: this.guard?.envChanges ?? null, fsChanges: this.guard?.fsChanges ?? null });
+        }
+        callback(message);
+      } : callback;
+      super.on(event, wrapped);
+      this.callbacks.set(wrapped, { event, original: callback });
     }
     off(event, callback) {
-      super.off(event, callback);
-      this.callbacks.delete(callback);
+      const entry = [...this.callbacks].find(([, item]) => item.event === event && item.original === callback);
+      const wrapped = entry?.[0] ?? callback;
+      super.off(event, wrapped);
+      this.callbacks.delete(wrapped);
     }
     async start() {
       assert.equal(this.piped, false, 'warm starts must follow a completed stop handshake');
@@ -29,7 +42,7 @@ export function createWarmPool() {
     async stop() {
       // PoolRunner has awaited 'stopped' and closed its RPC before this call.
       // Release only this runner's listeners/streams; keep the host thread.
-      for (const [callback,event] of this.callbacks) super.off(event, callback);
+      for (const [callback,item] of this.callbacks) super.off(item.event, callback);
       this.callbacks.clear();
       if (this.piped) {
         this.thread.stdout.unpipe(this.stdout);
@@ -38,12 +51,20 @@ export function createWarmPool() {
         this.stderr.setMaxListeners(this.stderr.getMaxListeners() - 1);
         this.piped = false;
       }
+      if (!guarded || (this.guard?.available === true && this.guard.dirty === false)) this.guard = undefined;
+      else {
+        if (this._thread) await this.thread.terminate();
+        this._thread = undefined;
+        this.guard = undefined;
+      }
     }
     async dispose() {
       if (this._thread) {
         await this.stop();
-        await this.thread.terminate();
-        this._thread = undefined;
+        if (this._thread) {
+          await this.thread.terminate();
+          this._thread = undefined;
+        }
       }
     }
   }
@@ -53,6 +74,7 @@ export function createWarmPool() {
       worker ??= new WarmWorker(options);
       return worker;
     } },
+    get evidence() { return worker?.lifecycle ?? []; },
     async dispose() { await worker?.dispose(); },
   };
 }

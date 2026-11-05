@@ -1,0 +1,18 @@
+{
+  "version": "4.1.12",
+  "node": "v26.3.1",
+  "platform": "linux",
+  "arch": "arm64",
+  "output": "/root/.t3/worktrees/oximut/t3-30bceab7/benchmarks/experiments/warm-runtime-probe/evidence/final2-fork-env",
+  "command": "/root/.local/share/oximut/toolchains/node-v26.3.1-linux-arm64/bin/node /root/.t3/worktrees/oximut/t3-30bceab7/benchmarks/experiments/warm-runtime-probe/probe.mjs --case forks-true-separate --mode env-only --output benchmarks/experiments/warm-runtime-probe/evidence/final2-fork-env",
+  "sourceHashes": {
+    "experiments/warm-runtime-probe/probe.mjs": "e408a85a9a9591d95196214b48f612d03947fb4e544deb5f2f5196920b18f86a",
+    "experiments/warm-runtime-probe/warm-pool.mjs": "598a3d2043c8d3d52027fe9369d4d155bcf77fdbcab8784354287ac54050bb37",
+    "experiments/warm-runtime-probe/warm-vm-worker.mjs": "4e4f1a08d546864bd53c03ffd89338b726087bb506aaad6aff559dffe721e516"
+  },
+  "cleanup": {
+    "controllerProcessGroupGone": true,
+    "vitestClosed": true
+  },
+  "measurement": "structural only; wall/CPU/RSS/process-tree/phase ratios/CIs are unmeasured/N/A"
+}

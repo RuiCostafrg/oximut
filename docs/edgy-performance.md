@@ -102,6 +102,23 @@ baselines and native coordinator cleanup unchanged.
 
 ## Ranked optimization experiments
 
+The [executed warm-runtime probe](../benchmarks/experiments/warm-runtime-probe/REPORT.md)
+now distinguishes stock batching, raw warm hosts, and a shallow recycling guard.
+Fresh VM contexts reset the tested module graph, but raw hosts leak environment
+and builtin state. A narrow guard recycles dirty hosts and passes its declared
+fixtures; it does not establish general isolation and enables no product mode.
+The stock negative controls remain executable. All probe resource/phase metrics,
+paired ratios and CIs are unmeasured/N/A; the [latest qualified control](../benchmarks/experiments/warm-runtime-probe/BASELINE.md)
+still misses wall and CPU goals.
+
+Before extending this guard, measure self CPU in the Rust resource sampler and
+controller input/cleanup checks, alongside worker bootstrap. Source inspection
+shows repeated current-RSS reads for aggregate and slot accounting, but there is
+no CPU attribution for those reads yet. Keep their cadence, fresh-read semantics,
+and fail-closed admission/cleanup unchanged during diagnosis. This measurement
+decides whether a safe accounting optimization deserves priority over more
+runtime-isolation work; it is not evidence of a saving.
+
 The [whole-job native capture](../benchmarks/results/2026-11-04-whole-mutant-profile/README.md)
 passed qualification and its original capture gate. It fails the current
 format-version/count-reconciliation gate and is retained as historical evidence. Its

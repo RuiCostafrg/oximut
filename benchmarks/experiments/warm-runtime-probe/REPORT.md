@@ -77,3 +77,119 @@ fresh-state guarantee: native-addon state, native timers, descriptors, listeners
 async leaks and selectors still need investigation before any product mode.
 Only after the fresh-process oracle passes a declared supported scope should a
 native paired wall/CPU/RSS campaign be run. No speedup, goal or release is claimed.
+
+## Guarded warm-host structural probe
+
+The probe now has an explicitly experimental `warmVm` pool with a per-job host
+guard. Pinned Vitest `onModuleRunner` is the snapshot point after VM setup and
+before user imports. The pinned VM runtime changes `SSR` from absent to `1` after
+that callback; the guard accepts only that known startup transition. Other
+environment key additions, deletions and value changes are reported by key
+only. Own-property descriptors and descriptor values on `node:fs` are compared
+without serializing their values. No environment values are logged. Because a
+test-owned `SSR` change to `1` is indistinguishable from startup, that key is
+excluded from the supported mutation scope.
+
+After the normal stopped acknowledgement, the PoolRunner has closed its RPC, and
+only then does the custom worker park a clean host or terminate a dirty/uncertain
+host. Missing guard evidence fails closed. The next worker is created with the
+controller's original environment. Final disposal terminates any parked host.
+The tests retain eight assertions per file, exact file/test inventory, complete
+result validation, no collection/unhandled errors, 45-second deadlines, and
+process-group cleanup checks.
+
+### Final source-hashed run matrix
+
+All selected jobs completed with Vitest 4.1.12 on Node 26.3.1 linux/arm64.
+Every case passed 16/16 assertions, had two distinct realm UUIDs, closed Vitest,
+and left no live controller process group. Each evidence directory contains raw
+observations, structured results, metadata with exact invocation,
+the three MJS source SHA-256 hashes, and cleanup booleans. Existing historical
+evidence was not modified.
+
+| Fixture mode | Guarded host identity | Guard evidence per job | Fresh-fork oracle |
+|---|---|---|---|
+| module-only | Same PID/threadId for both jobs | clean / clean | 16/16 |
+| env-only | Same PID, threadIds 1 then 2 | `OXIMUT_WARM_STATE` / dirty | 16/16 |
+| fs-only | Same PID, threadIds 1 then 2 | `__oximutWarmState` / dirty | 16/16 |
+| host-dirty | Same PID, threadIds 1 then 2 | environment and fs / dirty | 16/16 |
+
+For module-only, the two observations have different realm UUIDs while sharing
+the same worker. For each dirty mode, the second observation uses a different
+threadId and realm UUID; both jobs begin with clean module/global/env/fs/spy/timer
+state. Dirty channel summaries contain only names and descriptor-change keys, no
+secret values. Full evidence is under `evidence/final2-*`; the fs-only fork oracle
+rerun is `evidence/final2-fork-fs-rerun`.
+
+Exact commands (with the pinned Node directory on `PATH`):
+
+```sh
+node benchmarks/experiments/warm-runtime-probe/probe.mjs --case warmVm-true-separate --mode module-only --output benchmarks/experiments/warm-runtime-probe/evidence/final2-warm-module
+node benchmarks/experiments/warm-runtime-probe/probe.mjs --case forks-true-separate --mode module-only --output benchmarks/experiments/warm-runtime-probe/evidence/final2-fork-module
+node benchmarks/experiments/warm-runtime-probe/probe.mjs --case warmVm-true-separate --mode env-only --output benchmarks/experiments/warm-runtime-probe/evidence/final2-warm-env
+node benchmarks/experiments/warm-runtime-probe/probe.mjs --case forks-true-separate --mode env-only --output benchmarks/experiments/warm-runtime-probe/evidence/final2-fork-env
+node benchmarks/experiments/warm-runtime-probe/probe.mjs --case warmVm-true-separate --mode fs-only --output benchmarks/experiments/warm-runtime-probe/evidence/final2-warm-fs
+node benchmarks/experiments/warm-runtime-probe/probe.mjs --case forks-true-separate --mode fs-only --output benchmarks/experiments/warm-runtime-probe/evidence/final2-fork-fs-rerun
+node benchmarks/experiments/warm-runtime-probe/probe.mjs --case warmVm-true-separate --mode host-dirty --output benchmarks/experiments/warm-runtime-probe/evidence/final2-warm-host
+node benchmarks/experiments/warm-runtime-probe/probe.mjs --case forks-true-separate --mode host-dirty --output benchmarks/experiments/warm-runtime-probe/evidence/final2-fork-host
+```
+
+Validation commands:
+
+```sh
+node --check benchmarks/experiments/warm-runtime-probe/probe.mjs
+node --check benchmarks/experiments/warm-runtime-probe/warm-pool.mjs
+node --check benchmarks/experiments/warm-runtime-probe/warm-vm-worker.mjs
+git diff --check
+```
+
+These runs are structural probes, not timing evidence. Wall/CPU/RSS/process-tree
+metrics, phase ratios and confidence intervals are unmeasured/N/A. The supported
+scope is limited to observed environment key changes (except the pinned `SSR`
+startup transition) and shallow `node:fs` own-property descriptor changes at
+the pinned pre-import/post-teardown boundary. Test-owned mutation of `SSR` is not
+covered.
+Mutation of object internals, asynchronous changes after observation, native
+timers/listeners/file descriptors/addons, and process-wide C++ state are not
+proven reset by terminating a thread. Fresh-process equivalence is not claimed;
+the raw warm counterexample and stock negative controls remain required.
+
+### Parent review and executable counterexamples
+
+The delegated revision `cb10fbd` above called its guarded pool `warmVm`. Its
+eight retained runs demonstrate the narrow guard behavior, but parent review
+found three harness gaps: the raw warm pool was no longer selectable, a blanket
+distinct-realm assertion rejected stock negative controls, and guarded runs did
+not require zero failed assertions. The fixture-mode parser also accepted unknown
+modes. These were fixed before integration. The current guarded pool is named
+`guardedVm`; `warmVm` again selects the raw, unsafe host reuse control. Historical
+records and source hashes above remain unchanged and do not describe the updated
+source.
+
+The parent reran the entire stock matrix, the raw warm counterexample, and the
+four guarded modes plus matching fork oracles into `evidence/parent-reviewed/`.
+The new metadata hashes the executed sources independently. All guarded and
+fresh-fork cases pass all assertions; clean guarded jobs reuse one host with
+distinct realms and dirty guarded jobs recycle it. The guarded harness now also
+requires exact dirty channel names and matches each guard identity with its
+independent test observation. Stock reused batches retain their failed assertions
+and shared realm; raw warm reuse retains its two host-state failures. Captured
+console logs were left in `/tmp` and are not part of the committed evidence.
+
+Regression verification temporarily replayed the delegated probe and injected
+one failing local-module assertion into otherwise clean guarded fixtures. The
+old probe returned success despite those test failures; the fixed probe rejects
+them. Replaying a stock `forks-false-batch` also fails the old blanket realm
+assertion and is correctly retained as a failing-state control by the fixed
+probe. The injected sources were restored before recording normal evidence.
+The native `warm-runtime-probe.yml` workflow repeats this structural matrix and
+preserves its source archive and raw outputs, with no performance score.
+
+This experiment establishes only the tested detection/recycling mechanism. It
+does not justify a product mode or further optimization of this shallow guard.
+Next, measure CPU spent in the remaining resource accountant as well as worker
+bootstrap before choosing a production change. `resources.rs::sample_with_readers`
+currently reads each process's RSS for the aggregate and again for slot totals;
+each `smaps_rollup` read walks kernel mappings. That is a source-supported cost
+hypothesis, not measured CPU attribution. Preserve fresh reads, sampling cadence,
+admission correctness and cleanup gates while gathering diagnostic evidence.

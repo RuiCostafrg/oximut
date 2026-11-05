@@ -1,0 +1,75 @@
+name: Experimental warm-runtime state oracle
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - '.github/workflows/warm-runtime-probe.yml'
+      - 'benchmarks/experiments/warm-runtime-probe/**'
+      - 'package-lock.json'
+
+permissions:
+  contents: read
+
+jobs:
+  structural-oracle:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version-file: .node-version
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - name: Preserve executed source and run state oracles (no timing claims)
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = x86_64
+          mkdir "$RUNNER_TEMP/warm-runtime-probe"
+          git archive HEAD | gzip > "$RUNNER_TEMP/warm-runtime-probe/source.tar.gz"
+          git rev-parse HEAD > "$RUNNER_TEMP/warm-runtime-probe/commit.txt"
+          python3 - <<'PY'
+          import json, os, pathlib, subprocess
+          root = pathlib.Path(os.environ['RUNNER_TEMP']) / 'warm-runtime-probe'
+          script = 'benchmarks/experiments/warm-runtime-probe/probe.mjs'
+          cases = [('stock', []), ('raw-warm', ['--case', 'warmVm-true-separate'])]
+          for mode in ['module-only', 'env-only', 'fs-only', 'host-dirty']:
+              for label, pool in [('guard', 'guardedVm'), ('fork', 'forks')]:
+                  cases.append((f'{label}-{mode}', ['--case', f'{pool}-true-separate', '--mode', mode]))
+          for name, args in cases:
+              with (root / f'{name}.log').open('w') as log:
+                  subprocess.run(['node', script, *args, '--output', str(root / name)],
+                                 stdout=log, stderr=subprocess.STDOUT, check=True, timeout=180)
+              rows = [json.loads(line) for line in (root / name / 'results.jsonl').read_text().splitlines()]
+              if name == 'stock':
+                  assert len(rows) == 12
+                  for row in rows:
+                      negative = row['schedule'] == 'batch' and not (row['pool'] == 'forks' and row['isolate'])
+                      assert row['counts'] == ({'passed': 9, 'failed': 7} if negative else {'passed': 16, 'failed': 0})
+                      assert row['fresh'] is not negative
+              elif name == 'raw-warm':
+                  assert len(rows) == 1 and rows[0]['counts'] == {'passed': 14, 'failed': 2}
+                  assert rows[0]['reusedWorker'] and not rows[0]['fresh']
+              else:
+                  assert len(rows) == 1 and rows[0]['counts'] == {'passed': 16, 'failed': 0}
+                  assert rows[0]['fresh']
+              print(name, [row['counts'] for row in rows], flush=True)
+          PY
+      - name: Declare diagnostic scope
+        if: always()
+        run: |
+          echo 'Structural state oracles only; no product isolation mode enabled.' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Wall, CPU user/sys, aggregate RSS/process-tree, phase timings, paired ratios and CIs: unmeasured/N/A.' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Passing the shallow guard does not establish fresh-process equivalence or any performance target.' >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: warm-runtime-probe-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/warm-runtime-probe/**
+          include-hidden-files: true
+          if-no-files-found: warn
+          retention-days: 14

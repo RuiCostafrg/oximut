@@ -1,0 +1,1 @@
+{"pool":"warmVm","isolate":true,"schedule":"separate","root":"/root/.t3/worktrees/oximut/t3-30bceab7/benchmarks/experiments/warm-runtime-probe/evidence/final2-warm-env/warmVm-true-separate/project","fixtureMode":"env-only","result":"/root/.t3/worktrees/oximut/t3-30bceab7/benchmarks/experiments/warm-runtime-probe/evidence/final2-warm-env/warmVm-true-separate/result.json"}

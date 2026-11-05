@@ -1,0 +1,2 @@
+{"file":"a","pid":23042,"threadId":0,"realm":"854d3062-94b3-4f7c-addb-412d4e2b39f7","local":0,"cjs":0,"esm":0,"global":null,"env":null,"builtin":null,"spy":"original","fakeClock":false}
+{"file":"b","pid":23042,"threadId":0,"realm":"854d3062-94b3-4f7c-addb-412d4e2b39f7","local":1,"cjs":1,"esm":1,"global":"dirty","env":"dirty","builtin":"dirty","spy":"original","fakeClock":true}
