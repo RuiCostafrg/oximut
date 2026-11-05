@@ -536,6 +536,14 @@ class NodeFixtureTests(unittest.TestCase):
 
 
 class MinimumCaptureTests(unittest.TestCase):
+    @staticmethod
+    def profile():
+        """Small usable CPU profile; role/lifecycle tests do not need real stacks."""
+        return {'nodes': [{'id': 1, 'callFrame': {
+            'functionName': '(root)', 'scriptId': '0', 'url': '',
+            'lineNumber': -1, 'columnNumber': -1}}],
+                'startTime': 1, 'endTime': 2, 'samples': [1], 'timeDeltas': [1]}
+
     def test_explicit_capture_failures_quarantine_even_readable_partial_segments(self):
         """Retained raw segments cannot satisfy role evidence after a known failure."""
         for marker, value in [('initialIdentityWriteFailed', True), ('segmentCaptureError', 'fixture')]:
@@ -565,7 +573,7 @@ class MinimumCaptureTests(unittest.TestCase):
             empty = next(r for r in initial['observed'] if r['identity'] == 'node-6.json')
             self.assertEqual(empty['partial_segment_count'], 0)
             self.assertEqual(empty['partial_segment_range'], [])
-            raw = json.dumps({'nodes': [{'id': 1}], 'startTime': 1, 'endTime': 2})
+            raw = json.dumps(self.profile())
             for index in range(2000):
                 (profiles / f'Segment.6.0.1.{index}.cpuprofile').write_text(raw)
             (profiles / 'Segment.6.0.1.segment-events.jsonl').write_text(''.join(
@@ -610,7 +618,7 @@ class MinimumCaptureTests(unittest.TestCase):
             if kind == 'node':
                 record.update(threadId=0, exitObserved='now')
                 profile = profiles / f'CPU.20261028.000000.{pid}.0.001.cpuprofile'
-                profile.write_text(json.dumps({'nodes': [{'id': 1}], 'startTime': 1, 'endTime': 2}))
+                profile.write_text(json.dumps(self.profile()))
             else:
                 record['completed'] = True
                 profiler = cProfile.Profile()
@@ -782,7 +790,7 @@ class MinimumCaptureTests(unittest.TestCase):
                 else:
                     record.update(threadId=0, exitObserved='now')
                     (profiles / 'CPU.20261028.000000.9.0.001.cpuprofile').write_text(
-                        json.dumps({'nodes': [{'id': 1}], 'startTime': 1, 'endTime': 2}))
+                        json.dumps(self.profile()))
                 (profiles / parent).write_text(json.dumps(record))
                 controller = json.loads((profiles / 'node-5.json').read_text())
                 controller['ppid'] = 9

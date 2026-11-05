@@ -1,0 +1,2110 @@
+[
+  {
+    "run": 41340467516,
+    "label": "native coordinator / fresh forks",
+    "artifact_summary_sha256": "e0e721a7002eefa2fb69bbd43a404a5a98f5e099e5cf9f166fc41af48c0ddf0a",
+    "artifact_measurements_sha256": "c75b2b43d17baf20cf5fd86cc1ea59ec0e7e4e05d85b30cb69391d046c14e35a",
+    "correctness_gate": {
+      "errors": [],
+      "passed": true
+    },
+    "build_integrity": {
+      "errors": [],
+      "passed": true,
+      "required": true
+    },
+    "comparisons": {
+      "after_vs_before": {
+        "denominator": "before/oximut",
+        "metrics": {
+          "cpu_seconds": {
+            "bootstrap_95_percent": [
+              0.7926541907912104,
+              0.8852449576361767
+            ],
+            "max": 0.8852449576361767,
+            "median": 0.8466169775145267,
+            "median_cpu_reduction_percent": 15.33830224854733,
+            "min": 0.7926541907912104,
+            "paired_ratios": [
+              0.8852449576361767,
+              0.8466169775145267,
+              0.848651451153083,
+              0.8328871212720554,
+              0.7926541907912104
+            ]
+          },
+          "peak_aggregate_rss_bytes": {
+            "bootstrap_95_percent": [
+              0.7729218401244529,
+              0.829356830997822
+            ],
+            "max": 0.829356830997822,
+            "median": 0.7934013915820691,
+            "min": 0.7729218401244529,
+            "paired_ratios": [
+              0.7921893930511588,
+              0.7934013915820691,
+              0.829356830997822,
+              0.7729218401244529,
+              0.8128370987817297
+            ]
+          },
+          "wall_seconds": {
+            "bootstrap_95_percent": [
+              0.8043007654414611,
+              0.9193443175098225
+            ],
+            "max": 0.9193443175098225,
+            "median": 0.8535452363622414,
+            "min": 0.8043007654414611,
+            "paired_ratios": [
+              0.9193443175098225,
+              0.8528698843238582,
+              0.8624692021932348,
+              0.8535452363622414,
+              0.8043007654414611
+            ]
+          }
+        },
+        "numerator": "after/oximut"
+      },
+      "after_vs_stryker": {
+        "denominator": "after/stryker",
+        "metrics": {
+          "cpu_seconds": {
+            "bootstrap_95_percent": [
+              1.092165757729402,
+              1.1295022425274452
+            ],
+            "max": 1.1295022425274452,
+            "median": 1.1238672903513858,
+            "median_cpu_reduction_percent": -12.386729035138577,
+            "min": 1.092165757729402,
+            "paired_ratios": [
+              1.1238672903513858,
+              1.1295022425274452,
+              1.124171408758082,
+              1.092165757729402,
+              1.1071323960036734
+            ]
+          },
+          "peak_aggregate_rss_bytes": {
+            "bootstrap_95_percent": [
+              0.5779977600346833,
+              0.6186033828246658
+            ],
+            "max": 0.6186033828246658,
+            "median": 0.5945466589738658,
+            "median_target_met": false,
+            "min": 0.5779977600346833,
+            "paired_ratios": [
+              0.5811364841812526,
+              0.5945466589738658,
+              0.5975964570314739,
+              0.5779977600346833,
+              0.6186033828246658
+            ],
+            "status": "target missed",
+            "target_ratio": 0.5
+          },
+          "wall_seconds": {
+            "bootstrap_95_percent": [
+              1.082162974671243,
+              1.1095857903494806
+            ],
+            "max": 1.1095857903494806,
+            "median": 1.1065044237441695,
+            "median_target_met": false,
+            "min": 1.082162974671243,
+            "paired_ratios": [
+              1.1065044237441695,
+              1.1095857903494806,
+              1.108136867349016,
+              1.082162974671243,
+              1.1058088976086264
+            ],
+            "status": "target missed",
+            "target_ratio": 0.8
+          }
+        },
+        "numerator": "after/oximut"
+      },
+      "before_vs_stryker": {
+        "denominator": "before/stryker",
+        "metrics": {
+          "cpu_seconds": {
+            "bootstrap_95_percent": [
+              1.319348063113218,
+              1.413627098175784
+            ],
+            "max": 1.413627098175784,
+            "median": 1.3352512035274524,
+            "median_cpu_reduction_percent": -33.52512035274524,
+            "min": 1.319348063113218,
+            "paired_ratios": [
+              1.3358580195082146,
+              1.3352512035274524,
+              1.319348063113218,
+              1.3313147303091604,
+              1.413627098175784
+            ]
+          },
+          "peak_aggregate_rss_bytes": {
+            "bootstrap_95_percent": [
+              0.7111263561395816,
+              0.7631386146514142
+            ],
+            "max": 0.7631386146514142,
+            "median": 0.7514958320020912,
+            "median_target_met": false,
+            "min": 0.7111263561395816,
+            "paired_ratios": [
+              0.7253681838155042,
+              0.7631386146514142,
+              0.7111263561395816,
+              0.7514958320020912,
+              0.753370746607942
+            ],
+            "status": "target missed",
+            "target_ratio": 0.5
+          },
+          "wall_seconds": {
+            "bootstrap_95_percent": [
+              1.2804824350603758,
+              1.3747583610295337
+            ],
+            "max": 1.3747583610295337,
+            "median": 1.2931642190628667,
+            "median_target_met": false,
+            "min": 1.2804824350603758,
+            "paired_ratios": [
+              1.2931642190628667,
+              1.3008675773295273,
+              1.2810003729543848,
+              1.2804824350603758,
+              1.3747583610295337
+            ],
+            "status": "target missed",
+            "target_ratio": 0.8
+          }
+        },
+        "numerator": "before/oximut"
+      }
+    },
+    "phase_evidence": {
+      "after": [
+        {
+          "disabledValidationRuns": [
+            {
+              "coverage": true,
+              "files": [
+                "/home/runner/work/_temp/real-project-comparison/00-after/00-oximut/project/src/extend.ts",
+                "/home/runner/work/_temp/real-project-comparison/00-after/00-oximut/project/src/manipulate/invert.ts",
+                "/home/runner/work/_temp/real-project-comparison/00-after/00-oximut/project/src/manipulate/lighten.ts",
+                "/home/runner/work/_temp/real-project-comparison/00-after/00-oximut/project/src/manipulate/mix.ts",
+                "/home/runner/work/_temp/real-project-comparison/00-after/00-oximut/project/src/manipulate/saturate.ts"
+              ],
+              "run": "instrumentedBaseline",
+              "wallMs": 893.623108
+            }
+          ],
+          "phaseWallMs": {
+            "finalInputValidation": 0.000324,
+            "inputAndSchedulerPreparation": 2.3246640000000003,
+            "instrumentedBaseline": 894.32808,
+            "mutationExecution": 2523.0891079999997,
+            "mutationPlanning": 0.076104,
+            "originalBaseline": 1249.863555,
+            "postBaselineValidation": 0.000205,
+            "teardown": 39.457799
+          },
+          "report_file": "/home/runner/work/_temp/real-project-comparison/00-after/00-oximut/report.json",
+          "round": 0,
+          "warmup": true
+        },
+        {
+          "disabledValidationRuns": [
+            {
+              "coverage": true,
+              "files": [
+                "/home/runner/work/_temp/real-project-comparison/01-after/00-oximut/project/src/extend.ts",
+                "/home/runner/work/_temp/real-project-comparison/01-after/00-oximut/project/src/manipulate/invert.ts",
+                "/home/runner/work/_temp/real-project-comparison/01-after/00-oximut/project/src/manipulate/lighten.ts",
+                "/home/runner/work/_temp/real-project-comparison/01-after/00-oximut/project/src/manipulate/mix.ts",
+                "/home/runner/work/_temp/real-project-comparison/01-after/00-oximut/project/src/manipulate/saturate.ts"
+              ],
+              "run": "instrumentedBaseline",
+              "wallMs": 976.954895
+            }
+          ],
+          "phaseWallMs": {
+            "finalInputValidation": 0.00029299999999999997,
+            "inputAndSchedulerPreparation": 3.578903,
+            "instrumentedBaseline": 977.6112569999999,
+            "mutationExecution": 2502.9370989999998,
+            "mutationPlanning": 0.077414,
+            "originalBaseline": 1388.46802,
+            "postBaselineValidation": 0.000491,
+            "teardown": 39.689843
+          },
+          "report_file": "/home/runner/work/_temp/real-project-comparison/01-after/00-oximut/report.json",
+          "round": 1,
+          "warmup": false
+        },
+        {
+          "disabledValidationRuns": [
+            {
+              "coverage": true,
+              "files": [
+                "/home/runner/work/_temp/real-project-comparison/02-after/00-oximut/project/src/extend.ts",
+                "/home/runner/work/_temp/real-project-comparison/02-after/00-oximut/project/src/manipulate/invert.ts",
+                "/home/runner/work/_temp/real-project-comparison/02-after/00-oximut/project/src/manipulate/lighten.ts",
+                "/home/runner/work/_temp/real-project-comparison/02-after/00-oximut/project/src/manipulate/mix.ts",
+                "/home/runner/work/_temp/real-project-comparison/02-after/00-oximut/project/src/manipulate/saturate.ts"
+              ],
+              "run": "instrumentedBaseline",
+              "wallMs": 871.546155
+            }
+          ],
+          "phaseWallMs": {
+            "finalInputValidation": 0.000612,
+            "inputAndSchedulerPreparation": 2.216021,
+            "instrumentedBaseline": 872.169017,
+            "mutationExecution": 2437.3371939999997,
+            "mutationPlanning": 0.07534099999999999,
+            "originalBaseline": 1229.171918,
+            "postBaselineValidation": 0.000377,
+            "teardown": 51.925198
+          },
+          "report_file": "/home/runner/work/_temp/real-project-comparison/02-after/00-oximut/report.json",
+          "round": 2,
+          "warmup": false
+        },
+        {
+          "disabledValidationRuns": [
+            {
+              "coverage": true,
+              "files": [
+                "/home/runner/work/_temp/real-project-comparison/03-after/00-oximut/project/src/extend.ts",
+                "/home/runner/work/_temp/real-project-comparison/03-after/00-oximut/project/src/manipulate/invert.ts",
+                "/home/runner/work/_temp/real-project-comparison/03-after/00-oximut/project/src/manipulate/lighten.ts",
+                "/home/runner/work/_temp/real-project-comparison/03-after/00-oximut/project/src/manipulate/mix.ts",
+                "/home/runner/work/_temp/real-project-comparison/03-after/00-oximut/project/src/manipulate/saturate.ts"
+              ],
+              "run": "instrumentedBaseline",
+              "wallMs": 859.880661
+            }
+          ],
+          "phaseWallMs": {
+            "finalInputValidation": 0.000299,
+            "inputAndSchedulerPreparation": 2.271301,
+            "instrumentedBaseline": 860.5134410000001,
+            "mutationExecution": 2436.545248,
+            "mutationPlanning": 0.075158,
+            "originalBaseline": 1233.719585,
+            "postBaselineValidation": 0.000324,
+            "teardown": 39.099253
+          },
+          "report_file": "/home/runner/work/_temp/real-project-comparison/03-after/00-oximut/report.json",
+          "round": 3,
+          "warmup": false
+        },
+        {
+          "disabledValidationRuns": [
+            {
+              "coverage": true,
+              "files": [
+                "/home/runner/work/_temp/real-project-comparison/04-after/00-oximut/project/src/extend.ts",
+                "/home/runner/work/_temp/real-project-comparison/04-after/00-oximut/project/src/manipulate/invert.ts",
+                "/home/runner/work/_temp/real-project-comparison/04-after/00-oximut/project/src/manipulate/lighten.ts",
+                "/home/runner/work/_temp/real-project-comparison/04-after/00-oximut/project/src/manipulate/mix.ts",
+                "/home/runner/work/_temp/real-project-comparison/04-after/00-oximut/project/src/manipulate/saturate.ts"
+              ],
+              "run": "instrumentedBaseline",
+              "wallMs": 868.746614
+            }
+          ],
+          "phaseWallMs": {
+            "finalInputValidation": 0.000303,
+            "inputAndSchedulerPreparation": 2.272651,
+            "instrumentedBaseline": 869.6389810000001,
+            "mutationExecution": 2409.2734689999997,
+            "mutationPlanning": 0.108337,
+            "originalBaseline": 1232.3602819999999,
+            "postBaselineValidation": 0.00039999999999999996,
+            "teardown": 51.69617
+          },
+          "report_file": "/home/runner/work/_temp/real-project-comparison/04-after/00-oximut/report.json",
+          "round": 4,
+          "warmup": false
+        },
+        {
+          "disabledValidationRuns": [
+            {
+              "coverage": true,
+              "files": [
+                "/home/runner/work/_temp/real-project-comparison/05-after/00-oximut/project/src/extend.ts",
+                "/home/runner/work/_temp/real-project-comparison/05-after/00-oximut/project/src/manipulate/invert.ts",
+                "/home/runner/work/_temp/real-project-comparison/05-after/00-oximut/project/src/manipulate/lighten.ts",
+                "/home/runner/work/_temp/real-project-comparison/05-after/00-oximut/project/src/manipulate/mix.ts",
+                "/home/runner/work/_temp/real-project-comparison/05-after/00-oximut/project/src/manipulate/saturate.ts"
+              ],
+              "run": "instrumentedBaseline",
+              "wallMs": 870.487776
+            }
+          ],
+          "phaseWallMs": {
+            "finalInputValidation": 0.000384,
+            "inputAndSchedulerPreparation": 2.365173,
+            "instrumentedBaseline": 871.183767,
+            "mutationExecution": 2444.968095,
+            "mutationPlanning": 0.078793,
+            "originalBaseline": 1218.462282,
+            "postBaselineValidation": 0.000269,
+            "teardown": 51.920187999999996
+          },
+          "report_file": "/home/runner/work/_temp/real-project-comparison/05-after/00-oximut/report.json",
+          "round": 5,
+          "warmup": false
+        }
+      ],
+      "before": [
+        {
+          "disabledValidationRuns": [
+            {
+              "coverage": true,
+              "files": [
+                "/home/runner/work/_temp/real-project-comparison/00-before/00-oximut/project/src/extend.ts",
+                "/home/runner/work/_temp/real-project-comparison/00-before/00-oximut/project/src/manipulate/invert.ts",
+                "/home/runner/work/_temp/real-project-comparison/00-before/00-oximut/project/src/manipulate/lighten.ts",
+                "/home/runner/work/_temp/real-project-comparison/00-before/00-oximut/project/src/manipulate/mix.ts",
+                "/home/runner/work/_temp/real-project-comparison/00-before/00-oximut/project/src/manipulate/saturate.ts"
+              ],
+              "run": "instrumentedBaseline",
+              "wallMs": 955.366534
+            }
+          ],
+          "phaseWallMs": {
+            "finalInputValidation": 0.00038,
+            "inputAndSchedulerPreparation": 2.273844,
+            "instrumentedBaseline": 955.990729,
+            "mutationExecution": 3030.301805,
+            "mutationPlanning": 0.08270100000000001,
+            "originalBaseline": 1380.6539129999999,
+            "postBaselineValidation": 0.000217,
+            "teardown": 87.846723
+          },
+          "report_file": "/home/runner/work/_temp/real-project-comparison/00-before/00-oximut/report.json",
+          "round": 0,
+          "warmup": true
+        },
+        {
+          "disabledValidationRuns": [
+            {
+              "coverage": true,
+              "files": [
+                "/home/runner/work/_temp/real-project-comparison/01-before/00-oximut/project/src/extend.ts",
+                "/home/runner/work/_temp/real-project-comparison/01-before/00-oximut/project/src/manipulate/invert.ts",
+                "/home/runner/work/_temp/real-project-comparison/01-before/00-oximut/project/src/manipulate/lighten.ts",
+                "/home/runner/work/_temp/real-project-comparison/01-before/00-oximut/project/src/manipulate/mix.ts",
+                "/home/runner/work/_temp/real-project-comparison/01-before/00-oximut/project/src/manipulate/saturate.ts"
+              ],
+              "run": "instrumentedBaseline",
+              "wallMs": 957.905704
+            }
+          ],
+          "phaseWallMs": {
+            "finalInputValidation": 0.000418,
+            "inputAndSchedulerPreparation": 2.339261,
+            "instrumentedBaseline": 958.52189,
+            "mutationExecution": 2923.363702,
+            "mutationPlanning": 0.084953,
+            "originalBaseline": 1385.808654,
+            "postBaselineValidation": 0.000186,
+            "teardown": 76.500973
+          },
+          "report_file": "/home/runner/work/_temp/real-project-comparison/01-before/00-oximut/report.json",
+          "round": 1,
+          "warmup": false
+        },
+        {
+          "disabledValidationRuns": [
+            {
+              "coverage": true,
+              "files": [
+                "/home/runner/work/_temp/real-project-comparison/02-before/00-oximut/project/src/extend.ts",
+                "/home/runner/work/_temp/real-project-comparison/02-before/00-oximut/project/src/manipulate/invert.ts",
+                "/home/runner/work/_temp/real-project-comparison/02-before/00-oximut/project/src/manipulate/lighten.ts",
+                "/home/runner/work/_temp/real-project-comparison/02-before/00-oximut/project/src/manipulate/mix.ts",
+                "/home/runner/work/_temp/real-project-comparison/02-before/00-oximut/project/src/manipulate/saturate.ts"
+              ],
+              "run": "instrumentedBaseline",
+              "wallMs": 960.497981
+            }
+          ],
+          "phaseWallMs": {
+            "finalInputValidation": 0.000277,
+            "inputAndSchedulerPreparation": 2.2851299999999997,
+            "instrumentedBaseline": 961.111169,
+            "mutationExecution": 2941.2338130000003,
+            "mutationPlanning": 0.079192,
+            "originalBaseline": 1406.926342,
+            "postBaselineValidation": 0.000265,
+            "teardown": 74.826455
+          },
+          "report_file": "/home/runner/work/_temp/real-project-comparison/02-before/00-oximut/report.json",
+          "round": 2,
+          "warmup": false
+        },
+        {
+          "disabledValidationRuns": [
+            {
+              "coverage": true,
+              "files": [
+                "/home/runner/work/_temp/real-project-comparison/03-before/00-oximut/project/src/extend.ts",
+                "/home/runner/work/_temp/real-project-comparison/03-before/00-oximut/project/src/manipulate/invert.ts",
+                "/home/runner/work/_temp/real-project-comparison/03-before/00-oximut/project/src/manipulate/lighten.ts",
+                "/home/runner/work/_temp/real-project-comparison/03-before/00-oximut/project/src/manipulate/mix.ts",
+                "/home/runner/work/_temp/real-project-comparison/03-before/00-oximut/project/src/manipulate/saturate.ts"
+              ],
+              "run": "instrumentedBaseline",
+              "wallMs": 928.252423
+            }
+          ],
+          "phaseWallMs": {
+            "finalInputValidation": 0.000377,
+            "inputAndSchedulerPreparation": 2.256427,
+            "instrumentedBaseline": 928.868208,
+            "mutationExecution": 2912.3425049999996,
+            "mutationPlanning": 0.083192,
+            "originalBaseline": 1383.3105159999998,
+            "postBaselineValidation": 0.000355,
+            "teardown": 75.2417
+          },
+          "report_file": "/home/runner/work/_temp/real-project-comparison/03-before/00-oximut/report.json",
+          "round": 3,
+          "warmup": false
+        },
+        {
+          "disabledValidationRuns": [
+            {
+              "coverage": true,
+              "files": [
+                "/home/runner/work/_temp/real-project-comparison/04-before/00-oximut/project/src/extend.ts",
+                "/home/runner/work/_temp/real-project-comparison/04-before/00-oximut/project/src/manipulate/invert.ts",
+                "/home/runner/work/_temp/real-project-comparison/04-before/00-oximut/project/src/manipulate/lighten.ts",
+                "/home/runner/work/_temp/real-project-comparison/04-before/00-oximut/project/src/manipulate/mix.ts",
+                "/home/runner/work/_temp/real-project-comparison/04-before/00-oximut/project/src/manipulate/saturate.ts"
+              ],
+              "run": "instrumentedBaseline",
+              "wallMs": 967.8139199999999
+            }
+          ],
+          "phaseWallMs": {
+            "finalInputValidation": 0.000304,
+            "inputAndSchedulerPreparation": 2.313352,
+            "instrumentedBaseline": 968.424358,
+            "mutationExecution": 2935.883215,
+            "mutationPlanning": 0.082789,
+            "originalBaseline": 1378.8029640000002,
+            "postBaselineValidation": 0.00020800000000000001,
+            "teardown": 64.339189
+          },
+          "report_file": "/home/runner/work/_temp/real-project-comparison/04-before/00-oximut/report.json",
+          "round": 4,
+          "warmup": false
+        },
+        {
+          "disabledValidationRuns": [
+            {
+              "coverage": true,
+              "files": [
+                "/home/runner/work/_temp/real-project-comparison/05-before/00-oximut/project/src/extend.ts",
+                "/home/runner/work/_temp/real-project-comparison/05-before/00-oximut/project/src/manipulate/invert.ts",
+                "/home/runner/work/_temp/real-project-comparison/05-before/00-oximut/project/src/manipulate/lighten.ts",
+                "/home/runner/work/_temp/real-project-comparison/05-before/00-oximut/project/src/manipulate/mix.ts",
+                "/home/runner/work/_temp/real-project-comparison/05-before/00-oximut/project/src/manipulate/saturate.ts"
+              ],
+              "run": "instrumentedBaseline",
+              "wallMs": 933.2296799999999
+            }
+          ],
+          "phaseWallMs": {
+            "finalInputValidation": 0.000406,
+            "inputAndSchedulerPreparation": 2.310104,
+            "instrumentedBaseline": 933.8479600000001,
+            "mutationExecution": 3295.464089,
+            "mutationPlanning": 0.082842,
+            "originalBaseline": 1386.285287,
+            "postBaselineValidation": 0.00029499999999999996,
+            "teardown": 89.13923799999999
+          },
+          "report_file": "/home/runner/work/_temp/real-project-comparison/05-before/00-oximut/report.json",
+          "round": 5,
+          "warmup": false
+        }
+      ]
+    },
+    "measurements": [
+      {
+        "variant": "before",
+        "tool": "vitest",
+        "warmup": true,
+        "campaign_round": 0,
+        "wall_seconds": 1.1724050340000076,
+        "cpu_seconds": 1.56986,
+        "cpu_user_seconds": 1.341425,
+        "cpu_system_seconds": 0.228435,
+        "peak_aggregate_rss_bytes": 283217920,
+        "peak_process_count": 2,
+        "observed_process_count": 5,
+        "success": true
+      },
+      {
+        "variant": "before",
+        "tool": "oximut",
+        "warmup": true,
+        "campaign_round": 0,
+        "wall_seconds": 5.4629139769999995,
+        "cpu_seconds": 7.747646,
+        "cpu_user_seconds": 5.707624,
+        "cpu_system_seconds": 2.040022,
+        "peak_aggregate_rss_bytes": 408203264,
+        "peak_process_count": 6,
+        "observed_process_count": 23,
+        "success": true
+      },
+      {
+        "variant": "before",
+        "tool": "stryker",
+        "warmup": true,
+        "campaign_round": 0,
+        "wall_seconds": 4.223607955000006,
+        "cpu_seconds": 5.815206,
+        "cpu_user_seconds": 5.306768,
+        "cpu_system_seconds": 0.508438,
+        "peak_aggregate_rss_bytes": 569036800,
+        "peak_process_count": 3,
+        "observed_process_count": 3,
+        "success": true
+      },
+      {
+        "variant": "after",
+        "tool": "vitest",
+        "warmup": true,
+        "campaign_round": 0,
+        "wall_seconds": 1.2011733590000233,
+        "cpu_seconds": 1.579716,
+        "cpu_user_seconds": 1.323132,
+        "cpu_system_seconds": 0.256584,
+        "peak_aggregate_rss_bytes": 278794240,
+        "peak_process_count": 2,
+        "observed_process_count": 5,
+        "success": true
+      },
+      {
+        "variant": "after",
+        "tool": "oximut",
+        "warmup": true,
+        "campaign_round": 0,
+        "wall_seconds": 4.714511747000017,
+        "cpu_seconds": 6.518832,
+        "cpu_user_seconds": 5.034426,
+        "cpu_system_seconds": 1.484406,
+        "peak_aggregate_rss_bytes": 342650880,
+        "peak_process_count": 4,
+        "observed_process_count": 21,
+        "success": true
+      },
+      {
+        "variant": "after",
+        "tool": "stryker",
+        "warmup": true,
+        "campaign_round": 0,
+        "wall_seconds": 4.160915332000002,
+        "cpu_seconds": 5.740069,
+        "cpu_user_seconds": 5.26195,
+        "cpu_system_seconds": 0.47811899999999996,
+        "peak_aggregate_rss_bytes": 564355072,
+        "peak_process_count": 3,
+        "observed_process_count": 3,
+        "success": true
+      },
+      {
+        "variant": "after",
+        "tool": "stryker",
+        "warmup": false,
+        "campaign_round": 1,
+        "wall_seconds": 4.445030218999989,
+        "cpu_seconds": 5.991275,
+        "cpu_user_seconds": 5.463496,
+        "cpu_system_seconds": 0.527779,
+        "peak_aggregate_rss_bytes": 571465728,
+        "peak_process_count": 3,
+        "observed_process_count": 3,
+        "success": true
+      },
+      {
+        "variant": "after",
+        "tool": "oximut",
+        "warmup": false,
+        "campaign_round": 1,
+        "wall_seconds": 4.918445601000002,
+        "cpu_seconds": 6.733397999999999,
+        "cpu_user_seconds": 5.214333,
+        "cpu_system_seconds": 1.5190649999999999,
+        "peak_aggregate_rss_bytes": 332099584,
+        "peak_process_count": 4,
+        "observed_process_count": 21,
+        "success": true
+      },
+      {
+        "variant": "after",
+        "tool": "vitest",
+        "warmup": false,
+        "campaign_round": 1,
+        "wall_seconds": 1.1887410779999925,
+        "cpu_seconds": 1.5481230000000001,
+        "cpu_user_seconds": 1.299106,
+        "cpu_system_seconds": 0.249017,
+        "peak_aggregate_rss_bytes": 276373504,
+        "peak_process_count": 2,
+        "observed_process_count": 5,
+        "success": true
+      },
+      {
+        "variant": "before",
+        "tool": "stryker",
+        "warmup": false,
+        "campaign_round": 1,
+        "wall_seconds": 4.137099793000004,
+        "cpu_seconds": 5.6939090000000006,
+        "cpu_user_seconds": 5.194988,
+        "cpu_system_seconds": 0.498921,
+        "peak_aggregate_rss_bytes": 577937408,
+        "peak_process_count": 3,
+        "observed_process_count": 3,
+        "success": true
+      },
+      {
+        "variant": "before",
+        "tool": "oximut",
+        "warmup": false,
+        "campaign_round": 1,
+        "wall_seconds": 5.349949422999998,
+        "cpu_seconds": 7.606254,
+        "cpu_user_seconds": 5.656395,
+        "cpu_system_seconds": 1.949859,
+        "peak_aggregate_rss_bytes": 419217408,
+        "peak_process_count": 6,
+        "observed_process_count": 23,
+        "success": true
+      },
+      {
+        "variant": "before",
+        "tool": "vitest",
+        "warmup": false,
+        "campaign_round": 1,
+        "wall_seconds": 1.196429476999981,
+        "cpu_seconds": 1.561791,
+        "cpu_user_seconds": 1.334489,
+        "cpu_system_seconds": 0.22730199999999998,
+        "peak_aggregate_rss_bytes": 283074560,
+        "peak_process_count": 2,
+        "observed_process_count": 5,
+        "success": true
+      },
+      {
+        "variant": "before",
+        "tool": "vitest",
+        "warmup": false,
+        "campaign_round": 2,
+        "wall_seconds": 1.2161359250000032,
+        "cpu_seconds": 1.575462,
+        "cpu_user_seconds": 1.334319,
+        "cpu_system_seconds": 0.241143,
+        "peak_aggregate_rss_bytes": 283021312,
+        "peak_process_count": 2,
+        "observed_process_count": 5,
+        "success": true
+      },
+      {
+        "variant": "before",
+        "tool": "oximut",
+        "warmup": false,
+        "campaign_round": 2,
+        "wall_seconds": 5.391930825000003,
+        "cpu_seconds": 7.626346,
+        "cpu_user_seconds": 5.663921,
+        "cpu_system_seconds": 1.962425,
+        "peak_aggregate_rss_bytes": 430915584,
+        "peak_process_count": 6,
+        "observed_process_count": 23,
+        "success": true
+      },
+      {
+        "variant": "before",
+        "tool": "stryker",
+        "warmup": false,
+        "campaign_round": 2,
+        "wall_seconds": 4.144872944000014,
+        "cpu_seconds": 5.711544,
+        "cpu_user_seconds": 5.207251,
+        "cpu_system_seconds": 0.504293,
+        "peak_aggregate_rss_bytes": 564662272,
+        "peak_process_count": 3,
+        "observed_process_count": 3,
+        "success": true
+      },
+      {
+        "variant": "after",
+        "tool": "vitest",
+        "warmup": false,
+        "campaign_round": 2,
+        "wall_seconds": 1.1984188699999834,
+        "cpu_seconds": 1.564711,
+        "cpu_user_seconds": 1.334542,
+        "cpu_system_seconds": 0.23016899999999998,
+        "peak_aggregate_rss_bytes": 272158720,
+        "peak_process_count": 2,
+        "observed_process_count": 5,
+        "success": true
+      },
+      {
+        "variant": "after",
+        "tool": "oximut",
+        "warmup": false,
+        "campaign_round": 2,
+        "wall_seconds": 4.598615418999998,
+        "cpu_seconds": 6.456594000000001,
+        "cpu_user_seconds": 4.992257,
+        "cpu_system_seconds": 1.464337,
+        "peak_aggregate_rss_bytes": 341889024,
+        "peak_process_count": 4,
+        "observed_process_count": 21,
+        "success": true
+      },
+      {
+        "variant": "after",
+        "tool": "stryker",
+        "warmup": false,
+        "campaign_round": 2,
+        "wall_seconds": 4.144443322000001,
+        "cpu_seconds": 5.716318,
+        "cpu_user_seconds": 5.235393,
+        "cpu_system_seconds": 0.480925,
+        "peak_aggregate_rss_bytes": 575041536,
+        "peak_process_count": 3,
+        "observed_process_count": 3,
+        "success": true
+      },
+      {
+        "variant": "after",
+        "tool": "stryker",
+        "warmup": false,
+        "campaign_round": 3,
+        "wall_seconds": 4.131087685000011,
+        "cpu_seconds": 5.687364,
+        "cpu_user_seconds": 5.203637,
+        "cpu_system_seconds": 0.48372699999999996,
+        "peak_aggregate_rss_bytes": 571572224,
+        "peak_process_count": 3,
+        "observed_process_count": 3,
+        "success": true
+      },
+      {
+        "variant": "after",
+        "tool": "oximut",
+        "warmup": false,
+        "campaign_round": 3,
+        "wall_seconds": 4.577810566000011,
+        "cpu_seconds": 6.393572,
+        "cpu_user_seconds": 4.967292,
+        "cpu_system_seconds": 1.42628,
+        "peak_aggregate_rss_bytes": 341569536,
+        "peak_process_count": 4,
+        "observed_process_count": 21,
+        "success": true
+      },
+      {
+        "variant": "after",
+        "tool": "vitest",
+        "warmup": false,
+        "campaign_round": 3,
+        "wall_seconds": 1.1758783429999937,
+        "cpu_seconds": 1.548406,
+        "cpu_user_seconds": 1.325446,
+        "cpu_system_seconds": 0.22296,
+        "peak_aggregate_rss_bytes": 275091456,
+        "peak_process_count": 2,
+        "observed_process_count": 5,
+        "success": true
+      },
+      {
+        "variant": "before",
+        "tool": "stryker",
+        "warmup": false,
+        "campaign_round": 3,
+        "wall_seconds": 4.1434773119999875,
+        "cpu_seconds": 5.710246,
+        "cpu_user_seconds": 5.235771,
+        "cpu_system_seconds": 0.474475,
+        "peak_aggregate_rss_bytes": 579149824,
+        "peak_process_count": 3,
+        "observed_process_count": 3,
+        "success": true
+      },
+      {
+        "variant": "before",
+        "tool": "oximut",
+        "warmup": false,
+        "campaign_round": 3,
+        "wall_seconds": 5.307795982000016,
+        "cpu_seconds": 7.5338020000000006,
+        "cpu_user_seconds": 5.549229,
+        "cpu_system_seconds": 1.984573,
+        "peak_aggregate_rss_bytes": 411848704,
+        "peak_process_count": 6,
+        "observed_process_count": 23,
+        "success": true
+      },
+      {
+        "variant": "before",
+        "tool": "vitest",
+        "warmup": false,
+        "campaign_round": 3,
+        "wall_seconds": 1.1754911249999793,
+        "cpu_seconds": 1.5417509999999999,
+        "cpu_user_seconds": 1.3212009999999998,
+        "cpu_system_seconds": 0.22055,
+        "peak_aggregate_rss_bytes": 272732160,
+        "peak_process_count": 2,
+        "observed_process_count": 5,
+        "success": true
+      },
+      {
+        "variant": "before",
+        "tool": "vitest",
+        "warmup": false,
+        "campaign_round": 4,
+        "wall_seconds": 1.198169207999996,
+        "cpu_seconds": 1.5654599999999999,
+        "cpu_user_seconds": 1.318277,
+        "cpu_system_seconds": 0.24718299999999999,
+        "peak_aggregate_rss_bytes": 273002496,
+        "peak_process_count": 2,
+        "observed_process_count": 5,
+        "success": true
+      },
+      {
+        "variant": "before",
+        "tool": "oximut",
+        "warmup": false,
+        "campaign_round": 4,
+        "wall_seconds": 5.355357459999993,
+        "cpu_seconds": 7.6346359999999995,
+        "cpu_user_seconds": 5.5998339999999995,
+        "cpu_system_seconds": 2.034802,
+        "peak_aggregate_rss_bytes": 423907328,
+        "peak_process_count": 6,
+        "observed_process_count": 23,
+        "success": true
+      },
+      {
+        "variant": "before",
+        "tool": "stryker",
+        "warmup": false,
+        "campaign_round": 4,
+        "wall_seconds": 4.182296697999988,
+        "cpu_seconds": 5.734659,
+        "cpu_user_seconds": 5.255515,
+        "cpu_system_seconds": 0.47914399999999996,
+        "peak_aggregate_rss_bytes": 564084736,
+        "peak_process_count": 3,
+        "observed_process_count": 3,
+        "success": true
+      },
+      {
+        "variant": "after",
+        "tool": "vitest",
+        "warmup": false,
+        "campaign_round": 4,
+        "wall_seconds": 1.2284059739999975,
+        "cpu_seconds": 1.6006340000000001,
+        "cpu_user_seconds": 1.370503,
+        "cpu_system_seconds": 0.230131,
+        "peak_aggregate_rss_bytes": 275718144,
+        "peak_process_count": 2,
+        "observed_process_count": 5,
+        "success": true
+      },
+      {
+        "variant": "after",
+        "tool": "oximut",
+        "warmup": false,
+        "campaign_round": 4,
+        "wall_seconds": 4.5710398489999875,
+        "cpu_seconds": 6.35879,
+        "cpu_user_seconds": 4.961336,
+        "cpu_system_seconds": 1.397454,
+        "peak_aggregate_rss_bytes": 327647232,
+        "peak_process_count": 4,
+        "observed_process_count": 21,
+        "success": true
+      },
+      {
+        "variant": "after",
+        "tool": "stryker",
+        "warmup": false,
+        "campaign_round": 4,
+        "wall_seconds": 4.223984701000006,
+        "cpu_seconds": 5.822184,
+        "cpu_user_seconds": 5.308583,
+        "cpu_system_seconds": 0.513601,
+        "peak_aggregate_rss_bytes": 566865920,
+        "peak_process_count": 3,
+        "observed_process_count": 3,
+        "success": true
+      },
+      {
+        "variant": "after",
+        "tool": "stryker",
+        "warmup": false,
+        "campaign_round": 5,
+        "wall_seconds": 4.155159347999984,
+        "cpu_seconds": 5.7525830000000004,
+        "cpu_user_seconds": 5.222915,
+        "cpu_system_seconds": 0.529668,
+        "peak_aggregate_rss_bytes": 570781696,
+        "peak_process_count": 3,
+        "observed_process_count": 3,
+        "success": true
+      },
+      {
+        "variant": "after",
+        "tool": "oximut",
+        "warmup": false,
+        "campaign_round": 5,
+        "wall_seconds": 4.594812178000041,
+        "cpu_seconds": 6.368871,
+        "cpu_user_seconds": 4.879222,
+        "cpu_system_seconds": 1.489649,
+        "peak_aggregate_rss_bytes": 353087488,
+        "peak_process_count": 4,
+        "observed_process_count": 21,
+        "success": true
+      },
+      {
+        "variant": "after",
+        "tool": "vitest",
+        "warmup": false,
+        "campaign_round": 5,
+        "wall_seconds": 1.2122533089999479,
+        "cpu_seconds": 1.571052,
+        "cpu_user_seconds": 1.341373,
+        "cpu_system_seconds": 0.229679,
+        "peak_aggregate_rss_bytes": 275275776,
+        "peak_process_count": 2,
+        "observed_process_count": 5,
+        "success": true
+      },
+      {
+        "variant": "before",
+        "tool": "stryker",
+        "warmup": false,
+        "campaign_round": 5,
+        "wall_seconds": 4.155496413000037,
+        "cpu_seconds": 5.683866,
+        "cpu_user_seconds": 5.196023,
+        "cpu_system_seconds": 0.48784299999999997,
+        "peak_aggregate_rss_bytes": 576593920,
+        "peak_process_count": 3,
+        "observed_process_count": 3,
+        "success": true
+      },
+      {
+        "variant": "before",
+        "tool": "oximut",
+        "warmup": false,
+        "campaign_round": 5,
+        "wall_seconds": 5.712803438000037,
+        "cpu_seconds": 8.034867,
+        "cpu_user_seconds": 5.829002,
+        "cpu_system_seconds": 2.205865,
+        "peak_aggregate_rss_bytes": 434388992,
+        "peak_process_count": 6,
+        "observed_process_count": 23,
+        "success": true
+      },
+      {
+        "variant": "before",
+        "tool": "vitest",
+        "warmup": false,
+        "campaign_round": 5,
+        "wall_seconds": 1.2244426070000145,
+        "cpu_seconds": 1.587666,
+        "cpu_user_seconds": 1.354398,
+        "cpu_system_seconds": 0.233268,
+        "peak_aggregate_rss_bytes": 275726336,
+        "peak_process_count": 2,
+        "observed_process_count": 5,
+        "success": true
+      }
+    ]
+  },
+  {
+    "run": 41797866089,
+    "label": "fresh-thread opt-in",
+    "artifact_summary_sha256": "367606941ef663129e787b5f267f97747f659470ebadbb185fc7a2d8b0e0564f",
+    "artifact_measurements_sha256": "3afa6b4c8b97ef3683504a18bdd23e95915c22f27402e2ffe14ce8f6d57950d9",
+    "correctness_gate": {
+      "errors": [],
+      "passed": true
+    },
+    "build_integrity": {
+      "errors": [],
+      "passed": true,
+      "required": true
+    },
+    "comparisons": {
+      "after_vs_before": {
+        "denominator": "before/oximut",
+        "metrics": {
+          "cpu_seconds": {
+            "bootstrap_95_percent": [
+              0.659611974033752,
+              0.7296481597784685
+            ],
+            "max": 0.7296481597784685,
+            "median": 0.70930516006875,
+            "median_cpu_reduction_percent": 29.069483993125,
+            "min": 0.659611974033752,
+            "paired_ratios": [
+              0.70930516006875,
+              0.7032244600466143,
+              0.7093757665237124,
+              0.7296481597784685,
+              0.659611974033752
+            ]
+          },
+          "peak_aggregate_rss_bytes": {
+            "bootstrap_95_percent": [
+              0.6484499685641051,
+              0.6986732177337641
+            ],
+            "max": 0.6986732177337641,
+            "median": 0.6827434292866082,
+            "min": 0.6484499685641051,
+            "paired_ratios": [
+              0.6700346229681412,
+              0.6827434292866082,
+              0.6856114825780898,
+              0.6986732177337641,
+              0.6484499685641051
+            ]
+          },
+          "wall_seconds": {
+            "bootstrap_95_percent": [
+              0.7082959376136526,
+              0.8139949792253193
+            ],
+            "max": 0.8139949792253193,
+            "median": 0.7680267353358543,
+            "min": 0.7082959376136526,
+            "paired_ratios": [
+              0.7667831733269785,
+              0.7730185166460203,
+              0.7680267353358543,
+              0.8139949792253193,
+              0.7082959376136526
+            ]
+          }
+        },
+        "numerator": "after/oximut"
+      },
+      "after_vs_stryker": {
+        "denominator": "after/stryker",
+        "metrics": {
+          "cpu_seconds": {
+            "bootstrap_95_percent": [
+              1.0997771441814983,
+              1.1548683683477647
+            ],
+            "max": 1.1548683683477647,
+            "median": 1.1038617055012314,
+            "median_cpu_reduction_percent": -10.386170550123142,
+            "min": 1.0997771441814983,
+            "paired_ratios": [
+              1.1038617055012314,
+              1.1075175316952324,
+              1.1030082961679821,
+              1.1548683683477647,
+              1.0997771441814983
+            ]
+          },
+          "peak_aggregate_rss_bytes": {
+            "bootstrap_95_percent": [
+              0.48008822623727987,
+              0.5269186960220309
+            ],
+            "max": 0.5269186960220309,
+            "median": 0.5062474662651301,
+            "median_target_met": false,
+            "min": 0.48008822623727987,
+            "paired_ratios": [
+              0.509311647986002,
+              0.48602973670330296,
+              0.5062474662651301,
+              0.5269186960220309,
+              0.48008822623727987
+            ],
+            "status": "inconclusive",
+            "target_ratio": 0.5
+          },
+          "wall_seconds": {
+            "bootstrap_95_percent": [
+              1.0138131974616906,
+              1.0890881048008023
+            ],
+            "max": 1.0890881048008023,
+            "median": 1.0196484029460222,
+            "median_target_met": false,
+            "min": 1.0138131974616906,
+            "paired_ratios": [
+              1.0196484029460222,
+              1.0215368867780168,
+              1.0145567421635227,
+              1.0890881048008023,
+              1.0138131974616906
+            ],
+            "status": "target missed",
+            "target_ratio": 0.8
+          }
+        },
+        "numerator": "after/oximut"
+      },
+      "before_vs_stryker": {
+        "denominator": "before/stryker",
+        "metrics": {
+          "cpu_seconds": {
+            "bootstrap_95_percent": [
+              1.5564546926126668,
+              1.6531394814625082
+            ],
+            "max": 1.6531394814625082,
+            "median": 1.5773846735929584,
+            "median_cpu_reduction_percent": -57.73846735929584,
+            "min": 1.5564546926126668,
+            "paired_ratios": [
+              1.577876834748788,
+              1.5564546926126668,
+              1.5584971185340706,
+              1.5773846735929584,
+              1.6531394814625082
+            ]
+          },
+          "peak_aggregate_rss_bytes": {
+            "bootstrap_95_percent": [
+              0.7099546482036992,
+              0.7653910029605026
+            ],
+            "max": 0.7653910029605026,
+            "median": 0.7350619987486491,
+            "median_target_met": false,
+            "min": 0.7099546482036992,
+            "paired_ratios": [
+              0.7653910029605026,
+              0.7099546482036992,
+              0.7267817189437232,
+              0.755177616239199,
+              0.7350619987486491
+            ],
+            "status": "target missed",
+            "target_ratio": 0.5
+          },
+          "wall_seconds": {
+            "bootstrap_95_percent": [
+              1.3230763140133512,
+              1.422260209395183
+            ],
+            "max": 1.422260209395183,
+            "median": 1.331261263968456,
+            "median_target_met": false,
+            "min": 1.3230763140133512,
+            "paired_ratios": [
+              1.3454343672674591,
+              1.3230763140133512,
+              1.331261263968456,
+              1.3273839523974869,
+              1.422260209395183
+            ],
+            "status": "target missed",
+            "target_ratio": 0.8
+          }
+        },
+        "numerator": "before/oximut"
+      }
+    },
+    "phase_evidence": {
+      "after": [
+        {
+          "disabledValidationRuns": [
+            {
+              "coverage": true,
+              "files": [
+                "/home/runner/work/_temp/real-project-comparison/00-after/00-oximut/project/src/extend.ts",
+                "/home/runner/work/_temp/real-project-comparison/00-after/00-oximut/project/src/manipulate/invert.ts",
+                "/home/runner/work/_temp/real-project-comparison/00-after/00-oximut/project/src/manipulate/lighten.ts",
+                "/home/runner/work/_temp/real-project-comparison/00-after/00-oximut/project/src/manipulate/mix.ts",
+                "/home/runner/work/_temp/real-project-comparison/00-after/00-oximut/project/src/manipulate/saturate.ts"
+              ],
+              "run": "instrumentedBaseline",
+              "wallMs": 873.126367
+            }
+          ],
+          "phaseWallMs": {
+            "finalInputValidation": 0.00023,
+            "inputAndSchedulerPreparation": 3.39728,
+            "instrumentedBaseline": 874.3815860000001,
+            "mutationExecution": 2864.69229,
+            "mutationPlanning": 0.077746,
+            "originalBaseline": 1315.415797,
+            "postBaselineValidation": 0.00013,
+            "teardown": 54.011927
+          },
+          "report_file": "/home/runner/work/_temp/real-project-comparison/00-after/00-oximut/report.json",
+          "round": 0,
+          "warmup": true
+        },
+        {
+          "disabledValidationRuns": [
+            {
+              "coverage": true,
+              "files": [
+                "/home/runner/work/_temp/real-project-comparison/01-after/00-oximut/project/src/extend.ts",
+                "/home/runner/work/_temp/real-project-comparison/01-after/00-oximut/project/src/manipulate/invert.ts",
+                "/home/runner/work/_temp/real-project-comparison/01-after/00-oximut/project/src/manipulate/lighten.ts",
+                "/home/runner/work/_temp/real-project-comparison/01-after/00-oximut/project/src/manipulate/mix.ts",
+                "/home/runner/work/_temp/real-project-comparison/01-after/00-oximut/project/src/manipulate/saturate.ts"
+              ],
+              "run": "instrumentedBaseline",
+              "wallMs": 867.081615
+            }
+          ],
+          "phaseWallMs": {
+            "finalInputValidation": 0.00016,
+            "inputAndSchedulerPreparation": 3.507736,
+            "instrumentedBaseline": 868.3478759999999,
+            "mutationExecution": 2462.782759,
+            "mutationPlanning": 0.078487,
+            "originalBaseline": 1320.0456000000001,
+            "postBaselineValidation": 0.000321,
+            "teardown": 51.345753
+          },
+          "report_file": "/home/runner/work/_temp/real-project-comparison/01-after/00-oximut/report.json",
+          "round": 1,
+          "warmup": false
+        },
+        {
+          "disabledValidationRuns": [
+            {
+              "coverage": true,
+              "files": [
+                "/home/runner/work/_temp/real-project-comparison/02-after/00-oximut/project/src/extend.ts",
+                "/home/runner/work/_temp/real-project-comparison/02-after/00-oximut/project/src/manipulate/invert.ts",
+                "/home/runner/work/_temp/real-project-comparison/02-after/00-oximut/project/src/manipulate/lighten.ts",
+                "/home/runner/work/_temp/real-project-comparison/02-after/00-oximut/project/src/manipulate/mix.ts",
+                "/home/runner/work/_temp/real-project-comparison/02-after/00-oximut/project/src/manipulate/saturate.ts"
+              ],
+              "run": "instrumentedBaseline",
+              "wallMs": 884.4682320000001
+            }
+          ],
+          "phaseWallMs": {
+            "finalInputValidation": 0.00023,
+            "inputAndSchedulerPreparation": 3.4544469999999996,
+            "instrumentedBaseline": 885.7465450000001,
+            "mutationExecution": 2438.840188,
+            "mutationPlanning": 0.079008,
+            "originalBaseline": 1347.237345,
+            "postBaselineValidation": 0.00015099999999999998,
+            "teardown": 53.038969
+          },
+          "report_file": "/home/runner/work/_temp/real-project-comparison/02-after/00-oximut/report.json",
+          "round": 2,
+          "warmup": false
+        },
+        {
+          "disabledValidationRuns": [
+            {
+              "coverage": true,
+              "files": [
+                "/home/runner/work/_temp/real-project-comparison/03-after/00-oximut/project/src/extend.ts",
+                "/home/runner/work/_temp/real-project-comparison/03-after/00-oximut/project/src/manipulate/invert.ts",
+                "/home/runner/work/_temp/real-project-comparison/03-after/00-oximut/project/src/manipulate/lighten.ts",
+                "/home/runner/work/_temp/real-project-comparison/03-after/00-oximut/project/src/manipulate/mix.ts",
+                "/home/runner/work/_temp/real-project-comparison/03-after/00-oximut/project/src/manipulate/saturate.ts"
+              ],
+              "run": "instrumentedBaseline",
+              "wallMs": 881.295956
+            }
+          ],
+          "phaseWallMs": {
+            "finalInputValidation": 8.999999999999999e-05,
+            "inputAndSchedulerPreparation": 3.536921,
+            "instrumentedBaseline": 882.654259,
+            "mutationExecution": 2454.53494,
+            "mutationPlanning": 0.077165,
+            "originalBaseline": 1350.670393,
+            "postBaselineValidation": 0.000702,
+            "teardown": 49.176088
+          },
+          "report_file": "/home/runner/work/_temp/real-project-comparison/03-after/00-oximut/report.json",
+          "round": 3,
+          "warmup": false
+        },
+        {
+          "disabledValidationRuns": [
+            {
+              "coverage": true,
+              "files": [
+                "/home/runner/work/_temp/real-project-comparison/04-after/00-oximut/project/src/extend.ts",
+                "/home/runner/work/_temp/real-project-comparison/04-after/00-oximut/project/src/manipulate/invert.ts",
+                "/home/runner/work/_temp/real-project-comparison/04-after/00-oximut/project/src/manipulate/lighten.ts",
+                "/home/runner/work/_temp/real-project-comparison/04-after/00-oximut/project/src/manipulate/mix.ts",
+                "/home/runner/work/_temp/real-project-comparison/04-after/00-oximut/project/src/manipulate/saturate.ts"
+              ],
+              "run": "instrumentedBaseline",
+              "wallMs": 948.5899039999999
+            }
+          ],
+          "phaseWallMs": {
+            "finalInputValidation": 0.00015,
+            "inputAndSchedulerPreparation": 3.514599,
+            "instrumentedBaseline": 949.824024,
+            "mutationExecution": 2606.8318019999997,
+            "mutationPlanning": 0.078527,
+            "originalBaseline": 1408.050822,
+            "postBaselineValidation": 0.00037099999999999996,
+            "teardown": 49.493268
+          },
+          "report_file": "/home/runner/work/_temp/real-project-comparison/04-after/00-oximut/report.json",
+          "round": 4,
+          "warmup": false
+        },
+        {
+          "disabledValidationRuns": [
+            {
+              "coverage": true,
+              "files": [
+                "/home/runner/work/_temp/real-project-comparison/05-after/00-oximut/project/src/extend.ts",
+                "/home/runner/work/_temp/real-project-comparison/05-after/00-oximut/project/src/manipulate/invert.ts",
+                "/home/runner/work/_temp/real-project-comparison/05-after/00-oximut/project/src/manipulate/lighten.ts",
+                "/home/runner/work/_temp/real-project-comparison/05-after/00-oximut/project/src/manipulate/mix.ts",
+                "/home/runner/work/_temp/real-project-comparison/05-after/00-oximut/project/src/manipulate/saturate.ts"
+              ],
+              "run": "instrumentedBaseline",
+              "wallMs": 865.184787
+            }
+          ],
+          "phaseWallMs": {
+            "finalInputValidation": 0.00014000000000000001,
+            "inputAndSchedulerPreparation": 3.2926230000000003,
+            "instrumentedBaseline": 866.525166,
+            "mutationExecution": 2433.129787,
+            "mutationPlanning": 0.076934,
+            "originalBaseline": 1310.048696,
+            "postBaselineValidation": 0.00014000000000000001,
+            "teardown": 50.373487000000004
+          },
+          "report_file": "/home/runner/work/_temp/real-project-comparison/05-after/00-oximut/report.json",
+          "round": 5,
+          "warmup": false
+        }
+      ],
+      "before": [
+        {
+          "disabledValidationRuns": [
+            {
+              "coverage": true,
+              "files": [
+                "/home/runner/work/_temp/real-project-comparison/00-before/00-oximut/project/src/extend.ts",
+                "/home/runner/work/_temp/real-project-comparison/00-before/00-oximut/project/src/manipulate/invert.ts",
+                "/home/runner/work/_temp/real-project-comparison/00-before/00-oximut/project/src/manipulate/lighten.ts",
+                "/home/runner/work/_temp/real-project-comparison/00-before/00-oximut/project/src/manipulate/mix.ts",
+                "/home/runner/work/_temp/real-project-comparison/00-before/00-oximut/project/src/manipulate/saturate.ts"
+              ],
+              "run": "instrumentedBaseline",
+              "wallMs": 1083.3759750000002
+            }
+          ],
+          "phaseWallMs": {
+            "finalInputValidation": 0.000161,
+            "inputAndSchedulerPreparation": 3.454727,
+            "instrumentedBaseline": 1085.237619,
+            "mutationExecution": 3303.608846,
+            "mutationPlanning": 0.14434,
+            "originalBaseline": 1551.6447119999998,
+            "postBaselineValidation": 0.000441,
+            "teardown": 103.437053
+          },
+          "report_file": "/home/runner/work/_temp/real-project-comparison/00-before/00-oximut/report.json",
+          "round": 0,
+          "warmup": true
+        },
+        {
+          "disabledValidationRuns": [
+            {
+              "coverage": true,
+              "files": [
+                "/home/runner/work/_temp/real-project-comparison/01-before/00-oximut/project/src/extend.ts",
+                "/home/runner/work/_temp/real-project-comparison/01-before/00-oximut/project/src/manipulate/invert.ts",
+                "/home/runner/work/_temp/real-project-comparison/01-before/00-oximut/project/src/manipulate/lighten.ts",
+                "/home/runner/work/_temp/real-project-comparison/01-before/00-oximut/project/src/manipulate/mix.ts",
+                "/home/runner/work/_temp/real-project-comparison/01-before/00-oximut/project/src/manipulate/saturate.ts"
+              ],
+              "run": "instrumentedBaseline",
+              "wallMs": 1049.817827
+            }
+          ],
+          "phaseWallMs": {
+            "finalInputValidation": 0.00015,
+            "inputAndSchedulerPreparation": 3.386479,
+            "instrumentedBaseline": 1051.404577,
+            "mutationExecution": 3364.263062,
+            "mutationPlanning": 0.117319,
+            "originalBaseline": 1612.76336,
+            "postBaselineValidation": 0.000321,
+            "teardown": 87.889883
+          },
+          "report_file": "/home/runner/work/_temp/real-project-comparison/01-before/00-oximut/report.json",
+          "round": 1,
+          "warmup": false
+        },
+        {
+          "disabledValidationRuns": [
+            {
+              "coverage": true,
+              "files": [
+                "/home/runner/work/_temp/real-project-comparison/02-before/00-oximut/project/src/extend.ts",
+                "/home/runner/work/_temp/real-project-comparison/02-before/00-oximut/project/src/manipulate/invert.ts",
+                "/home/runner/work/_temp/real-project-comparison/02-before/00-oximut/project/src/manipulate/lighten.ts",
+                "/home/runner/work/_temp/real-project-comparison/02-before/00-oximut/project/src/manipulate/mix.ts",
+                "/home/runner/work/_temp/real-project-comparison/02-before/00-oximut/project/src/manipulate/saturate.ts"
+              ],
+              "run": "instrumentedBaseline",
+              "wallMs": 1064.336426
+            }
+          ],
+          "phaseWallMs": {
+            "finalInputValidation": 0.00016999999999999999,
+            "inputAndSchedulerPreparation": 3.455477,
+            "instrumentedBaseline": 1065.5736929999998,
+            "mutationExecution": 3331.3727910000002,
+            "mutationPlanning": 0.07459,
+            "originalBaseline": 1616.00212,
+            "postBaselineValidation": 0.00016,
+            "teardown": 102.949956
+          },
+          "report_file": "/home/runner/work/_temp/real-project-comparison/02-before/00-oximut/report.json",
+          "round": 2,
+          "warmup": false
+        },
+        {
+          "disabledValidationRuns": [
+            {
+              "coverage": true,
+              "files": [
+                "/home/runner/work/_temp/real-project-comparison/03-before/00-oximut/project/src/extend.ts",
+                "/home/runner/work/_temp/real-project-comparison/03-before/00-oximut/project/src/manipulate/invert.ts",
+                "/home/runner/work/_temp/real-project-comparison/03-before/00-oximut/project/src/manipulate/lighten.ts",
+                "/home/runner/work/_temp/real-project-comparison/03-before/00-oximut/project/src/manipulate/mix.ts",
+                "/home/runner/work/_temp/real-project-comparison/03-before/00-oximut/project/src/manipulate/saturate.ts"
+              ],
+              "run": "instrumentedBaseline",
+              "wallMs": 1042.909036
+            }
+          ],
+          "phaseWallMs": {
+            "finalInputValidation": 0.000161,
+            "inputAndSchedulerPreparation": 3.380919,
+            "instrumentedBaseline": 1044.1670219999999,
+            "mutationExecution": 3427.875057,
+            "mutationPlanning": 0.079899,
+            "originalBaseline": 1598.161548,
+            "postBaselineValidation": 0.00016,
+            "teardown": 104.367373
+          },
+          "report_file": "/home/runner/work/_temp/real-project-comparison/03-before/00-oximut/report.json",
+          "round": 3,
+          "warmup": false
+        },
+        {
+          "disabledValidationRuns": [
+            {
+              "coverage": true,
+              "files": [
+                "/home/runner/work/_temp/real-project-comparison/04-before/00-oximut/project/src/extend.ts",
+                "/home/runner/work/_temp/real-project-comparison/04-before/00-oximut/project/src/manipulate/invert.ts",
+                "/home/runner/work/_temp/real-project-comparison/04-before/00-oximut/project/src/manipulate/lighten.ts",
+                "/home/runner/work/_temp/real-project-comparison/04-before/00-oximut/project/src/manipulate/mix.ts",
+                "/home/runner/work/_temp/real-project-comparison/04-before/00-oximut/project/src/manipulate/saturate.ts"
+              ],
+              "run": "instrumentedBaseline",
+              "wallMs": 1080.324024
+            }
+          ],
+          "phaseWallMs": {
+            "finalInputValidation": 0.00022,
+            "inputAndSchedulerPreparation": 3.527082,
+            "instrumentedBaseline": 1081.5696070000001,
+            "mutationExecution": 3361.021258,
+            "mutationPlanning": 0.088145,
+            "originalBaseline": 1634.986653,
+            "postBaselineValidation": 0.00011999999999999999,
+            "teardown": 88.597914
+          },
+          "report_file": "/home/runner/work/_temp/real-project-comparison/04-before/00-oximut/report.json",
+          "round": 4,
+          "warmup": false
+        },
+        {
+          "disabledValidationRuns": [
+            {
+              "coverage": true,
+              "files": [
+                "/home/runner/work/_temp/real-project-comparison/05-before/00-oximut/project/src/extend.ts",
+                "/home/runner/work/_temp/real-project-comparison/05-before/00-oximut/project/src/manipulate/invert.ts",
+                "/home/runner/work/_temp/real-project-comparison/05-before/00-oximut/project/src/manipulate/lighten.ts",
+                "/home/runner/work/_temp/real-project-comparison/05-before/00-oximut/project/src/manipulate/mix.ts",
+                "/home/runner/work/_temp/real-project-comparison/05-before/00-oximut/project/src/manipulate/saturate.ts"
+              ],
+              "run": "instrumentedBaseline",
+              "wallMs": 1045.7652150000001
+            }
+          ],
+          "phaseWallMs": {
+            "finalInputValidation": 0.000171,
+            "inputAndSchedulerPreparation": 3.31188,
+            "instrumentedBaseline": 1047.0149040000001,
+            "mutationExecution": 3791.803405,
+            "mutationPlanning": 0.08322600000000001,
+            "originalBaseline": 1643.62468,
+            "postBaselineValidation": 0.00026,
+            "teardown": 102.07422
+          },
+          "report_file": "/home/runner/work/_temp/real-project-comparison/05-before/00-oximut/report.json",
+          "round": 5,
+          "warmup": false
+        }
+      ]
+    },
+    "measurements": [
+      {
+        "variant": "before",
+        "tool": "vitest",
+        "warmup": true,
+        "campaign_round": 0,
+        "wall_seconds": 1.3051767119999909,
+        "cpu_seconds": 1.6832500000000001,
+        "cpu_user_seconds": 1.389758,
+        "cpu_system_seconds": 0.293492,
+        "peak_aggregate_rss_bytes": 284102656,
+        "peak_process_count": 2,
+        "observed_process_count": 5,
+        "success": true
+      },
+      {
+        "variant": "before",
+        "tool": "oximut",
+        "warmup": true,
+        "campaign_round": 0,
+        "wall_seconds": 6.0571755530000075,
+        "cpu_seconds": 9.598652,
+        "cpu_user_seconds": 6.034968,
+        "cpu_system_seconds": 3.563684,
+        "peak_aggregate_rss_bytes": 427274240,
+        "peak_process_count": 6,
+        "observed_process_count": 23,
+        "success": true
+      },
+      {
+        "variant": "before",
+        "tool": "stryker",
+        "warmup": true,
+        "campaign_round": 0,
+        "wall_seconds": 4.59988032199999,
+        "cpu_seconds": 6.079713,
+        "cpu_user_seconds": 5.4727879999999995,
+        "cpu_system_seconds": 0.6069249999999999,
+        "peak_aggregate_rss_bytes": 564207616,
+        "peak_process_count": 3,
+        "observed_process_count": 3,
+        "success": true
+      },
+      {
+        "variant": "after",
+        "tool": "vitest",
+        "warmup": true,
+        "campaign_round": 0,
+        "wall_seconds": 1.3274905589999833,
+        "cpu_seconds": 1.683477,
+        "cpu_user_seconds": 1.377059,
+        "cpu_system_seconds": 0.30641799999999997,
+        "peak_aggregate_rss_bytes": 280264704,
+        "peak_process_count": 2,
+        "observed_process_count": 5,
+        "success": true
+      },
+      {
+        "variant": "after",
+        "tool": "oximut",
+        "warmup": true,
+        "campaign_round": 0,
+        "wall_seconds": 5.121842794000003,
+        "cpu_seconds": 7.114024,
+        "cpu_user_seconds": 5.45768,
+        "cpu_system_seconds": 1.6563439999999998,
+        "peak_aggregate_rss_bytes": 286543872,
+        "peak_process_count": 3,
+        "observed_process_count": 3,
+        "success": true
+      },
+      {
+        "variant": "after",
+        "tool": "stryker",
+        "warmup": true,
+        "campaign_round": 0,
+        "wall_seconds": 4.825458892,
+        "cpu_seconds": 6.261594,
+        "cpu_user_seconds": 5.605156,
+        "cpu_system_seconds": 0.656438,
+        "peak_aggregate_rss_bytes": 575377408,
+        "peak_process_count": 3,
+        "observed_process_count": 3,
+        "success": true
+      },
+      {
+        "variant": "after",
+        "tool": "stryker",
+        "warmup": false,
+        "campaign_round": 1,
+        "wall_seconds": 4.624695973999991,
+        "cpu_seconds": 6.120793000000001,
+        "cpu_user_seconds": 5.452397,
+        "cpu_system_seconds": 0.668396,
+        "peak_aggregate_rss_bytes": 571183104,
+        "peak_process_count": 3,
+        "observed_process_count": 3,
+        "success": true
+      },
+      {
+        "variant": "after",
+        "tool": "oximut",
+        "warmup": false,
+        "campaign_round": 1,
+        "wall_seconds": 4.715563863999989,
+        "cpu_seconds": 6.756509,
+        "cpu_user_seconds": 5.248039,
+        "cpu_system_seconds": 1.50847,
+        "peak_aggregate_rss_bytes": 290910208,
+        "peak_process_count": 3,
+        "observed_process_count": 3,
+        "success": true
+      },
+      {
+        "variant": "after",
+        "tool": "vitest",
+        "warmup": false,
+        "campaign_round": 1,
+        "wall_seconds": 1.2945491510000124,
+        "cpu_seconds": 1.661721,
+        "cpu_user_seconds": 1.397993,
+        "cpu_system_seconds": 0.26372799999999996,
+        "peak_aggregate_rss_bytes": 279814144,
+        "peak_process_count": 2,
+        "observed_process_count": 5,
+        "success": true
+      },
+      {
+        "variant": "before",
+        "tool": "stryker",
+        "warmup": false,
+        "campaign_round": 1,
+        "wall_seconds": 4.570866531000007,
+        "cpu_seconds": 6.03693,
+        "cpu_user_seconds": 5.415093,
+        "cpu_system_seconds": 0.621837,
+        "peak_aggregate_rss_bytes": 567255040,
+        "peak_process_count": 3,
+        "observed_process_count": 3,
+        "success": true
+      },
+      {
+        "variant": "before",
+        "tool": "oximut",
+        "warmup": false,
+        "campaign_round": 1,
+        "wall_seconds": 6.1498009190000005,
+        "cpu_seconds": 9.525532,
+        "cpu_user_seconds": 6.070514,
+        "cpu_system_seconds": 3.455018,
+        "peak_aggregate_rss_bytes": 434171904,
+        "peak_process_count": 6,
+        "observed_process_count": 23,
+        "success": true
+      },
+      {
+        "variant": "before",
+        "tool": "vitest",
+        "warmup": false,
+        "campaign_round": 1,
+        "wall_seconds": 1.2739087259999735,
+        "cpu_seconds": 1.644161,
+        "cpu_user_seconds": 1.363291,
+        "cpu_system_seconds": 0.28087,
+        "peak_aggregate_rss_bytes": 283537408,
+        "peak_process_count": 2,
+        "observed_process_count": 5,
+        "success": true
+      },
+      {
+        "variant": "before",
+        "tool": "vitest",
+        "warmup": false,
+        "campaign_round": 2,
+        "wall_seconds": 1.3275316049999901,
+        "cpu_seconds": 1.685528,
+        "cpu_user_seconds": 1.3803269999999999,
+        "cpu_system_seconds": 0.305201,
+        "peak_aggregate_rss_bytes": 278491136,
+        "peak_process_count": 2,
+        "observed_process_count": 5,
+        "success": true
+      },
+      {
+        "variant": "before",
+        "tool": "oximut",
+        "warmup": false,
+        "campaign_round": 2,
+        "wall_seconds": 6.1292961409999975,
+        "cpu_seconds": 9.573882,
+        "cpu_user_seconds": 6.087491,
+        "cpu_system_seconds": 3.486391,
+        "peak_aggregate_rss_bytes": 409088000,
+        "peak_process_count": 6,
+        "observed_process_count": 23,
+        "success": true
+      },
+      {
+        "variant": "before",
+        "tool": "stryker",
+        "warmup": false,
+        "campaign_round": 2,
+        "wall_seconds": 4.632609680999963,
+        "cpu_seconds": 6.151083,
+        "cpu_user_seconds": 5.53676,
+        "cpu_system_seconds": 0.614323,
+        "peak_aggregate_rss_bytes": 576217088,
+        "peak_process_count": 3,
+        "observed_process_count": 3,
+        "success": true
+      },
+      {
+        "variant": "after",
+        "tool": "vitest",
+        "warmup": false,
+        "campaign_round": 2,
+        "wall_seconds": 1.279785684999979,
+        "cpu_seconds": 1.645612,
+        "cpu_user_seconds": 1.346616,
+        "cpu_system_seconds": 0.298996,
+        "peak_aggregate_rss_bytes": 283054080,
+        "peak_process_count": 2,
+        "observed_process_count": 5,
+        "success": true
+      },
+      {
+        "variant": "after",
+        "tool": "oximut",
+        "warmup": false,
+        "campaign_round": 2,
+        "wall_seconds": 4.738059410999995,
+        "cpu_seconds": 6.732588,
+        "cpu_user_seconds": 5.256133,
+        "cpu_system_seconds": 1.476455,
+        "peak_aggregate_rss_bytes": 279302144,
+        "peak_process_count": 3,
+        "observed_process_count": 3,
+        "success": true
+      },
+      {
+        "variant": "after",
+        "tool": "stryker",
+        "warmup": false,
+        "campaign_round": 2,
+        "wall_seconds": 4.638167717999977,
+        "cpu_seconds": 6.078989999999999,
+        "cpu_user_seconds": 5.439162,
+        "cpu_system_seconds": 0.639828,
+        "peak_aggregate_rss_bytes": 574660608,
+        "peak_process_count": 3,
+        "observed_process_count": 3,
+        "success": true
+      },
+      {
+        "variant": "after",
+        "tool": "stryker",
+        "warmup": false,
+        "campaign_round": 3,
+        "wall_seconds": 4.6820783960000085,
+        "cpu_seconds": 6.174658,
+        "cpu_user_seconds": 5.566408,
+        "cpu_system_seconds": 0.60825,
+        "peak_aggregate_rss_bytes": 565805056,
+        "peak_process_count": 3,
+        "observed_process_count": 3,
+        "success": true
+      },
+      {
+        "variant": "after",
+        "tool": "oximut",
+        "warmup": false,
+        "campaign_round": 3,
+        "wall_seconds": 4.75023420399998,
+        "cpu_seconds": 6.810699,
+        "cpu_user_seconds": 5.24306,
+        "cpu_system_seconds": 1.567639,
+        "peak_aggregate_rss_bytes": 286437376,
+        "peak_process_count": 3,
+        "observed_process_count": 3,
+        "success": true
+      },
+      {
+        "variant": "after",
+        "tool": "vitest",
+        "warmup": false,
+        "campaign_round": 3,
+        "wall_seconds": 1.292200204999972,
+        "cpu_seconds": 1.654736,
+        "cpu_user_seconds": 1.419098,
+        "cpu_system_seconds": 0.235638,
+        "peak_aggregate_rss_bytes": 279195648,
+        "peak_process_count": 2,
+        "observed_process_count": 5,
+        "success": true
+      },
+      {
+        "variant": "before",
+        "tool": "stryker",
+        "warmup": false,
+        "campaign_round": 3,
+        "wall_seconds": 4.645959169999969,
+        "cpu_seconds": 6.160406,
+        "cpu_user_seconds": 5.534975,
+        "cpu_system_seconds": 0.625431,
+        "peak_aggregate_rss_bytes": 574840832,
+        "peak_process_count": 3,
+        "observed_process_count": 3,
+        "success": true
+      },
+      {
+        "variant": "before",
+        "tool": "oximut",
+        "warmup": false,
+        "campaign_round": 3,
+        "wall_seconds": 6.184985476999998,
+        "cpu_seconds": 9.600975,
+        "cpu_user_seconds": 6.126501,
+        "cpu_system_seconds": 3.474474,
+        "peak_aggregate_rss_bytes": 417783808,
+        "peak_process_count": 6,
+        "observed_process_count": 23,
+        "success": true
+      },
+      {
+        "variant": "before",
+        "tool": "vitest",
+        "warmup": false,
+        "campaign_round": 3,
+        "wall_seconds": 1.3148493230000327,
+        "cpu_seconds": 1.6594399999999998,
+        "cpu_user_seconds": 1.4047969999999999,
+        "cpu_system_seconds": 0.254643,
+        "peak_aggregate_rss_bytes": 269737984,
+        "peak_process_count": 2,
+        "observed_process_count": 5,
+        "success": true
+      },
+      {
+        "variant": "before",
+        "tool": "vitest",
+        "warmup": false,
+        "campaign_round": 4,
+        "wall_seconds": 1.3046014230000083,
+        "cpu_seconds": 1.680008,
+        "cpu_user_seconds": 1.358755,
+        "cpu_system_seconds": 0.321253,
+        "peak_aggregate_rss_bytes": 271519744,
+        "peak_process_count": 2,
+        "observed_process_count": 5,
+        "success": true
+      },
+      {
+        "variant": "before",
+        "tool": "oximut",
+        "warmup": false,
+        "campaign_round": 4,
+        "wall_seconds": 6.176228175000006,
+        "cpu_seconds": 9.688915,
+        "cpu_user_seconds": 6.092668,
+        "cpu_system_seconds": 3.596247,
+        "peak_aggregate_rss_bytes": 428498944,
+        "peak_process_count": 6,
+        "observed_process_count": 23,
+        "success": true
+      },
+      {
+        "variant": "before",
+        "tool": "stryker",
+        "warmup": false,
+        "campaign_round": 4,
+        "wall_seconds": 4.652932683000017,
+        "cpu_seconds": 6.142392,
+        "cpu_user_seconds": 5.510801,
+        "cpu_system_seconds": 0.631591,
+        "peak_aggregate_rss_bytes": 567414784,
+        "peak_process_count": 3,
+        "observed_process_count": 3,
+        "success": true
+      },
+      {
+        "variant": "after",
+        "tool": "vitest",
+        "warmup": false,
+        "campaign_round": 4,
+        "wall_seconds": 1.2757406409999703,
+        "cpu_seconds": 1.6369409999999998,
+        "cpu_user_seconds": 1.37329,
+        "cpu_system_seconds": 0.26365099999999997,
+        "peak_aggregate_rss_bytes": 269914112,
+        "peak_process_count": 2,
+        "observed_process_count": 5,
+        "success": true
+      },
+      {
+        "variant": "after",
+        "tool": "oximut",
+        "warmup": false,
+        "campaign_round": 4,
+        "wall_seconds": 5.027418724999961,
+        "cpu_seconds": 7.069499,
+        "cpu_user_seconds": 5.372734,
+        "cpu_system_seconds": 1.696765,
+        "peak_aggregate_rss_bytes": 299380736,
+        "peak_process_count": 3,
+        "observed_process_count": 3,
+        "success": true
+      },
+      {
+        "variant": "after",
+        "tool": "stryker",
+        "warmup": false,
+        "campaign_round": 4,
+        "wall_seconds": 4.616172651999989,
+        "cpu_seconds": 6.1214759999999995,
+        "cpu_user_seconds": 5.506752,
+        "cpu_system_seconds": 0.6147239999999999,
+        "peak_aggregate_rss_bytes": 568172544,
+        "peak_process_count": 3,
+        "observed_process_count": 3,
+        "success": true
+      },
+      {
+        "variant": "after",
+        "tool": "stryker",
+        "warmup": false,
+        "campaign_round": 5,
+        "wall_seconds": 4.609030326000038,
+        "cpu_seconds": 6.096767,
+        "cpu_user_seconds": 5.417301,
+        "cpu_system_seconds": 0.679466,
+        "peak_aggregate_rss_bytes": 571969536,
+        "peak_process_count": 3,
+        "observed_process_count": 3,
+        "success": true
+      },
+      {
+        "variant": "after",
+        "tool": "oximut",
+        "warmup": false,
+        "campaign_round": 5,
+        "wall_seconds": 4.672695771999997,
+        "cpu_seconds": 6.705085,
+        "cpu_user_seconds": 5.188164,
+        "cpu_system_seconds": 1.516921,
+        "peak_aggregate_rss_bytes": 274595840,
+        "peak_process_count": 3,
+        "observed_process_count": 3,
+        "success": true
+      },
+      {
+        "variant": "after",
+        "tool": "vitest",
+        "warmup": false,
+        "campaign_round": 5,
+        "wall_seconds": 1.3229426610000132,
+        "cpu_seconds": 1.6504590000000001,
+        "cpu_user_seconds": 1.368243,
+        "cpu_system_seconds": 0.28221599999999997,
+        "peak_aggregate_rss_bytes": 273371136,
+        "peak_process_count": 2,
+        "observed_process_count": 5,
+        "success": true
+      },
+      {
+        "variant": "before",
+        "tool": "stryker",
+        "warmup": false,
+        "campaign_round": 5,
+        "wall_seconds": 4.638458711999988,
+        "cpu_seconds": 6.149025,
+        "cpu_user_seconds": 5.500318,
+        "cpu_system_seconds": 0.6487069999999999,
+        "peak_aggregate_rss_bytes": 576094208,
+        "peak_process_count": 3,
+        "observed_process_count": 3,
+        "success": true
+      },
+      {
+        "variant": "before",
+        "tool": "oximut",
+        "warmup": false,
+        "campaign_round": 5,
+        "wall_seconds": 6.597095259000014,
+        "cpu_seconds": 10.165196,
+        "cpu_user_seconds": 6.353031,
+        "cpu_system_seconds": 3.812165,
+        "peak_aggregate_rss_bytes": 423464960,
+        "peak_process_count": 6,
+        "observed_process_count": 23,
+        "success": true
+      },
+      {
+        "variant": "before",
+        "tool": "vitest",
+        "warmup": false,
+        "campaign_round": 5,
+        "wall_seconds": 1.2920747239999741,
+        "cpu_seconds": 1.671968,
+        "cpu_user_seconds": 1.3889019999999999,
+        "cpu_system_seconds": 0.283066,
+        "peak_aggregate_rss_bytes": 280772608,
+        "peak_process_count": 2,
+        "observed_process_count": 5,
+        "success": true
+      }
+    ]
+  }
+]

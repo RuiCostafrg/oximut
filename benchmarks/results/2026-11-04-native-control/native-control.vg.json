@@ -1,0 +1,587 @@
+{
+  "$schema": "https://vega.github.io/schema/vega/v6.json",
+  "width": 950,
+  "height": 500,
+  "padding": 20,
+  "autosize": "none",
+  "background": "#12151c",
+  "config": {
+    "font": "sans-serif"
+  },
+  "data": [
+    {
+      "name": "points",
+      "values": [
+        {
+          "key": "before_vs_stryker",
+          "label": "Main control",
+          "color": "#83adff",
+          "legendX": 8,
+          "low": 1.1203443873732755,
+          "high": 1.1521607677085677,
+          "median": 1.1324628122798874,
+          "y": 144,
+          "text": "1.132  [1.120, 1.152]"
+        },
+        {
+          "key": "after_vs_stryker",
+          "label": "Diagnostic PR control",
+          "color": "#ffbc78",
+          "legendX": 222,
+          "low": 1.1283081000300608,
+          "high": 1.171284482933632,
+          "median": 1.1484607592782974,
+          "y": 168,
+          "text": "1.148  [1.128, 1.171]"
+        },
+        {
+          "key": "before_vs_stryker",
+          "label": "Main control",
+          "color": "#83adff",
+          "legendX": 8,
+          "low": 1.238856318891472,
+          "high": 1.2764134062785086,
+          "median": 1.2589831846116137,
+          "y": 228,
+          "text": "1.259  [1.239, 1.276]"
+        },
+        {
+          "key": "after_vs_stryker",
+          "label": "Diagnostic PR control",
+          "color": "#ffbc78",
+          "legendX": 222,
+          "low": 1.248654299812797,
+          "high": 1.2823855739998198,
+          "median": 1.2715329822437058,
+          "y": 252,
+          "text": "1.272  [1.249, 1.282]"
+        },
+        {
+          "key": "before_vs_stryker",
+          "label": "Main control",
+          "color": "#83adff",
+          "legendX": 8,
+          "low": 0.5625180805351133,
+          "high": 0.6012335130710742,
+          "median": 0.5741853163395507,
+          "y": 312,
+          "text": "0.574  [0.563, 0.601]"
+        },
+        {
+          "key": "after_vs_stryker",
+          "label": "Diagnostic PR control",
+          "color": "#ffbc78",
+          "legendX": 222,
+          "low": 0.5711081073308216,
+          "high": 0.6003137841942008,
+          "median": 0.590604317481397,
+          "y": 336,
+          "text": "0.591  [0.571, 0.600]"
+        }
+      ]
+    },
+    {
+      "name": "targets",
+      "values": [
+        {
+          "label": "Wall",
+          "field": "wall_seconds",
+          "target": 0.5,
+          "y": 156
+        },
+        {
+          "label": "CPU",
+          "field": "cpu_seconds",
+          "target": 0.8,
+          "y": 240
+        },
+        {
+          "label": "RSS",
+          "field": "peak_aggregate_rss_bytes",
+          "target": 0.8,
+          "y": 324
+        }
+      ]
+    },
+    {
+      "name": "legend",
+      "values": [
+        {
+          "key": "before_vs_stryker",
+          "label": "Main control",
+          "color": "#83adff",
+          "legendX": 8
+        },
+        {
+          "key": "after_vs_stryker",
+          "label": "Diagnostic PR control",
+          "color": "#ffbc78",
+          "legendX": 222
+        }
+      ]
+    },
+    {
+      "name": "grid",
+      "values": [
+        {
+          "value": 0
+        },
+        {
+          "value": 0.25
+        },
+        {
+          "value": 0.5
+        },
+        {
+          "value": 0.75
+        },
+        {
+          "value": 1
+        },
+        {
+          "value": 1.25
+        }
+      ]
+    }
+  ],
+  "scales": [
+    {
+      "name": "x",
+      "type": "linear",
+      "domain": [
+        0,
+        1.4
+      ],
+      "range": [
+        150,
+        650
+      ],
+      "zero": true,
+      "nice": false
+    }
+  ],
+  "axes": [
+    {
+      "scale": "x",
+      "orient": "bottom",
+      "offset": -110,
+      "domain": false,
+      "ticks": false,
+      "values": [
+        0,
+        0.25,
+        0.5,
+        0.75,
+        1,
+        1.25
+      ],
+      "format": ".2f",
+      "labelColor": "#b2bac8",
+      "labelFontSize": 12,
+      "title": "Paired Oximut / Stryker ratio · lower is better",
+      "titleColor": "#b2bac8",
+      "titleFontSize": 13,
+      "titlePadding": 15
+    }
+  ],
+  "marks": [
+    {
+      "type": "text",
+      "encode": {
+        "enter": {
+          "text": {
+            "value": "Native same-engine control"
+          },
+          "x": {
+            "value": 0
+          },
+          "y": {
+            "value": 28
+          },
+          "fontSize": {
+            "value": 26
+          },
+          "fill": {
+            "value": "#eef1f7"
+          },
+          "fontWeight": {
+            "value": "bold"
+          }
+        }
+      }
+    },
+    {
+      "type": "text",
+      "encode": {
+        "enter": {
+          "text": {
+            "value": "Paired medians and bootstrap 95% confidence intervals"
+          },
+          "x": {
+            "value": 0
+          },
+          "y": {
+            "value": 57
+          },
+          "fontSize": {
+            "value": 15
+          },
+          "fill": {
+            "value": "#b2bac8"
+          }
+        }
+      }
+    },
+    {
+      "type": "symbol",
+      "from": {
+        "data": "legend"
+      },
+      "encode": {
+        "enter": {
+          "x": {
+            "field": "legendX"
+          },
+          "y": {
+            "value": 87
+          },
+          "size": {
+            "value": 70
+          },
+          "fill": {
+            "field": "color"
+          }
+        }
+      }
+    },
+    {
+      "type": "text",
+      "from": {
+        "data": "legend"
+      },
+      "encode": {
+        "enter": {
+          "x": {
+            "signal": "datum.legendX + 15"
+          },
+          "y": {
+            "value": 92
+          },
+          "text": {
+            "field": "label"
+          },
+          "fill": {
+            "field": "color"
+          },
+          "fontSize": {
+            "value": 14
+          }
+        }
+      }
+    },
+    {
+      "type": "rule",
+      "from": {
+        "data": "grid"
+      },
+      "encode": {
+        "enter": {
+          "x": {
+            "scale": "x",
+            "field": "value"
+          },
+          "y": {
+            "value": 120
+          },
+          "y2": {
+            "value": 365
+          },
+          "stroke": {
+            "value": "#303744"
+          },
+          "strokeWidth": {
+            "value": 0.7
+          }
+        }
+      }
+    },
+    {
+      "type": "rule",
+      "from": {
+        "data": "targets"
+      },
+      "encode": {
+        "enter": {
+          "x": {
+            "scale": "x",
+            "field": "target"
+          },
+          "y": {
+            "signal": "datum.y - 28"
+          },
+          "y2": {
+            "signal": "datum.y + 28"
+          },
+          "stroke": {
+            "value": "#7dcf9b"
+          },
+          "strokeDash": {
+            "value": [
+              4,
+              3
+            ]
+          },
+          "strokeWidth": {
+            "value": 1.5
+          }
+        }
+      }
+    },
+    {
+      "type": "text",
+      "from": {
+        "data": "targets"
+      },
+      "encode": {
+        "enter": {
+          "x": {
+            "value": 0
+          },
+          "y": {
+            "signal": "datum.y - 3"
+          },
+          "text": {
+            "field": "label"
+          },
+          "fill": {
+            "value": "#eef1f7"
+          },
+          "fontSize": {
+            "value": 19
+          },
+          "fontWeight": {
+            "value": "bold"
+          }
+        }
+      }
+    },
+    {
+      "type": "text",
+      "from": {
+        "data": "targets"
+      },
+      "encode": {
+        "enter": {
+          "x": {
+            "value": 0
+          },
+          "y": {
+            "signal": "datum.y + 19"
+          },
+          "text": {
+            "signal": "'Target ≤ ' + format(datum.target, '.2f')"
+          },
+          "fill": {
+            "value": "#b2bac8"
+          },
+          "fontSize": {
+            "value": 12
+          }
+        }
+      }
+    },
+    {
+      "type": "rule",
+      "from": {
+        "data": "points"
+      },
+      "encode": {
+        "enter": {
+          "x": {
+            "scale": "x",
+            "field": "low"
+          },
+          "x2": {
+            "scale": "x",
+            "field": "high"
+          },
+          "y": {
+            "field": "y"
+          },
+          "stroke": {
+            "field": "color"
+          },
+          "strokeWidth": {
+            "value": 3
+          }
+        }
+      }
+    },
+    {
+      "type": "rule",
+      "from": {
+        "data": "points"
+      },
+      "encode": {
+        "enter": {
+          "x": {
+            "scale": "x",
+            "field": "low"
+          },
+          "y": {
+            "signal": "datum.y - 5"
+          },
+          "y2": {
+            "signal": "datum.y + 5"
+          },
+          "stroke": {
+            "field": "color"
+          },
+          "strokeWidth": {
+            "value": 2
+          }
+        }
+      }
+    },
+    {
+      "type": "rule",
+      "from": {
+        "data": "points"
+      },
+      "encode": {
+        "enter": {
+          "x": {
+            "scale": "x",
+            "field": "high"
+          },
+          "y": {
+            "signal": "datum.y - 5"
+          },
+          "y2": {
+            "signal": "datum.y + 5"
+          },
+          "stroke": {
+            "field": "color"
+          },
+          "strokeWidth": {
+            "value": 2
+          }
+        }
+      }
+    },
+    {
+      "type": "symbol",
+      "from": {
+        "data": "points"
+      },
+      "encode": {
+        "enter": {
+          "x": {
+            "scale": "x",
+            "field": "median"
+          },
+          "y": {
+            "field": "y"
+          },
+          "size": {
+            "value": 70
+          },
+          "fill": {
+            "field": "color"
+          }
+        }
+      }
+    },
+    {
+      "type": "text",
+      "from": {
+        "data": "points"
+      },
+      "encode": {
+        "enter": {
+          "x": {
+            "value": 680
+          },
+          "y": {
+            "signal": "datum.y + 5"
+          },
+          "text": {
+            "field": "text"
+          },
+          "fill": {
+            "field": "color"
+          },
+          "fontSize": {
+            "value": 14
+          }
+        }
+      }
+    },
+    {
+      "type": "text",
+      "encode": {
+        "enter": {
+          "text": {
+            "value": "Ubuntu 24.04 x86_64 · 1 warmup + 5 pairs · run 41844675894"
+          },
+          "x": {
+            "value": 0
+          },
+          "y": {
+            "value": 449
+          },
+          "fontSize": {
+            "value": 12
+          },
+          "fill": {
+            "value": "#b2bac8"
+          }
+        }
+      }
+    },
+    {
+      "type": "text",
+      "encode": {
+        "enter": {
+          "text": {
+            "value": "Exact workload and strict build integrity pass. All after/before CIs include 1; no optimization claim."
+          },
+          "x": {
+            "value": 0
+          },
+          "y": {
+            "value": 472
+          },
+          "fontSize": {
+            "value": 12
+          },
+          "fill": {
+            "value": "#b2bac8"
+          }
+        }
+      }
+    },
+    {
+      "type": "text",
+      "encode": {
+        "enter": {
+          "text": {
+            "value": "Dashed green: mission targets, superseding the legacy evaluator thresholds."
+          },
+          "x": {
+            "value": 0
+          },
+          "y": {
+            "value": 495
+          },
+          "fontSize": {
+            "value": 12
+          },
+          "fill": {
+            "value": "#b2bac8"
+          }
+        }
+      }
+    }
+  ]
+}

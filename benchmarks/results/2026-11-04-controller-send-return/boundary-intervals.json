@@ -1,0 +1,103 @@
+{
+  "units": "wall milliseconds; independent medians are not additive; controller CPU is not partitioned",
+  "jobs": [
+    {
+      "jobId": 4,
+      "requestToSendReturnMs": 500.78708200000005,
+      "requestToForkMs": 65.990542,
+      "forkToStartedMs": 66.45587299999988,
+      "runToCollectionMs": 320.463831,
+      "collectionToFinishedMs": 42.10814499999992,
+      "finishedToSendReturnMs": 5.610426000000189
+    },
+    {
+      "jobId": 5,
+      "requestToSendReturnMs": 621.6409309999999,
+      "requestToForkMs": 4.428785000000062,
+      "forkToStartedMs": 71.27420399999983,
+      "runToCollectionMs": 480.61997599999995,
+      "collectionToFinishedMs": 54.37516400000004,
+      "finishedToSendReturnMs": 10.82494699999961
+    },
+    {
+      "jobId": 6,
+      "requestToSendReturnMs": 143.3526820000002,
+      "requestToForkMs": 4.243651000000227,
+      "forkToStartedMs": 75.03194500000018,
+      "runToCollectionMs": 20.0988440000001,
+      "collectionToFinishedMs": 38.728579999999965,
+      "finishedToSendReturnMs": 5.126760000000104
+    },
+    {
+      "jobId": 7,
+      "requestToSendReturnMs": 180.3507709999999,
+      "requestToForkMs": 5.042975999999726,
+      "forkToStartedMs": 87.7637380000001,
+      "runToCollectionMs": 36.920990000000074,
+      "collectionToFinishedMs": 45.77009399999997,
+      "finishedToSendReturnMs": 4.636391999999887
+    },
+    {
+      "jobId": 8,
+      "requestToSendReturnMs": 138.31174299999975,
+      "requestToForkMs": 4.1006680000000415,
+      "forkToStartedMs": 67.90258700000004,
+      "runToCollectionMs": 18.27768900000001,
+      "collectionToFinishedMs": 42.68379200000027,
+      "finishedToSendReturnMs": 5.244734999999764
+    },
+    {
+      "jobId": 9,
+      "requestToSendReturnMs": 145.26805699999977,
+      "requestToForkMs": 4.247916999999688,
+      "forkToStartedMs": 71.12350200000037,
+      "runToCollectionMs": 22.764806000000135,
+      "collectionToFinishedMs": 41.43289499999992,
+      "finishedToSendReturnMs": 5.595925000000079
+    },
+    {
+      "jobId": 10,
+      "requestToSendReturnMs": 136.93273999999974,
+      "requestToForkMs": 4.222079000000122,
+      "forkToStartedMs": 69.67963099999997,
+      "runToCollectionMs": 21.719280000000253,
+      "collectionToFinishedMs": 36.89851799999997,
+      "finishedToSendReturnMs": 4.3035689999996976
+    },
+    {
+      "jobId": 11,
+      "requestToSendReturnMs": 161.74474599999985,
+      "requestToForkMs": 4.123012000000017,
+      "forkToStartedMs": 65.37611199999992,
+      "runToCollectionMs": 27.02529100000038,
+      "collectionToFinishedMs": 60.99671099999978,
+      "finishedToSendReturnMs": 4.108420000000024
+    },
+    {
+      "jobId": 12,
+      "requestToSendReturnMs": 150.07753000000002,
+      "requestToForkMs": 4.092956999999842,
+      "forkToStartedMs": 73.00285800000029,
+      "runToCollectionMs": 19.23485299999993,
+      "collectionToFinishedMs": 46.861131000000114,
+      "finishedToSendReturnMs": 6.783570000000054
+    },
+    {
+      "jobId": 13,
+      "requestToSendReturnMs": 134.02233999999999,
+      "requestToForkMs": 4.104404000000159,
+      "forkToStartedMs": 66.10005499999988,
+      "runToCollectionMs": 19.655886999999893,
+      "collectionToFinishedMs": 39.42335000000003,
+      "finishedToSendReturnMs": 4.635891999999785
+    }
+  ],
+  "medians": {
+    "requestToSendReturnMs": 147.6727934999999,
+    "requestToForkMs": 4.232865000000174,
+    "forkToStartedMs": 70.40156650000017,
+    "runToCollectionMs": 22.242043000000194,
+    "collectionToFinishedMs": 42.395968500000095,
+    "finishedToSendReturnMs": 5.185747499999934
+  }
+}

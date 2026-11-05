@@ -2,6 +2,14 @@ name: Native diagnostic CPU profiles
 
 on:
   workflow_dispatch:
+    inputs:
+      capture_mode:
+        description: Diagnostic scope (profiler overhead; never scored ratios)
+        type: choice
+        default: controller-jobs
+        options:
+          - controller-jobs
+          - segments
   pull_request:
     types: [opened, reopened, synchronize, labeled]
 
@@ -44,6 +52,7 @@ jobs:
           set -euo pipefail
           npm ci --ignore-scripts 2>&1 | tee "$PROFILE_ROOT/dependencies.log"
           python3 -m unittest discover -s benchmarks/tests -v 2>&1 | tee "$PROFILE_ROOT/fixture-tests.log"
+          python3 -m unittest discover -s benchmarks/profiling -p 'test_*.py' -v 2>&1 | tee "$PROFILE_ROOT/controller-fixture-tests.log"
       - name: Build one candidate before profiling
         shell: bash
         run: |
@@ -72,10 +81,17 @@ jobs:
           PY
       - name: Capture unchanged workload with profiler overhead, no ratios or targets
         shell: bash
+        env:
+          CAPTURE_MODE: ${{ inputs.capture_mode || 'controller-jobs' }}
         run: |
           set -euo pipefail
+          case "$CAPTURE_MODE" in
+            controller-jobs) CAPTURE_ARG=--controller-jobs ;;
+            segments) CAPTURE_ARG=--segments ;;
+            *) echo 'Unsupported capture mode' >&2; exit 1 ;;
+          esac
           python3 benchmarks/profile_native.py --binary "$PROFILE_ROOT/oximut" \
-            --segments --output "$PROFILE_ROOT/capture" 2>&1 | tee "$PROFILE_ROOT/diagnostic.log"
+            "$CAPTURE_ARG" --output "$PROFILE_ROOT/capture" 2>&1 | tee "$PROFILE_ROOT/diagnostic.log"
       - name: Publish diagnostic status and remove dependency symlinks
         if: always()
         shell: bash

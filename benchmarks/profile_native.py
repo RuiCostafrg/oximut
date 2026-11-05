@@ -8,6 +8,7 @@ import math
 import os
 from pathlib import Path
 import pstats
+import re
 import subprocess
 import sys
 from types import SimpleNamespace
@@ -44,15 +45,261 @@ def qualification_errors(directory, code):
 
 
 def node_profile_finalized(data):
-    """Check that parsed Node evidence has nodes and finite ordered timestamps."""
+    """Require a connected CPU call tree and usable, internally consistent samples."""
     try:
-        return (isinstance(data, dict) and isinstance(data.get('nodes'), list) and bool(data['nodes'])
-                and all(isinstance(node, dict) for node in data['nodes'])
-                and all(type(data.get(key)) in (int, float) and math.isfinite(data[key])
-                        for key in ('startTime', 'endTime'))
-                and data['endTime'] >= data['startTime'] >= 0)
-    except OverflowError:
+        if (not isinstance(data, dict) or not isinstance(data.get('nodes'), list) or not data['nodes']
+                or not all(type(data.get(k)) in (int, float) and math.isfinite(data[k])
+                           for k in ('startTime', 'endTime'))
+                or not data['endTime'] > data['startTime'] >= 0):
+            return False
+        nodes = {}
+        for node in data['nodes']:
+            if not isinstance(node, dict) or type(node.get('id')) is not int or node['id'] <= 0:
+                return False
+            frame = node.get('callFrame')
+            if (node['id'] in nodes or not isinstance(frame, dict)
+                    or not all(isinstance(frame.get(k), str) for k in ('functionName', 'scriptId', 'url'))
+                    or not all(type(frame.get(k)) is int and frame[k] >= -1
+                               for k in ('lineNumber', 'columnNumber'))
+                    or not isinstance(node.get('children', []), list)
+                    or not all(type(child) is int for child in node.get('children', []))):
+                return False
+            nodes[node['id']] = node
+        children = [child for node in nodes.values() for child in node.get('children', [])]
+        if (len(children) != len(set(children)) or any(child not in nodes for child in children)):
+            return False
+        roots = nodes.keys() - set(children)
+        if len(roots) != 1 or data['nodes'][0]['id'] not in roots:
+            return False
+        visited, pending = set(), list(roots)
+        while pending:
+            node_id = pending.pop()
+            if node_id in visited:
+                return False
+            visited.add(node_id)
+            pending.extend(nodes[node_id].get('children', []))
+        samples, deltas = data.get('samples'), data.get('timeDeltas')
+        return (len(visited) == len(nodes)
+                and isinstance(samples, list) and bool(samples) and isinstance(deltas, list)
+                and len(samples) == len(deltas)
+                and all(type(sample) is int and sample in nodes for sample in samples)
+                and all(type(delta) in (int, float) and math.isfinite(delta) and delta >= 0
+                        for delta in deltas)
+                and math.fsum(deltas) <= data['endTime'] - data['startTime'])
+    except (OverflowError, TypeError, ValueError):
         return False
+
+
+def valid_mutant_identity(value):
+    """Accept only the bounded lowercase digest emitted as an Oximut mutant ID."""
+    return isinstance(value, str) and len(value) == 64 and all(c in '0123456789abcdef' for c in value)
+
+
+def controller_capture_inventory(directory, qualification=None):
+    """Validate the deliberately narrow controller capture, never whole-tree coverage."""
+    errors, observed, matched = [], [], set()
+    if list(directory.glob('controller-*.timeline-error')):
+        errors.append('timeline append failure marker present')
+    timelines = sorted(directory.glob('controller-*.jsonl'))
+    for timeline in timelines:
+        try:
+            events = [json.loads(line) for line in timeline.read_text().splitlines()]
+            if not events or any(not isinstance(e, dict) for e in events):
+                raise ValueError('empty or malformed timeline')
+            if type(events[0].get('formatVersion')) is not int or events[0]['formatVersion'] != 1:
+                raise ValueError('unsupported legacy timeline: pre-send boundary/no append-integrity attestation')
+            if any(type(e.get('seq')) is not int or e['seq'] != i
+                   or e.get('timelineWriteFailed') is not False for i, e in enumerate(events, 1)):
+                raise ValueError('missing event sequence or timeline append failure')
+            times = [e['monotonicMs'] for e in events]
+            if (not all(type(t) in (int, float) and math.isfinite(t) and t >= 0 for t in times)
+                    or times != sorted(times)):
+                raise ValueError('invalid monotonic timeline')
+            if any(e['type'] == 'profile-error' for e in events):
+                errors.append(f'diagnostic helper error: {timeline.name}')
+            identities = [e for e in events if e['type'] == 'controller-start']
+            exits = [e for e in events if e['type'] == 'controller-exit']
+            if (len(identities) != 1 or len(exits) != 1
+                    or events[0]['type'] != 'controller-start'
+                    or events[-1]['type'] != 'controller-exit'
+                    or type(identities[0].get('pid')) is not int
+                    or identities[0]['pid'] <= 0
+                    or identities[0]['pid'] != int(timeline.stem.split('-')[1])
+                    or not str(identities[0].get('startTime', '')).isascii()
+                    or not str(identities[0].get('startTime', '')).isdecimal()):
+                errors.append(f'incomplete controller identity/lifecycle: {timeline.name}')
+            if len(exits) == 1 and (type(exits[0].get('code')) is not int or exits[0]['code'] != 0):
+                errors.append(f'abnormal controller exit: {timeline.name}')
+            requests = [e for e in events if e['type'] == 'controller-request']
+            replies = [e for e in events if e['type'] == 'controller-send']
+            if (not requests or requests[0].get('command') != 'initialize'
+                    or requests[-1].get('command') != 'close'
+                    or any(e.get('command') != 'run' or e.get('kind') not in ('baseline', 'mutant')
+                           for e in requests[1:-1])):
+                errors.append(f'invalid controller command sequence: {timeline.name}')
+            if any(e.get('boundary') != 'send-return' or type(e.get('sendReturn')) is not bool
+                   for e in replies):
+                errors.append(f'missing local send-return boundary: {timeline.name}')
+            ids = [e['id'] for e in requests]
+            reply_ids = [e['id'] for e in replies]
+            if (not ids or any(type(i) is not int or abs(i) > 2**53 - 1 for i in ids + reply_ids)
+                    or len(ids) != len(set(ids)) or len(reply_ids) != len(set(reply_ids))):
+                errors.append(f'invalid or duplicate controller IDs: {timeline.name}')
+            exchanges = [(e['type'], e['id']) for e in events
+                         if e['type'] in ('controller-request', 'controller-send')]
+            expected = [pair for i in ids for pair in
+                        [('controller-request', i), ('controller-send', i)]]
+            if exchanges != expected:
+                errors.append(f'unmatched or nonserial controller exchange: {timeline.name}')
+            if any(e.get('error') or not e.get('result') for e in replies):
+                errors.append(f'controller error reply: {timeline.name}')
+            mutants = [e for e in requests if e.get('kind') == 'mutant']
+            starts = [e for e in events if e['type'] == 'profile-started']
+            written = [e for e in events if e['type'] == 'profile-written']
+            profile_window = None
+            if (not mutants or len(starts) != 1 or len(written) != 1
+                    or starts[0]['jobId'] != mutants[0]['id']
+                    or written[0]['jobId'] != mutants[0]['id']):
+                errors.append(f'first mutant profile missing/duplicated: {timeline.name}')
+            else:
+                name = written[0]['profile']
+                if not isinstance(name, str) or Path(name).name != name or not name.endswith('.cpuprofile'):
+                    raise ValueError('unsafe profile filename')
+                profile = directory / name
+                matched.add(profile)
+                if not node_profile_finalized(json.loads(profile.read_text())):
+                    errors.append(f'invalid CPU profile: {name}')
+                reply = next(e for e in replies if e['id'] == mutants[0]['id'])
+                if not (mutants[0]['monotonicMs'] <= starts[0]['monotonicMs']
+                        <= reply['monotonicMs'] <= written[0]['monotonicMs']):
+                    errors.append(f'CPU sample window outside mutant timeline: {timeline.name}')
+                else:
+                    profile_window = {
+                        'requestToSendReturnMs': reply['monotonicMs'] - mutants[0]['monotonicMs'],
+                        'requestToProfileAckMs': starts[0]['monotonicMs'] - mutants[0]['monotonicMs'],
+                        'profileAckToSendReturnMs': reply['monotonicMs'] - starts[0]['monotonicMs'],
+                    }
+                forks = [e for e in events if e['type'] == 'fork'
+                         and starts[0]['monotonicMs'] <= e['monotonicMs'] <= reply['monotonicMs']]
+                if not forks:
+                    errors.append(f'no first-mutant fork evidence: {timeline.name}')
+            forks = [e['childPid'] for e in events if e['type'] == 'fork']
+            exited = [e['childPid'] for e in events if e['type'] == 'child-exit']
+            if not forks or sorted(forks) != sorted(exited):
+                errors.append(f'incomplete observed worker exits: {timeline.name}')
+            for pid in forks:
+                boundaries = []
+                for event in events:
+                    if event.get('childPid') != pid:
+                        continue
+                    if event['type'] in ('fork', 'child-exit'):
+                        boundaries.append(event['type'])
+                    elif event['type'] == 'child-send':
+                        boundaries.append('send:' + str(event.get('messageType')))
+                    elif event['type'] == 'child-message':
+                        if event.get('messageType'):
+                            boundaries.append('receive:' + str(event['messageType']))
+                        elif event.get('rpcMethod') == 'onCollected':
+                            boundaries.append('collection')
+                if boundaries != ['fork', 'send:start', 'receive:started', 'send:run',
+                                   'collection', 'receive:testfileFinished', 'send:stop',
+                                   'receive:stopped', 'child-exit']:
+                    errors.append(f'incomplete worker boundaries: {timeline.name}/{pid}')
+                worker_exit = next(e for e in events if e['type'] == 'child-exit'
+                                   and e.get('childPid') == pid)
+                # Vitest terminates isolated forks with SIGTERM after 'stopped'.
+                clean_exit = ('signal' in worker_exit
+                              and type(worker_exit.get('code')) is int and worker_exit['code'] == 0
+                              and worker_exit.get('signal') is None)
+                stopped_term = ('code' in worker_exit and worker_exit['code'] is None
+                                and worker_exit.get('signal') == 'SIGTERM'
+                                and 'receive:stopped' in boundaries)
+                if not (clean_exit or stopped_term):
+                    errors.append(f'abnormal observed worker exit: {timeline.name}/{pid}')
+                counts = worker_exit.get('counts')
+                critical = ('started', 'testfileFinished', 'stopped', 'onCollected')
+                if (not isinstance(counts, dict) or any(type(counts.get(k)) is not int
+                                                       or counts[k] != 1 for k in critical)):
+                    errors.append(f'invalid worker boundary counts: {timeline.name}/{pid}')
+            observed.append({'timeline': timeline.name, 'request_count': len(requests),
+                             'mutant_count': len(mutants), 'observed_forks': len(forks),
+                             'mutant_ids': [e.get('mutantId') for e in mutants],
+                             'baseline_count': sum(e.get('kind') == 'baseline' for e in requests),
+                             'jobs': [{'kind': e.get('kind'), 'job_id': e.get('jobId'),
+                                       'run_id': e.get('runId'), 'mutant_id': e.get('mutantId')}
+                                      for e in requests if e.get('command') == 'run'],
+                             'first_mutant_window': profile_window})
+        except (OSError, ValueError, KeyError, TypeError, StopIteration, OverflowError) as error:
+            errors.append(f'invalid controller capture {timeline.name}: {error}')
+    orphans = sorted(p.name for p in set(directory.glob('*.cpuprofile')) - matched)
+    if orphans:
+        errors.append('orphan controller profiles: ' + ', '.join(orphans))
+    if not observed:
+        errors.append('no usable controller timelines')
+    reconciled = False
+    try:
+        if qualification is None:
+            raise ValueError('qualification report required for workload completeness')
+        report = json.loads((qualification / '00-oximut/report.json').read_text())
+        mutants = report['mutants']
+        baselines = report['resources']['disabledValidationRuns']
+        if (not isinstance(mutants, list) or not mutants or not isinstance(baselines, list)
+                or any(not isinstance(run, dict) or run.get('run') != 'instrumentedBaseline'
+                       or type(run.get('coverage')) is not bool
+                       for run in baselines)
+                or any(m['provenance']['source'] != 'executed' for m in mutants)):
+            raise ValueError('require executed-mutant and validation-run evidence')
+        # Complete attribution is required by qualification. If none of the
+        # mutation groups collected it, the CLI ran a separate coverage baseline,
+        # which disabledValidationRuns intentionally does not include.
+        baseline = report['baseline']
+        if not isinstance(baseline, dict):
+            raise ValueError('invalid qualified baseline evidence')
+        coverage = baseline.get('coverage')
+        coverage = {} if coverage is None else coverage
+        if not isinstance(coverage, dict) or type(coverage.get('complete', False)) is not bool:
+            raise ValueError('invalid qualified coverage evidence')
+        coverage_only = (coverage.get('complete') is True
+                         and not any(run['coverage'] for run in baselines))
+        instrumented_count = len(baselines) + int(coverage_only)
+        expected = {'mutant_count': len(mutants), 'baseline_count': 1 + instrumented_count}
+        actual = {key: sum(r[key] for r in observed) for key in expected}
+        if actual != expected or sum(r['request_count'] for r in observed) != sum(expected.values()) + 2 * len(observed):
+            raise ValueError(f'captured workload counts {actual} differ from qualification {expected}')
+        expected_ids = [m['id'] for m in mutants]
+        captured_ids = [identity for row in observed for identity in row['mutant_ids']]
+        if (not all(valid_mutant_identity(identity) for identity in expected_ids)
+                or len(expected_ids) != len(set(expected_ids))):
+            raise ValueError('invalid or duplicate qualified mutant identities')
+        if (not all(valid_mutant_identity(identity) for identity in captured_ids)
+                or sorted(captured_ids) != sorted(expected_ids)):
+            raise ValueError('captured mutant identities differ from qualification')
+        run_id = report['runId']
+        if (not isinstance(run_id, str) or len(run_id) > 128
+                or re.fullmatch(r'[0-9]+-[0-9]+', run_id) is None
+                or baseline['jobId'] != 'baseline' or baseline['runId'] != run_id):
+            raise ValueError('invalid qualified original baseline identity')
+        jobs = [job for row in observed for job in row['jobs']]
+        if any(job['run_id'] != run_id for job in jobs):
+            raise ValueError('captured jobs belong to a different qualification run')
+        # CLI original job ID plus its single or indexed instrumented-baseline IDs.
+        expected_baselines = ['baseline'] + (
+            ['instrumented-baseline'] if instrumented_count == 1 else
+            [f'instrumented-baseline-{i}' for i in range(instrumented_count)])
+        baseline_ids = [job['job_id'] for job in jobs if job['kind'] == 'baseline']
+        if (not all(isinstance(identity, str) for identity in baseline_ids)
+                or sorted(baseline_ids) != sorted(expected_baselines)):
+            raise ValueError('captured baseline identities differ from qualification')
+        if any(job['job_id'] != job['mutant_id'] for job in jobs if job['kind'] == 'mutant'):
+            raise ValueError('captured mutant job identity differs from its mutation')
+        reconciled = True
+    except (OSError, ValueError, KeyError, TypeError) as error:
+        errors.append(f'workload reconciliation failed: {error}')
+    return {'observed': observed, 'errors': errors, 'orphan_profiles': orphans,
+            'workload_reconciled': reconciled,
+            'scope': 'Request observation to local send return (not recipient delivery/callback completion); partial controller CPU sampling. '
+                     'Sampling starts during profiler activation, omitting some request prefix, '
+                     'and may include inspector overhead. Not full-request or process-tree CPU profiling.'}
 
 
 def compact_summary(result):
@@ -286,15 +533,19 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--binary', type=Path, required=True)
     parser.add_argument('--output', type=Path, required=True)
-    parser.add_argument('--segments', action='store_true',
+    modes = parser.add_mutually_exclusive_group()
+    modes.add_argument('--segments', action='store_true',
                         help='Use one inspector startup checkpoint per isolate instead of exit-time Node profiles; always partial evidence')
+    modes.add_argument('--controller-jobs', action='store_true',
+                       help='Trace complete controller jobs with a partial first-mutant CPU sample window; no whole-tree CPU attribution')
     args = parser.parse_args(argv)
     output = args.output.resolve()
     output.mkdir(parents=True, exist_ok=False)
     profiles = output / 'profiles'
     profiles.mkdir()
     result = {'diagnostic_only': True, 'profiler_overhead': True,
-              'node_capture_mode': 'partial-inspector-startup' if args.segments else 'exit-time-cpu-prof',
+              'node_capture_mode': ('controller-jobs' if args.controller_jobs else
+                                    'partial-inspector-startup' if args.segments else 'exit-time-cpu-prof'),
               'qualification_errors': [], 'failure': None,
               'scope': 'Unchanged colord: 41 sources, 102 tests, five mutation sources, ten arithmetic edits. One capture, no warmup campaign.',
               'limits': 'Node sampling and Python supervisor self CPU only; no complete process-tree CPU partition. Rust resource sampling remains unattributed. External benchmark sampler CPU is outside wait4 product-tree CPU; it perturbs wall time.'}
@@ -320,6 +571,11 @@ def main(argv=None):
                'OXIMUT_PROFILE_SEGMENTS': '1' if args.segments else '0',
                'NODE_OPTIONS': ('' if args.segments else f'--cpu-prof --cpu-prof-dir="{profiles}" ') +
                                f'--require="{SUPPORT / "node-identity.cjs"}"'}
+        if args.controller_jobs:
+            # Keep this capture separate from the startup/exit-time profilers:
+            # two inspector sessions would otherwise stop each other's samples.
+            env['OXIMUT_PROFILE_CONTROLLER_DIR'] = str(profiles)
+            env['NODE_OPTIONS'] = f'--require="{SUPPORT / "controller-jobs.cjs"}"'
         result['node_options'] = env['NODE_OPTIONS']
         cmd = [sys.executable, str(ROOT / 'benchmarks/real_project.py'),
                '--binary', str(inputs.binary), '--adapter', str(inputs.adapter),
@@ -335,7 +591,8 @@ def main(argv=None):
     except Exception as error:
         result['failure'] = f'{type(error).__name__}: {error}'
     finally:
-        result['captures'] = capture_inventory(profiles, output / 'qualification')
+        result['captures'] = (controller_capture_inventory(profiles, output / 'qualification') if args.controller_jobs else
+                              capture_inventory(profiles, output / 'qualification'))
         result['passed'] = not (result['failure'] or result['qualification_errors'] or result['captures']['errors'])
         workload.m6.write_json(output / 'diagnostic.json', result)
     print(json.dumps(result, indent=2))
