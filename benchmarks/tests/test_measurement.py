@@ -48,6 +48,7 @@ class ProcessStatsTests(unittest.TestCase):
         self.assertEqual(result['rss_bytes'], 7 * runner.PAGE_SIZE)
 
     def test_optional_peak_details_use_the_same_verified_rss_reads(self):
+        """Retain peak components without extra reads or reused-PID evidence."""
         tail = ['S', '12', '34'] + ['0'] * 16 + ['9876', '1234', '7']
         stat = '99 (worker) ' + ' '.join(tail)
         details=[]
@@ -141,6 +142,7 @@ class CommandTests(unittest.TestCase):
         self.assertGreaterEqual(result['peak_process_count'], 2)
 
     def test_opt_in_peak_snapshot_reconciles_with_the_reported_memory_peak(self):
+        """Reconcile recorded process components with the measured aggregate peak."""
         with mock.patch.dict(os.environ,{'OXIMUT_PROFILE_MEMORY':'1'}):
             result=self.run_python('import time; data=bytearray(8000000); time.sleep(.05)')
         self.assertTrue(result['success'])
@@ -150,6 +152,7 @@ class CommandTests(unittest.TestCase):
         self.assertLessEqual(snapshot['sampled_wall_seconds'],result['wall_seconds'])
 
     def test_explicit_environment_controls_peak_capture_in_both_directions(self):
+        """Honor explicit profiling environments rather than parent switches."""
         script='import time; time.sleep(.05)'
         with mock.patch.dict(os.environ,{'OXIMUT_PROFILE_MEMORY':'0'}):
             result=self.run_python(script,env={**os.environ,'OXIMUT_PROFILE_MEMORY':'1'})

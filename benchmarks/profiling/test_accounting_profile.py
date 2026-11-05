@@ -12,6 +12,7 @@ import profile_native as diagnostic
 
 class AccountingCaptureTests(unittest.TestCase):
     def setUp(self):
+        """Create bounded synthetic counters for an isolated capture directory."""
         self.temporary = tempfile.TemporaryDirectory()
         self.addCleanup(self.temporary.cleanup)
         self.root = Path(self.temporary.name)
@@ -27,6 +28,7 @@ class AccountingCaptureTests(unittest.TestCase):
         }
 
     def capture(self, report):
+        """Write a three-tool fixture and validate its accounting inventory."""
         (self.root / '00-oximut/report.json').write_text(json.dumps(report))
         rows=[{'tool':tool,'wall_seconds':1.0,'peak_process_count':1,'observed_process_count':1,'peak_aggregate_rss_bytes':100,
                'peak_rss_snapshot':{'root_pid':1,'sampled_wall_seconds':.5,
@@ -36,6 +38,7 @@ class AccountingCaptureTests(unittest.TestCase):
         return diagnostic.accounting_capture_inventory(self.root)
 
     def test_complete_accounting_is_not_reported_as_node_identity_evidence(self):
+        """Keep sampling counters distinct from Node isolate identity evidence."""
         result = self.capture(self.report)
         self.assertEqual(result['errors'], [])
         self.assertEqual(result['observed'], [])
@@ -45,6 +48,7 @@ class AccountingCaptureTests(unittest.TestCase):
         self.assertEqual(summary['accounting_diagnostics'], result['accounting_diagnostics'])
 
     def test_missing_negative_noninteger_null_and_failure_totals_are_rejected(self):
+        """Reject incomplete or invalid stage counters instead of inventing zeros."""
         for stage in ('sampling','discovery','identityReads','rssReads'):
             for key in ('calls','wallNs','selfUserNs','selfSystemNs','cpuFailures','timingFailures'):
                 for invalid in (None, True, -1, 1.5, 2**64):
@@ -61,6 +65,7 @@ class AccountingCaptureTests(unittest.TestCase):
             self.assertTrue(self.capture(report)['errors'])
 
     def test_missing_profile_empty_stages_and_mismatched_sample_counts_are_rejected(self):
+        """Reconcile all measured stages with the admitted resource samples."""
         for key in ('samples','accountingDiagnostics'):
             report = copy.deepcopy(self.report)
             del report['resources'][key]
@@ -78,6 +83,7 @@ class AccountingCaptureTests(unittest.TestCase):
         self.assertTrue(self.capture(report)['errors'])
 
     def test_bad_native_or_resource_evidence_and_malformed_report_fail_closed(self):
+        """Reject unhealthy native accounting and unreadable report contents."""
         report = copy.deepcopy(self.report)
         report['diagnostics'] = []
         self.assertTrue(self.capture(report)['errors'])
@@ -88,6 +94,7 @@ class AccountingCaptureTests(unittest.TestCase):
         self.assertTrue(diagnostic.accounting_capture_inventory(self.root)['errors'])
 
     def test_memory_peak_requires_matching_sum_and_unique_verified_identities(self):
+        """Require complete, unique peak components whose RSS matches the total."""
         for fault in ['missing','sum','duplicate','identity']:
             self.capture(self.report)
             path=self.root/'measurements.jsonl'
@@ -105,6 +112,7 @@ class AccountingCaptureTests(unittest.TestCase):
                 self.assertTrue(diagnostic.accounting_capture_inventory(self.root)['errors'])
 
     def test_peak_processes_must_have_an_acyclic_start_ordered_chain_to_the_root(self):
+        """Reject missing roots, unrelated children, cycles and impossible ancestry."""
         for fault in ('root','unrelated','cycle','start'):
             self.capture(self.report)
             path=self.root/'measurements.jsonl'

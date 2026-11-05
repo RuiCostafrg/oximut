@@ -22,11 +22,13 @@ LABELS = {'wall_seconds': 'Wall', 'cpu_seconds': 'CPU', 'peak_aggregate_rss_byte
 
 
 def require(condition, message):
+    """Reject evidence that cannot support a reported value."""
     if not condition:
         raise ValueError(message)
 
 
 def read_json(path):
+    """Load one retained JSON input without modifying its bytes."""
     return json.loads(path.read_text())
 
 
@@ -169,13 +171,16 @@ def collect(comparison, controller, accounting=None):
 
 
 def table(headers, rows, caption=None):
+    """Render escaped tabular values with an optional accessible caption."""
     def cells(values, tag):
+        """Escape each cell value before inserting it into table markup."""
         return ''.join(f'<{tag}>{html.escape(str(value))}</{tag}>' for value in values)
     caption_html='<caption>'+html.escape(caption)+'</caption>' if caption else ''
     return '<div class="scroll"><table>'+caption_html+'<thead><tr>'+cells(headers,'th')+'</tr></thead><tbody>'+''.join('<tr>'+cells(row,'td')+'</tr>' for row in rows)+'</tbody></table></div>'
 
 
 def bars(values, label='Milliseconds'):
+    """Draw labeled wall-time intervals without implying an additive partition."""
     maximum = max(value for _,value in values) or 1
     height = len(values)*35+20
     svg = [f'<svg viewBox="0 0 720 {height}" role="img" aria-label="{html.escape(label)}" style="height:{height}px">']
@@ -186,6 +191,7 @@ def bars(values, label='Milliseconds'):
 
 
 def ratio_chart(data, key):
+    """Expose paired ratios and confidence bounds as a chart and a table."""
     values = data['comparisons'][key]['metrics']
     title={'after_vs_stryker':'After / Stryker','after_vs_before':'After / before',
            'before_vs_stryker':'Before / Stryker'}[key]
@@ -221,6 +227,7 @@ def render(data):
     boundaries = [(label,statistics.median(job[key] for job in intervals['jobs'])) for key,label in interval_keys]
     accounting = '<p class="notice">Pending native capture. No zero-cost or hotspot attribution is inferred from this gap.</p>'
     def diagnostic_resources(run):
+        """Keep one profiled run separate from paired performance comparisons."""
         return table(['Tool','Wall s','CPU s','User / sys s','RSS MB','Peak / observed'], [[r['tool'],f'{r["wall_seconds"]:.6f}',f'{r["cpu_seconds"]:.6f}',f'{r["cpu_user_seconds"]:.6f} / {r["cpu_system_seconds"]:.6f}',f'{r["peak_aggregate_rss_bytes"]/1e6:.3f}',f'{r["peak_process_count"]} / {r["observed_process_count"]}'] for r in run['rows']])+table(['Diagnostic resources.phaseWallMs','ms'],[[key,f'{value:.6f}'] for key,value in run['phases'].items()])+'<p>One overhead-bearing run: paired ratios and bootstrap CIs are unavailable.</p>'
     if data['accounting']:
         accounting = table(['Nested stage','Calls','Wall ms','Self user ms','Self sys ms'], [[key,d['calls'],f'{d["wallNs"]/1e6:.3f}',f'{d["selfUserNs"]/1e6:.3f}',f'{d["selfSystemNs"]/1e6:.3f}'] for key,d in data['accounting'].items() if isinstance(d,dict)])
@@ -263,6 +270,7 @@ def render(data):
 
 
 def main():
+    """Choose compatible retained evidence and write one offline report."""
     parser = argparse.ArgumentParser(description=__doc__)
     recent_control=ROOT/'benchmarks/results/2026-11-05-accounting-control'
     parser.add_argument('--comparison', type=Path, default=recent_control if recent_control.exists() else ROOT/'benchmarks/results/2026-11-05-native-control')

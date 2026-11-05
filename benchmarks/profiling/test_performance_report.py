@@ -20,15 +20,18 @@ CONTROLLER = report.ROOT / 'benchmarks/results/2026-11-04-controller-job-identit
 class PerformanceReportTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        """Derive the shared fixture from retained qualified native evidence."""
         cls.data = report.collect(COMPARISON,CONTROLLER)
 
     def setUp(self):
+        """Copy comparison inputs so each corruption case stays isolated."""
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name)/'comparison'
         shutil.copytree(COMPARISON,self.root)
 
     def update(self,name,data):
+        """Change one input and its digest to exercise semantic validation."""
         path=self.root/name
         path.write_text(json.dumps(data)+'\n')
         lines=(self.root/'SHA256SUMS').read_text().splitlines()
@@ -36,6 +39,7 @@ class PerformanceReportTests(unittest.TestCase):
         (self.root/'SHA256SUMS').write_text('\n'.join(lines)+'\n')
 
     def test_all_resource_components_phases_and_pending_costs_are_retained(self):
+        """Keep required metrics and unmeasured costs visible in the report."""
         data=self.data
         self.assertEqual(len(data['raw']),36)
         self.assertEqual(data['pairs'],5)
@@ -48,6 +52,7 @@ class PerformanceReportTests(unittest.TestCase):
         self.assertNotIn('<script src=',page)
 
     def test_failed_workload_and_build_gates_cannot_render_as_qualified(self):
+        """Reject campaigns whose stored qualification or build gate fails."""
         for gate in ['correctness_gate','build_integrity']:
             data=json.loads((COMPARISON/'original-summary.json').read_text())
             data[gate]['passed']=False
@@ -56,6 +61,7 @@ class PerformanceReportTests(unittest.TestCase):
                 report.collect(self.root,CONTROLLER)
 
     def test_paired_ratios_must_match_the_original_resource_observations(self):
+        """Reject ratios that disagree with their raw paired observations."""
         data=json.loads((COMPARISON/'original-summary.json').read_text())
         data['comparisons']['after_vs_stryker']['metrics']['cpu_seconds']['paired_ratios'][0] += .1
         self.update('original-summary.json',data)
@@ -63,6 +69,7 @@ class PerformanceReportTests(unittest.TestCase):
             report.collect(self.root,CONTROLLER)
 
     def test_a_bad_phase_cannot_hide_behind_a_valid_median(self):
+        """Reject an invalid phase row even when its group median is plausible."""
         data=json.loads((COMPARISON/'original-summary.json').read_text())
         data['phase_evidence']['after'][1]['phaseWallMs']['mutationExecution']=-1
         self.update('original-summary.json',data)
@@ -70,6 +77,7 @@ class PerformanceReportTests(unittest.TestCase):
             report.collect(self.root,CONTROLLER)
 
     def test_capture_tampering_and_injected_frame_markup_are_not_silently_accepted(self):
+        """Detect changed evidence bytes and escape profiler frame labels."""
         path=self.root/'original-measurements.jsonl'
         path.write_text(path.read_text()+'\n')
         with self.assertRaisesRegex(ValueError,'digest mismatch'):
@@ -81,6 +89,7 @@ class PerformanceReportTests(unittest.TestCase):
         self.assertIn('&lt;script&gt;alert(1)&lt;/script&gt;',page)
 
     def test_accounting_and_same_sample_process_memory_can_replace_pending_fields(self):
+        """Display measured sampling costs and escaped same-sample RSS details."""
         data=copy.deepcopy(self.data)
         stage={'calls':1,'wallNs':1000000,'selfUserNs':1000,'selfSystemNs':1000}
         data['accounting']={key:copy.deepcopy(stage) for key in ['sampling','discovery','identityReads','rssReads']}
@@ -95,6 +104,7 @@ class PerformanceReportTests(unittest.TestCase):
         self.assertIn('not independent per-process peaks',page)
 
     def test_native_accounting_is_revalidated_and_clock_skew_is_visible(self):
+        """Revalidate retained counters and disclose their CPU clock limitation."""
         accounting=report.ROOT/'benchmarks/results/2026-11-05-accounting-profile'
         comparison=report.ROOT/'benchmarks/results/2026-11-05-accounting-control'
         data=report.collect(comparison,CONTROLLER,accounting)
@@ -105,6 +115,7 @@ class PerformanceReportTests(unittest.TestCase):
         self.assertIn('node-MainThread',page)
 
     def test_ordered_but_invented_confidence_bounds_are_rejected(self):
+        """Require confidence bounds to reproduce the deterministic bootstrap."""
         data=json.loads((COMPARISON/'original-summary.json').read_text())
         metric=data['comparisons']['after_vs_stryker']['metrics']['cpu_seconds']
         metric['bootstrap_95_percent']=[metric['median']-.001,metric['median']+.001]
@@ -113,6 +124,7 @@ class PerformanceReportTests(unittest.TestCase):
             report.collect(self.root,CONTROLLER)
 
     def test_every_consumed_input_requires_a_manifest_entry(self):
+        """Require digests for every consumed comparison input."""
         for name in ('original-summary.json','original-measurements.jsonl','original-metadata.json','evidence-source.json'):
             lines=(COMPARISON/'SHA256SUMS').read_text().splitlines()
             (self.root/'SHA256SUMS').write_text('\n'.join(line for line in lines if not line.endswith('  '+name))+'\n')
@@ -120,6 +132,7 @@ class PerformanceReportTests(unittest.TestCase):
                 report.collect(self.root,CONTROLLER)
 
     def test_controller_and_accounting_consumed_inputs_require_manifest_entries(self):
+        """Require complete manifests for both diagnostic evidence roots."""
         comparison=report.ROOT/'benchmarks/results/2026-11-05-accounting-control'
         accounting=report.ROOT/'benchmarks/results/2026-11-05-accounting-profile'
         for original,required in [(CONTROLLER,['boundary-intervals.json','qualification/summary.json',
@@ -138,6 +151,7 @@ class PerformanceReportTests(unittest.TestCase):
                     report.collect(comparison,controller_arg,accounting_arg)
 
     def test_older_comparison_renders_without_an_incompatible_default_capture(self):
+        """Render historical controls without joining a newer accounting build."""
         output=Path(self.temp.name)/'historical.html'
         result=subprocess.run([sys.executable,report.__file__,'--comparison',str(COMPARISON),
                                '--output',str(output)],capture_output=True,text=True)
@@ -145,6 +159,7 @@ class PerformanceReportTests(unittest.TestCase):
         self.assertIn('Pending native capture',output.read_text())
 
     def test_every_ratio_chart_exposes_values_outside_its_svg(self):
+        """Keep all ratio values available outside inaccessible SVG text."""
         for key in ('after_vs_stryker','after_vs_before','before_vs_stryker'):
             chart=report.ratio_chart(self.data,key)
             accessible=re.sub(r'<svg\b.*?</svg>','',chart,flags=re.S)
@@ -154,6 +169,7 @@ class PerformanceReportTests(unittest.TestCase):
                         self.assertIn(f'{value:.3f}',accessible)
 
     def test_workload_is_requalified_instead_of_trusting_summary_booleans(self):
+        """Recheck raw workload identities despite passing stored gate booleans."""
         path=self.root/'original-measurements.jsonl'
         rows=[json.loads(line) for line in path.read_text().splitlines()]
         rows[0]['workload_sha256']='0'*64
@@ -164,6 +180,7 @@ class PerformanceReportTests(unittest.TestCase):
             report.collect(self.root,CONTROLLER)
 
     def test_accounting_from_another_engine_build_cannot_be_joined_to_control(self):
+        """Reject qualified accounting evidence from a different candidate build."""
         accounting=report.ROOT/'benchmarks/results/2026-11-05-accounting-profile'
         with self.assertRaisesRegex(ValueError,'accounting source differs'):
             report.collect(COMPARISON,CONTROLLER,accounting)
