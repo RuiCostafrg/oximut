@@ -1,0 +1,11 @@
+{
+  "node": "26.3.1",
+  "vitest": "4.1.12",
+  "host": "local Android/PRoot aarch64",
+  "measurement": "structural only; no qualified performance metrics or CIs",
+  "source_sha256": {
+    "probe.mjs": "cb63d1577edbb7b3fd734623c34e6f886ffabf69113a6cd69fd45ca2edff2951",
+    "warm-pool.mjs": "c53a7328097f9878d09ad0c89383b850f3f4cbef09d8273e717b281734d4d7b7",
+    "warm-vm-worker.mjs": "e9cfe6e4afb221a7d628092302380d2b397ca12e8f1d6b32da88105a2d4e6e40"
+  }
+}
