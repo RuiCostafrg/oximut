@@ -3,7 +3,9 @@ import copy
 import hashlib
 import json
 from pathlib import Path
+import re
 import shutil
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -116,6 +118,40 @@ class PerformanceReportTests(unittest.TestCase):
             (self.root/'SHA256SUMS').write_text('\n'.join(line for line in lines if not line.endswith('  '+name))+'\n')
             with self.subTest(name=name),self.assertRaisesRegex(ValueError,'unhashed evidence'):
                 report.collect(self.root,CONTROLLER)
+
+    def test_controller_and_accounting_consumed_inputs_require_manifest_entries(self):
+        comparison=report.ROOT/'benchmarks/results/2026-11-05-accounting-control'
+        accounting=report.ROOT/'benchmarks/results/2026-11-05-accounting-profile'
+        for original,required in [(CONTROLLER,['boundary-intervals.json','qualification/summary.json',
+                'qualification/measurements.jsonl','qualification/00-oximut/report.json']+
+                [str(p.relative_to(CONTROLLER)) for p in (CONTROLLER/'profiles').iterdir() if p.is_file()]),
+                (accounting,['diagnostic.json','build-metadata.json','evidence-source.json',
+                            'qualification/metadata.json','qualification/summary.json',
+                            'qualification/measurements.jsonl','qualification/00-oximut/report.json'])]:
+            root=Path(self.temp.name)/original.name
+            shutil.copytree(original,root)
+            lines=(original/'SHA256SUMS').read_text().splitlines()
+            for name in required:
+                (root/'SHA256SUMS').write_text('\n'.join(line for line in lines if not line.endswith('  '+name))+'\n')
+                controller_arg,accounting_arg=(root,accounting) if original==CONTROLLER else (CONTROLLER,root)
+                with self.subTest(root=original.name,name=name),self.assertRaisesRegex(ValueError,'unhashed evidence'):
+                    report.collect(comparison,controller_arg,accounting_arg)
+
+    def test_older_comparison_renders_without_an_incompatible_default_capture(self):
+        output=Path(self.temp.name)/'historical.html'
+        result=subprocess.run([sys.executable,report.__file__,'--comparison',str(COMPARISON),
+                               '--output',str(output)],capture_output=True,text=True)
+        self.assertEqual(result.returncode,0,result.stderr)
+        self.assertIn('Pending native capture',output.read_text())
+
+    def test_every_ratio_chart_exposes_values_outside_its_svg(self):
+        for key in ('after_vs_stryker','after_vs_before','before_vs_stryker'):
+            chart=report.ratio_chart(self.data,key)
+            accessible=re.sub(r'<svg\b.*?</svg>','',chart,flags=re.S)
+            with self.subTest(comparison=key):
+                for metric in self.data['comparisons'][key]['metrics'].values():
+                    for value in (metric['median'],*metric['bootstrap_95_percent']):
+                        self.assertIn(f'{value:.3f}',accessible)
 
     def test_workload_is_requalified_instead_of_trusting_summary_booleans(self):
         path=self.root/'original-measurements.jsonl'

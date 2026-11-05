@@ -168,10 +168,11 @@ def collect(comparison, controller, accounting=None):
             'accounting': accounting_data, 'accounting_run': accounting_run}
 
 
-def table(headers, rows):
+def table(headers, rows, caption=None):
     def cells(values, tag):
         return ''.join(f'<{tag}>{html.escape(str(value))}</{tag}>' for value in values)
-    return '<div class="scroll"><table><thead><tr>'+cells(headers,'th')+'</tr></thead><tbody>'+''.join('<tr>'+cells(row,'td')+'</tr>' for row in rows)+'</tbody></table></div>'
+    caption_html='<caption>'+html.escape(caption)+'</caption>' if caption else ''
+    return '<div class="scroll"><table>'+caption_html+'<thead><tr>'+cells(headers,'th')+'</tr></thead><tbody>'+''.join('<tr>'+cells(row,'td')+'</tr>' for row in rows)+'</tbody></table></div>'
 
 
 def bars(values, label='Milliseconds'):
@@ -186,15 +187,21 @@ def bars(values, label='Milliseconds'):
 
 def ratio_chart(data, key):
     values = data['comparisons'][key]['metrics']
+    title={'after_vs_stryker':'After / Stryker','after_vs_before':'After / before',
+           'before_vs_stryker':'Before / Stryker'}[key]
     maximum = max(1.5, max(values[field]['bootstrap_95_percent'][1] for field in TARGETS)*1.1)
     x = lambda value: 120+value/maximum*390
-    out = ['<svg viewBox="0 0 720 185" role="img" aria-label="Paired ratios with bootstrap 95 percent intervals" style="height:185px">']
+    out = ['<svg viewBox="0 0 720 185" role="img" aria-label="'+html.escape(title)+' paired ratios with bootstrap 95 percent intervals" style="height:185px">']
     for index,field in enumerate(TARGETS):
         metric = values[field]; lo,hi = metric['bootstrap_95_percent']; y = 35+index*50
         target = 1 if key == 'after_vs_before' else TARGETS[field]
         out.append(f'<text x="0" y="{y+4}" class="axis">{LABELS[field]}</text><line x1="{x(1):.2f}" x2="{x(1):.2f}" y1="{y-17}" y2="{y+17}" class="parity"/><line x1="{x(target):.2f}" x2="{x(target):.2f}" y1="{y-17}" y2="{y+17}" class="target"/><line x1="{x(lo):.2f}" x2="{x(hi):.2f}" y1="{y}" y2="{y}" class="interval"/><circle cx="{x(metric["median"]):.2f}" cy="{y}" r="5" class="point"/><text x="530" y="{y+4}" class="axis">{metric["median"]:.3f} [{lo:.3f}, {hi:.3f}]</text>')
     out.append('<text x="120" y="180" class="axis">0 → lower is better • gray: parity • green: target/parity</text>')
-    return '<div class="scroll">'+''.join(out)+'</svg></div>'
+    rows=[[LABELS[field],f'{values[field]["median"]:.3f}',
+           f'{values[field]["bootstrap_95_percent"][0]:.3f}',
+           f'{values[field]["bootstrap_95_percent"][1]:.3f}'] for field in TARGETS]
+    return '<div class="scroll">'+''.join(out)+'</svg></div>'+table(
+        ['Metric','Median ratio','95% CI lower','95% CI upper'],rows,caption=title)
 
 
 def render(data):
@@ -261,9 +268,12 @@ def main():
     parser.add_argument('--comparison', type=Path, default=recent_control if recent_control.exists() else ROOT/'benchmarks/results/2026-11-05-native-control')
     parser.add_argument('--controller', type=Path, default=ROOT/'benchmarks/results/2026-11-04-controller-job-identities')
     known_accounting=ROOT/'benchmarks/results/2026-11-05-accounting-profile'
-    parser.add_argument('--accounting', type=Path, default=known_accounting if known_accounting.exists() else None)
+    parser.add_argument('--accounting', type=Path)
     parser.add_argument('--output', type=Path, required=True)
     args = parser.parse_args()
+    if (args.accounting is None and args.comparison.resolve()==recent_control.resolve()
+            and known_accounting.exists()):
+        args.accounting=known_accounting
     data = collect(args.comparison,args.controller,args.accounting)
     args.output.parent.mkdir(parents=True,exist_ok=True)
     args.output.write_text(render(data))
