@@ -3,6 +3,7 @@ import copy
 import json
 from pathlib import Path
 import sys
+import subprocess
 import tempfile
 import unittest
 
@@ -98,6 +99,36 @@ class AccountingCaptureTests(unittest.TestCase):
                 self.assertTrue(self.capture(data)['errors'])
         data=copy.deepcopy(self.report); data['resources']['accountingDiagnostics']['sampling']['selfCpuNs']=14
         self.assertTrue(self.capture(data)['errors'])
+
+    def test_schema_requires_version_two_for_any_precise_clock_field(self):
+        """Reject partial precision extensions while accepting complete legacy data."""
+        legacy=json.loads((diagnostic.ROOT/'benchmarks/results/2026-11-05-accounting-profile/qualification/00-oximut/report.json').read_text())
+        current=copy.deepcopy(legacy)
+        current['resources']['accountingDiagnostics']=copy.deepcopy(self.report['resources']['accountingDiagnostics'])
+        cases=[{'name':'legacy','report':legacy,'valid':True},{'name':'version2','report':current,'valid':True}]
+        missing_version=copy.deepcopy(current)
+        del missing_version['resources']['accountingDiagnostics']['clockVersion']
+        cases.append({'name':'missing version on complete precise data','report':missing_version,'valid':False})
+        for key in ('clockVersion','threadCpuSinceBudgetStartNs','threadCpuFailures'):
+            report=copy.deepcopy(legacy)
+            report['resources']['accountingDiagnostics'][key]=2 if key=='clockVersion' else 0
+            cases.append({'name':key,'report':report,'valid':False})
+        for stage in ('sampling','discovery','identityReads','rssReads'):
+            for key in ('selfCpuNs','selfCpuFailures'):
+                report=copy.deepcopy(legacy)
+                report['resources']['accountingDiagnostics'][stage][key]=0
+                cases.append({'name':stage+'.'+key,'report':report,'valid':False})
+        script="""import {readFileSync} from 'node:fs';
+import assert from 'node:assert/strict';
+import {validateReport} from './scripts/validate-reports.mjs';
+for (const item of JSON.parse(readFileSync(0,'utf8'))) {
+ let accepted=true;try {validateReport(item.report);} catch {accepted=false;}
+ assert.equal(accepted,item.valid,item.name);
+}
+"""
+        result=subprocess.run(['node','--input-type=module','-e',script],cwd=diagnostic.ROOT,
+                              input=json.dumps(cases),text=True,capture_output=True)
+        self.assertEqual(result.returncode,0,result.stderr)
 
     def test_missing_profile_empty_stages_and_mismatched_sample_counts_are_rejected(self):
         """Reconcile all measured stages with the admitted resource samples."""

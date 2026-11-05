@@ -47,7 +47,37 @@ def verify_manifest(root, required):
     return hashes
 
 
-def collect(comparison, controller, accounting=None):
+def rejected_node_capture(root, source):
+    """Retain failed profile status and qualified workload resources without CPU attribution."""
+    verify_manifest(root, ('diagnostic.json','build-metadata.json','evidence-source.json',
+                          'qualification/summary.json','qualification/metadata.json',
+                          'qualification/measurements.jsonl','qualification/00-oximut/report.json'))
+    record=read_json(root/'diagnostic.json');provenance=read_json(root/'evidence-source.json')
+    build=read_json(root/'build-metadata.json');metadata=read_json(root/'qualification/metadata.json')
+    errors=record['captures']['errors']
+    require(record['passed'] is False and record['node_capture_mode']=='exit-time-cpu-prof'
+            and record['qualification_errors']==[] and isinstance(errors,list)
+            and all(isinstance(error,str) for error in errors)
+            and 'missing finalized process-role capture: oximut_test_fork' in errors, 'rejected Node capture status differs')
+    require(type(provenance['run']) is int and provenance['run']>0
+            and provenance['reviewed_head']==source['head_commit']
+            and record['source_commit']==build['commit']
+            and record['execution_inputs']==metadata['execution_inputs']
+            and record['execution_inputs']['binary_sha256']==build['binary_sha256'], 'rejected Node provenance differs')
+    require(not profile_native.qualification_errors(root/'qualification',0),'rejected Node workload is unqualified')
+    rows=[json.loads(line) for line in (root/'qualification/measurements.jsonl').read_text().splitlines()]
+    for row in rows:
+        require(all(type(row[k]) in (int,float) and 0<=row[k]<=2**64-1 and math.isfinite(row[k]) for k in FIELDS),'invalid rejected Node resources')
+        require(all(row[k]>0 for k in ('wall_seconds','cpu_seconds','peak_aggregate_rss_bytes'))
+                and all(type(row[k]) is int and row[k]>0 for k in ('peak_process_count','observed_process_count'))
+                and row['observed_process_count']>=row['peak_process_count'],'empty rejected Node resources')
+        require(math.isclose(row['cpu_seconds'],row['cpu_user_seconds']+row['cpu_system_seconds'],abs_tol=1e-8),'rejected Node CPU components differ')
+    phases=read_json(root/'qualification/00-oximut/report.json')['resources']['phaseWallMs']
+    require(set(phases)==set(compare_candidates.PHASES) and all(type(v) in (int,float) and 0<=v<=2**64-1 and math.isfinite(v) for v in phases.values()),'invalid rejected Node phases')
+    return {'native_run':provenance['run'],'source_commit':record['source_commit'],'rows':rows,'phases':phases}
+
+
+def collect(comparison, controller, accounting=None, rejected_node=None):
     """Keep paired controls and overhead-bearing diagnostics in separate scopes."""
     hashes = verify_manifest(comparison, ('original-summary.json','original-metadata.json',
                                          'original-measurements.jsonl','evidence-source.json'))
@@ -169,7 +199,8 @@ def collect(comparison, controller, accounting=None):
                            'frames': profile_rows, 'sampled_window_ms': (cpu['endTime']-cpu['startTime'])/1000,
                            'rows': [json.loads(line) for line in (controller/'qualification/measurements.jsonl').read_text().splitlines()],
                            'phases': read_json(controller/'qualification/00-oximut/report.json')['resources']['phaseWallMs']},
-            'accounting': accounting_data, 'accounting_run': accounting_run}
+            'accounting': accounting_data, 'accounting_run': accounting_run,
+            'rejected_node':rejected_node_capture(rejected_node,source) if rejected_node else None}
 
 
 def table(headers, rows, caption=None):
@@ -261,6 +292,10 @@ def render(data):
         accounting += '<p class="muted">Process RSS values come from the same verified peak sample, not independent per-process peaks. Shared pages count per process; sampling across PIDs is not atomic. No command-line arguments or environment values are collected.</p>'
     accounting_note = ('Measured stage totals cover only sampling; Budget totals, when present, bound a larger CLI thread interval without partitioning its remainder. No per-process worker CPU attribution is established. A saving still requires a paired optimization campaign.' if data['accounting'] else 'Repeated smaps_rollup reads are a source-supported cost hypothesis. Do not label them a measured CPU hotspot until the native capture arrives.')
     frames=table(['Controller sampled frame','File','Weighted sample ms'], [[r['function'],r['file'].rsplit('/',1)[-1],f'{r["sampled_ms"]:.3f}'] for r in data['controller']['frames']])
+    rejected_node=''
+    if data.get('rejected_node'):
+        failed=data['rejected_node']
+        rejected_node='<section><h2>Worker CPU capture remains incomplete</h2><p class="notice">The separate exit-time Node profile <a href="https://github.com/RuiCostafrg/oximut/actions/runs/'+str(failed['native_run'])+'">'+str(failed['native_run'])+'</a> passed workload qualification but failed profile validation: the required Oximut test-fork role did not finalize. No worker CPU attribution is claimed. This dispatch used branch source '+html.escape(failed['source_commit'])+', separately from the paired test-merge campaign.</p><details><summary>Rejected capture resources and phase timings</summary>'+diagnostic_resources(failed)+'</details></section>'
     raw_table=table(['Pair','Side','Tool','Warmup','Wall s','CPU s','User / sys s','RSS MB','Peak / observed'],[[r['campaign_round'],r['side'],r['tool'],r['warmup'],f'{r["wall_seconds"]:.6f}',f'{r["cpu_seconds"]:.6f}',f'{r["cpu_user_seconds"]:.6f} / {r["cpu_system_seconds"]:.6f}',f'{r["peak_aggregate_rss_bytes"]/1e6:.3f}',f'{r["peak_process_count"]} / {r["observed_process_count"]}'] for r in data['raw']])
     priority=('Measure forced-sample delay and worker bootstrap CPU, then choose an experiment from precise CPU totals. Preserve current RSS read freshness, admission and cleanup guarantees.' if data['accounting'] and data['accounting'].get('clockVersion')==2 else
               'Collect a version 2 native capture before attributing sampling CPU. The legacy RSS-read wall windows are measured; recoverable wall savings remain unknown. Keep current precision, read freshness, admission and cleanup guarantees.' if data['accounting'] else
@@ -276,6 +311,7 @@ def render(data):
 <section><h2>Where wall time goes</h2>{bars([(k,phases[k]) for k in ('mutationExecution','originalBaseline','instrumentedBaseline','teardown')])}<details><summary>Every resources.phaseWallMs timing</summary>{table(['Phase','After median ms','Before median ms'],[[key,f'{value:.6f}',f'{data["phases"]["before"][key]:.6f}'] for key,value in phases.items()])}</details><p class="muted">Independent phase medians are not additive. The original baseline includes controller/Vitest initialization; mutation execution includes scheduling, sampling, workers, tests and cleanup. These are wall intervals, not CPU attribution.</p></section>
 <section><h2>Inside a mutant job</h2><p class="muted">Separate overhead-bearing native diagnostic <a href="https://github.com/RuiCostafrg/oximut/actions/runs/{data['source']['controller_run']}">{data['source']['controller_run']}</a>. These observations cannot be subtracted from the paired control above.</p>{bars(boundaries)}<p>Fork startup and collection are material observed intervals. Request → send measures normal local send return, not recipient delivery. Intervals are independent medians and are not additive.</p><details><summary>All ten jobs, including profiler startup overhead</summary>{table(['Command','Request → send ms','Fork → started ms','Run → collection ms','Collection → finished ms'],[[j['commandId'],f'{j["requestToSendReturnMs"]:.3f}',f'{j["forkToStartedMs"]:.3f}',f'{j["runToCollectionMs"]:.3f}',f'{j["collectionToFinishedMs"]:.3f}'] for j in intervals['jobs']])}</details></section>
 <section><h2>TypeScript / Node profiler</h2><p>V8 inspector CPU sampling covers a partial first-mutant controller window ({data['controller']['sampled_window_ms']:.3f} ms). It excludes worker CPU, omits a request prefix and can include inspector overhead. Weighted sample time below includes idle frames and is not process-tree CPU seconds.</p><details><summary>Top sampled controller frames</summary>{frames}</details><details><summary>Diagnostic resources and phase timings</summary>{diagnostic_resources(data['controller'])}</details></section>
+{rejected_node}
 <section><h2>Rust resource accountant</h2>{accounting}<p>Opt-in getrusage(RUSAGE_THREAD) + monotonic clocks measure admitted sampling, discovery, fresh identity checks and RSS reads. Stages are nested; clock/framework overhead is not separately partitioned. No Node/Python profiler runs in accounting-only mode.</p><p>{accounting_note}</p></section>
 <section><h2>Isolation experiments</h2><p>Native structural oracle <a href="https://github.com/RuiCostafrg/oximut/actions/runs/{data['source']['structural_run']}">{data['source']['structural_run']}</a> preserves the raw warm-host leak counterexample. The narrow guard passes its tested fixture scope by recycling dirty hosts. Async/native resources and nested host state remain unproven. No product warm-reuse mode is enabled. Structural wall/CPU/RSS/process counts, phase timings, ratios and CIs are unmeasured/N/A.</p></section>
 <section><h2>Next decisions, ranked by current evidence</h2><ol><li>{priority}</li><li><b>Profile worker bootstrap and collection.</b> Controller samples do not explain fork CPU. Warm fresh realms are promising but blocked by isolation gaps.</li><li><b>Reduce baseline overhead safely.</b> Preserve the original oracle and inactive-transform/coverage validation; identify initialization work that can be amortized.</li><li><b>Measure per-test selection and bail.</b> These cannot remove worker startup; validate that early failure never masks teardown or infrastructure errors.</li></ol><p>These are hypotheses and measurement priorities, not promised savings. After a supported optimization, rerun the exact native paired wall/CPU/RSS campaign with bootstrap CIs.</p></section>
@@ -287,17 +323,25 @@ def render(data):
 def main():
     """Choose compatible retained evidence and write one offline report."""
     parser = argparse.ArgumentParser(description=__doc__)
-    recent_control=ROOT/'benchmarks/results/2026-11-05-accounting-control'
-    parser.add_argument('--comparison', type=Path, default=recent_control if recent_control.exists() else ROOT/'benchmarks/results/2026-11-05-native-control')
+    known_pairs=[(ROOT/'benchmarks/results/2026-11-05-precise-accounting-control',ROOT/'benchmarks/results/2026-11-05-precise-accounting-profile'),
+                 (ROOT/'benchmarks/results/2026-11-05-accounting-control',ROOT/'benchmarks/results/2026-11-05-accounting-profile'),
+                 (ROOT/'benchmarks/results/2026-11-05-native-control',None)]
+    recent_control=next((control for control,_ in known_pairs if control.exists()),known_pairs[-1][0])
+    parser.add_argument('--comparison', type=Path, default=recent_control)
     parser.add_argument('--controller', type=Path, default=ROOT/'benchmarks/results/2026-11-04-controller-job-identities')
-    known_accounting=ROOT/'benchmarks/results/2026-11-05-accounting-profile'
     parser.add_argument('--accounting', type=Path)
+    parser.add_argument('--rejected-node', type=Path)
     parser.add_argument('--output', type=Path, required=True)
     args = parser.parse_args()
-    if (args.accounting is None and args.comparison.resolve()==recent_control.resolve()
-            and known_accounting.exists()):
-        args.accounting=known_accounting
-    data = collect(args.comparison,args.controller,args.accounting)
+    if args.accounting is None:
+        for control,accounting in known_pairs:
+            if args.comparison.resolve()==control.resolve() and accounting and accounting.exists():
+                args.accounting=accounting
+                break
+    known_rejected=ROOT/'benchmarks/results/2026-11-05-exit-time-profile-rejected'
+    if args.rejected_node is None and args.comparison.resolve()==known_pairs[0][0].resolve() and known_rejected.exists():
+        args.rejected_node=known_rejected
+    data = collect(args.comparison,args.controller,args.accounting,args.rejected_node)
     args.output.parent.mkdir(parents=True,exist_ok=True)
     args.output.write_text(render(data))
     print(args.output)

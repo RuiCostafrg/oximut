@@ -1,0 +1,18 @@
+{
+  "pid": 6769,
+  "ppid": 6736,
+  "threadId": 0,
+  "argv": [
+    "/opt/hostedtoolcache/node/26.3.1/x64/bin/node",
+    "/home/runner/work/oximut/oximut/node_modules/@stryker-mutator/core/dist/src/child-proxy/child-process-proxy-worker.js"
+  ],
+  "execArgv": [],
+  "cwd": "/home/runner/work/_temp/native-diagnostic/capture/qualification/00-stryker/project",
+  "started": "2026-11-05T15:52:09.852Z",
+  "segmentCapture": null,
+  "selfCpuAtPreloadUs": {
+    "user": 32081,
+    "system": 12832
+  },
+  "startTime": "19608"
+}

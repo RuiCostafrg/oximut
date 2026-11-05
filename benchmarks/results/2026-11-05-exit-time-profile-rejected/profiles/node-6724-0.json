@@ -1,0 +1,28 @@
+{
+  "pid": 6724,
+  "ppid": 6469,
+  "threadId": 0,
+  "argv": [
+    "/opt/hostedtoolcache/node/26.3.1/x64/bin/node",
+    "/home/runner/work/_temp/native-diagnostic/capture/qualification/00-oximut/report.json"
+  ],
+  "execArgv": [
+    "--input-type=module",
+    "-e",
+    "import { readFileSync } from \"node:fs\"; import { validateReport } from \"file:///home/runner/work/oximut/oximut/scripts/validate-reports.mjs\"; try { validateReport(JSON.parse(readFileSync(0, \"utf8\")), process.argv[1]); } catch (error) { console.error(error.message); process.exitCode = 1; }"
+  ],
+  "cwd": "/home/runner/work/oximut/oximut",
+  "started": "2026-11-05T15:52:08.242Z",
+  "segmentCapture": null,
+  "selfCpuAtPreloadUs": {
+    "user": 29026,
+    "system": 6219
+  },
+  "startTime": "19448",
+  "exitCode": 0,
+  "selfCpuAtExitUs": {
+    "user": 181242,
+    "system": 25172
+  },
+  "exitObserved": "2026-11-05T15:52:08.361Z"
+}

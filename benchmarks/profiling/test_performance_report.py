@@ -114,6 +114,33 @@ class PerformanceReportTests(unittest.TestCase):
         self.assertIn('42006490326',page)
         self.assertIn('node-MainThread',page)
 
+    def test_native_precise_data_and_rejected_worker_capture_keep_separate_scopes(self):
+        """Keep scored ratios, precise accounting and rejected worker profiles distinct."""
+        base=report.ROOT/'benchmarks/results'
+        data=report.collect(base/'2026-11-05-precise-accounting-control',CONTROLLER,
+                            base/'2026-11-05-precise-accounting-profile',base/'2026-11-05-exit-time-profile-rejected')
+        self.assertEqual(data['accounting']['clockVersion'],2)
+        self.assertEqual(data['rejected_node']['native_run'],42058984932)
+        self.assertEqual(data['source']['benchmark_run'],42058759907)
+        page=report.render(data)
+        self.assertIn('failed profile validation',page)
+        self.assertIn('No worker CPU attribution is claimed',page)
+        self.assertIn('744.762',page)
+        self.assertIn('39.814',page)
+
+    def test_rejected_capture_cannot_silently_become_a_qualified_profile(self):
+        """Reject changed capture status even when its file digest is updated."""
+        base=report.ROOT/'benchmarks/results'
+        root=Path(self.temp.name)/'rejected'
+        shutil.copytree(base/'2026-11-05-exit-time-profile-rejected',root)
+        path=root/'diagnostic.json';record=json.loads(path.read_text());record['passed']=True
+        path.write_text(json.dumps(record)+'\n')
+        manifest=root/'SHA256SUMS'
+        manifest.write_text('\n'.join(hashlib.sha256(path.read_bytes()).hexdigest()+'  diagnostic.json' if line.endswith('  diagnostic.json') else line for line in manifest.read_text().splitlines())+'\n')
+        with self.assertRaisesRegex(ValueError,'rejected Node capture status differs'):
+            report.collect(base/'2026-11-05-precise-accounting-control',CONTROLLER,
+                           base/'2026-11-05-precise-accounting-profile',root)
+
     def test_precise_cpu_is_distinct_from_raw_splits_and_budget_remainder(self):
         """Label precise totals and the bounded CLI remainder without worker attribution."""
         accounting=report.ROOT/'benchmarks/results/2026-11-05-accounting-profile'

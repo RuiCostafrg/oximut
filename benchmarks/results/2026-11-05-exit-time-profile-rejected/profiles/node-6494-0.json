@@ -1,0 +1,26 @@
+{
+  "pid": 6494,
+  "ppid": 6469,
+  "threadId": 0,
+  "argv": [
+    "/opt/hostedtoolcache/node/26.3.1/x64/bin/node"
+  ],
+  "execArgv": [
+    "-p",
+    "JSON.stringify({execPath:process.execPath,platform:process.platform,arch:process.arch})"
+  ],
+  "cwd": "/home/runner/work/oximut/oximut",
+  "started": "2026-11-05T15:52:01.464Z",
+  "segmentCapture": null,
+  "selfCpuAtPreloadUs": {
+    "user": 23936,
+    "system": 10407
+  },
+  "startTime": "18770",
+  "exitCode": 0,
+  "selfCpuAtExitUs": {
+    "user": 26715,
+    "system": 11302
+  },
+  "exitObserved": "2026-11-05T15:52:01.468Z"
+}

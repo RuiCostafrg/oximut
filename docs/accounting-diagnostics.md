@@ -62,11 +62,13 @@ python3 benchmarks/profile_native.py --binary /path/to/release/oximut \
   --accounting --output /tmp/oximut-accounting-capture-new
 ```
 
-The separate `capture_mode: cpu-prof` dispatch exposes the harness's existing
-exit-time Node CPU profiler, including worker profiles when they finalize.
-Its identity/finalization/workload gates remain in place; incomplete files do
-not become qualified evidence. Use it to investigate worker startup and
-collection, separately from accounting mode and scored paired campaigns.
+An experimental exit-time Node CPU dispatch at `9aeb4a0` failed profile
+qualification: Vitest worker identities/profiles did not finalize, including
+the required Oximut test-fork role. The workload itself qualified. That mode
+is no longer exposed in the workflow; its rejected evidence is retained in
+[`2026-11-05-exit-time-profile-rejected`](../benchmarks/results/2026-11-05-exit-time-profile-rejected/README.md).
+A future worker profiler must flush at a verified lifecycle boundary, without
+intercepting termination signals or weakening existing finalization gates.
 
 It enables the environment switch for the unchanged three-tool colord workload,
 without Node inspector or Python profiler preloads. Acceptance still requires
@@ -107,12 +109,18 @@ The page preserves the full metrics, phase medians, bootstrap intervals,
 controller sampling limits and unknown worker/accountant CPU attribution.
 It never treats local Android/PRoot execution as qualified timing evidence.
 
-The first native capture is retained in
+The first, legacy native capture is retained in
 [`2026-11-05-accounting-profile`](../benchmarks/results/2026-11-05-accounting-profile/README.md).
 It qualifies the workload and complete counter collection, but exposes a
 fine-grained clock-boundary limitation: `identityReads` user+sys exceeds its wall
 interval. Preserve those raw values; do not interpret the per-stage user/sys
 split as exact CPU attribution. Version 2 aligns interval endpoints and adds
-`CLOCK_THREAD_CPUTIME_ID` totals; that precision format needs its own native
-capture before interpreting sampling CPU. Getrusage CPU fields are
+`CLOCK_THREAD_CPUTIME_ID` totals. Its separate native capture below supplies
+precise totals without retroactively correcting the legacy data. Getrusage CPU fields are
 microsecond counters converted to nanosecond units, not nanosecond precision.
+
+The qualified version 2 capture and separate paired control are retained in
+[`2026-11-05-precise-accounting-profile`](../benchmarks/results/2026-11-05-precise-accounting-profile/README.md)
+and [`2026-11-05-precise-accounting-control`](../benchmarks/results/2026-11-05-precise-accounting-control/README.md).
+The report uses those matched inputs by default. RSS reads dominate observed
+sampling CPU; worker CPU and critical-path wall savings remain unpartitioned.

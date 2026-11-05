@@ -1,0 +1,24 @@
+{
+  "pid": 6563,
+  "ppid": 6562,
+  "threadId": 0,
+  "argv": [
+    "/opt/hostedtoolcache/node/26.3.1/x64/bin/node",
+    "/home/runner/work/oximut/oximut/packages/vitest-adapter/m2-worker.ts"
+  ],
+  "execArgv": [],
+  "cwd": "/home/runner/work/_temp/native-diagnostic/capture/qualification/00-oximut/project",
+  "started": "2026-11-05T15:52:03.090Z",
+  "segmentCapture": null,
+  "selfCpuAtPreloadUs": {
+    "user": 32996,
+    "system": 4999
+  },
+  "startTime": "18932",
+  "exitCode": 0,
+  "selfCpuAtExitUs": {
+    "user": 1403778,
+    "system": 323338
+  },
+  "exitObserved": "2026-11-05T15:52:08.158Z"
+}

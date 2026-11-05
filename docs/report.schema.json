@@ -58,7 +58,23 @@
     "accountingDiagnostics": {
       "type": "object", "additionalProperties": false,
       "required": ["scope", "evidence", "sampling", "discovery", "identityReads", "rssReads", "timingNote"],
-      "allOf": [{"if":{"type":"object","required":["clockVersion"]},"then":{"type":"object","required":["threadCpuSinceBudgetStartNs","threadCpuFailures"],"properties":{"sampling":{"type":"object","required":["selfCpuNs","selfCpuFailures"]},"discovery":{"type":"object","required":["selfCpuNs","selfCpuFailures"]},"identityReads":{"type":"object","required":["selfCpuNs","selfCpuFailures"]},"rssReads":{"type":"object","required":["selfCpuNs","selfCpuFailures"]}}}}],
+      "allOf": [{
+        "if": {"type":"object","anyOf":[
+          {"required":["clockVersion"]},
+          {"required":["threadCpuSinceBudgetStartNs"]},
+          {"required":["threadCpuFailures"]},
+          {"required":["sampling"],"properties":{"sampling":{"type":"object","anyOf":[{"required":["selfCpuNs"]},{"required":["selfCpuFailures"]}]}}},
+          {"required":["discovery"],"properties":{"discovery":{"type":"object","anyOf":[{"required":["selfCpuNs"]},{"required":["selfCpuFailures"]}]}}},
+          {"required":["identityReads"],"properties":{"identityReads":{"type":"object","anyOf":[{"required":["selfCpuNs"]},{"required":["selfCpuFailures"]}]}}},
+          {"required":["rssReads"],"properties":{"rssReads":{"type":"object","anyOf":[{"required":["selfCpuNs"]},{"required":["selfCpuFailures"]}]}}}
+        ]},
+        "then": {"type":"object","required":["clockVersion","threadCpuSinceBudgetStartNs","threadCpuFailures"],"properties":{
+          "sampling":{"type":"object","required":["selfCpuNs","selfCpuFailures"]},
+          "discovery":{"type":"object","required":["selfCpuNs","selfCpuFailures"]},
+          "identityReads":{"type":"object","required":["selfCpuNs","selfCpuFailures"]},
+          "rssReads":{"type":"object","required":["selfCpuNs","selfCpuFailures"]}
+        }}
+      }],
       "properties": {
         "scope": { "type": "string" }, "evidence": { "type": "string" },
         "clockVersion": { "const": 2 },
