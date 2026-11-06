@@ -28,7 +28,7 @@ while [ $# -gt 0 ]; do
   case "$1" in
     --no-signoff) NO_SIGNOFF=1 ;;
     --list) printf '%s\n' "stages: ${AVAILABLE_STAGES[*]}"; exit 0 ;;
-    -h|--help) sed -n '2,12p' "$0"; exit 0 ;;
+    -h|--help) sed -n '2,9p' "$0"; exit 0 ;;
     -*) _fail "unknown option: $1 (try --help)" ;;
     *) SELECTED+=("$1") ;;
   esac
