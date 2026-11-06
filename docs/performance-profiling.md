@@ -254,9 +254,10 @@ The format validator now recognizes the pinned standard Vitest wrapper frame:
 anonymous function, file URL, line 0, column -196. Vitest 4.1.12 evaluates its
 209-character wrapper prefix with `columnOffset: -209`; the arrow starts at
 column 13. A real Node VM/inspector regression reproduces the resulting -196
-coordinate without editing the profile. Other negative locations remain
-unsupported, and connected-tree, sample-reference, interval, lifecycle and
-missing-profile checks remain required. This corrects a location-format false
+coordinate without editing the profile. The existing `-1` unknown-location
+sentinels remain valid; coordinates below `-1` remain unsupported apart from
+this exact wrapper-column exception. Connected-tree, sample-reference, interval,
+lifecycle and missing-profile checks remain required. This corrects a location-format false
 rejection; the historical attempt above remains failed because its other
 incomplete/invalid captures are not repaired.
 
