@@ -18,6 +18,7 @@ concurrency:
   group: fresh-fork-bundle-probe-${{ github.event.pull_request.number || github.ref }}
   # Preserve diagnostic attempts and their failure artifacts.
   cancel-in-progress: false
+  queue: max
 
 jobs:
   structural-probe:

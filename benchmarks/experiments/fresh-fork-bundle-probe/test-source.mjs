@@ -229,6 +229,8 @@ test('bundle preparation interval includes the last awaited metadata read', asyn
 test('dependency and focused-test failures retain staged evidence and their failing status', async () => {
   const workflow = parse(await readFile(new URL('../../../.github/workflows/fresh-fork-bundle-probe.yml', import.meta.url), 'utf8'));
   const steps = workflow.jobs['structural-probe'].steps;
+  assert.equal(workflow.concurrency['cancel-in-progress'], false, 'running attempts must retain their evidence');
+  assert.equal(workflow.concurrency.queue, 'max', 'pending attempts must not replace one another');
   for (const file of ['.npmrc', '.node-version', 'package.json', 'package-lock.json'])
     assert.ok(workflow.on.pull_request.paths.some(pattern => require('node:path').matchesGlob(file, pattern)), file);
   for (const phase of ['npm', 'focused']) {

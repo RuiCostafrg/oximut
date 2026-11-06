@@ -52,7 +52,8 @@ focused behavioral checks and probe, and uploads evidence for both supported and
 unsupported outcomes. Source evidence is staged immediately after checkout;
 dependency, focused-test and probe logs are retained when later steps fail.
 Hard cancellation or runner loss can still prevent artifact upload. Concurrency
-is bounded per PR/ref without cancelling historical diagnostic attempts.
+is bounded per PR/ref with `queue: max`, retaining up to 100 pending attempts
+without cancelling the running diagnostic.
 There are no automatic retries. Format version 2's `bundlePreparationMs` covers
 tool loading, bundle creation, output inspection and all bundle-metadata hashing.
 `bundlerLoadMs` is nested within it. Controller entry, lifetime, Vitest initialization, each job
