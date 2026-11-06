@@ -1,0 +1,72 @@
+name: Fresh fork startup overlap diagnostic
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - '.github/workflows/fresh-fork-prewarm-probe.yml'
+      - 'benchmarks/experiments/fresh-fork-prewarm-probe/**'
+      - 'benchmarks/run.py'
+      - 'benchmarks/targets.py'
+      - '.node-version'
+      - '.npmrc'
+      - 'package.json'
+      - 'package-lock.json'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: fresh-fork-prewarm-probe-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: false
+  queue: max
+
+jobs:
+  prewarm-probe:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Stage source evidence before prerequisites
+        run: |
+          set -euo pipefail
+          mkdir "$RUNNER_TEMP/fresh-fork-prewarm"
+          git archive HEAD | gzip > "$RUNNER_TEMP/fresh-fork-prewarm/source.tar.gz"
+          git rev-parse HEAD > "$RUNNER_TEMP/fresh-fork-prewarm/commit.txt"
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .node-version
+          cache: npm
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: '3.13'
+      - name: Install dependencies with retained diagnostics
+        run: |
+          set -euo pipefail
+          npm ci --ignore-scripts 2>&1 | tee "$RUNNER_TEMP/fresh-fork-prewarm/dependencies.log"
+      - name: Focused oracle and failure checks
+        run: |
+          set -euo pipefail
+          node --test benchmarks/experiments/fresh-fork-prewarm-probe/test.mjs 2>&1 | tee "$RUNNER_TEMP/fresh-fork-prewarm/node-tests.log"
+          python3 -m unittest discover -s benchmarks/experiments/fresh-fork-prewarm-probe -p test_measurement.py -v 2>&1 | tee "$RUNNER_TEMP/fresh-fork-prewarm/python-tests.log"
+      - name: Require actual fresh-state and stale-selector structural oracles
+        run: |
+          set -euo pipefail
+          test "$(uname -s)" = Linux
+          test "$(uname -m)" = x86_64
+          node benchmarks/experiments/fresh-fork-prewarm-probe/probe.mjs --output "$RUNNER_TEMP/fresh-fork-prewarm/structural" 2>&1 | tee "$RUNNER_TEMP/fresh-fork-prewarm/structural.log"
+      - name: Measure one warmup and five alternating paired prototype runs
+        run: |
+          set -euo pipefail
+          python3 benchmarks/experiments/fresh-fork-prewarm-probe/measure.py --output "$RUNNER_TEMP/fresh-fork-prewarm/paired" 2>&1 | tee "$RUNNER_TEMP/fresh-fork-prewarm/paired.log"
+      - name: Retain evidence on success or failure
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: fresh-fork-prewarm-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/fresh-fork-prewarm/**
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 14
