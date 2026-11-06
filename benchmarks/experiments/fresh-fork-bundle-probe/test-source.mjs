@@ -21,6 +21,9 @@ function assertRetainedOracle(proof) {
   assert.equal(proof.structuralOracle, true);
   assert.deepEqual(proof.runs.map(run => run.mode), ['stock', 'bundled']);
   assert.deepEqual(proof.runs[0].specHashes, proof.runs[1].specHashes);
+  assert.ok(proof.bundle.input.endsWith('/vitest/dist/workers/forks.js'));
+  assert.ok(proof.bundle.output.endsWith('/forks.bundle.mjs'));
+  assert.notEqual(proof.bundle.input, proof.bundle.output);
   const expected = ['local ESM clean', 'external CJS clean', 'external ESM clean', 'global clean',
     'env clean', 'builtin clean', 'spy clean', 'timer clean']
     .map(name => ({ name, state: 'passed' })).sort((a, b) => a.name.localeCompare(b.name));
@@ -29,9 +32,16 @@ function assertRetainedOracle(proof) {
     assert.equal(run.closed, true); assert.equal(run.jobs.length, 2); assert.equal(run.observations.length, 2);
     for (const job of run.jobs) {
       assert.deepEqual(job.counts, { passed: 8, failed: 0, skipped: 0 }); pids.push(job.pid);
+      assert.equal(job.entrypoint, run.mode === 'stock' ? proof.bundle.input : proof.bundle.output);
     }
     // Bind reported state to the workers and specifications that produced it.
     assert.deepEqual(new Set(run.observations.map(observation => observation.pid)), new Set(run.jobs.map(job => job.pid)));
+    for (const observation of run.observations) {
+      assert.deepEqual({ local: observation.local, cjs: observation.cjs, esm: observation.esm,
+        global: observation.global, env: observation.env, builtin: observation.builtin,
+        spy: observation.spy, fakeClock: observation.fakeClock },
+      { local: 0, cjs: 0, esm: 0, global: null, env: null, builtin: null, spy: 'original', fakeClock: false });
+    }
     for (let index = 0; index < run.jobs.length; index++) {
       const job = run.jobs[index], observation = run.observations.find(item => item.pid === job.pid);
       assert.equal(observation.file + '.test.mjs', run.runs[index].spec);
@@ -148,7 +158,14 @@ test('retained proof rejects unrelated worker state and changed or duplicated te
       run => { run.runs[0].testResults[1].name = run.runs[0].testResults[0].name; },
       run => { run.runs[0].testResults[0].state = 'failed'; },
       run => { run.runs[0].testResults.reverse(); },
+      run => { run.jobs[0].entrypoint = proof.runs[1 - mode].jobs[0].entrypoint; },
+      run => { run.jobs[0].entrypoint = '/unrelated/forks.bundle.mjs'; },
     ];
+    for (const [field, dirty] of Object.entries({ local: 1, cjs: 1, esm: 1, global: 'dirty',
+      env: 'dirty', builtin: 'dirty', spy: 'dirty', fakeClock: true })) {
+      changes.push(run => { run.observations[0][field] = dirty; });
+      changes.push(run => { delete run.observations[0][field]; });
+    }
     for (const change of changes) {
       const corrupted = structuredClone(proof); change(corrupted.runs[mode]);
       assert.throws(() => assertRetainedOracle(corrupted));
