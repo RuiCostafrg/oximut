@@ -27,8 +27,8 @@ export function preserveModuleContext(code, id) {
       // from the original file. Resolution/coercion failures must reject the
       // promise; argument expressions still evaluate in the caller as before.
       if (node.phase) throw Error(`UNSUPPORTED: ${node.phase} import in ${id}:${node.start}`);
-      output.overwrite(node.start, node.source.start,
-        '(async (specifier, options) => import(import.meta.resolve(`${specifier}`, ' + origin + '), options))(');
+      output.overwrite(node.start, node.start + 'import'.length,
+        '(async (specifier, options) => import(import.meta.resolve(`${specifier}`, ' + origin + '), options))');
       sites.push({ kind: 'computed-import', offset: node.start });
     }
     for (const [key, child] of Object.entries(node)) {

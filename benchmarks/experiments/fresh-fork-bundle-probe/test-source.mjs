@@ -20,7 +20,7 @@ test('relocated code preserves module URL, resolver and computed import bases', 
 export const resolve=import.meta.resolve;
 export const text="import.meta";
 export async function load(name) { return (await import(name)).default; }
-export function rawLoad(name) { return import(name); }`;
+export function rawLoad(name) { return import( /* retain argument syntax */ ((name))); }`;
     const transformed = preserveModuleContext(source, id);
     assert.deepEqual(transformed.sites.map(s => s.kind), ['meta:url', 'meta:resolve', 'computed-import', 'computed-import']);
     const candidate = join(relocated, 'candidate.mjs');
