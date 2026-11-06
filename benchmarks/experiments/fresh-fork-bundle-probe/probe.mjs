@@ -18,7 +18,7 @@ const builtins = new Set((await import('node:module')).builtinModules.flatMap(x 
 const hash = data => createHash('sha256').update(data).digest('hex');
 
 /** Bundle the static fork closure while retaining its shared collector API. */
-async function bundleRuntime(output) {
+export async function bundleRuntime(output, { readEvidence = readFile } = {}) {
   const start = performance.now();
   const { rolldown } = await import('rolldown');
   const { preserveModuleContext } = await import('./module-context.mjs');
@@ -55,7 +55,7 @@ async function bundleRuntime(output) {
   let result;
   try { result = await build.write({ file: output, format: 'es', codeSplitting: false, sourcemap: false }); }
   finally { await build.close(); }
-  const contents = await readFile(output);
+  const contents = await readEvidence(output);
   const chunk = result.output.find(item => item.type === 'chunk');
   assert.ok(chunk, 'Rolldown produced no worker chunk');
   let unsupported;
@@ -65,12 +65,15 @@ async function bundleRuntime(output) {
   }
   const modules = await Promise.all(chunk.moduleIds.map(async id => {
     if (id.includes('\0')) return { id, sha256: hash(id), sourceHash: 'virtual-module-id-only' };
-    return { id, sha256: hash(await readFile(id)) };
+    return { id, sha256: hash(await readEvidence(id)) };
   }));
-  return { setupBuildMs: performance.now() - start, bundlerLoadMs, input: workerEntry, output,
-    sourceHash: hash(await readFile(workerEntry)), bundleHash: hash(contents), bytes: contents.length,
-    modules, externals, sharedRunner: await Promise.all([...sharedRunner].sort().map(async id =>
-      ({ id, sha256: hash(await readFile(fileURLToPath(id))) }))),
+  const sourceHash = hash(await readEvidence(workerEntry));
+  const sharedRunnerFiles = await Promise.all([...sharedRunner].sort().map(async id =>
+    ({ id, sha256: hash(await readEvidence(fileURLToPath(id))) })));
+  const bundleHash = hash(contents);
+  return { bundlePreparationMs: performance.now() - start, bundlerLoadMs, input: workerEntry, output,
+    sourceHash, bundleHash, bytes: contents.length,
+    modules, externals, sharedRunner: sharedRunnerFiles,
     dynamicImports: chunk.dynamicImports, preservedContexts: contexts, unsupported };
 }
 
@@ -232,17 +235,39 @@ export async function createOutputDirectory(destination) {
   return output;
 }
 
+/** Reject incomplete or unknown CLI arguments before creating output directories. */
+export function parseOutputArguments(args) {
+  if (args.length === 0) return undefined;
+  if (args.length !== 2 || args[0] !== '--output' || typeof args[1] !== 'string'
+      || !args[1] || args[1].startsWith('--'))
+    throw Error('Expected --output <new directory>');
+  return args[1];
+}
+
+/** Bind every executable probe/oracle source to the captured bytes. */
+export async function probeSourceHashes(directory = new URL('.', import.meta.url)) {
+  const names = ['probe.mjs', 'pool.mjs', 'module-context.mjs', 'test-source.mjs'];
+  return Object.fromEntries(await Promise.all(names.map(async name =>
+    [name, hash(await readFile(new URL(name, directory)))])));
+}
+
 /** Retain successful and failed stages without manufacturing performance metrics. */
 async function main() {
-  const args = process.argv.slice(2), ix = args.indexOf('--output');
-  const output = await createOutputDirectory(ix < 0 ? undefined : args[ix + 1]);
-  const metadata = { command: process.argv, node: process.version, platform: process.platform, arch: process.arch, vitest: packageVersion('vitest'), rolldown: packageVersion('rolldown'), setupBuildMs: null, bundle: null, runs: [], metrics: 'whole-tree CPU user/sys, aggregate RSS, counts and resources.phaseWallMs are unmeasured/N/A; no paired ratios or CIs' };
-  metadata.sourceHashes = {};
-  for (const name of ['probe.mjs', 'pool.mjs', 'module-context.mjs']) metadata.sourceHashes[name] = hash(await readFile(new URL(name, import.meta.url)));
-  metadata.packageLockSha256 = hash(await readFile(new URL('../../../package-lock.json', import.meta.url)));
-  assert.equal(metadata.vitest, '4.1.12', 'pinned worker API required');
+  const output = await createOutputDirectory(parseOutputArguments(process.argv.slice(2)));
+  const metadata = { formatVersion: 2, command: process.argv, node: process.version,
+    platform: process.platform, arch: process.arch, vitest: null, rolldown: null,
+    bundlePreparationMs: null, bundle: null, runs: [],
+    metrics: 'whole-tree CPU user/sys, aggregate RSS, counts and resources.phaseWallMs are unmeasured/N/A; no paired ratios or CIs' };
   const bundle = join(output, 'forks.bundle.mjs');
-  try { metadata.bundle = await bundleRuntime(bundle); metadata.setupBuildMs = metadata.bundle.setupBuildMs; }
+  try {
+    metadata.vitest = packageVersion('vitest');
+    metadata.rolldown = packageVersion('rolldown');
+    metadata.sourceHashes = await probeSourceHashes();
+    metadata.packageLockSha256 = hash(await readFile(new URL('../../../package-lock.json', import.meta.url)));
+    assert.equal(metadata.vitest, '4.1.12', 'pinned worker API required');
+    metadata.bundle = await bundleRuntime(bundle);
+    metadata.bundlePreparationMs = metadata.bundle.bundlePreparationMs;
+  }
   catch (error) { metadata.unsupported = String(error.stack || error); await writeFile(join(output, 'evidence.json'), JSON.stringify(metadata, null, 2) + '\n'); console.error(`First unsupported error: ${error.message}`); process.exitCode = 2; return; }
   if (metadata.bundle.unsupported) { metadata.unsupported = metadata.bundle.unsupported; await writeFile(join(output, 'evidence.json'), JSON.stringify(metadata, null, 2) + '\n'); console.error(`First unsupported error: ${metadata.unsupported}`); process.exitCode = 2; return; }
   const cases = [];

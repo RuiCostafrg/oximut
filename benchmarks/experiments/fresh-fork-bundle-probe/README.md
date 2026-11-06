@@ -30,7 +30,8 @@ and are recorded. The probe does not claim that all framework code was inlined
 or that optional environments/trace providers are supported.
 
 The probe hashes the entry, emitted module sources, bundle, shared runner files,
-fixture inputs, lockfile and probe sources. Generated bundles retain original
+fixture inputs, lockfile and all four JavaScript probe/oracle sources. Tooling
+dependencies are declared directly and pinned in the lockfile. Generated bundles retain original
 installation URLs and are bound to that checkout; they are not relocatable
 release artifacts. The first unsupported or runtime failure is retained in
 `evidence.json`. There is no fallback wrapper loading the original worker entry.
@@ -48,8 +49,13 @@ node benchmarks/experiments/fresh-fork-bundle-probe/probe.mjs --output "$probe_e
 
 The output path must be a new empty directory. The dedicated workflow runs the
 focused behavioral checks and probe, and uploads evidence for both supported and
-unsupported outcomes. It does not retry. `setupBuildMs` covers bundler setup
-and build only. Controller entry, lifetime, Vitest initialization, each job
+unsupported outcomes. Source evidence is staged immediately after checkout;
+dependency, focused-test and probe logs are retained when later steps fail.
+Hard cancellation or runner loss can still prevent artifact upload. Concurrency
+is bounded per PR/ref without cancelling historical diagnostic attempts.
+There are no automatic retries. Format version 2's `bundlePreparationMs` covers
+tool loading, bundle creation, output inspection and all bundle-metadata hashing.
+`bundlerLoadMs` is nested within it. Controller entry, lifetime, Vitest initialization, each job
 including worker drain, and close have separate monotonic diagnostic timings.
 These measurements include probe overhead and do not certify speed. Whole-tree CPU user/sys,
 aggregate RSS, process counts, paired ratios/CIs, and

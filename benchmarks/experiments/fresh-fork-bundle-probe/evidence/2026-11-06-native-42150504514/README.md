@@ -35,12 +35,21 @@ must not be added. The two controllers run consecutively, stock first.
 | Parent cleanup/result handling | 0.657566 | 0.558837 |
 | Whole controller lifetime observed by parent | 411.429296 | 401.900796 |
 
-Bundle setup/build took 324.879454 ms, including 31.280186 ms loading the
-bundler/context tools. It emitted 1,054,053 bytes from 72 static framework modules,
+The legacy `setupBuildMs` was 324.879454 ms, including 31.280186 ms loading the
+bundler/context tools. That legacy window also includes preliminary output
+inspection and module-source hashing, and ends before the final entry/shared-API
+hash reads. It is not a pure build timer. Format version 2 uses
+`bundlePreparationMs`, measured after all metadata reads; no replacement value
+is inferred for this historical attempt. The bundle was 1,054,053 bytes from 72 static framework modules,
 with the native collector API retained separately. Controller `vitest/node`
 import, pool-module import, specification discovery, and run-versus-drain timing
 were not separately recorded by this revision. Subsequent probe code adds those
 clocks; no values are inferred for this historical run.
+
+This historical capture's explicit `sourceHashes` omit the focused test file.
+The reviewed Git revision and source-archive digest bind the complete source
+tree. New captures explicitly hash all four JavaScript sources too; this raw
+historical record is preserved unchanged.
 
 Native worker PIDs were 2348/2355 (stock) and 2377/2385 (bundled), all with normal
 SIGTERM after framework stop. Controllers 2332/2362 exited with code 0. Their

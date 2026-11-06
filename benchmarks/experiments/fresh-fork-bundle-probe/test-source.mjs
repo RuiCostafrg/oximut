@@ -1,13 +1,20 @@
 import assert from 'node:assert/strict';
-import { mkdtemp, mkdir, readFile, readdir, writeFile, rm } from 'node:fs/promises';
+import { mkdtemp, mkdir, readFile, readdir, writeFile, chmod, rm } from 'node:fs/promises';
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { tmpdir } from 'node:os';
 import { join, relative, sep } from 'node:path';
 import { pathToFileURL, fileURLToPath } from 'node:url';
+import { createRequire, isBuiltin } from 'node:module';
+import { parse as parseJavaScript } from '@babel/parser';
+import { setTimeout as delay } from 'node:timers/promises';
 import test from 'node:test';
 import { preserveModuleContext } from './module-context.mjs';
-import { fixtures, createOutputDirectory } from './probe.mjs';
+import { fixtures, createOutputDirectory, parseOutputArguments, probeSourceHashes, bundleRuntime } from './probe.mjs';
+
+const require = createRequire(import.meta.url);
+const { parse } = require('yaml');
+const probeScript = fileURLToPath(new URL('./probe.mjs', import.meta.url));
 
 test('relocated code preserves module URL, resolver and computed import bases', async () => {
   const root = await mkdtemp(join(tmpdir(), 'bundle-context-'));
@@ -105,4 +112,136 @@ test('retained native proof has complete hashes, exact outcomes and distinct wor
     assert.equal(status.cleanupVerified, true); assert.equal(status.cleanupRequired, false); assert.equal(status.timedOut, false);
   }
   assert.equal(new Set(pids).size, 4); assert.equal(new Set(realms).size, 4);
+});
+
+test('malformed output arguments fail before allocating or running a probe', async () => {
+  for (const args of [['--output'], ['--output', ''], ['--output', '--unknown'], ['--unknown'],
+    ['--output', 'one', '--output', 'two']])
+    assert.throws(() => parseOutputArguments(args), /Expected --output/);
+  assert.equal(parseOutputArguments([]), undefined);
+  assert.equal(parseOutputArguments(['--output', 'path with spaces']), 'path with spaces');
+  const root = await mkdtemp(join(tmpdir(), 'invalid-probe-output-'));
+  try {
+    const result = spawnSync(process.execPath, [probeScript, '--output'],
+      { env: { ...process.env, TMPDIR: root }, encoding: 'utf8', timeout: 30000 });
+    assert.notEqual(result.status, 0); assert.match(result.stderr, /Expected --output/);
+    assert.deepEqual(await readdir(root), []);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test('dependency pin failures retain unsupported evidence before any worker build', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'pin evidence '));
+  try {
+    const preload = join(root, 'wrong-version.cjs'), output = join(root, 'result');
+    const packageFile = require.resolve('vitest/package.json');
+    await writeFile(preload, `const fs=require('node:fs');const read=fs.readFileSync;
+fs.readFileSync=function(...args){const value=Reflect.apply(read,this,args);
+if(String(args[0])===${JSON.stringify(packageFile)})return JSON.stringify({...JSON.parse(value),version:'99.0.0-probe-test'});
+return value;};`);
+    const result = spawnSync(process.execPath, [probeScript, '--output', output],
+      { env: { ...process.env, NODE_OPTIONS: '--require=' + JSON.stringify(preload) }, encoding: 'utf8', timeout: 10000 });
+    assert.equal(result.status, 2, result.stderr);
+    const evidence = JSON.parse(await readFile(join(output, 'evidence.json'), 'utf8'));
+    assert.equal(evidence.vitest, '99.0.0-probe-test');
+    assert.match(evidence.unsupported, /pinned worker API required/);
+    assert.equal(evidence.bundle, null); assert.deepEqual(evidence.runs, []);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test('focused oracle bytes affect provenance without changing other source hashes', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'probe-source-hashes-'));
+  try {
+    for (const name of ['probe.mjs', 'pool.mjs', 'module-context.mjs', 'test-source.mjs'])
+      await writeFile(join(root, name), name + ' initial bytes');
+    const directory = pathToFileURL(root + sep);
+    const before = await probeSourceHashes(directory);
+    await writeFile(join(root, 'test-source.mjs'), 'changed focused oracle bytes');
+    const after = await probeSourceHashes(directory);
+    assert.equal(Object.keys(before).length, 4);
+    assert.equal(before['test-source.mjs'], createHash('sha256').update('test-source.mjs initial bytes').digest('hex'));
+    assert.notEqual(after['test-source.mjs'], before['test-source.mjs']);
+    for (const name of ['probe.mjs', 'pool.mjs', 'module-context.mjs']) assert.equal(before[name], after[name]);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test('bundle preparation interval includes the last awaited metadata read', async t => {
+  const root = await mkdtemp(join(tmpdir(), 'bundle-preparation-clock-'));
+  try {
+    let lastRead = 0;
+    const before = performance.now();
+    let bundle;
+    try {
+      bundle = await bundleRuntime(join(root, 'worker.mjs'), { readEvidence: async (...args) => {
+        const bytes = await readFile(...args); await delay(70); lastRead = performance.now(); return bytes;
+      } });
+    } catch (error) {
+      if (/Cannot find native binding/.test(String(error))) { t.skip('native Rolldown binding unavailable'); return; }
+      throw error;
+    }
+    assert.equal(typeof bundle.bundlePreparationMs, 'number');
+    assert.ok(bundle.bundlePreparationMs + 15 >= lastRead - before, 'interval ended before metadata reads completed');
+    assert.ok(bundle.bundlePreparationMs >= bundle.bundlerLoadMs);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test('dependency and focused-test failures retain staged evidence and their failing status', async () => {
+  const workflow = parse(await readFile(new URL('../../../.github/workflows/fresh-fork-bundle-probe.yml', import.meta.url), 'utf8'));
+  const steps = workflow.jobs['structural-probe'].steps;
+  for (const file of ['.npmrc', '.node-version', 'package.json', 'package-lock.json'])
+    assert.ok(workflow.on.pull_request.paths.some(pattern => require('node:path').matchesGlob(file, pattern)), file);
+  for (const phase of ['npm', 'focused']) {
+    const root = await mkdtemp(join(tmpdir(), "probe prerequisite's "));
+    try {
+      const bin = join(root, 'bin'); await mkdir(bin);
+      const programs = {
+        git: '#!/bin/sh\ncase "$1" in archive) printf source-fixture;; rev-parse) printf aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa;; *) exit 90;; esac\n',
+        npm: '#!/bin/sh\necho dependency-fixture\nif test "$PROBE_TEST_FAIL_PHASE" = npm; then exit 23; fi\n',
+        node: '#!/bin/sh\necho focused-fixture\nexit 29\n',
+      };
+      for (const [name, contents] of Object.entries(programs)) {
+        await writeFile(join(bin, name), contents); await chmod(join(bin, name), 0o755);
+      }
+      let failure;
+      for (const step of steps) {
+        if (step.id === 'probe') break;
+        if (!step.run) continue;
+        const result = spawnSync('bash', ['-c', step.run], { encoding: 'utf8', timeout: 10000,
+          env: { ...process.env, RUNNER_TEMP: root, PATH: bin + ':' + process.env.PATH, PROBE_TEST_FAIL_PHASE: phase } });
+        if (result.status !== 0) { failure = result; break; }
+      }
+      assert.equal(failure?.status, phase === 'npm' ? 23 : 29);
+      const evidence = join(root, 'fresh-fork-bundle-probe');
+      assert.ok((await readFile(join(evidence, 'source.tar.gz'))).length > 0);
+      assert.equal((await readFile(join(evidence, 'commit.txt'), 'utf8')).trim(), 'a'.repeat(40));
+      assert.match(await readFile(join(evidence, phase === 'npm' ? 'dependencies.log' : 'focused-tests.log'), 'utf8'),
+        phase === 'npm' ? /dependency-fixture/ : /focused-fixture/);
+    } finally { await rm(root, { recursive: true, force: true }); }
+  }
+});
+
+test('actual tooling imports have exact direct dependency and lockfile bindings', async () => {
+  const base = new URL('../../../', import.meta.url);
+  const manifest = JSON.parse(await readFile(new URL('package.json', base), 'utf8'));
+  const lock = JSON.parse(await readFile(new URL('package-lock.json', base), 'utf8'));
+  const packages = new Set();
+  function visit(node) {
+    if (!node || typeof node !== 'object') return;
+    const value = node.type === 'ImportDeclaration' || node.type === 'ImportExpression'
+      ? node.source?.type === 'StringLiteral' && node.source.value
+      : node.type === 'CallExpression' && node.callee.type === 'Identifier' && node.callee.name === 'require'
+        && node.arguments[0]?.type === 'StringLiteral' && node.arguments[0].value;
+    if (value && !isBuiltin(value) && !/^(?:\.|\/|[a-z]+:)/.test(value))
+      packages.add(value.match(/^(?:@[^/]+\/[^/]+|[^/]+)/)[0]);
+    for (const child of Object.values(node)) {
+      if (Array.isArray(child)) { for (const item of child) visit(item); }
+      else if (child && typeof child === 'object') visit(child);
+    }
+  }
+  for (const file of ['probe.mjs', 'pool.mjs', 'module-context.mjs', 'test-source.mjs'])
+    visit(parseJavaScript(await readFile(new URL(file, import.meta.url), 'utf8'), { sourceType: 'module', createImportExpressions: true }));
+  for (const name of packages) {
+    assert.match(manifest.devDependencies[name] ?? '', /^\d+\.\d+\.\d+(?:[-+][\w.-]+)?$/, name);
+    assert.equal(lock.packages[''].devDependencies[name], manifest.devDependencies[name], name);
+    assert.equal(lock.packages['node_modules/' + name].version, manifest.devDependencies[name], name);
+  }
 });

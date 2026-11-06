@@ -21,14 +21,18 @@
     "experiment": "node packages/vitest-adapter/experiment.mjs --output .oximut/experiment.json"
   },
   "devDependencies": {
+    "@babel/parser": "8.0.8",
     "@biomejs/biome": "2.3.8",
     "@stryker-mutator/core": "10.0.0",
     "@stryker-mutator/vitest-runner": "10.0.0",
     "@types/node": "26.6.6",
     "@vitest/coverage-v8": "4.1.12",
     "ajv": "8.20.0",
+    "magic-string": "0.30.21",
+    "rolldown": "1.2.15",
     "typescript": "7.0.2",
-    "vitest": "4.1.12"
+    "vitest": "4.1.12",
+    "yaml": "2.9.1"
   },
   "overrides": {
     "typed-rest-client": {
