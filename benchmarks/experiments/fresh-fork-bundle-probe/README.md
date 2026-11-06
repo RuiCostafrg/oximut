@@ -60,7 +60,13 @@ structural oracle completes.
 The reviewed local Android/PRoot run passed 16/16 assertions in each mode with
 four distinct worker PIDs and four distinct realms. This establishes only the
 controlled fixture result. Local timings are not native performance evidence;
-the native workflow and a later exact colord campaign remain required.
+an exact native colord campaign remains required for performance claims.
+
+The [first native structural run](evidence/2026-11-06-native-42150504514/README.md)
+also passed both modes. Its complete required-metric limitations, narrower stage
+timings, identities and provenance are retained. It establishes no speedup.
+Later probe revisions separately time controller imports, discovery and worker
+drain that were unpartitioned in that first run.
 
 An unsupported bundle says only that this pinned entry graph needs further
 semantic work or is incompatible with this bundling approach. A successful

@@ -1,0 +1,927 @@
+{
+  "command": [
+    "/opt/hostedtoolcache/node/26.3.1/x64/bin/node",
+    "/home/runner/work/oximut/oximut/benchmarks/experiments/fresh-fork-bundle-probe/probe.mjs",
+    "--output",
+    "/home/runner/work/_temp/fresh-fork-bundle-probe/run"
+  ],
+  "node": "v26.3.1",
+  "platform": "linux",
+  "arch": "x64",
+  "vitest": "4.1.12",
+  "rolldown": "1.2.15",
+  "setupBuildMs": 324.879454,
+  "bundle": {
+    "setupBuildMs": 324.879454,
+    "bundlerLoadMs": 31.280185999999997,
+    "input": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/workers/forks.js",
+    "output": "/home/runner/work/_temp/fresh-fork-bundle-probe/run/forks.bundle.mjs",
+    "sourceHash": "b461149b7a4488ff72f90af16d900ad9c8c410e1b8ddb2c443d49f6cd1aa7206",
+    "bundleHash": "6271389c0551f43bf3c2c9ebbe15aa06962fa6cb12a9aeedf79045b8e529e8ed",
+    "bytes": 1054053,
+    "modules": [
+      {
+        "id": "\u0000rolldown/runtime.js",
+        "sha256": "0adef0f9088854a42e7f25e3afbfd015013d05743380d036f211db27aff7a95a",
+        "sourceHash": "virtual-module-id-only"
+      },
+      {
+        "id": "/home/runner/work/oximut/oximut/node_modules/@vitest/spy/dist/index.js",
+        "sha256": "125bd25008172821d8d88c96fa2ebd189d52bf1494302486669dde9a4bc5c62d"
+      },
+      {
+        "id": "/home/runner/work/oximut/oximut/node_modules/tinyrainbow/dist/index.js",
+        "sha256": "798f5481b60f485d2b1afbd374f02884ac09fe47385d4d4c0573640115239c46"
+      },
+      {
+        "id": "/home/runner/work/oximut/oximut/node_modules/@vitest/pretty-format/dist/index.js",
+        "sha256": "8a0595b26463005d24e476de8129e3fedf2e10a117944a304afcc437ab30cde1"
+      },
+      {
+        "id": "/home/runner/work/oximut/oximut/node_modules/@vitest/utils/dist/display.js",
+        "sha256": "d1ee20c8d65fe2e69c32bf69f13529e763e50e0d4f81b0711e9dede14f636762"
+      },
+      {
+        "id": "/home/runner/work/oximut/oximut/node_modules/@vitest/utils/dist/constants.js",
+        "sha256": "c9db0d24cbad14ef1a38c5230f083e1d4194a7bb53c62f1b2edbd4af731c9e9d"
+      },
+      {
+        "id": "/home/runner/work/oximut/oximut/node_modules/@vitest/utils/dist/helpers.js",
+        "sha256": "1a5e6ae2acfeb0477419d8e5bee9f89b873b7ef8b20d13490ea95e20615cf1ec"
+      },
+      {
+        "id": "/home/runner/work/oximut/oximut/node_modules/@vitest/utils/dist/diff.js",
+        "sha256": "dc4196bc511cd2ef081d633b6cbcb14ba42ee62bd7b4f4a1157a0ffa18babe68"
+      },
+      {
+        "id": "/home/runner/work/oximut/oximut/node_modules/@vitest/utils/dist/serialize.js",
+        "sha256": "abed14f12f71519d897c9626bc18f71f2e69bea3fb552d0d907f1ca882455b29"
+      },
+      {
+        "id": "/home/runner/work/oximut/oximut/node_modules/@vitest/utils/dist/error.js",
+        "sha256": "2ce5a75a4a775415c4c8642e9c608d6c9334271d0eb4e586ac6a853d47c24c97"
+      },
+      {
+        "id": "/home/runner/work/oximut/oximut/node_modules/chai/index.js",
+        "sha256": "89e5418f06b7871fadf9230618d78a7eb352c62840fd576b51db3509ccb96a1f"
+      },
+      {
+        "id": "/home/runner/work/oximut/oximut/node_modules/@vitest/expect/dist/index.js",
+        "sha256": "b177ca97952f1d65d3d2691edbc31ab1af56ac36b3cf08d7f56ad0ca69f07a45"
+      },
+      {
+        "id": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/coverage.CTzCuANN.js",
+        "sha256": "ba99c6accd29ea165736009002ae739b448733098eda3847d85f3b3697923b4e"
+      },
+      {
+        "id": "/home/runner/work/oximut/oximut/node_modules/@vitest/utils/dist/chunk-pathe.M-eThtNZ.js",
+        "sha256": "98056e87c62571d6267813ed5951c131957037bf8a3a6d91658ac84f819685b0"
+      },
+      {
+        "id": "/home/runner/work/oximut/oximut/node_modules/@vitest/utils/dist/source-map.js",
+        "sha256": "bdc41c45e4bffd79dcc39422c85b98dca5f44e355bd17ef2c72d3e97aea15b50"
+      },
+      {
+        "id": "/home/runner/work/oximut/oximut/node_modules/@vitest/utils/dist/offset.js",
+        "sha256": "2bd47509feeecca1c191e59d744becbecd9998b740d692fb49d5f4adbb9b22e2"
+      },
+      {
+        "id": "/home/runner/work/oximut/oximut/node_modules/@jridgewell/sourcemap-codec/dist/sourcemap-codec.mjs",
+        "sha256": "2768e18f3bf937a0111c98872ff3e8ec8f5165d103a082b91f5127351beab7d0"
+      },
+      {
+        "id": "/home/runner/work/oximut/oximut/node_modules/magic-string/dist/magic-string.es.mjs",
+        "sha256": "d637092a6c7dd947e1b27aef30e97d1a5f59dc39b69ef8f4f0e37e766e4df159"
+      },
+      {
+        "id": "/home/runner/work/oximut/oximut/node_modules/@vitest/snapshot/dist/index.js",
+        "sha256": "d1b07d9337f1caf8b9b59ddb1ba1d58df92ce77cb4646df7700e07e994522128"
+      },
+      {
+        "id": "/home/runner/work/oximut/oximut/node_modules/@vitest/utils/dist/timers.js",
+        "sha256": "25b632685397407b240a15681b99f583b4bfdf8acb3f69c475f210153019374c"
+      },
+      {
+        "id": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/utils.BX5Fg8C4.js",
+        "sha256": "f7b093e5d0814fbf4a58675cd3448a7dea4359926cbc0d02f7621de3b5a1f498"
+      },
+      {
+        "id": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/constants.CPYnjOGj.js",
+        "sha256": "3565003408971a6af9e78d211dea047fe5b5bd82bdb0aad373f75b45c434449f"
+      },
+      {
+        "id": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/benchmark.CX_oY03V.js",
+        "sha256": "59ba553727ee6330556a8edef46306eda832e5499cf6cf1348ff3e1524cac77e"
+      },
+      {
+        "id": "/home/runner/work/oximut/oximut/node_modules/pathe/dist/shared/pathe.M-eThtNZ.mjs",
+        "sha256": "5a087c7848e128640d114aac23965f9fe73dce651a1e4c307f399dc72800afbc"
+      },
+      {
+        "id": "/home/runner/work/oximut/oximut/node_modules/pathe/dist/index.mjs",
+        "sha256": "9998af9290974a85a0dea395aabe596dd267c3e3ea8668f0abf9248d04fd75b9"
+      },
+      {
+        "id": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/_commonjsHelpers.D26ty3Ew.js",
+        "sha256": "0f94da1dc442bde150286e12305b2930f30ba483f35e3293ea8244b1bc7cf7ed"
+      },
+      {
+        "id": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/index.Chj8NDwU.js",
+        "sha256": "c9a26835aba20f5bca34ab581f9866e00f9ddd12d4df61c67e24b8840af9f0bf"
+      },
+      {
+        "id": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/rpc.MzXet3jl.js",
+        "sha256": "5be591fb05181d5b57f3bb506193e7558b2d3d4ed0402535c680e1c7653fadd0"
+      },
+      {
+        "id": "/home/runner/work/oximut/oximut/node_modules/tinybench/dist/index.js",
+        "sha256": "e47e88c53aaa2ab5ac12299a13eea36d33b3abfe23ab30772da04d4fdeafe9fb"
+      },
+      {
+        "id": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/test.DNmyFkvJ.js",
+        "sha256": "f07fc8036b066834143b14748bd70c436a6a2f15f648455af8d3a003a4eafc94"
+      },
+      {
+        "id": "/home/runner/work/oximut/oximut/node_modules/vite/dist/node/module-runner.js",
+        "sha256": "7dcee739418a576f8089c0b682b979ec191ef64dce9ec8380cf8162b69df9e0d"
+      },
+      {
+        "id": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/evaluatedModules.Dg1zASAC.js",
+        "sha256": "08eb18ac661433d9b821c117911be6d5be0821297311a5d92652aaf4581a5a61"
+      },
+      {
+        "id": "/home/runner/work/oximut/oximut/node_modules/expect-type/dist/branding.js",
+        "sha256": "d43aa81f5bc89faa359e0f97c814ba25155591ff078fbb9bfd40f8c7c9683230"
+      },
+      {
+        "id": "/home/runner/work/oximut/oximut/node_modules/expect-type/dist/messages.js",
+        "sha256": "e062c2666b2204e889e64985d7d1bc7b9bcd9de0422cda1b1be4b4b63a5c4721"
+      },
+      {
+        "id": "/home/runner/work/oximut/oximut/node_modules/expect-type/dist/overloads.js",
+        "sha256": "d43aa81f5bc89faa359e0f97c814ba25155591ff078fbb9bfd40f8c7c9683230"
+      },
+      {
+        "id": "/home/runner/work/oximut/oximut/node_modules/expect-type/dist/utils.js",
+        "sha256": "57cbab158e5dd81f975b55d6a78918fdf03c28a2dfd7e9a6c0b8d55aba066152"
+      },
+      {
+        "id": "/home/runner/work/oximut/oximut/node_modules/expect-type/dist/index.js",
+        "sha256": "504d5879f4328b88c20d58391e5b493c72a2a18a530b3e05e71f79956a7700f5"
+      },
+      {
+        "id": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/index.DdgEv5B1.js",
+        "sha256": "ca2e9d3ffa586960ea2c403db8aa35757a85ae05291df340aad032a9f4d2d407"
+      },
+      {
+        "id": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/globals.Dj1TGiMC.js",
+        "sha256": "93f775783be62f716a88b7dee2846afae5fc086f7e82d09f0c4d03738889a230"
+      },
+      {
+        "id": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/setup-common.DYx3LtFI.js",
+        "sha256": "c0de971a9f98ede426c5bef5bd498ecb944eba92ef09484778056b8751c75350"
+      },
+      {
+        "id": "/home/runner/work/oximut/oximut/node_modules/@vitest/snapshot/dist/environment.js",
+        "sha256": "66f8625515abbac355ccd129feccd57068031c6bbeafaff8df1fecd6d4f6594b"
+      },
+      {
+        "id": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/node.COQbm6gK.js",
+        "sha256": "765968247c3f1f669a3b1f74fe1045670186e3001acc4d39edc961a698a84af9"
+      },
+      {
+        "id": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/index.DXx9Dtk7.js",
+        "sha256": "984c62280948e3916bfd83d47786b912081f61fbac6d79d5be189cb656a570ac"
+      },
+      {
+        "id": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/modules.BJuCwlRJ.js",
+        "sha256": "102cca31e463f95e93e78a1972ac7eb3afc2ffef09a32c9c7da2b6dc63700bcb"
+      },
+      {
+        "id": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/path.js",
+        "sha256": "0ae93ca73f863259989ba3603bca12b21ba21981f2bfce65bdffe8044e3a89ae"
+      },
+      {
+        "id": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/traces.DT5aQ62U.js",
+        "sha256": "59550f228d460d26a7f5e58cef731746e494e7508ae3e0d48b5ad0821c4ea010"
+      },
+      {
+        "id": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/module-evaluator.js",
+        "sha256": "a0b36fb2211d2587d8df68d5855d48141be27e99bdb973378a83f927e03b004e"
+      },
+      {
+        "id": "/home/runner/work/oximut/oximut/node_modules/@vitest/mocker/dist/chunk-registry.js",
+        "sha256": "1d099aea4311b78165efb087216c1bf620607c2d070e1a26e22b8d06386ce6b5"
+      },
+      {
+        "id": "/home/runner/work/oximut/oximut/node_modules/@vitest/mocker/dist/index.js",
+        "sha256": "9a2131efabbd44edcf0b6f21bb1f2646648e6a560284ba5f651043c1973d7baf"
+      },
+      {
+        "id": "/home/runner/work/oximut/oximut/node_modules/@vitest/mocker/dist/chunk-pathe.M-eThtNZ.js",
+        "sha256": "8845b0da5f395a5480ecf6b9a4650ed503642faca99733755992f1b0fd06bf69"
+      },
+      {
+        "id": "/home/runner/work/oximut/oximut/node_modules/@vitest/mocker/dist/redirect.js",
+        "sha256": "2e7e45785c46757456c999138d13d090d591ebae0464ca01dff540df62a8d7d7"
+      },
+      {
+        "id": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/startVitestModuleRunner.DB-7oCpn.js",
+        "sha256": "244154a86165da6273cebbf4f2f77ba286e219c5f337022cfe88282f23bcc95f"
+      },
+      {
+        "id": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/index.DC7d2Pf8.js",
+        "sha256": "ca8e968b3dcbef742036f0d857700ef0a019127911f8770097066b8e5371036b"
+      },
+      {
+        "id": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/inspector.CvyFGlXm.js",
+        "sha256": "a696d80f441273d263d802206f202988f77558210f376ac0a33860e7fee4071f"
+      },
+      {
+        "id": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/init.k9zZ9sLh.js",
+        "sha256": "1590c223a08e12f898d2db14b21a044abdcc917a9456d720f1f4677c59daa5bf"
+      },
+      {
+        "id": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/index.BCY_7LL2.js",
+        "sha256": "7f2b6e2ffb2e3e74511b33041f3a3f3fdf665f3312448c4c5c75d506a76e88c3"
+      },
+      {
+        "id": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/nativeModuleRunner.BIakptoF.js",
+        "sha256": "6232a4cb2f8e244b31c154145c3a3d4851e3bda63befa382bd0fd731904f4cdb"
+      },
+      {
+        "id": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/console.3WNpx0tS.js",
+        "sha256": "3e19d2c9e51e1d7a95d92bd603a28ac30f2d974f5ff370cec08d975801ea746f"
+      },
+      {
+        "id": "/home/runner/work/oximut/oximut/node_modules/@vitest/mocker/dist/chunk-utils.js",
+        "sha256": "08b4c5fc5312daa9980e1cb292509e49e51552f4714f39ff101c58efd265b753"
+      },
+      {
+        "id": "/home/runner/work/oximut/oximut/node_modules/estree-walker/src/walker.js",
+        "sha256": "eadf0a365eaf36198f6637574f4ebbd3fd95e18fba93442c4d767044a38eb74a"
+      },
+      {
+        "id": "/home/runner/work/oximut/oximut/node_modules/estree-walker/src/sync.js",
+        "sha256": "599fd208deca092860f442fcb775c501168cbc4c6e1ac1d93c518fcbab8d5048"
+      },
+      {
+        "id": "/home/runner/work/oximut/oximut/node_modules/estree-walker/src/index.js",
+        "sha256": "731c3f79f1e9609575d34fb76aa1ffba7c5a29adccc97912dd12fced80431a5b"
+      },
+      {
+        "id": "/home/runner/work/oximut/oximut/node_modules/@vitest/mocker/dist/chunk-helpers.js",
+        "sha256": "22a5cbfa7f72d6dd6b3bab32d5e356fba8aa6585209d9ebccc320fc0d90ad1be"
+      },
+      {
+        "id": "/home/runner/work/oximut/oximut/node_modules/@vitest/mocker/dist/chunk-automock.js",
+        "sha256": "ae44c938c7ba189d272c1edcdf0509393905a5a76feb38128098f2302b9e79f7"
+      },
+      {
+        "id": "/home/runner/work/oximut/oximut/node_modules/@vitest/mocker/dist/chunk-hoistMocks.js",
+        "sha256": "6113a7cb5655d8ae32052245d71c553217f6f324075364fb22c2645ab00daa92"
+      },
+      {
+        "id": "/home/runner/work/oximut/oximut/node_modules/@vitest/mocker/dist/transforms.js",
+        "sha256": "91ebd13d7f3ac6e74ea1510976395f9bb35d89eb19c734ecf1d998fe83b00e91"
+      },
+      {
+        "id": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/acorn.B2iPLyUM.js",
+        "sha256": "d8af6fca1f24e258ae45833ad4db4d33dd49c8b330f80de48116c09872e2b159"
+      },
+      {
+        "id": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/nativeModuleMocker.BkNfQMkH.js",
+        "sha256": "83beb53736f34fca262c439407049654d7c440fef1a8f76ce3b8619f0e648739"
+      },
+      {
+        "id": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/native.DPzPHdi5.js",
+        "sha256": "9468190425b0db7c43ddd4aaf03140f7f38b507c39ef0b70f5c389b52f5d0cb6"
+      },
+      {
+        "id": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/base.B6Opl8PE.js",
+        "sha256": "bcdf4fd8921155a4d6c2e293aa608e082d274a2583ab97aa6104696d6f00081a"
+      },
+      {
+        "id": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/init-forks.H5ZuobOQ.js",
+        "sha256": "63acb3b402c59fa17a271f20c9436e487cdcbab48114a431b30a03df93509cd0"
+      },
+      {
+        "id": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/workers/forks.js",
+        "sha256": "b461149b7a4488ff72f90af16d900ad9c8c410e1b8ddb2c443d49f6cd1aa7206"
+      }
+    ],
+    "externals": [
+      "file:///home/runner/work/oximut/oximut/node_modules/@vitest/runner/dist/index.js",
+      "file:///home/runner/work/oximut/oximut/node_modules/@vitest/runner/dist/utils.js",
+      "node:assert",
+      "node:async_hooks",
+      "node:console",
+      "node:fs",
+      "node:fs/promises",
+      "node:module",
+      "node:path",
+      "node:perf_hooks",
+      "node:process",
+      "node:stream",
+      "node:timers",
+      "node:timers/promises",
+      "node:url",
+      "node:util",
+      "node:v8",
+      "node:vm",
+      "node:worker_threads"
+    ],
+    "sharedRunner": [
+      {
+        "id": "file:///home/runner/work/oximut/oximut/node_modules/@vitest/runner/dist/index.js",
+        "sha256": "61a758d5e6d41e0928c92bfd5ab7152bde625d90b97a08b269dc5a0438485d35"
+      },
+      {
+        "id": "file:///home/runner/work/oximut/oximut/node_modules/@vitest/runner/dist/utils.js",
+        "sha256": "f778f89df543143d276dc6e9233feb749531512dae30b29f80cb229560f19490"
+      }
+    ],
+    "dynamicImports": [
+      "forks.bundle.mjs",
+      "@opentelemetry/api",
+      "@edge-runtime/vm",
+      "happy-dom",
+      "jsdom",
+      "node:vm"
+    ],
+    "preservedContexts": [
+      {
+        "id": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/base.B6Opl8PE.js",
+        "sites": [
+          {
+            "kind": "meta:url",
+            "offset": 1882
+          }
+        ]
+      },
+      {
+        "id": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/path.js",
+        "sites": [
+          {
+            "kind": "meta:url",
+            "offset": 108
+          },
+          {
+            "kind": "meta:url",
+            "offset": 179
+          }
+        ]
+      },
+      {
+        "id": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/module-evaluator.js",
+        "sites": [
+          {
+            "kind": "computed-import",
+            "offset": 3292
+          }
+        ]
+      },
+      {
+        "id": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/traces.DT5aQ62U.js",
+        "sites": [
+          {
+            "kind": "computed-import",
+            "offset": 840
+          }
+        ]
+      },
+      {
+        "id": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/inspector.CvyFGlXm.js",
+        "sites": [
+          {
+            "kind": "meta:url",
+            "offset": 120
+          }
+        ]
+      },
+      {
+        "id": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/startVitestModuleRunner.DB-7oCpn.js",
+        "sites": [
+          {
+            "kind": "meta:resolve",
+            "offset": 17011
+          },
+          {
+            "kind": "meta:resolve",
+            "offset": 17073
+          }
+        ]
+      },
+      {
+        "id": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/coverage.CTzCuANN.js",
+        "sites": [
+          {
+            "kind": "computed-import",
+            "offset": 538
+          }
+        ]
+      },
+      {
+        "id": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/index.BCY_7LL2.js",
+        "sites": [
+          {
+            "kind": "meta:url",
+            "offset": 59090
+          }
+        ]
+      },
+      {
+        "id": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/nativeModuleRunner.BIakptoF.js",
+        "sites": [
+          {
+            "kind": "computed-import",
+            "offset": 956
+          }
+        ]
+      },
+      {
+        "id": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/init.k9zZ9sLh.js",
+        "sites": [
+          {
+            "kind": "meta:resolve",
+            "offset": 2398
+          },
+          {
+            "kind": "computed-import",
+            "offset": 2593
+          }
+        ]
+      },
+      {
+        "id": "/home/runner/work/oximut/oximut/node_modules/vite/dist/node/module-runner.js",
+        "sites": [
+          {
+            "kind": "meta:resolve",
+            "offset": 30994
+          },
+          {
+            "kind": "computed-import",
+            "offset": 32909
+          }
+        ]
+      },
+      {
+        "id": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/nativeModuleMocker.BkNfQMkH.js",
+        "sites": [
+          {
+            "kind": "meta:resolve",
+            "offset": 7022
+          },
+          {
+            "kind": "computed-import",
+            "offset": 7172
+          },
+          {
+            "kind": "meta:resolve",
+            "offset": 7251
+          },
+          {
+            "kind": "computed-import",
+            "offset": 7386
+          },
+          {
+            "kind": "computed-import",
+            "offset": 7700
+          },
+          {
+            "kind": "computed-import",
+            "offset": 7832
+          },
+          {
+            "kind": "meta:url",
+            "offset": 8223
+          }
+        ]
+      },
+      {
+        "id": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/native.DPzPHdi5.js",
+        "sites": [
+          {
+            "kind": "meta:url",
+            "offset": 3428
+          }
+        ]
+      },
+      {
+        "id": "/home/runner/work/oximut/oximut/node_modules/@vitest/mocker/dist/chunk-automock.js",
+        "sites": [
+          {
+            "kind": "meta:resolve",
+            "offset": 57955
+          },
+          {
+            "kind": "meta:url",
+            "offset": 60156
+          },
+          {
+            "kind": "meta:resolve",
+            "offset": 61360
+          }
+        ]
+      }
+    ]
+  },
+  "runs": [
+    {
+      "mode": "stock",
+      "specHashes": {
+        "package.json": "1239d4d885dcad42201a27ed9324f8f0f760b78700d8db9ced39a511cffe7eae",
+        "a.test.mjs": "86cbc0d4a161816c43396be57db2e1ce7020b407a6edf089a7273eba9a676ce9",
+        "b.test.mjs": "249659091ace7fce59b3d06561a8fd74408a13da174f5cf9c0209dd87881c9b7",
+        "local.mjs": "54762e509879065d26e4ad1d3900a8021c1ff5c6a227f1e0cca5124e11010014",
+        "node_modules/stateful-cjs/package.json": "4526a63fd2723886c4388b3724ee928a40c0394313048a78df08736292cfddf1",
+        "node_modules/stateful-cjs/index.js": "f2b490681164090ef863b2a44545d0233c7746b65f4faa9ec087b1d5355c329a",
+        "node_modules/stateful-esm/package.json": "03be8a7f599cd73d876392a3a71c87987e4bb0fd821c5b5bf2a2f1740b5c216b",
+        "node_modules/stateful-esm/index.js": "e2df9b9f28c5a434aac9a260eb286996b208021bd1037505acf2e6cdc248b7ca"
+      },
+      "controllerLifetimeMs": 411.42929599999997,
+      "runs": [
+        {
+          "spec": "a.test.mjs",
+          "counts": {
+            "passed": 8,
+            "failed": 0,
+            "skipped": 0
+          },
+          "testResults": [
+            {
+              "name": "local ESM clean",
+              "state": "passed"
+            },
+            {
+              "name": "external CJS clean",
+              "state": "passed"
+            },
+            {
+              "name": "external ESM clean",
+              "state": "passed"
+            },
+            {
+              "name": "global clean",
+              "state": "passed"
+            },
+            {
+              "name": "env clean",
+              "state": "passed"
+            },
+            {
+              "name": "builtin clean",
+              "state": "passed"
+            },
+            {
+              "name": "spy clean",
+              "state": "passed"
+            },
+            {
+              "name": "timer clean",
+              "state": "passed"
+            }
+          ]
+        },
+        {
+          "spec": "b.test.mjs",
+          "counts": {
+            "passed": 8,
+            "failed": 0,
+            "skipped": 0
+          },
+          "testResults": [
+            {
+              "name": "local ESM clean",
+              "state": "passed"
+            },
+            {
+              "name": "external CJS clean",
+              "state": "passed"
+            },
+            {
+              "name": "external ESM clean",
+              "state": "passed"
+            },
+            {
+              "name": "global clean",
+              "state": "passed"
+            },
+            {
+              "name": "env clean",
+              "state": "passed"
+            },
+            {
+              "name": "builtin clean",
+              "state": "passed"
+            },
+            {
+              "name": "spy clean",
+              "state": "passed"
+            },
+            {
+              "name": "timer clean",
+              "state": "passed"
+            }
+          ]
+        }
+      ],
+      "jobs": [
+        {
+          "spec": "/home/runner/work/_temp/fresh-fork-bundle-probe/run/stock/project/a.test.mjs",
+          "pid": 2348,
+          "ppid": 2332,
+          "startTime": "2535",
+          "entrypoint": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/workers/forks.js",
+          "execArgv": [
+            "--experimental-import-meta-resolve",
+            "--require",
+            "/home/runner/work/oximut/oximut/node_modules/vitest/suppress-warnings.cjs",
+            "--conditions",
+            "node",
+            "--conditions",
+            "development"
+          ],
+          "exitCode": null,
+          "signal": "SIGTERM",
+          "wallMs": 109.54654300000001,
+          "counts": {
+            "passed": 8,
+            "failed": 0,
+            "skipped": 0
+          }
+        },
+        {
+          "spec": "/home/runner/work/_temp/fresh-fork-bundle-probe/run/stock/project/b.test.mjs",
+          "pid": 2355,
+          "ppid": 2332,
+          "startTime": "2546",
+          "entrypoint": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/workers/forks.js",
+          "execArgv": [
+            "--experimental-import-meta-resolve",
+            "--require",
+            "/home/runner/work/oximut/oximut/node_modules/vitest/suppress-warnings.cjs",
+            "--conditions",
+            "node",
+            "--conditions",
+            "development"
+          ],
+          "exitCode": null,
+          "signal": "SIGTERM",
+          "wallMs": 89.81896999999998,
+          "counts": {
+            "passed": 8,
+            "failed": 0,
+            "skipped": 0
+          }
+        }
+      ],
+      "observations": [
+        {
+          "file": "a",
+          "pid": 2348,
+          "realm": "3bf54113-e25f-4e1d-8a11-56e91c02afcf",
+          "local": 0,
+          "cjs": 0,
+          "esm": 0,
+          "global": null,
+          "env": null,
+          "builtin": null,
+          "spy": "original",
+          "fakeClock": false
+        },
+        {
+          "file": "b",
+          "pid": 2355,
+          "realm": "aa34620e-7d79-495b-95b7-d7ad1e8ca6f0",
+          "local": 0,
+          "cjs": 0,
+          "esm": 0,
+          "global": null,
+          "env": null,
+          "builtin": null,
+          "spy": "original",
+          "fakeClock": false
+        }
+      ],
+      "stage": {
+        "vitestInitializeMs": 30.744684000000007,
+        "closeMs": 1.5842640000000188
+      },
+      "closed": true,
+      "controllerEntryMs": 30.214157999999998,
+      "cleanupMs": 0.657566000000088
+    },
+    {
+      "mode": "bundled",
+      "specHashes": {
+        "package.json": "1239d4d885dcad42201a27ed9324f8f0f760b78700d8db9ced39a511cffe7eae",
+        "a.test.mjs": "86cbc0d4a161816c43396be57db2e1ce7020b407a6edf089a7273eba9a676ce9",
+        "b.test.mjs": "249659091ace7fce59b3d06561a8fd74408a13da174f5cf9c0209dd87881c9b7",
+        "local.mjs": "54762e509879065d26e4ad1d3900a8021c1ff5c6a227f1e0cca5124e11010014",
+        "node_modules/stateful-cjs/package.json": "4526a63fd2723886c4388b3724ee928a40c0394313048a78df08736292cfddf1",
+        "node_modules/stateful-cjs/index.js": "f2b490681164090ef863b2a44545d0233c7746b65f4faa9ec087b1d5355c329a",
+        "node_modules/stateful-esm/package.json": "03be8a7f599cd73d876392a3a71c87987e4bb0fd821c5b5bf2a2f1740b5c216b",
+        "node_modules/stateful-esm/index.js": "e2df9b9f28c5a434aac9a260eb286996b208021bd1037505acf2e6cdc248b7ca"
+      },
+      "controllerLifetimeMs": 401.9007959999999,
+      "runs": [
+        {
+          "spec": "a.test.mjs",
+          "counts": {
+            "passed": 8,
+            "failed": 0,
+            "skipped": 0
+          },
+          "testResults": [
+            {
+              "name": "local ESM clean",
+              "state": "passed"
+            },
+            {
+              "name": "external CJS clean",
+              "state": "passed"
+            },
+            {
+              "name": "external ESM clean",
+              "state": "passed"
+            },
+            {
+              "name": "global clean",
+              "state": "passed"
+            },
+            {
+              "name": "env clean",
+              "state": "passed"
+            },
+            {
+              "name": "builtin clean",
+              "state": "passed"
+            },
+            {
+              "name": "spy clean",
+              "state": "passed"
+            },
+            {
+              "name": "timer clean",
+              "state": "passed"
+            }
+          ]
+        },
+        {
+          "spec": "b.test.mjs",
+          "counts": {
+            "passed": 8,
+            "failed": 0,
+            "skipped": 0
+          },
+          "testResults": [
+            {
+              "name": "local ESM clean",
+              "state": "passed"
+            },
+            {
+              "name": "external CJS clean",
+              "state": "passed"
+            },
+            {
+              "name": "external ESM clean",
+              "state": "passed"
+            },
+            {
+              "name": "global clean",
+              "state": "passed"
+            },
+            {
+              "name": "env clean",
+              "state": "passed"
+            },
+            {
+              "name": "builtin clean",
+              "state": "passed"
+            },
+            {
+              "name": "spy clean",
+              "state": "passed"
+            },
+            {
+              "name": "timer clean",
+              "state": "passed"
+            }
+          ]
+        }
+      ],
+      "jobs": [
+        {
+          "spec": "/home/runner/work/_temp/fresh-fork-bundle-probe/run/bundled/project/a.test.mjs",
+          "pid": 2377,
+          "ppid": 2362,
+          "startTime": "2576",
+          "entrypoint": "/home/runner/work/_temp/fresh-fork-bundle-probe/run/forks.bundle.mjs",
+          "execArgv": [
+            "--experimental-import-meta-resolve",
+            "--require",
+            "/home/runner/work/oximut/oximut/node_modules/vitest/suppress-warnings.cjs",
+            "--conditions",
+            "node",
+            "--conditions",
+            "development"
+          ],
+          "exitCode": null,
+          "signal": "SIGTERM",
+          "wallMs": 114.63262499999999,
+          "counts": {
+            "passed": 8,
+            "failed": 0,
+            "skipped": 0
+          }
+        },
+        {
+          "spec": "/home/runner/work/_temp/fresh-fork-bundle-probe/run/bundled/project/b.test.mjs",
+          "pid": 2385,
+          "ppid": 2362,
+          "startTime": "2587",
+          "entrypoint": "/home/runner/work/_temp/fresh-fork-bundle-probe/run/forks.bundle.mjs",
+          "execArgv": [
+            "--experimental-import-meta-resolve",
+            "--require",
+            "/home/runner/work/oximut/oximut/node_modules/vitest/suppress-warnings.cjs",
+            "--conditions",
+            "node",
+            "--conditions",
+            "development"
+          ],
+          "exitCode": null,
+          "signal": "SIGTERM",
+          "wallMs": 97.254793,
+          "counts": {
+            "passed": 8,
+            "failed": 0,
+            "skipped": 0
+          }
+        }
+      ],
+      "observations": [
+        {
+          "file": "a",
+          "pid": 2377,
+          "realm": "916d649b-5a54-462a-ae49-6c7287800539",
+          "local": 0,
+          "cjs": 0,
+          "esm": 0,
+          "global": null,
+          "env": null,
+          "builtin": null,
+          "spy": "original",
+          "fakeClock": false
+        },
+        {
+          "file": "b",
+          "pid": 2385,
+          "realm": "fe3e480c-b464-41a0-9a47-5c17f2d2a2d8",
+          "local": 0,
+          "cjs": 0,
+          "esm": 0,
+          "global": null,
+          "env": null,
+          "builtin": null,
+          "spy": "original",
+          "fakeClock": false
+        }
+      ],
+      "stage": {
+        "vitestInitializeMs": 31.480715999999987,
+        "closeMs": 1.595690999999988
+      },
+      "closed": true,
+      "controllerEntryMs": 28.19998899999996,
+      "cleanupMs": 0.5588370000000396
+    }
+  ],
+  "metrics": "whole-tree CPU user/sys, aggregate RSS, counts and resources.phaseWallMs are unmeasured/N/A; no paired ratios or CIs",
+  "sourceHashes": {
+    "probe.mjs": "5b14e38fd698106f6a12568f22db2b1a950e92b36f424c8f44671b87596142b1",
+    "pool.mjs": "d3cd3434eeb6c0e8ee3d23a87490cfb79544a4659cd6a8cea53f5c807522e0e4",
+    "module-context.mjs": "f8c814ab6339298e626e360809c181b4ee0125c72ce983d7c427a1e460b80a60"
+  },
+  "packageLockSha256": "b599ac63e961709c6647239730612a35fa67d5b2b52716a8109ae8d837654ae6",
+  "closeCleanup": [
+    {
+      "mode": "stock",
+      "closed": true,
+      "workerPids": [
+        2348,
+        2355
+      ]
+    },
+    {
+      "mode": "bundled",
+      "closed": true,
+      "workerPids": [
+        2377,
+        2385
+      ]
+    }
+  ],
+  "structuralOracle": true
+}

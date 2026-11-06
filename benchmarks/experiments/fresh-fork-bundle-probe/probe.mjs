@@ -77,9 +77,13 @@ async function bundleRuntime(output) {
 /** Execute the same state oracle through the real stock or bundled worker. */
 async function controller(input) {
   process.send?.({ type: 'controller-entered', pid: process.pid });
+  const stage = {}, importStart = performance.now();
   const { createVitest } = await import('vitest/node');
+  stage.vitestImportMs = performance.now() - importStart;
+  const poolImportStart = performance.now();
   const { createForkPool } = await import('./pool.mjs');
-  const runs = [], jobs = [], stage = {};
+  stage.poolImportMs = performance.now() - poolImportStart;
+  const runs = [], jobs = [];
   let context, reporterEnd;
   try {
     const stock = input.mode === 'stock';
@@ -96,13 +100,16 @@ async function controller(input) {
     assert.equal(context.projects[0].config.isolate, true);
     assert.equal(context.projects[0].config.pool, forkPool.pool.name);
     stage.vitestInitializeMs = performance.now() - initStart;
+    const discoveryStart = performance.now();
     const specs = (await context.globTestSpecifications()).sort((a, b) => a.moduleId.localeCompare(b.moduleId));
+    stage.specDiscoveryMs = performance.now() - discoveryStart;
     assert.equal(specs.length, 2, 'exactly two identical specifications required');
     for (const spec of specs) {
       reporterEnd = undefined;
       const before = forkPool.workers.length;
       const jobStart = performance.now();
       await context.runTestSpecifications([spec], true);
+      const runMs = performance.now() - jobStart;
       // The API may resolve while stop() is still pending. Drain each job
       // before observing exits or admitting the next fresh fork.
       await context.pool.close();
@@ -128,7 +135,8 @@ async function controller(input) {
       assert.equal(forkPool.workers.length, before + 1, 'one new OS fork per spec');
       const evidence = forkPool.workers.at(-1).worker.evidence;
       forkPool.assertDrained();
-      jobs.push({ spec: spec.moduleId, ...evidence, wallMs: jobMs, counts });
+      jobs.push({ spec: spec.moduleId, ...evidence, wallMs: jobMs, runMs,
+        drainMs: jobMs - runMs, counts });
       runs.push({ spec: basename(spec.moduleId), counts, testResults });
     }
     const closeStart = performance.now();

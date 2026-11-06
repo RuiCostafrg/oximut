@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { mkdtemp, mkdir, readFile, readdir, writeFile, rm } from 'node:fs/promises';
 import { spawnSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -72,4 +73,36 @@ test('default output is fresh and explicit existing directories are rejected', a
     assert.equal(await createOutputDirectory(nested), nested);
     assert.deepEqual(await readdir(nested), []);
   } finally { await rm(output, { recursive: true, force: true }); }
+});
+
+test('retained native proof has complete hashes, exact outcomes and distinct workers', async () => {
+  const root = new URL('./evidence/2026-11-06-native-42150504514/', import.meta.url);
+  const lines = (await readFile(new URL('SHA256SUMS', root), 'utf8')).trim().split('\n');
+  const covered = [];
+  for (const line of lines) {
+    const [expected, name] = line.split('  ');
+    assert.match(expected, /^[a-f0-9]{64}$/);
+    assert.ok(name && !name.startsWith('/') && !name.split('/').includes('..'));
+    assert.equal(createHash('sha256').update(await readFile(new URL(name, root))).digest('hex'), expected, name);
+    covered.push(name);
+  }
+  const retained = (await readdir(root, { recursive: true, withFileTypes: true }))
+    .filter(item => item.isFile() && item.name !== 'SHA256SUMS')
+    .map(item => join(item.parentPath, item.name).slice(root.pathname.length)).sort();
+  assert.deepEqual(covered.sort(), retained);
+  const proof = JSON.parse(await readFile(new URL('evidence.json', root), 'utf8'));
+  assert.equal(proof.structuralOracle, true);
+  assert.deepEqual(proof.runs.map(run => run.mode), ['stock', 'bundled']);
+  assert.deepEqual(proof.runs[0].specHashes, proof.runs[1].specHashes);
+  const pids = [], realms = [];
+  for (const run of proof.runs) {
+    assert.equal(run.closed, true); assert.equal(run.jobs.length, 2); assert.equal(run.observations.length, 2);
+    for (const job of run.jobs) {
+      assert.deepEqual(job.counts, { passed: 8, failed: 0, skipped: 0 }); pids.push(job.pid);
+    }
+    realms.push(...run.observations.map(observation => observation.realm));
+    const status = JSON.parse(await readFile(new URL(run.mode + '/controller-status.json', root), 'utf8'));
+    assert.equal(status.cleanupVerified, true); assert.equal(status.cleanupRequired, false); assert.equal(status.timedOut, false);
+  }
+  assert.equal(new Set(pids).size, 4); assert.equal(new Set(realms).size, 4);
 });
