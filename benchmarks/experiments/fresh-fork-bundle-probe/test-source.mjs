@@ -126,7 +126,7 @@ test('default output is fresh and explicit existing directories are rejected', a
 });
 
 test('retained native proof has complete hashes, exact outcomes and distinct workers', async () => {
-  const root = new URL('./evidence/2026-11-06-native-42150504514/', import.meta.url);
+  const root = new URL('../../results/2026-11-06-fresh-fork-bundle/', import.meta.url);
   const lines = (await readFile(new URL('SHA256SUMS', root), 'utf8')).trim().split('\n');
   const covered = [];
   for (const line of lines) {
@@ -149,7 +149,7 @@ test('retained native proof has complete hashes, exact outcomes and distinct wor
 });
 
 test('retained proof rejects unrelated worker state and changed or duplicated test identities', async () => {
-  const proof = JSON.parse(await readFile(new URL('./evidence/2026-11-06-native-42150504514/evidence.json', import.meta.url), 'utf8'));
+  const proof = JSON.parse(await readFile(new URL('../../results/2026-11-06-fresh-fork-bundle/evidence.json', import.meta.url), 'utf8'));
   for (let mode = 0; mode < 2; mode++) {
     const changes = [
       run => { run.observations[0].pid += 999999; },
