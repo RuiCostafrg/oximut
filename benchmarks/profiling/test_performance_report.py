@@ -159,7 +159,7 @@ class PerformanceReportTests(unittest.TestCase):
                 path.write_text(''.join(json.dumps(row)+'\n' for row in rows))
                 manifest=root/'SHA256SUMS';name='qualification/measurements.jsonl'
                 manifest.write_text('\n'.join(hashlib.sha256(path.read_bytes()).hexdigest()+'  '+name if line.endswith('  '+name) else line for line in manifest.read_text().splitlines())+'\n')
-                with self.subTest(field=key,row=row_index),self.assertRaises(ValueError):
+                with self.subTest(field=key,row=row_index),self.assertRaisesRegex(ValueError,'invalid rejected Node workload result'):
                     report.rejected_node_capture(root,source)
 
     def test_precise_cpu_is_distinct_from_raw_splits_and_budget_remainder(self):
