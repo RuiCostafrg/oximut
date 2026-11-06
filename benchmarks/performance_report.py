@@ -64,14 +64,18 @@ def rejected_node_capture(root, source):
             and record['source_commit']==build['commit']
             and record['execution_inputs']==metadata['execution_inputs']
             and record['execution_inputs']['binary_sha256']==build['binary_sha256'], 'rejected Node provenance differs')
-    require(not profile_native.qualification_errors(root/'qualification',0),'rejected Node workload is unqualified')
     rows=[json.loads(line) for line in (root/'qualification/measurements.jsonl').read_text().splitlines()]
     for row in rows:
+        require(row['success'] is True and row['timed_out'] is False and row['memory_errors']==[]
+                and type(row['exit_code']) is int and row['exit_code']==0
+                and row['memory_method']=='sum-live-smaps_rollup-rss' and row['spawn_error'] is None
+                and row['descendant_cleanup_required'] is False,'invalid rejected Node workload result')
         require(all(type(row[k]) in (int,float) and 0<=row[k]<=2**64-1 and math.isfinite(row[k]) for k in FIELDS),'invalid rejected Node resources')
         require(all(row[k]>0 for k in ('wall_seconds','cpu_seconds','peak_aggregate_rss_bytes'))
                 and all(type(row[k]) is int and row[k]>0 for k in ('peak_process_count','observed_process_count'))
                 and row['observed_process_count']>=row['peak_process_count'],'empty rejected Node resources')
         require(math.isclose(row['cpu_seconds'],row['cpu_user_seconds']+row['cpu_system_seconds'],abs_tol=1e-8),'rejected Node CPU components differ')
+    require(not profile_native.qualification_errors(root/'qualification',0),'rejected Node workload is unqualified')
     phases=read_json(root/'qualification/00-oximut/report.json')['resources']['phaseWallMs']
     require(set(phases)==set(compare_candidates.PHASES) and all(type(v) in (int,float) and 0<=v<=2**64-1 and math.isfinite(v) for v in phases.values()),'invalid rejected Node phases')
     return {'native_run':provenance['run'],'source_commit':record['source_commit'],'rows':rows,'phases':phases}
