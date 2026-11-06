@@ -37,6 +37,7 @@ console.log(JSON.stringify({ready,status,stderr,timedOut,pid:child.pid}));
 class ExplicitNodeProfileTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        """Resolve the pinned fork transport or explicitly skip missing dependencies."""
         result = subprocess.run([NODE, '-p', 'require.resolve("vitest/package.json")'],
                                 cwd=ROOT, text=True, capture_output=True, timeout=15)
         if result.returncode:

@@ -237,6 +237,19 @@ exits or profiles still fail capture, even when some fork profiles finalize.
 Workflow defaults remain the separate accounting mode. A native capture is
 required before claiming complete worker coverage or drawing hotspot conclusions.
 
+The first native explicit-flag attempt,
+[run 42146271995](https://github.com/RuiCostafrg/oximut/actions/runs/42146271995),
+passed exact workload qualification but **failed full capture validation**. All
+18 Oximut test forks finalized exit-code-0 identities; 17 produced profile files.
+Existing validation rejected negative source coordinates and sample intervals,
+and the remaining missing profile and incomplete Stryker lifecycles kept the
+capture incomplete. The launch mechanism is supported by this evidence;
+complete worker-profile coverage is unproven. Raw diagnostic resources and every
+Oximut phase are recorded in the
+[capture report](https://github.com/RuiCostafrg/oximut/pull/43#issuecomment-6674763157).
+Paired ratios and CIs are N/A for this overhead-bearing single capture. No
+profile was normalized or accepted by weakening validation.
+
 A diagnostic CommonJS preload records PID, parent PID,
 Linux start-time identity, thread ID, argv, execArgv, cwd, observed exit status
 and cumulative self CPU counters (`process.cpuUsage()`, microseconds) at preload
