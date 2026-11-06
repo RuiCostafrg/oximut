@@ -637,6 +637,25 @@ class ProfileStructureTests(unittest.TestCase):
                 corrupt(broken)
                 self.assertFalse(diagnostic.node_profile_finalized(broken))
 
+    def test_only_the_standard_vitest_wrapper_accepts_a_negative_source_column(self):
+        """Keep the known wrapper exception separate from malformed frame/sample data."""
+        profile = self.profile()
+        frame = profile['nodes'][1]['callFrame']
+        frame.update(functionName='', url='file:///project/test.ts', lineNumber=0, columnNumber=-196)
+        self.assertTrue(diagnostic.node_profile_finalized(profile))
+        for key, values in {'functionName': ['named'], 'url': ['', 'node:vm', 'file:///'],
+                            'lineNumber': [-1, 1, True],
+                            'columnNumber': [-2, -195, -197, -196.0, None, True]}.items():
+            for value in values:
+                broken = copy.deepcopy(profile)
+                broken['nodes'][1]['callFrame'][key] = value
+                with self.subTest(field=key, value=value):
+                    self.assertFalse(diagnostic.node_profile_finalized(broken))
+        for samples, deltas in [([999], [1]), ([2], [-1]), ([2], [float('nan')]), ([2], []), ([2], [21])]:
+            broken = copy.deepcopy(profile)
+            broken.update(samples=samples, timeDeltas=deltas)
+            self.assertFalse(diagnostic.node_profile_finalized(broken))
+
     def test_cumulative_sample_timing_stays_within_profile_window(self):
         """Individually valid deltas cannot place samples after profiling ended."""
         profile = self.profile()

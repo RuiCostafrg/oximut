@@ -67,6 +67,22 @@ def qualification_errors(directory, code):
     return errors
 
 
+def node_frame_position_valid(frame):
+    """Accept ordinary positions and the pinned Vitest anonymous wrapper offset."""
+    line, column = frame.get('lineNumber'), frame.get('columnNumber')
+    if type(line) is not int or line < -1 or type(column) is not int:
+        return False
+    if column >= -1:
+        return True
+    # Vitest 4.1.12 ModuleEvaluator uses a 209-character standard wrapper
+    # prefix with columnOffset=-209. Its anonymous arrow starts at column 13,
+    # so Node's real VM profiler reports 13-209=-196 on line 0. Keep other
+    # negative positions unsupported rather than accepting arbitrary offsets.
+    return (column == -196 and line == 0 and frame.get('functionName') == ''
+            and isinstance(frame.get('url'), str) and frame['url'].startswith('file:///')
+            and len(frame['url']) > len('file:///'))
+
+
 def node_profile_finalized(data):
     """Require a connected CPU call tree and usable, internally consistent samples."""
     try:
@@ -82,8 +98,7 @@ def node_profile_finalized(data):
             frame = node.get('callFrame')
             if (node['id'] in nodes or not isinstance(frame, dict)
                     or not all(isinstance(frame.get(k), str) for k in ('functionName', 'scriptId', 'url'))
-                    or not all(type(frame.get(k)) is int and frame[k] >= -1
-                               for k in ('lineNumber', 'columnNumber'))
+                    or not node_frame_position_valid(frame)
                     or not isinstance(node.get('children', []), list)
                     or not all(type(child) is int for child in node.get('children', []))):
                 return False

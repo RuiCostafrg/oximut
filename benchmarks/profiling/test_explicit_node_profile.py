@@ -98,6 +98,38 @@ class ExplicitNodeProfileTests(unittest.TestCase):
                         self.assertNotIn('exitObserved', identity)
                         self.assertEqual(captures, [])
 
+    def test_real_node_profile_accepts_the_pinned_vitest_wrapper_offset(self):
+        """Accept an untouched VM profile emitted with Vitest's actual wrapper layout."""
+        script = r'''
+import {Session} from 'node:inspector';
+import vm from 'node:vm';
+const names=['__vite_ssr_exports__','__vite_ssr_import_meta__','__vite_ssr_import__',
+ '__vite_ssr_dynamic_import__','__vite_ssr_exportAll__','__vite_ssr_exportName__',
+ '__filename','__dirname','module','exports','require'];
+const prefix=`'use strict';async (${names.join(',')})=>{{`;
+const session=new Session();session.connect();
+const post=(method,params={})=>new Promise((resolve,reject)=>session.post(method,params,(e,r)=>e?reject(e):resolve(r)));
+await post('Profiler.enable');await post('Profiler.setSamplingInterval',{interval:10000});
+await post('Profiler.start');
+await vm.runInThisContext(prefix+'const until=Date.now()+150;while(Date.now()<until){}\n}}',
+ {filename:'file:///oximut-wrapper-probe/module.mjs',lineOffset:0,columnOffset:-prefix.length})();
+const {profile}=await post('Profiler.stop');session.disconnect();
+console.log(JSON.stringify({prefixLength:prefix.length,profile}));
+'''
+        result = subprocess.run([NODE, '--input-type=module', '-e', script],
+                                text=True, capture_output=True, timeout=10,
+                                env={**os.environ, 'NODE_OPTIONS': ''})
+        self.assertEqual(result.returncode, 0, result.stderr)
+        record = json.loads(result.stdout)
+        self.assertEqual(record['prefixLength'], 209)
+        profile = record['profile']
+        wrappers = [node['callFrame'] for node in profile['nodes']
+                    if node['callFrame']['url'] == 'file:///oximut-wrapper-probe/module.mjs'
+                    and node['callFrame']['columnNumber'] == -196]
+        self.assertTrue(wrappers, 'real profiler must exercise the negative wrapper location')
+        self.assertTrue(all(frame['functionName'] == '' and frame['lineNumber'] == 0 for frame in wrappers))
+        self.assertTrue(diagnostic.node_profile_finalized(profile))
+
 
 if __name__ == '__main__':
     unittest.main()

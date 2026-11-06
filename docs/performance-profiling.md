@@ -250,6 +250,16 @@ Oximut phase are recorded in the
 Paired ratios and CIs are N/A for this overhead-bearing single capture. No
 profile was normalized or accepted by weakening validation.
 
+The format validator now recognizes the pinned standard Vitest wrapper frame:
+anonymous function, file URL, line 0, column -196. Vitest 4.1.12 evaluates its
+209-character wrapper prefix with `columnOffset: -209`; the arrow starts at
+column 13. A real Node VM/inspector regression reproduces the resulting -196
+coordinate without editing the profile. Other negative locations remain
+unsupported, and connected-tree, sample-reference, interval, lifecycle and
+missing-profile checks remain required. This corrects a location-format false
+rejection; the historical attempt above remains failed because its other
+incomplete/invalid captures are not repaired.
+
 A diagnostic CommonJS preload records PID, parent PID,
 Linux start-time identity, thread ID, argv, execArgv, cwd, observed exit status
 and cumulative self CPU counters (`process.cpuUsage()`, microseconds) at preload
