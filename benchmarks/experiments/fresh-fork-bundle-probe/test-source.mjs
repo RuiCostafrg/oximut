@@ -3,8 +3,8 @@ import { mkdtemp, mkdir, readFile, readdir, writeFile, rm } from 'node:fs/promis
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
-import { pathToFileURL } from 'node:url';
+import { join, relative, sep } from 'node:path';
+import { pathToFileURL, fileURLToPath } from 'node:url';
 import test from 'node:test';
 import { preserveModuleContext } from './module-context.mjs';
 import { fixtures, createOutputDirectory } from './probe.mjs';
@@ -88,7 +88,7 @@ test('retained native proof has complete hashes, exact outcomes and distinct wor
   }
   const retained = (await readdir(root, { recursive: true, withFileTypes: true }))
     .filter(item => item.isFile() && item.name !== 'SHA256SUMS')
-    .map(item => join(item.parentPath, item.name).slice(root.pathname.length)).sort();
+    .map(item => relative(fileURLToPath(root), join(item.parentPath, item.name)).split(sep).join('/')).sort();
   assert.deepEqual(covered.sort(), retained);
   const proof = JSON.parse(await readFile(new URL('evidence.json', root), 'utf8'));
   assert.equal(proof.structuralOracle, true);
