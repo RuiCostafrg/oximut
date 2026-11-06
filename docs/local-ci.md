@@ -25,6 +25,9 @@ scripts/local-ci.sh --no-signoff   # checks only, no statuses posted
 ```
 
 Push your commits first: `gh signoff` only attests pushed work. Failing stages post
+a red `signoff/<stage>` status automatically. Each status (green or red) is bound
+with `--commit` to the exact commit captured at the start of its stage, so a
+commit or push landing mid-run can never be green-lit for code it did not test.
 a red `signoff/<stage>` status automatically. The default all-stage invocation
 (`scripts/local-ci.sh`) mirrors the `ci.yml` feasibility job (candidate sandbox,
 npm, Rust, Python, benchmarks smoke); a single stage covers only that stage —
