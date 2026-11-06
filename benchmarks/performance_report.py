@@ -69,7 +69,8 @@ def rejected_node_capture(root, source):
         require(row['success'] is True and row['timed_out'] is False and row['memory_errors']==[]
                 and type(row['exit_code']) is int and row['exit_code']==0
                 and row['memory_method']=='sum-live-smaps_rollup-rss' and row['spawn_error'] is None
-                and row['descendant_cleanup_required'] is False,'invalid rejected Node workload result')
+                and row['descendant_cleanup_required'] is False and 'cleanup_error' not in row
+                and row.get('validation_error') is None,'invalid rejected Node workload result')
         require(all(type(row[k]) in (int,float) and 0<=row[k]<=2**64-1 and math.isfinite(row[k]) for k in FIELDS),'invalid rejected Node resources')
         require(all(row[k]>0 for k in ('wall_seconds','cpu_seconds','peak_aggregate_rss_bytes'))
                 and all(type(row[k]) is int and row[k]>0 for k in ('peak_process_count','observed_process_count'))

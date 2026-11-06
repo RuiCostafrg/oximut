@@ -149,17 +149,18 @@ class PerformanceReportTests(unittest.TestCase):
         root=Path(self.temp.name)/'rejected-resources';shutil.copytree(original,root)
         source=json.loads((base/'2026-11-05-precise-accounting-control/evidence-source.json').read_text())
         template=[json.loads(line) for line in (original/'qualification/measurements.jsonl').read_text().splitlines()]
-        self.assertEqual(template[0]['tool'],'vitest')
         for key,value in [('success',False),('timed_out',True),('memory_errors',['injected']),
                           ('exit_code',1),('memory_method','proc-stat'),('spawn_error','injected'),
-                          ('descendant_cleanup_required',True)]:
-            rows=copy.deepcopy(template);rows[0][key]=value
-            path=root/'qualification/measurements.jsonl'
-            path.write_text(''.join(json.dumps(row)+'\n' for row in rows))
-            manifest=root/'SHA256SUMS';name='qualification/measurements.jsonl'
-            manifest.write_text('\n'.join(hashlib.sha256(path.read_bytes()).hexdigest()+'  '+name if line.endswith('  '+name) else line for line in manifest.read_text().splitlines())+'\n')
-            with self.subTest(field=key),self.assertRaises(ValueError):
-                report.rejected_node_capture(root,source)
+                          ('descendant_cleanup_required',True),('cleanup_error','injected'),
+                          ('cleanup_error',None),('validation_error','injected')]:
+            for row_index in range(len(template)):
+                rows=copy.deepcopy(template);rows[row_index][key]=value
+                path=root/'qualification/measurements.jsonl'
+                path.write_text(''.join(json.dumps(row)+'\n' for row in rows))
+                manifest=root/'SHA256SUMS';name='qualification/measurements.jsonl'
+                manifest.write_text('\n'.join(hashlib.sha256(path.read_bytes()).hexdigest()+'  '+name if line.endswith('  '+name) else line for line in manifest.read_text().splitlines())+'\n')
+                with self.subTest(field=key,row=row_index),self.assertRaises(ValueError):
+                    report.rejected_node_capture(root,source)
 
     def test_precise_cpu_is_distinct_from_raw_splits_and_budget_remainder(self):
         """Label precise totals and the bounded CLI remainder without worker attribution."""
