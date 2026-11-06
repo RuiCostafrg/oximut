@@ -1,0 +1,103 @@
+#!/usr/bin/env bash
+# oximut local CI — Linux only, powered by basecamp/gh-signoff.
+# Mirrors the Linux feasibility job of .github/workflows/ci.yml.
+# Usage:
+#   scripts/local-ci.sh               stages: tests lint security
+#   scripts/local-ci.sh tests         selected stages only
+#   scripts/local-ci.sh --list        list stages
+#   scripts/local-ci.sh --no-signoff  run checks, don't post signoff statuses
+#   scripts/local-ci.sh --help        this text
+set -euo pipefail
+
+AVAILABLE_STAGES=(tests lint security)
+DEFAULT_STAGES=(tests lint security)
+
+_fail()   { printf '✗ %s\n' "$*" >&2; exit 1; }
+_log()    { printf '▸ %s\n' "$*"; }
+_ok()     { printf '✓ %s\n' "$*"; }
+require() { command -v "$1" >/dev/null 2>&1 || _fail "missing '$1'${2:+ — $2}"; }
+
+case "$(uname -s)" in
+  Linux) ;;
+  *) _fail "Linux-only local CI; refusing to run on $(uname -s) (other platforms stay in GitHub Actions)." ;;
+esac
+
+NO_SIGNOFF=0
+SELECTED=()
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --no-signoff) NO_SIGNOFF=1 ;;
+    --list) printf '%s\n' "stages: ${AVAILABLE_STAGES[*]}" ;;
+    -h|--help) sed -n '2,12p' "$0" ;;
+    -*) _fail "unknown option: $1 (try --help)" ;;
+    *) SELECTED+=("$1") ;;
+  esac
+  shift
+done
+[ ${#SELECTED[@]} -gt 0 ] || SELECTED=("${DEFAULT_STAGES[@]}")
+
+if [ "$NO_SIGNOFF" = 0 ]; then
+  require gh ""
+  gh extension list 2>/dev/null | grep -qi "gh-signoff" \
+    || _fail "gh-signoff extension missing — run: gh extension install basecamp/gh-signoff (or pass --no-signoff)"
+fi
+
+# ── stages ────────────────────────────────────────────────────────────────────
+
+stage_tests() {
+  # Full feasibility suite, in CI order (rust-toolchain.toml pins 1.96.0 via rustup).
+  require cargo ""
+  require python3 ""
+  require node ""
+  bash scripts/setup-candidate-sandbox.sh
+  OXIMUT_REQUIRE_SANDBOX=1 python3 -m unittest discover -s tests -p test_candidate_sandbox.py -v
+  npm ci
+  npm run typecheck
+  npm test
+  python3 -m unittest discover -s benchmarks/profiling -p 'test_*.py' -v
+  node --test scripts/tests/validate-*.test.mjs
+  npm run experiment
+  cargo clippy --workspace --all-targets --locked -- -D warnings
+  cargo test --workspace --locked
+  cargo build -p oximut-cli --locked
+  OXIMUT_REQUIRE_SANDBOX=1 OXIMUT_TEST_BINARY="$PWD/target/debug/oximut" \
+    python3 -m unittest discover -s tests -p test_candidate_sandbox.py -v
+  python3 -m unittest discover -s tests -v
+  cargo run --locked -p oximut-oxc-smoke -- fixtures/pure/src/logic.ts fixtures/stateful/src/service.ts
+  python3 benchmarks/run.py --repetitions 1 --warmups 0 --timeout 180 --output .oximut/ci-baselines
+  python3 benchmarks/m6.py --fixtures m1 --tools oximut --scenarios clean --repetitions 1 --warmups 0 --output .oximut/ci-m6
+  node scripts/validate-reports.mjs \
+    .oximut/ci-m6/measured-01-m1-oximut-clean-fresh/run/report.json \
+    .oximut/ci-m6/measured-01-m1-oximut-clean-persistent/run/report.json \
+    .oximut/ci-m6/measured-01-m1-oximut-clean-selection/run/report.json
+}
+
+stage_lint() {
+  require cargo ""
+  require npm ""
+  npm run format:check
+  npm run lint
+  cargo fmt --all -- --check
+}
+
+stage_security() {
+  require npm ""
+  npm audit --audit-level=moderate
+}
+
+# ── runner ────────────────────────────────────────────────────────────────────
+
+for s in "${SELECTED[@]}"; do
+  declare -F "stage_$s" >/dev/null || _fail "unknown stage '$s' (stages: ${AVAILABLE_STAGES[*]})"
+  _log "stage: $s"
+  if ! ( set -e; "stage_$s" ); then
+    [ "$NO_SIGNOFF" = 0 ] && gh signoff fail "$s" --description "$s failed locally" >/dev/null 2>&1 || true
+    _fail "stage '$s' failed"
+  fi
+  _ok "$s passed"
+  if [ "$NO_SIGNOFF" = 0 ]; then
+    gh signoff "$s" >/dev/null 2>&1 \
+      || printf '⚠ could not post signoff status for %s — is HEAD pushed? gh authorized?\n' "$s" >&2
+  fi
+done
+_log "all done${NO_SIGNOFF:+ — no signoff statuses posted (was --no-signoff)}."
