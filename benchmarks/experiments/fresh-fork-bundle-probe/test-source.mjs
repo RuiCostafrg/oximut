@@ -16,6 +16,39 @@ const require = createRequire(import.meta.url);
 const { parse } = require('yaml');
 const probeScript = fileURLToPath(new URL('./probe.mjs', import.meta.url));
 
+/** Reconcile retained assertions and observed state with the exact fresh workers. */
+function assertRetainedOracle(proof) {
+  assert.equal(proof.structuralOracle, true);
+  assert.deepEqual(proof.runs.map(run => run.mode), ['stock', 'bundled']);
+  assert.deepEqual(proof.runs[0].specHashes, proof.runs[1].specHashes);
+  const expected = ['local ESM clean', 'external CJS clean', 'external ESM clean', 'global clean',
+    'env clean', 'builtin clean', 'spy clean', 'timer clean']
+    .map(name => ({ name, state: 'passed' })).sort((a, b) => a.name.localeCompare(b.name));
+  const pids = [], realms = [];
+  for (const run of proof.runs) {
+    assert.equal(run.closed, true); assert.equal(run.jobs.length, 2); assert.equal(run.observations.length, 2);
+    for (const job of run.jobs) {
+      assert.deepEqual(job.counts, { passed: 8, failed: 0, skipped: 0 }); pids.push(job.pid);
+    }
+    // Bind reported state to the workers and specifications that produced it.
+    assert.deepEqual(new Set(run.observations.map(observation => observation.pid)), new Set(run.jobs.map(job => job.pid)));
+    for (let index = 0; index < run.jobs.length; index++) {
+      const job = run.jobs[index], observation = run.observations.find(item => item.pid === job.pid);
+      assert.equal(observation.file + '.test.mjs', run.runs[index].spec);
+      assert.equal(job.spec.split('/').at(-1), run.runs[index].spec);
+    }
+    // Bind aggregate counts to the complete per-spec identities and states.
+    assert.deepEqual(run.runs.map(spec => spec.spec), ['a.test.mjs', 'b.test.mjs']);
+    for (const spec of run.runs) {
+      assert.deepEqual(spec.counts, { passed: 8, failed: 0, skipped: 0 });
+      assert.deepEqual([...spec.testResults].sort((a, b) => a.name.localeCompare(b.name)), expected);
+    }
+    realms.push(...run.observations.map(observation => observation.realm));
+  }
+  assert.deepEqual(proof.runs[0].runs, proof.runs[1].runs);
+  assert.equal(new Set(pids).size, 4); assert.equal(new Set(realms).size, 4);
+}
+
 test('relocated code preserves module URL, resolver and computed import bases', async () => {
   const root = await mkdtemp(join(tmpdir(), 'bundle-context-'));
   try {
@@ -98,20 +131,29 @@ test('retained native proof has complete hashes, exact outcomes and distinct wor
     .map(item => relative(fileURLToPath(root), join(item.parentPath, item.name)).split(sep).join('/')).sort();
   assert.deepEqual(covered.sort(), retained);
   const proof = JSON.parse(await readFile(new URL('evidence.json', root), 'utf8'));
-  assert.equal(proof.structuralOracle, true);
-  assert.deepEqual(proof.runs.map(run => run.mode), ['stock', 'bundled']);
-  assert.deepEqual(proof.runs[0].specHashes, proof.runs[1].specHashes);
-  const pids = [], realms = [];
+  assertRetainedOracle(proof);
   for (const run of proof.runs) {
-    assert.equal(run.closed, true); assert.equal(run.jobs.length, 2); assert.equal(run.observations.length, 2);
-    for (const job of run.jobs) {
-      assert.deepEqual(job.counts, { passed: 8, failed: 0, skipped: 0 }); pids.push(job.pid);
-    }
-    realms.push(...run.observations.map(observation => observation.realm));
     const status = JSON.parse(await readFile(new URL(run.mode + '/controller-status.json', root), 'utf8'));
     assert.equal(status.cleanupVerified, true); assert.equal(status.cleanupRequired, false); assert.equal(status.timedOut, false);
   }
-  assert.equal(new Set(pids).size, 4); assert.equal(new Set(realms).size, 4);
+});
+
+test('retained proof rejects unrelated worker state and changed or duplicated test identities', async () => {
+  const proof = JSON.parse(await readFile(new URL('./evidence/2026-11-06-native-42150504514/evidence.json', import.meta.url), 'utf8'));
+  for (let mode = 0; mode < 2; mode++) {
+    const changes = [
+      run => { run.observations[0].pid += 999999; },
+      run => { [run.observations[0].pid, run.observations[1].pid] = [run.observations[1].pid, run.observations[0].pid]; },
+      run => { run.runs[0].testResults[0].name = 'unrelated passing assertion'; },
+      run => { run.runs[0].testResults[1].name = run.runs[0].testResults[0].name; },
+      run => { run.runs[0].testResults[0].state = 'failed'; },
+      run => { run.runs[0].testResults.reverse(); },
+    ];
+    for (const change of changes) {
+      const corrupted = structuredClone(proof); change(corrupted.runs[mode]);
+      assert.throws(() => assertRetainedOracle(corrupted));
+    }
+  }
 });
 
 test('malformed output arguments fail before allocating or running a probe', async () => {
