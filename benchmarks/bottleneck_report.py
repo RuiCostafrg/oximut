@@ -645,8 +645,9 @@ def render_timeline(d):
     # Stryker's code is identical in both runs, so its wall ratio indicates the host speed difference.
     host = c['tools']['stryker']['wall_seconds'] / d['benchmark']['medians']['after/stryker']['wall_seconds']
     body = ['<p><b>One diagnostic run</b> from the controller-job capture. Its runner host took '
-            f'{100 * host:.0f}% of the scored campaign\'s Stryker wall time (same Stryker code), so it was a faster '
-            'machine. Absolute milliseconds are valid only within this run; use '
+            f'{100 * host:.0f}% of the scored campaign\'s Stryker wall time (same Stryker code), so it was a '
+            f'{"faster" if host < 0.95 else "slower" if host > 1.05 else "comparable"} machine. '
+            'Absolute milliseconds are valid only within this run; use '
             'the shares to compare with other evidence. Each row is one fresh Vitest fork, coloured by lifecycle '
             'step; hover a segment for its duration. The shaded band is controller start-up, up to the initialize '
             'response.</p>',
