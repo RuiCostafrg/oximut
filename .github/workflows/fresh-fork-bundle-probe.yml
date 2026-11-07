@@ -1,0 +1,71 @@
+name: Fresh fork bundled runtime feasibility probe
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - '.github/workflows/fresh-fork-bundle-probe.yml'
+      - 'benchmarks/experiments/fresh-fork-bundle-probe/**'
+      - '.node-version'
+      - '.npmrc'
+      - 'package.json'
+      - 'package-lock.json'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: fresh-fork-bundle-probe-${{ github.event.pull_request.number || github.ref }}
+  # Preserve diagnostic attempts and their failure artifacts.
+  cancel-in-progress: false
+  queue: max
+
+jobs:
+  structural-probe:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Stage source evidence before prerequisites
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir "$RUNNER_TEMP/fresh-fork-bundle-probe"
+          git archive HEAD | gzip > "$RUNNER_TEMP/fresh-fork-bundle-probe/source.tar.gz"
+          git rev-parse HEAD > "$RUNNER_TEMP/fresh-fork-bundle-probe/commit.txt"
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .node-version
+          cache: npm
+      - name: Install dependencies with retained diagnostics
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm ci --ignore-scripts 2>&1 | tee "$RUNNER_TEMP/fresh-fork-bundle-probe/dependencies.log"
+      - name: Check focused oracle with retained diagnostics
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --test benchmarks/experiments/fresh-fork-bundle-probe/test-source.mjs 2>&1 | tee "$RUNNER_TEMP/fresh-fork-bundle-probe/focused-tests.log"
+      - name: Build bundle and run fresh-process structural oracle
+        id: probe
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = x86_64
+          node benchmarks/experiments/fresh-fork-bundle-probe/probe.mjs --output "$RUNNER_TEMP/fresh-fork-bundle-probe/run" 2>&1 | tee "$RUNNER_TEMP/fresh-fork-bundle-probe/probe.log"
+      - name: Upload probe evidence on every outcome
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: fresh-fork-bundle-probe-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/fresh-fork-bundle-probe/**
+          include-hidden-files: true
+          if-no-files-found: warn
+          retention-days: 14
+      - name: Require supported, passing structural oracle
+        if: steps.probe.outcome == 'failure'
+        run: exit 1
