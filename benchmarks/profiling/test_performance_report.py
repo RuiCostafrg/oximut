@@ -125,8 +125,9 @@ class PerformanceReportTests(unittest.TestCase):
         page=report.render(data)
         self.assertIn('failed profile validation',page)
         self.assertIn('No worker CPU attribution is claimed',page)
-        self.assertIn('744.762',page)
-        self.assertIn('39.814',page)
+        self.assertIn('Budget intervals through resource snapshots</td><td>744.762',page)
+        self.assertIn('Sampling windows</td><td>704.948',page)
+        self.assertIn('Outside sampling, within Budget intervals</td><td>39.814',page)
 
     def test_rejected_capture_cannot_silently_become_a_qualified_profile(self):
         """Reject changed capture status even when its file digest is updated."""
@@ -140,6 +141,26 @@ class PerformanceReportTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,'rejected Node capture status differs'):
             report.collect(base/'2026-11-05-precise-accounting-control',CONTROLLER,
                            base/'2026-11-05-precise-accounting-profile',root)
+
+    def test_rejected_capture_resources_still_require_successful_exact_measurements(self):
+        """Reject failed observations even when normalized test results still match."""
+        base=report.ROOT/'benchmarks/results'
+        original=base/'2026-11-05-exit-time-profile-rejected'
+        root=Path(self.temp.name)/'rejected-resources';shutil.copytree(original,root)
+        source=json.loads((base/'2026-11-05-precise-accounting-control/evidence-source.json').read_text())
+        template=[json.loads(line) for line in (original/'qualification/measurements.jsonl').read_text().splitlines()]
+        for key,value in [('success',False),('timed_out',True),('memory_errors',['injected']),
+                          ('exit_code',1),('memory_method','proc-stat'),('spawn_error','injected'),
+                          ('descendant_cleanup_required',True),('cleanup_error','injected'),
+                          ('cleanup_error',None),('validation_error','injected')]:
+            for row_index in range(len(template)):
+                rows=copy.deepcopy(template);rows[row_index][key]=value
+                path=root/'qualification/measurements.jsonl'
+                path.write_text(''.join(json.dumps(row)+'\n' for row in rows))
+                manifest=root/'SHA256SUMS';name='qualification/measurements.jsonl'
+                manifest.write_text('\n'.join(hashlib.sha256(path.read_bytes()).hexdigest()+'  '+name if line.endswith('  '+name) else line for line in manifest.read_text().splitlines())+'\n')
+                with self.subTest(field=key,row=row_index),self.assertRaisesRegex(ValueError,'invalid rejected Node workload result'):
+                    report.rejected_node_capture(root,source)
 
     def test_precise_cpu_is_distinct_from_raw_splits_and_budget_remainder(self):
         """Label precise totals and the bounded CLI remainder without worker attribution."""
