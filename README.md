@@ -1,3 +1,5 @@
+![oximut banner](assets/readme-banner.svg)
+
 # Oximut
 
 Mutation testing for JavaScript and TypeScript, designed around a Rust + Oxc
