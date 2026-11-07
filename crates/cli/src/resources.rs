@@ -555,8 +555,9 @@ fn rollup_rss(rollup: &str) -> Result<u64, String> {
     kib.checked_mul(1024)
         .ok_or_else(|| "RSS rollup Rss overflow".into())
 }
-// Discovery is shared; identity and RSS observations are deliberately fresh for
-// every aggregate/slot observation, including roots and the final CLI floor.
+// Discovery is shared and identities are re-checked fresh for every aggregate/
+// slot observation, including roots and the final CLI floor. Each verified PID's
+// RSS is read once per sample (see `sample_with_readers`).
 fn checked_rss(
     pid: u32,
     start: Option<u64>,
@@ -792,6 +793,21 @@ impl Budget {
             d.rss_reads.end(cpu, wall);
             result
         };
+        // One page-table walk per verified PID per sample: smaps_rollup costs
+        // ~1 ms of kernel CPU per Node process on this thread, and aggregate,
+        // slot and CLI-floor trees overlap. Identities stay fresh per
+        // observation and are verified against this sample's discovery before
+        // any lookup, so a cached value always belongs to the same process.
+        // Errors are never cached; they exhaust the sample.
+        let mut rss_snapshot = std::collections::HashMap::new();
+        let mut profiled_rss = |pid| {
+            if let Some(&bytes) = rss_snapshot.get(&pid) {
+                return Ok(bytes);
+            }
+            let bytes = profiled_rss(pid)?;
+            rss_snapshot.insert(pid, bytes);
+            Ok(bytes)
+        };
         let observed = (|| -> Result<(), String> {
             // Exactly one fresh broad discovery per admitted sample. This also
             // includes adopted descendants outside any live worker branch.
@@ -812,8 +828,7 @@ impl Budget {
                     .saturating_add(self.measured_worker_peak_bytes.div_ceil(4));
                 self.observed_workers.insert(pid, bytes);
             }
-            // RSS can grow between the aggregate and per-slot observations.
-            // Never credit a slot's RSS against reservations unless aggregate
+            // Slot trees reuse the aggregate's per-PID snapshot. Never credit a slot's RSS against reservations unless aggregate
             // accounting includes at least those same slot totals. Nested slots
             // intentionally overcount; duplicate PIDs retain one observed total.
             let accounted_slots = self.observed_workers.values().fold(
@@ -969,7 +984,7 @@ mod tests {
     }
 
     #[test]
-    fn samples_discover_once_and_read_rss_fresh_for_every_tree() {
+    fn samples_discover_once_check_identity_per_tree_and_read_rss_once_per_pid() {
         let cli = std::process::id();
         let (worker, nested, sibling, adopted, unrelated) =
             (cli + 1, cli + 2, cli + 3, cli + 4, cli + 5);
@@ -1035,17 +1050,29 @@ mod tests {
             assert_eq!(state.measured_worker_peak_bytes, peak);
             assert_eq!(state.admission_worker_cost_bytes, peak + peak.div_ceil(4));
             let observations = observations.into_inner();
+            let identity_reads: Vec<_> = observations
+                .iter()
+                .filter(|(kind, _)| *kind == "identity")
+                .collect();
             assert_eq!(
-                observations.len(),
-                2 * (6 + workers
+                identity_reads.len(),
+                6 + workers
                     .iter()
                     .map(|pid| if *pid == worker { 2 } else { 1 })
-                    .sum::<usize>())
+                    .sum::<usize>(),
+                "identities stay fresh for every tree observation"
             );
-            for pair in observations.chunks_exact(2) {
-                assert_eq!(pair[0], ("identity", pair[1].1));
-                assert_eq!(pair[1].0, "rss");
-                assert_ne!(pair[1].1, unrelated);
+            let rss_reads: Vec<_> = observations
+                .iter()
+                .filter(|(kind, _)| *kind == "rss")
+                .map(|(_, pid)| *pid)
+                .collect();
+            assert_eq!(rss_reads, vec![cli, worker, nested, sibling, adopted]);
+            for (index, observation) in observations.iter().enumerate() {
+                assert_ne!(observation.1, unrelated);
+                if observation.0 == "rss" {
+                    assert_eq!(observations[index - 1], ("identity", observation.1));
+                }
             }
         }
     }
@@ -1119,7 +1146,8 @@ mod tests {
         assert_eq!(state.exhaustion, None);
         assert_eq!(
             rss_reads,
-            BTreeMap::from([(cli, 2), (worker, 2), (nested, 3)])
+            BTreeMap::from([(cli, 1), (worker, 1), (nested, 1)]),
+            "nested slot trees reuse the sample's per-PID snapshot"
         );
         assert_eq!(
             state.observed_workers,
@@ -1305,17 +1333,40 @@ mod tests {
                 Ok(Some(reads * 10))
             },
         );
-        assert_eq!(reads, 4); // Aggregate CLI/worker, slot worker, CLI floor.
-        assert_eq!(state.observed_workers[&worker], 30);
+        // One snapshot: aggregate reads CLI and worker; the slot tree and CLI
+        // floor reuse them, so growth cannot appear between observations.
+        assert_eq!(reads, 2);
+        assert_eq!(state.observed_workers[&worker], 20);
+        assert_eq!(state.current, 30);
+        assert_eq!(state.peak_aggregate_rss_bytes, 30);
+        assert_eq!(state.measured_worker_peak_bytes, 20);
+        assert_eq!(state.admission_worker_cost_bytes, 25);
+        // A later sample reads afresh and still raises the peaks.
+        state.sample_with_readers(
+            &[worker],
+            true,
+            || {
+                ProcessTable::collect(identities.keys().map(|&pid| Ok(Some(pid))), |pid| {
+                    Ok(identities.get(&pid).copied())
+                })
+            },
+            |pid| Ok(identities.get(&pid).copied()),
+            |_| {
+                reads += 1;
+                Ok(Some(reads * 10))
+            },
+        );
+        assert_eq!(reads, 4);
+        assert_eq!(state.observed_workers[&worker], 40);
         assert_eq!(state.current, 70);
         assert_eq!(state.peak_aggregate_rss_bytes, 70);
-        assert_eq!(state.measured_worker_peak_bytes, 30);
-        assert_eq!(state.admission_worker_cost_bytes, 38);
+        assert_eq!(state.measured_worker_peak_bytes, 40);
+        assert_eq!(state.admission_worker_cost_bytes, 50);
         state.budget_bytes = 200;
         state.host_available = 200;
         state.reserve_bytes = 40;
         state.active = 1;
-        assert_eq!(state.capacity(&[worker]), 2); // (200 - 70 - 40 - 8) / 38
+        assert_eq!(state.capacity(&[worker]), 1); // (200 - 70 - 40 - 10) / 50
         state.reserve_bytes = 100;
         assert_eq!(state.capacity(&[worker]), 0);
     }
@@ -1592,15 +1643,14 @@ mod tests {
                 },
             );
         }
-        assert!(
-            rss_calls > 1,
-            "successful aggregate and final CLI reads stay fresh"
-        );
+        // Each sample reads the CLI once: the final floor reuses the snapshot,
+        // and the next sample (including its error) reads afresh.
+        assert_eq!(rss_calls, 2);
         let profile = state.accounting_diagnostics.as_ref().unwrap();
         assert_eq!(profile.rss_reads.calls, rss_calls);
         assert_eq!(profile.sampling.calls, state.samples);
         assert_eq!(profile.discovery.calls, 2);
-        assert_eq!(profile.identity_reads.calls, rss_calls);
+        assert_eq!(profile.identity_reads.calls, 3);
         assert!(profile.rss_reads.wall_ns.is_some());
         assert_eq!(state.exhaustion.as_deref(), Some("injected RSS error"));
     }
