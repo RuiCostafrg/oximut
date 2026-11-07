@@ -3,19 +3,30 @@ name: Experimental warm-runtime state oracle
 on:
   workflow_dispatch:
   pull_request:
-    paths:
-      - '.github/workflows/warm-runtime-probe.yml'
-      - 'benchmarks/experiments/warm-runtime-probe/**'
-      - 'package-lock.json'
-      - 'package.json'
-      - '.node-version'
-      - 'benchmarks/results/2026-11-05-warm-runtime-probe/**'
 
 permissions:
   contents: read
 
 jobs:
+  changes:
+    # Required checks always report; see pr-changes.yml.
+    uses: ./.github/workflows/pr-changes.yml
+    permissions:
+      contents: read
+      pull-requests: read
+    with:
+      patterns: |
+        .github/workflows/pr-changes.yml
+        .github/workflows/warm-runtime-probe.yml
+        benchmarks/experiments/warm-runtime-probe/**
+        package-lock.json
+        package.json
+        .node-version
+        benchmarks/results/2026-11-05-warm-runtime-probe/**
+
   structural-oracle:
+    needs: changes
+    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.relevant == 'true') }}
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:

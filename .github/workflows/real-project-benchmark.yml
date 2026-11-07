@@ -8,25 +8,6 @@ on:
         default: ''
         description: 'Extra Oximut args for the after candidate only, space-separated, e.g. --isolation fresh-thread'
   pull_request:
-    paths:
-      - 'benchmarks/compare_candidates.py'
-      - 'benchmarks/real_project.py'
-      - 'benchmarks/real-project/**'
-      - 'benchmarks/targets.py'
-      - 'benchmarks/run.py'
-      - 'benchmarks/m6.py'
-      - 'benchmarks/tests/**'
-      - 'docs/real-project-benchmark.md'
-      - '.github/workflows/real-project-benchmark.yml'
-      # Runner changes are what this campaign measures.
-      - 'crates/**'
-      - 'packages/vitest-adapter/**'
-      - 'Cargo.toml'
-      - 'Cargo.lock'
-      - 'rust-toolchain.toml'
-      - 'package.json'
-      - 'package-lock.json'
-      - '.node-version'
 
 permissions:
   contents: read
@@ -36,7 +17,36 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  changes:
+    # Required checks always report; see pr-changes.yml.
+    uses: ./.github/workflows/pr-changes.yml
+    permissions:
+      contents: read
+      pull-requests: read
+    with:
+      patterns: |
+        .github/workflows/pr-changes.yml
+        benchmarks/compare_candidates.py
+        benchmarks/real_project.py
+        benchmarks/real-project/**
+        benchmarks/targets.py
+        benchmarks/run.py
+        benchmarks/m6.py
+        benchmarks/tests/**
+        docs/real-project-benchmark.md
+        .github/workflows/real-project-benchmark.yml
+        crates/**
+        packages/vitest-adapter/**
+        Cargo.toml
+        Cargo.lock
+        rust-toolchain.toml
+        package.json
+        package-lock.json
+        .node-version
+
   compare:
+    needs: changes
+    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.relevant == 'true') }}
     runs-on: ubuntu-24.04
     timeout-minutes: 90
     env:

@@ -1,0 +1,75 @@
+name: PR path relevance
+
+# Shared by required checks that must always report. Callers run their heavy
+# job only when `relevant` is true and report skipped otherwise; callers also
+# run it when this workflow fails, so detection errors never skip the check.
+on:
+  workflow_call:
+    inputs:
+      patterns:
+        description: Newline-separated fnmatch globs (`*` also matches `/`)
+        type: string
+        required: true
+    outputs:
+      relevant:
+        description: "'true' when any changed or renamed-from path matches"
+        value: ${{ jobs.detect.outputs.relevant }}
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  detect:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      relevant: ${{ steps.filter.outputs.relevant }}
+    steps:
+      - id: filter
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          API: ${{ github.api_url }}
+          EVENT: ${{ github.event_name }}
+          PR: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+          PATTERNS: ${{ inputs.patterns }}
+        run: |
+          set -euo pipefail
+          python3 - >> "$GITHUB_OUTPUT" <<'PY'
+          import fnmatch, json, os, urllib.request
+
+          if os.environ["EVENT"] != "pull_request":
+              print("relevant=true")
+              raise SystemExit
+          patterns = [p.strip() for p in os.environ["PATTERNS"].splitlines() if p.strip()]
+          if not patterns:
+              raise SystemExit("no patterns given")
+          # Entries are parsed from JSON, so names keep any embedded newlines.
+          entries, page = [], 1
+          while True:
+              request = urllib.request.Request(
+                  f'{os.environ["API"]}/repos/{os.environ["REPO"]}/pulls/{os.environ["PR"]}/files'
+                  f"?per_page=100&page={page}",
+                  headers={
+                      "Authorization": f'Bearer {os.environ["GH_TOKEN"]}',
+                      "Accept": "application/vnd.github+json",
+                  },
+              )
+              with urllib.request.urlopen(request, timeout=30) as response:
+                  batch = json.load(response)
+              entries.extend(batch)
+              if len(batch) < 100:
+                  break
+              page += 1
+          paths = [e["filename"] for e in entries] + [
+              e["previous_filename"] for e in entries if e.get("previous_filename")
+          ]
+          # The files API lists at most 3000 entries (not paths); a full list
+          # may be truncated, so treat it as relevant.
+          relevant = len(entries) >= 3000 or any(
+              fnmatch.fnmatchcase(path, pattern) for path in paths for pattern in patterns
+          )
+          print("relevant=" + str(relevant).lower())
+          PY
