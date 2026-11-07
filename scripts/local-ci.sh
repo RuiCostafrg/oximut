@@ -89,8 +89,10 @@ stage_security() {
 
 # Anchor to the repository that owns this script, not the caller's working
 # directory — stages and status posting must use this repo's paths and HEAD,
-# even when invoked from another checkout (cubic P3, CodeRabbit).
-cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." || _fail "cannot find repository root"
+# even when invoked from another checkout, via a symlink, or with CDPATH set
+# (cubic P3/P2, CodeRabbit). readlink -f is safe: the runner is Linux-only.
+CDPATH= cd -- "$(dirname -- "$(readlink -f -- "${BASH_SOURCE[0]}")")/.." \
+  || _fail "cannot find repository root"
 
 signoff_failed=0
 
@@ -123,6 +125,12 @@ for s in "${SELECTED[@]}"; do
   if [ "$rc" -ne 0 ]; then
     [ "$NO_SIGNOFF" = 0 ] && gh signoff fail --commit "$head_sha" "$s" --description "$s failed locally" >/dev/null 2>&1 || true
     _fail "stage '$s' failed"
+  fi
+  # A concurrent commit during the stage changes what was tested but not
+  # head_sha — refuse to attest anything in that case (cubic P2).
+  if [ "$(git rev-parse HEAD)" != "$head_sha" ]; then
+    [ "$NO_SIGNOFF" = 0 ] && gh signoff fail --commit "$head_sha" "$s" --description "$s ran while HEAD moved" >/dev/null 2>&1 || true
+    _fail "HEAD moved during stage '$s' — aborting instead of attesting untested code"
   fi
   _ok "$s passed"
   if [ "$NO_SIGNOFF" = 0 ]; then
