@@ -91,7 +91,8 @@ stage_security() {
 # directory — stages and status posting must use this repo's paths and HEAD,
 # even when invoked from another checkout, via a symlink, or with CDPATH set
 # (cubic P3/P2, CodeRabbit). readlink -f is safe: the runner is Linux-only.
-CDPATH= cd -- "$(dirname -- "$(readlink -f -- "${BASH_SOURCE[0]}")")/.." \
+repo_script="$(readlink -f -- "${BASH_SOURCE[0]}")" || _fail "cannot resolve script path"
+CDPATH= cd -- "$(dirname -- "$repo_script")/.." \
   || _fail "cannot find repository root"
 
 signoff_failed=0
