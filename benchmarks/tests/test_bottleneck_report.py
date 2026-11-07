@@ -75,10 +75,10 @@ class BottleneckReport(unittest.TestCase):
             self.assertIn('n/a', index)
             self.assertIn('Partial evidence', (Path(directory) / 'cpu.html').read_text(encoding='utf-8'))
 
-    def test_host_speed_wording_follows_the_measured_ratio(self):
+    def test_host_ratio_is_reported_without_a_speed_verdict(self):
         data = json.loads((REPORT / 'data.json').read_text(encoding='utf-8'))
         campaign = data['benchmark']['medians']['after/stryker']['wall_seconds']
-        for ratio, word in ((0.5, 'faster'), (1.0, 'comparable'), (1.5, 'slower')):
+        for ratio in (0.5, 1.0, 1.5):
             changed = copy.deepcopy(data)
             changed['controller']['tools']['stryker']['wall_seconds'] = campaign * ratio
             with tempfile.TemporaryDirectory() as directory:
@@ -86,7 +86,8 @@ class BottleneckReport(unittest.TestCase):
                 path.write_text(json.dumps(changed), encoding='utf-8')
                 render(path, directory)
                 page = (Path(directory) / 'timeline.html').read_text(encoding='utf-8')
-                self.assertIn(f'so it was a {word} machine', page)
+                self.assertIn(f'Stryker took {100 * ratio:.0f}% of the scored campaign', page)
+                self.assertNotRegex(page, r'(faster|slower|comparable) machine')
 
     def test_every_chart_is_named_and_has_its_own_table(self):
         for name in PAGES:

@@ -642,12 +642,12 @@ def render_timeline(d):
         ('mutationExecution', f'{c["phases"]["mutationExecution"]:.0f}',
          f'{sum(j["end"] - j["start"] for j in mutants):.0f}', f'sum of {len(mutants)} mutant jobs'),
     ]
-    # Stryker's code is identical in both runs, so its wall ratio indicates the host speed difference.
+    # Same Stryker code in both: report the ratio, not a host-speed conclusion (one unwarmed run vs a
+    # warmed median can differ for many reasons).
     host = c['tools']['stryker']['wall_seconds'] / d['benchmark']['medians']['after/stryker']['wall_seconds']
-    body = ['<p><b>One diagnostic run</b> from the controller-job capture. Its runner host took '
-            f'{100 * host:.0f}% of the scored campaign\'s Stryker wall time (same Stryker code), so it was a '
-            f'{"faster" if host < 0.95 else "slower" if host > 1.05 else "comparable"} machine. '
-            'Absolute milliseconds are valid only within this run; use '
+    body = ['<p><b>One diagnostic run</b> from the controller-job capture. In it, Stryker took '
+            f'{100 * host:.0f}% of the scored campaign\'s median Stryker wall time (same Stryker code; one '
+            'unwarmed run versus a warmed median). Absolute milliseconds are valid only within this run; use '
             'the shares to compare with other evidence. Each row is one fresh Vitest fork, coloured by lifecycle '
             'step; hover a segment for its duration. The shaded band is controller start-up, up to the initialize '
             'response.</p>',

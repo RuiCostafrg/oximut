@@ -26,7 +26,7 @@ Re-extract from downloaded artifacts with `bottleneck_report.py extract --help`.
 
 ## Limits
 
-- Only the paired campaign is scored. The three diagnostic captures are single runs carrying profiler or clock overhead, and they may land on faster or slower runner hosts (the controller capture's host took 53% of the campaign's Stryker wall time, running the same Stryker code). Within a capture the report compares shares; it never subtracts absolute times across captures.
+- Only the paired campaign is scored. The three diagnostic captures are single runs carrying profiler or clock overhead, and they may land on faster or slower runner hosts (in the controller capture, Stryker took 53% of the campaign's median Stryker wall time on the same code: one unwarmed run versus a warmed median). Within a capture the report compares shares; it never subtracts absolute times across captures.
 - CPU profiles sample the main thread only. Process CPU from getrusage includes all threads.
 - Stryker's worker processes are terminated by signal and leave no profile, so the Node-level breakdown covers Oximut only.
 - Improvement candidates are discussion items, not measured savings.
