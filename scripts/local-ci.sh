@@ -134,8 +134,13 @@ for s in "${SELECTED[@]}"; do
   # A concurrent commit or uncommitted edit during the stage changes what was
   # tested while $head_sha stays — refuse to attest anything then (cubic P2/P1).
   # Scoped to signed-off runs: dirty trees are allowed with --no-signoff.
+  # Plain assignment so a failing git status can't read as a clean tree
+  # (cubic P2) — the post-stage mirror of the pre-stage check. Safe for
+  # --no-signoff dirty runs: the attestation gate below stays opt-in.
+  post_status="$(git status --porcelain --untracked-files=normal)" \
+    || _fail "git status failed — cannot verify tree cleanliness"
   if [ "$(git rev-parse HEAD)" != "$head_sha" ] \
-     || { [ "$NO_SIGNOFF" = 0 ] && [ -n "$(git status --porcelain --untracked-files=normal)" ]; }; then
+     || { [ "$NO_SIGNOFF" = 0 ] && [ -n "$post_status" ]; }; then
     [ "$NO_SIGNOFF" = 0 ] && gh signoff fail --commit "$head_sha" "$s" --description "$s ran while HEAD moved or tree changed" >/dev/null 2>&1 || true
     _fail "HEAD moved or working tree changed during stage '$s' — aborting instead of attesting untested code"
   fi
