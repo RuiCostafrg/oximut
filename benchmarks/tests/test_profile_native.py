@@ -536,6 +536,31 @@ class NodeFixtureTests(unittest.TestCase):
 
 
 class MinimumCaptureTests(unittest.TestCase):
+    def test_wrapper_coordinates_do_not_replace_missing_profiles_or_lifecycle_evidence(self):
+        """The supported wrapper location never repairs an incomplete process capture."""
+        for fault in ['none', 'profile', 'exit', 'identity', 'samples']:
+            with self.subTest(fault=fault), tempfile.TemporaryDirectory() as tmp:
+                profiles, qualification = self.fixture(Path(tmp), 'native')
+                path = profiles / 'CPU.20261028.000000.6.0.001.cpuprofile'
+                data = json.loads(path.read_text())
+                data['nodes'][0]['callFrame'].update(functionName='', url='file:///project/test.ts',
+                                                   lineNumber=0, columnNumber=-196)
+                if fault == 'samples': data['timeDeltas'] = [-1]
+                path.write_text(json.dumps(data))
+                identity = profiles / 'node-6.json'
+                if fault == 'profile': path.unlink()
+                elif fault == 'identity': identity.unlink()
+                elif fault == 'exit':
+                    record = json.loads(identity.read_text()); del record['exitObserved']
+                    identity.write_text(json.dumps(record))
+                inventory = diagnostic.capture_inventory(profiles, qualification)
+                if fault == 'none':
+                    self.assertEqual(inventory['errors'], [])
+                    self.assertEqual(inventory['minimum_role_evidence']['oximut_test_fork'], ['node-6.json'])
+                else:
+                    self.assertTrue(inventory['errors'])
+                    self.assertEqual(inventory['minimum_role_evidence']['oximut_test_fork'], [])
+
     @staticmethod
     def profile():
         """Small usable CPU profile; role/lifecycle tests do not need real stacks."""

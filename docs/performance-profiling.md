@@ -240,7 +240,50 @@ values in the underlying qualification artifacts include profiler overhead and
 are **not performance evidence**. Never mix them into the scored campaign.
 
 The default local mode inherits `--cpu-prof --cpu-prof-dir=<unique capture directory>`
-through `NODE_OPTIONS`. A diagnostic CommonJS preload records PID, parent PID,
+through `NODE_OPTIONS`. That legacy mode misses isolated Vitest fork profiles:
+Vitest 4.1.12 enables its existing profiling SIGTERM handler only when profiling
+flags appear in `process.execArgv`, which excludes `NODE_OPTIONS` flags. A local
+probe of the real pinned worker entry reproduced SIGTERM with no child profile
+under `NODE_OPTIONS`, and exit code 0 with a finalized child profile under explicit
+flags. This is a shutdown-mechanism check, not a test-run or performance result.
+
+Dispatch `capture_mode: cpu-prof-exec-argv`, or pass `--cpu-prof-exec-argv` locally,
+to test explicit profiler flags on the unchanged native workload. A private
+PATH launcher immediately execs the resolved Node binary with these flags;
+Vitest propagates them to test forks and applies its own profiling shutdown
+handling. The helper adds no signal handler, exit interception, waiting grace
+period, or deadline extension. The identity preload remains in `NODE_OPTIONS`.
+Launcher and profiler overhead are included in the diagnostic measurement.
+This mode retains the existing all-role lifecycle/profile validation: missing
+exits or profiles still fail capture, even when some fork profiles finalize.
+Workflow defaults remain the separate accounting mode. A native capture is
+required before claiming complete worker coverage or drawing hotspot conclusions.
+
+The first native explicit-flag attempt,
+[run 42146271995](https://github.com/RuiCostafrg/oximut/actions/runs/42146271995),
+passed exact workload qualification but **failed full capture validation**. All
+18 Oximut test forks finalized exit-code-0 identities; 17 produced profile files.
+Existing validation rejected negative source coordinates and sample intervals,
+and the remaining missing profile and incomplete Stryker lifecycles kept the
+capture incomplete. The launch mechanism is supported by this evidence;
+complete worker-profile coverage is unproven. Raw diagnostic resources and every
+Oximut phase are recorded in the
+[capture report](https://github.com/RuiCostafrg/oximut/pull/43#issuecomment-6674763157).
+Paired ratios and CIs are N/A for this overhead-bearing single capture. No
+profile was normalized or accepted by weakening validation.
+
+The format validator now recognizes the pinned standard Vitest wrapper frame:
+anonymous function, file URL, line 0, column -196. Vitest 4.1.12 evaluates its
+209-character wrapper prefix with `columnOffset: -209`; the arrow starts at
+column 13. A real Node VM/inspector regression reproduces the resulting -196
+coordinate without editing the profile. The existing `-1` unknown-location
+sentinels remain valid; coordinates below `-1` remain unsupported apart from
+this exact wrapper-column exception. Connected-tree, sample-reference, interval,
+lifecycle and missing-profile checks remain required. This corrects a location-format false
+rejection; the historical attempt above remains failed because its other
+incomplete/invalid captures are not repaired.
+
+A diagnostic CommonJS preload records PID, parent PID,
 Linux start-time identity, thread ID, argv, execArgv, cwd, observed exit status
 and cumulative self CPU counters (`process.cpuUsage()`, microseconds) at preload
 and observed exit. Exit counters omit later shutdown work and missing exits;
