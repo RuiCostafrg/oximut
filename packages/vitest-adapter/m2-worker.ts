@@ -1,9 +1,9 @@
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { normalizePath } from 'vite';
-import { createVitest, version, type Reporter } from 'vitest/node';
-import { validateRequest, type Request, type Result } from './protocol.ts';
+import { createVitest, type Reporter, version } from 'vitest/node';
 import { SelectionSupport } from './m3-selection.ts';
+import { type Request, type Result, validateRequest } from './protocol.ts';
 
 const selectionSupport = new SelectionSupport();
 
@@ -216,7 +216,18 @@ async function command(name: string, args: Request): Promise<unknown> {
   currentRun = undefined;
   delete process.env.OXIMUT_ACTIVE_MUTANT;
   if (job.kind === 'mutant' && next) process.env.OXIMUT_ACTIVE_MUTANT = next.id;
+  const previousBail = vitest.projects.map((project) => project.config.bail);
+  const cancellations: string[] = [];
+  // runFiles clears onCancel listeners before starting workers (4.1.12).
+  // Observe the public cancellation entry point instead, scoped to this job.
+  const cancelCurrentRun = vitest.cancelCurrentRun;
+  vitest.cancelCurrentRun = function (reason) {
+    cancellations.push(String(reason));
+    return cancelCurrentRun.call(this, reason);
+  };
   try {
+    // Vitest 4.1.12 serializes project.config afresh for each worker start.
+    for (const project of vitest.projects) project.config.bail = job.kind === 'mutant' ? 1 : 0;
     selectionSupport.begin(vitest, job);
     const specifications = await vitest.globTestSpecifications();
     const selected =
@@ -237,6 +248,9 @@ async function command(name: string, args: Request): Promise<unknown> {
     await vitest.runTestSpecifications(selected, true);
     await awaitWorkerTermination(vitest, job.deadlineMs - (performance.now() - started));
   } finally {
+    vitest.cancelCurrentRun = cancelCurrentRun;
+    for (const [index, project] of vitest.projects.entries())
+      project.config.bail = previousBail[index];
     delete process.env.OXIMUT_ACTIVE_MUTANT;
   }
   if (!currentRun) throw new Error('Missing onTestRunEnd event');
@@ -249,14 +263,18 @@ async function command(name: string, args: Request): Promise<unknown> {
     ...[...module.children.allSuites()].flatMap((suite) => suite.errors()),
   ]);
   const errors = [...unhandled, ...moduleErrors];
-  let incomplete = reason === 'interrupted';
+  let pending = false;
+  let hasTestError = false;
   for (const module of modules) {
     for (const test of module.children.allTests()) {
       const result = test.result();
       if (result.state === 'passed' || result.state === 'failed' || result.state === 'skipped')
         tests[result.state]++;
-      else incomplete = true;
-      if (result.state === 'failed') errors.push(...(result.errors ?? []));
+      else pending = true;
+      if (result.state === 'failed') {
+        hasTestError ||= Boolean(result.errors?.length);
+        errors.push(...(result.errors ?? []));
+      }
     }
   }
   let outcome: Result['outcome'];
@@ -266,6 +284,16 @@ async function command(name: string, args: Request): Promise<unknown> {
   const timedOut = errors.some((error) =>
     /(?:Test|Hook) timed out in \d+ms/.test(String(error.message ?? '')),
   );
+  // The reporter reason is 'interrupted', not the cancellation's 'test-failure'.
+  // Require both signals and a real test error; all other error precedence stays intact.
+  const bailed =
+    job.kind === 'mutant' &&
+    reason === 'interrupted' &&
+    cancellations.length > 0 &&
+    cancellations.every((reason) => reason === 'test-failure') &&
+    tests.failed > 0 &&
+    hasTestError;
+  const incomplete = (reason === 'interrupted' || pending || cancellations.length > 0) && !bailed;
   if (unhandled.length || incomplete || processFailure) outcome = 'infrastructure-error';
   else if (moduleErrors.some(transformError)) outcome = 'invalid';
   else if (timedOut) outcome = 'timeout';

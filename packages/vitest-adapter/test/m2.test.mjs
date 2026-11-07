@@ -468,3 +468,84 @@ test('alive', async () => { await new Promise(r => setTimeout(r, 30)); expect(th
     assert.equal(await readFile(marker, 'utf8'), atReply, 'thread wrote after its job reply');
   }
 });
+
+// Each case first proves bail is active, so safety checks also regress on the
+// pre-bail adapter rather than merely repeating its existing classifications.
+async function bailFixture(t, failingBaseline = false) {
+  const s = await session(t);
+  const observations = join(s.root, 'session/executed');
+  await writeFile(
+    join(s.root, 'sample.test.ts'),
+    `import { test, expect } from 'vitest';
+import { appendFileSync } from 'node:fs';
+import { enabled } from './source';
+for (let i = 0; i < 4; i++) test('enabled ' + i, () => {
+  appendFileSync(${JSON.stringify(observations)}, String(i));
+  expect(enabled).toBe(${failingBaseline ? 'Boolean(process.env.OXIMUT_ACTIVE_MUTANT)' : 'true'});
+});`,
+  );
+  const killed = await s.run('kill');
+  assert.equal(killed.outcome, 'failed', JSON.stringify(killed));
+  assert.equal(killed.tests.failed, 1, 'bail stops after one actual test failure');
+  assert.equal(await readFile(observations, 'utf8'), '0');
+  await writeFile(observations, '');
+  return { s, observations };
+}
+
+test('M2 bail stops a killed mutant at its first failure', { timeout: 60000 }, async (t) => {
+  await bailFixture(t);
+});
+
+test('M2 bail never leaks into a subsequent failing baseline', { timeout: 90000 }, async (t) => {
+  const { s, observations } = await bailFixture(t, true);
+  // A failing baseline proves bail=0 without changing any project inputs.
+  // Input changes would retire the controller and hide configuration leaks.
+  const baseline = await s.run('', null);
+  assert.equal(baseline.outcome, 'failed', JSON.stringify(baseline));
+  assert.equal(baseline.tests.failed, 4);
+  assert.equal(await readFile(observations, 'utf8'), '0123');
+  const events = (await readFile(join(s.root, 'session/events.jsonl'), 'utf8'))
+    .trim()
+    .split('\n')
+    .map(JSON.parse);
+  assert.equal(events.length, 1, 'baseline reuses the controller that bailed');
+  assert.equal(events[0].reuse, 'controller');
+});
+
+test('M2 bail lets surviving mutants run every test', { timeout: 90000 }, async (t) => {
+  const { s, observations } = await bailFixture(t);
+  const survivor = await s.run('disabled');
+  assert.equal(survivor.outcome, 'passed', JSON.stringify(survivor));
+  assert.equal(survivor.tests.passed, 4);
+  assert.equal(await readFile(observations, 'utf8'), '0123');
+});
+
+test('M2 bail preserves unhandled, teardown and timeout errors', { timeout: 120000 }, async (t) => {
+  const { s } = await bailFixture(t);
+  for (const [body, expected] of [
+    [
+      "setTimeout(() => { throw new Error('unhandled sentinel'); }, 0); await new Promise(r => setTimeout(r, 30)); expect(enabled).toBe(true);",
+      'infrastructure-error',
+    ],
+    ['await new Promise(() => {});', 'timeout'],
+  ]) {
+    await writeFile(
+      join(s.root, 'sample.test.ts'),
+      `import { test, expect } from 'vitest'; import { enabled } from './source';
+test('error', async () => { ${body} }, 100);
+test('must be cancelled', () => { expect(enabled).toBe(true); });`,
+    );
+    const result = await s.run('kill');
+    assert.equal(result.outcome, expected, JSON.stringify(result));
+    assert.equal(result.tests.failed, 1);
+  }
+  await writeFile(
+    join(s.root, 'sample.test.ts'),
+    `import { test, expect, afterAll } from 'vitest'; import { enabled } from './source';
+afterAll(() => { throw new Error('teardown sentinel'); });
+test('fails', () => { expect(enabled).toBe(true); });
+test('cancelled', () => { expect(enabled).toBe(true); });`,
+  );
+  const teardown = await s.run('kill');
+  assert.equal(teardown.outcome, 'infrastructure-error', JSON.stringify(teardown));
+});
