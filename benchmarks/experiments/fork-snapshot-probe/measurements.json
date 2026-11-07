@@ -1,0 +1,299 @@
+{
+  "node": "v26.3.1",
+  "platform": "linux",
+  "arch": "arm64",
+  "snapshotBuild": {
+    "status": 0,
+    "stderr": ""
+  },
+  "records": [
+    {
+      "rep": 0,
+      "name": "plain",
+      "wallMs": 140.59864600000003,
+      "childUserMs": null,
+      "status": 0,
+      "signal": null,
+      "stderr": ""
+    },
+    {
+      "rep": 0,
+      "name": "snapshot",
+      "wallMs": 158.79432299999996,
+      "childUserMs": null,
+      "status": 0,
+      "signal": null,
+      "stderr": ""
+    },
+    {
+      "rep": 0,
+      "name": "fork-import",
+      "wallMs": 986.8982289999999,
+      "childUserMs": null,
+      "status": 1,
+      "signal": null,
+      "stderr": "file:///root/oximut/node_modules/vitest/dist/chunks/init-forks.H5ZuobOQ.js:3\nif (!process.send) throw new Error(\"Expected worker to be run in node:child_process\");\n                         ^\n\nError: Expected worker to be run in node:child_process\n    at file:///root/oximut/node_modules/vitest/dist/chunks/init-forks.H5ZuobOQ.js:3:26\n    at ModuleJob.run (node:internal/modules/esm/module_job:439:25)\n    at async node:internal/modules/esm/loader:646:26\n\nNode.js v26.3.1\n"
+    },
+    {
+      "rep": 0,
+      "name": "fork-import-cache",
+      "wallMs": 1161.4366150000003,
+      "childUserMs": null,
+      "status": 1,
+      "signal": null,
+      "stderr": "file:///root/oximut/node_modules/vitest/dist/chunks/init-forks.H5ZuobOQ.js:3\nif (!process.send) throw new Error(\"Expected worker to be run in node:child_process\");\n                         ^\n\nError: Expected worker to be run in node:child_process\n    at file:///root/oximut/node_modules/vitest/dist/chunks/init-forks.H5ZuobOQ.js:3:26\n    at ModuleJob.run (node:internal/modules/esm/module_job:439:25)\n    at async node:internal/modules/esm/loader:646:26\n\nNode.js v26.3.1\n"
+    },
+    {
+      "rep": 1,
+      "name": "fork-import-cache",
+      "wallMs": 917.1684369999998,
+      "childUserMs": null,
+      "status": 1,
+      "signal": null,
+      "stderr": "file:///root/oximut/node_modules/vitest/dist/chunks/init-forks.H5ZuobOQ.js:3\nif (!process.send) throw new Error(\"Expected worker to be run in node:child_process\");\n                         ^\n\nError: Expected worker to be run in node:child_process\n    at file:///root/oximut/node_modules/vitest/dist/chunks/init-forks.H5ZuobOQ.js:3:26\n    at ModuleJob.run (node:internal/modules/esm/module_job:439:25)\n    at async node:internal/modules/esm/loader:646:26\n\nNode.js v26.3.1\n"
+    },
+    {
+      "rep": 1,
+      "name": "fork-import",
+      "wallMs": 988.0134370000001,
+      "childUserMs": null,
+      "status": 1,
+      "signal": null,
+      "stderr": "file:///root/oximut/node_modules/vitest/dist/chunks/init-forks.H5ZuobOQ.js:3\nif (!process.send) throw new Error(\"Expected worker to be run in node:child_process\");\n                         ^\n\nError: Expected worker to be run in node:child_process\n    at file:///root/oximut/node_modules/vitest/dist/chunks/init-forks.H5ZuobOQ.js:3:26\n    at ModuleJob.run (node:internal/modules/esm/module_job:439:25)\n    at async node:internal/modules/esm/loader:646:26\n\nNode.js v26.3.1\n"
+    },
+    {
+      "rep": 1,
+      "name": "snapshot",
+      "wallMs": 131.2894269999997,
+      "childUserMs": null,
+      "status": 0,
+      "signal": null,
+      "stderr": ""
+    },
+    {
+      "rep": 1,
+      "name": "plain",
+      "wallMs": 115.63989599999968,
+      "childUserMs": null,
+      "status": 0,
+      "signal": null,
+      "stderr": ""
+    },
+    {
+      "rep": 2,
+      "name": "plain",
+      "wallMs": 149.26432300000033,
+      "childUserMs": null,
+      "status": 0,
+      "signal": null,
+      "stderr": ""
+    },
+    {
+      "rep": 2,
+      "name": "snapshot",
+      "wallMs": 132.8967190000003,
+      "childUserMs": null,
+      "status": 0,
+      "signal": null,
+      "stderr": ""
+    },
+    {
+      "rep": 2,
+      "name": "fork-import",
+      "wallMs": 930.6862499999997,
+      "childUserMs": null,
+      "status": 1,
+      "signal": null,
+      "stderr": "file:///root/oximut/node_modules/vitest/dist/chunks/init-forks.H5ZuobOQ.js:3\nif (!process.send) throw new Error(\"Expected worker to be run in node:child_process\");\n                         ^\n\nError: Expected worker to be run in node:child_process\n    at file:///root/oximut/node_modules/vitest/dist/chunks/init-forks.H5ZuobOQ.js:3:26\n    at ModuleJob.run (node:internal/modules/esm/module_job:439:25)\n    at async node:internal/modules/esm/loader:646:26\n\nNode.js v26.3.1\n"
+    },
+    {
+      "rep": 2,
+      "name": "fork-import-cache",
+      "wallMs": 917.0669269999999,
+      "childUserMs": null,
+      "status": 1,
+      "signal": null,
+      "stderr": "file:///root/oximut/node_modules/vitest/dist/chunks/init-forks.H5ZuobOQ.js:3\nif (!process.send) throw new Error(\"Expected worker to be run in node:child_process\");\n                         ^\n\nError: Expected worker to be run in node:child_process\n    at file:///root/oximut/node_modules/vitest/dist/chunks/init-forks.H5ZuobOQ.js:3:26\n    at ModuleJob.run (node:internal/modules/esm/module_job:439:25)\n    at async node:internal/modules/esm/loader:646:26\n\nNode.js v26.3.1\n"
+    },
+    {
+      "rep": 3,
+      "name": "fork-import-cache",
+      "wallMs": 924.6886460000005,
+      "childUserMs": null,
+      "status": 1,
+      "signal": null,
+      "stderr": "file:///root/oximut/node_modules/vitest/dist/chunks/init-forks.H5ZuobOQ.js:3\nif (!process.send) throw new Error(\"Expected worker to be run in node:child_process\");\n                         ^\n\nError: Expected worker to be run in node:child_process\n    at file:///root/oximut/node_modules/vitest/dist/chunks/init-forks.H5ZuobOQ.js:3:26\n    at ModuleJob.run (node:internal/modules/esm/module_job:439:25)\n    at async node:internal/modules/esm/loader:646:26\n\nNode.js v26.3.1\n"
+    },
+    {
+      "rep": 3,
+      "name": "fork-import",
+      "wallMs": 924.7035410000008,
+      "childUserMs": null,
+      "status": 1,
+      "signal": null,
+      "stderr": "file:///root/oximut/node_modules/vitest/dist/chunks/init-forks.H5ZuobOQ.js:3\nif (!process.send) throw new Error(\"Expected worker to be run in node:child_process\");\n                         ^\n\nError: Expected worker to be run in node:child_process\n    at file:///root/oximut/node_modules/vitest/dist/chunks/init-forks.H5ZuobOQ.js:3:26\n    at ModuleJob.run (node:internal/modules/esm/module_job:439:25)\n    at async node:internal/modules/esm/loader:646:26\n\nNode.js v26.3.1\n"
+    },
+    {
+      "rep": 3,
+      "name": "snapshot",
+      "wallMs": 150.94583299999977,
+      "childUserMs": null,
+      "status": 0,
+      "signal": null,
+      "stderr": ""
+    },
+    {
+      "rep": 3,
+      "name": "plain",
+      "wallMs": 138.97875000000022,
+      "childUserMs": null,
+      "status": 0,
+      "signal": null,
+      "stderr": ""
+    },
+    {
+      "rep": 4,
+      "name": "plain",
+      "wallMs": 130.42385400000057,
+      "childUserMs": null,
+      "status": 0,
+      "signal": null,
+      "stderr": ""
+    },
+    {
+      "rep": 4,
+      "name": "snapshot",
+      "wallMs": 161.39650999999867,
+      "childUserMs": null,
+      "status": 0,
+      "signal": null,
+      "stderr": ""
+    },
+    {
+      "rep": 4,
+      "name": "fork-import",
+      "wallMs": 718.884062000001,
+      "childUserMs": null,
+      "status": 1,
+      "signal": null,
+      "stderr": "file:///root/oximut/node_modules/vitest/dist/chunks/init-forks.H5ZuobOQ.js:3\nif (!process.send) throw new Error(\"Expected worker to be run in node:child_process\");\n                         ^\n\nError: Expected worker to be run in node:child_process\n    at file:///root/oximut/node_modules/vitest/dist/chunks/init-forks.H5ZuobOQ.js:3:26\n    at ModuleJob.run (node:internal/modules/esm/module_job:439:25)\n    at async node:internal/modules/esm/loader:646:26\n\nNode.js v26.3.1\n"
+    },
+    {
+      "rep": 4,
+      "name": "fork-import-cache",
+      "wallMs": 373.0518229999998,
+      "childUserMs": null,
+      "status": 1,
+      "signal": null,
+      "stderr": "file:///root/oximut/node_modules/vitest/dist/chunks/init-forks.H5ZuobOQ.js:3\nif (!process.send) throw new Error(\"Expected worker to be run in node:child_process\");\n                         ^\n\nError: Expected worker to be run in node:child_process\n    at file:///root/oximut/node_modules/vitest/dist/chunks/init-forks.H5ZuobOQ.js:3:26\n    at ModuleJob.run (node:internal/modules/esm/module_job:439:25)\n    at async node:internal/modules/esm/loader:646:26\n\nNode.js v26.3.1\n"
+    },
+    {
+      "rep": 5,
+      "name": "fork-import-cache",
+      "wallMs": 349.35729100000026,
+      "childUserMs": null,
+      "status": 1,
+      "signal": null,
+      "stderr": "file:///root/oximut/node_modules/vitest/dist/chunks/init-forks.H5ZuobOQ.js:3\nif (!process.send) throw new Error(\"Expected worker to be run in node:child_process\");\n                         ^\n\nError: Expected worker to be run in node:child_process\n    at file:///root/oximut/node_modules/vitest/dist/chunks/init-forks.H5ZuobOQ.js:3:26\n    at ModuleJob.run (node:internal/modules/esm/module_job:439:25)\n    at async node:internal/modules/esm/loader:646:26\n\nNode.js v26.3.1\n"
+    },
+    {
+      "rep": 5,
+      "name": "fork-import",
+      "wallMs": 476.9793230000014,
+      "childUserMs": null,
+      "status": 1,
+      "signal": null,
+      "stderr": "file:///root/oximut/node_modules/vitest/dist/chunks/init-forks.H5ZuobOQ.js:3\nif (!process.send) throw new Error(\"Expected worker to be run in node:child_process\");\n                         ^\n\nError: Expected worker to be run in node:child_process\n    at file:///root/oximut/node_modules/vitest/dist/chunks/init-forks.H5ZuobOQ.js:3:26\n    at ModuleJob.run (node:internal/modules/esm/module_job:439:25)\n    at async node:internal/modules/esm/loader:646:26\n\nNode.js v26.3.1\n"
+    },
+    {
+      "rep": 5,
+      "name": "snapshot",
+      "wallMs": 96.64000000000124,
+      "childUserMs": null,
+      "status": 0,
+      "signal": null,
+      "stderr": ""
+    },
+    {
+      "rep": 5,
+      "name": "plain",
+      "wallMs": 93.78567699999985,
+      "childUserMs": null,
+      "status": 0,
+      "signal": null,
+      "stderr": ""
+    },
+    {
+      "rep": 6,
+      "name": "plain",
+      "wallMs": 101.86015600000064,
+      "childUserMs": null,
+      "status": 0,
+      "signal": null,
+      "stderr": ""
+    },
+    {
+      "rep": 6,
+      "name": "snapshot",
+      "wallMs": 147.62874899999952,
+      "childUserMs": null,
+      "status": 0,
+      "signal": null,
+      "stderr": ""
+    },
+    {
+      "rep": 6,
+      "name": "fork-import",
+      "wallMs": 423.4909889999999,
+      "childUserMs": null,
+      "status": 1,
+      "signal": null,
+      "stderr": "file:///root/oximut/node_modules/vitest/dist/chunks/init-forks.H5ZuobOQ.js:3\nif (!process.send) throw new Error(\"Expected worker to be run in node:child_process\");\n                         ^\n\nError: Expected worker to be run in node:child_process\n    at file:///root/oximut/node_modules/vitest/dist/chunks/init-forks.H5ZuobOQ.js:3:26\n    at ModuleJob.run (node:internal/modules/esm/module_job:439:25)\n    at async node:internal/modules/esm/loader:646:26\n\nNode.js v26.3.1\n"
+    },
+    {
+      "rep": 6,
+      "name": "fork-import-cache",
+      "wallMs": 398.9562499999993,
+      "childUserMs": null,
+      "status": 1,
+      "signal": null,
+      "stderr": "file:///root/oximut/node_modules/vitest/dist/chunks/init-forks.H5ZuobOQ.js:3\nif (!process.send) throw new Error(\"Expected worker to be run in node:child_process\");\n                         ^\n\nError: Expected worker to be run in node:child_process\n    at file:///root/oximut/node_modules/vitest/dist/chunks/init-forks.H5ZuobOQ.js:3:26\n    at ModuleJob.run (node:internal/modules/esm/module_job:439:25)\n    at async node:internal/modules/esm/loader:646:26\n\nNode.js v26.3.1\n"
+    },
+    {
+      "rep": 7,
+      "name": "fork-import-cache",
+      "wallMs": 1195.7732290000004,
+      "childUserMs": null,
+      "status": 1,
+      "signal": null,
+      "stderr": "file:///root/oximut/node_modules/vitest/dist/chunks/init-forks.H5ZuobOQ.js:3\nif (!process.send) throw new Error(\"Expected worker to be run in node:child_process\");\n                         ^\n\nError: Expected worker to be run in node:child_process\n    at file:///root/oximut/node_modules/vitest/dist/chunks/init-forks.H5ZuobOQ.js:3:26\n    at ModuleJob.run (node:internal/modules/esm/module_job:439:25)\n    at async node:internal/modules/esm/loader:646:26\n\nNode.js v26.3.1\n"
+    },
+    {
+      "rep": 7,
+      "name": "fork-import",
+      "wallMs": 411.66999899999973,
+      "childUserMs": null,
+      "status": 1,
+      "signal": null,
+      "stderr": "file:///root/oximut/node_modules/vitest/dist/chunks/init-forks.H5ZuobOQ.js:3\nif (!process.send) throw new Error(\"Expected worker to be run in node:child_process\");\n                         ^\n\nError: Expected worker to be run in node:child_process\n    at file:///root/oximut/node_modules/vitest/dist/chunks/init-forks.H5ZuobOQ.js:3:26\n    at ModuleJob.run (node:internal/modules/esm/module_job:439:25)\n    at async node:internal/modules/esm/loader:646:26\n\nNode.js v26.3.1\n"
+    },
+    {
+      "rep": 7,
+      "name": "snapshot",
+      "wallMs": 120.6971880000001,
+      "childUserMs": null,
+      "status": 0,
+      "signal": null,
+      "stderr": ""
+    },
+    {
+      "rep": 7,
+      "name": "plain",
+      "wallMs": 163.38182199999937,
+      "childUserMs": null,
+      "status": 0,
+      "signal": null,
+      "stderr": ""
+    }
+  ]
+}
