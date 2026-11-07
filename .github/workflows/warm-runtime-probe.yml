@@ -3,19 +3,58 @@ name: Experimental warm-runtime state oracle
 on:
   workflow_dispatch:
   pull_request:
-    paths:
-      - '.github/workflows/warm-runtime-probe.yml'
-      - 'benchmarks/experiments/warm-runtime-probe/**'
-      - 'package-lock.json'
-      - 'package.json'
-      - '.node-version'
-      - 'benchmarks/results/2026-11-05-warm-runtime-probe/**'
 
 permissions:
   contents: read
 
 jobs:
+  changes:
+    # Always report the required check: decide here whether this PR touches
+    # inputs the job below measures. If this detection fails, the job runs.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      relevant: ${{ steps.filter.outputs.relevant }}
+    steps:
+      - id: filter
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT: ${{ github.event_name }}
+          PR: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+          PATTERNS: |
+            .github/workflows/warm-runtime-probe.yml
+            benchmarks/experiments/warm-runtime-probe/**
+            package-lock.json
+            package.json
+            .node-version
+            benchmarks/results/2026-11-05-warm-runtime-probe/**
+        run: |
+          set -euo pipefail
+          if [ "$EVENT" != pull_request ]; then
+            echo relevant=true >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          gh api --paginate "repos/$REPO/pulls/$PR/files" \
+            --jq '.[] | .filename, (.previous_filename // empty)' > "$RUNNER_TEMP/changed.txt"
+          python3 - "$RUNNER_TEMP/changed.txt" >> "$GITHUB_OUTPUT" <<'PY'
+          import fnmatch, os, sys
+          patterns = [p.strip() for p in os.environ["PATTERNS"].splitlines() if p.strip()]
+          files = [f for f in open(sys.argv[1]).read().splitlines() if f]
+          # The files API lists at most 3000 entries; treat a full page as relevant.
+          relevant = len(files) >= 3000 or any(
+              fnmatch.fnmatchcase(f, p) for f in files for p in patterns
+          )
+          print("relevant=" + str(relevant).lower())
+          PY
+
   structural-oracle:
+    needs: changes
+    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.relevant == 'true') }}
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
