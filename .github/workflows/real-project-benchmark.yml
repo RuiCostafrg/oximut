@@ -8,25 +8,6 @@ on:
         default: ''
         description: 'Extra Oximut args for the after candidate only, space-separated, e.g. --isolation fresh-thread'
   pull_request:
-    paths:
-      - 'benchmarks/compare_candidates.py'
-      - 'benchmarks/real_project.py'
-      - 'benchmarks/real-project/**'
-      - 'benchmarks/targets.py'
-      - 'benchmarks/run.py'
-      - 'benchmarks/m6.py'
-      - 'benchmarks/tests/**'
-      - 'docs/real-project-benchmark.md'
-      - '.github/workflows/real-project-benchmark.yml'
-      # Runner changes are what this campaign measures.
-      - 'crates/**'
-      - 'packages/vitest-adapter/**'
-      - 'Cargo.toml'
-      - 'Cargo.lock'
-      - 'rust-toolchain.toml'
-      - 'package.json'
-      - 'package-lock.json'
-      - '.node-version'
 
 permissions:
   contents: read
@@ -36,12 +17,41 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  changes:
+    # Required checks always report; see pr-changes.yml.
+    uses: ./.github/workflows/pr-changes.yml
+    permissions:
+      contents: read
+      pull-requests: read
+    with:
+      patterns: |
+        .github/workflows/pr-changes.yml
+        benchmarks/compare_candidates.py
+        benchmarks/real_project.py
+        benchmarks/real-project/**
+        benchmarks/targets.py
+        benchmarks/run.py
+        benchmarks/m6.py
+        benchmarks/tests/**
+        docs/real-project-benchmark.md
+        .github/workflows/real-project-benchmark.yml
+        crates/**
+        packages/vitest-adapter/**
+        Cargo.toml
+        Cargo.lock
+        rust-toolchain.toml
+        package.json
+        package-lock.json
+        .node-version
+
   compare:
+    needs: changes
+    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.relevant == 'true') }}
     runs-on: ubuntu-24.04
     timeout-minutes: 90
     env:
-      # Main d7d9910 (after #40 and dependency bumps); diagnostic clocks and peak attribution stay off here.
-      BEFORE_COMMIT: d7d99100c6119143fe2b1896863dcce24ee85351
+      # Main c970951 (after #47 and #48); diagnostic clocks and peak attribution stay off here.
+      BEFORE_COMMIT: c97095182bce97acaf993045e0a5ed6f5f390ea8
       BUILD_FLAGS: --locked --release -p oximut-cli
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
