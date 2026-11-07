@@ -54,6 +54,10 @@ def write_atomic(path, text):
     with tempfile.NamedTemporaryFile('w', encoding='utf-8', dir=path.parent, delete=False,
                                      prefix=f'.{path.name}.') as handle:
         handle.write(text)
+    # NamedTemporaryFile creates 0600; give the report the usual umask-derived mode.
+    mask = os.umask(0)
+    os.umask(mask)
+    os.chmod(handle.name, 0o666 & ~mask)
     os.replace(handle.name, path)
 
 
@@ -413,6 +417,9 @@ def render_overview(d):
     run = sum(f['finished'] - f['collected'] for f in forks)
     stop = sum(f['exit'] - f['finished'] for f in forks)
     mut_run = sum(f['finished'] - f['collected'] for j in mutant_jobs for f in j['forks'])
+    # Like-for-like: median test time of one killed-mutant job vs one passing baseline file.
+    mut_job_median = statistics.median(sum(f['finished'] - f['collected'] for f in j['forks']) for j in mutant_jobs)
+    base_file_median = statistics.median(f['finished'] - f['collected'] for j in baseline_jobs for f in j['forks'])
     oximut_wall_ms = c['tools']['oximut']['wall_seconds'] * 1000
     # Controller start runs until the initialize response (Node + Vitest import + createVitest).
     initialize = next(j for j in jobs if j['command'] == 'initialize')
@@ -508,7 +515,8 @@ def render_overview(d):
     body.append(f'<p><b>Fork bootstrap is the largest single block</b> ({boot:.0f} ms, '
                 f'{100 * boot / oximut_wall_ms:.0f}% of the run): every fresh process starts Node and loads the '
                 f'Vitest worker runtime before it can run a single test. In the 10 killed-mutant jobs, running the '
-                f'(now failing) tests takes {mut_run:.0f} ms, about twice the per-file time of passing baseline files. '
+                f'(now failing) tests takes {mut_run:.0f} ms in total: a median of {mut_job_median:.0f} ms per job, '
+                f'{mut_job_median / base_file_median:.1f}× the {base_file_median:.0f} ms median of a passing baseline file. '
                 'Failure reporting (assertion diffs, stack traces) is the likely cause; this is a hypothesis to measure. '
                 'See the <a href="timeline.html">job timeline</a>.</p>')
     body.append('<h2>3. Ranked bottlenecks</h2>')
@@ -528,8 +536,8 @@ def render_overview(d):
           'Start the instrumented baseline while the original one is still running (overlap, same total CPU).',
           'Keep the original baseline as the oracle, and question whether every file needs both runs.']),
         ('Killed mutants likely pay for failure formatting',
-         f'{mut_run:.0f} ms of test time across 10 mutant jobs, versus a median of '
-         f'{statistics.median(f["finished"] - f["collected"] for j in baseline_jobs for f in j["forks"]):.0f} ms per passing baseline file.',
+         f'Median {mut_job_median:.0f} ms of test time per killed-mutant job, {mut_job_median / base_file_median:.1f}× the '
+         f'{base_file_median:.0f} ms median per passing baseline file ({mut_run:.0f} ms across {len(mutant_jobs)} mutant jobs).',
          ['Bail on the first failure (Stryker uses bail: 1): the mutant is already killed.',
           'Skip diff and stack formatting in mutant jobs (chai truncateThreshold, diff off).']),
         ('Oximut\'s own memory sampler',
@@ -634,8 +642,11 @@ def render_timeline(d):
         ('mutationExecution', f'{c["phases"]["mutationExecution"]:.0f}',
          f'{sum(j["end"] - j["start"] for j in mutants):.0f}', f'sum of {len(mutants)} mutant jobs'),
     ]
-    body = ['<p><b>One diagnostic run</b> from the controller-job capture, on a runner host that ran every tool '
-            'about 40% faster than the scored campaign. Absolute milliseconds are valid only within this run; use '
+    # Stryker's code is identical in both runs, so its wall ratio indicates the host speed difference.
+    host = c['tools']['stryker']['wall_seconds'] / d['benchmark']['medians']['after/stryker']['wall_seconds']
+    body = ['<p><b>One diagnostic run</b> from the controller-job capture. Its runner host took '
+            f'{100 * host:.0f}% of the scored campaign\'s Stryker wall time (same Stryker code), so it was a faster '
+            'machine. Absolute milliseconds are valid only within this run; use '
             'the shares to compare with other evidence. Each row is one fresh Vitest fork, coloured by lifecycle '
             'step; hover a segment for its duration. The shaded band is controller start-up, up to the initialize '
             'response.</p>',

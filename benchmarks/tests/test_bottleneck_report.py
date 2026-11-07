@@ -1,6 +1,7 @@
 """The committed bottleneck report must be reproducible, data-driven and validated."""
 import copy
 import json
+import os
 import re
 import subprocess
 import sys
@@ -47,6 +48,15 @@ class BottleneckReport(unittest.TestCase):
             for name in PAGES:
                 self.assertEqual((Path(directory) / name).read_text(encoding='utf-8'),
                                  (REPORT / name).read_text(encoding='utf-8'), name)
+
+    def test_atomic_writes_keep_the_umask_mode(self):
+        with tempfile.TemporaryDirectory() as directory:
+            target = Path(directory) / 'page.html'
+            bottleneck_report.write_atomic(target, 'x')
+            mask = os.umask(0)
+            os.umask(mask)
+            self.assertEqual(target.stat().st_mode & 0o777, 0o666 & ~mask)
+            self.assertEqual(target.read_text(encoding='utf-8'), 'x')
 
     def test_pages_follow_the_supplied_data(self):
         data = json.loads((REPORT / 'data.json').read_text(encoding='utf-8'))
