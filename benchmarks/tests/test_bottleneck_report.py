@@ -87,7 +87,7 @@ class BottleneckReport(unittest.TestCase):
                 render(path, directory)
                 page = (Path(directory) / 'timeline.html').read_text(encoding='utf-8')
                 self.assertIn(f'Stryker took {100 * ratio:.0f}% of the scored campaign', page)
-                self.assertNotRegex(page, r'(faster|slower|comparable) machine')
+                self.assertNotRegex(page, r'(?i)\b(faster|slower|comparable)\b')
 
     def test_every_chart_is_named_and_has_its_own_table(self):
         for name in PAGES:
