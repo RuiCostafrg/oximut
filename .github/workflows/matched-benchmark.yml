@@ -3,13 +3,6 @@ name: Matched Stryker benchmark
 on:
   workflow_dispatch:
   pull_request:
-    paths:
-      - 'benchmarks/targets.py'
-      - 'benchmarks/run.py'
-      - 'benchmarks/m6.py'
-      - 'benchmarks/config/m6-stryker.mjs'
-      - 'fixtures/matched-*/**'
-      - '.github/workflows/matched-benchmark.yml'
 
 permissions:
   contents: read
@@ -19,7 +12,25 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  changes:
+    # Required checks always report; see pr-changes.yml.
+    uses: ./.github/workflows/pr-changes.yml
+    permissions:
+      contents: read
+      pull-requests: read
+    with:
+      patterns: |
+        .github/workflows/pr-changes.yml
+        benchmarks/targets.py
+        benchmarks/run.py
+        benchmarks/m6.py
+        benchmarks/config/m6-stryker.mjs
+        fixtures/matched-*/**
+        .github/workflows/matched-benchmark.yml
+
   matched:
+    needs: changes
+    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.relevant == 'true') }}
     runs-on: ubuntu-24.04
     timeout-minutes: 90
     steps:

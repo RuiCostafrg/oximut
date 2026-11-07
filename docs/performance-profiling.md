@@ -61,6 +61,25 @@ identity tracking is sampled, not an exhaustive process audit. This changes no
 resource-budget sampling, test isolation, baseline, or mutation workload. Its
 performance effect requires a separate matched measurement.
 
+Each scheduler slot gives Node a private compile cache
+(`NODE_COMPILE_CACHE=<slot temporary directory>/node-compile-cache`), unless the
+caller already set one. The adapter, Vitest controller and every fresh test fork
+inherit it, so later forks reuse compiled Vitest runtime code instead of
+recompiling it. V8 validates cached code against source content and flags, so
+results cannot depend on stale entries. Vitest stops forks with SIGTERM after
+their teardown, which skips Node's exit-time flush. A fork-only preload
+(`compile-cache.cjs`, appended to each project's `execArgv`) therefore flushes
+when the worker receives Vitest's stop request. Other processes that inherit the
+preload run a different entrypoint and skip it. The default directory is
+removed with the slot, so nothing persists across runs. A caller-provided
+`NODE_COMPILE_CACHE` is left in place and remains the caller's to manage.
+`--no-cache` governs Oximut's persistent caches across runs. Like Vite's
+in-memory transform cache, this per-run code cache stays enabled unless the
+caller sets `NODE_DISABLE_COMPILE_CACHE=1`, which Node honours (the fork preload
+and its `execArgv` injection are then skipped as well); V8's validation
+means it cannot change outcomes. Test isolation is unaffected: every fork still starts fresh and
+evaluates its modules anew.
+
 Periodic accounting now discovers only the owned tree. The CLI and each slot
 are subreapers, so every owned process, including adopted orphans, is reachable
 through the per-thread `/proc/<pid>/task/<tid>/children` links. Periodic resource
@@ -82,8 +101,11 @@ Only memory-pressure admission waits take a broad sample, at most once per
 sampling interval. Before this change, every 10ms poll while all slots were busy
 (the whole mutation phase with one worker) forced a broad host scan. Every abort, termination and shutdown verification still performs a
 fresh broad discovery before signalling or concluding cleanup, so the
-fail-closed cleanup gates are unchanged. Identity and RSS reads for tree members
-remain fresh and strict.
+fail-closed cleanup gates are unchanged. Identity checks for tree members remain
+fresh and strict for every aggregate, slot and CLI-floor observation. Each
+verified PID's RSS is read once per sample (one `smaps_rollup` walk) and reused
+by the overlapping trees of that sample only; errors are never cached and every
+new sample reads afresh.
 
 If process discovery fails, the supervisor performs bounded best-effort cleanup
 of previously observed identities, including its directly spawned controller.
