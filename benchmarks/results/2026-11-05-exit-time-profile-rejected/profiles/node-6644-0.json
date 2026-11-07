@@ -1,0 +1,26 @@
+{
+  "pid": 6644,
+  "ppid": 6563,
+  "threadId": 0,
+  "argv": [
+    "/opt/hostedtoolcache/node/26.3.1/x64/bin/node",
+    "/home/runner/work/oximut/oximut/node_modules/vitest/dist/workers/forks.js"
+  ],
+  "execArgv": [
+    "--experimental-import-meta-resolve",
+    "--require",
+    "/home/runner/work/oximut/oximut/node_modules/vitest/suppress-warnings.cjs",
+    "--conditions",
+    "node",
+    "--conditions",
+    "development"
+  ],
+  "cwd": "/home/runner/work/_temp/native-diagnostic/capture/qualification/00-oximut/project",
+  "started": "2026-11-05T15:52:05.473Z",
+  "segmentCapture": null,
+  "selfCpuAtPreloadUs": {
+    "user": 36865,
+    "system": 12288
+  },
+  "startTime": "19170"
+}

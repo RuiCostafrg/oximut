@@ -78,6 +78,30 @@ in-memory transform cache, this per-run code cache stays enabled; V8's validatio
 means it cannot change outcomes. Test isolation is unaffected: every fork still starts fresh and
 evaluates its modules anew.
 
+Periodic accounting now discovers only the owned tree. The CLI and each slot
+are subreapers, so every owned process, including adopted orphans, is reachable
+through the per-thread `/proc/<pid>/task/<tid>/children` links. Periodic resource
+samples and the slots' 50ms ownership snapshots follow those links instead of
+reading every host process. A walk fails when it observes the tree changing:
+a visited or listed process exited (including zombies, whose children have
+already moved to a subreaper), one of its threads vanished mid-read (its
+children moved to a sibling thread), or a listed PID's parent is outside the tree
+(PID reuse or reparenting). That sample then uses broad discovery, as do kernels
+without the links. Forced samples (job completion, admission pressure and final
+accounting) always use broad discovery. The kernel's `children` lists are only
+exact for frozen processes, so a periodic sample can still miss a process that
+forks or exits concurrently. That miss lasts at most one interval, the same
+order as the sampling interval itself. `resources.treeDiscoveries` and
+`resources.broadDiscoveries` count each kind. The CLI no longer enumerates
+`/proc` on every 10ms dispatch poll: slot ownership reuses the sampler's
+discovery. Waiting for a busy slot is ordinary waiting and forces no samples.
+Only memory-pressure admission waits take a broad sample, at most once per
+sampling interval. Before this change, every 10ms poll while all slots were busy
+(the whole mutation phase with one worker) forced a broad host scan. Every abort, termination and shutdown verification still performs a
+fresh broad discovery before signalling or concluding cleanup, so the
+fail-closed cleanup gates are unchanged. Identity and RSS reads for tree members
+remain fresh and strict.
+
 If process discovery fails, the supervisor performs bounded best-effort cleanup
 of previously observed identities, including its directly spawned controller.
 Each signal requires an independent current start-time check; missing, reused,
@@ -92,6 +116,93 @@ PID from the first scan is absent. An existing or unverifiable PID still require
 controller recycling and verified cleanup. No waiting grace period is added.
 
 ## Opt-in native CPU capture
+
+### Qualified job observations with partial CPU sampling (current default)
+
+The performance workstream's [evidence and ranked experiments](edgy-performance.md)
+start with a narrower `--controller-jobs` capture. It runs the unchanged exact
+three-tool qualification, but preloads instrumentation only in `m2-worker.ts`.
+It records bounded fork IPC boundaries for every job and a timeline from request
+observation to the local `process.send` return. This boundary is recorded only
+after a normal return; it proves neither recipient delivery nor callback
+completion. The boolean return is retained unchanged, including `false` for
+backpressure, and exceptions/callback semantics are preserved. One inspector CPU
+profile samples a shorter interval
+within the first mutant request per controller, starting during profiler
+activation and stopping after the send returns. Some request-handling prefix is not
+sampled; inspector startup/stop overhead may also appear in the profile. No product
+adapter code changes. Incoming/outgoing worker control messages separate fork
+creation, bootstrap, collection, test completion, shutdown and exit. Only the
+first occurrence of each known RPC method is timestamped per fork; exit records
+retain its total count. No user request/test/source payloads are logged.
+
+Controller request/reply records also retain `process.cpuUsage()` and
+`process.memoryUsage()` (RSS, V8 heap and external allocations). These counters
+describe the controller alone. They neither measure fork CPU nor partition
+aggregate peak RSS. Profiles contain idle/native frames, so profile duration is
+not CPU consumption. Synchronous diagnostic writes and inspector work perturb
+scheduling and resource measurements; this run publishes no ratios or targets.
+`captures.observed[].first_mutant_window` reports `requestToSendReturnMs`,
+`requestToProfileAckMs` and `profileAckToSendReturnMs` separately.
+The activation latency is not an exact unsampled duration:
+some inspector setup is itself sampled. Complete timeline validation does not
+imply complete request CPU sampling.
+Any missing profile, reply, observed fork exit, worker boundary or controller
+lifecycle invalidates this narrow capture. Its success makes no claim of full
+process-tree profiling; startup-only captures retain their separate incomplete
+lifecycle gate. Neither mode changes workload correctness/cleanup gates.
+Controller-start must be the first event and controller-exit the last, enclosing
+every request, reply and observed worker exit. Malformed timestamps invalidate
+capture rather than preventing diagnostic-summary publication.
+
+Controller commands require unique safe-integer IDs and alternating request/reply
+events, so reordered or replayed exchanges cannot satisfy completeness. Their
+mutant and baseline counts must also match the independent qualification report:
+every executed mutant, one original baseline, every disabled-validation run and
+any separate coverage-only run,
+plus one initialize/close pair per controller. Losing an entire exchange cannot
+pass by leaving a shorter, self-consistent trace. Each mutant request also records
+its bounded 64-character mutant digest, with no source/test payload. The captured
+IDs must exactly match the qualification report's unique executed-mutant IDs;
+equal totals cannot hide a repeated mutant replacing another. Captures lacking
+this identity evidence fail current validation, even if an older count-only gate
+passed. Every run also records bounded `jobId` and `runId` identities. The original
+baseline must match the report's `baseline` job; disabled-validation jobs must
+match the CLI's single `instrumented-baseline` or indexed
+`instrumented-baseline-N` names. Complete qualified coverage with no group record
+marked `coverage: true` proves a separate coverage-only baseline, which precedes
+the group runs and is absent from `disabledValidationRuns`; count it when deriving
+these job IDs.
+Every job belongs to the qualification report's run ID, and mutant job IDs must
+match their mutation IDs. Repeated baselines or jobs from another run therefore
+cannot satisfy reconciliation. Captures without these identities fail current
+validation. Format-version-1 timelines
+require contiguous event sequence numbers and a clear sticky write-failure flag;
+any append failure leaves a failure marker and invalidates capture. Historical
+unversioned traces have pre-send timestamps and no append-integrity attestation;
+their original summaries are retained, but they fail this stronger capture gate.
+Worker exit counters must report exactly one start, completion, stop and collection
+response per observed fork; high-volume RPCs remain bounded first-event records.
+Controller exit must be code 0. Workers must exit with code 0 and no signal, or
+with Vitest's normal SIGTERM after the complete `stopped` acknowledgment.
+Nonzero codes, unexpected signals and missing exit-status fields invalidate
+capture. The SIGTERM case is verified in the retained native traces; requiring
+code 0 for every fork would reject normal isolated Vitest shutdown.
+The local inspector commands must complete synchronously before application
+dispatch continues. An asynchronous inspector callback invalidates capture and
+disconnects the profiler; no asynchronous waiting or redispatch of application
+messages is introduced. Synchronous inspector overhead still perturbs timing as
+described above. A profile is stopped only after startup has completed.
+
+Use the `native-profile` PR label for this mode, or dispatch with
+`capture_mode: controller-jobs`. Dispatch with `capture_mode: segments` to retain
+the startup experiment described below. Locally, select `--controller-jobs` in
+place of `--segments`; the modes are mutually exclusive to avoid inspector
+sessions stopping each other's samples. Diagnostic fixture tests live beside
+the preload and run with `python3 -m unittest discover -s benchmarks/profiling
+-p 'test_*.py' -v` before the workflow builds or captures anything.
+
+### Startup and exit-time captures
 
 `Native diagnostic CPU profiles` is a separate Ubuntu 24.04 workflow. After this
 change is in a PR, add the **`native-profile`** label to that PR (every push while it is
@@ -169,10 +280,19 @@ build provenance as the workflow does, leave `NODE_OPTIONS` unset, and use the
 pinned dependencies. This is a profiling command, not a timing benchmark.
 
 Minimum usable role evidence requires finalized Node profiles or partial segments
-for each of ordinary Vitest,
-Oximut and Stryker, and a linked Oximut adapter → Python supervisor → Node
-controller → test-fork chain, matched using process identities, argv and project
-cwd. This is minimum role evidence, not proof of complete process coverage.
+for each of ordinary Vitest, Oximut and Stryker, plus a linked Oximut process
+chain, matched using process identities, argv and project
+cwd. The native chain, the default for the reference adapter, is the Rust worker
+slot → Node controller (`m2-worker.ts`) → test forks. The Rust worker is not
+captured, so the controller's parent must not be any captured identity; a
+controller under a captured parent does not count. A capture that contains the
+adapter's `m2-runner.mjs` is the legacy custom-adapter relay: adapter → Python
+supervisor → Node controller → test forks, with no Python-free fallback. A
+capture is classified as native only when the Oximut report contains the
+`native coordinator: ` diagnostic and no relay runner was captured. Otherwise it
+is unclassifiable and must meet the strict legacy requirements, so an uncaptured
+relay can never pass as native. This is
+minimum role evidence, not proof of complete process coverage.
 Unmatched Node/Python profiles are listed as orphans and fail capture validation;
 all raw files remain available. Node exit-record writes are atomic and guarded so
 a profiler write failure cannot replace the workload's original exit status.
@@ -204,7 +324,7 @@ incomplete diagnostic evidence, not a product correctness failure or a valid
 performance comparison. Raw evidence is archived under
 [`2026-10-28-native-profile-incomplete`](../benchmarks/results/2026-10-28-native-profile-incomplete/README.md).
 
-The native workflow now selects explicit `--segments` mode to collect useful
+The startup capture selects explicit `--segments` mode to collect useful
 partial stacks from these workers. This mode uses an inspector session per isolate
 **instead of** the built-in exit-time profiler. It starts once during preload and
 requests **one** unreferenced checkpoint after 50ms: stop → disconnect → atomic

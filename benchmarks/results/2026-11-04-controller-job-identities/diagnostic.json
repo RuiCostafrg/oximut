@@ -1,0 +1,182 @@
+{
+  "captures": {
+    "errors": [],
+    "observed": [
+      {
+        "baseline_count": 2,
+        "first_mutant_window": {
+          "profileAckToSendReturnMs": 344.88551400000006,
+          "requestToProfileAckMs": 80.51834599999984,
+          "requestToSendReturnMs": 425.4038599999999
+        },
+        "jobs": [
+          {
+            "job_id": "baseline",
+            "kind": "baseline",
+            "mutant_id": null,
+            "run_id": "6374-1793833690414327265"
+          },
+          {
+            "job_id": "instrumented-baseline",
+            "kind": "baseline",
+            "mutant_id": null,
+            "run_id": "6374-1793833690414327265"
+          },
+          {
+            "job_id": "c8fb72bec90d9a783caf7ef8479772865cadc5338cbace358a9a173db7fcf175",
+            "kind": "mutant",
+            "mutant_id": "c8fb72bec90d9a783caf7ef8479772865cadc5338cbace358a9a173db7fcf175",
+            "run_id": "6374-1793833690414327265"
+          },
+          {
+            "job_id": "9fd7cd8a8c7b265bb46410e0ca0429f59067d4a2e458cd743941c88ea05ee378",
+            "kind": "mutant",
+            "mutant_id": "9fd7cd8a8c7b265bb46410e0ca0429f59067d4a2e458cd743941c88ea05ee378",
+            "run_id": "6374-1793833690414327265"
+          },
+          {
+            "job_id": "82b44c30bb77459ea1aa962c8f328ae2ee1aedcdd0ef3982cef07e398229385e",
+            "kind": "mutant",
+            "mutant_id": "82b44c30bb77459ea1aa962c8f328ae2ee1aedcdd0ef3982cef07e398229385e",
+            "run_id": "6374-1793833690414327265"
+          },
+          {
+            "job_id": "c59a734f77d74a37da696a4904f169a3a119a78a22d2732ca87f3c08b0a3cebd",
+            "kind": "mutant",
+            "mutant_id": "c59a734f77d74a37da696a4904f169a3a119a78a22d2732ca87f3c08b0a3cebd",
+            "run_id": "6374-1793833690414327265"
+          },
+          {
+            "job_id": "d608232f1dad0bf6337abb58c011a8da27269951d412bc352dacf25828e209d3",
+            "kind": "mutant",
+            "mutant_id": "d608232f1dad0bf6337abb58c011a8da27269951d412bc352dacf25828e209d3",
+            "run_id": "6374-1793833690414327265"
+          },
+          {
+            "job_id": "211c64945c6ed85c7fe4073b36288ffc39e3697f07c009e14edcf98b8d0f84b0",
+            "kind": "mutant",
+            "mutant_id": "211c64945c6ed85c7fe4073b36288ffc39e3697f07c009e14edcf98b8d0f84b0",
+            "run_id": "6374-1793833690414327265"
+          },
+          {
+            "job_id": "cf4748d0c363684160adae8ce709b2c871449b782017d3e7ad704525d7b51154",
+            "kind": "mutant",
+            "mutant_id": "cf4748d0c363684160adae8ce709b2c871449b782017d3e7ad704525d7b51154",
+            "run_id": "6374-1793833690414327265"
+          },
+          {
+            "job_id": "b115f5372f2edf03e51a8f712460addaed3513a89703cc1fe8500eee367aba65",
+            "kind": "mutant",
+            "mutant_id": "b115f5372f2edf03e51a8f712460addaed3513a89703cc1fe8500eee367aba65",
+            "run_id": "6374-1793833690414327265"
+          },
+          {
+            "job_id": "c88a30c6f5f3ccc6db4c6c87bf61459c5b328fc5b7df59aa03dde1ca099aa3db",
+            "kind": "mutant",
+            "mutant_id": "c88a30c6f5f3ccc6db4c6c87bf61459c5b328fc5b7df59aa03dde1ca099aa3db",
+            "run_id": "6374-1793833690414327265"
+          },
+          {
+            "job_id": "8a49a888d6e614ce683525b9bd586b4271285324ddac088829d4a8beec90c2a5",
+            "kind": "mutant",
+            "mutant_id": "8a49a888d6e614ce683525b9bd586b4271285324ddac088829d4a8beec90c2a5",
+            "run_id": "6374-1793833690414327265"
+          }
+        ],
+        "mutant_count": 10,
+        "mutant_ids": [
+          "c8fb72bec90d9a783caf7ef8479772865cadc5338cbace358a9a173db7fcf175",
+          "9fd7cd8a8c7b265bb46410e0ca0429f59067d4a2e458cd743941c88ea05ee378",
+          "82b44c30bb77459ea1aa962c8f328ae2ee1aedcdd0ef3982cef07e398229385e",
+          "c59a734f77d74a37da696a4904f169a3a119a78a22d2732ca87f3c08b0a3cebd",
+          "d608232f1dad0bf6337abb58c011a8da27269951d412bc352dacf25828e209d3",
+          "211c64945c6ed85c7fe4073b36288ffc39e3697f07c009e14edcf98b8d0f84b0",
+          "cf4748d0c363684160adae8ce709b2c871449b782017d3e7ad704525d7b51154",
+          "b115f5372f2edf03e51a8f712460addaed3513a89703cc1fe8500eee367aba65",
+          "c88a30c6f5f3ccc6db4c6c87bf61459c5b328fc5b7df59aa03dde1ca099aa3db",
+          "8a49a888d6e614ce683525b9bd586b4271285324ddac088829d4a8beec90c2a5"
+        ],
+        "observed_forks": 18,
+        "request_count": 14,
+        "timeline": "controller-6376.jsonl"
+      }
+    ],
+    "orphan_profiles": [],
+    "scope": "Request observation to local send return (not recipient delivery/callback completion); partial controller CPU sampling. Sampling starts during profiler activation, omitting some request prefix, and may include inspector overhead. Not full-request or process-tree CPU profiling.",
+    "workload_reconciled": true
+  },
+  "command": [
+    "/opt/hostedtoolcache/Python/3.13.17/x64/bin/python3",
+    "/home/runner/work/oximut/oximut/benchmarks/real_project.py",
+    "--binary",
+    "/home/runner/work/_temp/native-diagnostic/oximut",
+    "--adapter",
+    "/home/runner/work/oximut/oximut/packages/vitest-adapter/m2-runner.mjs",
+    "--adapter-source-dir",
+    "/home/runner/work/oximut/oximut/packages/vitest-adapter",
+    "--defer-ratios",
+    "--tools",
+    "vitest",
+    "oximut",
+    "stryker",
+    "--warmups",
+    "0",
+    "--repetitions",
+    "1",
+    "--timeout",
+    "600",
+    "--output",
+    "/home/runner/work/_temp/native-diagnostic/capture/qualification"
+  ],
+  "diagnostic_only": true,
+  "execution_inputs": {
+    "adapter_override": "/home/runner/work/oximut/oximut/packages/vitest-adapter/m2-runner.mjs",
+    "adapter_pairing": "explicit override",
+    "adapter_source_dir": "/home/runner/work/oximut/oximut/packages/vitest-adapter",
+    "adapter_source_sha256": {
+      "biome.json": "8c92ece24bbe3dd56abdf7d1ba097447556090156673af0f7de8366b93e9edd4",
+      "experiment.mjs": "8aef7cae2ef734311a1998ec6928f389a8887b59e32979c27c0ebe87d77468fe",
+      "index.mjs": "2e973f5cfc91fddb39b2dadac8a0b65d1a23bbf5912d028eb8b2e12e84e40031",
+      "m1-runner.mjs": "7971936fa754d55ce2d0e364469d3973dc1e5b615ca71692fe623c66c4ab9fb9",
+      "m1-worker.ts": "0f23740ee45d047cc1d77900347c922873c03b4acb57bdce60564f42865b5ee4",
+      "m2-runner.mjs": "c513d90785daeb737df03b64d74b80fb18be4baa09a6ff498cde8b009430ad9b",
+      "m2-worker.ts": "10f21727c81067b3136084b6551c62b45bf0fd52ea79f28db61de43eaa4c948a",
+      "m3-selection.ts": "e3df6ad0ef9050393c20fd4c5f7b1d3f3a931e87ffeb5efb722dfe6c55e1f567",
+      "m3-setup.ts": "23e46f230e438e9c080d73173760b1340c02506ebe03a7d7ed725d1dc1dd8f7f",
+      "package.json": "5cd6bd7d4af022c372c0d305b2a6d1826818c35929e2984b2fee526168552056",
+      "protocol.mjs": "c54e18bc60aea53fa245d76d94b5e54b3980583a42b12559f0e84013564fca06",
+      "protocol.ts": "add184ef5a38ad935918c329207e08aaa74373c8770305a6a2b622666ee10336",
+      "supervisor.py": "0cb9de6e2aa1084a987e62d51725ad810dd995524948f886aacab6a394e4c1cd",
+      "test/contract.test.mjs": "8bc30b038eb2631f1f8817032ff20021e08849c6b92e45a241f5c21b3036ec22",
+      "test/descendants.test.mjs": "528a74c9e29128a1221bd15b9f41148aeea9dcc40e5e63d03cff1b51d66ff789",
+      "test/lifecycle.test.mjs": "7ec6fe62792f4564b8af74d331297317bce8f64abf002456738a3fcd5b9c7d07",
+      "test/m1.test.mjs": "b8b81a52f22532f5fd39cadf2aa13e2b5d8df9707ffee52f633eb9e665be69cb",
+      "test/m2.test.mjs": "f2335bdd5420179ddd20eacb9310ab12b0848219370a78a9b56b857a14731b57",
+      "test/m3.test.mjs": "dc08829807dcfcdad5e64001fdf3f6893833c6fa86c5a938a1f244a3a8f898fa",
+      "test/protocol-types.ts": "9905afca7fb4274a0dcc5350fa8601e4e8dd76b963e6ccc9f6f6da7692830265",
+      "test/protocol.test.mjs": "e734cfd83f6047b77f93acf07daf31d4f844a24e556b968de4e4fc95d75a64a8",
+      "tsconfig.json": "6d53a48c0a6f2181c3a65c999e9288aa74ce9470c732ea86b157ae584cf91b77",
+      "worker.mjs": "26eee9f48e37250c52a6662fc0efdc30f9678cf7541f55c5b89d68dd97d79281"
+    },
+    "binary": "/home/runner/work/_temp/native-diagnostic/oximut",
+    "binary_sha256": "5dedde03c10d6d6e2cfafea52f2e501cb90744feabf14af27c53731bc91787f2",
+    "oximut_args": []
+  },
+  "failure": null,
+  "helper_sha256": {
+    "benchmarks/profile_native.py": "1d690d19fd825b8f4437b25dacfcf1e7afd64c8002880c92525de019ee42f44f",
+    "benchmarks/profiling/controller-jobs.cjs": "41d7dc2307aaad6f562cc12d643b140321386d0b5c0b99a834a8550ba948a8ff",
+    "benchmarks/profiling/node-identity.cjs": "2046d70bac7db57bc53f7a31f43a63c2a36190c570e23662ac1183a5371a600f",
+    "benchmarks/profiling/node-segments.cjs": "ad5ca48917af6d77e06c14c07f117f104d5f5199f0776b1c7ea530c25764fa83",
+    "benchmarks/profiling/python-shim.py": "6c54882a40842cc233713a84cdf905cea7e46c553914e4459be53d05e140e806",
+    "benchmarks/profiling/test_controller_profile.py": "837589f0c53568652011e77103a2964923d30ee846346f1bc763cf5083ce577b"
+  },
+  "limits": "Node sampling and Python supervisor self CPU only; no complete process-tree CPU partition. Rust resource sampling remains unattributed. External benchmark sampler CPU is outside wait4 product-tree CPU; it perturbs wall time.",
+  "node_capture_mode": "controller-jobs",
+  "node_options": "--require=\"/home/runner/work/oximut/oximut/benchmarks/profiling/controller-jobs.cjs\"",
+  "passed": true,
+  "profiler_overhead": true,
+  "qualification_errors": [],
+  "scope": "Unchanged colord: 41 sources, 102 tests, five mutation sources, ten arithmetic edits. One capture, no warmup campaign.",
+  "source_commit": "cccafbd502aa533b4b66627bf8bff0a356837797"
+}

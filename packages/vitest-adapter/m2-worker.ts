@@ -4,7 +4,7 @@ import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { normalizePath } from 'vite';
 import { createVitest, version, type Reporter } from 'vitest/node';
-import type { Request, Result } from './protocol.ts';
+import { validateRequest, type Request, type Result } from './protocol.ts';
 import { SelectionSupport } from './m3-selection.ts';
 
 const selectionSupport = new SelectionSupport();
@@ -13,6 +13,7 @@ const compileCacheFlush = fileURLToPath(new URL('./compile-cache.cjs', import.me
 let vitest: Awaited<ReturnType<typeof createVitest>> | undefined;
 let currentRun: Parameters<NonNullable<Reporter['onTestRunEnd']>> | undefined;
 let busy = false;
+let pool: 'forks' | 'threads' = 'forks';
 let mutation: Request['mutation'] = null;
 let probes: Request['collectCoverage'];
 let resident: Request['resident'];
@@ -46,10 +47,47 @@ function transformError(error: unknown): boolean {
     )
   );
 }
+/** Drain the pinned pool without closing Vite or losing controller transforms. */
+async function awaitWorkerTermination(context: NonNullable<typeof vitest>, remainingMs: number) {
+  // Vitest 4.1.12 createPool() hides its Pool in a closure. Its wrapper.close()
+  // calls Pool.cancel(): it drains activeTasks, sharedRunners and exitPromises,
+  // then resets cancellation so the same pool can run again. runTests() alone
+  // does not await runner.stop(), including Worker.terminate() for threads.
+  // Guard this version-specific handle; never acknowledge a job without it.
+  const handle = (
+    context as unknown as { pool?: { name?: unknown; close?: unknown; runTests?: unknown } }
+  ).pool;
+  if (
+    handle?.name !== 'default' ||
+    typeof handle.close !== 'function' ||
+    typeof handle.runTests !== 'function'
+  )
+    throw new Error('Unsupported Vitest pool: missing default pool termination handle');
+  const timeoutMs = Math.min(2000, remainingMs);
+  if (timeoutMs <= 0) throw new Error('Job deadline exhausted before worker termination');
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    await Promise.race([
+      handle.close(),
+      new Promise<never>((_, reject) => {
+        timer = setTimeout(
+          () => reject(new Error('Timed out waiting for test-worker termination')),
+          timeoutMs,
+        );
+      }),
+    ]);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 async function command(name: string, args: Request): Promise<unknown> {
   if (name === 'initialize') {
     if (vitest) throw new Error('Already initialized');
     if (version !== '4.1.12') throw new Error(`Unsupported Vitest ${version}; expected 4.1.12`);
+    // The native coordinator sends requests directly; validate them here.
+    validateRequest(args);
+    pool = args.pool === 'threads' ? 'threads' : 'forks';
     mutation = args.mutation;
     probes = args.collectCoverage;
     resident = args.resident;
@@ -62,7 +100,7 @@ async function command(name: string, args: Request): Promise<unknown> {
         root: args.root,
         config: args.config,
         watch: false,
-        pool: 'forks',
+        pool: args.pool === 'threads' ? 'threads' : 'forks',
         maxWorkers: 1,
         maxConcurrency: 1,
         fileParallelism: false,
@@ -107,7 +145,7 @@ async function command(name: string, args: Request): Promise<unknown> {
       vitest.projects.length !== 1 ||
       vitest.projects.some(
         (project) =>
-          project.config.pool !== 'forks' ||
+          project.config.pool !== pool ||
           project.config.isolate !== true ||
           project.config.maxWorkers !== 1 ||
           project.config.maxConcurrency !== 1 ||
@@ -116,18 +154,18 @@ async function command(name: string, args: Request): Promise<unknown> {
       )
     )
       throw new Error(
-        'Unsupported resource configuration: one Node project, one fork, sequential files and tests, and isolation are required',
+        'Unsupported resource configuration: one Node project, one requested worker, sequential files and tests, and isolation are required',
       );
     if (
       vitest.projects.some(
         (project) =>
-          project.config.pool !== 'forks' ||
+          project.config.pool !== pool ||
           project.config.isolate !== true ||
           project.config.maxWorkers !== 1,
       )
     )
       throw new Error(
-        'Unsupported project isolation configuration: forks, isolate and one worker are required',
+        'Unsupported project isolation configuration: requested pool, isolate and one worker are required',
       );
     const multipleProjects = vitest.projects.length !== 1;
     const unsupported = vitest.projects.some(
@@ -142,6 +180,7 @@ async function command(name: string, args: Request): Promise<unknown> {
     return {
       versions: { node: process.version, vitest: version },
       controllerPid: process.pid,
+      pool: vitest.projects[0].config.pool,
       reuse: unsupported
         ? `fresh: custom plugins, global setup, projects, or isolation configuration (${vitest.projects.flatMap((project) => project.vite.config.plugins.map((plugin) => plugin.name)).join(',')})`
         : 'controller',
@@ -154,7 +193,11 @@ async function command(name: string, args: Request): Promise<unknown> {
     return { closed: true };
   }
   if (name !== 'run') throw new Error(`Unknown command: ${name}`);
+  const started = performance.now();
   const job = (args as unknown as { request: Request }).request;
+  validateRequest(job);
+  if ((job.pool === 'threads' ? 'threads' : 'forks') !== pool)
+    throw new Error('Pool cannot change after initialization');
   const next = job.mutation;
   const probesChanged = JSON.stringify(probes) !== JSON.stringify(job.collectCoverage);
   if (probesChanged) {
@@ -202,6 +245,7 @@ async function command(name: string, args: Request): Promise<unknown> {
         );
     }
     await vitest.runTestSpecifications(selected, true);
+    await awaitWorkerTermination(vitest, job.deadlineMs - (performance.now() - started));
   } finally {
     delete process.env.OXIMUT_ACTIVE_MUTANT;
   }

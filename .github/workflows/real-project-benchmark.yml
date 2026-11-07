@@ -2,6 +2,11 @@ name: Real project before-after benchmark
 
 on:
   workflow_dispatch:
+    inputs:
+      after_oximut_args:
+        type: string
+        default: ''
+        description: 'Extra Oximut args for the after candidate only, space-separated, e.g. --isolation fresh-thread'
   pull_request:
     paths:
       - 'benchmarks/compare_candidates.py'
@@ -35,14 +40,15 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 90
     env:
-      BEFORE_COMMIT: 1a1334bc4e1a88d6655ed1e713e0e2d329a5647f
+      # Main after #39; diagnostic clocks and peak attribution stay off here.
+      BEFORE_COMMIT: d7d99100c6119143fe2b1896863dcce24ee85351
       BUILD_FLAGS: --locked --release -p oximut-cli
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
           persist-credentials: false
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version-file: .node-version
           cache: npm
@@ -100,8 +106,14 @@ jobs:
           (binaries / 'build-metadata.json').write_text(json.dumps(record, indent=2) + '\n')
           PY
       - name: Serial real project comparison, one warmup and five measured rounds
+        shell: bash
+        env:
+          AFTER_OXIMUT_ARGS: ${{ inputs.after_oximut_args || '' }}
         run: |
-          python3 benchmarks/compare_candidates.py \
+          read -r -a words <<< "$AFTER_OXIMUT_ARGS"
+          extra_args=()
+          for word in "${words[@]}"; do extra_args+=("--after-oximut-arg=$word"); done
+          python3 benchmarks/compare_candidates.py "${extra_args[@]}" \
             --before-binary "$BINARY_DIR/before-oximut" \
             --before-adapter-dir "$BEFORE_WORKTREE/packages/vitest-adapter" \
             --before-commit "$BEFORE_COMMIT" \

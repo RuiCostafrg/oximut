@@ -283,7 +283,9 @@ def subcommand(args, directory, warmup, variant, tools):
             '--adapter', str(source / 'm2-runner.mjs'), '--adapter-source-dir', str(source),
             '--defer-ratios', '--tools', *tools, '--warmups', '1' if warmup else '0',
             '--repetitions', '0' if warmup else '1', '--timeout', str(args.timeout),
-            '--output', str(directory)]
+            '--output', str(directory)] + [
+                f'--oximut-arg={arg}' for arg in
+                (getattr(args, 'after_oximut_arg', []) if variant == 'after' else [])]
 
 
 def stop_on_sigterm(signum, _frame):
@@ -294,6 +296,7 @@ def stop_on_sigterm(signum, _frame):
 def main(argv=None):
     signal.signal(signal.SIGTERM, stop_on_sigterm)
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--after-oximut-arg', action='append', default=[])
     parser.add_argument('--output', type=Path, required=True)
     for variant in VARIANTS:
         parser.add_argument(f'--{variant}-binary', type=Path, required=True)
@@ -309,6 +312,8 @@ def main(argv=None):
     parser.add_argument('--require-build-integrity', action='store_true',
                         help='Pinned CI comparison: isolated builds, distinct binaries and complete after phase evidence')
     args = parser.parse_args(argv)
+    if (error := workload.mode_args_error(args.after_oximut_arg)) is not None:
+        parser.error(f'--after-oximut-arg: {error}')
     if not math.isfinite(args.timeout) or args.timeout <= 0:
         parser.error('--timeout must be positive and finite')
     if args.warmups < 1 or args.repetitions < 5:
@@ -325,7 +330,8 @@ def main(argv=None):
         setattr(args, f'{variant}_binary', binary)
         setattr(args, f'{variant}_adapter_dir', adapter)
         provenance[variant] = workload.execution_inputs(SimpleNamespace(
-            binary=binary, adapter=adapter / 'm2-runner.mjs', adapter_source_dir=adapter))
+            binary=binary, adapter=adapter / 'm2-runner.mjs', adapter_source_dir=adapter,
+            oximut_arg=args.after_oximut_arg if variant == 'after' else []))
     output = args.output.resolve()
     output.mkdir(parents=True, exist_ok=False)
     build_metadata, build_metadata_error = None, None
@@ -335,7 +341,7 @@ def main(argv=None):
         except (OSError, ValueError) as error:
             build_metadata_error = f'cannot read supplied build metadata: {error}'
     metadata = workload.measurement.metadata()
-    metadata.update(before_commit=args.before_commit, after_commit=args.after_commit,
+    metadata.update(after_oximut_args=args.after_oximut_arg, before_commit=args.before_commit, after_commit=args.after_commit,
                     build_flags=args.build_flags, runtime_provenance=provenance,
                     build_metadata=build_metadata, build_metadata_error=build_metadata_error,
                     build_metadata_path=str(args.build_metadata) if args.build_metadata else None,
@@ -358,9 +364,10 @@ def main(argv=None):
     if preflight:
         (output / 'measurements.jsonl').touch()
         m6.write_json(output / 'attempts.json', [])
-        m6.write_json(output / 'summary.json', evaluate([], args.warmups, args.repetitions,
-                                                      provenance, [build_metadata_error] if build_metadata_error else [],
-                                                      **integrity))
+        result = evaluate([], args.warmups, args.repetitions, provenance,
+                          [build_metadata_error] if build_metadata_error else [], **integrity)
+        result['after_oximut_args'] = args.after_oximut_arg
+        m6.write_json(output / 'summary.json', result)
         print('Build integrity preflight failed: ' + '; '.join(preflight), file=sys.stderr)
         return 1
     with (output / 'measurements.jsonl').open('w') as stream:
@@ -403,6 +410,7 @@ def main(argv=None):
             if attempt.get('timed_out'):
                 break
     result = evaluate(rows, args.warmups, args.repetitions, provenance, failures, **integrity)
+    result['after_oximut_args'] = args.after_oximut_arg
     m6.write_json(output / 'summary.json', result)
     print(json.dumps(result, indent=2))
     return 1 if not result['correctness_gate']['passed'] or (args.require_targets and not result['targets_met']) else 0

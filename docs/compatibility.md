@@ -9,7 +9,7 @@ not evidence that every project using it is supported.
 
 | Component | Required or pinned value | Evidence and boundary |
 | --- | --- | --- |
-| Host kernel/process model | Linux with readable `/proc`, `prctl(PR_SET_CHILD_SUBREAPER)`, process signaling, and `waitpid` | Required by the Python process supervisor and Rust resource/process-tree controller. Windows and macOS are unsupported. |
+| Host kernel/process model | Linux with readable `/proc`, `prctl(PR_SET_CHILD_SUBREAPER)`, process signaling, `waitpid`, and `pidfd_open` (Linux ≥ 5.3) plus `pidfd_send_signal` (Linux ≥ 5.1), neither blocked by seccomp | Required by the Rust resource/process-tree controller, the native coordinator's identity-verified signaling (persistent execution fails closed without pidfd), and the Python supervisor of the custom-adapter relay. Windows and macOS are unsupported. |
 | Demonstrated host | Android 12, aarch64, Ubuntu userspace under Termux PRoot; Linux kernel reported as `6.17.0-PRoot-Distro` in the M0 lifecycle record | M0/M2 and M6 fixtures and benchmarks ran here. This is one environment, not a claim for all Linux distributions, kernels, or containers. |
 | Node.js | `26.3.1`, Linux executable | Pinned in `package.json` and used in the recorded M0/M2 runs. Adapter code records `process.version` but does not reject other Node versions; other versions have no compatibility evidence. Android/Termux Node cannot replace the Linux binary when Linux native dependencies are loaded. |
 | npm | `11.16.0` | Pinned in `package.json`; use `npm ci` with the committed lockfile. |
@@ -43,6 +43,7 @@ Vitest lifecycle APIs. Resolved settings outside required isolation/resource
 constraints, including non-Node environments, fail explicitly. The runner sets
 sequential-file execution at the root and validates resolved project pool,
 isolation, worker count, concurrency, environment, and single-project scope.
+Persistent execution defaults to fresh forks per test file. `--isolation fresh-thread` opts into fresh Vitest worker threads; see [m2.md](m2.md) for its semantics. The real-project benchmark measures the default unless its dispatch input passes extra arguments.
 Persistent mode falls back to a fresh controller for project features such as
 custom Vite plugins, global setup, or symlinked project inputs. It still uses
 fresh test forks. A controller fallback does not bypass M5

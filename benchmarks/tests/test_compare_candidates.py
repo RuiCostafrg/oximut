@@ -116,6 +116,18 @@ class CampaignTests(unittest.TestCase):
         self.assertEqual(warmup[warmup.index('--adapter') + 1], '/adapter/m2-runner.mjs')
 
 
+    def test_after_only_arguments(self):
+        args = SimpleNamespace(before_binary=Path('/before'), after_binary=Path('/after'),
+                               before_adapter_dir=Path('/adapter-before'),
+                               after_adapter_dir=Path('/adapter-after'), timeout=600,
+                               after_oximut_arg=['--isolation', 'fresh-thread'])
+        before = campaign.subcommand(args, Path('/out'), False, 'before', ['oximut'])
+        after = campaign.subcommand(args, Path('/out'), False, 'after', ['oximut'])
+        self.assertFalse(any(arg.startswith('--oximut-arg') for arg in before))
+        self.assertEqual(after[-2:], ['--oximut-arg=--isolation', '--oximut-arg=fresh-thread'])
+        args.after_oximut_arg = []
+        self.assertEqual(campaign.subcommand(args, Path('/out'), False, 'after', ['oximut']), after[:-2])
+
     def strict_evidence(self):
         rows, provenance = self.evidence()
         manifest = json.loads((campaign.workload.CORPUS / 'workload.json').read_text())
@@ -271,6 +283,7 @@ class CampaignTests(unittest.TestCase):
                 result = campaign.main(['--before-binary', str(binary), '--after-binary', str(binary),
                                         '--before-adapter-dir', str(adapter), '--after-adapter-dir', str(adapter),
                                         '--after-commit', 'a' * 40, '--require-build-integrity',
+                                        '--after-oximut-arg=--isolation', '--after-oximut-arg=fresh-thread',
                                         '--output', str(output)])
             self.assertEqual(result, 1)
             command.assert_not_called()
@@ -278,6 +291,9 @@ class CampaignTests(unittest.TestCase):
             self.assertEqual((output / 'measurements.jsonl').read_text(), '')
             self.assertEqual(json.loads((output / 'attempts.json').read_text()), [])
             summary = json.loads((output / 'summary.json').read_text())
+            self.assertEqual(summary['after_oximut_args'], ['--isolation', 'fresh-thread'])
+            self.assertEqual(json.loads((output / 'metadata.json').read_text())['after_oximut_args'],
+                             ['--isolation', 'fresh-thread'])
             self.assertFalse(summary['correctness_gate']['passed'])
             self.assertEqual(summary['comparisons'], {})
             for label in ('missing', 'invalid-json'):

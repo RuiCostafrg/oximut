@@ -1,0 +1,29 @@
+{
+  "pid": 6508,
+  "ppid": 6469,
+  "threadId": 0,
+  "argv": [
+    "/opt/hostedtoolcache/node/26.3.1/x64/bin/node",
+    "/home/runner/work/oximut/oximut/node_modules/vitest/vitest.mjs",
+    "run",
+    "--config",
+    "vitest.config.ts",
+    "--reporter=json",
+    "--outputFile=/home/runner/work/_temp/native-diagnostic/capture/qualification/00-vitest/report.json"
+  ],
+  "execArgv": [],
+  "cwd": "/home/runner/work/_temp/native-diagnostic/capture/qualification/00-vitest/project",
+  "started": "2026-11-05T15:52:01.701Z",
+  "segmentCapture": null,
+  "selfCpuAtPreloadUs": {
+    "user": 24246,
+    "system": 12520
+  },
+  "startTime": "18794",
+  "exitCode": 0,
+  "selfCpuAtExitUs": {
+    "user": 702413,
+    "system": 143569
+  },
+  "exitObserved": "2026-11-05T15:52:02.994Z"
+}

@@ -1,0 +1,25 @@
+{
+  "pid": 6769,
+  "ppid": 6736,
+  "threadId": 5,
+  "argv": [
+    "/opt/hostedtoolcache/node/26.3.1/x64/bin/node"
+  ],
+  "execArgv": [
+    "--experimental-import-meta-resolve",
+    "--require",
+    "/home/runner/work/oximut/oximut/node_modules/vitest/suppress-warnings.cjs",
+    "--conditions",
+    "node",
+    "--conditions",
+    "development"
+  ],
+  "cwd": "/home/runner/work/_temp/native-diagnostic/capture/qualification/00-stryker/project/.stryker-tmp-real-project/sandbox-feu8Xo",
+  "started": "2026-11-05T15:52:11.441Z",
+  "segmentCapture": null,
+  "selfCpuAtPreloadUs": {
+    "user": 2025090,
+    "system": 208480
+  },
+  "startTime": "19608"
+}

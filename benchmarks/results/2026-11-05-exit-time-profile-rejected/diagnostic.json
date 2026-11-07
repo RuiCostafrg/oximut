@@ -1,0 +1,578 @@
+{
+  "captures": {
+    "completeness": "Unknown: processes killed before preload/dump and overridden environments may be absent; raw orphan profiles retained.",
+    "errors": [
+      "incomplete capture: node-6529-0.json",
+      "incomplete capture: node-6537-0.json",
+      "incomplete capture: node-6545-0.json",
+      "incomplete capture: node-6553-0.json",
+      "incomplete capture: node-6580-0.json",
+      "incomplete capture: node-6588-0.json",
+      "incomplete capture: node-6596-0.json",
+      "incomplete capture: node-6604-0.json",
+      "incomplete capture: node-6612-0.json",
+      "incomplete capture: node-6620-0.json",
+      "incomplete capture: node-6628-0.json",
+      "incomplete capture: node-6636-0.json",
+      "incomplete capture: node-6644-0.json",
+      "incomplete capture: node-6652-0.json",
+      "incomplete capture: node-6660-0.json",
+      "incomplete capture: node-6668-0.json",
+      "incomplete capture: node-6676-0.json",
+      "incomplete capture: node-6684-0.json",
+      "incomplete capture: node-6692-0.json",
+      "incomplete capture: node-6700-0.json",
+      "incomplete capture: node-6708-0.json",
+      "incomplete capture: node-6716-0.json",
+      "incomplete capture: node-6753-0.json",
+      "incomplete capture: node-6769-0.json",
+      "incomplete capture: node-6769-1.json",
+      "incomplete capture: node-6769-10.json",
+      "incomplete capture: node-6769-11.json",
+      "incomplete capture: node-6769-12.json",
+      "incomplete capture: node-6769-13.json",
+      "incomplete capture: node-6769-14.json",
+      "incomplete capture: node-6769-2.json",
+      "incomplete capture: node-6769-3.json",
+      "incomplete capture: node-6769-4.json",
+      "incomplete capture: node-6769-5.json",
+      "incomplete capture: node-6769-6.json",
+      "incomplete capture: node-6769-7.json",
+      "incomplete capture: node-6769-8.json",
+      "incomplete capture: node-6769-9.json",
+      "missing finalized process-role capture: oximut_test_fork"
+    ],
+    "minimum_role_evidence": {
+      "oximut_controller": [
+        "node-6563-0.json"
+      ],
+      "oximut_node": [
+        "node-6563-0.json"
+      ],
+      "oximut_test_fork": [],
+      "stryker_node": [
+        "node-6736-0.json"
+      ],
+      "vitest_node": [
+        "node-6508-0.json"
+      ]
+    },
+    "observed": [
+      {
+        "capture_present_and_finalized": true,
+        "exit_observed": true,
+        "identity": "node-6471-0.json",
+        "partial_segment_count": 0,
+        "partial_segment_range": [],
+        "partial_segments_finalized": false,
+        "profiles": [
+          "CPU.20261105.155201.6471.0.001.cpuprofile"
+        ]
+      },
+      {
+        "capture_present_and_finalized": true,
+        "exit_observed": true,
+        "identity": "node-6494-0.json",
+        "partial_segment_count": 0,
+        "partial_segment_range": [],
+        "partial_segments_finalized": false,
+        "profiles": [
+          "CPU.20261105.155201.6494.0.001.cpuprofile"
+        ]
+      },
+      {
+        "capture_present_and_finalized": true,
+        "exit_observed": true,
+        "identity": "node-6508-0.json",
+        "partial_segment_count": 0,
+        "partial_segment_range": [],
+        "partial_segments_finalized": false,
+        "profiles": [
+          "CPU.20261105.155201.6508.0.001.cpuprofile"
+        ]
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-6529-0.json",
+        "partial_segment_count": 0,
+        "partial_segment_range": [],
+        "partial_segments_finalized": false,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-6537-0.json",
+        "partial_segment_count": 0,
+        "partial_segment_range": [],
+        "partial_segments_finalized": false,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-6545-0.json",
+        "partial_segment_count": 0,
+        "partial_segment_range": [],
+        "partial_segments_finalized": false,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-6553-0.json",
+        "partial_segment_count": 0,
+        "partial_segment_range": [],
+        "partial_segments_finalized": false,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": true,
+        "exit_observed": true,
+        "identity": "node-6563-0.json",
+        "partial_segment_count": 0,
+        "partial_segment_range": [],
+        "partial_segments_finalized": false,
+        "profiles": [
+          "CPU.20261105.155203.6563.0.001.cpuprofile"
+        ]
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-6580-0.json",
+        "partial_segment_count": 0,
+        "partial_segment_range": [],
+        "partial_segments_finalized": false,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-6588-0.json",
+        "partial_segment_count": 0,
+        "partial_segment_range": [],
+        "partial_segments_finalized": false,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-6596-0.json",
+        "partial_segment_count": 0,
+        "partial_segment_range": [],
+        "partial_segments_finalized": false,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-6604-0.json",
+        "partial_segment_count": 0,
+        "partial_segment_range": [],
+        "partial_segments_finalized": false,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-6612-0.json",
+        "partial_segment_count": 0,
+        "partial_segment_range": [],
+        "partial_segments_finalized": false,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-6620-0.json",
+        "partial_segment_count": 0,
+        "partial_segment_range": [],
+        "partial_segments_finalized": false,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-6628-0.json",
+        "partial_segment_count": 0,
+        "partial_segment_range": [],
+        "partial_segments_finalized": false,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-6636-0.json",
+        "partial_segment_count": 0,
+        "partial_segment_range": [],
+        "partial_segments_finalized": false,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-6644-0.json",
+        "partial_segment_count": 0,
+        "partial_segment_range": [],
+        "partial_segments_finalized": false,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-6652-0.json",
+        "partial_segment_count": 0,
+        "partial_segment_range": [],
+        "partial_segments_finalized": false,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-6660-0.json",
+        "partial_segment_count": 0,
+        "partial_segment_range": [],
+        "partial_segments_finalized": false,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-6668-0.json",
+        "partial_segment_count": 0,
+        "partial_segment_range": [],
+        "partial_segments_finalized": false,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-6676-0.json",
+        "partial_segment_count": 0,
+        "partial_segment_range": [],
+        "partial_segments_finalized": false,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-6684-0.json",
+        "partial_segment_count": 0,
+        "partial_segment_range": [],
+        "partial_segments_finalized": false,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-6692-0.json",
+        "partial_segment_count": 0,
+        "partial_segment_range": [],
+        "partial_segments_finalized": false,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-6700-0.json",
+        "partial_segment_count": 0,
+        "partial_segment_range": [],
+        "partial_segments_finalized": false,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-6708-0.json",
+        "partial_segment_count": 0,
+        "partial_segment_range": [],
+        "partial_segments_finalized": false,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-6716-0.json",
+        "partial_segment_count": 0,
+        "partial_segment_range": [],
+        "partial_segments_finalized": false,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": true,
+        "exit_observed": true,
+        "identity": "node-6724-0.json",
+        "partial_segment_count": 0,
+        "partial_segment_range": [],
+        "partial_segments_finalized": false,
+        "profiles": [
+          "CPU.20261105.155208.6724.0.001.cpuprofile"
+        ]
+      },
+      {
+        "capture_present_and_finalized": true,
+        "exit_observed": true,
+        "identity": "node-6736-0.json",
+        "partial_segment_count": 0,
+        "partial_segment_range": [],
+        "partial_segments_finalized": false,
+        "profiles": [
+          "CPU.20261105.155208.6736.0.001.cpuprofile"
+        ]
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-6753-0.json",
+        "partial_segment_count": 0,
+        "partial_segment_range": [],
+        "partial_segments_finalized": false,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-6769-0.json",
+        "partial_segment_count": 0,
+        "partial_segment_range": [],
+        "partial_segments_finalized": false,
+        "profiles": []
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-6769-1.json",
+        "partial_segment_count": 0,
+        "partial_segment_range": [],
+        "partial_segments_finalized": false,
+        "profiles": [
+          "CPU.20261105.155210.6769.1.002.cpuprofile"
+        ]
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-6769-10.json",
+        "partial_segment_count": 0,
+        "partial_segment_range": [],
+        "partial_segments_finalized": false,
+        "profiles": [
+          "CPU.20261105.155212.6769.10.011.cpuprofile"
+        ]
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-6769-11.json",
+        "partial_segment_count": 0,
+        "partial_segment_range": [],
+        "partial_segments_finalized": false,
+        "profiles": [
+          "CPU.20261105.155212.6769.11.012.cpuprofile"
+        ]
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-6769-12.json",
+        "partial_segment_count": 0,
+        "partial_segment_range": [],
+        "partial_segments_finalized": false,
+        "profiles": [
+          "CPU.20261105.155212.6769.12.013.cpuprofile"
+        ]
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-6769-13.json",
+        "partial_segment_count": 0,
+        "partial_segment_range": [],
+        "partial_segments_finalized": false,
+        "profiles": [
+          "CPU.20261105.155212.6769.13.014.cpuprofile"
+        ]
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-6769-14.json",
+        "partial_segment_count": 0,
+        "partial_segment_range": [],
+        "partial_segments_finalized": false,
+        "profiles": [
+          "CPU.20261105.155213.6769.14.015.cpuprofile"
+        ]
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-6769-2.json",
+        "partial_segment_count": 0,
+        "partial_segment_range": [],
+        "partial_segments_finalized": false,
+        "profiles": [
+          "CPU.20261105.155210.6769.2.003.cpuprofile"
+        ]
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-6769-3.json",
+        "partial_segment_count": 0,
+        "partial_segment_range": [],
+        "partial_segments_finalized": false,
+        "profiles": [
+          "CPU.20261105.155211.6769.3.004.cpuprofile"
+        ]
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-6769-4.json",
+        "partial_segment_count": 0,
+        "partial_segment_range": [],
+        "partial_segments_finalized": false,
+        "profiles": [
+          "CPU.20261105.155211.6769.4.005.cpuprofile"
+        ]
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-6769-5.json",
+        "partial_segment_count": 0,
+        "partial_segment_range": [],
+        "partial_segments_finalized": false,
+        "profiles": [
+          "CPU.20261105.155211.6769.5.006.cpuprofile"
+        ]
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-6769-6.json",
+        "partial_segment_count": 0,
+        "partial_segment_range": [],
+        "partial_segments_finalized": false,
+        "profiles": [
+          "CPU.20261105.155211.6769.6.007.cpuprofile"
+        ]
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-6769-7.json",
+        "partial_segment_count": 0,
+        "partial_segment_range": [],
+        "partial_segments_finalized": false,
+        "profiles": [
+          "CPU.20261105.155211.6769.7.008.cpuprofile"
+        ]
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-6769-8.json",
+        "partial_segment_count": 0,
+        "partial_segment_range": [],
+        "partial_segments_finalized": false,
+        "profiles": [
+          "CPU.20261105.155211.6769.8.009.cpuprofile"
+        ]
+      },
+      {
+        "capture_present_and_finalized": false,
+        "exit_observed": false,
+        "identity": "node-6769-9.json",
+        "partial_segment_count": 0,
+        "partial_segment_range": [],
+        "partial_segments_finalized": false,
+        "profiles": [
+          "CPU.20261105.155212.6769.9.010.cpuprofile"
+        ]
+      }
+    ],
+    "orphan_profiles": [],
+    "oximut_chain": "native",
+    "role_evidence_policy": "Finalized full profiles or explicitly partial segments. Missing lifecycle exits/full profiles still fail capture validation."
+  },
+  "command": [
+    "/opt/hostedtoolcache/Python/3.13.18/x64/bin/python3",
+    "/home/runner/work/oximut/oximut/benchmarks/real_project.py",
+    "--binary",
+    "/home/runner/work/_temp/native-diagnostic/oximut",
+    "--adapter",
+    "/home/runner/work/oximut/oximut/packages/vitest-adapter/m2-runner.mjs",
+    "--adapter-source-dir",
+    "/home/runner/work/oximut/oximut/packages/vitest-adapter",
+    "--defer-ratios",
+    "--tools",
+    "vitest",
+    "oximut",
+    "stryker",
+    "--warmups",
+    "0",
+    "--repetitions",
+    "1",
+    "--timeout",
+    "600",
+    "--output",
+    "/home/runner/work/_temp/native-diagnostic/capture/qualification"
+  ],
+  "diagnostic_only": true,
+  "execution_inputs": {
+    "adapter_override": "/home/runner/work/oximut/oximut/packages/vitest-adapter/m2-runner.mjs",
+    "adapter_pairing": "explicit override",
+    "adapter_source_dir": "/home/runner/work/oximut/oximut/packages/vitest-adapter",
+    "adapter_source_sha256": {
+      "biome.json": "8c92ece24bbe3dd56abdf7d1ba097447556090156673af0f7de8366b93e9edd4",
+      "experiment.mjs": "8aef7cae2ef734311a1998ec6928f389a8887b59e32979c27c0ebe87d77468fe",
+      "index.mjs": "2e973f5cfc91fddb39b2dadac8a0b65d1a23bbf5912d028eb8b2e12e84e40031",
+      "m1-runner.mjs": "7971936fa754d55ce2d0e364469d3973dc1e5b615ca71692fe623c66c4ab9fb9",
+      "m1-worker.ts": "0f23740ee45d047cc1d77900347c922873c03b4acb57bdce60564f42865b5ee4",
+      "m2-runner.mjs": "c513d90785daeb737df03b64d74b80fb18be4baa09a6ff498cde8b009430ad9b",
+      "m2-worker.ts": "10f21727c81067b3136084b6551c62b45bf0fd52ea79f28db61de43eaa4c948a",
+      "m3-selection.ts": "e3df6ad0ef9050393c20fd4c5f7b1d3f3a931e87ffeb5efb722dfe6c55e1f567",
+      "m3-setup.ts": "23e46f230e438e9c080d73173760b1340c02506ebe03a7d7ed725d1dc1dd8f7f",
+      "package.json": "5cd6bd7d4af022c372c0d305b2a6d1826818c35929e2984b2fee526168552056",
+      "protocol.mjs": "c54e18bc60aea53fa245d76d94b5e54b3980583a42b12559f0e84013564fca06",
+      "protocol.ts": "add184ef5a38ad935918c329207e08aaa74373c8770305a6a2b622666ee10336",
+      "supervisor.py": "0cb9de6e2aa1084a987e62d51725ad810dd995524948f886aacab6a394e4c1cd",
+      "test/contract.test.mjs": "8bc30b038eb2631f1f8817032ff20021e08849c6b92e45a241f5c21b3036ec22",
+      "test/descendants.test.mjs": "528a74c9e29128a1221bd15b9f41148aeea9dcc40e5e63d03cff1b51d66ff789",
+      "test/lifecycle.test.mjs": "7ec6fe62792f4564b8af74d331297317bce8f64abf002456738a3fcd5b9c7d07",
+      "test/m1.test.mjs": "b8b81a52f22532f5fd39cadf2aa13e2b5d8df9707ffee52f633eb9e665be69cb",
+      "test/m2.test.mjs": "f2335bdd5420179ddd20eacb9310ab12b0848219370a78a9b56b857a14731b57",
+      "test/m3.test.mjs": "dc08829807dcfcdad5e64001fdf3f6893833c6fa86c5a938a1f244a3a8f898fa",
+      "test/protocol-types.ts": "9905afca7fb4274a0dcc5350fa8601e4e8dd76b963e6ccc9f6f6da7692830265",
+      "test/protocol.test.mjs": "e734cfd83f6047b77f93acf07daf31d4f844a24e556b968de4e4fc95d75a64a8",
+      "tsconfig.json": "6d53a48c0a6f2181c3a65c999e9288aa74ce9470c732ea86b157ae584cf91b77",
+      "worker.mjs": "26eee9f48e37250c52a6662fc0efdc30f9678cf7541f55c5b89d68dd97d79281"
+    },
+    "binary": "/home/runner/work/_temp/native-diagnostic/oximut",
+    "binary_sha256": "932d5960f69b66ea8e947472d5bb370d24707f111f8beea0eba2ab316f4fbb35",
+    "oximut_args": []
+  },
+  "failure": null,
+  "helper_sha256": {
+    "benchmarks/profile_native.py": "2799520d6f003ae50a50fd8d08d1ce93ab1bac0709194b9147707edf9f302a76",
+    "benchmarks/profiling/controller-jobs.cjs": "41d7dc2307aaad6f562cc12d643b140321386d0b5c0b99a834a8550ba948a8ff",
+    "benchmarks/profiling/node-identity.cjs": "2046d70bac7db57bc53f7a31f43a63c2a36190c570e23662ac1183a5371a600f",
+    "benchmarks/profiling/node-segments.cjs": "ad5ca48917af6d77e06c14c07f117f104d5f5199f0776b1c7ea530c25764fa83",
+    "benchmarks/profiling/python-shim.py": "6c54882a40842cc233713a84cdf905cea7e46c553914e4459be53d05e140e806",
+    "benchmarks/profiling/test_accounting_profile.py": "da07cda62a7180dcd68d26047ea5a58d7ad72588e440fff89a4f6d57ff388cd0",
+    "benchmarks/profiling/test_controller_profile.py": "fae12bb37bb17832ca2841d3be1bf8c7d4374a67615adf7d401ee565ad0e0e9a",
+    "benchmarks/profiling/test_performance_report.py": "fe9de35beed59d0e05ae51bdee5977edd76483269b5bd1531964d9af97afd0b3"
+  },
+  "limits": "Node sampling and Python supervisor self CPU only; no complete process-tree CPU partition. Rust resource sampling remains unattributed. External benchmark sampler CPU is outside wait4 product-tree CPU; it perturbs wall time.",
+  "node_capture_mode": "exit-time-cpu-prof",
+  "node_options": "--cpu-prof --cpu-prof-dir=\"/home/runner/work/_temp/native-diagnostic/capture/profiles\" --require=\"/home/runner/work/oximut/oximut/benchmarks/profiling/node-identity.cjs\"",
+  "passed": false,
+  "profiler_overhead": true,
+  "qualification_errors": [],
+  "scope": "Unchanged colord: 41 sources, 102 tests, five mutation sources, ten arithmetic edits. One capture, no warmup campaign.",
+  "source_commit": "9aeb4a0bf7763fe895bc2c9bb51946fb78f7ff17"
+}

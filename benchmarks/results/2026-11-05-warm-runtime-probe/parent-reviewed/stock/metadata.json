@@ -1,0 +1,18 @@
+{
+  "version": "4.1.12",
+  "node": "v26.3.1",
+  "platform": "linux",
+  "arch": "arm64",
+  "output": "/root/.t3/worktrees/oximut/t3-edgy-performance/benchmarks/experiments/warm-runtime-probe/evidence/parent-reviewed/stock",
+  "command": "/root/.local/share/oximut/toolchains/node-v26.3.1-linux-arm64/bin/node /root/.t3/worktrees/oximut/t3-edgy-performance/benchmarks/experiments/warm-runtime-probe/probe.mjs --output benchmarks/experiments/warm-runtime-probe/evidence/parent-reviewed/stock",
+  "sourceHashes": {
+    "experiments/warm-runtime-probe/probe.mjs": "9a487c9d933388d9b425fcacb26b2b6fd5e1e3c8216471bd321065df0d711c49",
+    "experiments/warm-runtime-probe/warm-pool.mjs": "38aac848f506e07c02174196d463c6c6653deced97fa1aa49290feae61477f3a",
+    "experiments/warm-runtime-probe/warm-vm-worker.mjs": "4e4f1a08d546864bd53c03ffd89338b726087bb506aaad6aff559dffe721e516"
+  },
+  "cleanup": {
+    "controllerProcessGroupGone": true,
+    "vitestClosed": true
+  },
+  "measurement": "structural only; wall/CPU/RSS/process-tree/phase ratios/CIs are unmeasured/N/A"
+}

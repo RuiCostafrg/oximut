@@ -84,7 +84,6 @@ impl Worker {
         Ok(())
     }
     fn ready(&mut self) -> Option<Result<Response, String>> {
-        self.snapshot();
         let (_, request, started) = self.busy.as_ref()?;
         let path = self
             .directory
@@ -161,8 +160,21 @@ impl<'a> Scheduler<'a> {
         })
     }
     fn sample(&mut self, force: bool) {
+        self.sample_with(|budget, pids| budget.sample(pids, force));
+    }
+    fn sample_with(&mut self, sample: impl FnOnce(&mut resources::Budget, &[u32])) {
         let pids: Vec<_> = self.slots.iter().flatten().map(|w| w.child.id()).collect();
-        self.budget.sample(&pids, force);
+        let before = self.budget.samples;
+        sample(&mut self.budget, &pids);
+        // Ownership snapshots reuse the sample's discovery. Aborts and
+        // shutdown still discover afresh before signalling anything.
+        if self.budget.samples != before
+            && let Some(table) = &self.budget.table
+        {
+            for worker in self.slots.iter_mut().flatten() {
+                worker.owned.extend(table.descendants(worker.child.id()));
+            }
+        }
     }
     fn close_slot(&mut self, slot: usize) {
         let Some(mut worker) = self.slots[slot].take() else {
@@ -335,7 +347,10 @@ impl<'a> Scheduler<'a> {
                 // including processes not visible yet at this sampling instant.
                 paused = false;
                 idle_pressure_since = None;
-            } else if capacity == 0 {
+            } else if capacity == 0 && self.budget.active < self.budget.effective_workers {
+                // Memory pressure: a slot is free but admission must wait.
+                // Busy slots alone are ordinary waiting (below), relying on
+                // the periodic sample and the forced sample at completion.
                 if !paused {
                     self.budget.admission_pauses += 1;
                     paused = true;
@@ -352,7 +367,7 @@ impl<'a> Scheduler<'a> {
                     self.close_slot(index);
                     self.budget.recycled_idle_workers += 1;
                 }
-                self.sample(true);
+                self.sample_with(|budget, pids| budget.sample_admission(pids));
                 if self.budget.active == 0 {
                     let since = idle_pressure_since.get_or_insert_with(Instant::now);
                     if since.elapsed() >= Duration::from_millis(250) {
@@ -423,7 +438,7 @@ impl<'a> Scheduler<'a> {
         self.cleanup_ok && self.budget.exhaustion.is_none()
     }
     pub fn report(&self) -> serde_json::Value {
-        serde_json::to_value(&self.budget).expect("resource report")
+        self.budget.report_snapshot()
     }
 }
 
@@ -446,24 +461,19 @@ pub fn worker_main() -> Result<(), String> {
         while !path.exists() {
             if directory.join("stop").exists() {
                 let mut diagnostics = vec![];
-                let cleanup = session.as_mut().map_or(Ok(()), Session::finish);
-                if let Some(session) = &session {
-                    let events = session.directory.path().join("events.jsonl");
-                    if let Ok(bytes) = fs::read(events) {
-                        let mut modes = BTreeSet::new();
-                        for line in bytes.split(|byte| *byte == b'\n') {
-                            if let Ok(event) = serde_json::from_slice::<serde_json::Value>(line)
-                                && let Some(mode) =
-                                    event.get("reuse").and_then(|value| value.as_str())
-                            {
-                                modes.insert(mode.to_owned());
-                            }
-                        }
-                        diagnostics.extend(
-                            modes
-                                .into_iter()
-                                .map(|mode| format!("adapter observed reuse boundary: {mode}")),
-                        );
+                let cleanup = session.as_mut().map_or(Ok(()), Backend::finish);
+                if let Some(backend) = &session {
+                    diagnostics.extend(
+                        backend
+                            .reuse_modes()
+                            .into_iter()
+                            .map(|mode| format!("adapter observed reuse boundary: {mode}")),
+                    );
+                    if let Backend::Native(coordinator) = backend {
+                        diagnostics.push(format!(
+                            "native coordinator: {} controllers for {} jobs",
+                            coordinator.controllers_started, coordinator.jobs_run
+                        ));
                     }
                 }
                 if let Err(error) = &cleanup {

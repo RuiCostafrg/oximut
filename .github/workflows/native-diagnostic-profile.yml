@@ -2,6 +2,15 @@ name: Native diagnostic CPU profiles
 
 on:
   workflow_dispatch:
+    inputs:
+      capture_mode:
+        description: Diagnostic scope (profiler overhead; never scored ratios)
+        type: choice
+        default: accounting
+        options:
+          - accounting
+          - controller-jobs
+          - segments
   pull_request:
     types: [opened, reopened, synchronize, labeled]
 
@@ -28,7 +37,7 @@ jobs:
           echo "CARGO_TARGET_DIR=$(mktemp -d "$RUNNER_TEMP/native-profile-target.XXXXXX")" >> "$GITHUB_ENV"
           mkdir -p "$RUNNER_TEMP/native-diagnostic"
           git archive HEAD | gzip > "$RUNNER_TEMP/native-diagnostic/source.tar.gz"
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version-file: .node-version
           cache: npm
@@ -44,6 +53,7 @@ jobs:
           set -euo pipefail
           npm ci --ignore-scripts 2>&1 | tee "$PROFILE_ROOT/dependencies.log"
           python3 -m unittest discover -s benchmarks/tests -v 2>&1 | tee "$PROFILE_ROOT/fixture-tests.log"
+          python3 -m unittest discover -s benchmarks/profiling -p 'test_*.py' -v 2>&1 | tee "$PROFILE_ROOT/controller-fixture-tests.log"
       - name: Build one candidate before profiling
         shell: bash
         run: |
@@ -72,10 +82,18 @@ jobs:
           PY
       - name: Capture unchanged workload with profiler overhead, no ratios or targets
         shell: bash
+        env:
+          CAPTURE_MODE: ${{ inputs.capture_mode || 'accounting' }}
         run: |
           set -euo pipefail
+          case "$CAPTURE_MODE" in
+            accounting) CAPTURE_ARG=--accounting ;;
+            controller-jobs) CAPTURE_ARG=--controller-jobs ;;
+            segments) CAPTURE_ARG=--segments ;;
+            *) echo 'Unsupported capture mode' >&2; exit 1 ;;
+          esac
           python3 benchmarks/profile_native.py --binary "$PROFILE_ROOT/oximut" \
-            --segments --output "$PROFILE_ROOT/capture" 2>&1 | tee "$PROFILE_ROOT/diagnostic.log"
+            "$CAPTURE_ARG" --output "$PROFILE_ROOT/capture" 2>&1 | tee "$PROFILE_ROOT/diagnostic.log"
       - name: Publish diagnostic status and remove dependency symlinks
         if: always()
         shell: bash
@@ -83,7 +101,7 @@ jobs:
           {
             echo '### Diagnostic CPU capture (profiler overhead; no performance score)'
             echo 'Qualification failures and incomplete profiles are retained. No automatic retries.'
-            echo 'Node sampling and Python self CPU do not partition whole product CPU; Rust resource sampler CPU remains unattributed.'
+            echo 'Accounting mode measures CLI sampling-thread self CPU only; Node/Python modes remain separate. No mode partitions whole product CPU.'
             if test -f "$RUNNER_TEMP/native-diagnostic/capture/diagnostic.json"; then
               echo '```json'
               python3 - <<'PY'
