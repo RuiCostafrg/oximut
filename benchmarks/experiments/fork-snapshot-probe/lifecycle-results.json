@@ -1,0 +1,2131 @@
+{
+  "node": "v26.3.1",
+  "vitest": "4.1.12",
+  "platform": "linux",
+  "arch": "arm64",
+  "ipc": {
+    "code": 0,
+    "signal": null,
+    "messages": [
+      {
+        "ready": true,
+        "send": "function",
+        "build": {
+          "date": 1794064949388,
+          "random": 0.6729020609872418,
+          "env": "BUILD",
+          "cwd": "/root/.t3/worktrees/oximut/t3-30a24c44",
+          "argv": [
+            "/root/.local/share/oximut/toolchains/node-v26.3.1-linux-arm64/bin/node",
+            "/root/.t3/worktrees/oximut/t3-30a24c44/benchmarks/experiments/fork-snapshot-probe/generated/deps.cjs"
+          ],
+          "symbols": [
+            "Symbol(Symbol.toStringTag)",
+            "Symbol(matchers-object)",
+            "Symbol($$jest-matchers-object)",
+            "Symbol(asymmetric-matchers-object)"
+          ]
+        }
+      },
+      {
+        "echo": "ping",
+        "connected": true
+      }
+    ],
+    "stderr": ""
+  },
+  "summaries": {
+    "stock": {
+      "bootstrapWallMs": 736.1010935000004,
+      "lifecycleWallMs": 1450.254713000002,
+      "bootstrapCpuMs": 404.8415,
+      "lifecycleCpuMs": 500.356
+    },
+    "snapshot": {
+      "bootstrapWallMs": 714.310884999999,
+      "lifecycleWallMs": 1400.112083000001,
+      "bootstrapCpuMs": 429.1685,
+      "lifecycleCpuMs": 525.1324999999999
+    }
+  },
+  "deltas": {
+    "bootstrapWallMs": -2.9602195530499364,
+    "lifecycleWallMs": -3.4575050541484464,
+    "bootstrapCpuMs": 6.009018344216188,
+    "lifecycleCpuMs": 4.951774336672288
+  },
+  "equalStateObservations": true,
+  "records": [
+    {
+      "rep": 0,
+      "mode": "stock",
+      "bootstrapWallMs": 686.1884889999999,
+      "lifecycleWallMs": 1152.264844,
+      "tests": [
+        {
+          "name": "fresh state",
+          "state": "passed"
+        }
+      ],
+      "state": {
+        "env": "RUNTIME",
+        "cwd": "/root/.t3/worktrees/oximut/t3-30a24c44",
+        "argv": [],
+        "cleanGlobal": true,
+        "chaiTruncate": 40,
+        "runnerTestType": "function",
+        "identity": null,
+        "build": null
+      },
+      "bootstrapCpu": {
+        "userCPUTime": 330380,
+        "systemCPUTime": 65945,
+        "maxRSS": 51400,
+        "sharedMemorySize": 0,
+        "unsharedDataSize": 0,
+        "unsharedStackSize": 0,
+        "minorPageFault": 6410,
+        "majorPageFault": 0,
+        "swappedOut": 0,
+        "fsRead": 0,
+        "fsWrite": 0,
+        "ipcSent": 0,
+        "ipcReceived": 0,
+        "signalsCount": 0,
+        "voluntaryContextSwitches": 3029,
+        "involuntaryContextSwitches": 573
+      },
+      "stoppedCpu": {
+        "userCPUTime": 408320,
+        "systemCPUTime": 86287,
+        "maxRSS": 52856,
+        "sharedMemorySize": 0,
+        "unsharedDataSize": 0,
+        "unsharedStackSize": 0,
+        "minorPageFault": 6749,
+        "majorPageFault": 0,
+        "swappedOut": 0,
+        "fsRead": 0,
+        "fsWrite": 0,
+        "ipcSent": 0,
+        "ipcReceived": 0,
+        "signalsCount": 0,
+        "voluntaryContextSwitches": 3379,
+        "involuntaryContextSwitches": 660
+      },
+      "exitCpu": {
+        "userCPUTime": 409025,
+        "systemCPUTime": 86287,
+        "maxRSS": 52856,
+        "sharedMemorySize": 0,
+        "unsharedDataSize": 0,
+        "unsharedStackSize": 0,
+        "minorPageFault": 6753,
+        "majorPageFault": 0,
+        "swappedOut": 0,
+        "fsRead": 0,
+        "fsWrite": 0,
+        "ipcSent": 0,
+        "ipcReceived": 0,
+        "signalsCount": 0,
+        "voluntaryContextSwitches": 3384,
+        "involuntaryContextSwitches": 662
+      }
+    },
+    {
+      "rep": 0,
+      "mode": "snapshot",
+      "bootstrapWallMs": 784.6961970000002,
+      "lifecycleWallMs": 1344.936979,
+      "tests": [
+        {
+          "name": "fresh state",
+          "state": "passed"
+        }
+      ],
+      "state": {
+        "env": "RUNTIME",
+        "cwd": "/root/.t3/worktrees/oximut/t3-30a24c44",
+        "argv": [],
+        "cleanGlobal": true,
+        "chaiTruncate": 40,
+        "runnerTestType": "function",
+        "identity": {
+          "runner": false,
+          "expect": false,
+          "chai": false,
+          "spy": false
+        },
+        "build": {
+          "date": 1794064949388,
+          "random": 0.6729020609872418,
+          "env": "BUILD",
+          "cwd": "/root/.t3/worktrees/oximut/t3-30a24c44",
+          "argv": [
+            "/root/.local/share/oximut/toolchains/node-v26.3.1-linux-arm64/bin/node",
+            "/root/.t3/worktrees/oximut/t3-30a24c44/benchmarks/experiments/fork-snapshot-probe/generated/deps.cjs"
+          ],
+          "symbols": [
+            "Symbol(Symbol.toStringTag)",
+            "Symbol(matchers-object)",
+            "Symbol($$jest-matchers-object)",
+            "Symbol(asymmetric-matchers-object)"
+          ]
+        }
+      },
+      "bootstrapCpu": {
+        "userCPUTime": 338069,
+        "systemCPUTime": 73324,
+        "maxRSS": 35344,
+        "sharedMemorySize": 0,
+        "unsharedDataSize": 0,
+        "unsharedStackSize": 0,
+        "minorPageFault": 10543,
+        "majorPageFault": 0,
+        "swappedOut": 0,
+        "fsRead": 0,
+        "fsWrite": 0,
+        "ipcSent": 0,
+        "ipcReceived": 0,
+        "signalsCount": 0,
+        "voluntaryContextSwitches": 3088,
+        "involuntaryContextSwitches": 483
+      },
+      "stoppedCpu": {
+        "userCPUTime": 423927,
+        "systemCPUTime": 82946,
+        "maxRSS": 55504,
+        "sharedMemorySize": 0,
+        "unsharedDataSize": 0,
+        "unsharedStackSize": 0,
+        "minorPageFault": 10856,
+        "majorPageFault": 0,
+        "swappedOut": 0,
+        "fsRead": 0,
+        "fsWrite": 0,
+        "ipcSent": 0,
+        "ipcReceived": 0,
+        "signalsCount": 0,
+        "voluntaryContextSwitches": 3437,
+        "involuntaryContextSwitches": 546
+      },
+      "exitCpu": {
+        "userCPUTime": 424497,
+        "systemCPUTime": 82946,
+        "maxRSS": 55504,
+        "sharedMemorySize": 0,
+        "unsharedDataSize": 0,
+        "unsharedStackSize": 0,
+        "minorPageFault": 10859,
+        "majorPageFault": 0,
+        "swappedOut": 0,
+        "fsRead": 0,
+        "fsWrite": 0,
+        "ipcSent": 0,
+        "ipcReceived": 0,
+        "signalsCount": 0,
+        "voluntaryContextSwitches": 3442,
+        "involuntaryContextSwitches": 546
+      }
+    },
+    {
+      "rep": 1,
+      "mode": "snapshot",
+      "bootstrapWallMs": 541.8177610000002,
+      "lifecycleWallMs": 818.55901,
+      "tests": [
+        {
+          "name": "fresh state",
+          "state": "passed"
+        }
+      ],
+      "state": {
+        "env": "RUNTIME",
+        "cwd": "/root/.t3/worktrees/oximut/t3-30a24c44",
+        "argv": [],
+        "cleanGlobal": true,
+        "chaiTruncate": 40,
+        "runnerTestType": "function",
+        "identity": {
+          "runner": false,
+          "expect": false,
+          "chai": false,
+          "spy": false
+        },
+        "build": {
+          "date": 1794064949388,
+          "random": 0.6729020609872418,
+          "env": "BUILD",
+          "cwd": "/root/.t3/worktrees/oximut/t3-30a24c44",
+          "argv": [
+            "/root/.local/share/oximut/toolchains/node-v26.3.1-linux-arm64/bin/node",
+            "/root/.t3/worktrees/oximut/t3-30a24c44/benchmarks/experiments/fork-snapshot-probe/generated/deps.cjs"
+          ],
+          "symbols": [
+            "Symbol(Symbol.toStringTag)",
+            "Symbol(matchers-object)",
+            "Symbol($$jest-matchers-object)",
+            "Symbol(asymmetric-matchers-object)"
+          ]
+        }
+      },
+      "bootstrapCpu": {
+        "userCPUTime": 258793,
+        "systemCPUTime": 90682,
+        "maxRSS": 36644,
+        "sharedMemorySize": 0,
+        "unsharedDataSize": 0,
+        "unsharedStackSize": 0,
+        "minorPageFault": 10464,
+        "majorPageFault": 0,
+        "swappedOut": 0,
+        "fsRead": 0,
+        "fsWrite": 0,
+        "ipcSent": 0,
+        "ipcReceived": 0,
+        "signalsCount": 0,
+        "voluntaryContextSwitches": 3066,
+        "involuntaryContextSwitches": 632
+      },
+      "stoppedCpu": {
+        "userCPUTime": 306255,
+        "systemCPUTime": 109049,
+        "maxRSS": 57384,
+        "sharedMemorySize": 0,
+        "unsharedDataSize": 0,
+        "unsharedStackSize": 0,
+        "minorPageFault": 10790,
+        "majorPageFault": 0,
+        "swappedOut": 0,
+        "fsRead": 0,
+        "fsWrite": 0,
+        "ipcSent": 0,
+        "ipcReceived": 0,
+        "signalsCount": 0,
+        "voluntaryContextSwitches": 3414,
+        "involuntaryContextSwitches": 758
+      },
+      "exitCpu": {
+        "userCPUTime": 306573,
+        "systemCPUTime": 109162,
+        "maxRSS": 57384,
+        "sharedMemorySize": 0,
+        "unsharedDataSize": 0,
+        "unsharedStackSize": 0,
+        "minorPageFault": 10792,
+        "majorPageFault": 0,
+        "swappedOut": 0,
+        "fsRead": 0,
+        "fsWrite": 0,
+        "ipcSent": 0,
+        "ipcReceived": 0,
+        "signalsCount": 0,
+        "voluntaryContextSwitches": 3419,
+        "involuntaryContextSwitches": 758
+      }
+    },
+    {
+      "rep": 1,
+      "mode": "stock",
+      "bootstrapWallMs": 1035.0656239999998,
+      "lifecycleWallMs": 1677.2618739999998,
+      "tests": [
+        {
+          "name": "fresh state",
+          "state": "passed"
+        }
+      ],
+      "state": {
+        "env": "RUNTIME",
+        "cwd": "/root/.t3/worktrees/oximut/t3-30a24c44",
+        "argv": [],
+        "cleanGlobal": true,
+        "chaiTruncate": 40,
+        "runnerTestType": "function",
+        "identity": null,
+        "build": null
+      },
+      "bootstrapCpu": {
+        "userCPUTime": 466276,
+        "systemCPUTime": 111787,
+        "maxRSS": 30468,
+        "sharedMemorySize": 0,
+        "unsharedDataSize": 0,
+        "unsharedStackSize": 0,
+        "minorPageFault": 6257,
+        "majorPageFault": 0,
+        "swappedOut": 0,
+        "fsRead": 0,
+        "fsWrite": 0,
+        "ipcSent": 0,
+        "ipcReceived": 0,
+        "signalsCount": 0,
+        "voluntaryContextSwitches": 3091,
+        "involuntaryContextSwitches": 786
+      },
+      "stoppedCpu": {
+        "userCPUTime": 540707,
+        "systemCPUTime": 128505,
+        "maxRSS": 55044,
+        "sharedMemorySize": 0,
+        "unsharedDataSize": 0,
+        "unsharedStackSize": 0,
+        "minorPageFault": 6608,
+        "majorPageFault": 0,
+        "swappedOut": 0,
+        "fsRead": 0,
+        "fsWrite": 0,
+        "ipcSent": 0,
+        "ipcReceived": 0,
+        "signalsCount": 0,
+        "voluntaryContextSwitches": 3441,
+        "involuntaryContextSwitches": 858
+      },
+      "exitCpu": {
+        "userCPUTime": 540707,
+        "systemCPUTime": 129106,
+        "maxRSS": 55044,
+        "sharedMemorySize": 0,
+        "unsharedDataSize": 0,
+        "unsharedStackSize": 0,
+        "minorPageFault": 6610,
+        "majorPageFault": 0,
+        "swappedOut": 0,
+        "fsRead": 0,
+        "fsWrite": 0,
+        "ipcSent": 0,
+        "ipcReceived": 0,
+        "signalsCount": 0,
+        "voluntaryContextSwitches": 3446,
+        "involuntaryContextSwitches": 858
+      }
+    },
+    {
+      "rep": 2,
+      "mode": "stock",
+      "bootstrapWallMs": 539.4710930000001,
+      "lifecycleWallMs": 943.7538019999993,
+      "tests": [
+        {
+          "name": "fresh state",
+          "state": "passed"
+        }
+      ],
+      "state": {
+        "env": "RUNTIME",
+        "cwd": "/root/.t3/worktrees/oximut/t3-30a24c44",
+        "argv": [],
+        "cleanGlobal": true,
+        "chaiTruncate": 40,
+        "runnerTestType": "function",
+        "identity": null,
+        "build": null
+      },
+      "bootstrapCpu": {
+        "userCPUTime": 254215,
+        "systemCPUTime": 66585,
+        "maxRSS": 31212,
+        "sharedMemorySize": 0,
+        "unsharedDataSize": 0,
+        "unsharedStackSize": 0,
+        "minorPageFault": 6319,
+        "majorPageFault": 0,
+        "swappedOut": 0,
+        "fsRead": 0,
+        "fsWrite": 0,
+        "ipcSent": 0,
+        "ipcReceived": 0,
+        "signalsCount": 0,
+        "voluntaryContextSwitches": 3046,
+        "involuntaryContextSwitches": 553
+      },
+      "stoppedCpu": {
+        "userCPUTime": 331924,
+        "systemCPUTime": 77531,
+        "maxRSS": 57512,
+        "sharedMemorySize": 0,
+        "unsharedDataSize": 0,
+        "unsharedStackSize": 0,
+        "minorPageFault": 6691,
+        "majorPageFault": 0,
+        "swappedOut": 0,
+        "fsRead": 0,
+        "fsWrite": 0,
+        "ipcSent": 0,
+        "ipcReceived": 0,
+        "signalsCount": 0,
+        "voluntaryContextSwitches": 3387,
+        "involuntaryContextSwitches": 620
+      },
+      "exitCpu": {
+        "userCPUTime": 332522,
+        "systemCPUTime": 77670,
+        "maxRSS": 57512,
+        "sharedMemorySize": 0,
+        "unsharedDataSize": 0,
+        "unsharedStackSize": 0,
+        "minorPageFault": 6694,
+        "majorPageFault": 0,
+        "swappedOut": 0,
+        "fsRead": 0,
+        "fsWrite": 0,
+        "ipcSent": 0,
+        "ipcReceived": 0,
+        "signalsCount": 0,
+        "voluntaryContextSwitches": 3392,
+        "involuntaryContextSwitches": 621
+      }
+    },
+    {
+      "rep": 2,
+      "mode": "snapshot",
+      "bootstrapWallMs": 606.3532809999997,
+      "lifecycleWallMs": 1064.1566139999995,
+      "tests": [
+        {
+          "name": "fresh state",
+          "state": "passed"
+        }
+      ],
+      "state": {
+        "env": "RUNTIME",
+        "cwd": "/root/.t3/worktrees/oximut/t3-30a24c44",
+        "argv": [],
+        "cleanGlobal": true,
+        "chaiTruncate": 40,
+        "runnerTestType": "function",
+        "identity": {
+          "runner": false,
+          "expect": false,
+          "chai": false,
+          "spy": false
+        },
+        "build": {
+          "date": 1794064949388,
+          "random": 0.6729020609872418,
+          "env": "BUILD",
+          "cwd": "/root/.t3/worktrees/oximut/t3-30a24c44",
+          "argv": [
+            "/root/.local/share/oximut/toolchains/node-v26.3.1-linux-arm64/bin/node",
+            "/root/.t3/worktrees/oximut/t3-30a24c44/benchmarks/experiments/fork-snapshot-probe/generated/deps.cjs"
+          ],
+          "symbols": [
+            "Symbol(Symbol.toStringTag)",
+            "Symbol(matchers-object)",
+            "Symbol($$jest-matchers-object)",
+            "Symbol(asymmetric-matchers-object)"
+          ]
+        }
+      },
+      "bootstrapCpu": {
+        "userCPUTime": 309266,
+        "systemCPUTime": 63825,
+        "maxRSS": 39216,
+        "sharedMemorySize": 0,
+        "unsharedDataSize": 0,
+        "unsharedStackSize": 0,
+        "minorPageFault": 10458,
+        "majorPageFault": 0,
+        "swappedOut": 0,
+        "fsRead": 0,
+        "fsWrite": 0,
+        "ipcSent": 0,
+        "ipcReceived": 0,
+        "signalsCount": 0,
+        "voluntaryContextSwitches": 3107,
+        "involuntaryContextSwitches": 417
+      },
+      "stoppedCpu": {
+        "userCPUTime": 366471,
+        "systemCPUTime": 64711,
+        "maxRSS": 39216,
+        "sharedMemorySize": 0,
+        "unsharedDataSize": 0,
+        "unsharedStackSize": 0,
+        "minorPageFault": 10763,
+        "majorPageFault": 0,
+        "swappedOut": 0,
+        "fsRead": 0,
+        "fsWrite": 0,
+        "ipcSent": 0,
+        "ipcReceived": 0,
+        "signalsCount": 0,
+        "voluntaryContextSwitches": 3456,
+        "involuntaryContextSwitches": 487
+      },
+      "exitCpu": {
+        "userCPUTime": 367392,
+        "systemCPUTime": 64874,
+        "maxRSS": 39216,
+        "sharedMemorySize": 0,
+        "unsharedDataSize": 0,
+        "unsharedStackSize": 0,
+        "minorPageFault": 10766,
+        "majorPageFault": 0,
+        "swappedOut": 0,
+        "fsRead": 0,
+        "fsWrite": 0,
+        "ipcSent": 0,
+        "ipcReceived": 0,
+        "signalsCount": 0,
+        "voluntaryContextSwitches": 3461,
+        "involuntaryContextSwitches": 487
+      }
+    },
+    {
+      "rep": 3,
+      "mode": "snapshot",
+      "bootstrapWallMs": 687.0826040000011,
+      "lifecycleWallMs": 1182.440208,
+      "tests": [
+        {
+          "name": "fresh state",
+          "state": "passed"
+        }
+      ],
+      "state": {
+        "env": "RUNTIME",
+        "cwd": "/root/.t3/worktrees/oximut/t3-30a24c44",
+        "argv": [],
+        "cleanGlobal": true,
+        "chaiTruncate": 40,
+        "runnerTestType": "function",
+        "identity": {
+          "runner": false,
+          "expect": false,
+          "chai": false,
+          "spy": false
+        },
+        "build": {
+          "date": 1794064949388,
+          "random": 0.6729020609872418,
+          "env": "BUILD",
+          "cwd": "/root/.t3/worktrees/oximut/t3-30a24c44",
+          "argv": [
+            "/root/.local/share/oximut/toolchains/node-v26.3.1-linux-arm64/bin/node",
+            "/root/.t3/worktrees/oximut/t3-30a24c44/benchmarks/experiments/fork-snapshot-probe/generated/deps.cjs"
+          ],
+          "symbols": [
+            "Symbol(Symbol.toStringTag)",
+            "Symbol(matchers-object)",
+            "Symbol($$jest-matchers-object)",
+            "Symbol(asymmetric-matchers-object)"
+          ]
+        }
+      },
+      "bootstrapCpu": {
+        "userCPUTime": 277969,
+        "systemCPUTime": 89239,
+        "maxRSS": 39220,
+        "sharedMemorySize": 0,
+        "unsharedDataSize": 0,
+        "unsharedStackSize": 0,
+        "minorPageFault": 10387,
+        "majorPageFault": 0,
+        "swappedOut": 0,
+        "fsRead": 0,
+        "fsWrite": 0,
+        "ipcSent": 0,
+        "ipcReceived": 0,
+        "signalsCount": 0,
+        "voluntaryContextSwitches": 3058,
+        "involuntaryContextSwitches": 462
+      },
+      "stoppedCpu": {
+        "userCPUTime": 348227,
+        "systemCPUTime": 102684,
+        "maxRSS": 60000,
+        "sharedMemorySize": 0,
+        "unsharedDataSize": 0,
+        "unsharedStackSize": 0,
+        "minorPageFault": 10814,
+        "majorPageFault": 0,
+        "swappedOut": 0,
+        "fsRead": 0,
+        "fsWrite": 0,
+        "ipcSent": 0,
+        "ipcReceived": 0,
+        "signalsCount": 0,
+        "voluntaryContextSwitches": 3440,
+        "involuntaryContextSwitches": 497
+      },
+      "exitCpu": {
+        "userCPUTime": 349403,
+        "systemCPUTime": 102684,
+        "maxRSS": 60000,
+        "sharedMemorySize": 0,
+        "unsharedDataSize": 0,
+        "unsharedStackSize": 0,
+        "minorPageFault": 10817,
+        "majorPageFault": 0,
+        "swappedOut": 0,
+        "fsRead": 0,
+        "fsWrite": 0,
+        "ipcSent": 0,
+        "ipcReceived": 0,
+        "signalsCount": 0,
+        "voluntaryContextSwitches": 3445,
+        "involuntaryContextSwitches": 497
+      }
+    },
+    {
+      "rep": 3,
+      "mode": "stock",
+      "bootstrapWallMs": 705.5694270000004,
+      "lifecycleWallMs": 1075.0789049999985,
+      "tests": [
+        {
+          "name": "fresh state",
+          "state": "passed"
+        }
+      ],
+      "state": {
+        "env": "RUNTIME",
+        "cwd": "/root/.t3/worktrees/oximut/t3-30a24c44",
+        "argv": [],
+        "cleanGlobal": true,
+        "chaiTruncate": 40,
+        "runnerTestType": "function",
+        "identity": null,
+        "build": null
+      },
+      "bootstrapCpu": {
+        "userCPUTime": 333319,
+        "systemCPUTime": 87662,
+        "maxRSS": 31212,
+        "sharedMemorySize": 0,
+        "unsharedDataSize": 0,
+        "unsharedStackSize": 0,
+        "minorPageFault": 6249,
+        "majorPageFault": 0,
+        "swappedOut": 0,
+        "fsRead": 0,
+        "fsWrite": 0,
+        "ipcSent": 0,
+        "ipcReceived": 0,
+        "signalsCount": 0,
+        "voluntaryContextSwitches": 3033,
+        "involuntaryContextSwitches": 616
+      },
+      "stoppedCpu": {
+        "userCPUTime": 440788,
+        "systemCPUTime": 91494,
+        "maxRSS": 57440,
+        "sharedMemorySize": 0,
+        "unsharedDataSize": 0,
+        "unsharedStackSize": 0,
+        "minorPageFault": 6585,
+        "majorPageFault": 0,
+        "swappedOut": 0,
+        "fsRead": 0,
+        "fsWrite": 0,
+        "ipcSent": 0,
+        "ipcReceived": 0,
+        "signalsCount": 0,
+        "voluntaryContextSwitches": 3377,
+        "involuntaryContextSwitches": 736
+      },
+      "exitCpu": {
+        "userCPUTime": 441310,
+        "systemCPUTime": 91603,
+        "maxRSS": 57440,
+        "sharedMemorySize": 0,
+        "unsharedDataSize": 0,
+        "unsharedStackSize": 0,
+        "minorPageFault": 6586,
+        "majorPageFault": 0,
+        "swappedOut": 0,
+        "fsRead": 0,
+        "fsWrite": 0,
+        "ipcSent": 0,
+        "ipcReceived": 0,
+        "signalsCount": 0,
+        "voluntaryContextSwitches": 3382,
+        "involuntaryContextSwitches": 736
+      }
+    },
+    {
+      "rep": 4,
+      "mode": "stock",
+      "bootstrapWallMs": 895.4881770000011,
+      "lifecycleWallMs": 1723.993593000001,
+      "tests": [
+        {
+          "name": "fresh state",
+          "state": "passed"
+        }
+      ],
+      "state": {
+        "env": "RUNTIME",
+        "cwd": "/root/.t3/worktrees/oximut/t3-30a24c44",
+        "argv": [],
+        "cleanGlobal": true,
+        "chaiTruncate": 40,
+        "runnerTestType": "function",
+        "identity": null,
+        "build": null
+      },
+      "bootstrapCpu": {
+        "userCPUTime": 420278,
+        "systemCPUTime": 75140,
+        "maxRSS": 31212,
+        "sharedMemorySize": 0,
+        "unsharedDataSize": 0,
+        "unsharedStackSize": 0,
+        "minorPageFault": 6299,
+        "majorPageFault": 0,
+        "swappedOut": 0,
+        "fsRead": 0,
+        "fsWrite": 0,
+        "ipcSent": 0,
+        "ipcReceived": 0,
+        "signalsCount": 0,
+        "voluntaryContextSwitches": 3055,
+        "involuntaryContextSwitches": 702
+      },
+      "stoppedCpu": {
+        "userCPUTime": 494527,
+        "systemCPUTime": 89850,
+        "maxRSS": 56852,
+        "sharedMemorySize": 0,
+        "unsharedDataSize": 0,
+        "unsharedStackSize": 0,
+        "minorPageFault": 6667,
+        "majorPageFault": 0,
+        "swappedOut": 0,
+        "fsRead": 0,
+        "fsWrite": 0,
+        "ipcSent": 0,
+        "ipcReceived": 0,
+        "signalsCount": 0,
+        "voluntaryContextSwitches": 3394,
+        "involuntaryContextSwitches": 754
+      },
+      "exitCpu": {
+        "userCPUTime": 495735,
+        "systemCPUTime": 89850,
+        "maxRSS": 56852,
+        "sharedMemorySize": 0,
+        "unsharedDataSize": 0,
+        "unsharedStackSize": 0,
+        "minorPageFault": 6669,
+        "majorPageFault": 0,
+        "swappedOut": 0,
+        "fsRead": 0,
+        "fsWrite": 0,
+        "ipcSent": 0,
+        "ipcReceived": 0,
+        "signalsCount": 0,
+        "voluntaryContextSwitches": 3399,
+        "involuntaryContextSwitches": 754
+      }
+    },
+    {
+      "rep": 4,
+      "mode": "snapshot",
+      "bootstrapWallMs": 636.895364,
+      "lifecycleWallMs": 1997.8660410000011,
+      "tests": [
+        {
+          "name": "fresh state",
+          "state": "passed"
+        }
+      ],
+      "state": {
+        "env": "RUNTIME",
+        "cwd": "/root/.t3/worktrees/oximut/t3-30a24c44",
+        "argv": [],
+        "cleanGlobal": true,
+        "chaiTruncate": 40,
+        "runnerTestType": "function",
+        "identity": {
+          "runner": false,
+          "expect": false,
+          "chai": false,
+          "spy": false
+        },
+        "build": {
+          "date": 1794064949388,
+          "random": 0.6729020609872418,
+          "env": "BUILD",
+          "cwd": "/root/.t3/worktrees/oximut/t3-30a24c44",
+          "argv": [
+            "/root/.local/share/oximut/toolchains/node-v26.3.1-linux-arm64/bin/node",
+            "/root/.t3/worktrees/oximut/t3-30a24c44/benchmarks/experiments/fork-snapshot-probe/generated/deps.cjs"
+          ],
+          "symbols": [
+            "Symbol(Symbol.toStringTag)",
+            "Symbol(matchers-object)",
+            "Symbol($$jest-matchers-object)",
+            "Symbol(asymmetric-matchers-object)"
+          ]
+        }
+      },
+      "bootstrapCpu": {
+        "userCPUTime": 306121,
+        "systemCPUTime": 76182,
+        "maxRSS": 39220,
+        "sharedMemorySize": 0,
+        "unsharedDataSize": 0,
+        "unsharedStackSize": 0,
+        "minorPageFault": 10454,
+        "majorPageFault": 0,
+        "swappedOut": 0,
+        "fsRead": 0,
+        "fsWrite": 0,
+        "ipcSent": 0,
+        "ipcReceived": 0,
+        "signalsCount": 0,
+        "voluntaryContextSwitches": 3073,
+        "involuntaryContextSwitches": 383
+      },
+      "stoppedCpu": {
+        "userCPUTime": 394890,
+        "systemCPUTime": 86253,
+        "maxRSS": 60792,
+        "sharedMemorySize": 0,
+        "unsharedDataSize": 0,
+        "unsharedStackSize": 0,
+        "minorPageFault": 10885,
+        "majorPageFault": 0,
+        "swappedOut": 0,
+        "fsRead": 0,
+        "fsWrite": 0,
+        "ipcSent": 0,
+        "ipcReceived": 0,
+        "signalsCount": 0,
+        "voluntaryContextSwitches": 3460,
+        "involuntaryContextSwitches": 562
+      },
+      "exitCpu": {
+        "userCPUTime": 395566,
+        "systemCPUTime": 86400,
+        "maxRSS": 60792,
+        "sharedMemorySize": 0,
+        "unsharedDataSize": 0,
+        "unsharedStackSize": 0,
+        "minorPageFault": 10886,
+        "majorPageFault": 0,
+        "swappedOut": 0,
+        "fsRead": 0,
+        "fsWrite": 0,
+        "ipcSent": 0,
+        "ipcReceived": 0,
+        "signalsCount": 0,
+        "voluntaryContextSwitches": 3465,
+        "involuntaryContextSwitches": 562
+      }
+    },
+    {
+      "rep": 5,
+      "mode": "snapshot",
+      "bootstrapWallMs": 895.6876030000021,
+      "lifecycleWallMs": 2975.591145000002,
+      "tests": [
+        {
+          "name": "fresh state",
+          "state": "passed"
+        }
+      ],
+      "state": {
+        "env": "RUNTIME",
+        "cwd": "/root/.t3/worktrees/oximut/t3-30a24c44",
+        "argv": [],
+        "cleanGlobal": true,
+        "chaiTruncate": 40,
+        "runnerTestType": "function",
+        "identity": {
+          "runner": false,
+          "expect": false,
+          "chai": false,
+          "spy": false
+        },
+        "build": {
+          "date": 1794064949388,
+          "random": 0.6729020609872418,
+          "env": "BUILD",
+          "cwd": "/root/.t3/worktrees/oximut/t3-30a24c44",
+          "argv": [
+            "/root/.local/share/oximut/toolchains/node-v26.3.1-linux-arm64/bin/node",
+            "/root/.t3/worktrees/oximut/t3-30a24c44/benchmarks/experiments/fork-snapshot-probe/generated/deps.cjs"
+          ],
+          "symbols": [
+            "Symbol(Symbol.toStringTag)",
+            "Symbol(matchers-object)",
+            "Symbol($$jest-matchers-object)",
+            "Symbol(asymmetric-matchers-object)"
+          ]
+        }
+      },
+      "bootstrapCpu": {
+        "userCPUTime": 338967,
+        "systemCPUTime": 115281,
+        "maxRSS": 39220,
+        "sharedMemorySize": 0,
+        "unsharedDataSize": 0,
+        "unsharedStackSize": 0,
+        "minorPageFault": 10417,
+        "majorPageFault": 0,
+        "swappedOut": 0,
+        "fsRead": 0,
+        "fsWrite": 0,
+        "ipcSent": 0,
+        "ipcReceived": 0,
+        "signalsCount": 0,
+        "voluntaryContextSwitches": 3071,
+        "involuntaryContextSwitches": 497
+      },
+      "stoppedCpu": {
+        "userCPUTime": 438827,
+        "systemCPUTime": 137465,
+        "maxRSS": 60396,
+        "sharedMemorySize": 0,
+        "unsharedDataSize": 0,
+        "unsharedStackSize": 0,
+        "minorPageFault": 10874,
+        "majorPageFault": 0,
+        "swappedOut": 0,
+        "fsRead": 0,
+        "fsWrite": 0,
+        "ipcSent": 0,
+        "ipcReceived": 0,
+        "signalsCount": 0,
+        "voluntaryContextSwitches": 3444,
+        "involuntaryContextSwitches": 603
+      },
+      "exitCpu": {
+        "userCPUTime": 439197,
+        "systemCPUTime": 137581,
+        "maxRSS": 60396,
+        "sharedMemorySize": 0,
+        "unsharedDataSize": 0,
+        "unsharedStackSize": 0,
+        "minorPageFault": 10876,
+        "majorPageFault": 0,
+        "swappedOut": 0,
+        "fsRead": 0,
+        "fsWrite": 0,
+        "ipcSent": 0,
+        "ipcReceived": 0,
+        "signalsCount": 0,
+        "voluntaryContextSwitches": 3449,
+        "involuntaryContextSwitches": 603
+      }
+    },
+    {
+      "rep": 5,
+      "mode": "stock",
+      "bootstrapWallMs": 838.379062,
+      "lifecycleWallMs": 1742.4673949999997,
+      "tests": [
+        {
+          "name": "fresh state",
+          "state": "passed"
+        }
+      ],
+      "state": {
+        "env": "RUNTIME",
+        "cwd": "/root/.t3/worktrees/oximut/t3-30a24c44",
+        "argv": [],
+        "cleanGlobal": true,
+        "chaiTruncate": 40,
+        "runnerTestType": "function",
+        "identity": null,
+        "build": null
+      },
+      "bootstrapCpu": {
+        "userCPUTime": 413986,
+        "systemCPUTime": 64729,
+        "maxRSS": 31212,
+        "sharedMemorySize": 0,
+        "unsharedDataSize": 0,
+        "unsharedStackSize": 0,
+        "minorPageFault": 6261,
+        "majorPageFault": 0,
+        "swappedOut": 0,
+        "fsRead": 0,
+        "fsWrite": 0,
+        "ipcSent": 0,
+        "ipcReceived": 0,
+        "signalsCount": 0,
+        "voluntaryContextSwitches": 3048,
+        "involuntaryContextSwitches": 388
+      },
+      "stoppedCpu": {
+        "userCPUTime": 500272,
+        "systemCPUTime": 66933,
+        "maxRSS": 57708,
+        "sharedMemorySize": 0,
+        "unsharedDataSize": 0,
+        "unsharedStackSize": 0,
+        "minorPageFault": 6615,
+        "majorPageFault": 0,
+        "swappedOut": 0,
+        "fsRead": 0,
+        "fsWrite": 0,
+        "ipcSent": 0,
+        "ipcReceived": 0,
+        "signalsCount": 0,
+        "voluntaryContextSwitches": 3396,
+        "involuntaryContextSwitches": 535
+      },
+      "exitCpu": {
+        "userCPUTime": 501304,
+        "systemCPUTime": 66933,
+        "maxRSS": 57708,
+        "sharedMemorySize": 0,
+        "unsharedDataSize": 0,
+        "unsharedStackSize": 0,
+        "minorPageFault": 6616,
+        "majorPageFault": 0,
+        "swappedOut": 0,
+        "fsRead": 0,
+        "fsWrite": 0,
+        "ipcSent": 0,
+        "ipcReceived": 0,
+        "signalsCount": 0,
+        "voluntaryContextSwitches": 3401,
+        "involuntaryContextSwitches": 536
+      }
+    },
+    {
+      "rep": 6,
+      "mode": "stock",
+      "bootstrapWallMs": 1554.0325000000012,
+      "lifecycleWallMs": 2650.293383999997,
+      "tests": [
+        {
+          "name": "fresh state",
+          "state": "passed"
+        }
+      ],
+      "state": {
+        "env": "RUNTIME",
+        "cwd": "/root/.t3/worktrees/oximut/t3-30a24c44",
+        "argv": [],
+        "cleanGlobal": true,
+        "chaiTruncate": 40,
+        "runnerTestType": "function",
+        "identity": null,
+        "build": null
+      },
+      "bootstrapCpu": {
+        "userCPUTime": 312765,
+        "systemCPUTime": 66811,
+        "maxRSS": 31216,
+        "sharedMemorySize": 0,
+        "unsharedDataSize": 0,
+        "unsharedStackSize": 0,
+        "minorPageFault": 6277,
+        "majorPageFault": 0,
+        "swappedOut": 0,
+        "fsRead": 0,
+        "fsWrite": 0,
+        "ipcSent": 0,
+        "ipcReceived": 0,
+        "signalsCount": 0,
+        "voluntaryContextSwitches": 3053,
+        "involuntaryContextSwitches": 564
+      },
+      "stoppedCpu": {
+        "userCPUTime": 423086,
+        "systemCPUTime": 79722,
+        "maxRSS": 56688,
+        "sharedMemorySize": 0,
+        "unsharedDataSize": 0,
+        "unsharedStackSize": 0,
+        "minorPageFault": 6637,
+        "majorPageFault": 0,
+        "swappedOut": 0,
+        "fsRead": 0,
+        "fsWrite": 0,
+        "ipcSent": 0,
+        "ipcReceived": 0,
+        "signalsCount": 0,
+        "voluntaryContextSwitches": 3405,
+        "involuntaryContextSwitches": 787
+      },
+      "exitCpu": {
+        "userCPUTime": 423869,
+        "systemCPUTime": 79722,
+        "maxRSS": 56688,
+        "sharedMemorySize": 0,
+        "unsharedDataSize": 0,
+        "unsharedStackSize": 0,
+        "minorPageFault": 6639,
+        "majorPageFault": 0,
+        "swappedOut": 0,
+        "fsRead": 0,
+        "fsWrite": 0,
+        "ipcSent": 0,
+        "ipcReceived": 0,
+        "signalsCount": 0,
+        "voluntaryContextSwitches": 3410,
+        "involuntaryContextSwitches": 787
+      }
+    },
+    {
+      "rep": 6,
+      "mode": "snapshot",
+      "bootstrapWallMs": 866.376615000001,
+      "lifecycleWallMs": 1529.7061459999968,
+      "tests": [
+        {
+          "name": "fresh state",
+          "state": "passed"
+        }
+      ],
+      "state": {
+        "env": "RUNTIME",
+        "cwd": "/root/.t3/worktrees/oximut/t3-30a24c44",
+        "argv": [],
+        "cleanGlobal": true,
+        "chaiTruncate": 40,
+        "runnerTestType": "function",
+        "identity": {
+          "runner": false,
+          "expect": false,
+          "chai": false,
+          "spy": false
+        },
+        "build": {
+          "date": 1794064949388,
+          "random": 0.6729020609872418,
+          "env": "BUILD",
+          "cwd": "/root/.t3/worktrees/oximut/t3-30a24c44",
+          "argv": [
+            "/root/.local/share/oximut/toolchains/node-v26.3.1-linux-arm64/bin/node",
+            "/root/.t3/worktrees/oximut/t3-30a24c44/benchmarks/experiments/fork-snapshot-probe/generated/deps.cjs"
+          ],
+          "symbols": [
+            "Symbol(Symbol.toStringTag)",
+            "Symbol(matchers-object)",
+            "Symbol($$jest-matchers-object)",
+            "Symbol(asymmetric-matchers-object)"
+          ]
+        }
+      },
+      "bootstrapCpu": {
+        "userCPUTime": 383961,
+        "systemCPUTime": 83138,
+        "maxRSS": 39220,
+        "sharedMemorySize": 0,
+        "unsharedDataSize": 0,
+        "unsharedStackSize": 0,
+        "minorPageFault": 10451,
+        "majorPageFault": 0,
+        "swappedOut": 0,
+        "fsRead": 0,
+        "fsWrite": 0,
+        "ipcSent": 0,
+        "ipcReceived": 0,
+        "signalsCount": 0,
+        "voluntaryContextSwitches": 3085,
+        "involuntaryContextSwitches": 804
+      },
+      "stoppedCpu": {
+        "userCPUTime": 482370,
+        "systemCPUTime": 107368,
+        "maxRSS": 59848,
+        "sharedMemorySize": 0,
+        "unsharedDataSize": 0,
+        "unsharedStackSize": 0,
+        "minorPageFault": 10766,
+        "majorPageFault": 0,
+        "swappedOut": 0,
+        "fsRead": 0,
+        "fsWrite": 0,
+        "ipcSent": 0,
+        "ipcReceived": 0,
+        "signalsCount": 0,
+        "voluntaryContextSwitches": 3430,
+        "involuntaryContextSwitches": 928
+      },
+      "exitCpu": {
+        "userCPUTime": 482740,
+        "systemCPUTime": 107450,
+        "maxRSS": 59848,
+        "sharedMemorySize": 0,
+        "unsharedDataSize": 0,
+        "unsharedStackSize": 0,
+        "minorPageFault": 10767,
+        "majorPageFault": 0,
+        "swappedOut": 0,
+        "fsRead": 0,
+        "fsWrite": 0,
+        "ipcSent": 0,
+        "ipcReceived": 0,
+        "signalsCount": 0,
+        "voluntaryContextSwitches": 3435,
+        "involuntaryContextSwitches": 928
+      }
+    },
+    {
+      "rep": 7,
+      "mode": "snapshot",
+      "bootstrapWallMs": 885.7056759999978,
+      "lifecycleWallMs": 1622.9251559999975,
+      "tests": [
+        {
+          "name": "fresh state",
+          "state": "passed"
+        }
+      ],
+      "state": {
+        "env": "RUNTIME",
+        "cwd": "/root/.t3/worktrees/oximut/t3-30a24c44",
+        "argv": [],
+        "cleanGlobal": true,
+        "chaiTruncate": 40,
+        "runnerTestType": "function",
+        "identity": {
+          "runner": false,
+          "expect": false,
+          "chai": false,
+          "spy": false
+        },
+        "build": {
+          "date": 1794064949388,
+          "random": 0.6729020609872418,
+          "env": "BUILD",
+          "cwd": "/root/.t3/worktrees/oximut/t3-30a24c44",
+          "argv": [
+            "/root/.local/share/oximut/toolchains/node-v26.3.1-linux-arm64/bin/node",
+            "/root/.t3/worktrees/oximut/t3-30a24c44/benchmarks/experiments/fork-snapshot-probe/generated/deps.cjs"
+          ],
+          "symbols": [
+            "Symbol(Symbol.toStringTag)",
+            "Symbol(matchers-object)",
+            "Symbol($$jest-matchers-object)",
+            "Symbol(asymmetric-matchers-object)"
+          ]
+        }
+      },
+      "bootstrapCpu": {
+        "userCPUTime": 352766,
+        "systemCPUTime": 106226,
+        "maxRSS": 39216,
+        "sharedMemorySize": 0,
+        "unsharedDataSize": 0,
+        "unsharedStackSize": 0,
+        "minorPageFault": 10423,
+        "majorPageFault": 0,
+        "swappedOut": 0,
+        "fsRead": 0,
+        "fsWrite": 0,
+        "ipcSent": 0,
+        "ipcReceived": 0,
+        "signalsCount": 0,
+        "voluntaryContextSwitches": 3041,
+        "involuntaryContextSwitches": 608
+      },
+      "stoppedCpu": {
+        "userCPUTime": 438152,
+        "systemCPUTime": 110815,
+        "maxRSS": 60112,
+        "sharedMemorySize": 0,
+        "unsharedDataSize": 0,
+        "unsharedStackSize": 0,
+        "minorPageFault": 10856,
+        "majorPageFault": 0,
+        "swappedOut": 0,
+        "fsRead": 0,
+        "fsWrite": 0,
+        "ipcSent": 0,
+        "ipcReceived": 0,
+        "signalsCount": 0,
+        "voluntaryContextSwitches": 3442,
+        "involuntaryContextSwitches": 674
+      },
+      "exitCpu": {
+        "userCPUTime": 438708,
+        "systemCPUTime": 110956,
+        "maxRSS": 60112,
+        "sharedMemorySize": 0,
+        "unsharedDataSize": 0,
+        "unsharedStackSize": 0,
+        "minorPageFault": 10858,
+        "majorPageFault": 0,
+        "swappedOut": 0,
+        "fsRead": 0,
+        "fsWrite": 0,
+        "ipcSent": 0,
+        "ipcReceived": 0,
+        "signalsCount": 0,
+        "voluntaryContextSwitches": 3447,
+        "involuntaryContextSwitches": 674
+      }
+    },
+    {
+      "rep": 7,
+      "mode": "stock",
+      "bootstrapWallMs": 546.5205730000016,
+      "lifecycleWallMs": 1204.7871869999944,
+      "tests": [
+        {
+          "name": "fresh state",
+          "state": "passed"
+        }
+      ],
+      "state": {
+        "env": "RUNTIME",
+        "cwd": "/root/.t3/worktrees/oximut/t3-30a24c44",
+        "argv": [],
+        "cleanGlobal": true,
+        "chaiTruncate": 40,
+        "runnerTestType": "function",
+        "identity": null,
+        "build": null
+      },
+      "bootstrapCpu": {
+        "userCPUTime": 265050,
+        "systemCPUTime": 78021,
+        "maxRSS": 31212,
+        "sharedMemorySize": 0,
+        "unsharedDataSize": 0,
+        "unsharedStackSize": 0,
+        "minorPageFault": 6336,
+        "majorPageFault": 0,
+        "swappedOut": 0,
+        "fsRead": 0,
+        "fsWrite": 0,
+        "ipcSent": 0,
+        "ipcReceived": 0,
+        "signalsCount": 0,
+        "voluntaryContextSwitches": 3030,
+        "involuntaryContextSwitches": 400
+      },
+      "stoppedCpu": {
+        "userCPUTime": 320641,
+        "systemCPUTime": 90294,
+        "maxRSS": 57076,
+        "sharedMemorySize": 0,
+        "unsharedDataSize": 0,
+        "unsharedStackSize": 0,
+        "minorPageFault": 6682,
+        "majorPageFault": 0,
+        "swappedOut": 0,
+        "fsRead": 0,
+        "fsWrite": 0,
+        "ipcSent": 0,
+        "ipcReceived": 0,
+        "signalsCount": 0,
+        "voluntaryContextSwitches": 3380,
+        "involuntaryContextSwitches": 473
+      },
+      "exitCpu": {
+        "userCPUTime": 321379,
+        "systemCPUTime": 90294,
+        "maxRSS": 57076,
+        "sharedMemorySize": 0,
+        "unsharedDataSize": 0,
+        "unsharedStackSize": 0,
+        "minorPageFault": 6685,
+        "majorPageFault": 0,
+        "swappedOut": 0,
+        "fsRead": 0,
+        "fsWrite": 0,
+        "ipcSent": 0,
+        "ipcReceived": 0,
+        "signalsCount": 0,
+        "voluntaryContextSwitches": 3385,
+        "involuntaryContextSwitches": 473
+      }
+    },
+    {
+      "rep": 8,
+      "mode": "stock",
+      "bootstrapWallMs": 687.5107290000014,
+      "lifecycleWallMs": 1470.9647909999985,
+      "tests": [
+        {
+          "name": "fresh state",
+          "state": "passed"
+        }
+      ],
+      "state": {
+        "env": "RUNTIME",
+        "cwd": "/root/.t3/worktrees/oximut/t3-30a24c44",
+        "argv": [],
+        "cleanGlobal": true,
+        "chaiTruncate": 40,
+        "runnerTestType": "function",
+        "identity": null,
+        "build": null
+      },
+      "bootstrapCpu": {
+        "userCPUTime": 356560,
+        "systemCPUTime": 45430,
+        "maxRSS": 56572,
+        "sharedMemorySize": 0,
+        "unsharedDataSize": 0,
+        "unsharedStackSize": 0,
+        "minorPageFault": 6345,
+        "majorPageFault": 0,
+        "swappedOut": 0,
+        "fsRead": 0,
+        "fsWrite": 0,
+        "ipcSent": 0,
+        "ipcReceived": 0,
+        "signalsCount": 0,
+        "voluntaryContextSwitches": 3020,
+        "involuntaryContextSwitches": 712
+      },
+      "stoppedCpu": {
+        "userCPUTime": 421582,
+        "systemCPUTime": 49060,
+        "maxRSS": 57488,
+        "sharedMemorySize": 0,
+        "unsharedDataSize": 0,
+        "unsharedStackSize": 0,
+        "minorPageFault": 6695,
+        "majorPageFault": 0,
+        "swappedOut": 0,
+        "fsRead": 0,
+        "fsWrite": 0,
+        "ipcSent": 0,
+        "ipcReceived": 0,
+        "signalsCount": 0,
+        "voluntaryContextSwitches": 3366,
+        "involuntaryContextSwitches": 784
+      },
+      "exitCpu": {
+        "userCPUTime": 422207,
+        "systemCPUTime": 49133,
+        "maxRSS": 57488,
+        "sharedMemorySize": 0,
+        "unsharedDataSize": 0,
+        "unsharedStackSize": 0,
+        "minorPageFault": 6698,
+        "majorPageFault": 0,
+        "swappedOut": 0,
+        "fsRead": 0,
+        "fsWrite": 0,
+        "ipcSent": 0,
+        "ipcReceived": 0,
+        "signalsCount": 0,
+        "voluntaryContextSwitches": 3371,
+        "involuntaryContextSwitches": 784
+      }
+    },
+    {
+      "rep": 8,
+      "mode": "snapshot",
+      "bootstrapWallMs": 776.2092189999967,
+      "lifecycleWallMs": 1692.5035409999982,
+      "tests": [
+        {
+          "name": "fresh state",
+          "state": "passed"
+        }
+      ],
+      "state": {
+        "env": "RUNTIME",
+        "cwd": "/root/.t3/worktrees/oximut/t3-30a24c44",
+        "argv": [],
+        "cleanGlobal": true,
+        "chaiTruncate": 40,
+        "runnerTestType": "function",
+        "identity": {
+          "runner": false,
+          "expect": false,
+          "chai": false,
+          "spy": false
+        },
+        "build": {
+          "date": 1794064949388,
+          "random": 0.6729020609872418,
+          "env": "BUILD",
+          "cwd": "/root/.t3/worktrees/oximut/t3-30a24c44",
+          "argv": [
+            "/root/.local/share/oximut/toolchains/node-v26.3.1-linux-arm64/bin/node",
+            "/root/.t3/worktrees/oximut/t3-30a24c44/benchmarks/experiments/fork-snapshot-probe/generated/deps.cjs"
+          ],
+          "symbols": [
+            "Symbol(Symbol.toStringTag)",
+            "Symbol(matchers-object)",
+            "Symbol($$jest-matchers-object)",
+            "Symbol(asymmetric-matchers-object)"
+          ]
+        }
+      },
+      "bootstrapCpu": {
+        "userCPUTime": 335530,
+        "systemCPUTime": 111414,
+        "maxRSS": 39220,
+        "sharedMemorySize": 0,
+        "unsharedDataSize": 0,
+        "unsharedStackSize": 0,
+        "minorPageFault": 10399,
+        "majorPageFault": 0,
+        "swappedOut": 0,
+        "fsRead": 0,
+        "fsWrite": 0,
+        "ipcSent": 0,
+        "ipcReceived": 0,
+        "signalsCount": 0,
+        "voluntaryContextSwitches": 3037,
+        "involuntaryContextSwitches": 628
+      },
+      "stoppedCpu": {
+        "userCPUTime": 422677,
+        "systemCPUTime": 132673,
+        "maxRSS": 39220,
+        "sharedMemorySize": 0,
+        "unsharedDataSize": 0,
+        "unsharedStackSize": 0,
+        "minorPageFault": 10856,
+        "majorPageFault": 0,
+        "swappedOut": 0,
+        "fsRead": 0,
+        "fsWrite": 0,
+        "ipcSent": 0,
+        "ipcReceived": 0,
+        "signalsCount": 0,
+        "voluntaryContextSwitches": 3416,
+        "involuntaryContextSwitches": 717
+      },
+      "exitCpu": {
+        "userCPUTime": 423523,
+        "systemCPUTime": 132673,
+        "maxRSS": 39220,
+        "sharedMemorySize": 0,
+        "unsharedDataSize": 0,
+        "unsharedStackSize": 0,
+        "minorPageFault": 10857,
+        "majorPageFault": 0,
+        "swappedOut": 0,
+        "fsRead": 0,
+        "fsWrite": 0,
+        "ipcSent": 0,
+        "ipcReceived": 0,
+        "signalsCount": 0,
+        "voluntaryContextSwitches": 3421,
+        "involuntaryContextSwitches": 717
+      }
+    },
+    {
+      "rep": 9,
+      "mode": "snapshot",
+      "bootstrapWallMs": 710.4783329999991,
+      "lifecycleWallMs": 1455.2871870000017,
+      "tests": [
+        {
+          "name": "fresh state",
+          "state": "passed"
+        }
+      ],
+      "state": {
+        "env": "RUNTIME",
+        "cwd": "/root/.t3/worktrees/oximut/t3-30a24c44",
+        "argv": [],
+        "cleanGlobal": true,
+        "chaiTruncate": 40,
+        "runnerTestType": "function",
+        "identity": {
+          "runner": false,
+          "expect": false,
+          "chai": false,
+          "spy": false
+        },
+        "build": {
+          "date": 1794064949388,
+          "random": 0.6729020609872418,
+          "env": "BUILD",
+          "cwd": "/root/.t3/worktrees/oximut/t3-30a24c44",
+          "argv": [
+            "/root/.local/share/oximut/toolchains/node-v26.3.1-linux-arm64/bin/node",
+            "/root/.t3/worktrees/oximut/t3-30a24c44/benchmarks/experiments/fork-snapshot-probe/generated/deps.cjs"
+          ],
+          "symbols": [
+            "Symbol(Symbol.toStringTag)",
+            "Symbol(matchers-object)",
+            "Symbol($$jest-matchers-object)",
+            "Symbol(asymmetric-matchers-object)"
+          ]
+        }
+      },
+      "bootstrapCpu": {
+        "userCPUTime": 389984,
+        "systemCPUTime": 63234,
+        "maxRSS": 39216,
+        "sharedMemorySize": 0,
+        "unsharedDataSize": 0,
+        "unsharedStackSize": 0,
+        "minorPageFault": 10514,
+        "majorPageFault": 0,
+        "swappedOut": 0,
+        "fsRead": 0,
+        "fsWrite": 0,
+        "ipcSent": 0,
+        "ipcReceived": 0,
+        "signalsCount": 0,
+        "voluntaryContextSwitches": 3093,
+        "involuntaryContextSwitches": 618
+      },
+      "stoppedCpu": {
+        "userCPUTime": 454987,
+        "systemCPUTime": 85784,
+        "maxRSS": 60308,
+        "sharedMemorySize": 0,
+        "unsharedDataSize": 0,
+        "unsharedStackSize": 0,
+        "minorPageFault": 10835,
+        "majorPageFault": 0,
+        "swappedOut": 0,
+        "fsRead": 0,
+        "fsWrite": 0,
+        "ipcSent": 0,
+        "ipcReceived": 0,
+        "signalsCount": 0,
+        "voluntaryContextSwitches": 3434,
+        "involuntaryContextSwitches": 790
+      },
+      "exitCpu": {
+        "userCPUTime": 456713,
+        "systemCPUTime": 86109,
+        "maxRSS": 60308,
+        "sharedMemorySize": 0,
+        "unsharedDataSize": 0,
+        "unsharedStackSize": 0,
+        "minorPageFault": 10841,
+        "majorPageFault": 0,
+        "swappedOut": 0,
+        "fsRead": 0,
+        "fsWrite": 0,
+        "ipcSent": 0,
+        "ipcReceived": 0,
+        "signalsCount": 0,
+        "voluntaryContextSwitches": 3441,
+        "involuntaryContextSwitches": 794
+      }
+    },
+    {
+      "rep": 9,
+      "mode": "stock",
+      "bootstrapWallMs": 828.0255719999986,
+      "lifecycleWallMs": 2160.542343000001,
+      "tests": [
+        {
+          "name": "fresh state",
+          "state": "passed"
+        }
+      ],
+      "state": {
+        "env": "RUNTIME",
+        "cwd": "/root/.t3/worktrees/oximut/t3-30a24c44",
+        "argv": [],
+        "cleanGlobal": true,
+        "chaiTruncate": 40,
+        "runnerTestType": "function",
+        "identity": null,
+        "build": null
+      },
+      "bootstrapCpu": {
+        "userCPUTime": 344181,
+        "systemCPUTime": 103131,
+        "maxRSS": 31232,
+        "sharedMemorySize": 0,
+        "unsharedDataSize": 0,
+        "unsharedStackSize": 0,
+        "minorPageFault": 6226,
+        "majorPageFault": 0,
+        "swappedOut": 0,
+        "fsRead": 0,
+        "fsWrite": 0,
+        "ipcSent": 0,
+        "ipcReceived": 0,
+        "signalsCount": 0,
+        "voluntaryContextSwitches": 3090,
+        "involuntaryContextSwitches": 603
+      },
+      "stoppedCpu": {
+        "userCPUTime": 430754,
+        "systemCPUTime": 121753,
+        "maxRSS": 55992,
+        "sharedMemorySize": 0,
+        "unsharedDataSize": 0,
+        "unsharedStackSize": 0,
+        "minorPageFault": 6612,
+        "majorPageFault": 0,
+        "swappedOut": 0,
+        "fsRead": 0,
+        "fsWrite": 0,
+        "ipcSent": 0,
+        "ipcReceived": 0,
+        "signalsCount": 0,
+        "voluntaryContextSwitches": 3430,
+        "involuntaryContextSwitches": 745
+      },
+      "exitCpu": {
+        "userCPUTime": 431473,
+        "systemCPUTime": 121956,
+        "maxRSS": 55992,
+        "sharedMemorySize": 0,
+        "unsharedDataSize": 0,
+        "unsharedStackSize": 0,
+        "minorPageFault": 6614,
+        "majorPageFault": 0,
+        "swappedOut": 0,
+        "fsRead": 0,
+        "fsWrite": 0,
+        "ipcSent": 0,
+        "ipcReceived": 0,
+        "signalsCount": 0,
+        "voluntaryContextSwitches": 3435,
+        "involuntaryContextSwitches": 745
+      }
+    },
+    {
+      "rep": 10,
+      "mode": "stock",
+      "bootstrapWallMs": 563.795468999997,
+      "lifecycleWallMs": 1270.8669790000058,
+      "tests": [
+        {
+          "name": "fresh state",
+          "state": "passed"
+        }
+      ],
+      "state": {
+        "env": "RUNTIME",
+        "cwd": "/root/.t3/worktrees/oximut/t3-30a24c44",
+        "argv": [],
+        "cleanGlobal": true,
+        "chaiTruncate": 40,
+        "runnerTestType": "function",
+        "identity": null,
+        "build": null
+      },
+      "bootstrapCpu": {
+        "userCPUTime": 286919,
+        "systemCPUTime": 41865,
+        "maxRSS": 31512,
+        "sharedMemorySize": 0,
+        "unsharedDataSize": 0,
+        "unsharedStackSize": 0,
+        "minorPageFault": 6333,
+        "majorPageFault": 0,
+        "swappedOut": 0,
+        "fsRead": 0,
+        "fsWrite": 0,
+        "ipcSent": 0,
+        "ipcReceived": 0,
+        "signalsCount": 0,
+        "voluntaryContextSwitches": 3044,
+        "involuntaryContextSwitches": 649
+      },
+      "stoppedCpu": {
+        "userCPUTime": 347529,
+        "systemCPUTime": 55099,
+        "maxRSS": 57176,
+        "sharedMemorySize": 0,
+        "unsharedDataSize": 0,
+        "unsharedStackSize": 0,
+        "minorPageFault": 6673,
+        "majorPageFault": 0,
+        "swappedOut": 0,
+        "fsRead": 0,
+        "fsWrite": 0,
+        "ipcSent": 0,
+        "ipcReceived": 0,
+        "signalsCount": 0,
+        "voluntaryContextSwitches": 3398,
+        "involuntaryContextSwitches": 746
+      },
+      "exitCpu": {
+        "userCPUTime": 347987,
+        "systemCPUTime": 55099,
+        "maxRSS": 57176,
+        "sharedMemorySize": 0,
+        "unsharedDataSize": 0,
+        "unsharedStackSize": 0,
+        "minorPageFault": 6675,
+        "majorPageFault": 0,
+        "swappedOut": 0,
+        "fsRead": 0,
+        "fsWrite": 0,
+        "ipcSent": 0,
+        "ipcReceived": 0,
+        "signalsCount": 0,
+        "voluntaryContextSwitches": 3403,
+        "involuntaryContextSwitches": 746
+      }
+    },
+    {
+      "rep": 10,
+      "mode": "snapshot",
+      "bootstrapWallMs": 585.3385419999977,
+      "lifecycleWallMs": 977.0144270000019,
+      "tests": [
+        {
+          "name": "fresh state",
+          "state": "passed"
+        }
+      ],
+      "state": {
+        "env": "RUNTIME",
+        "cwd": "/root/.t3/worktrees/oximut/t3-30a24c44",
+        "argv": [],
+        "cleanGlobal": true,
+        "chaiTruncate": 40,
+        "runnerTestType": "function",
+        "identity": {
+          "runner": false,
+          "expect": false,
+          "chai": false,
+          "spy": false
+        },
+        "build": {
+          "date": 1794064949388,
+          "random": 0.6729020609872418,
+          "env": "BUILD",
+          "cwd": "/root/.t3/worktrees/oximut/t3-30a24c44",
+          "argv": [
+            "/root/.local/share/oximut/toolchains/node-v26.3.1-linux-arm64/bin/node",
+            "/root/.t3/worktrees/oximut/t3-30a24c44/benchmarks/experiments/fork-snapshot-probe/generated/deps.cjs"
+          ],
+          "symbols": [
+            "Symbol(Symbol.toStringTag)",
+            "Symbol(matchers-object)",
+            "Symbol($$jest-matchers-object)",
+            "Symbol(asymmetric-matchers-object)"
+          ]
+        }
+      },
+      "bootstrapCpu": {
+        "userCPUTime": 262803,
+        "systemCPUTime": 87105,
+        "maxRSS": 39216,
+        "sharedMemorySize": 0,
+        "unsharedDataSize": 0,
+        "unsharedStackSize": 0,
+        "minorPageFault": 10382,
+        "majorPageFault": 0,
+        "swappedOut": 0,
+        "fsRead": 0,
+        "fsWrite": 0,
+        "ipcSent": 0,
+        "ipcReceived": 0,
+        "signalsCount": 0,
+        "voluntaryContextSwitches": 3064,
+        "involuntaryContextSwitches": 471
+      },
+      "stoppedCpu": {
+        "userCPUTime": 326594,
+        "systemCPUTime": 110087,
+        "maxRSS": 60588,
+        "sharedMemorySize": 0,
+        "unsharedDataSize": 0,
+        "unsharedStackSize": 0,
+        "minorPageFault": 10815,
+        "majorPageFault": 0,
+        "swappedOut": 0,
+        "fsRead": 0,
+        "fsWrite": 0,
+        "ipcSent": 0,
+        "ipcReceived": 0,
+        "signalsCount": 0,
+        "voluntaryContextSwitches": 3435,
+        "involuntaryContextSwitches": 564
+      },
+      "exitCpu": {
+        "userCPUTime": 327664,
+        "systemCPUTime": 110087,
+        "maxRSS": 60588,
+        "sharedMemorySize": 0,
+        "unsharedDataSize": 0,
+        "unsharedStackSize": 0,
+        "minorPageFault": 10817,
+        "majorPageFault": 0,
+        "swappedOut": 0,
+        "fsRead": 0,
+        "fsWrite": 0,
+        "ipcSent": 0,
+        "ipcReceived": 0,
+        "signalsCount": 0,
+        "voluntaryContextSwitches": 3440,
+        "involuntaryContextSwitches": 568
+      }
+    },
+    {
+      "rep": 11,
+      "mode": "snapshot",
+      "bootstrapWallMs": 718.1434369999988,
+      "lifecycleWallMs": 1128.372030999999,
+      "tests": [
+        {
+          "name": "fresh state",
+          "state": "passed"
+        }
+      ],
+      "state": {
+        "env": "RUNTIME",
+        "cwd": "/root/.t3/worktrees/oximut/t3-30a24c44",
+        "argv": [],
+        "cleanGlobal": true,
+        "chaiTruncate": 40,
+        "runnerTestType": "function",
+        "identity": {
+          "runner": false,
+          "expect": false,
+          "chai": false,
+          "spy": false
+        },
+        "build": {
+          "date": 1794064949388,
+          "random": 0.6729020609872418,
+          "env": "BUILD",
+          "cwd": "/root/.t3/worktrees/oximut/t3-30a24c44",
+          "argv": [
+            "/root/.local/share/oximut/toolchains/node-v26.3.1-linux-arm64/bin/node",
+            "/root/.t3/worktrees/oximut/t3-30a24c44/benchmarks/experiments/fork-snapshot-probe/generated/deps.cjs"
+          ],
+          "symbols": [
+            "Symbol(Symbol.toStringTag)",
+            "Symbol(matchers-object)",
+            "Symbol($$jest-matchers-object)",
+            "Symbol(asymmetric-matchers-object)"
+          ]
+        }
+      },
+      "bootstrapCpu": {
+        "userCPUTime": 379586,
+        "systemCPUTime": 93886,
+        "maxRSS": 39220,
+        "sharedMemorySize": 0,
+        "unsharedDataSize": 0,
+        "unsharedStackSize": 0,
+        "minorPageFault": 10415,
+        "majorPageFault": 0,
+        "swappedOut": 0,
+        "fsRead": 0,
+        "fsWrite": 0,
+        "ipcSent": 0,
+        "ipcReceived": 0,
+        "signalsCount": 0,
+        "voluntaryContextSwitches": 3040,
+        "involuntaryContextSwitches": 562
+      },
+      "stoppedCpu": {
+        "userCPUTime": 471999,
+        "systemCPUTime": 102044,
+        "maxRSS": 39220,
+        "sharedMemorySize": 0,
+        "unsharedDataSize": 0,
+        "unsharedStackSize": 0,
+        "minorPageFault": 10882,
+        "majorPageFault": 0,
+        "swappedOut": 0,
+        "fsRead": 0,
+        "fsWrite": 0,
+        "ipcSent": 0,
+        "ipcReceived": 0,
+        "signalsCount": 0,
+        "voluntaryContextSwitches": 3411,
+        "involuntaryContextSwitches": 656
+      },
+      "exitCpu": {
+        "userCPUTime": 472516,
+        "systemCPUTime": 102099,
+        "maxRSS": 39220,
+        "sharedMemorySize": 0,
+        "unsharedDataSize": 0,
+        "unsharedStackSize": 0,
+        "minorPageFault": 10883,
+        "majorPageFault": 0,
+        "swappedOut": 0,
+        "fsRead": 0,
+        "fsWrite": 0,
+        "ipcSent": 0,
+        "ipcReceived": 0,
+        "signalsCount": 0,
+        "voluntaryContextSwitches": 3416,
+        "involuntaryContextSwitches": 657
+      }
+    },
+    {
+      "rep": 11,
+      "mode": "stock",
+      "bootstrapWallMs": 766.6327600000004,
+      "lifecycleWallMs": 1429.5446350000057,
+      "tests": [
+        {
+          "name": "fresh state",
+          "state": "passed"
+        }
+      ],
+      "state": {
+        "env": "RUNTIME",
+        "cwd": "/root/.t3/worktrees/oximut/t3-30a24c44",
+        "argv": [],
+        "cleanGlobal": true,
+        "chaiTruncate": 40,
+        "runnerTestType": "function",
+        "identity": null,
+        "build": null
+      },
+      "bootstrapCpu": {
+        "userCPUTime": 348132,
+        "systemCPUTime": 59561,
+        "maxRSS": 55720,
+        "sharedMemorySize": 0,
+        "unsharedDataSize": 0,
+        "unsharedStackSize": 0,
+        "minorPageFault": 6417,
+        "majorPageFault": 0,
+        "swappedOut": 0,
+        "fsRead": 0,
+        "fsWrite": 0,
+        "ipcSent": 0,
+        "ipcReceived": 0,
+        "signalsCount": 0,
+        "voluntaryContextSwitches": 3059,
+        "involuntaryContextSwitches": 483
+      },
+      "stoppedCpu": {
+        "userCPUTime": 433837,
+        "systemCPUTime": 62283,
+        "maxRSS": 57244,
+        "sharedMemorySize": 0,
+        "unsharedDataSize": 0,
+        "unsharedStackSize": 0,
+        "minorPageFault": 6767,
+        "majorPageFault": 0,
+        "swappedOut": 0,
+        "fsRead": 0,
+        "fsWrite": 0,
+        "ipcSent": 0,
+        "ipcReceived": 0,
+        "signalsCount": 0,
+        "voluntaryContextSwitches": 3407,
+        "involuntaryContextSwitches": 557
+      },
+      "exitCpu": {
+        "userCPUTime": 434712,
+        "systemCPUTime": 62409,
+        "maxRSS": 57244,
+        "sharedMemorySize": 0,
+        "unsharedDataSize": 0,
+        "unsharedStackSize": 0,
+        "minorPageFault": 6768,
+        "majorPageFault": 0,
+        "swappedOut": 0,
+        "fsRead": 0,
+        "fsWrite": 0,
+        "ipcSent": 0,
+        "ipcReceived": 0,
+        "signalsCount": 0,
+        "voluntaryContextSwitches": 3412,
+        "involuntaryContextSwitches": 557
+      }
+    }
+  ],
+  "sourceHashes": {
+    "build.mjs": "ad60f184e2383dcb9a72c1cd917cea4a5c10ddaacc00d01465330e2eada56d8d",
+    "runtime.cjs": "575d0b874de163baafd0664cdc85eaf186bceaaf8e3d89ed31c2057d7ec0aade",
+    "lifecycle.mjs": "0cee1fb911adda5689d497ac122cc229bb70f001abbee19a3e328dd28035d715",
+    "generated/deps.cjs": "bcf2a0064c3fc12ec906009c23a48bda746d32570e447e027ce35797f7628454",
+    "generated/deps.blob": "5efb4b331a5246f1a17897b4218b916595450270d70a742c46f60e0719cbafce"
+  }
+}

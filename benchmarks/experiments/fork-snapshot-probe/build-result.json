@@ -1,0 +1,6 @@
+{
+  "status": 0,
+  "signal": null,
+  "stdout": "",
+  "stderr": "(node:18409) Warning: It's not yet fully verified whether built-in module \"node:module\" works in user snapshot builder scripts.\nIt may still work in some cases, but in other cases certain run-time states may be out-of-sync after snapshot deserialization.\nTo request support for the module, use the Node.js issue tracker: https://github.com/nodejs/node/issues\n(Use `node --trace-warnings ...` to show where the warning was created)\n"
+}

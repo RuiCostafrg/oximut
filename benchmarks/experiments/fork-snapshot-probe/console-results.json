@@ -1,0 +1,20 @@
+{
+  "stock": {
+    "status": 0,
+    "signal": null,
+    "stdout": "{\"consoleType\":\"function\",\"error\":null}",
+    "stderr": ""
+  },
+  "unpatched": {
+    "status": 0,
+    "signal": null,
+    "stdout": "{\"consoleType\":\"undefined\",\"error\":\"TypeError: Console is not a constructor\"}",
+    "stderr": ""
+  },
+  "repaired": {
+    "status": 0,
+    "signal": null,
+    "stdout": "{\"consoleType\":\"function\",\"error\":null}",
+    "stderr": ""
+  }
+}
