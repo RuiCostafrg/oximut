@@ -73,6 +73,11 @@ def validate_metadata(files, version):
             # Inspect selected Git blobs, never the current checkout's runners.
             for name in re.findall(r"from\s+['\"]\./(protocol\.(?:mjs|ts))['\"]", source[1].decode()):
                 required.add(f"packages/vitest-adapter/{name}")
+    for worker in ("m1-worker.ts", "m2-worker.ts"):
+        source = files.get(f"packages/vitest-adapter/{worker}")
+        # Only candidates whose workers load the compile-cache preload need it.
+        if source and "compile-cache.cjs" in source[1].decode():
+            required.add("packages/vitest-adapter/compile-cache.cjs")
     missing = required - files.keys()
     if missing:
         raise ValueError(f"missing required source files: {sorted(missing)}")

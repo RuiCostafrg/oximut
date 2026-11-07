@@ -1,8 +1,12 @@
 import { readFile } from 'node:fs/promises';
+import { getCompileCacheDir } from 'node:module';
 import { resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { createVitest, version, type Reporter } from 'vitest/node';
 import type { Request, Result } from './protocol.ts';
 import { SelectionSupport } from './m3-selection.ts';
+
+const compileCacheFlush = fileURLToPath(new URL('./compile-cache.cjs', import.meta.url));
 
 const selectionSupport = new SelectionSupport();
 
@@ -73,6 +77,10 @@ async function command(name: string, args: Request): Promise<unknown> {
       },
     );
     await vitest.standalone();
+    // Fresh forks reuse compiled Vitest runtime code (see m2-worker.ts).
+    if (getCompileCacheDir())
+      for (const project of vitest.projects)
+        project.config.execArgv = [...project.config.execArgv, '--require', compileCacheFlush];
     if (
       vitest.projects.length !== 1 ||
       vitest.projects.some(
