@@ -82,8 +82,11 @@ Only memory-pressure admission waits take a broad sample, at most once per
 sampling interval. Before this change, every 10ms poll while all slots were busy
 (the whole mutation phase with one worker) forced a broad host scan. Every abort, termination and shutdown verification still performs a
 fresh broad discovery before signalling or concluding cleanup, so the
-fail-closed cleanup gates are unchanged. Identity and RSS reads for tree members
-remain fresh and strict.
+fail-closed cleanup gates are unchanged. Identity checks for tree members remain
+fresh and strict for every aggregate, slot and CLI-floor observation. Each
+verified PID's RSS is read once per sample (one `smaps_rollup` walk) and reused
+by the overlapping trees of that sample only; errors are never cached and every
+new sample reads afresh.
 
 If process discovery fails, the supervisor performs bounded best-effort cleanup
 of previously observed identities, including its directly spawned controller.
