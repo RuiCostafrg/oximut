@@ -11,9 +11,13 @@ ADAPTER = r"""
 import { appendFileSync, existsSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 const session = process.argv[2];
+const parent = process.ppid;
+const deadline = Date.now() + 90_000;
 let sequence = 0;
 for (;;) {
   if (existsSync(join(session, 'stop'))) process.exit(0);
+  // Never outlive a hung or killed CLI slot: exit once reparented or overdue.
+  if (process.ppid !== parent || Date.now() > deadline) process.exit(1);
   const input = join(session, `request-${sequence}.json`);
   if (!existsSync(input)) { await new Promise(r => setTimeout(r, 5)); continue; }
   const request = JSON.parse(readFileSync(input, 'utf8'));

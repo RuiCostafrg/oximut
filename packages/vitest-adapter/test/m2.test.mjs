@@ -210,8 +210,11 @@ test(
   async (t) => {
     await mkdir(join(repository, '.oximut'), { recursive: true });
     const cache = await mkdtemp(join(repository, '.oximut/m2-compile-cache-'));
-    t.after(() => rm(cache, { recursive: true, force: true }));
     const s = await session(t, { NODE_COMPILE_CACHE: cache });
+    // after() hooks run in registration order: remove the cache only once the
+    // session hook has stopped the runner, so its stop-time flush cannot
+    // recreate the directory under .oximut/.
+    t.after(() => rm(cache, { recursive: true, force: true }));
     assert.equal((await s.run('disabled')).outcome, 'passed');
     // The controller only flushes at exit; entries now come from test forks.
     const entries = await readdir(cache, { recursive: true, withFileTypes: true });

@@ -74,7 +74,9 @@ preload run a different entrypoint and skip it. The default directory is
 removed with the slot, so nothing persists across runs. A caller-provided
 `NODE_COMPILE_CACHE` is left in place and remains the caller's to manage.
 `--no-cache` governs Oximut's persistent caches across runs. Like Vite's
-in-memory transform cache, this per-run code cache stays enabled; V8's validation
+in-memory transform cache, this per-run code cache stays enabled unless the
+caller sets `NODE_DISABLE_COMPILE_CACHE=1`, which Node honours (the fork preload
+and its `execArgv` injection are then skipped as well); V8's validation
 means it cannot change outcomes. Test isolation is unaffected: every fork still starts fresh and
 evaluates its modules anew.
 

@@ -40,7 +40,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 90
     env:
-      # Main after #39; diagnostic clocks and peak attribution stay off here.
+      # Main d7d9910 (after #40 and dependency bumps); diagnostic clocks and peak attribution stay off here.
       BEFORE_COMMIT: d7d99100c6119143fe2b1896863dcce24ee85351
       BUILD_FLAGS: --locked --release -p oximut-cli
     steps:
