@@ -102,7 +102,11 @@ for s in "${SELECTED[@]}"; do
   declare -F "stage_$s" >/dev/null || _fail "unknown stage '$s' (stages: ${AVAILABLE_STAGES[*]})"
 done
 
-if [ -n "$(git status --porcelain --untracked-files=normal)" ]; then
+# Plain assignment (not an if-condition) so a failing git status can't
+# silently read as a clean tree (CodeRabbit Minor, status command).
+worktree_status="$(git status --porcelain --untracked-files=normal)" \
+  || _fail "git status failed — cannot verify tree cleanliness"
+if [ -n "$worktree_status" ]; then
   # gh-signoff refuses to attest a dirty tree, so fail fast BEFORE the long
   # stages instead of finishing a full run with nothing posted.
   if [ "$NO_SIGNOFF" = 0 ]; then
