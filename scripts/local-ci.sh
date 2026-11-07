@@ -126,11 +126,13 @@ for s in "${SELECTED[@]}"; do
     [ "$NO_SIGNOFF" = 0 ] && gh signoff fail --commit "$head_sha" "$s" --description "$s failed locally" >/dev/null 2>&1 || true
     _fail "stage '$s' failed"
   fi
-  # A concurrent commit during the stage changes what was tested but not
-  # head_sha — refuse to attest anything in that case (cubic P2).
-  if [ "$(git rev-parse HEAD)" != "$head_sha" ]; then
-    [ "$NO_SIGNOFF" = 0 ] && gh signoff fail --commit "$head_sha" "$s" --description "$s ran while HEAD moved" >/dev/null 2>&1 || true
-    _fail "HEAD moved during stage '$s' — aborting instead of attesting untested code"
+  # A concurrent commit or uncommitted edit during the stage changes what was
+  # tested while $head_sha stays — refuse to attest anything then (cubic P2/P1).
+  # Scoped to signed-off runs: dirty trees are allowed with --no-signoff.
+  if [ "$(git rev-parse HEAD)" != "$head_sha" ] \
+     || { [ "$NO_SIGNOFF" = 0 ] && [ -n "$(git status --porcelain --untracked-files=normal)" ]; }; then
+    [ "$NO_SIGNOFF" = 0 ] && gh signoff fail --commit "$head_sha" "$s" --description "$s ran while HEAD moved or tree changed" >/dev/null 2>&1 || true
+    _fail "HEAD moved or working tree changed during stage '$s' — aborting instead of attesting untested code"
   fi
   _ok "$s passed"
   if [ "$NO_SIGNOFF" = 0 ]; then
