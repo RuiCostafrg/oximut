@@ -13,9 +13,9 @@ Open the pages in a browser (on GitHub: Raw → save → open). They are offline
 | Paired before/after campaign (5 pairs, gates pass) | [42368931548](https://github.com/RuiCostafrg/oximut/actions/runs/42368931548) | Every ratio, CI, phase median and tool median |
 | Rust sampler accounting | [42370674832](https://github.com/RuiCostafrg/oximut/actions/runs/42370674832) | Sampler self CPU; peak RSS composition |
 | Controller job timeline | [42370841803](https://github.com/RuiCostafrg/oximut/actions/runs/42370841803) | Fork lifecycle and job walls (shares only) |
-| Node CPU profiles (explicit `--cpu-prof`, #43 branch merged with main) | [42370984859](https://github.com/RuiCostafrg/oximut/actions/runs/42370984859) | CPU categories and functions; 17 of 18 fork profiles (partial evidence) |
+| Node CPU profiles (explicit `--cpu-prof`) at `2d2911f`: main `2c6952b` merged into the #43 profiler-tooling branch, so the product code matches main but the capture tooling differs | [42370984859](https://github.com/RuiCostafrg/oximut/actions/runs/42370984859) | CPU categories and functions; 17 of 18 fork profiles (partial evidence; that capture's strict gate fails) |
 
-`data.json` holds every derived number plus the SHA-256 of each consumed input. Regenerate the pages without the (14-day) artifacts:
+`data.json` holds every derived number plus the SHA-256 of every consumed input file. Extraction rejects a campaign whose gates failed, whose rows are missing or duplicated, or whose published medians/intervals differ from those recomputed from its raw rows (same deterministic bootstrap). It also rejects inputs that declare different workloads, and records each diagnostic's commit and pass status. Regenerate the pages without the (14-day) artifacts:
 
 ~~~sh
 python3 benchmarks/bottleneck_report.py render --data benchmarks/results/2026-11-07-bottleneck-report/data.json \

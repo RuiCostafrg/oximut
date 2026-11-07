@@ -1,6 +1,11 @@
 {
  "accounting": {
-  "commit": "2c6952b5b2970340c88b2d0185e954d213995b7f",
+  "identity": {
+   "commit": "2c6952b5b2970340c88b2d0185e954d213995b7f",
+   "mode": "rust-accounting-self",
+   "passed": true,
+   "workload_sha256": "b6a51df85b96a9216263afd673e71e22b2a25c02374260b7a37f61faa4103c3a"
+  },
   "passed": true,
   "peak_rss_snapshots": [
    {
@@ -317,7 +322,8 @@
      "median": 1.112883590752389
     }
    }
-  }
+  },
+  "workload_sha256": "b6a51df85b96a9216263afd673e71e22b2a25c02374260b7a37f61faa4103c3a"
  },
  "controller": {
   "controller_exit_ms": 2963.37765,
@@ -327,6 +333,12 @@
    "user": 852.684
   },
   "controller_start_ms": 0.198928,
+  "identity": {
+   "commit": "2c6952b5b2970340c88b2d0185e954d213995b7f",
+   "mode": "controller-jobs",
+   "passed": true,
+   "workload_sha256": "b6a51df85b96a9216263afd673e71e22b2a25c02374260b7a37f61faa4103c3a"
+  },
   "jobs": [
    {
     "command": "initialize",
@@ -667,35 +679,97 @@
     "peak_process_count": 2,
     "wall_seconds": 0.7977603769999746
    }
+  },
+  "workload": {
+   "killed": 10,
+   "mutants": 10,
+   "mutated_files": 5,
+   "tests": 102
   }
  },
- "generated": "Generated 2026-11-07 from native Ubuntu x86_64 evidence on main 2c6952b (paired campaign at ff3eb88 vs c970951).",
+ "generated": "Generated 2026-11-07 from native Ubuntu x86_64 evidence on main 2c6952b (paired campaign at ff3eb88 vs c970951; CPU profiles at 2d2911f).",
  "inputs": {
-  "native-diagnostic-2c6952b5b2970340c88b2d0185e954d213995b7f-1/capture/diagnostic.json": "457eee0887942dc41fa48ec925a319686c103aea21bf6c5b2e61114b157eefed",
-  "native-diagnostic-2c6952b5b2970340c88b2d0185e954d213995b7f-1/capture/profiles/controller-6361.jsonl": "fd942becba3b4dfcf0e1fd0c003b51b17eb293e7ae18993c0f4b069d958cbf22",
-  "native-diagnostic-2d2911fb618a36b764b2aff48eef303ec8ad1dcb-1/capture/profiles/CPU.20261107.120805.6631.0.001.cpuprofile": "fb4b79b8dff682adda0665eda5369cead6a7c24037642ab8a2fa2f1b9fe9320d",
-  "native-diagnostic-2d2911fb618a36b764b2aff48eef303ec8ad1dcb-1/capture/profiles/CPU.20261107.120805.6648.0.001.cpuprofile": "2915aa0fb44f54e072b6581f4e323ba9e765cad50e46f72ff118a8c43e595535",
-  "native-diagnostic-2d2911fb618a36b764b2aff48eef303ec8ad1dcb-1/capture/profiles/CPU.20261107.120806.6656.0.001.cpuprofile": "b83933c8140c495bf8b2f5666fdaf04ca508f381cf62a164a25cac0b3caed505",
-  "native-diagnostic-2d2911fb618a36b764b2aff48eef303ec8ad1dcb-1/capture/profiles/CPU.20261107.120806.6664.0.001.cpuprofile": "e2078d41d4ae5de3e203759bb050bdee7ac9d3a856519c228d14893beadc173e",
-  "native-diagnostic-2d2911fb618a36b764b2aff48eef303ec8ad1dcb-1/capture/profiles/CPU.20261107.120806.6672.0.001.cpuprofile": "a750b583f1130c481dfbdb4248c2c01e279e0314e9d5c97abf52ae7b26374331",
-  "native-diagnostic-2d2911fb618a36b764b2aff48eef303ec8ad1dcb-1/capture/profiles/CPU.20261107.120807.6680.0.001.cpuprofile": "caba241f1b09fb848023f82b9653bb3ba49e7bac812bcab5af2be56583c1fc9d",
-  "native-diagnostic-2d2911fb618a36b764b2aff48eef303ec8ad1dcb-1/capture/profiles/CPU.20261107.120807.6688.0.001.cpuprofile": "c767f485afc5372acbb29644147345cfe704345efd83f3da6da1d9594835ce87",
-  "native-diagnostic-2d2911fb618a36b764b2aff48eef303ec8ad1dcb-1/capture/profiles/CPU.20261107.120807.6696.0.001.cpuprofile": "973f2ae632fb237824609a58b53badbf78aaa4cbf366a6bde82867e89ac09cae",
-  "native-diagnostic-2d2911fb618a36b764b2aff48eef303ec8ad1dcb-1/capture/profiles/CPU.20261107.120808.6704.0.001.cpuprofile": "d4eca6b6ec84b58f7317a1a6f39286150adcbbc37ad712df8a8fb5c271635f02",
-  "native-diagnostic-2d2911fb618a36b764b2aff48eef303ec8ad1dcb-1/capture/profiles/CPU.20261107.120808.6720.0.001.cpuprofile": "032ca3cf45fc6d4edbe3a1ee616a29442c84adb80a8bc20cdd239f4f6c46e52d",
-  "native-diagnostic-2d2911fb618a36b764b2aff48eef303ec8ad1dcb-1/capture/profiles/CPU.20261107.120809.6728.0.001.cpuprofile": "a6a7ea03c6676709d1054a92cdd1ee7825e62f7ed1005281efbf3aeafc7634da",
-  "native-diagnostic-2d2911fb618a36b764b2aff48eef303ec8ad1dcb-1/capture/profiles/CPU.20261107.120809.6736.0.001.cpuprofile": "bbe9a2339a9ccd0f127942bddb7ebf44d0085431fb99589583978a9d157c808d",
-  "native-diagnostic-2d2911fb618a36b764b2aff48eef303ec8ad1dcb-1/capture/profiles/CPU.20261107.120809.6744.0.001.cpuprofile": "3d734e56f1bfdeba8a593096a4d8161df982af7f53f81e8bb543892bf78fc3f5",
-  "native-diagnostic-2d2911fb618a36b764b2aff48eef303ec8ad1dcb-1/capture/profiles/CPU.20261107.120810.6752.0.001.cpuprofile": "05709db7ed2b75addc62f2c10ebf03fa1e6914c4d7ad1c78d76061a05b84d378",
-  "native-diagnostic-2d2911fb618a36b764b2aff48eef303ec8ad1dcb-1/capture/profiles/CPU.20261107.120810.6760.0.001.cpuprofile": "59293b0764ff07166b5444660a43ee49b175497de91e36cfe440145f64ae30b2",
-  "native-diagnostic-2d2911fb618a36b764b2aff48eef303ec8ad1dcb-1/capture/profiles/CPU.20261107.120810.6768.0.001.cpuprofile": "7c6923c0fb35f4bba38fa57e368961be7b4e37251920b04786e9532f10105e23",
-  "native-diagnostic-2d2911fb618a36b764b2aff48eef303ec8ad1dcb-1/capture/profiles/CPU.20261107.120811.6776.0.001.cpuprofile": "a9d8aa2ea754eed0098b7264d2e2ff5ae09c944915897bcdbe81f3e6c0de8fb6",
-  "native-diagnostic-2d2911fb618a36b764b2aff48eef303ec8ad1dcb-1/capture/profiles/CPU.20261107.120811.6784.0.001.cpuprofile": "43e81980f35a5f056022aa2df8bde7383c2fe7b2a9811163b3bbd71487e2db57",
-  "real-project-comparison-dd942fcdead8508ecfb87caed233335f45049a3d-1/real-project-comparison/measurements.jsonl": "f9e40297317fe13282152fff6021fd37500870c7eb44fa5c700a947b1a32c43f",
-  "real-project-comparison-dd942fcdead8508ecfb87caed233335f45049a3d-1/real-project-comparison/summary.json": "295f5cbbd0927ce69a19b2db8036a83fab523a1a2707cd778f6ef76baee22387"
+  "accounting 42370674832: native-diagnostic-2c6952b5b2970340c88b2d0185e954d213995b7f-1/capture/diagnostic.json": "457eee0887942dc41fa48ec925a319686c103aea21bf6c5b2e61114b157eefed",
+  "accounting 42370674832: native-diagnostic-2c6952b5b2970340c88b2d0185e954d213995b7f-1/capture/qualification/measurements.jsonl": "0fd9408237f4476620966d7a70039d8910d47edfe7f02e22335c66d0c6d9de61",
+  "benchmark 42368931548: real-project-comparison-dd942fcdead8508ecfb87caed233335f45049a3d-1/real-project-comparison/measurements.jsonl": "f9e40297317fe13282152fff6021fd37500870c7eb44fa5c700a947b1a32c43f",
+  "benchmark 42368931548: real-project-comparison-dd942fcdead8508ecfb87caed233335f45049a3d-1/real-project-comparison/summary.json": "295f5cbbd0927ce69a19b2db8036a83fab523a1a2707cd778f6ef76baee22387",
+  "controller 42370841803: native-diagnostic-2c6952b5b2970340c88b2d0185e954d213995b7f-1/capture/diagnostic.json": "d0518cede235d19b593336a4d14428c588675bb4f49f5786a7878dbcb8338383",
+  "controller 42370841803: native-diagnostic-2c6952b5b2970340c88b2d0185e954d213995b7f-1/capture/profiles/controller-6361.jsonl": "fd942becba3b4dfcf0e1fd0c003b51b17eb293e7ae18993c0f4b069d958cbf22",
+  "controller 42370841803: native-diagnostic-2c6952b5b2970340c88b2d0185e954d213995b7f-1/capture/qualification/00-oximut/report.json": "99748bf529febf5ebdea403c37fb0cb05744d47afcf8d71f13fdf265fe684cf0",
+  "controller 42370841803: native-diagnostic-2c6952b5b2970340c88b2d0185e954d213995b7f-1/capture/qualification/measurements.jsonl": "fc7c6f6c14d74c9ef264fb8c5a110873f4aadf01e65af89329d7cfb6b07cde91",
+  "profiles 42370984859: native-diagnostic-2d2911fb618a36b764b2aff48eef303ec8ad1dcb-1/capture/diagnostic.json": "fafdcaa3b29c966c277539b826c5549d14583678ab20e0f540e8c8563725d25b",
+  "profiles 42370984859: native-diagnostic-2d2911fb618a36b764b2aff48eef303ec8ad1dcb-1/capture/profiles/CPU.20261107.120805.6631.0.001.cpuprofile": "fb4b79b8dff682adda0665eda5369cead6a7c24037642ab8a2fa2f1b9fe9320d",
+  "profiles 42370984859: native-diagnostic-2d2911fb618a36b764b2aff48eef303ec8ad1dcb-1/capture/profiles/CPU.20261107.120805.6648.0.001.cpuprofile": "2915aa0fb44f54e072b6581f4e323ba9e765cad50e46f72ff118a8c43e595535",
+  "profiles 42370984859: native-diagnostic-2d2911fb618a36b764b2aff48eef303ec8ad1dcb-1/capture/profiles/CPU.20261107.120806.6656.0.001.cpuprofile": "b83933c8140c495bf8b2f5666fdaf04ca508f381cf62a164a25cac0b3caed505",
+  "profiles 42370984859: native-diagnostic-2d2911fb618a36b764b2aff48eef303ec8ad1dcb-1/capture/profiles/CPU.20261107.120806.6664.0.001.cpuprofile": "e2078d41d4ae5de3e203759bb050bdee7ac9d3a856519c228d14893beadc173e",
+  "profiles 42370984859: native-diagnostic-2d2911fb618a36b764b2aff48eef303ec8ad1dcb-1/capture/profiles/CPU.20261107.120806.6672.0.001.cpuprofile": "a750b583f1130c481dfbdb4248c2c01e279e0314e9d5c97abf52ae7b26374331",
+  "profiles 42370984859: native-diagnostic-2d2911fb618a36b764b2aff48eef303ec8ad1dcb-1/capture/profiles/CPU.20261107.120807.6680.0.001.cpuprofile": "caba241f1b09fb848023f82b9653bb3ba49e7bac812bcab5af2be56583c1fc9d",
+  "profiles 42370984859: native-diagnostic-2d2911fb618a36b764b2aff48eef303ec8ad1dcb-1/capture/profiles/CPU.20261107.120807.6688.0.001.cpuprofile": "c767f485afc5372acbb29644147345cfe704345efd83f3da6da1d9594835ce87",
+  "profiles 42370984859: native-diagnostic-2d2911fb618a36b764b2aff48eef303ec8ad1dcb-1/capture/profiles/CPU.20261107.120807.6696.0.001.cpuprofile": "973f2ae632fb237824609a58b53badbf78aaa4cbf366a6bde82867e89ac09cae",
+  "profiles 42370984859: native-diagnostic-2d2911fb618a36b764b2aff48eef303ec8ad1dcb-1/capture/profiles/CPU.20261107.120808.6704.0.001.cpuprofile": "d4eca6b6ec84b58f7317a1a6f39286150adcbbc37ad712df8a8fb5c271635f02",
+  "profiles 42370984859: native-diagnostic-2d2911fb618a36b764b2aff48eef303ec8ad1dcb-1/capture/profiles/CPU.20261107.120808.6720.0.001.cpuprofile": "032ca3cf45fc6d4edbe3a1ee616a29442c84adb80a8bc20cdd239f4f6c46e52d",
+  "profiles 42370984859: native-diagnostic-2d2911fb618a36b764b2aff48eef303ec8ad1dcb-1/capture/profiles/CPU.20261107.120809.6728.0.001.cpuprofile": "a6a7ea03c6676709d1054a92cdd1ee7825e62f7ed1005281efbf3aeafc7634da",
+  "profiles 42370984859: native-diagnostic-2d2911fb618a36b764b2aff48eef303ec8ad1dcb-1/capture/profiles/CPU.20261107.120809.6736.0.001.cpuprofile": "bbe9a2339a9ccd0f127942bddb7ebf44d0085431fb99589583978a9d157c808d",
+  "profiles 42370984859: native-diagnostic-2d2911fb618a36b764b2aff48eef303ec8ad1dcb-1/capture/profiles/CPU.20261107.120809.6744.0.001.cpuprofile": "3d734e56f1bfdeba8a593096a4d8161df982af7f53f81e8bb543892bf78fc3f5",
+  "profiles 42370984859: native-diagnostic-2d2911fb618a36b764b2aff48eef303ec8ad1dcb-1/capture/profiles/CPU.20261107.120810.6752.0.001.cpuprofile": "05709db7ed2b75addc62f2c10ebf03fa1e6914c4d7ad1c78d76061a05b84d378",
+  "profiles 42370984859: native-diagnostic-2d2911fb618a36b764b2aff48eef303ec8ad1dcb-1/capture/profiles/CPU.20261107.120810.6760.0.001.cpuprofile": "59293b0764ff07166b5444660a43ee49b175497de91e36cfe440145f64ae30b2",
+  "profiles 42370984859: native-diagnostic-2d2911fb618a36b764b2aff48eef303ec8ad1dcb-1/capture/profiles/CPU.20261107.120810.6768.0.001.cpuprofile": "7c6923c0fb35f4bba38fa57e368961be7b4e37251920b04786e9532f10105e23",
+  "profiles 42370984859: native-diagnostic-2d2911fb618a36b764b2aff48eef303ec8ad1dcb-1/capture/profiles/CPU.20261107.120811.6776.0.001.cpuprofile": "a9d8aa2ea754eed0098b7264d2e2ff5ae09c944915897bcdbe81f3e6c0de8fb6",
+  "profiles 42370984859: native-diagnostic-2d2911fb618a36b764b2aff48eef303ec8ad1dcb-1/capture/profiles/CPU.20261107.120811.6784.0.001.cpuprofile": "43e81980f35a5f056022aa2df8bde7383c2fe7b2a9811163b3bbd71487e2db57",
+  "profiles 42370984859: native-diagnostic-2d2911fb618a36b764b2aff48eef303ec8ad1dcb-1/capture/profiles/node-6539-0.json": "fa8e1bab5ae5f3bcb15cb3b4925e78269d1ca99874bc31107fed92e9347440c9",
+  "profiles 42370984859: native-diagnostic-2d2911fb618a36b764b2aff48eef303ec8ad1dcb-1/capture/profiles/node-6562-0.json": "474308447e9148cb5225fcddf2b1e45f01fdba0a99d4f73f5c9dad3616368b88",
+  "profiles 42370984859: native-diagnostic-2d2911fb618a36b764b2aff48eef303ec8ad1dcb-1/capture/profiles/node-6576-0.json": "50ea3d0816c53182284c5d47080b398e75667cae339219575f8a07ef491ae7c8",
+  "profiles 42370984859: native-diagnostic-2d2911fb618a36b764b2aff48eef303ec8ad1dcb-1/capture/profiles/node-6597-0.json": "9d7a99c9e510fedf38d2533688e205588787d48c12a5fd87e21813d651a5c263",
+  "profiles 42370984859: native-diagnostic-2d2911fb618a36b764b2aff48eef303ec8ad1dcb-1/capture/profiles/node-6605-0.json": "a4a50862ee27ebaecfcf8d4ed4b0e054b21137691c40e1c4fe9cb4c4a610ea8d",
+  "profiles 42370984859: native-diagnostic-2d2911fb618a36b764b2aff48eef303ec8ad1dcb-1/capture/profiles/node-6613-0.json": "ed95c93d996679129cad245353023ed6153f77c57049ee899dd99193b3a5fc21",
+  "profiles 42370984859: native-diagnostic-2d2911fb618a36b764b2aff48eef303ec8ad1dcb-1/capture/profiles/node-6621-0.json": "ed18cd9e1bd765d0065713704c3b4da0063c7f37b966109647d4f72ab4891714",
+  "profiles 42370984859: native-diagnostic-2d2911fb618a36b764b2aff48eef303ec8ad1dcb-1/capture/profiles/node-6631-0.json": "60d1cfcf5fa58359cd38572f6b34fa8a025a2f30c693c4f0c6a9855a0a1543b9",
+  "profiles 42370984859: native-diagnostic-2d2911fb618a36b764b2aff48eef303ec8ad1dcb-1/capture/profiles/node-6648-0.json": "56dcd51394e998f0691e4c84163d959866225aafcf95be18e0334ce02b57b1e9",
+  "profiles 42370984859: native-diagnostic-2d2911fb618a36b764b2aff48eef303ec8ad1dcb-1/capture/profiles/node-6656-0.json": "bfdfa4d307f0be95b78b1a1cb6ca29955628a13a70e74b49614bdba51ddeec34",
+  "profiles 42370984859: native-diagnostic-2d2911fb618a36b764b2aff48eef303ec8ad1dcb-1/capture/profiles/node-6664-0.json": "d7b95e90814202b875d602ef35868c22160e02914c7fec654958cccb71497864",
+  "profiles 42370984859: native-diagnostic-2d2911fb618a36b764b2aff48eef303ec8ad1dcb-1/capture/profiles/node-6672-0.json": "23809ec4ce4fd565ce6a5ff741b532eeeb03dbca392bb75620ee4a33ecb93eb5",
+  "profiles 42370984859: native-diagnostic-2d2911fb618a36b764b2aff48eef303ec8ad1dcb-1/capture/profiles/node-6680-0.json": "28b696643279aaf16d8f279a2ec2a72307f1aa28a4c3577b92fcf242383c6f1c",
+  "profiles 42370984859: native-diagnostic-2d2911fb618a36b764b2aff48eef303ec8ad1dcb-1/capture/profiles/node-6688-0.json": "e28066fc351188b79d512125f19fced6bde4477f502a729ad4c44f076f68376b",
+  "profiles 42370984859: native-diagnostic-2d2911fb618a36b764b2aff48eef303ec8ad1dcb-1/capture/profiles/node-6696-0.json": "18e6397d7796e0e610b7719ae63dd74537490db2fb226d0ac5430aeae0003ebf",
+  "profiles 42370984859: native-diagnostic-2d2911fb618a36b764b2aff48eef303ec8ad1dcb-1/capture/profiles/node-6704-0.json": "7ada37cda2c7823436143b76224bd6b48cf240f62f5f841513189ceda8e841fd",
+  "profiles 42370984859: native-diagnostic-2d2911fb618a36b764b2aff48eef303ec8ad1dcb-1/capture/profiles/node-6712-0.json": "96037e676a7af17fdd7cf22439daad75b7a78c9d4edacfe9c07b3606ddc6b774",
+  "profiles 42370984859: native-diagnostic-2d2911fb618a36b764b2aff48eef303ec8ad1dcb-1/capture/profiles/node-6720-0.json": "460a5a241e214daa5fd2035e114cda73cae6d8761140c52ca97694b3f5933dc0",
+  "profiles 42370984859: native-diagnostic-2d2911fb618a36b764b2aff48eef303ec8ad1dcb-1/capture/profiles/node-6728-0.json": "0dcbbb372f432c9b38cf884e1ae50b8945609d91db57d05b135507ed00201dba",
+  "profiles 42370984859: native-diagnostic-2d2911fb618a36b764b2aff48eef303ec8ad1dcb-1/capture/profiles/node-6736-0.json": "eb09220d3cb640d0385398550c3c2727cca45df3c4551dc1f9d0fab5862cdf04",
+  "profiles 42370984859: native-diagnostic-2d2911fb618a36b764b2aff48eef303ec8ad1dcb-1/capture/profiles/node-6744-0.json": "5028ea9821c19226337be1366d34ac4a63429e675b8c8ed1ddc8a8b1ffadd731",
+  "profiles 42370984859: native-diagnostic-2d2911fb618a36b764b2aff48eef303ec8ad1dcb-1/capture/profiles/node-6752-0.json": "ac74f09ccc873c7640cdd3c05ee00f0c11feb257825705e18062f895e56d69a7",
+  "profiles 42370984859: native-diagnostic-2d2911fb618a36b764b2aff48eef303ec8ad1dcb-1/capture/profiles/node-6760-0.json": "47bd7c2596942c32095181780d0dd0bfc5186b07c3613760436eac1abe38baf3",
+  "profiles 42370984859: native-diagnostic-2d2911fb618a36b764b2aff48eef303ec8ad1dcb-1/capture/profiles/node-6768-0.json": "f07d077aa35a82a7acfbc1109415a8d5f0612bfcfea449b0b814d45cc4747055",
+  "profiles 42370984859: native-diagnostic-2d2911fb618a36b764b2aff48eef303ec8ad1dcb-1/capture/profiles/node-6776-0.json": "5ca6890c2f7ec08a18dddb8e9952f17be17c95d5ec068d74ddf0def2e81e3811",
+  "profiles 42370984859: native-diagnostic-2d2911fb618a36b764b2aff48eef303ec8ad1dcb-1/capture/profiles/node-6784-0.json": "ac4b1f9725ab8dd48450772e6c0af00e47641fd935ded32735daa4f0bc71e791",
+  "profiles 42370984859: native-diagnostic-2d2911fb618a36b764b2aff48eef303ec8ad1dcb-1/capture/profiles/node-6792-0.json": "d4539b346eba10429246376bff60d1fc2f8d05c9a8f6341b9c9f1d80f12338bb",
+  "profiles 42370984859: native-diagnostic-2d2911fb618a36b764b2aff48eef303ec8ad1dcb-1/capture/profiles/node-6804-0.json": "f7177268f0abcc1bab6881b29f30d165ad356a72278d8083de432f2cb326eb4a",
+  "profiles 42370984859: native-diagnostic-2d2911fb618a36b764b2aff48eef303ec8ad1dcb-1/capture/profiles/node-6820-0.json": "0a76086ac05608cb0394018226c98ee9bf67822c8d89294b90f6538db03905f9",
+  "profiles 42370984859: native-diagnostic-2d2911fb618a36b764b2aff48eef303ec8ad1dcb-1/capture/profiles/node-6835-0.json": "19adc30736e3e059c64745385dbc65903fda08378cb482171d0138866b7ece16",
+  "profiles 42370984859: native-diagnostic-2d2911fb618a36b764b2aff48eef303ec8ad1dcb-1/capture/profiles/node-6835-1.json": "f88572546ee8645463f1268797aee4e871871376e01ea6fd6d88ec8a6d5aa70d",
+  "profiles 42370984859: native-diagnostic-2d2911fb618a36b764b2aff48eef303ec8ad1dcb-1/capture/profiles/node-6835-10.json": "cc2a241251f967966940734057e59e628bd0e482525e4924559bb8ff99299a8c",
+  "profiles 42370984859: native-diagnostic-2d2911fb618a36b764b2aff48eef303ec8ad1dcb-1/capture/profiles/node-6835-11.json": "0ea29451e3ac33544544a1c2684ec42a75d3b445934f34baaa1b8cc6cd62f8b7",
+  "profiles 42370984859: native-diagnostic-2d2911fb618a36b764b2aff48eef303ec8ad1dcb-1/capture/profiles/node-6835-12.json": "3f3e7fd66b8b207bb880a7391757e1307979008923107fec5015b6d0d93ddcd7",
+  "profiles 42370984859: native-diagnostic-2d2911fb618a36b764b2aff48eef303ec8ad1dcb-1/capture/profiles/node-6835-13.json": "ab29f5c3ff56ac1302cff1959dae0ab54d42b59e723e6f5711d83d6417074f2f",
+  "profiles 42370984859: native-diagnostic-2d2911fb618a36b764b2aff48eef303ec8ad1dcb-1/capture/profiles/node-6835-14.json": "05b90b5dff9a037170a7c0987da99effba15e52ab47b5159b205cde141bf59e7",
+  "profiles 42370984859: native-diagnostic-2d2911fb618a36b764b2aff48eef303ec8ad1dcb-1/capture/profiles/node-6835-2.json": "9790fd0a5a1006d7be4987a138209e3a9049b773bca10f82fc4ad54fa2fc807f",
+  "profiles 42370984859: native-diagnostic-2d2911fb618a36b764b2aff48eef303ec8ad1dcb-1/capture/profiles/node-6835-3.json": "e02a04309504af7941206bb770a8ac9a82e06ac2752b010de7faa5afae2556bb",
+  "profiles 42370984859: native-diagnostic-2d2911fb618a36b764b2aff48eef303ec8ad1dcb-1/capture/profiles/node-6835-4.json": "e47a008860ee4793bbdb42cbce19cf894e524561fda7f4116b016e59a8562661",
+  "profiles 42370984859: native-diagnostic-2d2911fb618a36b764b2aff48eef303ec8ad1dcb-1/capture/profiles/node-6835-5.json": "c1df53cea2ee0331bea8db21c91bd1897fb5ad78392aab7a3bc2cd323403e7bb",
+  "profiles 42370984859: native-diagnostic-2d2911fb618a36b764b2aff48eef303ec8ad1dcb-1/capture/profiles/node-6835-6.json": "8091e1085089b4b933bab25cf7d1276c1614c63053f527c4afc9bb0e22df21c6",
+  "profiles 42370984859: native-diagnostic-2d2911fb618a36b764b2aff48eef303ec8ad1dcb-1/capture/profiles/node-6835-7.json": "5e92d043e8e88a1717807009731996de0827ce7e0752cfa72e20da76a2b52082",
+  "profiles 42370984859: native-diagnostic-2d2911fb618a36b764b2aff48eef303ec8ad1dcb-1/capture/profiles/node-6835-8.json": "b155a3059e1cf6d910fbe5eac171691d095dc7747dbd2057e9adc4e6795e821d",
+  "profiles 42370984859: native-diagnostic-2d2911fb618a36b764b2aff48eef303ec8ad1dcb-1/capture/profiles/node-6835-9.json": "8a22251d24b753afc2f8ba4d0d1043b6dfe5f713159affebb969879a02bd2618",
+  "profiles 42370984859: native-diagnostic-2d2911fb618a36b764b2aff48eef303ec8ad1dcb-1/capture/qualification/measurements.jsonl": "de91b9211d0f82d7c2f9ce415daee80a4d0540625e4fbaad8e33b10f0575d601"
  },
  "profiles": {
   "forks_expected": 18,
+  "identity": {
+   "commit": "2d2911fb618a36b764b2aff48eef303ec8ad1dcb",
+   "mode": "exit-time-cpu-prof-exec-argv",
+   "passed": false,
+   "workload_sha256": "b6a51df85b96a9216263afd673e71e22b2a25c02374260b7a37f61faa4103c3a"
+  },
   "roles": {
    "controller": [
     {

@@ -25,11 +25,36 @@ import json
 import os
 import re
 import statistics
+import sys
+import tempfile
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import targets  # noqa: E402  (deterministic paired bootstrap used by the campaign)
 
-def sha256(path):
-    return hashlib.sha256(Path(path).read_bytes()).hexdigest()
+
+def consume(path, inputs):
+    """Hash every file whose contents reach data.json; return its text."""
+    data = Path(path).read_bytes()
+    inputs[str(path)] = hashlib.sha256(data).hexdigest()
+    return data.decode('utf-8')
+
+
+def read_json(path, inputs):
+    return json.loads(consume(path, inputs))
+
+
+def read_jsonl(path, inputs):
+    return [json.loads(line) for line in consume(path, inputs).splitlines() if line.strip()]
+
+
+def write_atomic(path, text):
+    """Replace path only with a complete file, so readers never see a partial write."""
+    path = Path(path)
+    with tempfile.NamedTemporaryFile('w', encoding='utf-8', dir=path.parent, delete=False,
+                                     prefix=f'.{path.name}.') as handle:
+        handle.write(text)
+    os.replace(handle.name, path)
 
 
 def one(root, pattern):
@@ -49,12 +74,46 @@ METRICS = ['wall_seconds', 'cpu_seconds', 'cpu_user_seconds', 'cpu_system_second
            'peak_aggregate_rss_bytes', 'peak_process_count', 'observed_process_count']
 
 
+COMPARISONS = {'before_vs_stryker': (('before', 'oximut'), ('before', 'stryker')),
+               'after_vs_stryker': (('after', 'oximut'), ('after', 'stryker')),
+               'after_vs_before': (('after', 'oximut'), ('before', 'oximut'))}
+
+
+def validate_campaign(rows, summary):
+    """Require one row per round/variant/tool and ratios recomputable from the raw rows."""
+    if not (summary['correctness_gate']['passed'] and summary['build_integrity']['passed']):
+        raise ValueError('campaign gates did not pass')
+    warmups, pairs = summary['warmup_pairs'], summary['measured_pairs']
+    indexed = {}
+    for row in rows:
+        key = (row.get('campaign_round'), row.get('variant'), row.get('tool'))
+        if key in indexed:
+            raise ValueError(f'duplicate campaign row {key}')
+        indexed[key] = row
+    expected = {(i, v, t) for i in range(warmups + pairs) for v in ('before', 'after')
+                for t in ('vitest', 'oximut', 'stryker')}
+    if set(indexed) != expected:
+        raise ValueError('missing or unexpected campaign rows')
+    for key, row in indexed.items():
+        if row.get('warmup') != (key[0] < warmups):
+            raise ValueError(f'inconsistent warmup label {key}')
+    if len({row.get('workload_sha256') for row in rows}) != 1:
+        raise ValueError('campaign rows declare different workloads')
+    for name, ((nv, nt), (dv, dt)) in COMPARISONS.items():
+        for metric, published in summary['comparisons'][name]['metrics'].items():
+            value = targets.paired_interval([(indexed[(i, nv, nt)][metric], indexed[(i, dv, dt)][metric])
+                                             for i in range(warmups, warmups + pairs)])
+            if (abs(value['median'] - published['median']) > 1e-12 or
+                    any(abs(a - b) > 1e-12 for a, b in zip(value['bootstrap_95_percent'],
+                                                           published['bootstrap_95_percent']))):
+                raise ValueError(f'{name} {metric}: summary disagrees with raw paired rows')
+    return indexed
+
+
 def extract_benchmark(root, inputs):
-    summary_path, rows_path = one(root, 'summary.json'), one(root, 'measurements.jsonl')
-    inputs[summary_path] = sha256(summary_path)
-    inputs[rows_path] = sha256(rows_path)
-    summary = json.load(open(summary_path))
-    rows = [json.loads(line) for line in open(rows_path)]
+    summary = read_json(one(root, 'summary.json'), inputs)
+    rows = read_jsonl(one(root, 'measurements.jsonl'), inputs)
+    validate_campaign(rows, summary)
     tools = collections.defaultdict(list)
     for row in rows:
         if not row.get('warmup'):
@@ -66,7 +125,8 @@ def extract_benchmark(root, inputs):
                 for name, ms in entry['phaseWallMs'].items():
                     phases[side][name].append(ms)
     return {
-        'gate': summary['correctness_gate']['passed'] and summary['build_integrity']['passed'],
+        'gate': True,
+        'workload_sha256': rows[0]['workload_sha256'],
         'pairs': summary['measured_pairs'],
         'medians': {k: medians(v, METRICS) for k, v in tools.items()},
         'ratios': {name: {m: {'median': x['median'], 'ci': x['bootstrap_95_percent']}
@@ -76,15 +136,22 @@ def extract_benchmark(root, inputs):
     }
 
 
+def diagnostic_identity(root, inputs):
+    data = read_json(one(root, 'capture/diagnostic.json'), inputs)
+    rows = read_jsonl(one(root, 'qualification/measurements.jsonl'), inputs)
+    workloads = {r.get('workload_sha256') for r in rows}
+    if len(workloads) != 1:
+        raise ValueError(f'{root}: qualification rows declare different workloads')
+    return data, rows, {'passed': data['passed'], 'commit': data.get('source_commit'),
+                        'workload_sha256': workloads.pop(), 'mode': data.get('node_capture_mode')}
+
+
 def extract_accounting(root, inputs):
-    path = one(root, 'capture/diagnostic.json')
-    inputs[path] = sha256(path)
-    data = json.load(open(path))
+    data, rows, identity = diagnostic_identity(root, inputs)
     captures = data['captures']
-    rows = [json.loads(line) for line in open(one(root, 'qualification/measurements.jsonl'))]
     return {
+        'identity': identity,
         'passed': data['passed'],
-        'commit': data.get('source_commit'),
         'sampler': captures['accounting_diagnostics'],
         'tools': {r['tool']: {m: r[m] for m in METRICS} for r in rows},
         'peak_rss_snapshots': captures['peak_rss_snapshots'],
@@ -92,11 +159,10 @@ def extract_accounting(root, inputs):
 
 
 def extract_controller(root, inputs):
-    timeline = one(root, 'controller-*.jsonl')
-    inputs[timeline] = sha256(timeline)
-    events = [json.loads(line) for line in open(timeline)]
-    report = json.load(open(one(root, 'qualification/00-oximut/report.json')))
-    rows = [json.loads(line) for line in open(one(root, 'qualification/measurements.jsonl'))]
+    _, rows, identity = diagnostic_identity(root, inputs)
+    events = read_jsonl(one(root, 'controller-*.jsonl'), inputs)
+    report = read_json(one(root, 'qualification/00-oximut/report.json'), inputs)
+    vitest = next(r for r in rows if r['tool'] == 'vitest')
     jobs, forks, current = [], {}, None
     for e in events:
         kind, t = e['type'], e['monotonicMs']
@@ -132,6 +198,10 @@ def extract_controller(root, inputs):
                          'forks': segments})
     exit_event = next(e for e in events if e['type'] == 'controller-exit')
     return {
+        'identity': identity,
+        'workload': {'tests': vitest['test_counts']['numTotalTests'],
+                     'mutants': report['summary']['total'], 'killed': report['summary']['killed'],
+                     'mutated_files': len(report['resources']['disabledValidationRuns'][0]['files'])},
         'controller_start_ms': events[0]['monotonicMs'],
         'controller_exit_ms': exit_event['monotonicMs'],
         'controller_self_cpu_ms': {k: v / 1e3 for k, v in exit_event['selfCpuUsage'].items()},
@@ -173,10 +243,11 @@ def category(frame):
 
 
 def extract_profiles(root, inputs):
+    _, _, identity = diagnostic_identity(root, inputs)
     directory = os.path.dirname(one(root, 'node-*.json'))
     identities = {}
-    for path in glob.glob(os.path.join(directory, 'node-*.json')):
-        ident = json.load(open(path))
+    for path in sorted(glob.glob(os.path.join(directory, 'node-*.json'))):
+        ident = read_json(path, inputs)
         identities[(ident['pid'], ident['threadId'])] = ident
     controller = next(i for i in identities.values() if 'm2-worker' in ' '.join(i['argv']))
     roles = {'controller': [], 'fork': []}
@@ -192,8 +263,7 @@ def extract_profiles(root, inputs):
             role = 'fork'
         else:
             continue
-        inputs[path] = sha256(path)
-        profile = json.load(open(path))
+        profile = read_json(path, inputs)
         nodes = {n['id']: n['callFrame'] for n in profile['nodes']}
         self_us = collections.Counter()
         for sample, delta in zip(profile['samples'], profile['timeDeltas']):
@@ -211,7 +281,7 @@ def extract_profiles(root, inputs):
                             'self_cpu_ms': {k: v / 1e3 for k, v in cpu.items()}})
     forks_expected = sum(1 for i in identities.values()
                          if 'workers/forks.js' in ' '.join(i['argv']) and i['ppid'] == controller['pid'])
-    return {'roles': roles, 'forks_expected': forks_expected}
+    return {'identity': identity, 'roles': roles, 'forks_expected': forks_expected}
 
 
 # ----------------------------------------------------------------------------- render
@@ -258,18 +328,23 @@ def legend(items):
     return '<div class="legend">' + ''.join(f'<span><i style="background:{c}"></i>{esc(n)}</span>' for n, c in items) + '</div>'
 
 
-def table(headers, rows):
+def table(headers, rows, caption):
     head = ''.join(f'<th>{esc(h)}</th>' for h in headers)
     body = ''.join('<tr>' + ''.join(f'<td>{esc(c)}</td>' for c in row) + '</tr>' for row in rows)
-    return f'<table><thead><tr>{head}</tr></thead><tbody>{body}</tbody></table>'
+    return (f'<table><caption class="note">{esc(caption)}</caption><thead><tr>{head}</tr></thead>'
+            f'<tbody>{body}</tbody></table>')
 
 
-def stacked_bars(rows, unit, width=1000, bar=26, gap=14, label_w=170):
+def share(part, whole):
+    return f'{100 * part / whole:.0f}%' if whole else 'n/a'
+
+
+def stacked_bars(rows, unit, label, width=1000, bar=26, gap=14, label_w=170):
     """rows: [(label, [(segment_name, value, color)])]; horizontal stacked bars on one axis."""
     total_max = max(sum(v for _, v, _ in segs) for _, segs in rows) or 1
     plot = width - label_w - 70
     height = len(rows) * (bar + gap) + 30
-    out = [f'<svg viewBox="0 0 {width} {height}" width="100%" role="img">']
+    out = [f'<svg viewBox="0 0 {width} {height}" width="100%" role="img" aria-label="{esc(label)}">']
     for tick in range(0, 6):
         x = label_w + plot * tick / 5
         out.append(f'<line x1="{x:.1f}" y1="0" x2="{x:.1f}" y2="{height - 22}" stroke="var(--grid)"/>'
@@ -287,17 +362,18 @@ def stacked_bars(rows, unit, width=1000, bar=26, gap=14, label_w=170):
         out.append(f'<text x="{x + 6:.1f}" y="{y + bar / 2 + 4}">{sum(v for _, v, _ in segs):.0f}{unit}</text>')
     out.append('</svg>')
     data = [(label, name, f'{value:.0f}{unit}') for label, segs in rows for name, value, _ in segs]
-    out.append('<details><summary>Data table</summary>' + table(['Bar', 'Segment', 'Value'], data) + '</details>')
+    out.append('<details><summary>Data table</summary>' +
+               table(['Bar', 'Segment', 'Value'], data, f'Data for: {label}') + '</details>')
     return ''.join(out)
 
 
-def ratio_chart(items, width=1000):
+def ratio_chart(items, label, width=1000):
     """items: [(label, median, (lo, hi), target)] on one ratio axis with a 1.0 reference."""
     label_w, plot, row = 230, width - 300, 34
     lo_axis, hi_axis = 0.0, max(1.4, max(h for _, _, (_, h), _ in items) * 1.08)
     sx = lambda v: label_w + plot * (v - lo_axis) / (hi_axis - lo_axis)
     height = len(items) * row + 34
-    out = [f'<svg viewBox="0 0 {width} {height}" width="100%" role="img">']
+    out = [f'<svg viewBox="0 0 {width} {height}" width="100%" role="img" aria-label="{esc(label)}">']
     for t in [0, 0.25, 0.5, 0.75, 1.0, 1.25]:
         if t <= hi_axis:
             out.append(f'<line x1="{sx(t):.1f}" y1="0" x2="{sx(t):.1f}" y2="{height - 22}" stroke="var(--grid)"/>'
@@ -314,6 +390,9 @@ def ratio_chart(items, width=1000):
                    f'<title>{esc(label)}: {median:.3f} [{lo:.3f}, {hi:.3f}]</title></circle>'
                    f'<text x="{sx(hi) + 8:.1f}" y="{y + 4}">{median:.3f} [{lo:.3f}, {hi:.3f}]</text>')
     out.append('</svg>')
+    out.append(table(['Comparison', 'Paired median', '95% CI low', '95% CI high', 'Target (≤)'],
+                     [(n, f'{m:.3f}', f'{lo:.3f}', f'{hi:.3f}', t or '-') for n, m, (lo, hi), t in items],
+                     f'Data for: {label}'))
     return ''.join(out)
 
 
@@ -334,7 +413,9 @@ def render_overview(d):
     stop = sum(f['exit'] - f['finished'] for f in forks)
     mut_run = sum(f['finished'] - f['collected'] for j in mutant_jobs for f in j['forks'])
     oximut_wall_ms = c['tools']['oximut']['wall_seconds'] * 1000
-    init = jobs[0]['start'] - c['controller_start_ms']
+    # Controller start runs until the initialize response (Node + Vitest import + createVitest).
+    initialize = next(j for j in jobs if j['command'] == 'initialize')
+    init = initialize['end'] - c['controller_start_ms']
     fork_rows = [
         ('Fork bootstrap (spawn → started)', boot, SLOTS[0]),
         ('Module fetch + collection', collect, SLOTS[1]),
@@ -352,12 +433,18 @@ def render_overview(d):
     for x in p['roles']['fork']:
         fork_cats.update(x['categories'])
     busy = sum(v for k, v in fork_cats.items() if k != 'Idle (waiting)')
-    test_share = fork_cats['colord source + tests'] / busy
+    test_share_text = share(fork_cats['colord source + tests'], busy)
+    partial = (f' (partial: {len(p["roles"]["fork"])} of {p["forks_expected"]} fork profiles)'
+               if len(p['roles']['fork']) != p['forks_expected'] else '')
+    w = c['workload']
     body = []
+    if not a['passed']:
+        body.append('<p><b>Warning:</b> the accounting diagnostic did not pass; its sampler and memory values '
+                    'below are not qualified evidence.</p>')
     body.append('<p>This report explains where Oximut spends wall time, CPU and memory on the colord '
-                'benchmark (41 sources, 102 tests, 5 mutated files, 10 killed mutants, one worker), and what '
-                'separates it from Stryker. Every number comes from retained native GitHub Actions evidence; '
-                'the inputs and their hashes are listed at the bottom.</p>')
+                f'benchmark ({w["tests"]} tests, {w["mutated_files"]} mutated files, {w["killed"]} of {w["mutants"]} '
+                'mutants killed, one worker), and what separates it from Stryker. Every number comes from retained '
+                'native GitHub Actions evidence; the inputs and their hashes are listed at the bottom.</p>')
     body.append('<div class="tiles">'
                 f'<div class="tile"><span>Wall vs Stryker (target ≤ 0.50)</span><b>{r["wall_seconds"]["median"]:.2f}×</b>'
                 f'<span>{ox["wall_seconds"]:.2f} s vs {sk["wall_seconds"]:.2f} s</span></div>'
@@ -365,8 +452,8 @@ def render_overview(d):
                 f'<span>{ox["cpu_seconds"]:.2f} s vs {sk["cpu_seconds"]:.2f} s</span></div>'
                 f'<div class="tile"><span>Peak memory vs Stryker (target ≤ 0.80)</span><b>{r["peak_aggregate_rss_bytes"]["median"]:.2f}×</b>'
                 f'<span>{ox["peak_aggregate_rss_bytes"] / 1e6:.0f} MB vs {sk["peak_aggregate_rss_bytes"] / 1e6:.0f} MB</span></div>'
-                f'<div class="tile"><span>Real test work inside forks</span><b>{test_share * 100:.0f}%</b>'
-                '<span>of busy fork CPU is colord code + tests</span></div></div>')
+                f'<div class="tile"><span>Real test work inside forks</span><b>{test_share_text}</b>'
+                f'<span>of busy fork CPU is colord code + tests{esc(partial)}</span></div></div>')
     body.append('<h2>1. Where we stand</h2>')
     body.append(f'<p>Paired native campaign, {b["pairs"]} measured pairs after one warm-up; correctness and '
                 'build-integrity gates ' + ('pass' if b['gate'] else '<b>fail</b>') +
@@ -376,12 +463,13 @@ def render_overview(d):
         ('Wall time / Stryker', r['wall_seconds']['median'], r['wall_seconds']['ci'], 0.5),
         ('CPU (user+sys) / Stryker', r['cpu_seconds']['median'], r['cpu_seconds']['ci'], 0.8),
         ('Peak aggregate RSS / Stryker', r['peak_aggregate_rss_bytes']['median'], r['peak_aggregate_rss_bytes']['ci'], 0.8),
-    ]))
+    ], 'Oximut divided by Stryker: paired medians with bootstrap 95% intervals and targets'))
     body.append(table(['Tool', 'Wall s', 'CPU s', 'user s', 'sys s', 'Peak RSS MB', 'Peak / observed processes'], [
         (name, f'{x["wall_seconds"]:.3f}', f'{x["cpu_seconds"]:.3f}', f'{x["cpu_user_seconds"]:.3f}',
          f'{x["cpu_system_seconds"]:.3f}', f'{x["peak_aggregate_rss_bytes"] / 1e6:.1f}',
          f'{x["peak_process_count"]:.0f} / {x["observed_process_count"]:.0f}')
-        for name, x in [('Oximut', ox), ('Stryker', sk), ('plain Vitest (one full run)', vt)]]))
+        for name, x in [('Oximut', ox), ('Stryker', sk), ('plain Vitest (one full run)', vt)]],
+        'Median per tool across the measured pairs (after candidate)'))
     body.append(f'<p><b>User CPU is already {"below" if ox["cpu_user_seconds"] < sk["cpu_user_seconds"] else "close to"} '
                 f'Stryker\'s</b> ({ox["cpu_user_seconds"]:.2f} s vs {sk["cpu_user_seconds"]:.2f} s). The CPU gap is '
                 f'kernel time: {ox["cpu_system_seconds"]:.2f} s vs {sk["cpu_system_seconds"]:.2f} s, from starting '
@@ -396,7 +484,7 @@ def render_overview(d):
                     ('Teardown + other', ph['teardown'] + ph['inputAndSchedulerPreparation'], SLOTS[3])]),
         ('Stryker (total)', [('Stryker total', sk['wall_seconds'] * 1000, SLOTS[4])]),
         ('Plain Vitest (total)', [('Vitest total', vt['wall_seconds'] * 1000, SLOTS[5])]),
-    ], ' ms'))
+    ], ' ms', 'Oximut wall time by phase next to Stryker and plain Vitest totals'))
     body.append(legend([('Original baseline', SLOTS[0]), ('Instrumented baseline', SLOTS[1]),
                         ('Mutant execution', SLOTS[2]), ('Teardown + other', SLOTS[3]),
                         ('Stryker total', SLOTS[4]), ('Plain Vitest total', SLOTS[5])]))
@@ -413,7 +501,7 @@ def render_overview(d):
         ('All 18 forks', [(n, v, col) for n, v, col in fork_rows]),
         ('Controller start', [('Node + Vitest import + createVitest', init, SLOTS[4])]),
         ('Rest of the run', [('Rust CLI, slot, IPC, teardown', max(rest, 0), SLOTS[5])]),
-    ], ' ms'))
+    ], ' ms', 'One diagnostic run: fork lifecycle totals, controller start and the rest'))
     body.append(legend([(n, col) for n, _, col in fork_rows] +
                        [('Controller start', SLOTS[4]), ('Rust CLI, slot, IPC, teardown', SLOTS[5])]))
     body.append(f'<p><b>Fork bootstrap is the largest single block</b> ({boot:.0f} ms, '
@@ -426,7 +514,7 @@ def render_overview(d):
     ranks = [
         ('Fresh-process tax: 18 Node processes per run',
          f'{boot:.0f} ms wall in bootstrap ({100 * boot / oximut_wall_ms:.0f}% of the run); forks consume '
-         f'{100 * fork_cpu / (fork_cpu + ctl_cpu):.0f}% of Node CPU, yet only {test_share * 100:.0f}% of busy fork CPU is colord code '
+         f'{share(fork_cpu, fork_cpu + ctl_cpu)} of Node CPU{partial}, yet only {test_share_text} of busy fork CPU is colord code '
          'and tests. The rest is Node bootstrap, module loading/compile, Vitest/expect/chai setup and GC, repeated in every process.',
          ['Build a V8 startup snapshot of the Vitest fork runtime (node --snapshot-blob), so each fresh '
           'process starts with the runtime already initialized. This keeps the fresh-process guarantee.',
@@ -461,16 +549,21 @@ def render_overview(d):
     body.append('<p class="note">The ideas listed are discussion candidates, not measured savings. Each would be its '
                 'own PR with a paired native benchmark and the owner\'s rule: faster with no added CPU or memory.</p>')
     body.append('<h2>Evidence and limits</h2><ul>' + ''.join(f'<li>{x}</li>' for x in [
-        f'Paired campaign: run {esc(d["runs"]["benchmark"])} (scored; source of every ratio and phase median).',
-        f'Controller job timeline: run {esc(d["runs"]["controller"])} (one overhead-bearing run; shares only).',
-        f'Rust sampler accounting: run {esc(d["runs"]["accounting"])} (one run; CLI sampling thread only).',
-        f'Node CPU profiles: run {esc(d["runs"]["profiles"])}. Profiler overhead included; '
-        f'{len(p["roles"]["fork"])} of {p["forks_expected"]} fork profiles present (the capture fails its strict '
-        'completeness gate, so it is used as partial evidence).',
+        f'Paired campaign: run {esc(d["runs"]["benchmark"])} (scored; ratios re-derived from raw rows; '
+        'source of every ratio and phase median).',
+        f'Controller job timeline: run {esc(d["runs"]["controller"])} at {esc(c["identity"]["commit"][:7])} '
+        f'(one overhead-bearing run; passed: {c["identity"]["passed"]}).',
+        f'Rust sampler accounting: run {esc(d["runs"]["accounting"])} at {esc(a["identity"]["commit"][:7])} '
+        f'(one run; CLI sampling thread only; passed: {a["identity"]["passed"]}).',
+        f'Node CPU profiles: run {esc(d["runs"]["profiles"])} at {esc(p["identity"]["commit"][:7])}, a merge of main '
+        'with the #43 profiler tooling. Profiler overhead included; '
+        f'{len(p["roles"]["fork"])} of {p["forks_expected"]} fork profiles present (passed: {p["identity"]["passed"]}; '
+        'used as partial evidence).',
+        f'All four runs declare the same workload ({esc(b["workload_sha256"][:12])}).',
         'Diagnostic runs can land on faster or slower runner hosts. Never subtract absolute times across captures.',
     ]) + '</ul>')
     body.append('<details><summary>Input files and SHA-256</summary>' +
-                table(['File', 'SHA-256'], sorted(d['inputs'].items())) + '</details>')
+                table(['File', 'SHA-256'], sorted(d['inputs'].items()), 'Every consumed input file') + '</details>')
     return page('Oximut bottleneck report', ''.join(body), d['generated'])
 
 
@@ -488,12 +581,13 @@ def render_timeline(d):
               ('Fetch + collect', 'started', 'collected', SLOTS[1]),
               ('Run tests', 'collected', 'finished', SLOTS[2]),
               ('Stop → exit', 'finished', 'exit', SLOTS[3])]
-    out = [f'<svg viewBox="0 0 {width} {height}" width="100%" role="img">']
+    out = [f'<svg viewBox="0 0 {width} {height}" width="100%" role="img" '
+           f'aria-label="Gantt chart: lifecycle of each of the {len(forks)} Vitest forks in one run">']
     for tick in range(0, int(t1 - t0) + 1, 250):
         x = sx(t0 + tick)
         out.append(f'<line x1="{x:.1f}" y1="0" x2="{x:.1f}" y2="{height - 40}" stroke="var(--grid)"/>'
                    f'<text x="{x:.1f}" y="{height - 24}" text-anchor="middle">{tick} ms</text>')
-    first = jobs[0]['start']
+    first = next(j for j in c['jobs'] if j['command'] == 'initialize')['end']
     out.append(f'<rect x="{sx(t0):.1f}" y="2" width="{sx(first) - sx(t0):.1f}" height="{height - 46}" '
                f'fill="var(--s5)" opacity="0.18"><title>Controller start: Node + Vitest import + createVitest '
                f'({first - t0:.0f} ms)</title></rect>')
@@ -515,19 +609,47 @@ def render_timeline(d):
         kind = 'mutant' if job['kind'] == 'mutant' else 'baseline'
         for name, a, b, _ in colors:
             seg[(kind, name)].append(fork[b] - fork[a])
+    run_ms = c['tools']['oximut']['wall_seconds'] * 1000
+    totals = collections.Counter()
+    for (kind, name), v in seg.items():
+        totals[name] += sum(v)
     rows = [(f'{kind}: {name}', f'{statistics.median(v):.1f}', f'{min(v):.1f}', f'{max(v):.1f}', len(v))
             for (kind, name), v in sorted(seg.items())]
+    share_rows = [(name, f'{v:.0f}', share(v, run_ms)) for name, v in totals.most_common()]
     job_rows = [(f'{j["kind"]} {(j["mutant"] or "")[:8]}', f'{j["end"] - j["start"]:.1f}', len(j['forks']),
                  f'{j["forks"][0]["fork"] - j["start"]:.1f}', f'{j["controller_cpu_ms"]:.0f}') for j in jobs]
-    body = ['<p>One Oximut run from the controller-job capture: each row is one fresh Vitest fork, coloured by '
-            'lifecycle step; hover a segment for its duration. The shaded band at the start is controller start-up.</p>',
+    baselines = [j for j in jobs if j['kind'] == 'baseline']
+    mutants = [j for j in jobs if j['kind'] == 'mutant']
+    init_end = first - t0
+    recon = [
+        ('originalBaseline', f'{c["phases"]["originalBaseline"]:.0f}',
+         f'{init_end + baselines[0]["end"] - baselines[0]["start"]:.0f}',
+         'controller start + initialize + first baseline job'),
+        ('instrumentedBaseline', f'{c["phases"]["instrumentedBaseline"]:.0f}',
+         f'{baselines[1]["end"] - baselines[1]["start"]:.0f}', 'second baseline job'),
+        ('mutationExecution', f'{c["phases"]["mutationExecution"]:.0f}',
+         f'{sum(j["end"] - j["start"] for j in mutants):.0f}', f'sum of {len(mutants)} mutant jobs'),
+    ]
+    body = ['<p><b>One diagnostic run</b> from the controller-job capture, on a runner host that ran every tool '
+            'about 40% faster than the scored campaign. Absolute milliseconds are valid only within this run; use '
+            'the shares to compare with other evidence. Each row is one fresh Vitest fork, coloured by lifecycle '
+            'step; hover a segment for its duration. The shaded band is controller start-up, up to the initialize '
+            'response.</p>',
             out[0] + ''.join(out[1:]),
             legend([(n, col) for n, _, _, col in colors] + [('Controller start', 'var(--s5)')]),
-            '<h2>Per-step durations (ms)</h2>', table(['Step', 'median', 'min', 'max', 'n'], rows),
-            '<h2>Jobs</h2>', table(['Job', 'wall ms', 'forks', 'request → fork ms', 'controller CPU ms'], job_rows),
-            f'<p class="note">Run {esc(d["runs"]["controller"])}. The first mutant also carries the controller CPU-profile '
-            'window of this diagnostic mode. Rust-side phase walls for the same run: ' +
-            esc(', '.join(f'{k} {v:.0f} ms' for k, v in c['phases'].items() if v > 1)) + '.</p>']
+            '<h2>Share of the run by fork step</h2>',
+            table(['Step (all forks)', 'ms', f'share of the {run_ms:.0f} ms run'], share_rows,
+                  'Data for: Gantt chart of fork lifecycles, summed per step'),
+            '<h2>Per-step durations (ms)</h2>',
+            table(['Step', 'median', 'min', 'max', 'n'], rows, 'Per-fork step durations within this run'),
+            '<h2>Jobs</h2>',
+            table(['Job', 'wall ms', 'forks', 'request → fork ms', 'controller CPU ms'], job_rows,
+                  'Controller-visible job walls within this run'),
+            '<h2>Rust phases vs controller-visible time (same run)</h2>',
+            table(['Rust phase', 'Rust wall ms', 'controller-visible ms', 'controller-visible part'], recon,
+                  'The difference is Rust CLI, slot process, IPC and scheduling outside the controller'),
+            f'<p class="note">Run {esc(d["runs"]["controller"])}. The first mutant also carries the controller '
+            'CPU-profile window of this diagnostic mode.</p>']
     return page('Oximut job timeline', ''.join(body), d['generated'])
 
 
@@ -548,18 +670,27 @@ def render_cpu(d):
         out = [(k, acc.get(k, 0) / 1e3, color[k]) for k in main6]
         out.append(('Everything else (busy)', sum(v for k, v in acc.items() if k not in main6 and k != 'Idle (waiting)') / 1e3, 'var(--muted)'))
         return out
-    body = ['<p>Sampled Node CPU profiles (main thread only, profiler overhead included). The categories group '
-            'self time by where the code lives. Idle time is excluded from the bars and shown in the table.</p>']
-    body.append(stacked_bars([(f'{len(p["roles"]["fork"])} forks (sum)', segs(fork_t)),
-                              ('Controller', segs(ctl_t))], ' ms'))
+    present, expected = len(p['roles']['fork']), p['forks_expected']
+    body = [f'<p>Sampled Node CPU profiles from run {esc(d["runs"]["profiles"])} at '
+            f'{esc(p["identity"]["commit"][:7])} (main merged with the #43 profiler tooling; main thread only, '
+            'profiler overhead included). The categories group self time by where the code lives. Idle time is '
+            'excluded from the bars and shown in the table.</p>']
+    if present != expected:
+        body.append(f'<p><b>Partial evidence:</b> {present} of {expected} fork profiles were captured, so fork totals '
+                    'and per-fork averages cover only the captured forks. Shares within them remain comparable.</p>')
+    body.append(stacked_bars([(f'{present} forks (sum)', segs(fork_t)),
+                              ('Controller', segs(ctl_t))], ' ms',
+                             'Busy Node CPU by category: forks versus controller'))
     body.append(legend([(k, color[k]) for k in main6] + [('Everything else (busy)', 'var(--muted)')]))
     rows = []
     fb = sum(v for k, v in fork_t.items() if k != 'Idle (waiting)')
     cb = sum(v for k, v in ctl_t.items() if k != 'Idle (waiting)')
     for k in order:
-        rows.append((k, f'{fork_t.get(k, 0) / 1e3:.1f}', f'{100 * fork_t.get(k, 0) / fb:.1f}%' if k != 'Idle (waiting)' else '-',
-                     f'{ctl_t.get(k, 0) / 1e3:.1f}', f'{100 * ctl_t.get(k, 0) / cb:.1f}%' if k != 'Idle (waiting)' else '-'))
-    body.append(table(['Category', 'forks ms', 'share of busy', 'controller ms', 'share of busy'], rows))
+        idle = k == 'Idle (waiting)'
+        rows.append((k, f'{fork_t.get(k, 0) / 1e3:.1f}', '-' if idle else share(fork_t.get(k, 0), fb),
+                     f'{ctl_t.get(k, 0) / 1e3:.1f}', '-' if idle else share(ctl_t.get(k, 0), cb)))
+    body.append(table(['Category', 'forks ms', 'share of busy', 'controller ms', 'share of busy'], rows,
+                      'All categories, including idle time'))
     for role in ('fork', 'controller'):
         fn = collections.Counter()
         for x in p['roles'][role]:
@@ -568,7 +699,8 @@ def render_cpu(d):
                     fn[(cat, name, where)] += us
         body.append(f'<h3>Top self-time functions: {"forks" if role == "fork" else "controller"}</h3>')
         body.append(table(['Function', 'Where', 'Category', 'ms'],
-                          [(n, w, cat, f'{us / 1e3:.1f}') for (cat, n, w), us in fn.most_common(15)]))
+                          [(n, w, cat, f'{us / 1e3:.1f}') for (cat, n, w), us in fn.most_common(15)],
+                          f'Top 15 busy self-time functions ({role})'))
     cpu_rows = []
     for role in ('controller', 'fork'):
         xs = p['roles'][role]
@@ -577,14 +709,18 @@ def render_cpu(d):
                          f'{sum(x["self_cpu_ms"].get("system", 0) for x in xs):.0f}',
                          f'{sum(x["self_cpu_ms"].get("user", 0) + x["self_cpu_ms"].get("system", 0) for x in xs) / max(len(xs), 1):.0f}'))
     body.append('<h2>Process CPU (getrusage at exit, profiled run)</h2>')
-    body.append(table(['Process', 'user ms', 'sys ms', 'per process ms'], cpu_rows))
+    body.append(table(['Process', 'user ms', 'sys ms', 'per process ms'], cpu_rows,
+                      'Whole-process CPU (all threads) at exit; captured processes only'))
     s = a['sampler']
     body.append('<h2>Oximut\'s Rust memory sampler</h2>')
+    if not a['passed']:
+        body.append('<p><b>Warning:</b> this accounting diagnostic did not pass; values are not qualified.</p>')
     body.append(table(['Stage', 'calls', 'thread CPU ms', 'kernel ms', 'wall ms'], [
         (name, s[key]['calls'], f'{s[key]["selfCpuNs"] / 1e6:.1f}', f'{s[key]["selfSystemNs"] / 1e6:.1f}',
          f'{s[key]["wallNs"] / 1e6:.1f}') for name, key in
         [('All sampling', 'sampling'), ('Process discovery', 'discovery'), ('Identity reads', 'identityReads'),
-         ('RSS reads (smaps_rollup)', 'rssReads')]]))
+         ('RSS reads (smaps_rollup)', 'rssReads')]],
+        'CLI sampling-thread clocks; stages nest inside all sampling'))
     body.append(f'<p>Same run: Oximut used {a["tools"]["oximut"]["cpu_seconds"]:.2f} s CPU '
                 f'({a["tools"]["oximut"]["cpu_system_seconds"]:.2f} s kernel). The sampler accounts for '
                 f'{100 * s["sampling"]["selfCpuNs"] / 1e9 / a["tools"]["oximut"]["cpu_seconds"]:.0f}% of it.</p>')
@@ -595,8 +731,9 @@ def render_cpu(d):
             snap_rows.append((snap['tool'], proc['comm'], proc['pid'], f'{proc["rss_bytes"] / 1e6:.1f}'))
     body.append(stacked_bars([(snap['tool'], [(f'{pr["comm"]} {pr["pid"]}', pr['rss_bytes'] / 1e6, SLOTS[i % 6])
                                               for i, pr in enumerate(sorted(snap['processes'], key=lambda q: -q['rss_bytes']))])
-                              for snap in a['peak_rss_snapshots']], ' MB'))
-    body.append(table(['Tool', 'Process', 'PID', 'RSS MB'], snap_rows))
+                              for snap in a['peak_rss_snapshots']], ' MB',
+                             'Resident memory per process at each tool\'s aggregate peak'))
+    body.append(table(['Tool', 'Process', 'PID', 'RSS MB'], snap_rows, 'Processes in each peak snapshot'))
     body.append('<p>Oximut\'s peak is one controller (Vite + Vitest in-process) plus one test fork. Stryker keeps '
                 'its main process, a checker and a long-lived test runner. Memory is the one target already met.</p>')
     body.append(f'<p class="note">Profiles: run {esc(d["runs"]["profiles"])}; accounting: run {esc(d["runs"]["accounting"])}; '
@@ -626,21 +763,27 @@ def main(argv=None):
                 'accounting': extract_accounting(args.accounting, inputs),
                 'controller': extract_controller(args.controller, inputs),
                 'profiles': extract_profiles(args.profiles, inputs)}
-        roots = [str(getattr(args, k).resolve()) for k in ('benchmark', 'accounting', 'controller', 'profiles')]
+        workloads = {data['benchmark']['workload_sha256']} | {
+            data[k]['identity']['workload_sha256'] for k in ('accounting', 'controller', 'profiles')}
+        if len(workloads) != 1:
+            raise SystemExit(f'inputs declare different workloads: {sorted(workloads)}')
+        roots = {k: str(getattr(args, k).resolve()) for k in ('benchmark', 'accounting', 'controller', 'profiles')}
         def rel(path):
             path = str(Path(path).resolve())
-            for root in roots:
-                if path.startswith(root):
-                    return os.path.relpath(path, root)
+            for name, root in roots.items():
+                if path.startswith(root + os.sep):
+                    return f'{name} {data["runs"][name]}: {os.path.relpath(path, root)}'
             return path
         data['inputs'] = {rel(k): v for k, v in inputs.items()}
-        args.output.write_text(json.dumps(data, indent=1, sort_keys=True) + '\n')
+        write_atomic(args.output, json.dumps(data, indent=1, sort_keys=True) + '\n')
     else:
-        data = json.loads(args.data.read_text())
+        data = json.loads(args.data.read_text(encoding='utf-8'))
         args.output_dir.mkdir(parents=True, exist_ok=True)
-        (args.output_dir / 'index.html').write_text(render_overview(data))
-        (args.output_dir / 'timeline.html').write_text(render_timeline(data))
-        (args.output_dir / 'cpu.html').write_text(render_cpu(data))
+        # Render every page before replacing any, so a failure leaves the previous set intact.
+        pages = {'index.html': render_overview(data), 'timeline.html': render_timeline(data),
+                 'cpu.html': render_cpu(data)}
+        for name, text in pages.items():
+            write_atomic(args.output_dir / name, text)
 
 
 if __name__ == '__main__':
