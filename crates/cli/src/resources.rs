@@ -1050,16 +1050,29 @@ mod tests {
             assert_eq!(state.measured_worker_peak_bytes, peak);
             assert_eq!(state.admission_worker_cost_bytes, peak + peak.div_ceil(4));
             let observations = observations.into_inner();
-            let identity_reads: Vec<_> = observations
-                .iter()
-                .filter(|(kind, _)| *kind == "identity")
-                .collect();
+            // Exact per-PID identity checks, cache hits included: the aggregate
+            // tree checks every owned PID once, each slot tree (duplicates
+            // included) checks its own members, and the CLI floor checks the CLI.
+            let mut expected_identity: BTreeMap<u32, usize> =
+                [cli, worker, nested, sibling, adopted]
+                    .into_iter()
+                    .map(|pid| (pid, 1))
+                    .collect();
+            *expected_identity.get_mut(&cli).unwrap() += 1;
+            for &slot in &workers {
+                *expected_identity.get_mut(&slot).unwrap() += 1;
+                if slot == worker {
+                    *expected_identity.get_mut(&nested).unwrap() += 1;
+                }
+            }
+            let mut identity_reads = BTreeMap::new();
+            for (kind, pid) in &observations {
+                if *kind == "identity" {
+                    *identity_reads.entry(*pid).or_insert(0) += 1;
+                }
+            }
             assert_eq!(
-                identity_reads.len(),
-                6 + workers
-                    .iter()
-                    .map(|pid| if *pid == worker { 2 } else { 1 })
-                    .sum::<usize>(),
+                identity_reads, expected_identity,
                 "identities stay fresh for every tree observation"
             );
             let rss_reads: Vec<_> = observations

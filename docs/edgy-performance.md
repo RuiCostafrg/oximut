@@ -118,7 +118,9 @@ Before extending this guard, measure self CPU in the Rust resource sampler and
 controller input/cleanup checks, alongside worker bootstrap. Source inspection
 shows repeated current-RSS reads for aggregate and slot accounting, but there is
 no CPU attribution for those reads yet. Keep their cadence, fresh-read semantics,
-and fail-closed admission/cleanup unchanged during diagnosis. This measurement
+and fail-closed admission/cleanup unchanged during diagnosis. (Follow-up: the
+precise capture attributed ~0.7 s of kernel CPU to these walks; #47 keeps fresh
+per-observation identity checks but reads each PID's RSS once per sample.) This measurement
 decides whether a safe accounting optimization deserves priority over more
 runtime-isolation work; it is not evidence of a saving.
 
