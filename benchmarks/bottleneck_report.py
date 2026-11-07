@@ -105,7 +105,8 @@ def validate_campaign(rows, summary):
                                              for i in range(warmups, warmups + pairs)])
             if (abs(value['median'] - published['median']) > 1e-12 or
                     any(abs(a - b) > 1e-12 for a, b in zip(value['bootstrap_95_percent'],
-                                                           published['bootstrap_95_percent']))):
+                                                           published['bootstrap_95_percent'],
+                                                           strict=True))):
                 raise ValueError(f'{name} {metric}: summary disagrees with raw paired rows')
     return indexed
 
@@ -349,19 +350,19 @@ def stacked_bars(rows, unit, label, width=1000, bar=26, gap=14, label_w=170):
         x = label_w + plot * tick / 5
         out.append(f'<line x1="{x:.1f}" y1="0" x2="{x:.1f}" y2="{height - 22}" stroke="var(--grid)"/>'
                    f'<text x="{x:.1f}" y="{height - 6}" text-anchor="middle">{total_max * tick / 5:.0f}{unit}</text>')
-    for i, (label, segs) in enumerate(rows):
+    for i, (row_label, segs) in enumerate(rows):
         y = i * (bar + gap) + 4
-        out.append(f'<text class="lbl" x="{label_w - 10}" y="{y + bar / 2 + 4}" text-anchor="end">{esc(label)}</text>')
+        out.append(f'<text class="lbl" x="{label_w - 10}" y="{y + bar / 2 + 4}" text-anchor="end">{esc(row_label)}</text>')
         x = label_w
         for name, value, color in segs:
             w = plot * value / total_max
             if w > 0:
                 out.append(f'<rect x="{x:.1f}" y="{y}" width="{max(w - 2, 0.5):.1f}" height="{bar}" rx="4" '
-                           f'fill="{color}"><title>{esc(label)} - {esc(name)}: {value:.0f}{unit}</title></rect>')
+                           f'fill="{color}"><title>{esc(row_label)} - {esc(name)}: {value:.0f}{unit}</title></rect>')
             x += w
         out.append(f'<text x="{x + 6:.1f}" y="{y + bar / 2 + 4}">{sum(v for _, v, _ in segs):.0f}{unit}</text>')
     out.append('</svg>')
-    data = [(label, name, f'{value:.0f}{unit}') for label, segs in rows for name, value, _ in segs]
+    data = [(row_label, name, f'{value:.0f}{unit}') for row_label, segs in rows for name, value, _ in segs]
     out.append('<details><summary>Data table</summary>' +
                table(['Bar', 'Segment', 'Value'], data, f'Data for: {label}') + '</details>')
     return ''.join(out)
@@ -379,15 +380,15 @@ def ratio_chart(items, label, width=1000):
             out.append(f'<line x1="{sx(t):.1f}" y1="0" x2="{sx(t):.1f}" y2="{height - 22}" stroke="var(--grid)"/>'
                        f'<text x="{sx(t):.1f}" y="{height - 6}" text-anchor="middle">{t:.2f}</text>')
     out.append(f'<line x1="{sx(1):.1f}" y1="0" x2="{sx(1):.1f}" y2="{height - 22}" stroke="var(--ink2)" stroke-dasharray="4 3"/>')
-    for i, (label, median, (lo, hi), target) in enumerate(items):
+    for i, (item_label, median, (lo, hi), target) in enumerate(items):
         y = i * row + 14
-        out.append(f'<text class="lbl" x="{label_w - 10}" y="{y + 4}" text-anchor="end">{esc(label)}</text>')
+        out.append(f'<text class="lbl" x="{label_w - 10}" y="{y + 4}" text-anchor="end">{esc(item_label)}</text>')
         if target:
             out.append(f'<line x1="{sx(target):.1f}" y1="{y - 10}" x2="{sx(target):.1f}" y2="{y + 10}" stroke="var(--s2)" stroke-width="2"/>'
                        f'<text x="{sx(target) + 4:.1f}" y="{y - 4}" style="fill:var(--s2)">target {target}</text>')
         out.append(f'<line x1="{sx(lo):.1f}" y1="{y}" x2="{sx(hi):.1f}" y2="{y}" stroke="var(--s1)" stroke-width="2"/>'
                    f'<circle cx="{sx(median):.1f}" cy="{y}" r="5" fill="var(--s1)" stroke="var(--surface)" stroke-width="2">'
-                   f'<title>{esc(label)}: {median:.3f} [{lo:.3f}, {hi:.3f}]</title></circle>'
+                   f'<title>{esc(item_label)}: {median:.3f} [{lo:.3f}, {hi:.3f}]</title></circle>'
                    f'<text x="{sx(hi) + 8:.1f}" y="{y + 4}">{median:.3f} [{lo:.3f}, {hi:.3f}]</text>')
     out.append('</svg>')
     out.append(table(['Comparison', 'Paired median', '95% CI low', '95% CI high', 'Target (≤)'],
@@ -591,13 +592,14 @@ def render_timeline(d):
     out.append(f'<rect x="{sx(t0):.1f}" y="2" width="{sx(first) - sx(t0):.1f}" height="{height - 46}" '
                f'fill="var(--s5)" opacity="0.18"><title>Controller start: Node + Vitest import + createVitest '
                f'({first - t0:.0f} ms)</title></rect>')
-    names = {'baseline': 'baseline'}
     seen = collections.Counter()
+    fork_labels = []
     for i, (job, fork) in enumerate(forks):
         y = i * row + 4
         seen[id(job)] += 1
         label = (f'mutant {job["mutant"][:8]}' if job['kind'] == 'mutant' else
                  f'baseline {1 + [k for k in jobs if k["kind"] == "baseline"].index(job)} · file {seen[id(job)]}')
+        fork_labels.append(label)
         out.append(f'<text class="lbl" x="{label_w - 8}" y="{y + 13}" text-anchor="end">{esc(label)}</text>')
         for name, a, b, color in colors:
             x0, x1 = sx(fork[a]), sx(fork[b])
@@ -616,6 +618,8 @@ def render_timeline(d):
     rows = [(f'{kind}: {name}', f'{statistics.median(v):.1f}', f'{min(v):.1f}', f'{max(v):.1f}', len(v))
             for (kind, name), v in sorted(seg.items())]
     share_rows = [(name, f'{v:.0f}', share(v, run_ms)) for name, v in totals.most_common()]
+    fork_rows = [(label, f'{fork["fork"] - t0:.1f}') + tuple(f'{fork[b] - fork[a]:.1f}' for _, a, b, _ in colors)
+                 for label, (job, fork) in zip(fork_labels, forks, strict=True)]
     job_rows = [(f'{j["kind"]} {(j["mutant"] or "")[:8]}', f'{j["end"] - j["start"]:.1f}', len(j['forks']),
                  f'{j["forks"][0]["fork"] - j["start"]:.1f}', f'{j["controller_cpu_ms"]:.0f}') for j in jobs]
     baselines = [j for j in jobs if j['kind'] == 'baseline']
@@ -637,9 +641,13 @@ def render_timeline(d):
             'response.</p>',
             out[0] + ''.join(out[1:]),
             legend([(n, col) for n, _, _, col in colors] + [('Controller start', 'var(--s5)')]),
+            '<details><summary>Data table</summary>' +
+            table(['Fork', 'start ms'] + [n for n, _, _, _ in colors], fork_rows,
+                  f'Data for: Gantt chart: lifecycle of each of the {len(forks)} Vitest forks in one run') +
+            '</details>',
             '<h2>Share of the run by fork step</h2>',
             table(['Step (all forks)', 'ms', f'share of the {run_ms:.0f} ms run'], share_rows,
-                  'Data for: Gantt chart of fork lifecycles, summed per step'),
+                  'Fork lifecycle steps summed across all forks'),
             '<h2>Per-step durations (ms)</h2>',
             table(['Step', 'median', 'min', 'max', 'n'], rows, 'Per-fork step durations within this run'),
             '<h2>Jobs</h2>',

@@ -76,8 +76,17 @@ class BottleneckReport(unittest.TestCase):
                 self.assertRegex(chart, r'role="img" aria-label="[^"]+"', name)
             labels = re.findall(r'<svg [^>]*aria-label="([^"]+)"', page)
             captions = re.findall(r'<caption[^>]*>Data for: ([^<]+)</caption>', page)
-            # Every named chart needs its own captioned data table.
-            self.assertEqual(len(captions), len(labels), name)
+            # Every named chart needs its own data table, captioned with that chart's name.
+            self.assertEqual(captions, labels, name)
+
+    def test_timeline_table_has_a_row_per_chart_row(self):
+        page = (REPORT / 'timeline.html').read_text(encoding='utf-8')
+        svg = re.search(r'<svg .*?</svg>', page, re.S).group(0)
+        chart_rows = re.findall(r'<text class="lbl"[^>]*>([^<]+)</text>', svg)
+        table = re.search(r'<caption[^>]*>Data for: [^<]+</caption>(.*?)</table>', page, re.S).group(1)
+        table_rows = re.findall(r'<tr><td>([^<]+)</td>', table)
+        self.assertEqual(table_rows, chart_rows)
+        self.assertEqual(len(chart_rows), 18)
 
     def test_campaign_validation_rejects_bad_evidence(self):
         rows, summary = campaign()
@@ -86,6 +95,10 @@ class BottleneckReport(unittest.TestCase):
             bottleneck_report.validate_campaign(rows[:-1], summary)
         with self.assertRaisesRegex(ValueError, 'duplicate'):
             bottleneck_report.validate_campaign(rows + [rows[-1]], summary)
+        truncated = copy.deepcopy(summary)
+        truncated['comparisons']['after_vs_stryker']['metrics']['wall_seconds']['bootstrap_95_percent'].pop()
+        with self.assertRaises(ValueError):
+            bottleneck_report.validate_campaign(rows, truncated)
         tampered = copy.deepcopy(summary)
         tampered['comparisons']['after_vs_stryker']['metrics']['wall_seconds']['bootstrap_95_percent'][1] += 0.01
         with self.assertRaisesRegex(ValueError, 'disagrees'):
