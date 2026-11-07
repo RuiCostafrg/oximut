@@ -76,7 +76,7 @@ class BottleneckReport(unittest.TestCase):
                 self.assertRegex(chart, r'role="img" aria-label="[^"]+"', name)
             labels = re.findall(r'<svg [^>]*aria-label="([^"]+)"', page)
             captions = re.findall(r'<caption[^>]*>Data for: ([^<]+)</caption>', page)
-            # Low-contrast palette slots require a table view for every chart.
+            # Every named chart needs its own captioned data table.
             self.assertEqual(len(captions), len(labels), name)
 
     def test_campaign_validation_rejects_bad_evidence(self):
