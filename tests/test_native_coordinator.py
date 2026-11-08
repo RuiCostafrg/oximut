@@ -179,7 +179,7 @@ class NativeCoordinator(unittest.TestCase):
                 str(REPO / 'target/debug/oximut'), '--root', str(ROOT),
                 '--source', str(ROOT / 'src/subject.ts'), *([] if full else ['--baseline-only']),
                 '--execution', 'persistent', '--adapter', str(adapter), '--report', '-',
-                '--timeout-ms', str(timeout_ms), '--no-cache', *extra_args,
+                '--timeout-ms', str(timeout_ms), '--no-cache', '--no-shared-controller', *extra_args,
             ], env={**os.environ, 'OXIMUT_FAKE_MODE': mode, 'OXIMUT_FAKE_LOG': str(log)},
                 text=True, capture_output=True, timeout=120)
             events = [json.loads(line) for line in log.read_text().splitlines()]

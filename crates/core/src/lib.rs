@@ -78,6 +78,8 @@ pub struct Mutation {
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct Request {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub lanes: Option<Vec<Request>>,
     pub protocol: u32,
     pub run_id: String,
     pub job_id: String,
@@ -208,6 +210,8 @@ impl Coverage {
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct Response {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub lanes: Option<Vec<Response>>,
     pub protocol: u32,
     pub run_id: String,
     pub job_id: String,
@@ -231,6 +235,25 @@ impl Response {
             || self.generation != request.generation
         {
             return Err("adapter returned a stale or incompatible response".into());
+        }
+        match (&request.lanes, &self.lanes) {
+            (Some(jobs), Some(results)) if jobs.len() == results.len() => {
+                for (job, result) in jobs.iter().zip(results) {
+                    if job.lanes.is_some() || result.lanes.is_some() {
+                        return Err("nested lanes".into());
+                    }
+                    result.validate(job)?;
+                }
+            }
+            (Some(_), None)
+                if matches!(
+                    self.outcome,
+                    TestOutcome::InfrastructureError
+                        | TestOutcome::Timeout
+                        | TestOutcome::ResourceExhausted
+                ) => {}
+            (None, None) => {}
+            _ => return Err("invalid lane response inventory".into()),
         }
         let executed_tests = self
             .tests
@@ -451,6 +474,7 @@ mod tests {
     #[test]
     fn infrastructure_is_never_a_kill_and_empty_pass_is_rejected() {
         let request = Request {
+            lanes: None,
             protocol: 1,
             run_id: "r".into(),
             job_id: "j".into(),
@@ -467,6 +491,7 @@ mod tests {
             selection: None,
         };
         let mut response = Response {
+            lanes: None,
             protocol: 1,
             run_id: "r".into(),
             job_id: "j".into(),
@@ -568,6 +593,7 @@ mod tests {
         .unwrap();
         request.selection = Some(coverage().select("covered"));
         let mut response = Response {
+            lanes: None,
             protocol: 1,
             run_id: "r".into(),
             job_id: "j".into(),
@@ -609,6 +635,7 @@ mod tests {
             map: serde_json::json!({}),
         };
         let mut response = Response {
+            lanes: None,
             protocol: 1,
             run_id: "r".into(),
             job_id: "j".into(),

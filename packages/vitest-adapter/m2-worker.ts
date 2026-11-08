@@ -8,6 +8,8 @@ import { validateRequest, type Request, type Result } from './protocol.ts';
 import { SelectionSupport } from './m3-selection.ts';
 
 const selectionSupport = new SelectionSupport();
+let sharedLanes: import('./shared-lanes.ts').SharedLanes | undefined;
+let controllerReusable = false;
 const compileCacheFlush = fileURLToPath(new URL('./compile-cache.cjs', import.meta.url));
 
 let vitest: Awaited<ReturnType<typeof createVitest>> | undefined;
@@ -180,6 +182,7 @@ async function command(name: string, args: Request): Promise<unknown> {
             !/^(?:vite:|vitest(?::|$)|oximut-m2-mutation$|builtin:|alias$)/.test(plugin.name),
         ),
     );
+    controllerReusable = !unsupported;
     return {
       versions: { node: process.version, vitest: version },
       controllerPid: process.pid,
@@ -192,6 +195,7 @@ async function command(name: string, args: Request): Promise<unknown> {
   if (!vitest) throw new Error('Not initialized');
   if (name === 'close') {
     selectionSupport.close();
+    await sharedLanes?.close();
     await vitest.close();
     return { closed: true };
   }
@@ -201,6 +205,13 @@ async function command(name: string, args: Request): Promise<unknown> {
   validateRequest(job);
   if ((job.pool === 'threads' ? 'threads' : 'forks') !== pool)
     throw new Error('Pool cannot change after initialization');
+  if (job.lanes) {
+    // Custom plugins, global setup or multiple projects can't be shared across lanes.
+    if (!controllerReusable) throw new Error('Shared lanes require a reusable controller project');
+    await vitest.close();
+    sharedLanes ??= new (await import('./shared-lanes.ts')).SharedLanes();
+    return sharedLanes.run(job);
+  }
   const next = job.mutation;
   const probesChanged = JSON.stringify(probes) !== JSON.stringify(job.collectCoverage);
   if (probesChanged || job.collectCoverage) {

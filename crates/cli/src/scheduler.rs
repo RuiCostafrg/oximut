@@ -173,7 +173,8 @@ impl<'a> Scheduler<'a> {
         })
     }
     pub fn prepare_spares(&mut self, request: &Request) {
-        if self.options.execution == Execution::Persistent
+        if !(self.options.shared_controller && self.slots.len() >= 2)
+            && self.options.execution == Execution::Persistent
             && coordinator::native_worker(&self.options.adapter).is_some()
         {
             self.spares
@@ -470,8 +471,13 @@ impl<'a> Scheduler<'a> {
                         if index != WARM_JOB {
                             self.budget.active += 1;
                         }
-                        self.budget.max_active_jobs =
-                            self.budget.max_active_jobs.max(self.budget.active);
+                        self.budget.max_active_jobs = self.budget.max_active_jobs.max(
+                            self.budget.active
+                                + request
+                                    .lanes
+                                    .as_ref()
+                                    .map_or(0, |lanes| lanes.len().saturating_sub(1)),
+                        );
                     }
                     Err(error) => {
                         if index == WARM_JOB {
@@ -528,6 +534,87 @@ impl<'a> Scheduler<'a> {
             .1
     }
     pub fn run_jobs(&mut self, jobs: Vec<(usize, Request)>, results: &mut [MutantResult]) {
+        if self.options.shared_controller && self.slots.len() >= 2 {
+            let mut pending: VecDeque<_> = jobs.into();
+            while let Some(first) = pending.pop_front() {
+                let mut batch = vec![first];
+                // Admission remains centralized; the baseline fork limit reserves
+                // headroom for every lane, while the single slot owns the whole tree.
+                self.sample(true);
+                let pids: Vec<_> = self.slots.iter().flatten().map(|w| w.child.id()).collect();
+                let capacity = self.budget.capacity(&pids);
+                let limit = self.budget.baseline_fork_limit(capacity, &pids);
+                while batch.len() < limit {
+                    let Some(next) = pending.front() else { break };
+                    if encoded_len(&next.1.resident) != encoded_len(&batch[0].1.resident)
+                        || next
+                            .1
+                            .resident
+                            .as_ref()
+                            .map(|r| r.iter().map(|m| &m.file).collect::<Vec<_>>())
+                            != batch[0]
+                                .1
+                                .resident
+                                .as_ref()
+                                .map(|r| r.iter().map(|m| &m.file).collect::<Vec<_>>())
+                    {
+                        break;
+                    }
+                    let mut candidate = batch[0].1.clone();
+                    candidate.lanes = Some(
+                        batch
+                            .iter()
+                            .map(|(_, r)| r.clone())
+                            .chain(std::iter::once(next.1.clone()))
+                            .collect(),
+                    );
+                    if encoded_len(&candidate) > 8 * 1024 * 1024 {
+                        break;
+                    }
+                    batch.push(pending.pop_front().unwrap());
+                }
+                let mut request = batch[0].1.clone();
+                request.lanes = Some(batch.iter().map(|(_, r)| r.clone()).collect());
+                let response = self.execute(&request);
+                // Unsupported projects run with one controller per worker instead.
+                if response.lanes.is_none()
+                    && response
+                        .errors
+                        .iter()
+                        .any(|error| error.contains("Shared lanes require"))
+                {
+                    self.diagnostics.push(format!(
+                        "shared controller unavailable, using one controller per worker: {}",
+                        response.errors.join("; ")
+                    ));
+                    let mut rest: Vec<_> = batch;
+                    rest.extend(pending);
+                    for (index, response) in self.dispatch(rest.into(), false) {
+                        results[index].outcome = response.mutant_outcome();
+                        results[index].tests = response.tests;
+                        results[index].errors = response.errors;
+                    }
+                    return;
+                }
+                let responses = response.lanes;
+                for (offset, (index, job)) in batch.into_iter().enumerate() {
+                    let item = responses
+                        .as_ref()
+                        .and_then(|r| r.get(offset))
+                        .cloned()
+                        .unwrap_or_else(|| {
+                            infrastructure(
+                                &job,
+                                format!("Shared batch failed: {}", response.errors.join("; ")),
+                            )
+                        });
+                    results[index].outcome = item.mutant_outcome();
+                    results[index].tests = item.tests;
+                    results[index].errors = item.errors;
+                }
+            }
+            return;
+        }
         for (index, response) in self.dispatch(jobs.into(), false) {
             results[index].outcome = response.mutant_outcome();
             results[index].tests = response.tests;

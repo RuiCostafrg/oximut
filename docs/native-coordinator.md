@@ -261,6 +261,17 @@ through verified abort; completed warms close normally and retain their diagnost
 Single-worker runs and relay adapters send no warm command. Warm acknowledgements
 carry zero tests and never enter baseline or mutant results.
 
+## Shared controller (default for parallel persistent runs)
+
+With at least two admitted workers, persistent execution, fresh-process isolation and
+the native adapter, mutants run in one controller. Lanes are named Vitest
+projects; each mutant still gets one fresh OS process for all its selected
+files, and stop-at-first-failure applies per mutant. `--no-shared-controller`
+selects one controller per worker. Projects that can't share a controller
+(custom plugins, global setup, multiple projects, non-Node environments) fall
+back to one controller per worker and record a diagnostic. This depends on
+private details of the pinned Vitest version; `shared-lanes.ts` refuses others.
+
 ## Release or follow-up
 
 If the qualified campaign meets all three targets with every gate passing,
