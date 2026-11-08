@@ -256,13 +256,21 @@ import graphs. It never collects tests, imports user modules or starts a test
 pool. Each mutant still gets fresh isolated workers. Other resident groups and
 static overrides retain the normal invalidation behavior.
 
-Warm-up shares scheduler admission, accounting, deadlines, ownership discovery,
-leak verification and shutdown with ordinary jobs. The original baseline uses
-one test worker while spare admission is pending, reserving the remaining job
-capacity for warm-ups; later baselines keep their admitted parallelism. Dispatch
-waits for admitted warm-ups before returning the baseline, so successful spares
-are ready before mutants. Refused admission skips the remaining spares. A warm
-or spare initialization failure is diagnostic only: its slot is aborted and may
-start lazily for a mutant. Global exhaustion or interruption still stops every
-slot and fails closed. Single-worker runs and relay adapters send no warm command.
-Warm acknowledgements carry zero tests and never enter baseline or mutant results.
+Warm-up retains scheduler memory admission, aggregate RSS accounting, deadlines,
+ownership discovery, leak verification and shutdown. Pending spares stay separate
+from the real dispatch queue. In-flight warm jobs occupy their slot until their
+acknowledgement arrives, but do not count as active real jobs, consume real-job
+CPU capacity or block serial baseline admission. Baseline dispatch returns once
+its real job completes; later dispatch loops accept warm acknowledgements. Thus
+the instrumented baseline can use its full admitted fork limit while spares warm.
+Mutants use ready slots and wait when all remaining slots are still busy warming;
+a warming slot never starts a duplicate controller.
+
+Refused admission skips remaining spares. A warm or spare initialization failure
+is diagnostic only: its slot is aborted and may start lazily for a mutant. Global
+exhaustion or interruption still stops every slot and fails closed. Shutdown
+writes stop to all slots before polling their exits together, with an independent
+seven-second deadline per slot, unchanged exit/ownership checks and final global
+subreaper cleanup. Warm completions during shutdown retain their diagnostics.
+Single-worker runs and relay adapters send no warm command. Warm acknowledgements
+carry zero tests and never enter baseline or mutant results.

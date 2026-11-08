@@ -197,63 +197,104 @@ impl<'a> Scheduler<'a> {
             }
         }
     }
-    fn close_slot(&mut self, slot: usize) {
-        let Some(mut worker) = self.slots[slot].take() else {
-            return;
-        };
-        worker.snapshot();
-        if let Err(error) = fs::write(worker.directory.path().join("stop"), b"") {
-            self.cleanup_ok = false;
-            self.diagnostics
-                .push(format!("scheduler shutdown failed: {error}"));
-            worker.abort();
-            return;
-        }
-        let deadline = Instant::now() + Duration::from_secs(7);
-        loop {
+    fn close_slots(&mut self, slots: &[usize]) {
+        let mut stopping = vec![];
+        let mut failed_signals = vec![];
+        for &slot in slots {
+            let Some(mut worker) = self.slots[slot].take() else {
+                continue;
+            };
             worker.snapshot();
-            self.sample(false);
-            match worker.child.try_wait() {
-                Ok(Some(status)) => {
-                    if !status.success() {
-                        self.cleanup_ok = false;
-                        self.diagnostics.push(format!(
-                            "persistent adapter shutdown failed (scheduler worker): {status}"
-                        ));
-                    }
-                    if let Ok(value) = fs::read(worker.directory.path().join("shutdown.json"))
-                        && let Ok(messages) = serde_json::from_slice::<Vec<String>>(&value)
-                    {
-                        self.diagnostics.extend(messages);
-                    }
-                    if worker
-                        .owned
-                        .iter()
-                        .any(|(&pid, &start)| still_owned(pid, start))
-                    {
-                        self.cleanup_ok = false;
-                        self.diagnostics
-                            .push("scheduler shutdown left owned descendants".into());
-                    }
-                    break;
-                }
-                Err(error) => {
-                    self.cleanup_ok = false;
-                    self.diagnostics
-                        .push(format!("scheduler shutdown wait failed: {error}"));
-                    break;
-                }
-                _ => {}
-            }
-            if Instant::now() >= deadline {
+            if let Err(error) = fs::write(worker.directory.path().join("stop"), b"") {
                 self.cleanup_ok = false;
                 self.diagnostics
-                    .push("scheduler shutdown exceeded deadline".into());
-                break;
+                    .push(format!("scheduler shutdown failed: {error}"));
+                failed_signals.push(worker);
+                continue;
             }
-            thread::sleep(Duration::from_millis(10));
+            stopping.push((worker, Instant::now() + Duration::from_secs(7)));
         }
-        worker.abort();
+        for mut worker in failed_signals {
+            worker.abort();
+        }
+        while !stopping.is_empty() {
+            let stopping_pids: Vec<_> = stopping.iter().map(|(w, _)| w.child.id()).collect();
+            self.sample_with(|budget, pids| {
+                let mut all = pids.to_vec();
+                all.extend(stopping_pids);
+                budget.sample(&all, false);
+            });
+            stopping.retain_mut(|(worker, deadline)| {
+                worker.snapshot();
+                // A final dispatch may have returned with this warm still busy.
+                // Preserve its diagnostics and lazy-fallback behavior at shutdown.
+                if worker
+                    .busy
+                    .as_ref()
+                    .is_some_and(|(index, _, _)| *index == WARM_JOB)
+                    && let Some(result) = worker.ready()
+                {
+                    let (_, request, _) = worker.busy.take().unwrap();
+                    worker.sequence += 1;
+                    let response = result.unwrap_or_else(|error| infrastructure(&request, error));
+                    let failed = response.outcome != TestOutcome::Skipped;
+                    self.diagnostics.push(format!(
+                        "spare warm {}: {}",
+                        if failed { "failed" } else { "ready" },
+                        response.errors.join("; ")
+                    ));
+                    if failed {
+                        worker.abort();
+                        return false;
+                    }
+                }
+                match worker.child.try_wait() {
+                    Ok(Some(status)) => {
+                        if !status.success() {
+                            self.cleanup_ok = false;
+                            self.diagnostics.push(format!(
+                                "persistent adapter shutdown failed (scheduler worker): {status}"
+                            ));
+                        }
+                        if let Ok(value) = fs::read(worker.directory.path().join("shutdown.json"))
+                            && let Ok(messages) = serde_json::from_slice::<Vec<String>>(&value)
+                        {
+                            self.diagnostics.extend(messages);
+                        }
+                        if worker
+                            .owned
+                            .iter()
+                            .any(|(&pid, &start)| still_owned(pid, start))
+                        {
+                            self.cleanup_ok = false;
+                            self.diagnostics
+                                .push("scheduler shutdown left owned descendants".into());
+                        }
+                        worker.abort();
+                        return false;
+                    }
+                    Err(error) => {
+                        self.cleanup_ok = false;
+                        self.diagnostics
+                            .push(format!("scheduler shutdown wait failed: {error}"));
+                        worker.abort();
+                        return false;
+                    }
+                    _ => {}
+                }
+                if Instant::now() >= *deadline {
+                    self.cleanup_ok = false;
+                    self.diagnostics
+                        .push("scheduler shutdown exceeded deadline".into());
+                    worker.abort();
+                    return false;
+                }
+                true
+            });
+            if !stopping.is_empty() {
+                thread::sleep(Duration::from_millis(10));
+            }
+        }
     }
     fn dispatch(
         &mut self,
@@ -261,16 +302,9 @@ impl<'a> Scheduler<'a> {
         serial: bool,
     ) -> Vec<(usize, Response)> {
         let mut completed = vec![];
-        pending.append(&mut self.spares);
         let mut paused = false;
         let mut idle_pressure_since = None;
-        while !pending.is_empty()
-            || self
-                .slots
-                .iter()
-                .flatten()
-                .any(|worker| worker.busy.is_some())
-        {
+        while !pending.is_empty() || self.budget.active > 0 {
             if INTERRUPTED.load(Ordering::Relaxed) {
                 self.budget.exhausted("run interrupted by SIGINT/SIGTERM");
             }
@@ -290,7 +324,9 @@ impl<'a> Scheduler<'a> {
                     let worker = self.slots[slot].as_mut().expect("ready worker");
                     let (index, request, _) = worker.busy.take().expect("ready job");
                     worker.sequence += 1;
-                    self.budget.active -= 1;
+                    if index != WARM_JOB {
+                        self.budget.active -= 1;
+                    }
                     let response = if let Some(reason) = &self.budget.exhaustion {
                         exhausted(&request, reason)
                     } else {
@@ -317,10 +353,10 @@ impl<'a> Scheduler<'a> {
             if let Some(reason) = self.budget.exhaustion.clone() {
                 for slot in 0..self.slots.len() {
                     if let Some(worker) = self.slots[slot].as_mut() {
-                        if let Some((index, request, _)) = worker.busy.take() {
-                            if index != WARM_JOB {
-                                completed.push((index, exhausted(&request, &reason)));
-                            }
+                        if let Some((index, request, _)) = worker.busy.take()
+                            && index != WARM_JOB
+                        {
+                            completed.push((index, exhausted(&request, &reason)));
                             self.budget.active -= 1;
                         }
                         worker.abort();
@@ -335,7 +371,10 @@ impl<'a> Scheduler<'a> {
                 );
                 break;
             }
-            if pending.is_empty() {
+            if pending.is_empty() && self.budget.active == 0 {
+                break;
+            }
+            if pending.is_empty() && self.spares.is_empty() {
                 if self.budget.active > 0 {
                     thread::sleep(Duration::from_millis(10));
                 }
@@ -345,12 +384,15 @@ impl<'a> Scheduler<'a> {
             // Only when a job could actually be admitted now: a free slot and serial
             // ordering satisfied. A busy backlog keeps the cheap periodic cadence;
             // exact samples still run at least once per second and per response.
-            let warming = pending.front().is_some_and(|(index, _)| *index == WARM_JOB);
-            let admissible = (!serial || warming || self.budget.active == 0)
-                && self
-                    .slots
-                    .iter()
-                    .any(|slot| slot.as_ref().is_none_or(|worker| worker.busy.is_none()));
+            let warming = pending.is_empty();
+            let free_slot = self.slots.iter().enumerate().position(|(index, slot)| {
+                if warming {
+                    index > 0 && slot.is_none()
+                } else {
+                    slot.as_ref().is_none_or(|worker| worker.busy.is_none())
+                }
+            });
+            let admissible = (!serial || warming || self.budget.active == 0) && free_slot.is_some();
             if admissible && self.budget.last_sample_was_counter {
                 self.sample(true);
                 if self.budget.exhaustion.is_some() {
@@ -361,30 +403,30 @@ impl<'a> Scheduler<'a> {
                 .slots
                 .iter()
                 .flatten()
-                .filter(|worker| worker.busy.is_some())
+                .filter(|worker| {
+                    worker
+                        .busy
+                        .as_ref()
+                        .is_some_and(|(index, _, _)| *index != WARM_JOB)
+                })
                 .map(|worker| worker.child.id())
                 .collect();
             let capacity = self.budget.capacity(&active_pids);
             if warming && capacity == 0 {
                 self.diagnostics
                     .push("spare warm skipped: resource admission refused".into());
-                pending.retain(|(index, _)| *index != WARM_JOB);
+                self.spares.clear();
                 continue;
             }
-            if capacity > 0 && (!serial || warming || self.budget.active == 0) {
-                let slot = self
-                    .slots
-                    .iter()
-                    .enumerate()
-                    .position(|(index, slot)| {
-                        if warming {
-                            index > 0 && slot.is_none()
-                        } else {
-                            slot.as_ref().is_none_or(|worker| worker.busy.is_none())
-                        }
-                    })
-                    .expect("capacity has slot");
-                let (index, mut request) = pending.pop_front().unwrap();
+            if capacity > 0
+                && (!serial || warming || self.budget.active == 0)
+                && let Some(slot) = free_slot
+            {
+                let (index, mut request) = if warming {
+                    self.spares.pop_front().unwrap()
+                } else {
+                    pending.pop_front().unwrap()
+                };
                 // One serial baseline occupies the controller, but its fresh forks
                 // must each have admission headroom before they are launched.
                 if request.kind == "baseline" && self.options.execution == Execution::Persistent {
@@ -412,7 +454,9 @@ impl<'a> Scheduler<'a> {
                 let worker = self.slots[slot].as_mut().unwrap();
                 match worker.send(index, request.clone()) {
                     Ok(()) => {
-                        self.budget.active += 1;
+                        if index != WARM_JOB {
+                            self.budget.active += 1;
+                        }
                         self.budget.max_active_jobs =
                             self.budget.max_active_jobs.max(self.budget.active);
                     }
@@ -426,11 +470,11 @@ impl<'a> Scheduler<'a> {
                         self.slots[slot] = None;
                     }
                 }
-                // Charge the measured cost for every admitted in-flight job,
-                // including processes not visible yet at this sampling instant.
+                // Real jobs reserve admission headroom; warm slots remain busy
+                // and their entire trees remain in aggregate RSS sampling.
                 paused = false;
                 idle_pressure_since = None;
-            } else if capacity == 0 && self.budget.active < self.budget.effective_workers {
+            } else if capacity == 0 && free_slot.is_some() {
                 // Memory pressure: a slot is free but admission must wait.
                 // Busy slots alone are ordinary waiting (below), relying on
                 // the periodic sample and the forced sample at completion.
@@ -447,7 +491,7 @@ impl<'a> Scheduler<'a> {
                     })
                     .collect();
                 for index in idle {
-                    self.close_slot(index);
+                    self.close_slots(&[index]);
                     self.budget.recycled_idle_workers += 1;
                 }
                 self.sample_with(|budget, pids| budget.sample_admission(pids));
@@ -478,9 +522,8 @@ impl<'a> Scheduler<'a> {
         }
     }
     pub fn finish(&mut self, diagnostics: &mut Vec<String>) -> bool {
-        for slot in 0..self.slots.len() {
-            self.close_slot(slot);
-        }
+        self.spares.clear();
+        self.close_slots(&(0..self.slots.len()).collect::<Vec<_>>());
         // All slot roots are stopped. Any remaining descendant has been
         // adopted by the main subreaper and belongs to this run, including
         // processes orphaned before a failed slot could be sampled.
@@ -592,4 +635,99 @@ pub fn worker_main() -> Result<(), String> {
         let _ = fs::remove_file(path);
     }
     unreachable!()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    static PROCESS_TEST: std::sync::Mutex<()> = std::sync::Mutex::new(());
+
+    fn options() -> Options {
+        parse_options(
+            [
+                "--root",
+                concat!(env!("CARGO_MANIFEST_DIR"), "/../../fixtures/m1"),
+                "--source",
+                concat!(
+                    env!("CARGO_MANIFEST_DIR"),
+                    "/../../fixtures/m1/src/subject.ts"
+                ),
+                "--workers",
+                "2",
+            ]
+            .into_iter()
+            .map(str::to_string),
+        )
+        .unwrap()
+        .unwrap()
+    }
+
+    fn worker(directory: tempfile::TempDir, script: &str, paths: &[&Path]) -> Worker {
+        Worker {
+            child: Command::new("python3")
+                .args(["-c", script])
+                .args(paths)
+                .spawn()
+                .unwrap(),
+            directory,
+            owned: BTreeMap::new(),
+            sequence: 0,
+            busy: None,
+            finished: false,
+        }
+    }
+
+    #[test]
+    fn empty_dispatch_leaves_background_warm_busy() {
+        let _guard = PROCESS_TEST.lock().unwrap();
+        let options = options();
+        let mut scheduler = Scheduler::new(&options).unwrap();
+        let mut spare = worker(
+            tempfile::tempdir().unwrap(),
+            "import time; time.sleep(60)",
+            &[],
+        );
+        let request: Request = serde_json::from_value(serde_json::json!({
+            "protocol": 1, "runId": "test", "jobId": "warm", "generation": 0,
+            "kind": "baseline", "root": ".", "config": "", "deadlineMs": 0,
+            "mutation": null
+        }))
+        .unwrap();
+        spare.busy = Some((WARM_JOB, request, Instant::now() - Duration::from_secs(17)));
+        scheduler.slots = vec![None, Some(spare)];
+        assert!(scheduler.dispatch(VecDeque::new(), true).is_empty());
+        assert!(scheduler.slots[1].as_ref().unwrap().busy.is_some());
+        assert_eq!(scheduler.budget.active, 0);
+    }
+
+    #[test]
+    fn shutdown_signals_all_slots_before_waiting() {
+        let _guard = PROCESS_TEST.lock().unwrap();
+        let options = options();
+        let mut scheduler = Scheduler::new(&options).unwrap();
+        let first = tempfile::tempdir().unwrap();
+        let second = tempfile::tempdir().unwrap();
+        let barrier = tempfile::tempdir().unwrap();
+        let first_seen = barrier.path().join("first");
+        let second_seen = barrier.path().join("second");
+        let script = "import pathlib,sys,time\nwhile not (pathlib.Path(sys.argv[1])/'stop').exists(): time.sleep(.01)\npathlib.Path(sys.argv[2]).touch()\nwhile not pathlib.Path(sys.argv[3]).exists(): time.sleep(.01)";
+        let mut a = worker(
+            tempfile::tempdir().unwrap(),
+            script,
+            &[first.path(), &first_seen, &second_seen],
+        );
+        let mut b = worker(
+            tempfile::tempdir().unwrap(),
+            script,
+            &[second.path(), &second_seen, &first_seen],
+        );
+        // Acknowledgements outlive slot directories, so either exit order is safe.
+        a.directory = first;
+        b.directory = second;
+        scheduler.slots = vec![Some(a), Some(b)];
+        let mut diagnostics = vec![];
+        assert!(scheduler.finish(&mut diagnostics), "{diagnostics:?}");
+        assert!(scheduler.slots.iter().all(Option::is_none));
+    }
 }

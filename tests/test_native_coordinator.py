@@ -33,6 +33,16 @@ process.on('message', (message) => {
   }
   if (command === 'close') {
     log({ event: 'close' });
+    if (mode === 'parallel-close') {
+      const path = process.env.OXIMUT_FAKE_LOG + '.closing';
+      appendFileSync(path, 'close\n');
+      const wait = () => {
+        if (readFileSync(path, 'utf8').trim().split('\n').length < 2) return setTimeout(wait, 10);
+        log({ event: 'close-reply' });
+        reply({ result: { closed: true } });
+      };
+      wait(); return;
+    }
     if (mode === 'no-close') return;
     return reply({ result: { closed: true } });
   }
@@ -45,21 +55,48 @@ process.on('message', (message) => {
       child.unref(); log({ event: 'leaked', child: child.pid });
       return reply({ error: 'warm deliberately failed' });
     }
-    log({ event: 'warm-ready' });
-    return reply({ result: { warmed: true, outcome: 'skipped',
-      tests: { passed: 0, failed: 0, skipped: 0 }, errors: [],
-      ...(args.request.resident ? { resident: args.request.resident.length } : {}) } });
+    const finish = () => {
+      log({ event: 'warm-ready' });
+      return reply({ result: { warmed: true, outcome: 'skipped',
+        tests: { passed: 0, failed: 0, skipped: 0 }, errors: [],
+        ...(args.request.resident ? { resident: args.request.resident.length } : {}) } });
+    };
+    if (mode.startsWith('nonblocking')) {
+      const wait = () => {
+        const workerDirectory = readFileSync(`/proc/${process.ppid}/cmdline`, 'utf8').split('\0')[2];
+        const stopping = existsSync(workerDirectory + '/stop');
+        if (!stopping && !existsSync(process.env.OXIMUT_FAKE_LOG + '.release')) return setTimeout(wait, 10);
+        if (stopping) log({ event: 'warm-stopping' });
+        finish();
+      };
+      wait(); return;
+    }
+    return finish();
   }
   const request = args.request;
   jobs++;
   log({ event: 'run', job: request.jobId, workers: request.workers });
-  if ((mode === 'warm-order' || mode === 'baseline-fail-warm') && request.jobId === 'baseline') {
+  if (mode.startsWith('nonblocking') && request.jobId === 'instrumented-baseline') {
+    log({ event: 'instrumented-start', workers: request.workers });
+  }
+  if (mode === 'nonblocking' && request.kind === 'mutant') {
+    writeFileSync(process.env.OXIMUT_FAKE_LOG + '.release', '');
+    const path = process.env.OXIMUT_FAKE_LOG + '.mutants';
+    appendFileSync(path, request.jobId + '\n');
+    const wait = () => {
+      if (readFileSync(path, 'utf8').trim().split('\n').length < 2) return setTimeout(wait, 10);
+      reply({ result: { outcome: 'passed', tests: { passed: 1, failed: 0, skipped: 0 },
+        errors: [], ...(request.resident ? { resident: request.resident.length } : {}) } });
+    };
+    wait(); return;
+  }
+  if ((mode.startsWith('nonblocking') || mode === 'warm-order' || mode === 'baseline-fail-warm') && request.jobId === 'baseline') {
     const wait = () => {
       if (!existsSync(process.env.OXIMUT_FAKE_LOG + '.warm')) return setTimeout(wait, 10);
       log({ event: 'baseline-end' });
-      reply({ result: { outcome: mode === 'baseline-fail-warm' ? 'failed' : 'passed',
-        tests: { passed: mode === 'baseline-fail-warm' ? 0 : 1,
-          failed: mode === 'baseline-fail-warm' ? 1 : 0, skipped: 0 }, errors: [] } });
+      reply({ result: { outcome: (mode === 'baseline-fail-warm' || mode === 'nonblocking-fail') ? 'failed' : 'passed',
+        tests: { passed: (mode === 'baseline-fail-warm' || mode === 'nonblocking-fail') ? 0 : 1,
+          failed: (mode === 'baseline-fail-warm' || mode === 'nonblocking-fail') ? 1 : 0, skipped: 0 }, errors: [] } });
     };
     wait(); return;
   }
@@ -154,6 +191,42 @@ class NativeCoordinator(unittest.TestCase):
     def assert_reaped(self, events):
         for pid in self.controllers(events):
             self.assertFalse(alive(pid), f'controller {pid} survived')
+
+    def test_nonblocking_warm_preserves_baseline_capacity_and_reuses_slot(self):
+        result, report, events = self.run_cli('nonblocking', extra_args=('--workers', '2'), full=True)
+        self.assertTrue(report['summary']['complete'], result.stdout + result.stderr)
+        names = [e['event'] for e in events]
+        self.assertIn('warm-ready', names)
+        self.assertLess(names.index('instrumented-start'), names.index('warm-ready'))
+        instrumented = next(e for e in events if e['event'] == 'instrumented-start')
+        self.assertEqual(instrumented['workers'], 2)
+        first_mutant = next(i for i, e in enumerate(events)
+                            if e['event'] == 'run' and e['job'] not in ('baseline', 'instrumented-baseline'))
+        self.assertLess(first_mutant, names.index('warm-ready'))
+        warm_pid = next(e['pid'] for e in events if e['event'] == 'warm-ready')
+        self.assertTrue(any(e['event'] == 'run' and e['pid'] == warm_pid for e in events))
+        self.assertEqual(len(self.controllers(events)), 2)
+        self.assert_reaped(events)
+
+    def test_ending_and_failing_with_warm_in_flight_cleans_up(self):
+        for mode in ('nonblocking-end', 'nonblocking-fail'):
+            with self.subTest(mode=mode):
+                result, report, events = self.run_cli(mode, extra_args=('--workers', '2'))
+                names = [e['event'] for e in events]
+                self.assertIn('warm-stopping', names)
+                self.assertLess(names.index('warm-stopping'), names.index('warm-ready'))
+                self.assertEqual(report['baseline']['outcome'],
+                                 'failed' if mode.endswith('fail') else 'passed', result.stderr)
+                self.assertEqual(report['summary']['complete'], mode == 'nonblocking-end')
+                self.assertTrue(any('spare warm ready' in d for d in report['diagnostics']))
+                self.assert_reaped(events)
+
+    def test_parallel_close_signals_all_slots_before_waiting(self):
+        result, report, events = self.run_cli('parallel-close', extra_args=('--workers', '2'), full=True)
+        self.assertTrue(report['summary']['complete'], result.stdout + result.stderr)
+        names = [e['event'] for e in events]
+        self.assertEqual(names[:names.index('close-reply')].count('close'), 2)
+        self.assert_reaped(events)
 
     def test_spares_overlap_baseline_and_are_ready_before_mutants(self):
         result, report, events = self.run_cli('warm-order', extra_args=('--workers', '2'), full=True)
