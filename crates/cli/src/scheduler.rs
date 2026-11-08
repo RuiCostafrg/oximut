@@ -575,6 +575,7 @@ impl<'a> Scheduler<'a> {
                 }
                 let mut request = batch[0].1.clone();
                 request.lanes = Some(batch.iter().map(|(_, r)| r.clone()).collect());
+                request.workers = Some(limit.clamp(batch.len(), 1024));
                 let response = self.execute(&request);
                 let responses = response.lanes;
                 for (offset, (index, job)) in batch.into_iter().enumerate() {
