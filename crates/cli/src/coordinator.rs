@@ -797,6 +797,14 @@ impl Coordinator {
     }
 
     pub fn run(&mut self, options: &Options, request: &Request) -> Response {
+        self.run_inner(options, request, false)
+    }
+
+    pub fn warm(&mut self, options: &Options, request: &Request) -> Response {
+        self.run_inner(options, request, true)
+    }
+
+    fn run_inner(&mut self, options: &Options, request: &Request, warm: bool) -> Response {
         let started = Instant::now();
         let deadline = started + Duration::from_millis(request.deadline_ms);
         let timeout = |message: &str| empty(request, TestOutcome::Timeout, message);
@@ -906,15 +914,37 @@ impl Coordinator {
             self.controller = Some(controller);
         }
         let controller = self.controller.as_mut().expect("controller");
+        if warm && controller.reuse != "controller" {
+            return self.retire_with(
+                request,
+                infrastructure(request, "spare controller cannot be reused"),
+            );
+        }
         let reply = if Instant::now() >= deadline {
             Err(Wait::Deadline)
         } else {
-            controller.request("run", &serde_json::json!({ "request": args }), deadline)
+            controller.request(
+                if warm { "warm" } else { "run" },
+                &serde_json::json!({ "request": args }),
+                deadline,
+            )
         };
-        self.jobs += 1;
-        self.jobs_run += 1;
+        if !warm {
+            self.jobs += 1;
+            self.jobs_run += 1;
+        }
         let response = match reply {
-            Ok(Reply::Result(result)) => envelope(request, result),
+            Ok(Reply::Result(mut result)) => {
+                if warm && result.get("warmed").and_then(serde_json::Value::as_bool) != Some(true) {
+                    Err("controller did not acknowledge warm".into())
+                } else {
+                    if warm && let Some(fields) = result.as_object_mut() {
+                        fields.remove("warmed");
+                        fields.remove("transformed");
+                    }
+                    envelope(request, result)
+                }
+            }
             Ok(Reply::Error(error)) | Err(Wait::Failed(error)) => Err(error),
             Err(Wait::Deadline) => {
                 return self.retire_with(
@@ -954,6 +984,12 @@ impl Coordinator {
                 }
             }
         };
+        if warm && leaked {
+            return self.retire_with(
+                request,
+                infrastructure(request, "warm left owned descendants"),
+            );
+        }
         // Never publish a result after the deadline, retiring or not.
         if Instant::now() >= deadline {
             let late = timeout("Job deadline exceeded during descendant verification");

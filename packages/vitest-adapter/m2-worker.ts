@@ -192,7 +192,7 @@ async function command(name: string, args: Request): Promise<unknown> {
     await vitest.close();
     return { closed: true };
   }
-  if (name !== 'run') throw new Error(`Unknown command: ${name}`);
+  if (name !== 'run' && name !== 'warm') throw new Error(`Unknown command: ${name}`);
   const started = performance.now();
   const job = (args as unknown as { request: Request }).request;
   validateRequest(job);
@@ -224,6 +224,37 @@ async function command(name: string, args: Request): Promise<unknown> {
   probes = job.collectCoverage;
   resident = job.resident;
   servedModules = served(mutation, resident);
+  if (name === 'warm') {
+    // Transform only: never collectTests, import a module, or start a pool.
+    // SSR is the Node test environment used by pinned Vitest 4.1.12.
+    const specifications = await vitest.globTestSpecifications();
+    let transformed = 0;
+    for (const project of vitest.projects) {
+      const environment = project.vite.environments.ssr;
+      const seen = new Set<string>();
+      const transform = async (url: string): Promise<void> => {
+        if (seen.has(url)) return;
+        seen.add(url);
+        await environment.transformRequest(url);
+        transformed++;
+        const module = await environment.moduleGraph.getModuleByUrl(url);
+        for (const dependency of module?.importedModules ?? []) {
+          if (dependency.file && !dependency.file.includes('/node_modules/'))
+            await transform(dependency.url);
+        }
+      };
+      for (const file of servedModules.keys()) await transform(normalizePath(file));
+      for (const spec of specifications) await transform(normalizePath(spec.moduleId));
+    }
+    return {
+      warmed: true,
+      transformed,
+      outcome: 'skipped',
+      tests: { passed: 0, failed: 0, skipped: 0 },
+      errors: [],
+      ...(job.resident ? { resident: job.resident.length } : {}),
+    };
+  }
   currentRun = undefined;
   delete process.env.OXIMUT_ACTIVE_MUTANT;
   if (job.kind === 'mutant' && next) process.env.OXIMUT_ACTIVE_MUTANT = next.id;

@@ -146,7 +146,7 @@ the parent requested a build hold.
 
 `benchmarks/compare_candidates.py` runs one warmup pair and five measured pairs
 by default. Build both binaries **before** invoking it. The baseline is pinned to
-`78958ba492a2137b6702f4bb526ad57308d363d9` (main after #50; `--before-commit` overrides
+`412b705ae65c13b2633ce09a70da85808596f3b1` (main after #53; `--before-commit` overrides
 it). The candidate includes the change under evaluation; pass its full commit SHA. Both use the same
 arithmetic/boolean-literal declaration (the five-file scope has no Boolean
 literals), the same 41 available source files and all 102 upstream tests.

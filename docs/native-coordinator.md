@@ -229,6 +229,38 @@ abort on exhaustion. The original and instrumented baseline oracles, inventories
 deadline, worker termination and post-job descendant cleanup gates are unchanged.
 Mutant jobs retain one test worker per controller.
 
+## Spare controller warm-up
+
+Persistent runs with more than one admitted worker and a nonempty initial mutant
+inventory prepare spare slots during original baseline dispatch. Baseline-only
+runs prepare no spares. Resident groups are planned before that dispatch;
+spares initialize with the first group's instrumented modules, then receive a
+private `warm` command. The command globs test specifications and recursively
+requests Vite SSR transforms of resident modules, test files and their local
+import graphs. It never collects tests, imports user modules or starts a test
+pool. Each mutant still gets fresh isolated workers. Other resident groups and
+static overrides retain the normal invalidation behavior.
+
+Warm-up retains scheduler memory admission, aggregate RSS accounting, deadlines,
+ownership discovery, leak verification and shutdown. Pending spares stay separate
+from the real dispatch queue. In-flight warm jobs occupy their slot until their
+acknowledgement arrives, but do not count as active real jobs, consume real-job
+CPU capacity or block serial baseline admission. Baseline dispatch returns once
+its real job completes; later dispatch loops accept warm acknowledgements. Thus
+the instrumented baseline can use its full admitted fork limit while spares warm.
+Mutants use ready slots and wait when all remaining slots are still busy warming;
+a warming slot never starts a duplicate controller.
+
+Refused admission skips remaining spares. A warm or spare initialization failure
+is diagnostic only: its slot is aborted and may start lazily for a mutant. Global
+exhaustion or interruption still stops every slot and fails closed. Shutdown
+writes stop to all normally closing slots before polling their exits together,
+with an independent seven-second deadline per slot, unchanged exit/ownership checks
+and final global subreaper cleanup. In-flight warms are abandoned immediately
+through verified abort; completed warms close normally and retain their diagnostics.
+Single-worker runs and relay adapters send no warm command. Warm acknowledgements
+carry zero tests and never enter baseline or mutant results.
+
 ## Release or follow-up
 
 If the qualified campaign meets all three targets with every gate passing,

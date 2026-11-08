@@ -1015,6 +1015,16 @@ fn run_attempt(options: &Options, previous: Option<RetryEvidence>) -> Result<Att
         selection: None,
     };
     let mut scheduler = scheduler::Scheduler::new(options)?;
+    let groups: Vec<Arc<Vec<Mutation>>> = plan_groups(resident, request_budget())
+        .into_iter()
+        .map(Arc::new)
+        .collect();
+    if !options.baseline_only && !mutants.is_empty() {
+        let mut warm_request = request.clone();
+        warm_request.job_id = "spare-warm".into();
+        warm_request.resident = groups.first().cloned();
+        scheduler.prepare_spares(&warm_request);
+    }
     phase_wall_ms.insert(
         "inputAndSchedulerPreparation",
         preparation_started.elapsed().as_secs_f64() * 1000.0,
@@ -1032,10 +1042,6 @@ fn run_attempt(options: &Options, previous: Option<RetryEvidence>) -> Result<Att
     let instrumented_started = Instant::now();
     let collect = options.test_selection;
     let budget = request_budget();
-    let groups: Vec<Arc<Vec<Mutation>>> = plan_groups(resident, budget)
-        .into_iter()
-        .map(Arc::new)
-        .collect();
     let group_of: BTreeMap<String, usize> = groups
         .iter()
         .enumerate()
