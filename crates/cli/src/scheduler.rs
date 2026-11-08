@@ -393,7 +393,9 @@ impl<'a> Scheduler<'a> {
                         Some(if pending.iter().any(|(index, _)| *index == WARM_JOB) {
                             1
                         } else {
-                            capacity.min(1024)
+                            self.budget
+                                .baseline_fork_limit(capacity, &active_pids)
+                                .min(1024)
                         });
                 }
                 if self.slots[slot].is_none() {
