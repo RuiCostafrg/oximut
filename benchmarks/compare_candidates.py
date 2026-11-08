@@ -172,6 +172,21 @@ def phase_errors(row, manifest):
     return errors
 
 
+def parallelism_errors(row, concurrency):
+    """A run that ended up with fewer workers than Stryker is not a matched comparison."""
+    if concurrency == 1:
+        return []
+    resources = row.get('resources')
+    if not isinstance(resources, dict):
+        return ['missing resources for matched parallelism']
+    errors = []
+    if resources.get('effectiveWorkers') != concurrency:
+        errors.append(f"ran {resources.get('effectiveWorkers')} workers, not the matched {concurrency}")
+    if resources.get('admissionPauses') != 0:
+        errors.append(f"memory pressure paused admission {resources.get('admissionPauses')} times")
+    return errors
+
+
 def plan(warmups, repetitions):
     for index in range(warmups + repetitions):
         for variant in VARIANTS if index % 2 == 0 else reversed(VARIANTS):
@@ -181,7 +196,8 @@ def plan(warmups, repetitions):
 
 
 def evaluate(rows, warmups, repetitions, provenance, failures=(), *,
-             require_build_integrity=False, build_metadata=None, candidate_commits=None):
+             require_build_integrity=False, build_metadata=None, candidate_commits=None,
+             concurrency=1):
     """No ratios until the entire campaign, including every warmup, qualifies."""
     integrity_errors = build_errors(provenance, build_metadata, candidate_commits or {},
                                    require_build_integrity)
@@ -225,6 +241,8 @@ def evaluate(rows, warmups, repetitions, provenance, failures=(), *,
                     errors.append(f'{label}: binary or adapter provenance changed')
                 if require_build_integrity and variant == 'after' and row['tool'] == 'oximut':
                     errors.extend(f'{label}: {error}' for error in phase_errors(row, manifest))
+                if row['tool'] == 'oximut':
+                    errors.extend(f'{label}: {error}' for error in parallelism_errors(row, concurrency))
                 if row['tool'] != 'vitest':
                     if reference is None:
                         reference = row
@@ -240,7 +258,7 @@ def evaluate(rows, warmups, repetitions, provenance, failures=(), *,
     result = {'phase_evidence': phases, 'correctness_gate': {'passed': not errors, 'errors': errors},
               'build_integrity': {'required': require_build_integrity,
                                   'passed': not integrity_errors, 'errors': integrity_errors},
-              'warmup_pairs': warmups, 'measured_pairs': repetitions,
+              'warmup_pairs': warmups, 'measured_pairs': repetitions, 'concurrency': concurrency,
               'thresholds': targets.THRESHOLDS, 'targets_met': False, 'comparisons': {},
               'scope': 'Five declared production mutation files, all 41 source files available, '
                        'all 102 upstream tests; not the full colord mutation scope.',
@@ -412,7 +430,8 @@ def main(argv=None):
             m6.write_json(output / 'attempts.json', attempts)
             if attempt.get('timed_out'):
                 break
-    result = evaluate(rows, args.warmups, args.repetitions, provenance, failures, **integrity)
+    result = evaluate(rows, args.warmups, args.repetitions, provenance, failures,
+                      concurrency=getattr(args, 'concurrency', 1), **integrity)
     result['after_oximut_args'] = args.after_oximut_arg
     m6.write_json(output / 'summary.json', result)
     print(json.dumps(result, indent=2))

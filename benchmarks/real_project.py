@@ -273,6 +273,7 @@ def main(argv=None):
             or meta['versions']['@stryker-mutator/vitest-runner'] != '10.1.1'):
         raise ValueError('pinned Node/Vitest/Stryker toolchain required')
     meta.update(execution_inputs=execution_inputs(args), workload=manifest, diagnostic_unrestricted=args.diagnostic_unrestricted,
+                concurrency=args.concurrency,
                 binary_sha256=measurement.file_hash(args.binary) if args.binary.exists() else None,
                 harness_sha256={str(path.relative_to(ROOT)): measurement.file_hash(path)
                                 for path in [Path(__file__), Path(m6.__file__), Path(measurement.__file__),
