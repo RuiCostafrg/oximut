@@ -333,6 +333,10 @@ def main(argv=None):
     parser.add_argument('--require-build-integrity', action='store_true',
                         help='Pinned CI comparison: isolated builds, distinct binaries and complete after phase evidence')
     args = parser.parse_args(argv)
+    try:
+        workload.require_matched_concurrency(args.concurrency)
+    except ValueError as error:
+        parser.error(str(error))
     if (error := workload.mode_args_error(args.after_oximut_arg)) is not None:
         parser.error(f'--after-oximut-arg: {error}')
     if not math.isfinite(args.timeout) or args.timeout <= 0:
