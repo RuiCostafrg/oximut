@@ -1,5 +1,6 @@
 """Compare mutation switching/reuse with the independent fresh-process reference."""
 import json
+import os
 import pathlib
 import subprocess
 import tempfile
@@ -23,6 +24,72 @@ class PersistentEquivalence(unittest.TestCase):
             self.assertEqual(payload['baseline']['outcome'], 'passed')
             self.assertTrue(payload['summary']['complete'], payload)
             return payload
+
+    def test_shared_controller_matches_sequential_selected_and_full(self):
+        for selection in ((), ('--test-selection',)):
+            with self.subTest(selection=selection):
+                serial = self.run_fixture('m1', 'subject.ts', 'persistent', 17,
+                                          (*selection, '--workers', '1', '--no-cache'))
+                shared = self.run_fixture('m1', 'subject.ts', 'persistent', 17,
+                                          (*selection, '--workers', '3', '--no-cache',
+                                           '--experimental-shared-controller'))
+                self.assertEqual({m['id']: (m['outcome'], m['tests']) for m in shared['mutants']},
+                                 {m['id']: (m['outcome'], m['tests']) for m in serial['mutants']})
+                self.assertFalse(any('spare warm' in d for d in shared['diagnostics']))
+                self.assertTrue(any('native coordinator: 1 controllers' in d
+                                    for d in shared['diagnostics']), shared['diagnostics'])
+
+    def test_shared_cli_barrier_and_process_cleanup(self):
+        with tempfile.TemporaryDirectory(prefix='oximut-lane-cli-') as temporary:
+            root = pathlib.Path(temporary)
+            (root / 'node_modules').symlink_to(REPO / 'node_modules')
+            (root / 'source.ts').write_text('export const enabled = true; export const unused = false;')
+            (root / 'vitest.config.mjs').write_text(
+                "export default { test: { include: ['sample.test.ts'], testTimeout: 10000 } };")
+            (root / 'sample.test.ts').write_text("""
+import { test, expect } from 'vitest';
+import { appendFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { enabled } from './source';
+const root = ROOT;
+const id = process.env.OXIMUT_ACTIVE_MUTANT;
+let state = 0;
+test('barrier', async () => {
+  expect(state++).toBe(0);
+  if (id) {
+    appendFileSync(root+'/events', JSON.stringify({type:'enter', id, pid:process.pid})+'\\n');
+    writeFileSync(root+'/ready-'+id, '');
+    while (readdirSync(root).filter(n => n.startsWith('ready-')).length < 2)
+      await new Promise(r => setTimeout(r, 5));
+    appendFileSync(root+'/events', JSON.stringify({type:'released', id, pid:process.pid})+'\\n');
+  }
+});
+test('enabled', () => expect(enabled).toBe(true));
+""".replace('ROOT', json.dumps(str(root))))
+            report = root / '.oximut' / 'report.json'
+            result = subprocess.run([
+                str(BINARY), '--root', str(root), '--source', 'source.ts',
+                '--config', 'vitest.config.mjs', '--execution', 'persistent',
+                '--workers', '2', '--experimental-shared-controller', '--no-cache',
+                '--mutators', 'boolean-literal', '--report', str(report),
+            ], cwd=REPO, capture_output=True, text=True, timeout=90)
+            payload = json.loads(report.read_text())
+            self.assertIn(result.returncode, (0, 1), payload)
+            self.assertEqual(sorted(m['outcome'] for m in payload['mutants']), ['killed', 'survived'])
+            events = [json.loads(line) for line in (root / 'events').read_text().splitlines()]
+            self.assertEqual([e['type'] for e in events[:2]], ['enter', 'enter'])
+            pids = {e['pid'] for e in events}
+            self.assertEqual(len(pids), 2)
+            for pid in pids:
+                with self.assertRaises(ProcessLookupError):
+                    os.kill(pid, 0)
+
+    def test_shared_controller_flag_constraints(self):
+        for extra in ((), ('--execution', 'persistent'),
+                      ('--execution', 'persistent', '--workers', '2', '--isolation', 'fresh-thread')):
+            result = subprocess.run([str(BINARY), '--experimental-shared-controller', *extra],
+                                    cwd=REPO, capture_output=True, text=True, timeout=30)
+            self.assertEqual(result.returncode, 2)
+            self.assertIn('--experimental-shared-controller requires', result.stderr)
 
     def test_fresh_thread_matches_process_with_selection(self):
         process = self.run_fixture('m1', 'subject.ts', 'persistent', 17,

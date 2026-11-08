@@ -8,6 +8,7 @@ import { validateRequest, type Request, type Result } from './protocol.ts';
 import { SelectionSupport } from './m3-selection.ts';
 
 const selectionSupport = new SelectionSupport();
+let sharedLanes: import('./shared-lanes.ts').SharedLanes | undefined;
 const compileCacheFlush = fileURLToPath(new URL('./compile-cache.cjs', import.meta.url));
 
 let vitest: Awaited<ReturnType<typeof createVitest>> | undefined;
@@ -189,6 +190,7 @@ async function command(name: string, args: Request): Promise<unknown> {
   if (!vitest) throw new Error('Not initialized');
   if (name === 'close') {
     selectionSupport.close();
+    await sharedLanes?.close();
     await vitest.close();
     return { closed: true };
   }
@@ -198,6 +200,11 @@ async function command(name: string, args: Request): Promise<unknown> {
   validateRequest(job);
   if ((job.pool === 'threads' ? 'threads' : 'forks') !== pool)
     throw new Error('Pool cannot change after initialization');
+  if (job.lanes) {
+    await vitest.close();
+    sharedLanes ??= new (await import('./shared-lanes.ts')).SharedLanes();
+    return sharedLanes.run(job);
+  }
   const next = job.mutation;
   const probesChanged = JSON.stringify(probes) !== JSON.stringify(job.collectCoverage);
   if (probesChanged || job.collectCoverage) {

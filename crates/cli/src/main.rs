@@ -19,7 +19,7 @@ use std::{
     time::{Duration, Instant, SystemTime, UNIX_EPOCH},
 };
 
-const HELP: &str = "Usage: oximut [--root DIR] [--config FILE] --source FILE [--source FILE ...]\n  --version           Print the Cargo package version\n  --report FILE       JSON report (- for stdout)\n  --timeout-ms N      Per-job deadline, default 30000 ms\n  --workers N         Maximum simultaneous mutation jobs / persistent baseline files (default 1; bounded by CPU limits)\n  --memory-budget-mib N Aggregate sampled RSS budget in MiB (1 MiB = 1048576 bytes); default host/container limit\n  --memory-reserve-mib N Reserved admission headroom in MiB (default 64)\n  --execution MODE   fresh (default) or persistent controller\n  --isolation MODE   fresh-process (default) or fresh-thread (requires persistent)\n  --test-selection    Collect baseline hits and conservatively select hit test files\n  --mutators FAMILIES Repeatable comma-separated union: arithmetic,boolean-literal,comparison-boundary (default: all)\n  --order-seed N     Deterministically shuffle mutant execution order\n  --adapter FILE      Node adapter entry point override (an m2-runner.mjs beside m2-worker.ts runs natively)\n  --cache             Cache instrumentation; outcomes require --cache-inputs-complete\n  --cache-policy MODE  auto (default) learns whether outcome caching saves work; always validates/reuses eligible outcomes\n  --cache-inputs-complete Assert all nondeterministic/external inputs are declared\n  --cache-input FILE  Additional input file/directory (repeatable)\n  --cache-env NAME    Additional environment input (repeatable; values stay private)\n  --no-cache, --force Bypass all cache reads and writes\n  --list              Generate mutants as JSON without executing tests\n  --baseline-only     Run original sources without mutants\nExit: 0 complete/no survivors; 1 survivors/no coverage; 2 incomplete/error.\nScore: killed/(killed+survived+no-coverage)*100; empty denominator => null.\nInvalid/timeout/infrastructure-error/resource-exhausted/skipped are excluded and make a run incomplete.";
+const HELP: &str = "Usage: oximut [--root DIR] [--config FILE] --source FILE [--source FILE ...]\n  --version           Print the Cargo package version\n  --report FILE       JSON report (- for stdout)\n  --timeout-ms N      Per-job deadline, default 30000 ms\n  --workers N         Maximum simultaneous mutation jobs / persistent baseline files (default 1; bounded by CPU limits)\n  --memory-budget-mib N Aggregate sampled RSS budget in MiB (1 MiB = 1048576 bytes); default host/container limit\n  --memory-reserve-mib N Reserved admission headroom in MiB (default 64)\n  --execution MODE   fresh (default) or persistent controller\n  --experimental-shared-controller Experimental single controller mutant lanes (persistent, workers > 1)\n  --isolation MODE   fresh-process (default) or fresh-thread (requires persistent)\n  --test-selection    Collect baseline hits and conservatively select hit test files\n  --mutators FAMILIES Repeatable comma-separated union: arithmetic,boolean-literal,comparison-boundary (default: all)\n  --order-seed N     Deterministically shuffle mutant execution order\n  --adapter FILE      Node adapter entry point override (an m2-runner.mjs beside m2-worker.ts runs natively)\n  --cache             Cache instrumentation; outcomes require --cache-inputs-complete\n  --cache-policy MODE  auto (default) learns whether outcome caching saves work; always validates/reuses eligible outcomes\n  --cache-inputs-complete Assert all nondeterministic/external inputs are declared\n  --cache-input FILE  Additional input file/directory (repeatable)\n  --cache-env NAME    Additional environment input (repeatable; values stay private)\n  --no-cache, --force Bypass all cache reads and writes\n  --list              Generate mutants as JSON without executing tests\n  --baseline-only     Run original sources without mutants\nExit: 0 complete/no survivors; 1 survivors/no coverage; 2 incomplete/error.\nScore: killed/(killed+survived+no-coverage)*100; empty denominator => null.\nInvalid/timeout/infrastructure-error/resource-exhausted/skipped are excluded and make a run incomplete.";
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 enum Execution {
@@ -66,6 +66,8 @@ struct Options {
     cache_inputs: Vec<PathBuf>,
     cache_env: Vec<String>,
     workers: usize,
+    #[serde(default)]
+    experimental_shared_controller: bool,
     memory_budget_mib: Option<u64>,
     memory_reserve_mib: u64,
     #[serde(default)]
@@ -98,6 +100,7 @@ fn parse_options(mut args: impl Iterator<Item = String>) -> Result<Option<Option
     let mut cache_inputs = vec![];
     let mut cache_env = vec![];
     let mut workers = 1;
+    let mut experimental_shared_controller = false;
     let mut memory_budget_mib = None;
     let mut memory_reserve_mib = 64;
     let mut mutators = BTreeSet::new();
@@ -128,6 +131,7 @@ fn parse_options(mut args: impl Iterator<Item = String>) -> Result<Option<Option
                     mutators.insert(family.to_string());
                 }
             }
+            "--experimental-shared-controller" => experimental_shared_controller = true,
             "--baseline-only" => baseline_only = true,
             "--test-selection" => test_selection = true,
             "--cache" => cache = true,
@@ -233,6 +237,13 @@ fn parse_options(mut args: impl Iterator<Item = String>) -> Result<Option<Option
         adapter = Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../packages/vitest-adapter/m2-runner.mjs");
     }
+    if experimental_shared_controller
+        && (execution != Execution::Persistent
+            || workers < 2
+            || isolation != Isolation::FreshProcess)
+    {
+        return Err("--experimental-shared-controller requires --execution persistent, --workers > 1 and fresh-process isolation".into());
+    }
     if !(1..=1024).contains(&workers) {
         return Err("--workers must be 1..1024".into());
     }
@@ -308,6 +319,11 @@ fn parse_options(mut args: impl Iterator<Item = String>) -> Result<Option<Option
             return Err("report path would overwrite a project source file".into());
         }
     }
+    if experimental_shared_controller && coordinator::native_worker(&adapter).is_none() {
+        return Err(
+            "--experimental-shared-controller requires the native reference adapter".into(),
+        );
+    }
     Ok(Some(Options {
         root,
         config,
@@ -328,6 +344,7 @@ fn parse_options(mut args: impl Iterator<Item = String>) -> Result<Option<Option
         cache_inputs,
         cache_env,
         workers,
+        experimental_shared_controller,
         memory_budget_mib,
         memory_reserve_mib,
         mutators,
@@ -336,6 +353,7 @@ fn parse_options(mut args: impl Iterator<Item = String>) -> Result<Option<Option
 
 fn infrastructure(request: &Request, error: impl Into<String>) -> Response {
     Response {
+        lanes: None,
         protocol: PROTOCOL,
         run_id: request.run_id.clone(),
         job_id: request.job_id.clone(),
@@ -997,6 +1015,7 @@ fn run_attempt(options: &Options, previous: Option<RetryEvidence>) -> Result<Att
             .as_nanos()
     );
     let mut request = Request {
+        lanes: None,
         protocol: PROTOCOL,
         run_id: run_id.clone(),
         job_id: "baseline".into(),
@@ -1299,7 +1318,7 @@ fn run_attempt(options: &Options, previous: Option<RetryEvidence>) -> Result<Att
                 request.resident = group_of
                     .get(&mutant.file)
                     .map(|&index| groups[index].clone())
-                    .filter(|group| group.len() > 1);
+                    .filter(|group| options.experimental_shared_controller || group.len() > 1);
                 request.mutation = Some(Mutation {
                     id: mutant.id.clone(),
                     file: mutant.file.clone(),
@@ -1310,6 +1329,7 @@ fn run_attempt(options: &Options, previous: Option<RetryEvidence>) -> Result<Att
                 infrastructure(&request, "pending scheduler execution")
             } else {
                 Response {
+                    lanes: None,
                     protocol: PROTOCOL,
                     run_id: run_id.clone(),
                     job_id: mutant.id.clone(),
@@ -1767,6 +1787,7 @@ mod tests {
         let directory = tempfile::tempdir().unwrap();
         let path = directory.path().join("response.json");
         let request = Request {
+            lanes: None,
             protocol: PROTOCOL,
             run_id: "run".into(),
             job_id: "job".into(),

@@ -961,13 +961,23 @@ impl Coordinator {
                 return self.retire_with(request, failure);
             }
         };
-        let retire = matches!(
-            response.outcome,
-            TestOutcome::Timeout | TestOutcome::InfrastructureError
-        ) || self
-            .controller
-            .as_ref()
-            .is_some_and(|c| c.reuse != "controller");
+        let lane_failure = response.lanes.as_ref().is_some_and(|lanes| {
+            lanes.iter().any(|lane| {
+                matches!(
+                    lane.outcome,
+                    TestOutcome::Timeout | TestOutcome::InfrastructureError
+                )
+            })
+        });
+        let retire = lane_failure
+            || matches!(
+                response.outcome,
+                TestOutcome::Timeout | TestOutcome::InfrastructureError
+            )
+            || self
+                .controller
+                .as_ref()
+                .is_some_and(|c| c.reuse != "controller");
         let leaked = if retire {
             false
         } else {

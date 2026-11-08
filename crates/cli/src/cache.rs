@@ -956,6 +956,9 @@ fn fingerprint_inputs(
         &mut tree.hash,
         &serde_json::to_vec(resources).map_err(|e| e.to_string())?,
     );
+    if options.experimental_shared_controller {
+        part(&mut tree.hash, b"experimental-shared-controller");
+    }
     part(&mut tree.hash, OPERATORS.as_bytes());
     part(
         &mut tree.hash,
@@ -1045,6 +1048,7 @@ mod tests {
             cache_inputs: vec![],
             cache_env: vec![],
             workers: 1,
+            experimental_shared_controller: false,
             memory_budget_mib: None,
             memory_reserve_mib: 64,
             mutators: BTreeSet::new(),
