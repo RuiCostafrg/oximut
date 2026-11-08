@@ -283,6 +283,7 @@ def subcommand(args, directory, warmup, variant, tools):
             '--adapter', str(source / 'm2-runner.mjs'), '--adapter-source-dir', str(source),
             '--defer-ratios', '--tools', *tools, '--warmups', '1' if warmup else '0',
             '--repetitions', '0' if warmup else '1', '--timeout', str(args.timeout),
+            '--concurrency', str(getattr(args, 'concurrency', 1)),
             '--output', str(directory)] + [
                 f'--oximut-arg={arg}' for arg in
                 (getattr(args, 'after_oximut_arg', []) if variant == 'after' else [])]
@@ -297,6 +298,8 @@ def main(argv=None):
     signal.signal(signal.SIGTERM, stop_on_sigterm)
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--after-oximut-arg', action='append', default=[])
+    parser.add_argument('--concurrency', type=int, default=1,
+                        help='Matched parallelism for Stryker and both Oximut candidates')
     parser.add_argument('--output', type=Path, required=True)
     for variant in VARIANTS:
         parser.add_argument(f'--{variant}-binary', type=Path, required=True)

@@ -7,6 +7,10 @@ on:
         type: string
         default: ''
         description: 'Extra Oximut args for the after candidate only, space-separated, e.g. --isolation fresh-thread'
+      concurrency:
+        type: string
+        default: '1'
+        description: 'Matched parallelism: Stryker concurrency and Oximut --workers'
   pull_request:
 
 permissions:
@@ -51,7 +55,7 @@ jobs:
     timeout-minutes: 90
     env:
       # Main 1c2e45a (after #51); diagnostic clocks and peak attribution stay off here.
-      BEFORE_COMMIT: 1c2e45a6a6521024f692f4dd5553d348e0122604
+      BEFORE_COMMIT: 78958ba492a2137b6702f4bb526ad57308d363d9
       BUILD_FLAGS: --locked --release -p oximut-cli
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -119,11 +123,12 @@ jobs:
         shell: bash
         env:
           AFTER_OXIMUT_ARGS: ${{ inputs.after_oximut_args || '' }}
+          MATCHED_CONCURRENCY: ${{ inputs.concurrency || '1' }}
         run: |
           read -r -a words <<< "$AFTER_OXIMUT_ARGS"
           extra_args=()
           for word in "${words[@]}"; do extra_args+=("--after-oximut-arg=$word"); done
-          python3 benchmarks/compare_candidates.py "${extra_args[@]}" \
+          python3 benchmarks/compare_candidates.py "${extra_args[@]}" --concurrency "$MATCHED_CONCURRENCY" \
             --before-binary "$BINARY_DIR/before-oximut" \
             --before-adapter-dir "$BEFORE_WORKTREE/packages/vitest-adapter" \
             --before-commit "$BEFORE_COMMIT" \

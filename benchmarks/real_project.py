@@ -82,7 +82,7 @@ def validate(tool, report_path, project, row, manifest):
     return artifact
 
 
-def prepare(project, manifest):
+def prepare(project, manifest, concurrency=1):
     shutil.copytree(CORPUS, project, ignore=shutil.ignore_patterns(
         'node_modules', '.oximut', '.vitest', '.stryker-tmp*'))
     (project / 'node_modules').symlink_to(ROOT / 'node_modules', target_is_directory=True)
@@ -91,7 +91,7 @@ def prepare(project, manifest):
         'mutate': manifest['mutate'],
         'files': ['src/**/*.ts', 'tests/**/*.ts', 'vitest.config.ts', 'package.json'],
         'testRunner': 'vitest', 'vitest': {'configFile': 'vitest.config.ts', 'related': False},
-        'coverageAnalysis': 'perTest', 'concurrency': 1, 'checkers': [],
+        'coverageAnalysis': 'perTest', 'concurrency': concurrency, 'checkers': [],
         'mutator': {'excludedMutations': [
             'EqualityOperator', 'AssignmentOperator', 'CallExpression', 'ArrayDeclaration',
             'ArrowFunction', 'BlockStatement', 'ConditionalExpression', 'LogicalOperator',
@@ -114,7 +114,7 @@ def command(tool, args, project, report, manifest):
         return ['node', str(ROOT / 'node_modules/@stryker-mutator/core/bin/stryker.js'),
                 'run', 'stryker.config.mjs']
     result = [str(args.binary), '--root', str(project), '--config', 'vitest.config.ts',
-              '--report', str(report), '--workers', '1', '--execution', 'persistent',
+              '--report', str(report), '--workers', str(getattr(args, 'concurrency', 1)), '--execution', 'persistent',
               '--test-selection', '--no-cache', '--order-seed', '100']
     if args.adapter is not None:
         result.extend(['--adapter', str(args.adapter)])
@@ -204,6 +204,8 @@ def mode_args_error(values):
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--oximut-arg', action='append', default=[])
+    parser.add_argument('--concurrency', type=int, default=1,
+                        help='Matched parallelism: Stryker concurrency and Oximut --workers')
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--binary', type=Path, default=ROOT / 'target/release/oximut')
     parser.add_argument('--adapter', type=Path,
@@ -272,7 +274,7 @@ def main(argv=None):
                 directory = output / f'{index:02d}-{tool}'
                 directory.mkdir()
                 project, report = directory / 'project', directory / 'report.json'
-                prepare(project, manifest)
+                prepare(project, manifest, getattr(args, 'concurrency', 1))
                 m6.write_json(directory / 'project-inputs.json', {
                     'sha256': {str(path.relative_to(project)): measurement.file_hash(path)
                                for path in project.rglob('*') if path.is_file()

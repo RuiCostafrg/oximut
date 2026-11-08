@@ -72,7 +72,7 @@ class CorpusTests(unittest.TestCase):
 class WarmupOnlyTests(unittest.TestCase):
     def test_warmup_only_keeps_raw_evidence_without_measured_medians(self):
         # Exercise orchestration only: no child process or timed command runs.
-        def prepare(project, manifest):
+        def prepare(project, manifest, concurrency=1):
             project.mkdir()
             for name in ('vitest.config.ts', 'stryker.config.mjs', 'package.json'):
                 (project / name).write_text('{}')
@@ -99,7 +99,7 @@ class WarmupOnlyTests(unittest.TestCase):
 
 class FailedCampaignRatioTests(unittest.TestCase):
     def campaign(self, failing_round):
-        def prepare(project, manifest):
+        def prepare(project, manifest, concurrency=1):
             project.mkdir()
             for name in ('vitest.config.ts', 'stryker.config.mjs', 'package.json'):
                 (project / name).write_text('{}')
