@@ -221,6 +221,8 @@ def mode_args_error(values):
             if value not in MODE_VALUES[pending]:
                 return f'unsupported value for {pending}: {value!r}'
             pending = None
+        elif value == '--experimental-shared-controller':
+            continue
         elif value in MODE_VALUES:
             pending = value
         elif '=' in value and value.split('=', 1)[0] in MODE_VALUES:
