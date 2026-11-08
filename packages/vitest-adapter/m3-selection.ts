@@ -1,4 +1,4 @@
-import { mkdtempSync, readFileSync, readdirSync, rmSync } from 'node:fs';
+import { mkdtempSync, readFileSync, readdirSync, rmSync, statSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -71,11 +71,13 @@ export class SelectionSupport {
     }
     let ready = 0;
     try {
-      const records = readdirSync(this.directory as string)
+      const streams = readdirSync(this.directory as string)
         .sort()
-        .map((file) => readFileSync(join(this.directory as string, file)));
-      const data = Buffer.concat(records);
-      if (data.length > 8 * 1024 * 1024) throw new Error('probe-record-limit');
+        .map((file) => join(this.directory as string, file));
+      // Check the aggregate size before loading any stream into memory.
+      const size = streams.reduce((total, file) => total + statSync(file).size, 0);
+      if (size > 8 * 1024 * 1024) throw new Error('probe-record-limit');
+      const data = Buffer.concat(streams.map((file) => readFileSync(file)));
       for (const line of data.toString('utf8').trim().split('\n')) {
         if (!line) continue;
         const record = JSON.parse(line) as {

@@ -339,7 +339,11 @@ impl<'a> Scheduler<'a> {
                 // One serial baseline occupies the controller, but its fresh forks
                 // must each have admission headroom before they are launched.
                 if request.kind == "baseline" && self.options.execution == Execution::Persistent {
-                    request.workers = Some(capacity.min(1024));
+                    request.workers = Some(
+                        self.budget
+                            .baseline_fork_limit(capacity, &active_pids)
+                            .min(1024),
+                    );
                 }
                 if self.slots[slot].is_none() {
                     match Worker::start(self.options) {

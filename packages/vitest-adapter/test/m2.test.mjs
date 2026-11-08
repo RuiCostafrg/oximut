@@ -618,6 +618,8 @@ test('file ${i}', async () => {
     expect(mode).not.toBe('fail');
   }
   expect(subject.enabled).toBe(true);
+  // Mutant files stay busy long enough that parallel execution would overlap.
+  if (process.env.OXIMUT_ACTIVE_MUTANT) await new Promise(r => setTimeout(r, 150));
   log('end');
 }, readFileSync(${JSON.stringify(mode)}, 'utf8') === 'timeout' ? 100 : 20000);`,
     );
