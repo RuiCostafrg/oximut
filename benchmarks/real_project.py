@@ -362,7 +362,7 @@ def main(argv=None):
                        'raw_medians': {metric: (statistics.median(row[metric] for row in measured)
                                                if measured else None)
                                        for metric in METRICS}})
-    m6.write_json(output / 'summary.json', {'correctness_gate': passed, 'groups': groups,
+    m6.write_json(output / 'summary.json', {'correctness_gate': passed, 'groups': groups, 'concurrency': args.concurrency,
                                           'ratios': ratios, 'raw_measurement_count': len(rows)})
     print(f'Exact comparison gate: {passed}; {output}', flush=True)
     return 0 if passed else 1

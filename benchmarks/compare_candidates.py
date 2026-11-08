@@ -358,7 +358,7 @@ def main(argv=None):
                     policy='Both binaries built before timing; serial subcampaigns; no installs, builds '
                            'or automatic retries. Matching adapters must remain unchanged. '
                            'Caller must keep this host free of other benchmark/build work.',
-                    warmups=args.warmups, repetitions=args.repetitions,
+                    warmups=args.warmups, repetitions=args.repetitions, concurrency=args.concurrency,
                     require_build_integrity=args.require_build_integrity,
                     harness_sha256={name: workload.measurement.file_hash(workload.ROOT / 'benchmarks' / name)
                                     for name in ('compare_candidates.py', 'real_project.py', 'targets.py', 'm6.py', 'run.py')})
@@ -375,7 +375,8 @@ def main(argv=None):
         (output / 'measurements.jsonl').touch()
         m6.write_json(output / 'attempts.json', [])
         result = evaluate([], args.warmups, args.repetitions, provenance,
-                          [build_metadata_error] if build_metadata_error else [], **integrity)
+                          [build_metadata_error] if build_metadata_error else [],
+                          concurrency=args.concurrency, **integrity)
         result['after_oximut_args'] = args.after_oximut_arg
         m6.write_json(output / 'summary.json', result)
         print('Build integrity preflight failed: ' + '; '.join(preflight), file=sys.stderr)
