@@ -20,7 +20,7 @@ registration state and the real import graph. Upstream has no async tests.
 ## Reproduce
 
 Install from the root lockfile before timing. Required versions are Node 26.3.1,
-Vitest 4.1.12, and Stryker core/vitest-runner 10.0.0. The runner checks them.
+Vitest 4.1.12, and Stryker core/vitest-runner 10.1.1. The runner checks them.
 Use a release Oximut binary and the adapter from the same candidate checkout.
 `--adapter` explicitly overrides the runner entrypoint; its parent package is
 hashed recursively. Without an override, provide `--adapter-source-dir` for the

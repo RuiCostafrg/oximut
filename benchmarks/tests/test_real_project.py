@@ -77,7 +77,7 @@ class WarmupOnlyTests(unittest.TestCase):
             for name in ('vitest.config.ts', 'stryker.config.mjs', 'package.json'):
                 (project / name).write_text('{}')
         versions = {'node': 'v26.3.1', 'vitest': '4.1.12',
-                    '@stryker-mutator/core': '10.0.0', '@stryker-mutator/vitest-runner': '10.0.0'}
+                    '@stryker-mutator/core': '10.1.1', '@stryker-mutator/vitest-runner': '10.1.1'}
         with tempfile.TemporaryDirectory() as tmp:
             output = Path(tmp) / 'warmup'
             with mock.patch.object(benchmark.measurement, 'metadata', return_value={'versions': versions}), \
@@ -119,7 +119,7 @@ class FailedCampaignRatioTests(unittest.TestCase):
                     'mutations': {'a': {'outcome': 'killed'}}}
 
         versions = {'node': 'v26.3.1', 'vitest': '4.1.12',
-                    '@stryker-mutator/core': '10.0.0', '@stryker-mutator/vitest-runner': '10.0.0'}
+                    '@stryker-mutator/core': '10.1.1', '@stryker-mutator/vitest-runner': '10.1.1'}
         with tempfile.TemporaryDirectory() as tmp:
             output = Path(tmp) / 'campaign'
             with mock.patch.object(benchmark.measurement, 'metadata', return_value={'versions': versions}), \

@@ -252,8 +252,8 @@ def main(argv=None):
     verify_inputs(CORPUS, manifest)
     meta = measurement.metadata()
     if (meta['versions']['node'] != 'v26.3.1' or meta['versions']['vitest'] != '4.1.12'
-            or meta['versions']['@stryker-mutator/core'] != '10.0.0'
-            or meta['versions']['@stryker-mutator/vitest-runner'] != '10.0.0'):
+            or meta['versions']['@stryker-mutator/core'] != '10.1.1'
+            or meta['versions']['@stryker-mutator/vitest-runner'] != '10.1.1'):
         raise ValueError('pinned Node/Vitest/Stryker toolchain required')
     meta.update(execution_inputs=execution_inputs(args), workload=manifest, diagnostic_unrestricted=args.diagnostic_unrestricted,
                 binary_sha256=measurement.file_hash(args.binary) if args.binary.exists() else None,
