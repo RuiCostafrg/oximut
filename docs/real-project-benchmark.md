@@ -146,7 +146,7 @@ the parent requested a build hold.
 
 `benchmarks/compare_candidates.py` runs one warmup pair and five measured pairs
 by default. Build both binaries **before** invoking it. The baseline is pinned to
-`34acb9fee79a9e010f956b1326c52dc537aa1a64` (main after #54; `--before-commit` overrides
+`7e3ae5a492516c7a45e4b44eb0304d95d2171a5f` (the Vitest 5 upgrade commit; `--before-commit` overrides
 it). Main's unchanged adapter rejects Vitest 5.1.0 during initialization, so
 using this branch's node_modules for both candidates cannot produce a qualified
 paired before/after campaign. This pin records the requested control, not a
