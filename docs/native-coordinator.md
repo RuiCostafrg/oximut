@@ -233,3 +233,23 @@ host/cgroup pressure sampling still cover the entire slot process tree and
 abort on exhaustion. The original and instrumented baseline oracles, inventories,
 deadline, worker termination and post-job descendant cleanup gates are unchanged.
 Mutant jobs retain one test worker per controller.
+
+Persistent runs with more than one admitted worker prepare spare slots during
+original baseline dispatch. Resident groups are planned before that dispatch;
+spares initialize with the first group's instrumented modules, then receive a
+private `warm` command. The command globs test specifications and recursively
+requests Vite SSR transforms of resident modules, test files and their local
+import graphs. It never collects tests, imports user modules or starts a test
+pool. Each mutant still gets fresh isolated workers. Other resident groups and
+static overrides retain the normal invalidation behavior.
+
+Warm-up shares scheduler admission, accounting, deadlines, ownership discovery,
+leak verification and shutdown with ordinary jobs. The original baseline uses
+one test worker while spare admission is pending, reserving the remaining job
+capacity for warm-ups; later baselines keep their admitted parallelism. Dispatch
+waits for admitted warm-ups before returning the baseline, so successful spares
+are ready before mutants. Refused admission skips the remaining spares. A warm
+or spare initialization failure is diagnostic only: its slot is aborted and may
+start lazily for a mutant. Global exhaustion or interruption still stops every
+slot and fails closed. Single-worker runs and relay adapters send no warm command.
+Warm acknowledgements carry zero tests and never enter baseline or mutant results.

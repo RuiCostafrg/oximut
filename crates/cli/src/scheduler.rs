@@ -3,6 +3,8 @@
 use super::*;
 use std::collections::VecDeque;
 use std::sync::atomic::{AtomicBool, Ordering};
+// Internal warm acknowledgements never index the public mutant result array.
+const WARM_JOB: usize = usize::MAX;
 static INTERRUPTED: AtomicBool = AtomicBool::new(false);
 extern "C" fn interrupt_handler(_: libc::c_int) {
     INTERRUPTED.store(true, Ordering::Relaxed);
@@ -73,6 +75,15 @@ impl Worker {
         self.owned.extend(descendants(self.child.id()));
     }
     fn send(&mut self, index: usize, request: Request) -> Result<(), String> {
+        if index == WARM_JOB {
+            fs::write(
+                self.directory
+                    .path()
+                    .join(format!("warm-{}", self.sequence)),
+                b"",
+            )
+            .map_err(|e| e.to_string())?;
+        }
         cache::atomic(
             &self
                 .directory
@@ -128,6 +139,7 @@ pub struct Scheduler<'a> {
     slots: Vec<Option<Worker>>,
     diagnostics: Vec<String>,
     cleanup_ok: bool,
+    spares: VecDeque<(usize, Request)>,
 }
 fn exhausted(request: &Request, reason: &str) -> Response {
     if reason.starts_with("scheduler worker exited") {
@@ -157,7 +169,16 @@ impl<'a> Scheduler<'a> {
             slots,
             diagnostics: vec![],
             cleanup_ok: true,
+            spares: VecDeque::new(),
         })
+    }
+    pub fn prepare_spares(&mut self, request: &Request) {
+        if self.options.execution == Execution::Persistent
+            && coordinator::native_worker(&self.options.adapter).is_some()
+        {
+            self.spares
+                .extend((1..self.slots.len()).map(|_| (WARM_JOB, request.clone())));
+        }
     }
     fn sample(&mut self, force: bool) {
         self.sample_with(|budget, pids| budget.sample(pids, force));
@@ -240,6 +261,7 @@ impl<'a> Scheduler<'a> {
         serial: bool,
     ) -> Vec<(usize, Response)> {
         let mut completed = vec![];
+        pending.append(&mut self.spares);
         let mut paused = false;
         let mut idle_pressure_since = None;
         while !pending.is_empty()
@@ -259,7 +281,8 @@ impl<'a> Scheduler<'a> {
                 let ready = self.slots[slot].as_mut().and_then(Worker::ready);
                 if let Some(result) = ready {
                     self.sample(true);
-                    if let Err(error) = &result
+                    if self.slots[slot].as_ref().unwrap().busy.as_ref().unwrap().0 != WARM_JOB
+                        && let Err(error) = &result
                         && error.starts_with("scheduler worker exited")
                     {
                         self.budget.exhausted(error.clone());
@@ -273,9 +296,18 @@ impl<'a> Scheduler<'a> {
                     } else {
                         result.unwrap_or_else(|error| infrastructure(&request, error))
                     };
-                    let untrusted = response.outcome == TestOutcome::InfrastructureError
+                    let untrusted = (index == WARM_JOB && response.outcome != TestOutcome::Skipped)
+                        || response.outcome == TestOutcome::InfrastructureError
                         || response.outcome == TestOutcome::ResourceExhausted;
-                    completed.push((index, response));
+                    if index == WARM_JOB {
+                        self.diagnostics.push(format!(
+                            "spare warm {}: {}",
+                            if untrusted { "failed" } else { "ready" },
+                            response.errors.join("; ")
+                        ));
+                    } else {
+                        completed.push((index, response));
+                    }
                     if untrusted {
                         self.slots[slot].as_mut().unwrap().abort();
                         self.slots[slot] = None;
@@ -286,7 +318,9 @@ impl<'a> Scheduler<'a> {
                 for slot in 0..self.slots.len() {
                     if let Some(worker) = self.slots[slot].as_mut() {
                         if let Some((index, request, _)) = worker.busy.take() {
-                            completed.push((index, exhausted(&request, &reason)));
+                            if index != WARM_JOB {
+                                completed.push((index, exhausted(&request, &reason)));
+                            }
                             self.budget.active -= 1;
                         }
                         worker.abort();
@@ -296,6 +330,7 @@ impl<'a> Scheduler<'a> {
                 completed.extend(
                     pending
                         .drain(..)
+                        .filter(|(index, _)| *index != WARM_JOB)
                         .map(|(index, request)| (index, exhausted(&request, &reason))),
                 );
                 break;
@@ -310,7 +345,8 @@ impl<'a> Scheduler<'a> {
             // Only when a job could actually be admitted now: a free slot and serial
             // ordering satisfied. A busy backlog keeps the cheap periodic cadence;
             // exact samples still run at least once per second and per response.
-            let admissible = (!serial || self.budget.active == 0)
+            let warming = pending.front().is_some_and(|(index, _)| *index == WARM_JOB);
+            let admissible = (!serial || warming || self.budget.active == 0)
                 && self
                     .slots
                     .iter()
@@ -329,23 +365,47 @@ impl<'a> Scheduler<'a> {
                 .map(|worker| worker.child.id())
                 .collect();
             let capacity = self.budget.capacity(&active_pids);
-            if capacity > 0 && (!serial || self.budget.active == 0) {
+            if warming && capacity == 0 {
+                self.diagnostics
+                    .push("spare warm skipped: resource admission refused".into());
+                pending.retain(|(index, _)| *index != WARM_JOB);
+                continue;
+            }
+            if capacity > 0 && (!serial || warming || self.budget.active == 0) {
                 let slot = self
                     .slots
                     .iter()
-                    .position(|slot| slot.as_ref().is_none_or(|worker| worker.busy.is_none()))
+                    .enumerate()
+                    .position(|(index, slot)| {
+                        if warming {
+                            index > 0 && slot.is_none()
+                        } else {
+                            slot.as_ref().is_none_or(|worker| worker.busy.is_none())
+                        }
+                    })
                     .expect("capacity has slot");
                 let (index, mut request) = pending.pop_front().unwrap();
                 // One serial baseline occupies the controller, but its fresh forks
                 // must each have admission headroom before they are launched.
                 if request.kind == "baseline" && self.options.execution == Execution::Persistent {
-                    request.workers = Some(capacity.min(1024));
+                    // Reserve the other admitted job costs for starting spares.
+                    request.workers =
+                        Some(if pending.iter().any(|(index, _)| *index == WARM_JOB) {
+                            1
+                        } else {
+                            capacity.min(1024)
+                        });
                 }
                 if self.slots[slot].is_none() {
                     match Worker::start(self.options) {
                         Ok(worker) => self.slots[slot] = Some(worker),
                         Err(error) => {
-                            completed.push((index, infrastructure(&request, error)));
+                            if index == WARM_JOB {
+                                self.diagnostics
+                                    .push(format!("spare start failed: {error}"));
+                            } else {
+                                completed.push((index, infrastructure(&request, error)));
+                            }
                             continue;
                         }
                     }
@@ -358,7 +418,11 @@ impl<'a> Scheduler<'a> {
                             self.budget.max_active_jobs.max(self.budget.active);
                     }
                     Err(error) => {
-                        completed.push((index, infrastructure(&request, error)));
+                        if index == WARM_JOB {
+                            self.diagnostics.push(format!("spare send failed: {error}"));
+                        } else {
+                            completed.push((index, infrastructure(&request, error)));
+                        }
                         worker.abort();
                         self.slots[slot] = None;
                     }
@@ -510,7 +574,18 @@ pub fn worker_main() -> Result<(), String> {
             return Err("internal request exceeds 8 MiB".into());
         }
         let request = serde_json::from_slice(&bytes).map_err(|e| e.to_string())?;
-        let response = execute_local(&options, &request, &mut session);
+        let response = if directory.join(format!("warm-{sequence}")).exists() {
+            if session.is_none() {
+                session = coordinator::native_worker(&options.adapter)
+                    .map(|worker| Backend::Native(Box::new(coordinator::Coordinator::new(worker))));
+            }
+            match session.as_mut() {
+                Some(Backend::Native(coordinator)) => coordinator.warm(&options, &request),
+                _ => infrastructure(&request, "warm requires native coordinator"),
+            }
+        } else {
+            execute_local(&options, &request, &mut session)
+        };
         cache::atomic(
             &directory.join(format!("response-{sequence}.json")),
             &response,

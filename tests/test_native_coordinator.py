@@ -12,7 +12,7 @@ ROOT = REPO / 'fixtures/m1'
 # A fake controller speaking the reference controller's IPC protocol. The CLI
 # drives it natively because it sits beside a file named m2-runner.mjs.
 CONTROLLER = r"""
-import { appendFileSync, existsSync, writeFileSync } from 'node:fs';
+import { appendFileSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { spawn } from 'node:child_process';
 const mode = process.env.OXIMUT_FAKE_MODE;
 const log = (event) => appendFileSync(process.env.OXIMUT_FAKE_LOG,
@@ -24,6 +24,7 @@ process.on('message', (message) => {
   const reply = (body) => process.send({ protocol: 1, id, ...body });
   if (command === 'initialize') {
     log({ event: 'initialize', job: args.jobId });
+    if (mode === 'warm-start-fail' && args.jobId === 'spare-warm') process.exit(3);
     if (mode === 'bad-init') return reply({ result: {} });
     return reply({ result: { controllerPid: process.pid,
       pool: args.pool === 'threads' ? 'threads' : 'forks',
@@ -35,9 +36,43 @@ process.on('message', (message) => {
     if (mode === 'no-close') return;
     return reply({ result: { closed: true } });
   }
+  if (command === 'warm') {
+    log({ event: 'warm', job: args.request.jobId });
+    writeFileSync(process.env.OXIMUT_FAKE_LOG + '.warm', '');
+    if (mode === 'warm-fail') {
+      const child = spawn(process.execPath, ['-e', 'setInterval(() => {}, 1000)'],
+        { detached: true, stdio: 'ignore' });
+      child.unref(); log({ event: 'leaked', child: child.pid });
+      return reply({ error: 'warm deliberately failed' });
+    }
+    log({ event: 'warm-ready' });
+    return reply({ result: { warmed: true, outcome: 'skipped',
+      tests: { passed: 0, failed: 0, skipped: 0 }, errors: [],
+      ...(args.request.resident ? { resident: args.request.resident.length } : {}) } });
+  }
   const request = args.request;
   jobs++;
   log({ event: 'run', job: request.jobId, workers: request.workers });
+  if ((mode === 'warm-order' || mode === 'baseline-fail-warm') && request.jobId === 'baseline') {
+    const wait = () => {
+      if (!existsSync(process.env.OXIMUT_FAKE_LOG + '.warm')) return setTimeout(wait, 10);
+      log({ event: 'baseline-end' });
+      reply({ result: { outcome: mode === 'baseline-fail-warm' ? 'failed' : 'passed',
+        tests: { passed: mode === 'baseline-fail-warm' ? 0 : 1,
+          failed: mode === 'baseline-fail-warm' ? 1 : 0, skipped: 0 }, errors: [] } });
+    };
+    wait(); return;
+  }
+  if (mode === 'warm-order' && request.kind === 'mutant') {
+    const path = process.env.OXIMUT_FAKE_LOG + '.mutants';
+    appendFileSync(path, request.jobId + '\n');
+    const wait = () => {
+      if (readFileSync(path, 'utf8').trim().split('\n').length < 2) return setTimeout(wait, 10);
+      reply({ result: { outcome: 'passed', tests: { passed: 1, failed: 0, skipped: 0 },
+        errors: [], ...(request.resident ? { resident: request.resident.length } : {}) } });
+    };
+    wait(); return;
+  }
   if (mode === 'hang') return;
   if (mode === 'crash') process.exit(3);
   if (mode === 'error') return reply({ error: 'boom from controller' });
@@ -97,7 +132,7 @@ class NativeCoordinator(unittest.TestCase):
             self.assertEqual(accepted.returncode, 0, accepted.stdout + accepted.stderr)
             self.assertEqual(json.loads(accepted.stdout)['baseline']['outcome'], 'passed')
 
-    def run_cli(self, mode, timeout_ms=5000, extra_args=()):
+    def run_cli(self, mode, timeout_ms=5000, extra_args=(), full=False):
         with tempfile.TemporaryDirectory(prefix='oximut-native-') as directory:
             adapter = Path(directory) / 'm2-runner.mjs'
             adapter.write_text('throw new Error("the native coordinator must not run this");\n')
@@ -105,7 +140,7 @@ class NativeCoordinator(unittest.TestCase):
             log = Path(directory) / 'log.jsonl'
             result = subprocess.run([
                 str(REPO / 'target/debug/oximut'), '--root', str(ROOT),
-                '--source', str(ROOT / 'src/subject.ts'), '--baseline-only',
+                '--source', str(ROOT / 'src/subject.ts'), *([] if full else ['--baseline-only']),
                 '--execution', 'persistent', '--adapter', str(adapter), '--report', '-',
                 '--timeout-ms', str(timeout_ms), '--no-cache', *extra_args,
             ], env={**os.environ, 'OXIMUT_FAKE_MODE': mode, 'OXIMUT_FAKE_LOG': str(log)},
@@ -119,6 +154,48 @@ class NativeCoordinator(unittest.TestCase):
     def assert_reaped(self, events):
         for pid in self.controllers(events):
             self.assertFalse(alive(pid), f'controller {pid} survived')
+
+    def test_spares_overlap_baseline_and_are_ready_before_mutants(self):
+        result, report, events = self.run_cli('warm-order', extra_args=('--workers', '2'), full=True)
+        self.assertTrue(report['summary']['complete'], result.stdout + result.stderr)
+        names = [e['event'] for e in events]
+        self.assertLess(names.index('warm'), names.index('baseline-end'))
+        first_mutant = next(i for i, e in enumerate(events)
+                            if e['event'] == 'run' and e['job'] not in ('baseline', 'instrumented-baseline'))
+        self.assertLess(names.index('warm-ready'), first_mutant)
+        self.assertEqual(len(self.controllers(events)), 2)
+        warm_pid = next(e['pid'] for e in events if e['event'] == 'warm-ready')
+        self.assertTrue(any(e['event'] == 'run' and e['pid'] == warm_pid for e in events))
+        self.assert_reaped(events)
+
+    def test_failed_warm_and_spare_start_fall_back_without_leaks(self):
+        normal, expected, _ = self.run_cli('normal', extra_args=('--workers', '2'), full=True)
+        self.assertTrue(expected['summary']['complete'], normal.stdout)
+        for mode in ('warm-fail', 'warm-start-fail'):
+            with self.subTest(mode=mode):
+                result, report, events = self.run_cli(mode, extra_args=('--workers', '2'), full=True)
+                self.assertTrue(report['summary']['complete'], result.stdout + result.stderr)
+                self.assertEqual([m['outcome'] for m in report['mutants']],
+                                 [m['outcome'] for m in expected['mutants']])
+                self.assertTrue(any('spare warm failed' in d for d in report['diagnostics']))
+                self.assert_reaped(events)
+                for event in events:
+                    if event['event'] == 'leaked':
+                        self.assertFalse(alive(event['child']))
+
+    def test_one_worker_never_warms(self):
+        for workers in (1, 2):
+            result, _, events = self.run_cli('normal', extra_args=('--workers', str(workers)))
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(sum(e['event'] == 'warm' for e in events), workers - 1)
+            self.assert_reaped(events)
+
+    def test_baseline_failure_cleans_warm_spares(self):
+        result, report, events = self.run_cli('baseline-fail-warm', extra_args=('--workers', '2'), full=True)
+        self.assertEqual(report['baseline']['outcome'], 'failed', result.stderr)
+        self.assertTrue(any(e['event'] == 'warm' for e in events))
+        self.assertFalse(any(e['event'] == 'run' and e['job'] != 'baseline' for e in events))
+        self.assert_reaped(events)
 
     def test_baseline_worker_limit_is_admitted_and_forwarded(self):
         for workers in (1, 2):
