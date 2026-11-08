@@ -54,6 +54,8 @@ jobs:
           mkdir "$RUNNER_TEMP/warm-runtime-probe"
           git archive HEAD | gzip > "$RUNNER_TEMP/warm-runtime-probe/source.tar.gz"
           git rev-parse HEAD > "$RUNNER_TEMP/warm-runtime-probe/commit.txt"
+          # git archive holds the Vitest 5 tree; record the manifests this probe actually ran on.
+          cp package.json package-lock.json "$RUNNER_TEMP/warm-runtime-probe/"
           python3 - <<'PY'
           import json, os, pathlib, subprocess
           root = pathlib.Path(os.environ['RUNNER_TEMP']) / 'warm-runtime-probe'
