@@ -335,7 +335,12 @@ impl<'a> Scheduler<'a> {
                     .iter()
                     .position(|slot| slot.as_ref().is_none_or(|worker| worker.busy.is_none()))
                     .expect("capacity has slot");
-                let (index, request) = pending.pop_front().unwrap();
+                let (index, mut request) = pending.pop_front().unwrap();
+                // One serial baseline occupies the controller, but its fresh forks
+                // must each have admission headroom before they are launched.
+                if request.kind == "baseline" && self.options.execution == Execution::Persistent {
+                    request.workers = Some(capacity.min(1024));
+                }
                 if self.slots[slot].is_none() {
                     match Worker::start(self.options) {
                         Ok(worker) => self.slots[slot] = Some(worker),

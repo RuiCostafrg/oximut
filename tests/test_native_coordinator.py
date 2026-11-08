@@ -37,7 +37,7 @@ process.on('message', (message) => {
   }
   const request = args.request;
   jobs++;
-  log({ event: 'run', job: request.jobId });
+  log({ event: 'run', job: request.jobId, workers: request.workers });
   if (mode === 'hang') return;
   if (mode === 'crash') process.exit(3);
   if (mode === 'error') return reply({ error: 'boom from controller' });
@@ -119,6 +119,17 @@ class NativeCoordinator(unittest.TestCase):
     def assert_reaped(self, events):
         for pid in self.controllers(events):
             self.assertFalse(alive(pid), f'controller {pid} survived')
+
+    def test_baseline_worker_limit_is_admitted_and_forwarded(self):
+        for workers in (1, 2):
+            result, report, events = self.run_cli('normal', extra_args=('--workers', str(workers)))
+            self.assertEqual(result.returncode, 0, result.stderr)
+            runs = [e for e in events if e['event'] == 'run']
+            self.assertEqual(len(runs), 2)
+            for run in runs:
+                self.assertGreaterEqual(run['workers'], 1)
+                self.assertLessEqual(run['workers'], workers)
+            self.assert_reaped(events)
 
     def test_healthy_controller_is_reused_and_closed(self):
         result, report, events = self.run_cli('normal')

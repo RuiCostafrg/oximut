@@ -37,6 +37,13 @@ export function validateRequest(value) {
     /** @type {number} */ (value.deadlineMs) > 2147483647
   )
     throw new Error('Invalid deadlineMs');
+  if (
+    value.workers !== undefined &&
+    (!Number.isSafeInteger(value.workers) ||
+      /** @type {number} */ (value.workers) < 1 ||
+      /** @type {number} */ (value.workers) > 1024)
+  )
+    throw new Error('Invalid workers');
   if (value.kind === 'baseline') {
     if (value.mutation !== null) throw new Error('Baseline mutation must be null');
   } else {

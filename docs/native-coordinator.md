@@ -224,3 +224,12 @@ release through the private Homebrew tap, mirroring ts-crap's tap and release
 distribution and reusing the R1–R3 source-release and provenance tooling.
 Otherwise a dedicated follow-up thread explores out-of-the-box reductions, driven
 by profiles of where time and memory actually go.
+
+For persistent baselines, the scheduler forwards a `workers` limit capped by
+both effective CPU concurrency and the current memory admission capacity (and
+protocol maximum 1024). Serial dispatch still admits only one baseline job;
+its internal fresh workers consume that admitted capacity. Aggregate RSS and
+host/cgroup pressure sampling still cover the entire slot process tree and
+abort on exhaustion. The original and instrumented baseline oracles, inventories,
+deadline, worker termination and post-job descendant cleanup gates are unchanged.
+Mutant jobs retain one test worker per controller.

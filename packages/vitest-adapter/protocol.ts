@@ -25,6 +25,8 @@ export interface Request {
   root: string;
   config: string;
   deadlineMs: number;
+  /** Per-baseline file concurrency; mutants always use one worker. */
+  workers?: number;
   mutation: null | { id: string; file: string; code: string; map: Record<string, unknown> };
   pool?: 'threads';
   collectCoverage?: NonNullable<Request['mutation']>[];

@@ -200,8 +200,9 @@ async function command(name: string, args: Request): Promise<unknown> {
     throw new Error('Pool cannot change after initialization');
   const next = job.mutation;
   const probesChanged = JSON.stringify(probes) !== JSON.stringify(job.collectCoverage);
-  if (probesChanged) {
-    // Probe changes can affect every source file and attribution dependency.
+  if (probesChanged || job.collectCoverage) {
+    // Probe changes affect every source file and attribution dependency.
+    // Repeated probes also need fresh transforms for this job's observed set.
     for (const project of vitest.projects) project.vite.moduleGraph.invalidateAll();
   } else {
     // Invalidate exactly the files whose served module changes, restoring the
@@ -226,6 +227,7 @@ async function command(name: string, args: Request): Promise<unknown> {
   currentRun = undefined;
   delete process.env.OXIMUT_ACTIVE_MUTANT;
   if (job.kind === 'mutant' && next) process.env.OXIMUT_ACTIVE_MUTANT = next.id;
+  const previousWorkers = vitest.projects.map((project) => project.config.maxWorkers);
   const previousBail = vitest.projects.map((project) => project.config.bail);
   const cancellations: string[] = [];
   // runFiles clears onCancel listeners before starting workers (4.1.12).
@@ -237,7 +239,12 @@ async function command(name: string, args: Request): Promise<unknown> {
   };
   try {
     // Vitest 4.1.12 serializes project.config afresh for each worker start.
-    for (const project of vitest.projects) project.config.bail = job.kind === 'mutant' ? 1 : 0;
+    for (const project of vitest.projects) {
+      project.config.bail = job.kind === 'mutant' ? 1 : 0;
+      // 4.1.12 groupSpecs reads this on every run; createPool calls
+      // setMaxWorkers for that group. Isolation still gives each file a fresh runner.
+      project.config.maxWorkers = job.kind === 'baseline' ? (job.workers ?? 1) : 1;
+    }
     selectionSupport.begin(vitest, job);
     const specifications = await vitest.globTestSpecifications();
     const selected =
@@ -259,8 +266,10 @@ async function command(name: string, args: Request): Promise<unknown> {
     await awaitWorkerTermination(vitest, job.deadlineMs - (performance.now() - started));
   } finally {
     vitest.cancelCurrentRun = cancelCurrentRun;
-    for (const [index, project] of vitest.projects.entries())
+    for (const [index, project] of vitest.projects.entries()) {
       project.config.bail = previousBail[index];
+      project.config.maxWorkers = previousWorkers[index];
+    }
     delete process.env.OXIMUT_ACTIVE_MUTANT;
   }
   if (!currentRun) throw new Error('Missing onTestRunEnd event');

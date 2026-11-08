@@ -1,4 +1,4 @@
-import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { mkdtempSync, readFileSync, readdirSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -10,7 +10,6 @@ const setup = fileURLToPath(new URL('./m3-setup.ts', import.meta.url));
 export class SelectionSupport {
   readonly observed = new Set<string>();
   private directory?: string;
-  private recordFile?: string;
 
   begin(vitest: Vitest, request: Request): void {
     this.close();
@@ -20,8 +19,7 @@ export class SelectionSupport {
     }
     if (!request.collectCoverage) return;
     this.directory = mkdtempSync(join(tmpdir(), 'oximut-m3-'));
-    this.recordFile = join(this.directory, 'hits.jsonl');
-    process.env.OXIMUT_M3_COVERAGE = this.recordFile;
+    process.env.OXIMUT_M3_COVERAGE = this.directory;
     for (const project of vitest.projects) {
       project.config.setupFiles.unshift(setup);
     }
@@ -73,7 +71,10 @@ export class SelectionSupport {
     }
     let ready = 0;
     try {
-      const data = readFileSync(this.recordFile as string);
+      const records = readdirSync(this.directory as string)
+        .sort()
+        .map((file) => readFileSync(join(this.directory as string, file)));
+      const data = Buffer.concat(records);
       if (data.length > 8 * 1024 * 1024) throw new Error('probe-record-limit');
       for (const line of data.toString('utf8').trim().split('\n')) {
         if (!line) continue;
@@ -111,7 +112,7 @@ export class SelectionSupport {
     const complete = result.outcome === 'passed' && reasons.size === 0;
     return {
       complete,
-      tests,
+      tests: tests.sort((a, b) => a.id.localeCompare(b.id)),
       hits: [...hits].map(([mutantId, hit]) => ({
         mutantId,
         tests: [...hit.tests].sort(),
@@ -125,6 +126,5 @@ export class SelectionSupport {
     delete process.env.OXIMUT_M3_COVERAGE;
     if (this.directory) rmSync(this.directory, { recursive: true, force: true });
     this.directory = undefined;
-    this.recordFile = undefined;
   }
 }
