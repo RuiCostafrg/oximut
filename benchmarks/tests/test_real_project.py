@@ -39,7 +39,7 @@ class CorpusTests(unittest.TestCase):
                 benchmark.verify_inputs(project, self.manifest)
 
     def test_missing_tests_and_duplicate_names_are_rejected(self):
-        identities = self.manifest['expectedTests']
+        identities = self.manifest['expectedOximutTests']
         report = {'testFiles': {}}
         for filename, name in identities:
             report['testFiles'].setdefault(filename, {'tests': []})['tests'].append({'name': name})
