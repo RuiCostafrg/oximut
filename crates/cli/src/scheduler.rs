@@ -307,7 +307,15 @@ impl<'a> Scheduler<'a> {
                 continue;
             }
             // Counter samples never refresh slot costs; admit only on exact evidence.
-            if self.budget.last_sample_was_counter {
+            // Only when a job could actually be admitted now: a free slot and serial
+            // ordering satisfied. A busy backlog keeps the cheap periodic cadence;
+            // exact samples still run at least once per second and per response.
+            let admissible = (!serial || self.budget.active == 0)
+                && self
+                    .slots
+                    .iter()
+                    .any(|slot| slot.as_ref().is_none_or(|worker| worker.busy.is_none()));
+            if admissible && self.budget.last_sample_was_counter {
                 self.sample(true);
                 if self.budget.exhaustion.is_some() {
                     continue;

@@ -103,7 +103,8 @@ sampling interval. Before this change, every 10ms poll while all slots were busy
 fresh broad discovery before signalling or concluding cleanup, so the
 fail-closed cleanup gates are unchanged. Identity checks for tree members remain
 fresh and strict for every aggregate, slot and CLI-floor observation. In an
-exact sample, each verified PID's RSS is read once (one `smaps_rollup` walk) and
+exact sample, each verified PID's RSS is read once (one `smaps_rollup` walk where
+available, otherwise the documented approximate `/proc/PID/stat` fallback) and
 reused by the overlapping trees of that sample only; errors are never cached and
 every new exact sample reads afresh. Counter samples (periodic samples between
 forced ones, see `docs/m5.md`) read only `/proc/PID/statm` for each verified PID,
