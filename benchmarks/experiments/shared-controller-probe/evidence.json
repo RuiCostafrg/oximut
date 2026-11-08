@@ -1,0 +1,244 @@
+{
+  "node": "v26.3.1",
+  "vitest": "4.1.12",
+  "oracle": {
+    "killed": {
+      "outcome": "killed",
+      "total": 3,
+      "passed": 1,
+      "failed": 1,
+      "notRun": 1,
+      "states": [
+        "passed",
+        "failed",
+        "pending"
+      ]
+    },
+    "survived": {
+      "outcome": "survived",
+      "total": 3,
+      "passed": 3,
+      "failed": 0,
+      "notRun": 0,
+      "states": [
+        "passed",
+        "passed",
+        "passed"
+      ]
+    },
+    "timeout": {
+      "outcome": "timeout",
+      "total": 3,
+      "passed": 1,
+      "failed": 1,
+      "notRun": 1,
+      "states": [
+        "passed",
+        "failed",
+        "pending"
+      ]
+    },
+    "survived-again": {
+      "outcome": "survived",
+      "total": 3,
+      "passed": 3,
+      "failed": 0,
+      "notRun": 0,
+      "states": [
+        "passed",
+        "passed",
+        "passed"
+      ]
+    }
+  },
+  "shared": {
+    "outcomes": {
+      "survived": {
+        "outcome": "survived",
+        "total": 3,
+        "passed": 3,
+        "failed": 0,
+        "notRun": 0,
+        "states": [
+          "passed",
+          "passed",
+          "passed"
+        ]
+      },
+      "killed": {
+        "outcome": "killed",
+        "total": 3,
+        "passed": 1,
+        "failed": 1,
+        "notRun": 1,
+        "states": [
+          "passed",
+          "failed",
+          "pending"
+        ]
+      },
+      "timeout": {
+        "outcome": "timeout",
+        "total": 3,
+        "passed": 1,
+        "failed": 1,
+        "notRun": 1,
+        "states": [
+          "passed",
+          "failed",
+          "pending"
+        ]
+      },
+      "survived-again": {
+        "outcome": "survived",
+        "total": 3,
+        "passed": 3,
+        "failed": 0,
+        "notRun": 0,
+        "states": [
+          "passed",
+          "passed",
+          "passed"
+        ]
+      }
+    },
+    "errors": [],
+    "events": [
+      {
+        "type": "run-start"
+      },
+      {
+        "type": "start",
+        "mutant": "killed",
+        "pid": 30886
+      },
+      {
+        "type": "start",
+        "mutant": "survived",
+        "pid": 30887
+      },
+      {
+        "type": "run",
+        "mutant": "survived"
+      },
+      {
+        "type": "run",
+        "mutant": "killed"
+      },
+      {
+        "type": "stop",
+        "mutant": "survived"
+      },
+      {
+        "type": "start",
+        "mutant": "survived-again",
+        "pid": 30900
+      },
+      {
+        "type": "stop",
+        "mutant": "killed"
+      },
+      {
+        "type": "start",
+        "mutant": "timeout",
+        "pid": 30906
+      },
+      {
+        "type": "run",
+        "mutant": "survived-again"
+      },
+      {
+        "type": "run",
+        "mutant": "timeout"
+      },
+      {
+        "type": "stop",
+        "mutant": "survived-again"
+      },
+      {
+        "type": "run-end"
+      },
+      {
+        "type": "stop",
+        "mutant": "timeout"
+      }
+    ],
+    "peak": 2,
+    "taskIds": [
+      "915823808",
+      "-1357743307",
+      "2019058046",
+      "2114307784"
+    ],
+    "workerFailures": {}
+  },
+  "stock": {
+    "outcomes": {
+      "survived": {
+        "outcome": "survived",
+        "total": 3,
+        "passed": 3,
+        "failed": 0,
+        "notRun": 0,
+        "states": [
+          "passed",
+          "passed",
+          "passed"
+        ]
+      },
+      "killed": {
+        "outcome": "killed",
+        "total": 3,
+        "passed": 1,
+        "failed": 1,
+        "notRun": 1,
+        "states": [
+          "passed",
+          "failed",
+          "pending"
+        ]
+      },
+      "survived-again": {
+        "outcome": "survived",
+        "total": 3,
+        "passed": 3,
+        "failed": 0,
+        "notRun": 0,
+        "states": [
+          "passed",
+          "passed",
+          "passed"
+        ]
+      },
+      "timeout": {
+        "outcome": "timeout",
+        "total": 3,
+        "passed": 1,
+        "failed": 1,
+        "notRun": 1,
+        "states": [
+          "passed",
+          "failed",
+          "pending"
+        ]
+      }
+    },
+    "errors": [],
+    "events": [
+      {
+        "type": "run-start"
+      },
+      {
+        "type": "run-end"
+      }
+    ],
+    "peak": 0,
+    "taskIds": [
+      "915823808",
+      "-1357743307",
+      "2019058046",
+      "2114307784"
+    ],
+    "workerFailures": {}
+  }
+}

@@ -1,0 +1,366 @@
+{
+  "duplicate": {
+    "outcomes": {
+      "survived": {
+        "outcome": "survived",
+        "total": 3,
+        "passed": 3,
+        "failed": 0,
+        "notRun": 0,
+        "states": [
+          "passed",
+          "passed",
+          "passed"
+        ]
+      }
+    },
+    "errors": [],
+    "events": [
+      {
+        "type": "run-start"
+      },
+      {
+        "type": "start",
+        "mutant": "survived",
+        "pid": 30679
+      },
+      {
+        "type": "start",
+        "mutant": "survived",
+        "pid": 30680
+      },
+      {
+        "type": "run",
+        "mutant": "survived"
+      },
+      {
+        "type": "run",
+        "mutant": "survived"
+      },
+      {
+        "type": "run-end"
+      },
+      {
+        "type": "stop",
+        "mutant": "survived"
+      },
+      {
+        "type": "stop",
+        "mutant": "survived"
+      }
+    ],
+    "peak": 2,
+    "taskIds": [
+      "-1357743307"
+    ],
+    "workerFailures": {}
+  },
+  "overlap": {
+    "outcomes": {
+      "survived": {
+        "outcome": "survived",
+        "total": 3,
+        "passed": 3,
+        "failed": 0,
+        "notRun": 0,
+        "states": [
+          "passed",
+          "passed",
+          "passed"
+        ]
+      }
+    },
+    "errors": [],
+    "events": [
+      {
+        "type": "run-start"
+      },
+      {
+        "type": "start",
+        "mutant": "survived",
+        "pid": 30717
+      },
+      {
+        "type": "run",
+        "mutant": "survived"
+      },
+      {
+        "type": "run-start"
+      },
+      {
+        "type": "run-end"
+      },
+      {
+        "type": "start",
+        "mutant": "survived",
+        "pid": 30731
+      },
+      {
+        "type": "stop",
+        "mutant": "survived"
+      },
+      {
+        "type": "run",
+        "mutant": "survived"
+      },
+      {
+        "type": "run-end"
+      },
+      {
+        "type": "stop",
+        "mutant": "survived"
+      }
+    ],
+    "peak": 2,
+    "taskIds": [
+      "-1357743307"
+    ],
+    "workerFailures": {}
+  },
+  "simultaneous": {
+    "outcomes": {
+      "survived-again": {
+        "outcome": "survived",
+        "total": 3,
+        "passed": 3,
+        "failed": 0,
+        "notRun": 0,
+        "states": [
+          "passed",
+          "passed",
+          "passed"
+        ]
+      },
+      "survived": {
+        "outcome": "survived",
+        "total": 3,
+        "passed": 3,
+        "failed": 0,
+        "notRun": 0,
+        "states": [
+          "passed",
+          "passed",
+          "passed"
+        ]
+      }
+    },
+    "errors": [],
+    "events": [
+      {
+        "type": "run-start"
+      },
+      {
+        "type": "run-start"
+      },
+      {
+        "type": "start",
+        "mutant": "survived",
+        "pid": 30763
+      },
+      {
+        "type": "start",
+        "mutant": "survived-again",
+        "pid": 30764
+      },
+      {
+        "type": "run",
+        "mutant": "survived"
+      },
+      {
+        "type": "run",
+        "mutant": "survived-again"
+      },
+      {
+        "type": "run-end"
+      },
+      {
+        "type": "run-end"
+      },
+      {
+        "type": "stop",
+        "mutant": "survived-again"
+      },
+      {
+        "type": "stop",
+        "mutant": "survived"
+      }
+    ],
+    "peak": 2,
+    "taskIds": [
+      "-1357743307",
+      "2114307784"
+    ],
+    "workerFailures": {},
+    "perCallModules": [
+      [
+        "survived-again",
+        "survived"
+      ],
+      [
+        "survived-again",
+        "survived"
+      ]
+    ]
+  },
+  "failures": {
+    "outcomes": {
+      "crash": {
+        "outcome": "crash",
+        "total": 3,
+        "passed": 0,
+        "failed": 0,
+        "notRun": 3,
+        "states": [
+          "pending",
+          "pending",
+          "pending"
+        ]
+      },
+      "hard-timeout": {
+        "outcome": "timeout",
+        "total": 3,
+        "passed": 0,
+        "failed": 0,
+        "notRun": 3,
+        "states": [
+          "pending",
+          "pending",
+          "pending"
+        ]
+      },
+      "survived": {
+        "outcome": "survived",
+        "total": 3,
+        "passed": 3,
+        "failed": 0,
+        "notRun": 0,
+        "states": [
+          "passed",
+          "passed",
+          "passed"
+        ]
+      },
+      "unhandled": {
+        "outcome": "unhandled",
+        "total": 3,
+        "passed": 3,
+        "failed": 0,
+        "notRun": 0,
+        "states": [
+          "passed",
+          "passed",
+          "passed"
+        ]
+      }
+    },
+    "errors": [
+      {
+        "stack": "Error: unhandled probe\n    at /root/.t3/worktrees/oximut/t3-8d990581/benchmarks/experiments/shared-controller-probe/fixture/shared.test.mjs:13:20\n    at file:///root/oximut/node_modules/@vitest/runner/dist/chunk-artifact.js:302:11\n    at file:///root/oximut/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:26\n    at file:///root/oximut/node_modules/@vitest/runner/dist/chunk-artifact.js:2326:20\n    at new Promise (<anonymous>)\n    at runWithCancel (file:///root/oximut/node_modules/@vitest/runner/dist/chunk-artifact.js:2323:10)\n    at file:///root/oximut/node_modules/@vitest/runner/dist/chunk-artifact.js:2305:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///root/oximut/node_modules/@vitest/runner/dist/chunk-artifact.js:2272:10)\n    at file:///root/oximut/node_modules/@vitest/runner/dist/chunk-artifact.js:2956:64",
+        "message": "unhandled probe",
+        "constructor": "Function<Error>",
+        "name": "Error",
+        "toString": "Function<toString>",
+        "VITEST_TEST_NAME": "mutation",
+        "VITEST_TEST_PATH": "/root/.t3/worktrees/oximut/t3-8d990581/benchmarks/experiments/shared-controller-probe/fixture/shared.test.mjs",
+        "type": "Unhandled Rejection"
+      },
+      {
+        "type": "Unhandled Error"
+      },
+      {
+        "type": "Unhandled Error"
+      }
+    ],
+    "events": [
+      {
+        "type": "run-start"
+      },
+      {
+        "type": "start",
+        "mutant": "crash",
+        "pid": 30790
+      },
+      {
+        "type": "start",
+        "mutant": "hard-timeout",
+        "pid": 30791
+      },
+      {
+        "type": "run",
+        "mutant": "crash"
+      },
+      {
+        "type": "run",
+        "mutant": "hard-timeout"
+      },
+      {
+        "type": "unexpected-exit",
+        "mutant": "crash",
+        "code": null
+      },
+      {
+        "type": "stop",
+        "mutant": "crash"
+      },
+      {
+        "type": "start",
+        "mutant": "survived",
+        "pid": 30829
+      },
+      {
+        "type": "run",
+        "mutant": "survived"
+      },
+      {
+        "type": "stop",
+        "mutant": "survived"
+      },
+      {
+        "type": "start",
+        "mutant": "unhandled",
+        "pid": 30837
+      },
+      {
+        "type": "run",
+        "mutant": "unhandled"
+      },
+      {
+        "type": "unhandled",
+        "mutant": "unhandled",
+        "message": "unhandled probe"
+      },
+      {
+        "type": "stop",
+        "mutant": "unhandled"
+      },
+      {
+        "type": "deadline",
+        "mutant": "hard-timeout"
+      },
+      {
+        "type": "unexpected-exit",
+        "mutant": "hard-timeout",
+        "code": null
+      },
+      {
+        "type": "stop",
+        "mutant": "hard-timeout"
+      },
+      {
+        "type": "run-end"
+      }
+    ],
+    "peak": 2,
+    "taskIds": [
+      "-254682364",
+      "2145832066",
+      "1342692192",
+      "-1357743307"
+    ],
+    "workerFailures": {
+      "crash": "crash",
+      "unhandled": "unhandled",
+      "hard-timeout": "timeout"
+    }
+  }
+}
