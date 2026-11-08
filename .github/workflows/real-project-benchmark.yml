@@ -76,8 +76,12 @@ jobs:
         env:
           MATCHED_CONCURRENCY: ${{ inputs.concurrency || '1' }}
         run: |
-          [[ "$MATCHED_CONCURRENCY" =~ ^[0-9]+$ ]] &&
-            (( 10#$MATCHED_CONCURRENCY >= 1 && 10#$MATCHED_CONCURRENCY <= 1024 && 10#$MATCHED_CONCURRENCY <= $(nproc) ))
+          cpus=$(nproc)
+          if ! [[ "$MATCHED_CONCURRENCY" =~ ^[0-9]+$ ]] ||
+            (( 10#$MATCHED_CONCURRENCY < 1 || 10#$MATCHED_CONCURRENCY > 1024 || 10#$MATCHED_CONCURRENCY > cpus )); then
+            echo "::error::concurrency '$MATCHED_CONCURRENCY' must be an integer from 1 to 1024 and at most the $cpus usable CPUs"
+            exit 1
+          fi
       - name: Set native campaign paths
         run: |
           test "$(uname -m)" = x86_64
