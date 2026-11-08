@@ -388,15 +388,12 @@ impl<'a> Scheduler<'a> {
                 // One serial baseline occupies the controller, but its fresh forks
                 // must each have admission headroom before they are launched.
                 if request.kind == "baseline" && self.options.execution == Execution::Persistent {
-                    // Reserve the other admitted job costs for starting spares.
-                    request.workers =
-                        Some(if pending.iter().any(|(index, _)| *index == WARM_JOB) {
-                            1
-                        } else {
-                            self.budget
-                                .baseline_fork_limit(capacity, &active_pids)
-                                .min(1024)
-                        });
+                    // Spares start alongside: wall time matters more than peak memory.
+                    request.workers = Some(
+                        self.budget
+                            .baseline_fork_limit(capacity, &active_pids)
+                            .min(1024),
+                    );
                 }
                 if self.slots[slot].is_none() {
                     match Worker::start(self.options) {
