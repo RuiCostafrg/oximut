@@ -82,7 +82,38 @@ def validate(tool, report_path, project, row, manifest):
     return artifact
 
 
-def prepare(project, manifest):
+def concurrency_arg(value):
+    """Accept the range Oximut's --workers accepts, before any campaign starts."""
+    number = int(value)
+    if not 1 <= number <= 1024:
+        raise argparse.ArgumentTypeError('concurrency must be between 1 and 1024')
+    return number
+
+
+def require_matched_concurrency(concurrency, available=None):
+    """Oximut caps workers at usable CPUs and Stryker does not, so refuse to mismatch them."""
+    available = len(os.sched_getaffinity(0)) if available is None else available
+    if concurrency > available:
+        raise ValueError(f'concurrency {concurrency} exceeds {available} usable CPUs; '
+                         'Oximut would cap its workers while Stryker would not')
+
+
+def parallelism_errors(row, concurrency):
+    """A run that ended up with fewer workers than Stryker is not a matched comparison."""
+    if concurrency == 1:
+        return []
+    resources = row.get('resources')
+    if not isinstance(resources, dict):
+        return ['missing resources for matched parallelism']
+    errors = []
+    if resources.get('effectiveWorkers') != concurrency:
+        errors.append(f"ran {resources.get('effectiveWorkers')} workers, not the matched {concurrency}")
+    if resources.get('admissionPauses') != 0:
+        errors.append(f"memory pressure paused admission {resources.get('admissionPauses')} times")
+    return errors
+
+
+def prepare(project, manifest, concurrency=1):
     shutil.copytree(CORPUS, project, ignore=shutil.ignore_patterns(
         'node_modules', '.oximut', '.vitest', '.stryker-tmp*'))
     (project / 'node_modules').symlink_to(ROOT / 'node_modules', target_is_directory=True)
@@ -91,7 +122,7 @@ def prepare(project, manifest):
         'mutate': manifest['mutate'],
         'files': ['src/**/*.ts', 'tests/**/*.ts', 'vitest.config.ts', 'package.json'],
         'testRunner': 'vitest', 'vitest': {'configFile': 'vitest.config.ts', 'related': False},
-        'coverageAnalysis': 'perTest', 'concurrency': 1, 'checkers': [],
+        'coverageAnalysis': 'perTest', 'concurrency': concurrency, 'checkers': [],
         'mutator': {'excludedMutations': [
             'EqualityOperator', 'AssignmentOperator', 'CallExpression', 'ArrayDeclaration',
             'ArrowFunction', 'BlockStatement', 'ConditionalExpression', 'LogicalOperator',
@@ -114,7 +145,7 @@ def command(tool, args, project, report, manifest):
         return ['node', str(ROOT / 'node_modules/@stryker-mutator/core/bin/stryker.js'),
                 'run', 'stryker.config.mjs']
     result = [str(args.binary), '--root', str(project), '--config', 'vitest.config.ts',
-              '--report', str(report), '--workers', '1', '--execution', 'persistent',
+              '--report', str(report), '--workers', str(getattr(args, 'concurrency', 1)), '--execution', 'persistent',
               '--test-selection', '--no-cache', '--order-seed', '100']
     if args.adapter is not None:
         result.extend(['--adapter', str(args.adapter)])
@@ -204,6 +235,8 @@ def mode_args_error(values):
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--oximut-arg', action='append', default=[])
+    parser.add_argument('--concurrency', type=concurrency_arg, default=1,
+                        help='Matched parallelism: Stryker concurrency and Oximut --workers (1-1024, at most the usable CPUs)')
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--binary', type=Path, default=ROOT / 'target/release/oximut')
     parser.add_argument('--adapter', type=Path,
@@ -243,6 +276,10 @@ def main(argv=None):
             parser.error('--adapter must be inside --adapter-source-dir')
     if 'oximut' in args.tools and args.adapter_source_dir is None:
         parser.error('provide --adapter or --adapter-source-dir to record matching adapter provenance')
+    try:
+        require_matched_concurrency(args.concurrency)
+    except ValueError as error:
+        parser.error(str(error))
     output = args.output.resolve()
     output.mkdir(parents=True, exist_ok=False)
     (output / '.gitignore').write_text('*/project/\n')
@@ -250,10 +287,11 @@ def main(argv=None):
     verify_inputs(CORPUS, manifest)
     meta = measurement.metadata()
     if (meta['versions']['node'] != 'v26.3.1' or meta['versions']['vitest'] != '4.1.12'
-            or meta['versions']['@stryker-mutator/core'] != '10.0.0'
-            or meta['versions']['@stryker-mutator/vitest-runner'] != '10.0.0'):
+            or meta['versions']['@stryker-mutator/core'] != '10.1.1'
+            or meta['versions']['@stryker-mutator/vitest-runner'] != '10.1.1'):
         raise ValueError('pinned Node/Vitest/Stryker toolchain required')
     meta.update(execution_inputs=execution_inputs(args), workload=manifest, diagnostic_unrestricted=args.diagnostic_unrestricted,
+                concurrency=args.concurrency,
                 binary_sha256=measurement.file_hash(args.binary) if args.binary.exists() else None,
                 harness_sha256={str(path.relative_to(ROOT)): measurement.file_hash(path)
                                 for path in [Path(__file__), Path(m6.__file__), Path(measurement.__file__),
@@ -272,7 +310,7 @@ def main(argv=None):
                 directory = output / f'{index:02d}-{tool}'
                 directory.mkdir()
                 project, report = directory / 'project', directory / 'report.json'
-                prepare(project, manifest)
+                prepare(project, manifest, getattr(args, 'concurrency', 1))
                 m6.write_json(directory / 'project-inputs.json', {
                     'sha256': {str(path.relative_to(project)): measurement.file_hash(path)
                                for path in project.rglob('*') if path.is_file()
@@ -297,6 +335,10 @@ def main(argv=None):
                     if execution_inputs(args) != inputs:
                         raise ValueError('binary or adapter sources changed during measured command')
                     row.update(validate(tool, report, project, row, manifest))
+                    if tool == 'oximut':
+                        unmatched = parallelism_errors(row, getattr(args, 'concurrency', 1))
+                        if unmatched:
+                            raise ValueError('; '.join(unmatched))
                     row['success'] = True
                 except (OSError, ValueError, TypeError, KeyError) as error:
                     row.update(success=False, validation_error=str(error))
@@ -320,7 +362,7 @@ def main(argv=None):
                        'raw_medians': {metric: (statistics.median(row[metric] for row in measured)
                                                if measured else None)
                                        for metric in METRICS}})
-    m6.write_json(output / 'summary.json', {'correctness_gate': passed, 'groups': groups,
+    m6.write_json(output / 'summary.json', {'correctness_gate': passed, 'groups': groups, 'concurrency': args.concurrency,
                                           'ratios': ratios, 'raw_measurement_count': len(rows)})
     print(f'Exact comparison gate: {passed}; {output}', flush=True)
     return 0 if passed else 1

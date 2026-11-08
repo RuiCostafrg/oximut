@@ -20,7 +20,7 @@ registration state and the real import graph. Upstream has no async tests.
 ## Reproduce
 
 Install from the root lockfile before timing. Required versions are Node 26.3.1,
-Vitest 4.1.12, and Stryker core/vitest-runner 10.0.0. The runner checks them.
+Vitest 4.1.12, and Stryker core/vitest-runner 10.1.1. The runner checks them.
 Use a release Oximut binary and the adapter from the same candidate checkout.
 `--adapter` explicitly overrides the runner entrypoint; its parent package is
 hashed recursively. Without an override, provide `--adapter-source-dir` for the
@@ -66,7 +66,8 @@ the overall cross-tool gate remains false because there is no comparison.
 
 Persistent execution defaults to fresh forks per test file. `--isolation fresh-thread` opts into fresh Vitest worker threads; see [m2.md](m2.md) for semantics. The benchmark measures the default unless its dispatch input passes extra arguments.
 
-Each run uses a new private copy, forks, one worker, file isolation and disabled
+Each run uses a new private copy, forks, `--concurrency` workers (one by default;
+Stryker gets the same value, and it must not exceed the usable CPUs), file isolation and disabled
 outcome caches. Stryker `vitest.related: false` keeps all upstream tests in its
 baseline. Both tools can conservatively select covered tests for mutants.
 No test assertion, parser complexity budget, isolation setting or cache validation
@@ -145,9 +146,8 @@ the parent requested a build hold.
 
 `benchmarks/compare_candidates.py` runs one warmup pair and five measured pairs
 by default. Build both binaries **before** invoking it. The baseline is pinned to
-`4a6993b564758d15d976cd0998ba490fbf64e1e1`, which has the mutation-family filter
-and predates the allocation/invalidation optimization. The candidate includes the
-optimization under evaluation; pass its full commit SHA. Both use the same
+`78958ba492a2137b6702f4bb526ad57308d363d9` (main after #50; `--before-commit` overrides
+it). The candidate includes the change under evaluation; pass its full commit SHA. Both use the same
 arithmetic/boolean-literal declaration (the five-file scope has no Boolean
 literals), the same 41 available source files and all 102 upstream tests.
 
