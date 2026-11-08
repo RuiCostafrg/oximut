@@ -286,7 +286,7 @@ def main(argv=None):
     manifest = measurement.read_json(CORPUS / 'workload.json')
     verify_inputs(CORPUS, manifest)
     meta = measurement.metadata()
-    if (meta['versions']['node'] != 'v26.3.1' or meta['versions']['vitest'] != '4.1.12'
+    if (meta['versions']['node'] != 'v26.3.1' or meta['versions']['vitest'] != '5.1.0'
             or meta['versions']['@stryker-mutator/core'] != '10.1.1'
             or meta['versions']['@stryker-mutator/vitest-runner'] != '10.1.1'):
         raise ValueError('pinned Node/Vitest/Stryker toolchain required')

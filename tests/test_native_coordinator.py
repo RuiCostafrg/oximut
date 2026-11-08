@@ -188,12 +188,31 @@ class NativeCoordinator(unittest.TestCase):
     def controllers(self, events):
         return {event['pid'] for event in events if event['event'] == 'start'}
 
+    def require_two_workers(self):
+        """Spares only start with at least two admitted workers."""
+        cpus = len(os.sched_getaffinity(0))
+        try:
+            quota, period = Path('/sys/fs/cgroup/cpu.max').read_text().split()
+            if quota != 'max':
+                cpus = min(cpus, max(1, int(quota) // int(period)))
+        except (OSError, ValueError):
+            pass
+        if cpus < 2:
+            self.skipTest('needs two usable CPUs for a spare controller')
+
     def assert_reaped(self, events):
         for pid in self.controllers(events):
             self.assertFalse(alive(pid), f'controller {pid} survived')
 
+    def require_spare_capacity(self, report):
+        usable = len(os.sched_getaffinity(0)) if hasattr(os, 'sched_getaffinity') else (os.cpu_count() or 1)
+        if usable < 2 or report['resources']['effectiveWorkers'] < 2:
+            self.skipTest('spare warming requires at least two usable CPUs and effective workers')
+
     def test_nonblocking_warm_preserves_baseline_capacity_and_reuses_slot(self):
+        self.require_two_workers()
         result, report, events = self.run_cli('nonblocking', extra_args=('--workers', '2'), full=True)
+        self.require_spare_capacity(report)
         self.assertTrue(report['summary']['complete'], result.stdout + result.stderr)
         names = [e['event'] for e in events]
         self.assertIn('warm-ready', names)
@@ -209,10 +228,12 @@ class NativeCoordinator(unittest.TestCase):
         self.assert_reaped(events)
 
     def test_ending_and_failing_with_warm_in_flight_cleans_up(self):
+        self.require_two_workers()
         for mode in ('nonblocking-end', 'nonblocking-fail'):
             with self.subTest(mode=mode):
                 result, report, events = self.run_cli(
                     mode, extra_args=('--workers', '2'), full=True)
+                self.require_spare_capacity(report)
                 self.assertEqual(report['baseline']['outcome'],
                                  'failed' if mode.endswith('fail') else 'passed', result.stderr)
                 self.assertEqual(report['summary']['complete'], mode == 'nonblocking-end')
@@ -233,14 +254,18 @@ class NativeCoordinator(unittest.TestCase):
                 self.assert_reaped(events)
 
     def test_parallel_close_signals_all_slots_before_waiting(self):
+        self.require_two_workers()
         result, report, events = self.run_cli('parallel-close', extra_args=('--workers', '2'), full=True)
+        self.require_spare_capacity(report)
         self.assertTrue(report['summary']['complete'], result.stdout + result.stderr)
         names = [e['event'] for e in events]
         self.assertEqual(names[:names.index('close-reply')].count('close'), 2)
         self.assert_reaped(events)
 
     def test_spares_overlap_baseline_and_are_ready_before_mutants(self):
+        self.require_two_workers()
         result, report, events = self.run_cli('warm-order', extra_args=('--workers', '2'), full=True)
+        self.require_spare_capacity(report)
         self.assertTrue(report['summary']['complete'], result.stdout + result.stderr)
         names = [e['event'] for e in events]
         self.assertLess(names.index('warm'), names.index('baseline-end'))
@@ -253,6 +278,7 @@ class NativeCoordinator(unittest.TestCase):
         self.assert_reaped(events)
 
     def test_failed_warm_and_spare_start_fall_back_without_leaks(self):
+        self.require_two_workers()
         normal, expected, _ = self.run_cli('normal', extra_args=('--workers', '2'), full=True)
         self.assertTrue(expected['summary']['complete'], normal.stdout)
         for mode in ('warm-fail', 'warm-start-fail'):
@@ -282,6 +308,7 @@ class NativeCoordinator(unittest.TestCase):
             self.assert_reaped(events)
 
     def test_baseline_failure_cleans_warm_spares(self):
+        self.require_two_workers()
         result, report, events = self.run_cli('baseline-fail-warm', extra_args=('--workers', '2'), full=True)
         self.assertEqual(report['baseline']['outcome'], 'failed', result.stderr)
         self.assertTrue(any(e['event'] == 'warm' for e in events))

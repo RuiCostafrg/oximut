@@ -77,7 +77,7 @@ The startup-qualified profile capture and the code identify the costs:
 Stryker, by contrast: one instrumented dry run (no uninstrumented oracle),
 `pool: 'threads'` overriding the project's `forks`, mutants switched at runtime
 through a global, and `bail: 1`. Because the project sets `isolate: true`, Vitest
-4.1.12's pool stops each runner after its test file and never returns it to the
+5.1.0's pool stops each runner after its test file and never returns it to the
 shared-runner list, so every test file still gets a fresh worker *thread*.
 
 ## Honest reading of the proposed architecture

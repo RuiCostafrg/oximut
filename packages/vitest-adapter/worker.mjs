@@ -52,7 +52,7 @@ function coveragePayload(map) {
 async function command(name, args) {
   if (name === 'initialize') {
     if (vitest) throw new Error('Already initialized');
-    if (vitestVersion !== '4.1.12') throw new Error(`Unsupported Vitest ${vitestVersion}; M0 requires 4.1.12`);
+    if (vitestVersion !== '5.1.0') throw new Error(`Unsupported Vitest ${vitestVersion}; M0 requires 5.1.0`);
     root = resolve(args.root);
     const reporter = {
       onCoverage(map) { coverage = coveragePayload(map); },
@@ -66,6 +66,8 @@ async function command(name, args) {
       maxWorkers: 1,
       fileParallelism: false,
       isolate: true,
+      // Mutation transforms vary without changing source bytes; disk cache keys do not.
+      fsModuleCache: false,
       includeTaskLocation: true,
       reporters: [reporter],
       coverage: {

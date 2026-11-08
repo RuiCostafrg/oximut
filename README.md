@@ -59,9 +59,9 @@ are for matched tool comparisons and scoped analysis, not performance-target gam
 
 Use Linux, Node **26.3.1**, npm **11.16.0**, Python **3.13**, and Rust **1.96.0**.
 Oxc is pinned to **0.152.0**, compatible with the pinned Rust toolchain. The
-JavaScript lockfile pins Vitest/coverage-v8 **4.1.12** and Stryker **10.1.1**.
-Historical M0/M2 benchmark results used Vitest **4.1.10**; the security patch
-upgrade does not update those recorded measurements.
+JavaScript lockfile pins Vitest/coverage-v8 **5.1.0** and Stryker **10.1.1**.
+Historical M0/M2 benchmark results used Vitest **4.1.10**; this migration
+does not update recorded measurements. See the [Vitest 5 audit](docs/vitest-5-audit.md).
 
 ```sh
 npm ci

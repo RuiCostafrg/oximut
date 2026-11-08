@@ -20,7 +20,7 @@ registration state and the real import graph. Upstream has no async tests.
 ## Reproduce
 
 Install from the root lockfile before timing. Required versions are Node 26.3.1,
-Vitest 4.1.12, and Stryker core/vitest-runner 10.1.1. The runner checks them.
+Vitest 5.1.0, and Stryker core/vitest-runner 10.1.1. The runner checks them.
 Use a release Oximut binary and the adapter from the same candidate checkout.
 `--adapter` explicitly overrides the runner entrypoint; its parent package is
 hashed recursively. Without an override, provide `--adapter-source-dir` for the
@@ -146,8 +146,12 @@ the parent requested a build hold.
 
 `benchmarks/compare_candidates.py` runs one warmup pair and five measured pairs
 by default. Build both binaries **before** invoking it. The baseline is pinned to
-`412b705ae65c13b2633ce09a70da85808596f3b1` (main after #53; `--before-commit` overrides
-it). The candidate includes the change under evaluation; pass its full commit SHA. Both use the same
+`34acb9fee79a9e010f956b1326c52dc537aa1a64` (main after #54; `--before-commit` overrides
+it). Main's unchanged adapter rejects Vitest 5.1.0 during initialization, so
+using this branch's node_modules for both candidates cannot produce a qualified
+paired before/after campaign. This pin records the requested control, not a
+claim that it works on Vitest 5; the harness must keep rejecting that run.
+The candidate includes the change under evaluation; pass its full commit SHA. Both use the same
 arithmetic/boolean-literal declaration (the five-file scope has no Boolean
 literals), the same 41 available source files and all 102 upstream tests.
 

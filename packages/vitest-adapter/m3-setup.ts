@@ -1,6 +1,6 @@
 import { appendFileSync } from 'node:fs';
 import { threadId } from 'node:worker_threads';
-import { getCurrentTest } from '@vitest/runner';
+import { TestRunner } from 'vitest';
 
 // Installed before test module imports; user setup files require full fallback.
 // Sync, deduplicated records include hooks and survive fresh-fork termination.
@@ -14,7 +14,7 @@ let overflow = false;
 Object.defineProperty(globalThis, '__oximut_m3_hit__', {
   configurable: true,
   value(mutantId: string) {
-    const test = getCurrentTest();
+    const test = TestRunner.getCurrentTest();
     const record = JSON.stringify({ mutantId, testId: test?.id ?? null });
     if (seen.has(record) || overflow) return;
     if (seen.size >= 20000) {

@@ -16,9 +16,13 @@ not evidence that every project using it is supported.
 | Python | `3.13` in the pinned feasibility environment | Linux process supervision requires Python 3 and the standard library. The recorded supervisor executable is the Termux host Python 3.13.13. Other Python versions are not separately validated. |
 | Rust / Cargo | `1.96.0`, minimal toolchain with `clippy` and `rustfmt` | Exact toolchain in `rust-toolchain.toml`; workspace declares Rust 1.96.0. |
 | Oxc crates | `0.152.0` | Exact versions pinned in `Cargo.toml` and `Cargo.lock`. |
-| Vitest | `4.1.12` exactly | Both adapter entrypoints reject any other version at initialization. The lockfile pins this version. Historical M0/M2 lifecycle and benchmark records used `4.1.10`; those results are not current-version support evidence. |
-| `@vitest/coverage-v8` | `4.1.12` | Lockfile-pinned with Vitest; used for M3 attribution. |
+| Vitest | `5.1.0` exactly | All adapter entrypoints reject any other version at initialization. The lockfile pins this version. Historical M0/M2 lifecycle and benchmark records used `4.1.10`; those results are not current-version support evidence. |
+| `@vitest/coverage-v8` | `5.1.0` | Lockfile-pinned with Vitest; used by the M0 lifecycle coverage oracle. M3 uses conservative runtime probes. |
 | Stryker (benchmark dependency only) | Core and Vitest runner `10.1.1` | Pinned for the baseline benchmark harness; not required to run Oximut. |
+
+The [Vitest 5 audit](vitest-5-audit.md) records internal contracts and migration fixes.
+The adapter disables filesystem module caching because transformed mutations do
+not change source bytes on disk.
 
 Reproduce the current pinned setup and project checks with:
 
