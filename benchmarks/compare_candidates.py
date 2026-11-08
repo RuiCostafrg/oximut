@@ -172,21 +172,6 @@ def phase_errors(row, manifest):
     return errors
 
 
-def parallelism_errors(row, concurrency):
-    """A run that ended up with fewer workers than Stryker is not a matched comparison."""
-    if concurrency == 1:
-        return []
-    resources = row.get('resources')
-    if not isinstance(resources, dict):
-        return ['missing resources for matched parallelism']
-    errors = []
-    if resources.get('effectiveWorkers') != concurrency:
-        errors.append(f"ran {resources.get('effectiveWorkers')} workers, not the matched {concurrency}")
-    if resources.get('admissionPauses') != 0:
-        errors.append(f"memory pressure paused admission {resources.get('admissionPauses')} times")
-    return errors
-
-
 def plan(warmups, repetitions):
     for index in range(warmups + repetitions):
         for variant in VARIANTS if index % 2 == 0 else reversed(VARIANTS):
@@ -242,7 +227,7 @@ def evaluate(rows, warmups, repetitions, provenance, failures=(), *,
                 if require_build_integrity and variant == 'after' and row['tool'] == 'oximut':
                     errors.extend(f'{label}: {error}' for error in phase_errors(row, manifest))
                 if row['tool'] == 'oximut':
-                    errors.extend(f'{label}: {error}' for error in parallelism_errors(row, concurrency))
+                    errors.extend(f'{label}: {error}' for error in workload.parallelism_errors(row, concurrency))
                 if row['tool'] != 'vitest':
                     if reference is None:
                         reference = row

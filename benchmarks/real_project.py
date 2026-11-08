@@ -98,6 +98,21 @@ def require_matched_concurrency(concurrency, available=None):
                          'Oximut would cap its workers while Stryker would not')
 
 
+def parallelism_errors(row, concurrency):
+    """A run that ended up with fewer workers than Stryker is not a matched comparison."""
+    if concurrency == 1:
+        return []
+    resources = row.get('resources')
+    if not isinstance(resources, dict):
+        return ['missing resources for matched parallelism']
+    errors = []
+    if resources.get('effectiveWorkers') != concurrency:
+        errors.append(f"ran {resources.get('effectiveWorkers')} workers, not the matched {concurrency}")
+    if resources.get('admissionPauses') != 0:
+        errors.append(f"memory pressure paused admission {resources.get('admissionPauses')} times")
+    return errors
+
+
 def prepare(project, manifest, concurrency=1):
     shutil.copytree(CORPUS, project, ignore=shutil.ignore_patterns(
         'node_modules', '.oximut', '.vitest', '.stryker-tmp*'))
@@ -320,6 +335,10 @@ def main(argv=None):
                     if execution_inputs(args) != inputs:
                         raise ValueError('binary or adapter sources changed during measured command')
                     row.update(validate(tool, report, project, row, manifest))
+                    if tool == 'oximut':
+                        unmatched = parallelism_errors(row, getattr(args, 'concurrency', 1))
+                        if unmatched:
+                            raise ValueError('; '.join(unmatched))
                     row['success'] = True
                 except (OSError, ValueError, TypeError, KeyError) as error:
                     row.update(success=False, validation_error=str(error))

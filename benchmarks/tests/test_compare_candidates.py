@@ -577,13 +577,13 @@ class SubcampaignCleanupTests(unittest.TestCase):
 class MatchedParallelismTests(unittest.TestCase):
     def test_throttled_or_capped_runs_are_not_matched(self):
         full = {'resources': {'effectiveWorkers': 4, 'admissionPauses': 0}}
-        self.assertEqual(campaign.parallelism_errors(full, 4), [])
-        self.assertEqual(campaign.parallelism_errors({}, 1), [])
+        self.assertEqual(campaign.workload.parallelism_errors(full, 4), [])
+        self.assertEqual(campaign.workload.parallelism_errors({}, 1), [])
         capped = {'resources': {'effectiveWorkers': 2, 'admissionPauses': 0}}
-        self.assertIn('not the matched 4', campaign.parallelism_errors(capped, 4)[0])
+        self.assertIn('not the matched 4', campaign.workload.parallelism_errors(capped, 4)[0])
         paused = {'resources': {'effectiveWorkers': 4, 'admissionPauses': 3}}
-        self.assertIn('paused admission', campaign.parallelism_errors(paused, 4)[0])
-        self.assertTrue(campaign.parallelism_errors({}, 2))
+        self.assertIn('paused admission', campaign.workload.parallelism_errors(paused, 4)[0])
+        self.assertTrue(campaign.workload.parallelism_errors({}, 2))
 
 
 if __name__ == '__main__':

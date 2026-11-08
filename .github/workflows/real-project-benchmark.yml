@@ -77,7 +77,7 @@ jobs:
           MATCHED_CONCURRENCY: ${{ inputs.concurrency || '1' }}
         run: |
           cpus=$(nproc)
-          if ! [[ "$MATCHED_CONCURRENCY" =~ ^[0-9]+$ ]] ||
+          if ! [[ "$MATCHED_CONCURRENCY" =~ ^[0-9]{1,4}$ ]] ||
             (( 10#$MATCHED_CONCURRENCY < 1 || 10#$MATCHED_CONCURRENCY > 1024 || 10#$MATCHED_CONCURRENCY > cpus )); then
             echo "::error::concurrency '$MATCHED_CONCURRENCY' must be an integer from 1 to 1024 and at most the $cpus usable CPUs"
             exit 1
