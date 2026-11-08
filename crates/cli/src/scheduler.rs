@@ -306,6 +306,13 @@ impl<'a> Scheduler<'a> {
                 }
                 continue;
             }
+            // Counter samples never refresh slot costs; admit only on exact evidence.
+            if self.budget.last_sample_was_counter {
+                self.sample(true);
+                if self.budget.exhaustion.is_some() {
+                    continue;
+                }
+            }
             let active_pids: Vec<_> = self
                 .slots
                 .iter()

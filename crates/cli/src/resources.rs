@@ -650,6 +650,10 @@ pub struct Budget {
     /// Host MemAvailable source; injectable so tests don't depend on host memory.
     #[serde(skip)]
     available_reader: fn() -> Option<u64>,
+    /// The latest sample was a counter hint: slot costs may be stale, so admission
+    /// must first take an exact sample.
+    #[serde(skip)]
+    pub last_sample_was_counter: bool,
     /// Samples discovered by walking the owned tree's `children` links, and
     /// by broad `/proc` enumeration (kernels without those links).
     pub tree_discoveries: u64,
@@ -718,6 +722,7 @@ impl Budget {
             last_exact_counter_total: None,
             last_exact_at: Instant::now(),
             available_reader: || meminfo("MemAvailable"),
+            last_sample_was_counter: false,
             tree_discoveries: 0,
             broad_discoveries: 0,
             exhaustion: None,
@@ -955,11 +960,13 @@ impl Budget {
                         }
                     }
                     self.counter_samples += 1;
+                    self.last_sample_was_counter = true;
                     self.table = Some(table);
                     return Ok(());
                 }
             }
             self.exact_samples += 1;
+            self.last_sample_was_counter = false;
             self.current = tree_rss(
                 std::process::id(),
                 &table,
@@ -1125,6 +1132,7 @@ mod tests {
             last_exact_counter_total: None,
             last_exact_at: Instant::now(),
             available_reader: || meminfo("MemAvailable"),
+            last_sample_was_counter: false,
             tree_discoveries: 0,
             broad_discoveries: 0,
             exhaustion: None,
@@ -1207,8 +1215,10 @@ mod tests {
         let cli = std::process::id();
         let table = state.table.as_ref().expect("refreshed ownership table");
         assert!(table.start(cli).is_some() && table.start(cli + 1).is_some());
-        // Admission sees fresh host headroom from the accepted counter sample.
+        // Admission sees fresh host headroom from the accepted counter sample,
+        // and must take an exact sample before trusting slot costs.
         assert_eq!(state.host_available, 48 * 1024 * MIB);
+        assert!(state.last_sample_was_counter);
         assert_eq!(state.current, 20 * MIB);
         assert_eq!(state.peak_aggregate_rss_bytes, 20 * MIB);
         assert_eq!(state.measured_worker_peak_bytes, 10 * MIB);
@@ -1221,6 +1231,11 @@ mod tests {
         let report = state.report_snapshot();
         assert_eq!(report["exactSamples"], 1);
         assert_eq!(report["counterSamples"], 1);
+        assert_eq!(counter_sample(&mut state, true, 10 * MIB, 0), (2, 0));
+        assert!(
+            !state.last_sample_was_counter,
+            "a forced exact sample clears the flag"
+        );
     }
 
     #[test]
