@@ -87,6 +87,8 @@ pub struct Request {
     pub config: String,
     pub deadline_ms: u64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub workers: Option<usize>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub pool: Option<String>,
     pub mutation: Option<Mutation>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -457,6 +459,7 @@ mod tests {
             root: "/".into(),
             config: "/c".into(),
             deadline_ms: 10,
+            workers: None,
             pool: None,
             mutation: None,
             collect_coverage: None,

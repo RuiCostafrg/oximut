@@ -1,4 +1,4 @@
-import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { mkdtempSync, readFileSync, readdirSync, rmSync, statSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -10,7 +10,6 @@ const setup = fileURLToPath(new URL('./m3-setup.ts', import.meta.url));
 export class SelectionSupport {
   readonly observed = new Set<string>();
   private directory?: string;
-  private recordFile?: string;
 
   begin(vitest: Vitest, request: Request): void {
     this.close();
@@ -20,8 +19,7 @@ export class SelectionSupport {
     }
     if (!request.collectCoverage) return;
     this.directory = mkdtempSync(join(tmpdir(), 'oximut-m3-'));
-    this.recordFile = join(this.directory, 'hits.jsonl');
-    process.env.OXIMUT_M3_COVERAGE = this.recordFile;
+    process.env.OXIMUT_M3_COVERAGE = this.directory;
     for (const project of vitest.projects) {
       project.config.setupFiles.unshift(setup);
     }
@@ -73,8 +71,13 @@ export class SelectionSupport {
     }
     let ready = 0;
     try {
-      const data = readFileSync(this.recordFile as string);
-      if (data.length > 8 * 1024 * 1024) throw new Error('probe-record-limit');
+      const streams = readdirSync(this.directory as string)
+        .sort()
+        .map((file) => join(this.directory as string, file));
+      // Check the aggregate size before loading any stream into memory.
+      const size = streams.reduce((total, file) => total + statSync(file).size, 0);
+      if (size > 8 * 1024 * 1024) throw new Error('probe-record-limit');
+      const data = Buffer.concat(streams.map((file) => readFileSync(file)));
       for (const line of data.toString('utf8').trim().split('\n')) {
         if (!line) continue;
         const record = JSON.parse(line) as {
@@ -111,7 +114,7 @@ export class SelectionSupport {
     const complete = result.outcome === 'passed' && reasons.size === 0;
     return {
       complete,
-      tests,
+      tests: tests.sort((a, b) => a.id.localeCompare(b.id)),
       hits: [...hits].map(([mutantId, hit]) => ({
         mutantId,
         tests: [...hit.tests].sort(),
@@ -125,6 +128,5 @@ export class SelectionSupport {
     delete process.env.OXIMUT_M3_COVERAGE;
     if (this.directory) rmSync(this.directory, { recursive: true, force: true });
     this.directory = undefined;
-    this.recordFile = undefined;
   }
 }

@@ -261,3 +261,9 @@ test('pool accepts only omitted or threads', () => {
       message: 'Invalid pool',
     });
 });
+
+test('worker limit is a bounded positive integer', () => {
+  for (const workers of [1, 2, 1024]) runtime.validateRequest({ ...baseline, workers });
+  for (const workers of [0, -1, 1.5, 1025, '2', null, Infinity])
+    assert.throws(() => runtime.validateRequest({ ...baseline, workers }), /Invalid workers/);
+});

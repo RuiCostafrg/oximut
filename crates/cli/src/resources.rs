@@ -284,6 +284,8 @@ fn timespec_ns(ts: libc::timespec) -> Option<u64> {
 }
 
 pub const MIB: u64 = 1024 * 1024;
+/// Conservative RSS assumed per baseline fork before any has been measured.
+const UNMEASURED_FORK_BYTES: u64 = 256 * MIB;
 pub const SAMPLE_MS: u64 = 50;
 
 #[derive(Clone, Debug, Serialize)]
@@ -1070,7 +1072,23 @@ impl Budget {
             .saturating_sub(self.active)
             .min(self.memory_capacity(active_pids))
     }
+    /// How many forks one baseline may run at once. Until a worker cost has been
+    /// measured, memory admission has no per-fork figure and would allow the full
+    /// CPU limit, so assume a conservative cost and keep at least one fork.
+    pub fn baseline_fork_limit(&self, capacity: usize, active_pids: &[u32]) -> usize {
+        if self.admission_worker_cost_bytes > 0 {
+            return capacity;
+        }
+        let affordable = self.memory_headroom(active_pids) / UNMEASURED_FORK_BYTES;
+        capacity
+            .min(affordable.min(usize::MAX as u64) as usize)
+            .max(1)
+    }
     fn memory_capacity(&self, active_pids: &[u32]) -> usize {
+        let cost = self.admission_worker_cost_bytes.max(1);
+        (self.memory_headroom(active_pids) / cost).min(usize::MAX as u64) as usize
+    }
+    fn memory_headroom(&self, active_pids: &[u32]) -> u64 {
         let mut available = self
             .budget_bytes
             .saturating_sub(self.current)
@@ -1089,11 +1107,9 @@ impl Budget {
                     .saturating_sub(self.observed_workers.get(pid).copied().unwrap_or(0)),
             )
         });
-        let headroom = available
+        available
             .saturating_sub(self.reserve_bytes)
-            .saturating_sub(growth);
-        let cost = self.admission_worker_cost_bytes.max(1);
-        (headroom / cost).min(usize::MAX as u64) as usize
+            .saturating_sub(growth)
     }
     pub fn exhausted(&mut self, reason: impl Into<String>) {
         if self.exhaustion.is_none() {
@@ -1236,6 +1252,25 @@ mod tests {
             !state.last_sample_was_counter,
             "a forced exact sample clears the flag"
         );
+    }
+
+    #[test]
+    fn first_baseline_forks_are_capped_by_conservative_memory_estimate() {
+        let mut state = budget();
+        state.budget_bytes = 1024 * MIB;
+        state.host_available = 1024 * MIB;
+        state.reserve_bytes = 0;
+        state.current = 0;
+        state.admission_worker_cost_bytes = 0;
+        // 1 GiB of headroom affords four 256 MiB forks, even if CPUs allow eight.
+        assert_eq!(state.baseline_fork_limit(8, &[]), 4);
+        assert_eq!(state.baseline_fork_limit(2, &[]), 2);
+        // Too little headroom still runs one fork, as serial baselines always did.
+        state.budget_bytes = 100 * MIB;
+        assert_eq!(state.baseline_fork_limit(8, &[]), 1);
+        // Once a cost is measured, normal admission capacity applies unchanged.
+        state.admission_worker_cost_bytes = 10 * MIB;
+        assert_eq!(state.baseline_fork_limit(8, &[]), 8);
     }
 
     #[test]
