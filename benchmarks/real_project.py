@@ -82,6 +82,22 @@ def validate(tool, report_path, project, row, manifest):
     return artifact
 
 
+def concurrency_arg(value):
+    """Accept the range Oximut's --workers accepts, before any campaign starts."""
+    number = int(value)
+    if not 1 <= number <= 1024:
+        raise argparse.ArgumentTypeError('concurrency must be between 1 and 1024')
+    return number
+
+
+def require_matched_concurrency(concurrency, available=None):
+    """Oximut caps workers at usable CPUs and Stryker does not, so refuse to mismatch them."""
+    available = len(os.sched_getaffinity(0)) if available is None else available
+    if concurrency > available:
+        raise ValueError(f'concurrency {concurrency} exceeds {available} usable CPUs; '
+                         'Oximut would cap its workers while Stryker would not')
+
+
 def prepare(project, manifest, concurrency=1):
     shutil.copytree(CORPUS, project, ignore=shutil.ignore_patterns(
         'node_modules', '.oximut', '.vitest', '.stryker-tmp*'))
@@ -204,8 +220,8 @@ def mode_args_error(values):
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--oximut-arg', action='append', default=[])
-    parser.add_argument('--concurrency', type=int, default=1,
-                        help='Matched parallelism: Stryker concurrency and Oximut --workers')
+    parser.add_argument('--concurrency', type=concurrency_arg, default=1,
+                        help='Matched parallelism: Stryker concurrency and Oximut --workers (1-1024, at most the usable CPUs)')
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--binary', type=Path, default=ROOT / 'target/release/oximut')
     parser.add_argument('--adapter', type=Path,
@@ -245,6 +261,7 @@ def main(argv=None):
             parser.error('--adapter must be inside --adapter-source-dir')
     if 'oximut' in args.tools and args.adapter_source_dir is None:
         parser.error('provide --adapter or --adapter-source-dir to record matching adapter provenance')
+    require_matched_concurrency(args.concurrency)
     output = args.output.resolve()
     output.mkdir(parents=True, exist_ok=False)
     (output / '.gitignore').write_text('*/project/\n')

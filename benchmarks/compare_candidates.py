@@ -21,7 +21,7 @@ import m6
 import real_project as workload
 import targets
 
-BASELINE = '4a6993b564758d15d976cd0998ba490fbf64e1e1'
+BASELINE = '78958ba492a2137b6702f4bb526ad57308d363d9'
 METRICS = ('wall_seconds', 'cpu_seconds', 'peak_aggregate_rss_bytes')
 VARIANTS = ('before', 'after')
 # One instrumented baseline validates inactive switching for every switched file
@@ -298,7 +298,7 @@ def main(argv=None):
     signal.signal(signal.SIGTERM, stop_on_sigterm)
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--after-oximut-arg', action='append', default=[])
-    parser.add_argument('--concurrency', type=int, default=1,
+    parser.add_argument('--concurrency', type=workload.concurrency_arg, default=1,
                         help='Matched parallelism for Stryker and both Oximut candidates')
     parser.add_argument('--output', type=Path, required=True)
     for variant in VARIANTS:

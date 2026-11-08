@@ -1,4 +1,5 @@
 """Real workload gates must reject changed corpora and unequal full experiments."""
+import argparse
 import copy
 import json
 from pathlib import Path
@@ -256,6 +257,20 @@ class ArgumentValidationTests(unittest.TestCase):
 
     def test_repeated_tool_is_rejected(self):
         self.assertIn('--tools', self.rejected('--tools', 'vitest', 'vitest'))
+
+
+
+class MatchedConcurrencyTests(unittest.TestCase):
+    def test_concurrency_range_matches_oximut_workers(self):
+        for value in ('0', '-1', '1025'):
+            with self.assertRaises(argparse.ArgumentTypeError):
+                benchmark.concurrency_arg(value)
+        self.assertEqual(benchmark.concurrency_arg('1024'), 1024)
+
+    def test_concurrency_above_usable_cpus_is_refused(self):
+        benchmark.require_matched_concurrency(4, available=4)
+        with self.assertRaisesRegex(ValueError, 'usable CPUs'):
+            benchmark.require_matched_concurrency(5, available=4)
 
 
 if __name__ == '__main__':

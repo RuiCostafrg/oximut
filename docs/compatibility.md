@@ -18,7 +18,7 @@ not evidence that every project using it is supported.
 | Oxc crates | `0.152.0` | Exact versions pinned in `Cargo.toml` and `Cargo.lock`. |
 | Vitest | `4.1.12` exactly | Both adapter entrypoints reject any other version at initialization. The lockfile pins this version. Historical M0/M2 lifecycle and benchmark records used `4.1.10`; those results are not current-version support evidence. |
 | `@vitest/coverage-v8` | `4.1.12` | Lockfile-pinned with Vitest; used for M3 attribution. |
-| Stryker (benchmark dependency only) | Core and Vitest runner `10.0.0` | Pinned for the baseline benchmark harness; not required to run Oximut. |
+| Stryker (benchmark dependency only) | Core and Vitest runner `10.1.1` | Pinned for the baseline benchmark harness; not required to run Oximut. |
 
 Reproduce the current pinned setup and project checks with:
 

@@ -66,7 +66,8 @@ the overall cross-tool gate remains false because there is no comparison.
 
 Persistent execution defaults to fresh forks per test file. `--isolation fresh-thread` opts into fresh Vitest worker threads; see [m2.md](m2.md) for semantics. The benchmark measures the default unless its dispatch input passes extra arguments.
 
-Each run uses a new private copy, forks, one worker, file isolation and disabled
+Each run uses a new private copy, forks, `--concurrency` workers (one by default;
+Stryker gets the same value, and it must not exceed the usable CPUs), file isolation and disabled
 outcome caches. Stryker `vitest.related: false` keeps all upstream tests in its
 baseline. Both tools can conservatively select covered tests for mutants.
 No test assertion, parser complexity budget, isolation setting or cache validation
