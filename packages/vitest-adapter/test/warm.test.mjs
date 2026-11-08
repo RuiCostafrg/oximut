@@ -16,7 +16,7 @@ test('warm transforms resident and test graphs without evaluating user modules',
   await writeFile(join(root, 'sample.test.ts'), `import { test, expect } from 'vitest'; import { value } from './source'; import { appendFileSync } from 'node:fs'; appendFileSync(${JSON.stringify(observed)}, process.pid + '\\n'); test('resident', () => expect(value).toBe(true));`);
   const child = fork(join(repository, 'packages/vitest-adapter/m2-worker.ts'), [], { execArgv: [], stdio: ['ignore', 'ignore', 'pipe', 'ipc'] });
   t.after(async () => {
-    if (child.exitCode === null) { const exited = once(child, 'exit'); child.kill('SIGKILL'); await exited; }
+    if (child.exitCode === null && child.signalCode === null) { const exited = once(child, 'exit'); child.kill('SIGKILL'); await exited; }
     await rm(root, { recursive: true, force: true });
   });
   let id = 0;
@@ -40,6 +40,7 @@ test('warm transforms resident and test graphs without evaluating user modules',
   assert.equal(result.outcome, 'passed', JSON.stringify(result));
   const lines = (await readFile(observed, 'utf8')).trim().split('\n');
   assert.equal(lines[0], 'dependency');
+  assert.match(lines[1] ?? '', /^\d+$/);
   assert.notEqual(Number(lines[1]), child.pid);
   await command('close', {});
 });

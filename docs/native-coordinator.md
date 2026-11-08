@@ -229,26 +229,11 @@ abort on exhaustion. The original and instrumented baseline oracles, inventories
 deadline, worker termination and post-job descendant cleanup gates are unchanged.
 Mutant jobs retain one test worker per controller.
 
-## Release or follow-up
+## Spare controller warm-up
 
-If the qualified campaign meets all three targets with every gate passing,
-release through the private Homebrew tap, mirroring ts-crap's tap and release
-distribution and reusing the R1–R3 source-release and provenance tooling.
-Otherwise a dedicated follow-up thread explores out-of-the-box reductions, driven
-by profiles of where time and memory actually go.
-
-
-For persistent baselines, the scheduler forwards a `workers` limit capped by
-both effective CPU concurrency and the current memory admission capacity (and
-protocol maximum 1024). Serial dispatch still admits only one baseline job;
-its internal fresh workers consume that admitted capacity. Aggregate RSS and
-host/cgroup pressure sampling still cover the entire slot process tree and
-abort on exhaustion. The original and instrumented baseline oracles, inventories,
-deadline, worker termination and post-job descendant cleanup gates are unchanged.
-Mutant jobs retain one test worker per controller.
-
-Persistent runs with more than one admitted worker prepare spare slots during
-original baseline dispatch. Resident groups are planned before that dispatch;
+Persistent runs with more than one admitted worker and a nonempty initial mutant
+inventory prepare spare slots during original baseline dispatch. Baseline-only
+runs prepare no spares. Resident groups are planned before that dispatch;
 spares initialize with the first group's instrumented modules, then receive a
 private `warm` command. The command globs test specifications and recursively
 requests Vite SSR transforms of resident modules, test files and their local
@@ -269,8 +254,17 @@ a warming slot never starts a duplicate controller.
 Refused admission skips remaining spares. A warm or spare initialization failure
 is diagnostic only: its slot is aborted and may start lazily for a mutant. Global
 exhaustion or interruption still stops every slot and fails closed. Shutdown
-writes stop to all slots before polling their exits together, with an independent
-seven-second deadline per slot, unchanged exit/ownership checks and final global
-subreaper cleanup. Warm completions during shutdown retain their diagnostics.
+writes stop to all normally closing slots before polling their exits together,
+with an independent seven-second deadline per slot, unchanged exit/ownership checks
+and final global subreaper cleanup. In-flight warms are abandoned immediately
+through verified abort; completed warms close normally and retain their diagnostics.
 Single-worker runs and relay adapters send no warm command. Warm acknowledgements
 carry zero tests and never enter baseline or mutant results.
+
+## Release or follow-up
+
+If the qualified campaign meets all three targets with every gate passing,
+release through the private Homebrew tap, mirroring ts-crap's tap and release
+distribution and reusing the R1–R3 source-release and provenance tooling.
+Otherwise a dedicated follow-up thread explores out-of-the-box reductions, driven
+by profiles of where time and memory actually go.

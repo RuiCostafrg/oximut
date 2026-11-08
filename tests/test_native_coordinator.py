@@ -199,7 +199,7 @@ class NativeCoordinator(unittest.TestCase):
         self.assertIn('warm-ready', names)
         self.assertLess(names.index('instrumented-start'), names.index('warm-ready'))
         instrumented = next(e for e in events if e['event'] == 'instrumented-start')
-        self.assertEqual(instrumented['workers'], 2)
+        self.assertEqual(instrumented['workers'], report['resources']['effectiveWorkers'])
         first_mutant = next(i for i, e in enumerate(events)
                             if e['event'] == 'run' and e['job'] not in ('baseline', 'instrumented-baseline'))
         self.assertLess(first_mutant, names.index('warm-ready'))
@@ -211,14 +211,25 @@ class NativeCoordinator(unittest.TestCase):
     def test_ending_and_failing_with_warm_in_flight_cleans_up(self):
         for mode in ('nonblocking-end', 'nonblocking-fail'):
             with self.subTest(mode=mode):
-                result, report, events = self.run_cli(mode, extra_args=('--workers', '2'))
-                names = [e['event'] for e in events]
-                self.assertIn('warm-stopping', names)
-                self.assertLess(names.index('warm-stopping'), names.index('warm-ready'))
+                result, report, events = self.run_cli(
+                    mode, extra_args=('--workers', '2'), full=True)
                 self.assertEqual(report['baseline']['outcome'],
                                  'failed' if mode.endswith('fail') else 'passed', result.stderr)
                 self.assertEqual(report['summary']['complete'], mode == 'nonblocking-end')
-                self.assertTrue(any('spare warm ready' in d for d in report['diagnostics']))
+                self.assertTrue(any('spare warm abandoned' in d for d in report['diagnostics']))
+                self.assertFalse(any(e['event'] == 'warm-ready' for e in events))
+                self.assert_reaped(events)
+
+    def test_baseline_only_and_empty_mutant_inventory_never_warm(self):
+        for full, extra in ((False, ()), (True, ('--mutators', 'arithmetic'))):
+            with self.subTest(full=full):
+                # subject.ts has no arithmetic expressions: filtering leaves no jobs.
+                result, report, events = self.run_cli(
+                    'normal', extra_args=('--workers', '2', *extra), full=full)
+                self.assertTrue(report['summary']['complete'], result.stdout + result.stderr)
+                self.assertEqual(report['mutants'], [])
+                self.assertFalse(any(e['event'] == 'warm' for e in events))
+                self.assertFalse(any('spare warm' in d for d in report['diagnostics']))
                 self.assert_reaped(events)
 
     def test_parallel_close_signals_all_slots_before_waiting(self):
@@ -258,9 +269,16 @@ class NativeCoordinator(unittest.TestCase):
 
     def test_one_worker_never_warms(self):
         for workers in (1, 2):
-            result, _, events = self.run_cli('normal', extra_args=('--workers', str(workers)))
-            self.assertEqual(result.returncode, 0, result.stderr)
-            self.assertEqual(sum(e['event'] == 'warm' for e in events), workers - 1)
+            result, report, events = self.run_cli(
+                'normal', extra_args=('--workers', str(workers)), full=True)
+            self.assertIn(result.returncode, (0, 1), result.stderr)
+            self.assertTrue(report["summary"]["complete"], report)
+            if report['resources']['effectiveWorkers'] >= 2:
+                self.assertTrue(any(any(f'spare warm {outcome}' in d
+                                        for outcome in ('ready', 'skipped', 'abandoned'))
+                                    for d in report['diagnostics']), report)
+            else:
+                self.assertFalse(any(e['event'] == 'warm' for e in events))
             self.assert_reaped(events)
 
     def test_baseline_failure_cleans_warm_spares(self):

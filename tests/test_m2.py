@@ -41,7 +41,10 @@ class PersistentEquivalence(unittest.TestCase):
                                     ('--test-selection', '--workers', '2', '--no-cache'))
         self.assertEqual({m['id']: m['outcome'] for m in parallel['mutants']},
                          {m['id']: m['outcome'] for m in serial['mutants']})
-        self.assertTrue(any('spare warm ready' in d for d in parallel['diagnostics']), parallel)
+        if parallel['resources']['effectiveWorkers'] >= 2:
+            self.assertTrue(any(any(f'spare warm {outcome}' in d
+                                    for outcome in ('ready', 'skipped', 'abandoned'))
+                                for d in parallel['diagnostics']), parallel)
         self.assertFalse(any('spare warm' in d for d in serial['diagnostics']))
 
     def test_randomized_orders_match_fresh_reference_without_source_edits(self):

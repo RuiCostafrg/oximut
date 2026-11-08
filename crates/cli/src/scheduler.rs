@@ -205,6 +205,41 @@ impl<'a> Scheduler<'a> {
                 continue;
             };
             worker.snapshot();
+            if worker
+                .busy
+                .as_ref()
+                .is_some_and(|(index, _, _)| *index == WARM_JOB)
+            {
+                if let Some(result) = worker.ready() {
+                    let (_, request, _) = worker.busy.take().unwrap();
+                    worker.sequence += 1;
+                    let response = result.unwrap_or_else(|error| infrastructure(&request, error));
+                    let failed = response.outcome != TestOutcome::Skipped;
+                    self.diagnostics.push(format!(
+                        "spare warm {}: {}",
+                        if failed { "failed" } else { "ready" },
+                        response.errors.join("; ")
+                    ));
+                    if failed {
+                        worker.abort();
+                        continue;
+                    }
+                } else {
+                    self.diagnostics
+                        .push("spare warm abandoned at shutdown".into());
+                    worker.abort();
+                    if worker
+                        .owned
+                        .iter()
+                        .any(|(&pid, &start)| still_owned(pid, start))
+                    {
+                        self.cleanup_ok = false;
+                        self.diagnostics
+                            .push("scheduler shutdown left owned descendants".into());
+                    }
+                    continue;
+                }
+            }
             if let Err(error) = fs::write(worker.directory.path().join("stop"), b"") {
                 self.cleanup_ok = false;
                 self.diagnostics
@@ -226,28 +261,6 @@ impl<'a> Scheduler<'a> {
             });
             stopping.retain_mut(|(worker, deadline)| {
                 worker.snapshot();
-                // A final dispatch may have returned with this warm still busy.
-                // Preserve its diagnostics and lazy-fallback behavior at shutdown.
-                if worker
-                    .busy
-                    .as_ref()
-                    .is_some_and(|(index, _, _)| *index == WARM_JOB)
-                    && let Some(result) = worker.ready()
-                {
-                    let (_, request, _) = worker.busy.take().unwrap();
-                    worker.sequence += 1;
-                    let response = result.unwrap_or_else(|error| infrastructure(&request, error));
-                    let failed = response.outcome != TestOutcome::Skipped;
-                    self.diagnostics.push(format!(
-                        "spare warm {}: {}",
-                        if failed { "failed" } else { "ready" },
-                        response.errors.join("; ")
-                    ));
-                    if failed {
-                        worker.abort();
-                        return false;
-                    }
-                }
                 match worker.child.try_wait() {
                     Ok(Some(status)) => {
                         if !status.success() {
@@ -304,7 +317,7 @@ impl<'a> Scheduler<'a> {
         let mut completed = vec![];
         let mut paused = false;
         let mut idle_pressure_since = None;
-        while !pending.is_empty() || self.budget.active > 0 {
+        while !pending.is_empty() || self.budget.active > 0 || !self.spares.is_empty() {
             if INTERRUPTED.load(Ordering::Relaxed) {
                 self.budget.exhausted("run interrupted by SIGINT/SIGTERM");
             }
@@ -371,7 +384,7 @@ impl<'a> Scheduler<'a> {
                 );
                 break;
             }
-            if pending.is_empty() && self.budget.active == 0 {
+            if pending.is_empty() && self.budget.active == 0 && self.spares.is_empty() {
                 break;
             }
             if pending.is_empty() && self.spares.is_empty() {
@@ -699,6 +712,90 @@ mod tests {
         assert!(scheduler.dispatch(VecDeque::new(), true).is_empty());
         assert!(scheduler.slots[1].as_ref().unwrap().busy.is_some());
         assert_eq!(scheduler.budget.active, 0);
+    }
+
+    fn request() -> Request {
+        serde_json::from_value(serde_json::json!({
+            "protocol": 1, "runId": "test", "jobId": "baseline", "generation": 0,
+            "kind": "baseline", "root": ".", "config": "", "deadlineMs": 60000,
+            "mutation": null
+        }))
+        .unwrap()
+    }
+
+    #[test]
+    fn shutdown_abandons_warm_before_stop_and_reaps_descendants() {
+        let _guard = PROCESS_TEST.lock().unwrap();
+        enable_subreaper().unwrap();
+        let options = options();
+        let mut scheduler = Scheduler::new(&options).unwrap();
+        let directory = tempfile::tempdir().unwrap();
+        let evidence = tempfile::tempdir().unwrap();
+        let child_pid = evidence.path().join("child");
+        let stop_seen = evidence.path().join("stop-seen");
+        let script = "import pathlib,subprocess,sys,time\nchild=subprocess.Popen(['python3','-c','import time; time.sleep(60)'], start_new_session=True)\npathlib.Path(sys.argv[2]).write_text(str(child.pid))\nwhile True:\n if (pathlib.Path(sys.argv[1])/'stop').exists(): pathlib.Path(sys.argv[3]).touch()\n time.sleep(.01)";
+        let mut warm = worker(
+            tempfile::tempdir().unwrap(),
+            script,
+            &[directory.path(), &child_pid, &stop_seen],
+        );
+        warm.directory = directory;
+        // Synchronize on the descendant existing, rather than elapsed host time.
+        let watchdog = Instant::now() + Duration::from_secs(30);
+        while fs::read_to_string(&child_pid)
+            .unwrap_or_default()
+            .is_empty()
+        {
+            assert!(Instant::now() < watchdog, "warm descendant did not start");
+            thread::yield_now();
+        }
+        let pid: u32 = fs::read_to_string(&child_pid).unwrap().parse().unwrap();
+        let (_, start) = process_identity(pid).unwrap();
+        warm.busy = Some((WARM_JOB, request(), Instant::now()));
+        scheduler.slots = vec![None, Some(warm)];
+        let mut diagnostics = vec![];
+        assert!(scheduler.finish(&mut diagnostics), "{diagnostics:?}");
+        assert!(
+            !stop_seen.exists(),
+            "warm must be aborted before graceful stop"
+        );
+        assert!(
+            diagnostics
+                .iter()
+                .any(|d| d.contains("spare warm abandoned at shutdown"))
+        );
+        assert!(!still_owned(pid, start), "warm descendant survived");
+    }
+
+    #[test]
+    fn completed_baseline_starts_queued_spare_before_returning() {
+        let _guard = PROCESS_TEST.lock().unwrap();
+        let options = options();
+        let mut scheduler = Scheduler::new(&options).unwrap();
+        scheduler.budget.effective_workers = 2;
+        let mut baseline = worker(
+            tempfile::tempdir().unwrap(),
+            "import time; time.sleep(60)",
+            &[],
+        );
+        let request = request();
+        let mut response = infrastructure(&request, "");
+        response.outcome = TestOutcome::Passed;
+        cache::atomic(
+            &baseline.directory.path().join("response-0.json"),
+            &response,
+        )
+        .unwrap();
+        baseline.busy = Some((0, request.clone(), Instant::now()));
+        scheduler.slots = vec![Some(baseline), None];
+        scheduler.budget.active = 1;
+        scheduler.spares.push_back((WARM_JOB, request));
+        let completed = scheduler.dispatch(VecDeque::new(), true);
+        assert_eq!(completed.len(), 1);
+        assert!(scheduler.spares.is_empty());
+        let spare = scheduler.slots[1].as_ref().expect("queued spare started");
+        assert_eq!(spare.busy.as_ref().unwrap().0, WARM_JOB);
+        assert!(spare.directory.path().join("warm-0").exists());
     }
 
     #[test]
