@@ -3,7 +3,7 @@
   "version": "1.0.0-rc.1",
   "private": true,
   "type": "module",
-  "description": "Rust/Oxc mutation testing with a Vitest adapter \u2014 feasibility prototype",
+  "description": "Rust/Oxc mutation testing with a Vitest adapter — feasibility prototype",
   "engines": {
     "node": "26.3.1"
   },
@@ -22,8 +22,8 @@
   },
   "devDependencies": {
     "@biomejs/biome": "2.3.8",
-    "@stryker-mutator/core": "10.0.0",
-    "@stryker-mutator/vitest-runner": "10.0.0",
+    "@stryker-mutator/core": "10.1.1",
+    "@stryker-mutator/vitest-runner": "10.1.1",
     "@types/node": "26.6.6",
     "@vitest/coverage-v8": "4.1.12",
     "ajv": "8.20.0",

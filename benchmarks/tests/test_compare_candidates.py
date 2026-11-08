@@ -279,14 +279,17 @@ class CampaignTests(unittest.TestCase):
             provenance = {'binary_sha256': 'same', 'adapter_source_sha256': {}}
             with (patch.object(campaign.workload.measurement, 'metadata', return_value={'versions': {}}),
                   patch.object(campaign.workload, 'execution_inputs', return_value=provenance),
+                  patch.object(campaign.workload, 'require_matched_concurrency'),
                   patch.object(campaign.subprocess, 'run') as command):
                 result = campaign.main(['--before-binary', str(binary), '--after-binary', str(binary),
                                         '--before-adapter-dir', str(adapter), '--after-adapter-dir', str(adapter),
                                         '--after-commit', 'a' * 40, '--require-build-integrity',
                                         '--after-oximut-arg=--isolation', '--after-oximut-arg=fresh-thread',
-                                        '--output', str(output)])
+                                        '--concurrency', '2', '--output', str(output)])
             self.assertEqual(result, 1)
             command.assert_not_called()
+            self.assertEqual(json.loads((output / 'summary.json').read_text())['concurrency'], 2)
+            self.assertEqual(json.loads((output / 'metadata.json').read_text())['concurrency'], 2)
             self.assertTrue((output / 'metadata.json').is_file())
             self.assertEqual((output / 'measurements.jsonl').read_text(), '')
             self.assertEqual(json.loads((output / 'attempts.json').read_text()), [])
@@ -571,6 +574,19 @@ class SubcampaignCleanupTests(unittest.TestCase):
         self.assertTrue(attempt['descendant_cleanup_required'])
         # Detached tools are still signalled even though the root cannot be reaped.
         reap.assert_called_once_with(0.1)
+
+
+
+class MatchedParallelismTests(unittest.TestCase):
+    def test_throttled_or_capped_runs_are_not_matched(self):
+        full = {'resources': {'effectiveWorkers': 4, 'admissionPauses': 0}}
+        self.assertEqual(campaign.workload.parallelism_errors(full, 4), [])
+        self.assertEqual(campaign.workload.parallelism_errors({}, 1), [])
+        capped = {'resources': {'effectiveWorkers': 2, 'admissionPauses': 0}}
+        self.assertIn('not the matched 4', campaign.workload.parallelism_errors(capped, 4)[0])
+        paused = {'resources': {'effectiveWorkers': 4, 'admissionPauses': 3}}
+        self.assertIn('paused admission', campaign.workload.parallelism_errors(paused, 4)[0])
+        self.assertTrue(campaign.workload.parallelism_errors({}, 2))
 
 
 if __name__ == '__main__':
