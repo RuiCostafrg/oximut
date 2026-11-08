@@ -261,7 +261,10 @@ def main(argv=None):
             parser.error('--adapter must be inside --adapter-source-dir')
     if 'oximut' in args.tools and args.adapter_source_dir is None:
         parser.error('provide --adapter or --adapter-source-dir to record matching adapter provenance')
-    require_matched_concurrency(args.concurrency)
+    try:
+        require_matched_concurrency(args.concurrency)
+    except ValueError as error:
+        parser.error(str(error))
     output = args.output.resolve()
     output.mkdir(parents=True, exist_ok=False)
     (output / '.gitignore').write_text('*/project/\n')

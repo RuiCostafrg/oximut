@@ -72,6 +72,12 @@ jobs:
       - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # stable
         with:
           toolchain: '1.96.0'
+      - name: Validate the matched concurrency before building
+        env:
+          MATCHED_CONCURRENCY: ${{ inputs.concurrency || '1' }}
+        run: |
+          [[ "$MATCHED_CONCURRENCY" =~ ^[0-9]+$ ]] &&
+            (( 10#$MATCHED_CONCURRENCY >= 1 && 10#$MATCHED_CONCURRENCY <= 1024 && 10#$MATCHED_CONCURRENCY <= $(nproc) ))
       - name: Set native campaign paths
         run: |
           test "$(uname -m)" = x86_64
