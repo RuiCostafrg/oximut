@@ -53,7 +53,8 @@ def validate_tests(tool, report, project, manifest):
             raise ValueError('Oximut baseline test attribution incomplete')
         identities = [[relative(test['file'], project), test['name']]
                       for test in coverage['tests']]
-    expected = manifest['expectedOximutTests'] if tool == 'oximut' else manifest['expectedTests']
+    # From Vitest 5, Stryker reports names joined with ' > ', exactly as Oximut does.
+    expected = manifest['expectedTests'] if tool == 'vitest' else manifest['expectedOximutTests']
     if sorted(identities) != sorted(expected):
         raise ValueError(f'{tool} test identities differ from declared upstream tests')
     # Both exact representations are pinned from ordinary Vitest ancestorTitles/title.
