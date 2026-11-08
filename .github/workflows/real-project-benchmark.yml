@@ -7,6 +7,10 @@ on:
         type: string
         default: ''
         description: 'Extra Oximut args for the after candidate only, space-separated, e.g. --isolation fresh-thread'
+      concurrency:
+        type: string
+        default: '1'
+        description: 'Matched parallelism: Stryker concurrency and Oximut --workers'
   pull_request:
 
 permissions:
@@ -50,8 +54,8 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 90
     env:
-      # Main 1c2e45a (after #51); diagnostic clocks and peak attribution stay off here.
-      BEFORE_COMMIT: 1c2e45a6a6521024f692f4dd5553d348e0122604
+      # Main 78958ba (after #50); diagnostic clocks and peak attribution stay off here.
+      BEFORE_COMMIT: 78958ba492a2137b6702f4bb526ad57308d363d9
       BUILD_FLAGS: --locked --release -p oximut-cli
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -68,6 +72,16 @@ jobs:
       - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # stable
         with:
           toolchain: '1.96.0'
+      - name: Validate the matched concurrency before building
+        env:
+          MATCHED_CONCURRENCY: ${{ inputs.concurrency || '1' }}
+        run: |
+          cpus=$(nproc)
+          if ! [[ "$MATCHED_CONCURRENCY" =~ ^[0-9]{1,4}$ ]] ||
+            (( 10#$MATCHED_CONCURRENCY < 1 || 10#$MATCHED_CONCURRENCY > 1024 || 10#$MATCHED_CONCURRENCY > cpus )); then
+            echo "::error::concurrency '$MATCHED_CONCURRENCY' must be an integer from 1 to 1024 and at most the $cpus usable CPUs"
+            exit 1
+          fi
       - name: Set native campaign paths
         run: |
           test "$(uname -m)" = x86_64
@@ -119,11 +133,12 @@ jobs:
         shell: bash
         env:
           AFTER_OXIMUT_ARGS: ${{ inputs.after_oximut_args || '' }}
+          MATCHED_CONCURRENCY: ${{ inputs.concurrency || '1' }}
         run: |
           read -r -a words <<< "$AFTER_OXIMUT_ARGS"
           extra_args=()
           for word in "${words[@]}"; do extra_args+=("--after-oximut-arg=$word"); done
-          python3 benchmarks/compare_candidates.py "${extra_args[@]}" \
+          python3 benchmarks/compare_candidates.py "${extra_args[@]}" --concurrency "$MATCHED_CONCURRENCY" \
             --before-binary "$BINARY_DIR/before-oximut" \
             --before-adapter-dir "$BEFORE_WORKTREE/packages/vitest-adapter" \
             --before-commit "$BEFORE_COMMIT" \
