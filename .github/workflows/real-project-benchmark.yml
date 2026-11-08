@@ -54,8 +54,8 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 90
     env:
-      # Main 78958ba (after #50); diagnostic clocks and peak attribution stay off here.
-      BEFORE_COMMIT: 78958ba492a2137b6702f4bb526ad57308d363d9
+      # Main 412b705 (after #53); diagnostic clocks and peak attribution stay off here.
+      BEFORE_COMMIT: 412b705ae65c13b2633ce09a70da85808596f3b1
       BUILD_FLAGS: --locked --release -p oximut-cli
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

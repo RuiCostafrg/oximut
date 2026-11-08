@@ -277,7 +277,9 @@ class NativeCoordinator(unittest.TestCase):
                 self.assertEqual(result.returncode, 0, result.stderr)
                 runs = [e for e in events if e['event'] == 'run']
                 self.assertEqual(len(runs), 2)
-                expected = min(workers, len(os.sched_getaffinity(0)))
+                # CPU quota or memory admission can lower the requested limit.
+                expected = report['resources']['effectiveWorkers']
+                self.assertLessEqual(expected, workers)
                 self.assertEqual([run['workers'] for run in runs], [expected, expected])
                 self.assert_reaped(events)
 
