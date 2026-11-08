@@ -197,6 +197,13 @@ class NativeCoordinator(unittest.TestCase):
                 cpus = min(cpus, max(1, int(quota) // int(period)))
         except (OSError, ValueError):
             pass
+        try:
+            quota = int(Path('/sys/fs/cgroup/cpu/cpu.cfs_quota_us').read_text())
+            period = int(Path('/sys/fs/cgroup/cpu/cpu.cfs_period_us').read_text())
+            if quota > 0:
+                cpus = min(cpus, max(1, quota // period))
+        except (OSError, ValueError):
+            pass
         if cpus < 2:
             self.skipTest('needs two usable CPUs for a spare controller')
 
@@ -205,9 +212,10 @@ class NativeCoordinator(unittest.TestCase):
             self.assertFalse(alive(pid), f'controller {pid} survived')
 
     def require_spare_capacity(self, report):
-        usable = len(os.sched_getaffinity(0)) if hasattr(os, 'sched_getaffinity') else (os.cpu_count() or 1)
-        if usable < 2 or report['resources']['effectiveWorkers'] < 2:
-            self.skipTest('spare warming requires at least two usable CPUs and effective workers')
+        # Only a host CPU limit may lower workers; anything else is a regression.
+        if report['resources']['cpuLimitWorkers'] < 2:
+            self.skipTest('spare warming requires at least two usable CPUs')
+        self.assertGreaterEqual(report['resources']['effectiveWorkers'], 2)
 
     def test_nonblocking_warm_preserves_baseline_capacity_and_reuses_slot(self):
         self.require_two_workers()
@@ -284,6 +292,7 @@ class NativeCoordinator(unittest.TestCase):
         for mode in ('warm-fail', 'warm-start-fail'):
             with self.subTest(mode=mode):
                 result, report, events = self.run_cli(mode, extra_args=('--workers', '2'), full=True)
+                self.require_spare_capacity(report)
                 self.assertTrue(report['summary']['complete'], result.stdout + result.stderr)
                 self.assertEqual([m['outcome'] for m in report['mutants']],
                                  [m['outcome'] for m in expected['mutants']])

@@ -41,10 +41,10 @@ No failure or attribution gate was relaxed.
 
 ## Benchmark control
 
-The requested `BEFORE_COMMIT` and campaign `BASELINE` are main
-`34acb9fee79a9e010f956b1326c52dc537aa1a64`. Its unchanged persistent worker,
-executed with this branch's Vitest 5 dependencies, returns
-`Unsupported Vitest 5.1.0; expected 4.1.12` at initialization. It cannot qualify
-as a paired control with these node_modules. Even bypassing that guard would
-leave the removed M3 runner import and unsafe filesystem cache. The harness
-retains all gates and must report the control failure, not comparative ratios.
+`BEFORE_COMMIT` and the campaign `BASELINE` pin the upgrade commit
+`7e3ae5a492516c7a45e4b44eb0304d95d2171a5f`, so the campaign is a same-engine
+control. Main before the upgrade (`34acb9fee79a9e010f956b1326c52dc537aa1a64`)
+can't be used: with Vitest 5 dependencies its worker returns
+`Unsupported Vitest 5.1.0; expected 4.1.12` at initialization, and even without
+that guard it would hit the removed M3 runner import and the unsafe filesystem
+cache. The meaningful result is Oximut versus Stryker, both on Vitest 5.
