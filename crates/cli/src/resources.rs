@@ -647,6 +647,9 @@ pub struct Budget {
     last_exact_counter_total: Option<u64>,
     #[serde(skip)]
     last_exact_at: Instant,
+    /// Host MemAvailable source; injectable so tests don't depend on host memory.
+    #[serde(skip)]
+    available_reader: fn() -> Option<u64>,
     /// Samples discovered by walking the owned tree's `children` links, and
     /// by broad `/proc` enumeration (kernels without those links).
     pub tree_discoveries: u64,
@@ -714,6 +717,7 @@ impl Budget {
             last_exact_current: 0,
             last_exact_counter_total: None,
             last_exact_at: Instant::now(),
+            available_reader: || meminfo("MemAvailable"),
             tree_discoveries: 0,
             broad_discoveries: 0,
             exhaustion: None,
@@ -886,15 +890,18 @@ impl Budget {
             // Exactly one fresh broad discovery per admitted sample. This also
             // includes adopted descendants outside any live worker branch.
             let table = profiled_discover()?;
+            // Counters are only a hint: any counter or identity error falls through to
+            // the exact path, which repeats every check strictly.
             let cheap_total = if force {
                 None
             } else {
-                Some(tree_rss(
+                tree_rss(
                     std::process::id(),
                     &table,
                     &mut profiled_identity,
                     &mut profiled_counter,
-                )?)
+                )
+                .ok()
             };
             if let Some(cheap) = cheap_total
                 && let Some(baseline) = self.last_exact_counter_total
@@ -910,17 +917,19 @@ impl Budget {
                 // accounting must never be hidden by accepting a counter hint.
                 let mut limit = self.base_budget_bytes;
                 let mut uncertain = false;
-                if let Some(available) = meminfo("MemAvailable") {
-                    limit = limit.min(available);
-                } else {
-                    uncertain = true;
+                let available = (self.available_reader)();
+                match available {
+                    Some(available) => limit = limit.min(available),
+                    None => uncertain = true,
                 }
+                let mut group_limits = Vec::with_capacity(self.cgroups.len());
                 for group in &self.cgroups {
                     match (memory_limit(&group.limit_path), number(&group.usage_path)) {
                         (Ok(group_limit), Some(usage)) => {
                             if let Some(cap) = group_limit {
                                 limit = limit.min(cap).min(cap.saturating_sub(usage));
                             }
+                            group_limits.push(group_limit);
                         }
                         _ => uncertain = true,
                     }
@@ -935,6 +944,16 @@ impl Budget {
                     && self.memory_capacity(workers) > 0
                     && projected.saturating_add(margin) < limit
                 {
+                    // Admission between exact samples must see fresh headroom, exactly
+                    // as the exact path stores it.
+                    self.host_available = available.unwrap_or(0);
+                    self.budget_bytes = self.base_budget_bytes;
+                    for (group, group_limit) in self.cgroups.iter_mut().zip(group_limits) {
+                        group.limit_bytes = group_limit;
+                        if let Some(cap) = group_limit {
+                            self.budget_bytes = self.budget_bytes.min(cap);
+                        }
+                    }
                     self.counter_samples += 1;
                     self.table = Some(table);
                     return Ok(());
@@ -972,7 +991,7 @@ impl Budget {
             self.current = self.current.max(accounted_slots);
             self.peak_aggregate_rss_bytes = self.peak_aggregate_rss_bytes.max(self.current);
             self.host_available =
-                meminfo("MemAvailable").ok_or("host available memory accounting unavailable")?;
+                (self.available_reader)().ok_or("host available memory accounting unavailable")?;
             self.budget_bytes = self.base_budget_bytes;
             for cgroup in &mut self.cgroups {
                 cgroup.limit_bytes = memory_limit(&cgroup.limit_path)?;
@@ -1105,6 +1124,7 @@ mod tests {
             last_exact_current: 0,
             last_exact_counter_total: None,
             last_exact_at: Instant::now(),
+            available_reader: || meminfo("MemAvailable"),
             tree_discoveries: 0,
             broad_discoveries: 0,
             exhaustion: None,
@@ -1152,7 +1172,8 @@ mod tests {
 
     fn seeded_counter_budget() -> Budget {
         let mut state = budget();
-        // Keep thresholds deterministic and far below host availability.
+        // Deterministic thresholds, independent of the host's free memory.
+        state.available_reader = || Some(64 * 1024 * MIB);
         state.base_budget_bytes = 4 * 1024 * MIB;
         state.budget_bytes = state.base_budget_bytes;
         assert_eq!(counter_sample(&mut state, false, 10 * MIB, 8 * MIB), (2, 2));
@@ -1177,11 +1198,17 @@ mod tests {
         let cost = state.admission_worker_cost_bytes;
         state.table = None;
         state.active = state.effective_workers; // Busy slots alone are not memory pressure.
+        state.last_exact_at = Instant::now(); // Independent of scheduling delays.
+        state.available_reader = || Some(48 * 1024 * MIB);
         assert_eq!(
             counter_sample(&mut state, false, 999 * MIB, 9 * MIB),
             (0, 2)
         );
-        assert!(state.table.is_some());
+        let cli = std::process::id();
+        let table = state.table.as_ref().expect("refreshed ownership table");
+        assert!(table.start(cli).is_some() && table.start(cli + 1).is_some());
+        // Admission sees fresh host headroom from the accepted counter sample.
+        assert_eq!(state.host_available, 48 * 1024 * MIB);
         assert_eq!(state.current, 20 * MIB);
         assert_eq!(state.peak_aggregate_rss_bytes, 20 * MIB);
         assert_eq!(state.measured_worker_peak_bytes, 10 * MIB);
@@ -1196,8 +1223,43 @@ mod tests {
         assert_eq!(report["counterSamples"], 1);
     }
 
+    #[test]
+    fn counter_errors_fall_back_to_an_exact_sample() {
+        let mut state = seeded_counter_budget();
+        state.last_exact_at = Instant::now();
+        let cli = std::process::id();
+        let worker = cli + 1;
+        let (mut exact_calls, mut counter_calls) = (0, 0);
+        state.last_sample = Instant::now() - Duration::from_millis(SAMPLE_MS);
+        state.sample_with_counter_readers(
+            &[worker],
+            false,
+            || {
+                ProcessTable::collect([Ok(Some(cli)), Ok(Some(worker))], |pid| {
+                    Ok(Some((if pid == cli { 0 } else { cli }, u64::from(pid))))
+                })
+            },
+            |pid| Ok(Some((if pid == cli { 0 } else { cli }, u64::from(pid)))),
+            |_| {
+                exact_calls += 1;
+                Ok(Some(10 * MIB))
+            },
+            |_| {
+                counter_calls += 1;
+                Err("statm unreadable".into())
+            },
+        );
+        assert_eq!(
+            state.exhaustion, None,
+            "a counter error is only a missing hint"
+        );
+        assert_eq!((exact_calls, counter_calls), (2, 1));
+        assert_eq!((state.exact_samples, state.counter_samples), (2, 0));
+    }
+
     fn check_periodic_escalation(reason: &str) {
         let mut state = seeded_counter_budget();
+        state.last_exact_at = Instant::now();
         assert_eq!(
             counter_sample(&mut state, false, 999 * MIB, 8 * MIB),
             (0, 2)
@@ -1857,7 +1919,9 @@ mod tests {
             },
         );
         let prof = state.accounting_diagnostics.as_ref().unwrap();
-        assert_eq!((discovers, identities, rss_reads), (1, 1, 0));
+        // The periodic counter pass and then the strict exact pass each check the
+        // identity once; the exact pass still fails closed.
+        assert_eq!((discovers, identities, rss_reads), (1, 2, 0));
         assert_eq!(
             (
                 prof.sampling.calls,
@@ -1865,7 +1929,7 @@ mod tests {
                 prof.identity_reads.calls,
                 prof.rss_reads.calls
             ),
-            (1, 1, 1, 0)
+            (1, 1, 2, 0)
         );
         assert!(
             state
@@ -1877,7 +1941,7 @@ mod tests {
         let encoded = serde_json::to_value(&state).unwrap();
         assert_eq!(
             encoded["accountingDiagnostics"]["identityReads"]["calls"],
-            1
+            2
         );
         assert!(
             encoded["accountingDiagnostics"]["identityReads"]["wallNs"]

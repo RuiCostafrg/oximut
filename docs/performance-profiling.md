@@ -105,7 +105,9 @@ fail-closed cleanup gates are unchanged. Identity checks for tree members remain
 fresh and strict for every aggregate, slot and CLI-floor observation. Each
 verified PID's RSS is read once per sample (one `smaps_rollup` walk) and reused
 by the overlapping trees of that sample only; errors are never cached and every
-new sample reads afresh.
+new exact sample reads afresh. Periodic samples between forced ones may instead use
+`statm` counters as an escalation hint (see `docs/m5.md`); the report's
+`exactSamples` and `counterSamples` count each kind.
 
 If process discovery fails, the supervisor performs bounded best-effort cleanup
 of previously observed identities, including its directly spawned controller.
