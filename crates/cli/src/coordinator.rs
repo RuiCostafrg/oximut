@@ -844,7 +844,7 @@ impl Coordinator {
         if Instant::now() >= deadline {
             return self.retire_with(request, timeout("Job deadline exceeded"));
         }
-        let args = match serde_json::to_value(request) {
+        let mut args = match serde_json::to_value(request) {
             Ok(args) => args,
             Err(error) => return infrastructure(request, error.to_string()),
         };
@@ -920,6 +920,7 @@ impl Coordinator {
                 infrastructure(request, "spare controller cannot be reused"),
             );
         }
+        charge_lane_startup(&mut args, started.elapsed());
         let reply = if Instant::now() >= deadline {
             Err(Wait::Deadline)
         } else {
@@ -1050,6 +1051,20 @@ impl Drop for Coordinator {
     }
 }
 
+/// Job deadlines include controller start-up. Lanes start counting when the
+/// adapter receives them, so they only get what is left of the job's budget.
+fn charge_lane_startup(args: &mut serde_json::Value, spent: Duration) {
+    let spent = u64::try_from(spent.as_millis()).unwrap_or(u64::MAX);
+    let lanes = args
+        .get_mut("lanes")
+        .and_then(serde_json::Value::as_array_mut);
+    for lane in lanes.into_iter().flatten() {
+        if let Some(budget) = lane.get("deadlineMs").and_then(serde_json::Value::as_u64) {
+            lane["deadlineMs"] = budget.saturating_sub(spent).max(1).into();
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1146,6 +1161,20 @@ mod tests {
         let mut long_line = vec![b' '; MAX_MESSAGE_BYTES];
         long_line.extend_from_slice(b"1\n");
         assert!(take_messages(&mut long_line).is_err());
+    }
+
+    #[test]
+    fn lanes_only_get_what_is_left_of_the_job_budget() {
+        let mut args = serde_json::json!({
+            "deadlineMs": 6000,
+            "lanes": [{ "deadlineMs": 5000 }, { "deadlineMs": 5000 }],
+        });
+        charge_lane_startup(&mut args, Duration::from_millis(1500));
+        assert_eq!(args["deadlineMs"], 6000);
+        assert_eq!(args["lanes"][0]["deadlineMs"], 3500);
+        assert_eq!(args["lanes"][1]["deadlineMs"], 3500);
+        charge_lane_startup(&mut args, Duration::from_secs(60));
+        assert_eq!(args["lanes"][1]["deadlineMs"], 1);
     }
 
     fn request() -> Request {
