@@ -63,7 +63,8 @@ export function validateRequest(value) {
         job.root !== value.root ||
         job.config !== value.config ||
         job.runId !== value.runId ||
-        job.deadlineMs !== value.deadlineMs ||
+        job.deadlineMs !== value.lanes[0].deadlineMs ||
+        job.deadlineMs > value.deadlineMs ||
         job.pool !== undefined ||
         job.collectCoverage !== undefined ||
         ids.has(job.jobId)

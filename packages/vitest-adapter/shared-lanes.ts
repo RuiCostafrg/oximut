@@ -7,6 +7,10 @@ import { envelope, type Request, type Result } from './protocol.ts';
 
 type Context = Awaited<ReturnType<typeof createVitest>>;
 const runner = fileURLToPath(new URL('./lane-runner.mjs', import.meta.url));
+const HARD_DEADLINE = 'Job deadline exceeded';
+const LANE_EXITED = 'Lane worker exited before completion';
+// Vitest's unattributed report of a pool worker that exited.
+const POOL_EXIT = /^\[vitest-pool\]: Worker oximut-lane-forks emitted error\.$/;
 
 /** Experimental pinned-runtime batch execution. No assignment survives pool drain. */
 export class SharedLanes {
@@ -26,7 +30,8 @@ export class SharedLanes {
   async run(batch: Request): Promise<Result> {
     if (version !== '5.1.0') throw new Error('Shared lanes require Vitest 5.1.0');
     const jobs = batch.lanes!;
-    this.deadline = performance.now() + batch.deadlineMs;
+    // The batch's own deadline adds time to report after a lane is stopped.
+    this.deadline = performance.now() + jobs[0].deadlineMs;
     this.failures.clear();
     this.files.clear();
     const modules = new Map<string, NonNullable<Request['mutation']>>();
@@ -90,8 +95,8 @@ export class SharedLanes {
                   await start();
                   worker.on('exit', () => {
                     clearTimeout(timer);
-                    if (!finished && !stopping)
-                      this.failures.set(name, 'Lane worker exited before completion');
+                    if (!finished && !stopping && !this.failures.has(name))
+                      this.failures.set(name, LANE_EXITED);
                   });
                 };
                 worker.send = (message) => {
@@ -104,12 +109,12 @@ export class SharedLanes {
                     run.context.files = this.files.get(name)!.map((filepath) => ({ filepath }));
                     timer = setTimeout(
                       () => {
-                        this.failures.set(name, 'Lane hard deadline exceeded');
+                        this.failures.set(name, HARD_DEADLINE);
                         (worker as unknown as { fork?: { kill(signal: string): void } }).fork?.kill(
                           'SIGKILL',
                         );
                       },
-                      Math.max(1, this.deadline - performance.now() - 250),
+                      Math.max(1, this.deadline - performance.now()),
                     );
                   }
                   return send(message);
@@ -204,6 +209,15 @@ export class SharedLanes {
     }
     // Eight errors per lane, escaped, must stay well under the 1 MiB response limit.
     const messageLimit = Math.min(2048, Math.floor((128 * 1024) / (jobs.length * 8)));
+    // Each lane exit we observed explains one such error. Anything else, or any
+    // more of them, cannot be attributed and still taints the whole batch.
+    const exits = [...this.failures.values()].filter(
+      (failure) => failure === LANE_EXITED || failure === HARD_DEADLINE,
+    ).length;
+    const poolExits = result.unhandledErrors.filter((error) =>
+      POOL_EXIT.test(String(error.message)),
+    ).length;
+    const unattributed = result.unhandledErrors.length > poolExits || poolExits > exits;
     const lanes = jobs.map((job, index) => {
       const name = `oximut-lane-${index}`;
       const modules = result.testModules.filter(
@@ -232,8 +246,7 @@ export class SharedLanes {
         this.failures.get(name) ||
         (tests.failed && !errors.length ? 'Failed test without error evidence' : undefined);
       // Aggregate errors have lost project identity: conservatively taint all lanes.
-      const untrusted =
-        failure || (result.unhandledErrors.length ? 'Unattributed batch error' : undefined);
+      const untrusted = failure || (unattributed ? 'Unattributed batch error' : undefined);
       const timedOut = messages.some((error) => /(?:Test|Hook) timed out in \d+ms/.test(error));
       const invalid = moduleErrors.some((error) =>
         /Transform failed|Parse failure|Failed to parse source|Unexpected token|Expected.*but found/.test(
@@ -241,21 +254,23 @@ export class SharedLanes {
         ),
       );
       let outcome: Result['outcome'] =
-        untrusted || messages.some((m) => /process\.exit unexpectedly called/.test(m))
-          ? 'infrastructure-error'
-          : invalid
-            ? 'invalid'
-            : timedOut
-              ? 'timeout'
-              : moduleErrors.length
-                ? 'infrastructure-error'
-                : tests.failed
-                  ? 'failed'
-                  : pending
-                    ? 'infrastructure-error'
-                    : tests.passed
-                      ? 'passed'
-                      : 'skipped';
+        failure === HARD_DEADLINE
+          ? 'timeout'
+          : untrusted || messages.some((m) => /process\.exit unexpectedly called/.test(m))
+            ? 'infrastructure-error'
+            : invalid
+              ? 'invalid'
+              : timedOut
+                ? 'timeout'
+                : moduleErrors.length
+                  ? 'infrastructure-error'
+                  : tests.failed
+                    ? 'failed'
+                    : pending
+                      ? 'infrastructure-error'
+                      : tests.passed
+                        ? 'passed'
+                        : 'skipped';
       if (
         outcome === 'passed' &&
         job.selection &&

@@ -170,12 +170,14 @@ test('a crashed shared fork fails closed and every fork exits', { timeout: 90000
   const jobs = ['crash', 'survived'].map(s.job);
   const result = await c.run({ ...jobs[0], lanes: jobs });
   assert.equal(result.lanes[0].outcome, 'infrastructure-error');
-  assert.notEqual(result.lanes[1].outcome, 'failed');
+  assert.equal(result.lanes[1].outcome, 'passed');
   await assertGone(s.root);
   const hung = ['hang', 'survived'].map((id) => ({ ...s.job(id), deadlineMs: 5000 }));
   const stopped = await c.run({ ...hung[0], lanes: hung });
-  assert.equal(stopped.lanes[0].outcome, 'infrastructure-error');
-  assert.notEqual(stopped.lanes[1].outcome, 'failed');
+  // A hung lane is a timeout, as with one controller per worker, and its
+  // finished neighbour keeps its result.
+  assert.equal(stopped.lanes[0].outcome, 'timeout');
+  assert.equal(stopped.lanes[1].outcome, 'passed');
   await assertGone(s.root);
   await c.close();
 });

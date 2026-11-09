@@ -142,7 +142,17 @@ pub struct Scheduler<'a> {
     spares: VecDeque<(usize, Request)>,
 }
 /// Whether a job still fits the request limit once wrapped as a one-lane batch.
-const MAX_LANE_BATCH: usize = 8 * 1024 * 1024;
+// Leaves room for the batch's own, slightly longer, deadline field.
+const MAX_LANE_BATCH: usize = 8 * 1024 * 1024 - 64;
+/// Time a batch has to report once a lane is stopped at the job deadline.
+const LANE_REPORT_MS: u64 = 1000;
+
+fn lane_batch(batch: &[(usize, Request)]) -> Request {
+    let mut request = batch[0].1.clone();
+    request.deadline_ms = request.deadline_ms.saturating_add(LANE_REPORT_MS);
+    request.lanes = Some(batch.iter().map(|(_, r)| r.clone()).collect());
+    request
+}
 
 /// Encoded size of a batch holding just this request.
 fn one_lane_len(request: &Request) -> usize {
@@ -586,9 +596,7 @@ impl<'a> Scheduler<'a> {
                     encoded += lane;
                     batch.push(pending.pop_front().unwrap());
                 }
-                let mut request = batch[0].1.clone();
-                request.lanes = Some(batch.iter().map(|(_, r)| r.clone()).collect());
-                let response = self.execute(&request);
+                let response = self.execute(&lane_batch(&batch));
                 // Unsupported projects run with one controller per worker instead.
                 if response.lanes.is_none()
                     && response
@@ -826,6 +834,21 @@ mod tests {
         job.root = "x".repeat(5 * 1024 * 1024);
         assert!(encoded_len(&job) <= 8 * 1024 * 1024);
         assert!(one_lane_len(&job) > MAX_LANE_BATCH);
+    }
+
+    #[test]
+    fn a_lane_batch_can_report_after_its_lanes_reach_the_job_deadline() {
+        let mut job = request();
+        job.deadline_ms = 5000;
+        let batch = lane_batch(&[(0, job.clone()), (1, job)]);
+        assert_eq!(batch.deadline_ms, 5000 + LANE_REPORT_MS);
+        assert!(
+            batch
+                .lanes
+                .unwrap()
+                .iter()
+                .all(|lane| lane.deadline_ms == 5000)
+        );
     }
 
     fn request() -> Request {

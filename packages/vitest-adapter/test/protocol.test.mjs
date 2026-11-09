@@ -273,6 +273,7 @@ test('shared lane batches reject every inconsistent assignment', () => {
   const batch = (lanes, extra = {}) => ({ ...mutant, jobId: 'batch', lanes, ...extra });
   const resident = [mutation];
   runtime.validateRequest(batch([lane('a'), lane('b')]));
+  runtime.validateRequest(batch([lane('a'), lane('b')], { deadlineMs: 1001 }));
   runtime.validateRequest(batch([lane('a', { resident }), lane('b', { resident })], { resident }));
   for (const [request, message] of [
     [batch([lane('a'), lane('a')]), /Invalid lane assignment/],
@@ -280,6 +281,10 @@ test('shared lane batches reject every inconsistent assignment', () => {
     [batch([lane('a', { config: '/other' })]), /Invalid lane assignment/],
     [batch([lane('a', { runId: 'other' })]), /Invalid lane assignment/],
     [batch([lane('a', { deadlineMs: 2 })]), /Invalid lane assignment/],
+    [
+      batch([lane('a'), lane('b', { deadlineMs: 2 })], { deadlineMs: 9 }),
+      /Invalid lane assignment/,
+    ],
     [batch([lane('a', { pool: 'threads' })]), /Invalid lane assignment/],
     [batch([lane('a', { collectCoverage: [mutation] })]), /Invalid lane assignment/],
     [batch([lane('a', { lanes: [lane('b')] })]), /Invalid lane assignment/],
