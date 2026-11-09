@@ -152,7 +152,7 @@ fn lane_batch(batch: &[(usize, Request)], width: usize) -> Request {
     let mut request = batch[0].1.clone();
     // The adapter keeps this many lanes, so a smaller batch reuses its context.
     // The worker count is fixed for the run; the admission limit is not.
-    request.workers = Some(width.clamp(batch.len(), 1024));
+    request.workers = Some(width.max(batch.len()).min(1024));
     request.deadline_ms = request.deadline_ms.saturating_add(LANE_REPORT_MS);
     request.lanes = Some(batch.iter().map(|(_, r)| r.clone()).collect());
     request
@@ -855,6 +855,8 @@ mod tests {
         job.deadline_ms = 5000;
         let batch = lane_batch(&[(0, job.clone()), (1, job)], 4);
         assert_eq!(batch.workers, Some(4));
+        let huge = vec![(0, request()); 1025];
+        assert_eq!(lane_batch(&huge, 2).workers, Some(1024));
         assert_eq!(batch.deadline_ms, 5000 + LANE_REPORT_MS);
         assert!(
             batch
