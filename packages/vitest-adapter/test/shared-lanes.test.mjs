@@ -338,3 +338,23 @@ test('a custom runner falls back to one controller per worker', { timeout: 90000
   assert.equal(result.lanes, undefined);
   assert.match(result.errors.join(';'), /Shared lanes require/);
 });
+
+test('an unexplained batch error outranks a lane timeout', { timeout: 90000 }, async (t) => {
+  const s = await fixture(t);
+  const lanes = new SharedLanes();
+  t.after(() => lanes.close());
+  const jobs = ['survived', 'selected'].map(s.job);
+  await lanes.run({ ...jobs[0], lanes: jobs });
+  const run = lanes.context.runTestSpecifications.bind(lanes.context);
+  lanes.context.runTestSpecifications = async (...args) => {
+    const result = await run(...args);
+    return { ...result, unhandledErrors: [...result.unhandledErrors, new Error('unrelated')] };
+  };
+  const hung = ['hang', 'survived'].map((id) => ({ ...s.job(id), deadlineMs: 3000 }));
+  const result = await lanes.run({ ...hung[0], lanes: hung });
+  process.exitCode = undefined;
+  assert.deepEqual(
+    result.lanes.map((lane) => lane.outcome),
+    ['infrastructure-error', 'infrastructure-error'],
+  );
+});

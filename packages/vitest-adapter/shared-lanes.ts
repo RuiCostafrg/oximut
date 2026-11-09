@@ -257,7 +257,7 @@ export class SharedLanes {
         ),
       );
       let outcome: Result['outcome'] =
-        failure === HARD_DEADLINE
+        failure === HARD_DEADLINE && !unattributed
           ? 'timeout'
           : untrusted || messages.some((m) => /process\.exit unexpectedly called/.test(m))
             ? 'infrastructure-error'
