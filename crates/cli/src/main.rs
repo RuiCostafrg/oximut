@@ -1308,7 +1308,8 @@ fn run_attempt(options: &Options, previous: Option<RetryEvidence>) -> Result<Att
                 request.generation = generation_offset + index as u64 + 1;
                 request.kind = "mutant".into();
                 request.selection = selection.clone();
-                // A lone module is served through `mutation` alone.
+                // A lone module is served through `mutation` alone, except that
+                // shared lanes need a resident module for every mutant.
                 request.resident = group_of
                     .get(&mutant.file)
                     .map(|&index| groups[index].clone())

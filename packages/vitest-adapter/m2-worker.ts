@@ -185,7 +185,8 @@ async function command(name: string, args: Request): Promise<unknown> {
             !/^(?:vite:|vitest(?::|$)|oximut-m2-mutation$|builtin:|alias$)/.test(plugin.name),
         ),
     );
-    controllerReusable = !unsupported;
+    // A lane installs its own runner, which would replace a configured one.
+    controllerReusable = !unsupported && !vitest.projects.some((project) => project.config.runner);
     return {
       versions: { node: process.version, vitest: version },
       controllerPid: process.pid,
@@ -209,7 +210,7 @@ async function command(name: string, args: Request): Promise<unknown> {
   if ((job.pool === 'threads' ? 'threads' : 'forks') !== pool)
     throw new Error('Pool cannot change after initialization');
   if (job.lanes) {
-    // Custom plugins, global setup or multiple projects can't be shared across lanes.
+    // Custom plugins, runners, global setup or multiple projects can't be shared across lanes.
     if (!controllerReusable) throw new Error('Shared lanes require a reusable controller project');
     await vitest.close();
     sharedLanes ??= new (await import('./shared-lanes.ts')).SharedLanes();

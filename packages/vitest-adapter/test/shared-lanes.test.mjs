@@ -4,6 +4,8 @@ import { mkdir, mkdtemp, readFile, rm, symlink, writeFile } from 'node:fs/promis
 import { resolve, join } from 'node:path';
 import test from 'node:test';
 
+import { SharedLanes } from '../shared-lanes.ts';
+
 const repository = resolve(import.meta.dirname, '../../..');
 async function fixture(t) {
   await mkdir(join(repository, '.oximut'), { recursive: true });
@@ -251,3 +253,86 @@ test('other', () => expect(count()).toBe(0));
     await c.close();
   },
 );
+
+test(
+  'a file the current run did not report never reuses earlier results',
+  { timeout: 90000 },
+  async (t) => {
+    const s = await fixture(t);
+    const lanes = new SharedLanes();
+    t.after(() => lanes.close());
+    const jobs = ['survived', 'selected'].map(s.job);
+    const first = await lanes.run({ ...jobs[0], lanes: jobs });
+    assert.deepEqual(
+      first.lanes.map((lane) => lane.outcome),
+      ['passed', 'passed'],
+    );
+    // A run that delivers nothing: only earlier state could still report a result.
+    lanes.context.runTestSpecifications = async () => ({
+      testModules: lanes.context.state.getTestModules(),
+      unhandledErrors: [],
+    });
+    const second = await lanes.run({ ...jobs[0], lanes: jobs });
+    assert.deepEqual(
+      second.lanes.map((lane) => lane.outcome),
+      ['infrastructure-error', 'infrastructure-error'],
+    );
+  },
+);
+
+test('a run that throws drops the context', { timeout: 90000 }, async (t) => {
+  const s = await fixture(t);
+  const lanes = new SharedLanes();
+  t.after(() => lanes.close());
+  const jobs = ['survived', 'selected'].map(s.job);
+  await lanes.run({ ...jobs[0], lanes: jobs });
+  lanes.context.runTestSpecifications = async () => {
+    throw new Error('run failed');
+  };
+  await assert.rejects(lanes.run({ ...jobs[0], lanes: jobs }), /run failed/);
+  assert.equal(lanes.context, undefined);
+});
+
+test('lane errors are bounded', { timeout: 90000 }, async (t) => {
+  const s = await fixture(t);
+  await writeFile(
+    join(s.root, 'long.test.ts'),
+    "import { test } from 'vitest'; test('long', () => { throw new Error('x'.repeat(100000)); });",
+  );
+  const jobs = ['long-a', 'long-b'].map(s.job);
+  for (const job of jobs)
+    job.selection = {
+      mode: 'files',
+      files: [join(s.root, 'long.test.ts')],
+      selectedTests: 1,
+      totalTests: 1,
+      reasons: [],
+    };
+  const c = await s.controller();
+  const result = await c.run({ ...jobs[0], lanes: jobs });
+  await c.close();
+  for (const lane of result.lanes) {
+    assert.equal(lane.outcome, 'failed');
+    assert.ok(lane.errors.length && lane.errors.every((error) => error.length <= 2048));
+  }
+});
+
+test('a custom runner falls back to one controller per worker', { timeout: 90000 }, async (t) => {
+  const s = await fixture(t);
+  await writeFile(
+    join(s.root, 'custom-runner.mjs'),
+    "export { TestRunner as default } from 'vitest';",
+  );
+  await writeFile(
+    join(s.root, 'vitest.config.mjs'),
+    "export default { test: { include: ['*.test.ts'], testTimeout: 300, runner: './custom-runner.mjs' } };",
+  );
+  const c = await s.controller();
+  const jobs = ['survived', 'selected'].map(s.job);
+  const result = await c
+    .run({ ...jobs[0], lanes: jobs })
+    .catch((error) => ({ errors: [error.message] }));
+  await c.close();
+  assert.equal(result.lanes, undefined);
+  assert.match(result.errors.join(';'), /Shared lanes require/);
+});

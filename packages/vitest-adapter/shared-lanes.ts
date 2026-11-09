@@ -18,8 +18,9 @@ export class SharedLanes {
   private deadline = 0;
 
   async close() {
-    await this.context?.close();
+    const context = this.context;
     this.context = undefined;
+    await context?.close();
   }
 
   async run(batch: Request): Promise<Result> {
@@ -46,8 +47,7 @@ export class SharedLanes {
     this.modules = modules;
     if (this.context && this.width !== jobs.length) await this.close();
     if (!this.context) {
-      this.width = jobs.length;
-      this.context = await createVitest('test', {
+      const context = await createVitest('test', {
         root: batch.root,
         config: batch.config,
         watch: false,
@@ -139,9 +139,16 @@ export class SharedLanes {
           },
         })),
       });
-      await this.context.standalone();
+      try {
+        await context.standalone();
+      } catch (error) {
+        await context.close();
+        throw error;
+      }
+      this.context = context;
+      this.width = jobs.length;
       if (getCompileCacheDir())
-        for (const project of this.context.projects)
+        for (const project of context.projects)
           project.config.execArgv = [
             ...project.config.execArgv,
             '--require',
@@ -179,15 +186,24 @@ export class SharedLanes {
         if (/@(?:vitest|jest)-environment\s+(?!node\b)/.test(source))
           throw new Error('Shared lanes require Node test files');
       }
-      this.files.set(
-        name,
-        selected.map((spec) => spec.moduleId),
-      );
+      const files = selected.map((spec) => spec.moduleId);
+      this.files.set(name, files);
+      // Vitest only clears representatives. Results of a previous batch must not
+      // survive for the other files of this one.
+      ctx.state.clearFiles(ctx.projects[index], files);
       if (selected.length) representatives.push(selected[0]);
     }
-    const result = await ctx.runTestSpecifications(representatives, true);
-    // runTestSpecifications does not await isolated stop(). Drain before reassigning.
-    await (ctx as unknown as { pool: { close(): Promise<void> } }).pool.close();
+    let result: Awaited<ReturnType<Context['runTestSpecifications']>>;
+    try {
+      result = await ctx.runTestSpecifications(representatives, true);
+      // runTestSpecifications does not await isolated stop(). Drain before reassigning.
+      await (ctx as unknown as { pool?: { close(): Promise<void> } }).pool?.close();
+    } catch (error) {
+      await this.close();
+      throw error;
+    }
+    // Eight errors per lane, escaped, must stay well under the 1 MiB response limit.
+    const messageLimit = Math.min(2048, Math.floor((128 * 1024) / (jobs.length * 8)));
     const lanes = jobs.map((job, index) => {
       const name = `oximut-lane-${index}`;
       const modules = result.testModules.filter(
@@ -199,7 +215,10 @@ export class SharedLanes {
         ...[...module.children.allSuites()].flatMap((suite) => suite.errors()),
       ]);
       const errors = [...moduleErrors];
-      let pending = false;
+      // After a local bail the remaining files may never report; a failure stands.
+      let pending =
+        modules.length !== this.files.get(name)!.length ||
+        modules.some((module) => module.state() === 'pending' || module.state() === 'queued');
       for (const module of modules)
         for (const test of module.children.allTests()) {
           const state = test.result();
@@ -208,7 +227,7 @@ export class SharedLanes {
           else pending = true;
           errors.push(...(state.errors ?? []));
         }
-      const messages = errors.map((error) => String(error.message ?? error));
+      const messages = errors.map((error) => String(error.message ?? error).slice(0, messageLimit));
       const failure =
         this.failures.get(name) ||
         (tests.failed && !errors.length ? 'Failed test without error evidence' : undefined);

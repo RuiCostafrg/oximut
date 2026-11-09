@@ -267,3 +267,27 @@ test('worker limit is a bounded positive integer', () => {
   for (const workers of [0, -1, 1.5, 1025, '2', null, Infinity])
     assert.throws(() => runtime.validateRequest({ ...baseline, workers }), /Invalid workers/);
 });
+
+test('shared lane batches reject every inconsistent assignment', () => {
+  const lane = (jobId, extra = {}) => ({ ...mutant, jobId, ...extra });
+  const batch = (lanes, extra = {}) => ({ ...mutant, jobId: 'batch', lanes, ...extra });
+  const resident = [mutation];
+  runtime.validateRequest(batch([lane('a'), lane('b')]));
+  runtime.validateRequest(batch([lane('a', { resident }), lane('b', { resident })], { resident }));
+  for (const [request, message] of [
+    [batch([lane('a'), lane('a')]), /Invalid lane assignment/],
+    [batch([lane('a', { root: '/other' })]), /Invalid lane assignment/],
+    [batch([lane('a', { config: '/other' })]), /Invalid lane assignment/],
+    [batch([lane('a', { runId: 'other' })]), /Invalid lane assignment/],
+    [batch([lane('a', { deadlineMs: 2 })]), /Invalid lane assignment/],
+    [batch([lane('a', { pool: 'threads' })]), /Invalid lane assignment/],
+    [batch([lane('a', { collectCoverage: [mutation] })]), /Invalid lane assignment/],
+    [batch([lane('a', { lanes: [lane('b')] })]), /Invalid lane assignment/],
+    [batch([lane('a', { resident }), lane('b')], { resident }), /identical resident/],
+    [batch([lane('a')], { pool: 'threads' }), /Invalid shared controller lanes/],
+    [batch([lane('a')], { collectCoverage: [mutation] }), /Invalid shared controller lanes/],
+    [batch([lane('a')], { kind: 'baseline', mutation: null }), /Invalid shared controller lanes/],
+    [batch([]), /Invalid shared controller lanes/],
+  ])
+    assert.throws(() => runtime.validateRequest(request), message);
+});

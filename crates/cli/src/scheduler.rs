@@ -141,6 +141,15 @@ pub struct Scheduler<'a> {
     cleanup_ok: bool,
     spares: VecDeque<(usize, Request)>,
 }
+/// Whether a job still fits the request limit once wrapped as a one-lane batch.
+const MAX_LANE_BATCH: usize = 8 * 1024 * 1024;
+
+/// Encoded size of a batch holding just this request.
+fn one_lane_len(request: &Request) -> usize {
+    let mut wrapped = request.clone();
+    wrapped.lanes = Some(vec![request.clone()]);
+    encoded_len(&wrapped)
+}
 fn exhausted(request: &Request, reason: &str) -> Response {
     if reason.starts_with("scheduler worker exited") {
         return infrastructure(
@@ -537,6 +546,16 @@ impl<'a> Scheduler<'a> {
         if self.options.shared_controller && self.slots.len() >= 2 {
             let mut pending: VecDeque<_> = jobs.into();
             while let Some(first) = pending.pop_front() {
+                // A request too large to wrap in a lane batch still runs normally.
+                let mut encoded = one_lane_len(&first.1);
+                if encoded > MAX_LANE_BATCH {
+                    for (index, response) in self.dispatch(VecDeque::from([first]), false) {
+                        results[index].outcome = response.mutant_outcome();
+                        results[index].tests = response.tests;
+                        results[index].errors = response.errors;
+                    }
+                    continue;
+                }
                 let mut batch = vec![first];
                 // Admission remains centralized; the baseline fork limit reserves
                 // headroom for every lane, while the single slot owns the whole tree.
@@ -560,17 +579,11 @@ impl<'a> Scheduler<'a> {
                     {
                         break;
                     }
-                    let mut candidate = batch[0].1.clone();
-                    candidate.lanes = Some(
-                        batch
-                            .iter()
-                            .map(|(_, r)| r.clone())
-                            .chain(std::iter::once(next.1.clone()))
-                            .collect(),
-                    );
-                    if encoded_len(&candidate) > 8 * 1024 * 1024 {
+                    let lane = encoded_len(&next.1) + 1;
+                    if encoded + lane > MAX_LANE_BATCH {
                         break;
                     }
+                    encoded += lane;
                     batch.push(pending.pop_front().unwrap());
                 }
                 let mut request = batch[0].1.clone();
@@ -603,10 +616,14 @@ impl<'a> Scheduler<'a> {
                         .and_then(|r| r.get(offset))
                         .cloned()
                         .unwrap_or_else(|| {
-                            infrastructure(
-                                &job,
-                                format!("Shared batch failed: {}", response.errors.join("; ")),
-                            )
+                            if response.outcome == TestOutcome::ResourceExhausted {
+                                exhausted(&job, &response.errors.join("; "))
+                            } else {
+                                infrastructure(
+                                    &job,
+                                    format!("Shared batch failed: {}", response.errors.join("; ")),
+                                )
+                            }
                         });
                     results[index].outcome = item.mutant_outcome();
                     results[index].tests = item.tests;
@@ -799,6 +816,16 @@ mod tests {
         assert!(scheduler.dispatch(VecDeque::new(), true).is_empty());
         assert!(scheduler.slots[1].as_ref().unwrap().busy.is_some());
         assert_eq!(scheduler.budget.active, 0);
+    }
+
+    #[test]
+    fn oversized_requests_do_not_become_lane_batches() {
+        let mut job = request();
+        assert!(one_lane_len(&job) <= MAX_LANE_BATCH);
+        // Five MiB fits the ordinary limit, but the wrapper repeats the job.
+        job.root = "x".repeat(5 * 1024 * 1024);
+        assert!(encoded_len(&job) <= 8 * 1024 * 1024);
+        assert!(one_lane_len(&job) > MAX_LANE_BATCH);
     }
 
     fn request() -> Request {

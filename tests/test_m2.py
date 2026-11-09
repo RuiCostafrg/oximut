@@ -39,6 +39,8 @@ class PersistentEquivalence(unittest.TestCase):
                                     for d in shared['diagnostics']), shared['diagnostics'])
 
     def test_shared_cli_barrier_and_process_cleanup(self):
+        if len(os.sched_getaffinity(0)) < 2:
+            self.skipTest('the barrier needs two concurrent workers')
         with tempfile.TemporaryDirectory(prefix='oximut-lane-cli-') as temporary:
             root = pathlib.Path(temporary)
             (root / 'node_modules').symlink_to(REPO / 'node_modules')
@@ -119,6 +121,8 @@ test('enabled', () => expect(enabled).toBe(true));
                 if name == 'default':
                     self.assertTrue(any('shared controller unavailable' in d
                                         for d in payload['diagnostics']), payload['diagnostics'])
+                    resources = payload['resources']
+                    self.assertEqual(resources['maxActiveJobs'], min(resources['effectiveWorkers'], 2), resources)
             self.assertEqual(outcomes['default'], outcomes['disabled'])
 
     def test_fresh_thread_matches_process_with_selection(self):
