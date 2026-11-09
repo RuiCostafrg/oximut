@@ -151,7 +151,6 @@ const LANE_REPORT_MS: u64 = 1000;
 fn lane_batch(batch: &[(usize, Request)], width: usize) -> Request {
     let mut request = batch[0].1.clone();
     // The adapter keeps this many lanes, so a smaller batch reuses its context.
-    // The worker count is fixed for the run; the admission limit is not.
     request.workers = Some(width.max(batch.len()).min(1024));
     request.deadline_ms = request.deadline_ms.saturating_add(LANE_REPORT_MS);
     request.lanes = Some(batch.iter().map(|(_, r)| r.clone()).collect());
@@ -565,6 +564,8 @@ impl<'a> Scheduler<'a> {
     }
     pub fn run_jobs(&mut self, jobs: Vec<(usize, Request)>, results: &mut [MutantResult]) {
         if self.options.shared_controller && self.slots.len() >= 2 {
+            // Fixed for the run, so that a smaller batch reuses the same lanes.
+            let width = self.slots.len().min(jobs.len());
             let mut pending: VecDeque<_> = jobs.into();
             while let Some(first) = pending.pop_front() {
                 // A request too large to wrap in a lane batch still runs normally.
@@ -608,7 +609,7 @@ impl<'a> Scheduler<'a> {
                     encoded += lane;
                     batch.push(pending.pop_front().unwrap());
                 }
-                let response = self.execute(&lane_batch(&batch, self.slots.len()));
+                let response = self.execute(&lane_batch(&batch, width));
                 self.lanes_ran = true;
                 // Unsupported projects run with one controller per worker instead.
                 if response.lanes.is_none()
