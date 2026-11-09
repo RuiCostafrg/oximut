@@ -227,7 +227,13 @@ test('other', () => expect(count()).toBe(0));
     await writeFile(join(s.root, 'events'), '');
     const c = await s.controller();
     const result = await c.run({ ...jobs[0], lanes: jobs });
-    assert.deepEqual(result.lanes.map(evidence), oracle);
+    // A killed mutant stops at its first failure, so how many tests passed before
+    // it depends on file order. Its outcome and failure count must still match.
+    const comparable = (entry) =>
+      entry.outcome === 'failed'
+        ? { outcome: entry.outcome, failed: entry.tests.failed, skipped: entry.tests.skipped }
+        : entry;
+    assert.deepEqual(result.lanes.map(evidence).map(comparable), oracle.map(comparable));
     const events = await assertGone(s.root);
     for (const job of jobs) {
       const own = events.filter((e) => e.id === job.jobId);
