@@ -140,6 +140,26 @@ pub struct Scheduler<'a> {
     diagnostics: Vec<String>,
     cleanup_ok: bool,
     spares: VecDeque<(usize, Request)>,
+    lanes_ran: bool,
+}
+/// Whether a job still fits the request limit once wrapped as a one-lane batch.
+// Leaves room for the batch's own, slightly longer, deadline field.
+const MAX_LANE_BATCH: usize = 8 * 1024 * 1024 - 64;
+/// Time a batch has to report once a lane is stopped at the job deadline.
+const LANE_REPORT_MS: u64 = 1000;
+
+fn lane_batch(batch: &[(usize, Request)]) -> Request {
+    let mut request = batch[0].1.clone();
+    request.deadline_ms = request.deadline_ms.saturating_add(LANE_REPORT_MS);
+    request.lanes = Some(batch.iter().map(|(_, r)| r.clone()).collect());
+    request
+}
+
+/// Encoded size of a batch holding just this request.
+fn one_lane_len(request: &Request) -> usize {
+    let mut wrapped = request.clone();
+    wrapped.lanes = Some(vec![request.clone()]);
+    encoded_len(&wrapped)
 }
 fn exhausted(request: &Request, reason: &str) -> Response {
     if reason.starts_with("scheduler worker exited") {
@@ -170,10 +190,12 @@ impl<'a> Scheduler<'a> {
             diagnostics: vec![],
             cleanup_ok: true,
             spares: VecDeque::new(),
+            lanes_ran: false,
         })
     }
     pub fn prepare_spares(&mut self, request: &Request) {
-        if self.options.execution == Execution::Persistent
+        if !(self.options.shared_controller && self.slots.len() >= 2)
+            && self.options.execution == Execution::Persistent
             && coordinator::native_worker(&self.options.adapter).is_some()
         {
             self.spares
@@ -470,8 +492,13 @@ impl<'a> Scheduler<'a> {
                         if index != WARM_JOB {
                             self.budget.active += 1;
                         }
-                        self.budget.max_active_jobs =
-                            self.budget.max_active_jobs.max(self.budget.active);
+                        self.budget.max_active_jobs = self.budget.max_active_jobs.max(
+                            self.budget.active
+                                + request
+                                    .lanes
+                                    .as_ref()
+                                    .map_or(0, |lanes| lanes.len().saturating_sub(1)),
+                        );
                     }
                     Err(error) => {
                         if index == WARM_JOB {
@@ -527,7 +554,102 @@ impl<'a> Scheduler<'a> {
             .expect("one serial result")
             .1
     }
+    /// A controller that ran lanes has given up its ordinary Vitest instance.
+    fn retire_lane_controllers(&mut self) {
+        if std::mem::take(&mut self.lanes_ran) {
+            self.close_slots(&(0..self.slots.len()).collect::<Vec<_>>());
+        }
+    }
     pub fn run_jobs(&mut self, jobs: Vec<(usize, Request)>, results: &mut [MutantResult]) {
+        if self.options.shared_controller && self.slots.len() >= 2 {
+            let mut pending: VecDeque<_> = jobs.into();
+            while let Some(first) = pending.pop_front() {
+                // A request too large to wrap in a lane batch still runs normally.
+                let mut encoded = one_lane_len(&first.1);
+                if encoded > MAX_LANE_BATCH {
+                    self.retire_lane_controllers();
+                    for (index, response) in self.dispatch(VecDeque::from([first]), false) {
+                        results[index].outcome = response.mutant_outcome();
+                        results[index].tests = response.tests;
+                        results[index].errors = response.errors;
+                    }
+                    continue;
+                }
+                let mut batch = vec![first];
+                // Admission remains centralized; the baseline fork limit reserves
+                // headroom for every lane, while the single slot owns the whole tree.
+                self.sample(true);
+                let pids: Vec<_> = self.slots.iter().flatten().map(|w| w.child.id()).collect();
+                let capacity = self.budget.capacity(&pids);
+                let limit = self.budget.baseline_fork_limit(capacity, &pids);
+                while batch.len() < limit {
+                    let Some(next) = pending.front() else { break };
+                    if encoded_len(&next.1.resident) != encoded_len(&batch[0].1.resident)
+                        || next
+                            .1
+                            .resident
+                            .as_ref()
+                            .map(|r| r.iter().map(|m| &m.file).collect::<Vec<_>>())
+                            != batch[0]
+                                .1
+                                .resident
+                                .as_ref()
+                                .map(|r| r.iter().map(|m| &m.file).collect::<Vec<_>>())
+                    {
+                        break;
+                    }
+                    let lane = encoded_len(&next.1) + 1;
+                    if encoded + lane > MAX_LANE_BATCH {
+                        break;
+                    }
+                    encoded += lane;
+                    batch.push(pending.pop_front().unwrap());
+                }
+                let response = self.execute(&lane_batch(&batch));
+                self.lanes_ran = true;
+                // Unsupported projects run with one controller per worker instead.
+                if response.lanes.is_none()
+                    && response
+                        .errors
+                        .iter()
+                        .any(|error| error.contains("Shared lanes require"))
+                {
+                    self.diagnostics.push(format!(
+                        "shared controller unavailable, using one controller per worker: {}",
+                        response.errors.join("; ")
+                    ));
+                    let mut rest: Vec<_> = batch;
+                    rest.extend(pending);
+                    for (index, response) in self.dispatch(rest.into(), false) {
+                        results[index].outcome = response.mutant_outcome();
+                        results[index].tests = response.tests;
+                        results[index].errors = response.errors;
+                    }
+                    return;
+                }
+                let responses = response.lanes;
+                for (offset, (index, job)) in batch.into_iter().enumerate() {
+                    let item = responses
+                        .as_ref()
+                        .and_then(|r| r.get(offset))
+                        .cloned()
+                        .unwrap_or_else(|| {
+                            if response.outcome == TestOutcome::ResourceExhausted {
+                                exhausted(&job, &response.errors.join("; "))
+                            } else {
+                                infrastructure(
+                                    &job,
+                                    format!("Shared batch failed: {}", response.errors.join("; ")),
+                                )
+                            }
+                        });
+                    results[index].outcome = item.mutant_outcome();
+                    results[index].tests = item.tests;
+                    results[index].errors = item.errors;
+                }
+            }
+            return;
+        }
         for (index, response) in self.dispatch(jobs.into(), false) {
             results[index].outcome = response.mutant_outcome();
             results[index].tests = response.tests;
@@ -714,6 +836,31 @@ mod tests {
         assert_eq!(scheduler.budget.active, 0);
     }
 
+    #[test]
+    fn oversized_requests_do_not_become_lane_batches() {
+        let mut job = request();
+        assert!(one_lane_len(&job) <= MAX_LANE_BATCH);
+        // Five MiB fits the ordinary limit, but the wrapper repeats the job.
+        job.root = "x".repeat(5 * 1024 * 1024);
+        assert!(encoded_len(&job) <= 8 * 1024 * 1024);
+        assert!(one_lane_len(&job) > MAX_LANE_BATCH);
+    }
+
+    #[test]
+    fn a_lane_batch_can_report_after_its_lanes_reach_the_job_deadline() {
+        let mut job = request();
+        job.deadline_ms = 5000;
+        let batch = lane_batch(&[(0, job.clone()), (1, job)]);
+        assert_eq!(batch.deadline_ms, 5000 + LANE_REPORT_MS);
+        assert!(
+            batch
+                .lanes
+                .unwrap()
+                .iter()
+                .all(|lane| lane.deadline_ms == 5000)
+        );
+    }
+
     fn request() -> Request {
         serde_json::from_value(serde_json::json!({
             "protocol": 1, "runId": "test", "jobId": "baseline", "generation": 0,
@@ -796,6 +943,24 @@ mod tests {
         let spare = scheduler.slots[1].as_ref().expect("queued spare started");
         assert_eq!(spare.busy.as_ref().unwrap().0, WARM_JOB);
         assert!(spare.directory.path().join("warm-0").exists());
+    }
+
+    #[test]
+    fn only_controllers_that_ran_lanes_are_retired() {
+        let _guard = PROCESS_TEST.lock().unwrap();
+        let options = options();
+        let mut scheduler = Scheduler::new(&options).unwrap();
+        let directory = tempfile::tempdir().unwrap();
+        let script = "import pathlib,sys,time\nwhile not (pathlib.Path(sys.argv[1])/'stop').exists(): time.sleep(0.01)";
+        let mut controller = worker(tempfile::tempdir().unwrap(), script, &[directory.path()]);
+        controller.directory = directory;
+        scheduler.slots = vec![Some(controller)];
+        scheduler.retire_lane_controllers();
+        assert!(scheduler.slots[0].is_some());
+        scheduler.lanes_ran = true;
+        scheduler.retire_lane_controllers();
+        assert!(scheduler.slots[0].is_none());
+        assert!(!scheduler.lanes_ran);
     }
 
     #[test]

@@ -17,6 +17,7 @@ export interface Coverage {
 }
 
 export interface Request {
+  lanes?: Omit<Request, 'lanes'>[];
   protocol: 1;
   runId: string;
   jobId: string;
@@ -35,6 +36,7 @@ export interface Request {
   selection?: Selection;
 }
 export interface Result {
+  lanes?: Omit<Response, 'lanes'>[];
   outcome: 'passed' | 'failed' | 'invalid' | 'timeout' | 'infrastructure-error' | 'skipped';
   tests: { passed: number; failed: number; skipped: number };
   errors: string[];

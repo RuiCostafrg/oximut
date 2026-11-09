@@ -227,7 +227,8 @@ its internal fresh workers consume that admitted capacity. Aggregate RSS and
 host/cgroup pressure sampling still cover the entire slot process tree and
 abort on exhaustion. The original and instrumented baseline oracles, inventories,
 deadline, worker termination and post-job descendant cleanup gates are unchanged.
-Mutant jobs retain one test worker per controller.
+With one controller per worker, mutant jobs retain one test worker per controller;
+the shared controller below instead runs one per lane.
 
 ## Spare controller warm-up
 
@@ -260,6 +261,26 @@ and final global subreaper cleanup. In-flight warms are abandoned immediately
 through verified abort; completed warms close normally and retain their diagnostics.
 Single-worker runs and relay adapters send no warm command. Warm acknowledgements
 carry zero tests and never enter baseline or mutant results.
+
+## Shared controller (default for parallel persistent runs)
+
+With at least two admitted workers, persistent execution, fresh-process isolation and
+the native adapter, mutants run in one controller. Lanes are named Vitest
+projects; each mutant still gets one fresh OS process for all its selected
+files, and stop-at-first-failure applies per mutant. `--no-shared-controller`
+selects one controller per worker. Projects whose controller can't be shared
+(custom plugins or runners, global setup, non-Node test files) fall back to one controller
+per worker and record a diagnostic; configurations that persistent execution
+already rejects, such as multiple projects, are still rejected.
+
+The process boundary differs from one controller per worker, where every selected
+test file gets its own fork. Here a mutant's selected files share its one fork:
+Vitest still resets modules between them, but process-level state such as patched
+globals or native addon state can carry from one file to the next. Use
+`--no-shared-controller` when tests depend on a process per file.
+
+This depends on
+private details of Vitest 5.1.0; `shared-lanes.ts` refuses any other version.
 
 ## Release or follow-up
 

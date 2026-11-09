@@ -54,8 +54,8 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 90
     env:
-      # The Vitest 5 upgrade commit itself: main's adapter rejects Vitest 5, so this is a same-engine control.
-      BEFORE_COMMIT: 7e3ae5a492516c7a45e4b44eb0304d95d2171a5f
+      # Main 91fef20 (after #55, Vitest 5); diagnostic clocks and peak attribution stay off here.
+      BEFORE_COMMIT: 91fef2060e0180dc65eb8ff378896616eb8fc62b
       BUILD_FLAGS: --locked --release -p oximut-cli
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

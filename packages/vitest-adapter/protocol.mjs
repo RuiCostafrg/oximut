@@ -44,6 +44,38 @@ export function validateRequest(value) {
       /** @type {number} */ (value.workers) > 1024)
   )
     throw new Error('Invalid workers');
+  if (value.lanes !== undefined) {
+    if (
+      value.kind !== 'mutant' ||
+      value.pool !== undefined ||
+      value.collectCoverage !== undefined ||
+      !Array.isArray(value.lanes) ||
+      value.lanes.length < 1 ||
+      value.lanes.length > 1024
+    )
+      throw new Error('Invalid shared controller lanes');
+    const ids = new Set();
+    for (const job of value.lanes) {
+      if (
+        !record(job) ||
+        job.lanes !== undefined ||
+        job.kind !== 'mutant' ||
+        job.root !== value.root ||
+        job.config !== value.config ||
+        job.runId !== value.runId ||
+        job.deadlineMs !== value.lanes[0].deadlineMs ||
+        /** @type {number} */ (job.deadlineMs) > /** @type {number} */ (value.deadlineMs) ||
+        job.pool !== undefined ||
+        job.collectCoverage !== undefined ||
+        ids.has(job.jobId)
+      )
+        throw new Error('Invalid lane assignment');
+      validateRequest(job);
+      if (JSON.stringify(job.resident) !== JSON.stringify(value.resident))
+        throw new Error('Lanes require identical resident modules');
+      ids.add(job.jobId);
+    }
+  }
   if (value.kind === 'baseline') {
     if (value.mutation !== null) throw new Error('Baseline mutation must be null');
   } else {
@@ -75,6 +107,7 @@ export function validateRequest(value) {
     for (const mutation of value.collectCoverage)
       validateRequest({
         ...value,
+        lanes: undefined,
         kind: 'mutant',
         mutation,
         collectCoverage: undefined,
@@ -88,6 +121,7 @@ export function validateRequest(value) {
     for (const mutation of value.resident) {
       validateRequest({
         ...value,
+        lanes: undefined,
         kind: 'mutant',
         mutation,
         collectCoverage: undefined,
