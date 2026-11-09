@@ -151,6 +151,7 @@ const LANE_REPORT_MS: u64 = 1000;
 fn lane_batch(batch: &[(usize, Request)], width: usize) -> Request {
     let mut request = batch[0].1.clone();
     // The adapter keeps this many lanes, so a smaller batch reuses its context.
+    // The worker count is fixed for the run; the admission limit is not.
     request.workers = Some(width.clamp(batch.len(), 1024));
     request.deadline_ms = request.deadline_ms.saturating_add(LANE_REPORT_MS);
     request.lanes = Some(batch.iter().map(|(_, r)| r.clone()).collect());
@@ -607,7 +608,7 @@ impl<'a> Scheduler<'a> {
                     encoded += lane;
                     batch.push(pending.pop_front().unwrap());
                 }
-                let response = self.execute(&lane_batch(&batch, limit));
+                let response = self.execute(&lane_batch(&batch, self.slots.len()));
                 self.lanes_ran = true;
                 // Unsupported projects run with one controller per worker instead.
                 if response.lanes.is_none()

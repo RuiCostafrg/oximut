@@ -54,7 +54,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 90
     env:
-      # Main 91fef20 (after #55, Vitest 5); diagnostic clocks and peak attribution stay off here.
+      # Main 3fcbf19 (after #56, shared controller); diagnostic clocks and peak attribution stay off here.
       BEFORE_COMMIT: 3fcbf192f1c1f204d2362c805b931947cac78220
       BUILD_FLAGS: --locked --release -p oximut-cli
     steps:
