@@ -21,7 +21,7 @@ import m6
 import real_project as workload
 import targets
 
-BASELINE = 'e6fd607a2347cd7f47148c9f41329e67486ef086'
+BASELINE = '91fef2060e0180dc65eb8ff378896616eb8fc62b'
 METRICS = ('wall_seconds', 'cpu_seconds', 'peak_aggregate_rss_bytes')
 VARIANTS = ('before', 'after')
 # One instrumented baseline validates inactive switching for every switched file
