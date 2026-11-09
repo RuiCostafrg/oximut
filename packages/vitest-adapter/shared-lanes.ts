@@ -218,7 +218,7 @@ export class SharedLanes {
       (failure) => failure === LANE_EXITED || failure === HARD_DEADLINE,
     ).length;
     const poolExits = result.unhandledErrors.filter((error) =>
-      POOL_EXIT.test(String(error.message)),
+      POOL_EXIT.test(String((error as Error).message)),
     ).length;
     const unattributed = result.unhandledErrors.length > poolExits || poolExits > exits;
     const lanes = jobs.map((job, index) => {
