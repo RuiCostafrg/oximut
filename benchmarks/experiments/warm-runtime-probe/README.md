@@ -7,10 +7,14 @@ The repository now uses Vitest 5. To run this probe, first restore its dependenc
 (do not commit these two files):
 
 ```sh
-git show 34acb9fee79a9e010f956b1326c52dc537aa1a64:package.json > package.json
-git show 34acb9fee79a9e010f956b1326c52dc537aa1a64:package-lock.json > package-lock.json
+git fetch --no-tags --depth=1 origin 34acb9fee79a9e010f956b1326c52dc537aa1a64
+git show FETCH_HEAD:package.json > package.json
+git show FETCH_HEAD:package-lock.json > package-lock.json
 npm ci --ignore-scripts
 ```
+
+Afterwards, run `git checkout -- package.json package-lock.json && npm ci --ignore-scripts`
+to return to the repository's dependencies.
 
 From the repo root, with those dependencies and Node 26.3.1:
 

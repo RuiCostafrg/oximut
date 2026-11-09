@@ -319,6 +319,7 @@ class NativeCoordinator(unittest.TestCase):
     def test_baseline_failure_cleans_warm_spares(self):
         self.require_two_workers()
         result, report, events = self.run_cli('baseline-fail-warm', extra_args=('--workers', '2'), full=True)
+        self.require_spare_capacity(report)
         self.assertEqual(report['baseline']['outcome'], 'failed', result.stderr)
         self.assertTrue(any(e['event'] == 'warm' for e in events))
         self.assertFalse(any(e['event'] == 'run' and e['job'] != 'baseline' for e in events))
