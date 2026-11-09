@@ -50,13 +50,15 @@ export class SharedLanes {
     }
     const changed = JSON.stringify([...modules]) !== JSON.stringify([...this.modules]);
     this.modules = modules;
-    if (this.context && this.width !== jobs.length) await this.close();
+    // A stable lane count keeps the context across a smaller final batch.
+    const width = Math.max(batch.workers ?? jobs.length, jobs.length);
+    if (this.context && this.width !== width) await this.close();
     if (!this.context) {
       const context = await createVitest('test', {
         root: batch.root,
         config: batch.config,
         watch: false,
-        maxWorkers: jobs.length,
+        maxWorkers: width,
         maxConcurrency: 1,
         fileParallelism: true,
         isolate: true,
@@ -65,7 +67,7 @@ export class SharedLanes {
         reporters: [],
         // Mutation transforms vary without changing source bytes; disk cache keys do not.
         fsModuleCache: false,
-        projects: jobs.map((_, index) => ({
+        projects: Array.from({ length: width }, (_, index) => ({
           extends: true,
           plugins: [
             {
@@ -138,7 +140,7 @@ export class SharedLanes {
             runner,
             isolate: true,
             bail: 0,
-            maxWorkers: jobs.length,
+            maxWorkers: width,
             fileParallelism: true,
             maxConcurrency: 1,
           },
@@ -151,7 +153,7 @@ export class SharedLanes {
         throw error;
       }
       this.context = context;
-      this.width = jobs.length;
+      this.width = width;
       if (getCompileCacheDir())
         for (const project of context.projects)
           project.config.execArgv = [
@@ -164,10 +166,12 @@ export class SharedLanes {
     }
     const ctx = this.context;
     for (const [index, project] of ctx.projects.entries()) {
-      project.config.env = {
-        ...project.config.env,
-        OXIMUT_ACTIVE_MUTANT: jobs[index].mutation!.id,
-      };
+      // Lanes beyond this batch stay idle: they receive no specification.
+      if (jobs[index])
+        project.config.env = {
+          ...project.config.env,
+          OXIMUT_ACTIVE_MUTANT: jobs[index].mutation!.id,
+        };
       if (
         project.config.environment !== 'node' ||
         project.config.globalSetup?.length ||

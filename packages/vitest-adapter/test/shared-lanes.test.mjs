@@ -358,3 +358,24 @@ test('an unexplained batch error outranks a lane timeout', { timeout: 90000 }, a
     ['infrastructure-error', 'infrastructure-error'],
   );
 });
+
+test('a smaller batch reuses the lanes of a stable width', { timeout: 90000 }, async (t) => {
+  const s = await fixture(t);
+  const lanes = new SharedLanes();
+  t.after(() => lanes.close());
+  const jobs = ['survived', 'selected'].map(s.job);
+  const full = await lanes.run({ ...jobs[0], workers: 2, lanes: jobs });
+  assert.deepEqual(
+    full.lanes.map((lane) => lane.outcome),
+    ['passed', 'passed'],
+  );
+  const context = lanes.context;
+  const small = await lanes.run({ ...jobs[1], workers: 2, lanes: [jobs[1]] });
+  assert.deepEqual(
+    small.lanes.map((lane) => lane.outcome),
+    ['passed'],
+  );
+  assert.equal(lanes.context, context);
+  await lanes.run({ ...jobs[1], lanes: [jobs[1]] });
+  assert.notEqual(lanes.context, context);
+});

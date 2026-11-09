@@ -148,8 +148,10 @@ const MAX_LANE_BATCH: usize = 8 * 1024 * 1024 - 64;
 /// Time a batch has to report once a lane is stopped at the job deadline.
 const LANE_REPORT_MS: u64 = 1000;
 
-fn lane_batch(batch: &[(usize, Request)]) -> Request {
+fn lane_batch(batch: &[(usize, Request)], width: usize) -> Request {
     let mut request = batch[0].1.clone();
+    // The adapter keeps this many lanes, so a smaller batch reuses its context.
+    request.workers = Some(width.clamp(batch.len(), 1024));
     request.deadline_ms = request.deadline_ms.saturating_add(LANE_REPORT_MS);
     request.lanes = Some(batch.iter().map(|(_, r)| r.clone()).collect());
     request
@@ -605,7 +607,7 @@ impl<'a> Scheduler<'a> {
                     encoded += lane;
                     batch.push(pending.pop_front().unwrap());
                 }
-                let response = self.execute(&lane_batch(&batch));
+                let response = self.execute(&lane_batch(&batch, limit));
                 self.lanes_ran = true;
                 // Unsupported projects run with one controller per worker instead.
                 if response.lanes.is_none()
@@ -850,7 +852,8 @@ mod tests {
     fn a_lane_batch_can_report_after_its_lanes_reach_the_job_deadline() {
         let mut job = request();
         job.deadline_ms = 5000;
-        let batch = lane_batch(&[(0, job.clone()), (1, job)]);
+        let batch = lane_batch(&[(0, job.clone()), (1, job)], 4);
+        assert_eq!(batch.workers, Some(4));
         assert_eq!(batch.deadline_ms, 5000 + LANE_REPORT_MS);
         assert!(
             batch
