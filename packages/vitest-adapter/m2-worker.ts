@@ -34,6 +34,9 @@ function same(a?: NonNullable<Request['mutation']>, b?: NonNullable<Request['mut
 }
 
 function message(error: unknown): string {
+  // Vitest 5 wraps project setup failures in an AggregateError; keep their causes.
+  if (error instanceof AggregateError)
+    return [error.message, ...error.errors.map(message)].join('\n');
   return error instanceof Error ? error.message : String(error);
 }
 function transformError(error: unknown): boolean {
@@ -49,7 +52,7 @@ function transformError(error: unknown): boolean {
 }
 /** Drain the pinned pool without closing Vite or losing controller transforms. */
 async function awaitWorkerTermination(context: NonNullable<typeof vitest>, remainingMs: number) {
-  // Vitest 4.1.12 createPool() hides its Pool in a closure. Its wrapper.close()
+  // Vitest 5.1.0 createPool() hides its Pool in a closure. Its wrapper.close()
   // calls Pool.cancel(): it drains activeTasks, sharedRunners and exitPromises,
   // then resets cancellation so the same pool can run again. runTests() alone
   // does not await runner.stop(), including Worker.terminate() for threads.
@@ -84,7 +87,7 @@ async function awaitWorkerTermination(context: NonNullable<typeof vitest>, remai
 async function command(name: string, args: Request): Promise<unknown> {
   if (name === 'initialize') {
     if (vitest) throw new Error('Already initialized');
-    if (version !== '4.1.12') throw new Error(`Unsupported Vitest ${version}; expected 4.1.12`);
+    if (version !== '5.1.0') throw new Error(`Unsupported Vitest ${version}; expected 5.1.0`);
     // The native coordinator sends requests directly; validate them here.
     validateRequest(args);
     pool = args.pool === 'threads' ? 'threads' : 'forks';
@@ -105,6 +108,8 @@ async function command(name: string, args: Request): Promise<unknown> {
         maxConcurrency: 1,
         fileParallelism: false,
         isolate: true,
+        // Mutation transforms vary without changing source bytes; disk cache keys do not.
+        fsModuleCache: false,
         coverage: { enabled: false },
         reporters: [
           {
@@ -145,6 +150,7 @@ async function command(name: string, args: Request): Promise<unknown> {
       vitest.projects.length !== 1 ||
       vitest.projects.some(
         (project) =>
+          project.config.fsModuleCache !== false ||
           project.config.pool !== pool ||
           project.config.isolate !== true ||
           project.config.maxWorkers !== 1 ||
@@ -154,7 +160,7 @@ async function command(name: string, args: Request): Promise<unknown> {
       )
     )
       throw new Error(
-        'Unsupported resource configuration: one Node project, one requested worker, sequential files and tests, and isolation are required',
+        'Unsupported resource configuration: one Node project, one requested worker, sequential files and tests, isolation, and disabled filesystem module caching are required',
       );
     if (
       vitest.projects.some(
@@ -226,7 +232,7 @@ async function command(name: string, args: Request): Promise<unknown> {
   servedModules = served(mutation, resident);
   if (name === 'warm') {
     // Transform only: never collectTests, import a module, or start a pool.
-    // SSR is the Node test environment used by pinned Vitest 4.1.12.
+    // SSR is the Node test environment used by pinned Vitest 5.1.0.
     const specifications = await vitest.globTestSpecifications();
     let transformed = 0;
     for (const project of vitest.projects) {
@@ -261,7 +267,7 @@ async function command(name: string, args: Request): Promise<unknown> {
   const previousWorkers = vitest.projects.map((project) => project.config.maxWorkers);
   const previousBail = vitest.projects.map((project) => project.config.bail);
   const cancellations: string[] = [];
-  // runFiles clears onCancel listeners before starting workers (4.1.12).
+  // runFiles clears onCancel listeners before starting workers (5.1.0).
   // Observe the public cancellation entry point instead, scoped to this job.
   const cancelCurrentRun = vitest.cancelCurrentRun;
   vitest.cancelCurrentRun = function (reason) {
@@ -269,10 +275,10 @@ async function command(name: string, args: Request): Promise<unknown> {
     return cancelCurrentRun.call(this, reason);
   };
   try {
-    // Vitest 4.1.12 serializes project.config afresh for each worker start.
+    // Vitest 5.1.0 serializes project.config afresh for each worker start.
     for (const project of vitest.projects) {
       project.config.bail = job.kind === 'mutant' ? 1 : 0;
-      // 4.1.12 groupSpecs reads this on every run; createPool calls
+      // 5.1.0 groupSpecs reads this on every run; createPool calls
       // setMaxWorkers for that group. Isolation still gives each file a fresh runner.
       project.config.maxWorkers = job.kind === 'baseline' ? (job.workers ?? 1) : 1;
     }
@@ -282,7 +288,7 @@ async function command(name: string, args: Request): Promise<unknown> {
       job.selection?.mode === 'files'
         ? specifications.filter((spec) => job.selection?.files.includes(resolve(spec.moduleId)))
         : specifications;
-    // Match the file pragma precedence and syntax in pinned Vitest 4.1.12.
+    // Match the file pragma precedence and syntax in pinned Vitest 5.1.0.
     for (const spec of selected) {
       const content = await readFile(spec.moduleId, 'utf8');
       const environment =

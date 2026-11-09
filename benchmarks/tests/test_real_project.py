@@ -39,7 +39,7 @@ class CorpusTests(unittest.TestCase):
                 benchmark.verify_inputs(project, self.manifest)
 
     def test_missing_tests_and_duplicate_names_are_rejected(self):
-        identities = self.manifest['expectedTests']
+        identities = self.manifest['expectedOximutTests']
         report = {'testFiles': {}}
         for filename, name in identities:
             report['testFiles'].setdefault(filename, {'tests': []})['tests'].append({'name': name})
@@ -77,7 +77,7 @@ class WarmupOnlyTests(unittest.TestCase):
             project.mkdir()
             for name in ('vitest.config.ts', 'stryker.config.mjs', 'package.json'):
                 (project / name).write_text('{}')
-        versions = {'node': 'v26.3.1', 'vitest': '4.1.12',
+        versions = {'node': 'v26.3.1', 'vitest': '5.1.0',
                     '@stryker-mutator/core': '10.1.1', '@stryker-mutator/vitest-runner': '10.1.1'}
         with tempfile.TemporaryDirectory() as tmp:
             output = Path(tmp) / 'warmup'
@@ -119,7 +119,7 @@ class FailedCampaignRatioTests(unittest.TestCase):
             return {'declared_test_identity_sha256': 'same',
                     'mutations': {'a': {'outcome': 'killed'}}}
 
-        versions = {'node': 'v26.3.1', 'vitest': '4.1.12',
+        versions = {'node': 'v26.3.1', 'vitest': '5.1.0',
                     '@stryker-mutator/core': '10.1.1', '@stryker-mutator/vitest-runner': '10.1.1'}
         with tempfile.TemporaryDirectory() as tmp:
             output = Path(tmp) / 'campaign'

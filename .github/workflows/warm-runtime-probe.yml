@@ -37,6 +37,13 @@ jobs:
         with:
           node-version-file: .node-version
           cache: npm
+      # This probe is a frozen record of Vitest 4.1.12 behaviour and uses its private paths,
+      # so it installs the exact dependency tree of the last revision on that version.
+      - name: Restore the Vitest 4.1.12 lockfile
+        run: |
+          git fetch --no-tags --depth=1 origin 34acb9fee79a9e010f956b1326c52dc537aa1a64
+          git show FETCH_HEAD:package.json > package.json
+          git show FETCH_HEAD:package-lock.json > package-lock.json
       - run: npm ci --ignore-scripts
       - run: node --test benchmarks/experiments/warm-runtime-probe/test-validation.mjs
       - name: Preserve executed source and run state oracles (no timing claims)
@@ -47,6 +54,8 @@ jobs:
           mkdir "$RUNNER_TEMP/warm-runtime-probe"
           git archive HEAD | gzip > "$RUNNER_TEMP/warm-runtime-probe/source.tar.gz"
           git rev-parse HEAD > "$RUNNER_TEMP/warm-runtime-probe/commit.txt"
+          # git archive holds the Vitest 5 tree; record the manifests this probe actually ran on.
+          cp package.json package-lock.json "$RUNNER_TEMP/warm-runtime-probe/"
           python3 - <<'PY'
           import json, os, pathlib, subprocess
           root = pathlib.Path(os.environ['RUNNER_TEMP']) / 'warm-runtime-probe'

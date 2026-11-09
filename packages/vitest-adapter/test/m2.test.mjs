@@ -479,7 +479,7 @@ import { parentPort, threadId } from 'node:worker_threads';
 const tick = () => appendFileSync(${JSON.stringify(marker)}, threadId + '\\n');
 tick();
 setInterval(tick, 5).unref();
-// Vitest 4.1.12 sends this message before terminating the thread. Delay its
+// Vitest 5.1.0 sends this message before terminating the thread. Delay its
 // handling so the run/termination gap is observable even on a slow host.
 parentPort.on('message', (message) => {
   if (!message?.__vitest_worker_request__ || message.type !== 'stop') return;

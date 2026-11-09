@@ -53,7 +53,8 @@ def validate_tests(tool, report, project, manifest):
             raise ValueError('Oximut baseline test attribution incomplete')
         identities = [[relative(test['file'], project), test['name']]
                       for test in coverage['tests']]
-    expected = manifest['expectedOximutTests'] if tool == 'oximut' else manifest['expectedTests']
+    # From Vitest 5, Stryker reports names joined with ' > ', exactly as Oximut does.
+    expected = manifest['expectedTests'] if tool == 'vitest' else manifest['expectedOximutTests']
     if sorted(identities) != sorted(expected):
         raise ValueError(f'{tool} test identities differ from declared upstream tests')
     # Both exact representations are pinned from ordinary Vitest ancestorTitles/title.
@@ -286,7 +287,7 @@ def main(argv=None):
     manifest = measurement.read_json(CORPUS / 'workload.json')
     verify_inputs(CORPUS, manifest)
     meta = measurement.metadata()
-    if (meta['versions']['node'] != 'v26.3.1' or meta['versions']['vitest'] != '4.1.12'
+    if (meta['versions']['node'] != 'v26.3.1' or meta['versions']['vitest'] != '5.1.0'
             or meta['versions']['@stryker-mutator/core'] != '10.1.1'
             or meta['versions']['@stryker-mutator/vitest-runner'] != '10.1.1'):
         raise ValueError('pinned Node/Vitest/Stryker toolchain required')
