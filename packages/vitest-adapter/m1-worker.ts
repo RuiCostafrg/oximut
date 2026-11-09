@@ -16,6 +16,9 @@ let busy = false;
 let job: Request;
 
 function message(error: unknown): string {
+  // Vitest 5 wraps project setup failures in an AggregateError; keep their causes.
+  if (error instanceof AggregateError)
+    return [error.message, ...error.errors.map(message)].join('\n');
   return error instanceof Error ? error.message : String(error);
 }
 function transformError(error: unknown): boolean {

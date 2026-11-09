@@ -81,6 +81,9 @@ async function command(name, args) {
         reportOnFailure: true,
       },
     });
+    // A project config can override this; stale transforms would corrupt mutant outcomes.
+    if (vitest.projects.some((project) => project.config.fsModuleCache !== false))
+      throw new Error('Unsupported configuration: fsModuleCache must stay disabled');
     await vitest.standalone();
     return { versions: { node: process.version, vitest: vitestVersion }, controllerPid: process.pid };
   }

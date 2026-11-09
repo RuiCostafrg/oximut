@@ -3,7 +3,20 @@
 This is a standalone structural probe of pinned Vitest 4.1.12, not a product mode
 or performance benchmark. Fresh forks remain Oximut's default.
 
-From the repo root, with its installed dependencies and Node 26.3.1:
+The repository now uses Vitest 5. To run this probe, first restore its dependencies
+(do not commit these two files):
+
+```sh
+git fetch --no-tags --depth=1 origin 34acb9fee79a9e010f956b1326c52dc537aa1a64
+git show FETCH_HEAD:package.json > package.json
+git show FETCH_HEAD:package-lock.json > package-lock.json
+npm ci --ignore-scripts
+```
+
+Afterwards, run `git checkout -- package.json package-lock.json && npm ci --ignore-scripts`
+to return to the repository's dependencies.
+
+From the repo root, with those dependencies and Node 26.3.1:
 
 ```sh
 node benchmarks/experiments/warm-runtime-probe/probe.mjs --output /tmp/oximut-stock-probe-new
