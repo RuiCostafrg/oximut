@@ -202,7 +202,10 @@ export class SharedLanes {
     try {
       result = await ctx.runTestSpecifications(representatives, true);
       // runTestSpecifications does not await isolated stop(). Drain before reassigning.
-      await (ctx as unknown as { pool?: { close(): Promise<void> } }).pool?.close();
+      const pool = (ctx as unknown as { pool?: { close?: () => Promise<void> } }).pool;
+      if (typeof pool?.close !== 'function')
+        throw new Error('Unsupported Vitest pool: missing termination handle');
+      await pool.close();
     } catch (error) {
       await this.close();
       throw error;

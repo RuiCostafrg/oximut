@@ -93,37 +93,48 @@ test('enabled', () => expect(enabled).toBe(true));
                 self.assertEqual(warmed, not shared, payload['diagnostics'])
 
     def test_unsupported_project_falls_back_to_one_controller_per_worker(self):
-        with tempfile.TemporaryDirectory(prefix='oximut-lane-fallback-') as temporary:
-            root = pathlib.Path(temporary)
-            (root / 'node_modules').symlink_to(REPO / 'node_modules')
-            (root / 'source.ts').write_text('export const enabled = true; export const unused = false;')
-            (root / 'global-setup.mjs').write_text('export default () => {};')
-            (root / 'vitest.config.mjs').write_text(
-                "export default { test: { include: ['sample.test.ts'], globalSetup: ['./global-setup.mjs'] } };")
-            (root / 'sample.test.ts').write_text("""
+        global_setup = {
+            'global-setup.mjs': 'export default () => {};',
+            'vitest.config.mjs': "export default { test: { include: ['sample.test.ts'], globalSetup: ['./global-setup.mjs'] } };",
+        }
+        # Detected only when the first batch runs, after the worker gave up its
+        # ordinary Vitest instance for lanes.
+        custom_environment = {
+            'environment.mjs': "export default { name: 'custom', viteEnvironment: 'ssr', setup() { return { teardown() {} }; } };",
+            'vitest.config.mjs': "export default { test: { include: ['sample.test.ts'] } };",
+        }
+        for label, files, header in (('global setup', global_setup, ''),
+                                     ('test file environment', custom_environment, '// @vitest-environment ./environment.mjs\n')):
+            with self.subTest(label), tempfile.TemporaryDirectory(prefix='oximut-lane-fallback-') as temporary:
+                root = pathlib.Path(temporary)
+                (root / 'node_modules').symlink_to(REPO / 'node_modules')
+                (root / 'source.ts').write_text('export const enabled = true; export const unused = false;')
+                for name, content in files.items():
+                    (root / name).write_text(content)
+                (root / 'sample.test.ts').write_text(header + """
 import { test, expect } from 'vitest';
 import { enabled } from './source';
 test('enabled', () => expect(enabled).toBe(true));
 """)
-            outcomes = {}
-            for name, extra in (('default', ()), ('disabled', ('--no-shared-controller',))):
-                report = root / f'{name}.json'
-                result = subprocess.run([
-                    str(BINARY), '--root', str(root), '--source', 'source.ts',
-                    '--config', 'vitest.config.mjs', '--execution', 'persistent',
-                    '--workers', '2', '--no-cache', '--mutators', 'boolean-literal',
-                    '--report', str(report), *extra,
-                ], cwd=REPO, capture_output=True, text=True, timeout=120)
-                payload = json.loads(report.read_text())
-                self.assertIn(result.returncode, (0, 1), payload)
-                self.assertTrue(payload['summary']['complete'], payload)
-                outcomes[name] = sorted((m['id'], m['outcome']) for m in payload['mutants'])
-                if name == 'default':
-                    self.assertTrue(any('shared controller unavailable' in d
-                                        for d in payload['diagnostics']), payload['diagnostics'])
-                    resources = payload['resources']
-                    self.assertEqual(resources['maxActiveJobs'], min(resources['effectiveWorkers'], 2), resources)
-            self.assertEqual(outcomes['default'], outcomes['disabled'])
+                outcomes = {}
+                for name, extra in (('default', ()), ('disabled', ('--no-shared-controller',))):
+                    report = root / f'{name}.json'
+                    result = subprocess.run([
+                        str(BINARY), '--root', str(root), '--source', 'source.ts',
+                        '--config', 'vitest.config.mjs', '--execution', 'persistent',
+                        '--workers', '2', '--no-cache', '--mutators', 'boolean-literal',
+                        '--report', str(report), *extra,
+                    ], cwd=REPO, capture_output=True, text=True, timeout=120)
+                    payload = json.loads(report.read_text())
+                    self.assertIn(result.returncode, (0, 1), payload)
+                    self.assertTrue(payload['summary']['complete'], payload)
+                    outcomes[name] = sorted((m['id'], m['outcome']) for m in payload['mutants'])
+                    if name == 'default':
+                        self.assertTrue(any('shared controller unavailable' in d
+                                            for d in payload['diagnostics']), payload['diagnostics'])
+                        resources = payload['resources']
+                        self.assertEqual(resources['maxActiveJobs'], min(resources['effectiveWorkers'], 2), resources)
+                self.assertEqual(outcomes['default'], outcomes['disabled'])
 
     def test_fresh_thread_matches_process_with_selection(self):
         process = self.run_fixture('m1', 'subject.ts', 'persistent', 17,

@@ -140,6 +140,7 @@ pub struct Scheduler<'a> {
     diagnostics: Vec<String>,
     cleanup_ok: bool,
     spares: VecDeque<(usize, Request)>,
+    lanes_ran: bool,
 }
 /// Whether a job still fits the request limit once wrapped as a one-lane batch.
 // Leaves room for the batch's own, slightly longer, deadline field.
@@ -189,6 +190,7 @@ impl<'a> Scheduler<'a> {
             diagnostics: vec![],
             cleanup_ok: true,
             spares: VecDeque::new(),
+            lanes_ran: false,
         })
     }
     pub fn prepare_spares(&mut self, request: &Request) {
@@ -552,6 +554,12 @@ impl<'a> Scheduler<'a> {
             .expect("one serial result")
             .1
     }
+    /// A controller that ran lanes has given up its ordinary Vitest instance.
+    fn retire_lane_controllers(&mut self) {
+        if std::mem::take(&mut self.lanes_ran) {
+            self.close_slots(&(0..self.slots.len()).collect::<Vec<_>>());
+        }
+    }
     pub fn run_jobs(&mut self, jobs: Vec<(usize, Request)>, results: &mut [MutantResult]) {
         if self.options.shared_controller && self.slots.len() >= 2 {
             let mut pending: VecDeque<_> = jobs.into();
@@ -559,6 +567,7 @@ impl<'a> Scheduler<'a> {
                 // A request too large to wrap in a lane batch still runs normally.
                 let mut encoded = one_lane_len(&first.1);
                 if encoded > MAX_LANE_BATCH {
+                    self.retire_lane_controllers();
                     for (index, response) in self.dispatch(VecDeque::from([first]), false) {
                         results[index].outcome = response.mutant_outcome();
                         results[index].tests = response.tests;
@@ -597,6 +606,7 @@ impl<'a> Scheduler<'a> {
                     batch.push(pending.pop_front().unwrap());
                 }
                 let response = self.execute(&lane_batch(&batch));
+                self.lanes_ran = true;
                 // Unsupported projects run with one controller per worker instead.
                 if response.lanes.is_none()
                     && response
@@ -933,6 +943,24 @@ mod tests {
         let spare = scheduler.slots[1].as_ref().expect("queued spare started");
         assert_eq!(spare.busy.as_ref().unwrap().0, WARM_JOB);
         assert!(spare.directory.path().join("warm-0").exists());
+    }
+
+    #[test]
+    fn only_controllers_that_ran_lanes_are_retired() {
+        let _guard = PROCESS_TEST.lock().unwrap();
+        let options = options();
+        let mut scheduler = Scheduler::new(&options).unwrap();
+        let directory = tempfile::tempdir().unwrap();
+        let script = "import pathlib,sys,time\nwhile not (pathlib.Path(sys.argv[1])/'stop').exists(): time.sleep(0.01)";
+        let mut controller = worker(tempfile::tempdir().unwrap(), script, &[directory.path()]);
+        controller.directory = directory;
+        scheduler.slots = vec![Some(controller)];
+        scheduler.retire_lane_controllers();
+        assert!(scheduler.slots[0].is_some());
+        scheduler.lanes_ran = true;
+        scheduler.retire_lane_controllers();
+        assert!(scheduler.slots[0].is_none());
+        assert!(!scheduler.lanes_ran);
     }
 
     #[test]
