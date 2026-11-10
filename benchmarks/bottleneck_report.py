@@ -173,7 +173,7 @@ def extract_controller(root, inputs):
         kind, t = e['type'], e['monotonicMs']
         if kind == 'controller-request':
             current = {'command': e['command'], 'kind': e.get('kind'), 'mutant': e.get('mutantId'),
-                       'start': t, 'cpu0': e['selfCpuUsage'], 'forks': []}
+                       'lanes': e.get('laneCount'), 'start': t, 'cpu0': e['selfCpuUsage'], 'forks': []}
             jobs.append(current)
         elif kind == 'controller-send' and current is not None:
             current['end'], current['cpu1'] = t, e['selfCpuUsage']
@@ -199,7 +199,7 @@ def extract_controller(root, inputs):
                              'exit': exited})
         cpu = (job['cpu1']['user'] - job['cpu0']['user'] + job['cpu1']['system'] - job['cpu0']['system']) / 1e3
         out_jobs.append({'command': job['command'], 'kind': job['kind'], 'mutant': job['mutant'],
-                         'start': job['start'], 'end': job['end'], 'controller_cpu_ms': cpu,
+                         'lanes': job['lanes'], 'start': job['start'], 'end': job['end'], 'controller_cpu_ms': cpu,
                          'forks': segments})
     exit_event = next(e for e in events if e['type'] == 'controller-exit')
     return {

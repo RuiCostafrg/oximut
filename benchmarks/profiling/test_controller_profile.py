@@ -23,8 +23,10 @@ const { fork } = require('node:child_process');
 process.on('message', async msg => {
   if (msg.command === 'run') {
     if (process.env.FIXTURE_DEFER_PROFILE === '1') await new Promise(setImmediate);
-    const child = fork(process.env.FIXTURE_CHILD, [], { stdio: ['ignore','ignore','inherit','ipc'] });
-    await new Promise(resolve => {
+    // A shared-lane batch forks one child per lane, all at once.
+    const lanes = msg.args?.request?.lanes?.length ?? 1;
+    await Promise.all(Array.from({length: lanes}, () => new Promise(resolve => {
+      const child = fork(process.env.FIXTURE_CHILD, [], { stdio: ['ignore','ignore','inherit','ipc'] });
       let running = false;
       let stopping = false;
       child.on('message', m => {
@@ -37,7 +39,7 @@ process.on('message', async msg => {
       });
       child.once('exit', resolve);
       child.send({__vitest_worker_request__:true,type:'start'});
-    });
+    })));
   }
   let sendReturned = false;
   const returned = process.send({protocol:1,id:msg.id,result:{ok:true}}, error => {
@@ -80,12 +82,21 @@ const { fork } = require('node:child_process');
   const mutantJobIds = JSON.parse(process.env.FIXTURE_MUTANT_JOB_IDS);
   const baselineIds = JSON.parse(process.env.FIXTURE_BASELINE_IDS);
   const runId = process.env.FIXTURE_RUN_ID;
+  // Batch sizes group the mutants into shared-lane requests; one lane per batch by default.
+  const sizes = JSON.parse(process.env.FIXTURE_BATCHES || '[]');
+  const batches = [];
+  for (let at = 0, i = 0; at < mutantIds.length; i++) {
+    const size = sizes.length ? sizes[i] : 1;
+    batches.push(mutantIds.slice(at, at + size).map((m, k) => [mutantJobIds[at + k], m]));
+    at += size;
+  }
   const commands = [['initialize'], ...baselineIds.map(id => ['run','baseline',id]),
-    ...mutantIds.map((id,i) => ['run','mutant',mutantJobIds[i],id]), ['close']];
-  for (const [index,[command,kind,jobId,mutantId]] of commands.entries()) {
+    ...batches.map(batch => ['run','mutant',batch[0][0],batch[0][1],batch]), ['close']];
+  for (const [index,[command,kind,jobId,mutantId,batch]] of commands.entries()) {
     const id = index + 1;
     const response = new Promise(resolve => c.once('message', resolve));
     const job = {kind, jobId, runId, mutation:kind === 'mutant' ? {id:mutantId} : null};
+    if (batch && sizes.length) job.lanes = batch.map(([lane, m]) => ({kind, jobId:lane, runId, mutation:{id:m}}));
     const args = command === 'run' ? {request:job} : command === 'initialize'
       ? {kind:'baseline',jobId:'baseline',runId,mutation:null} : {};
     c.send({protocol:1,id,command,args});
@@ -187,7 +198,7 @@ setImmediate(() => {
                 duplicate='', defer_profile=False, fail_append=False,
                 request_ids=None, qualification_ids=None, validation_runs=0,
                 baseline_ids=None, request_run_id=None, qualification_run_id=None,
-                mutant_job_ids=None, coverage_mode="none", controller_exit_code=0):
+                mutant_job_ids=None, coverage_mode="none", controller_exit_code=0, batches=None):
         """Run real fork IPC and verify replies, callbacks, return values and exit."""
         request_ids = request_ids if request_ids is not None else [secrets.token_hex(32) for _ in range(2)]
         qualification_ids = qualification_ids if qualification_ids is not None else list(request_ids)
@@ -219,6 +230,7 @@ setImmediate(() => {
                'FIXTURE_BASELINE_IDS': json.dumps(baseline_ids), 'FIXTURE_RUN_ID': request_run_id,
                'FIXTURE_CONTROLLER_EXIT': str(controller_exit_code),
                'FIXTURE_DUPLICATE': duplicate,
+               'FIXTURE_BATCHES': json.dumps(batches or []),
                'FIXTURE_DEFER_PROFILE': '1' if defer_profile else '0'}
         if defer_profile:
             sabotage = root / 'deferred-inspector.cjs'
@@ -258,7 +270,7 @@ fs.appendFileSync = function(file, data, ...args) {
         lines = result.stdout.splitlines()
         data = next(json.loads(line) for line in lines if line.startswith('{'))
         self.assertEqual(data['code'], controller_exit_code)
-        command_count = len(baseline_ids) + len(request_ids) + 2
+        command_count = len(baseline_ids) + (len(batches) if batches else len(request_ids)) + 2
         self.assertEqual(data['replies'], [dict(protocol=1,id=i,result=dict(ok=True)) for i in range(1,command_count + 1)])
         self.assertEqual(lines.count('callback'), command_count)
         self.assertEqual(lines.count('returned:true'), command_count)
@@ -313,6 +325,45 @@ fs.appendFileSync = function(file, data, ...args) {
                     self.assertTrue(self.capture(root)['errors'])
             self.write_events(timeline, events)
             self.assertEqual(self.capture(root)['errors'], [])
+
+    def test_shared_lane_batches_count_every_lane_and_name_them(self):
+        """A batch is one request carrying one mutant per lane; every lane must reconcile."""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            ids = [secrets.token_hex(32) for _ in range(3)]
+            result = self.fixture(root, request_ids=ids, batches=[2, 1])
+            self.assertEqual(result['errors'], [])
+            self.assertTrue(result['workload_reconciled'])
+            observed = result['observed'][0]
+            self.assertEqual(observed['batch_sizes'], [2, 1])
+            self.assertEqual(observed['mutant_count'], 3)
+            self.assertEqual(observed['mutant_request_count'], 2)
+            self.assertEqual(observed['mutant_ids'], ids)
+            self.assertEqual(observed['observed_forks'], 1 + 3)  # one baseline fork, one fork per lane
+            events = [json.loads(line) for line in next(root.glob('controller-*.jsonl')).read_text().splitlines()]
+            batches = [e for e in events if e['type'] == 'controller-request' and 'laneCount' in e]
+            self.assertEqual([e['laneMutantIds'] for e in batches], [ids[:2], ids[2:]])
+            # A batch that names a lane the qualification does not know must not reconcile.
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            ids = [secrets.token_hex(32) for _ in range(3)]
+            qualified = [ids[0], ids[1], secrets.token_hex(32)]
+            result = self.fixture(root, request_ids=ids, qualification_ids=qualified, batches=[2, 1])
+            self.assertFalse(result['workload_reconciled'])
+            self.assertTrue(any('identities differ' in e for e in result['errors']))
+        with tempfile.TemporaryDirectory() as tmp:
+            # Dropping a lane's identity from a batch breaks the batch's own consistency.
+            root = Path(tmp)
+            ids = [secrets.token_hex(32) for _ in range(3)]
+            self.fixture(root, request_ids=ids, batches=[2, 1])
+            timeline = next(root.glob('controller-*.jsonl'))
+            events = [json.loads(line) for line in timeline.read_text().splitlines()]
+            for e in events:
+                if 'laneMutantIds' in e:
+                    e['laneMutantIds'] = e['laneMutantIds'][:1]
+                    break
+            self.write_events(timeline, events)
+            self.assertTrue(any('unidentified shared-lane batch' in e for e in self.capture(root)['errors']))
 
     def test_opt_out_and_noncontroller_are_inert(self):
         """Leave execution and output untouched outside the explicit controller opt-in."""
