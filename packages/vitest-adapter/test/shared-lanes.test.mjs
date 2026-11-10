@@ -370,12 +370,20 @@ test('a smaller batch reuses the lanes of a stable width', { timeout: 90000 }, a
     ['passed', 'passed'],
   );
   const context = lanes.context;
+  await writeFile(join(s.root, 'events'), '');
   const small = await lanes.run({ ...jobs[1], workers: 2, lanes: [jobs[1]] });
   assert.deepEqual(
     small.lanes.map((lane) => lane.outcome),
     ['passed'],
   );
   assert.equal(lanes.context, context);
+  // Only the requested mutant ran; the idle lane did nothing.
+  const events = (await readFile(join(s.root, 'events'), 'utf8'))
+    .split('\n')
+    .filter(Boolean)
+    .map(JSON.parse);
+  assert.ok(events.length);
+  assert.deepEqual([...new Set(events.map((event) => event.id))], ['selected']);
   await lanes.run({ ...jobs[1], lanes: [jobs[1]] });
   assert.notEqual(lanes.context, context);
 });
