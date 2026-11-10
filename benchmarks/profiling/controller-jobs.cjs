@@ -148,9 +148,13 @@ if (dir && process.argv[1]?.endsWith('/m2-worker.ts')) {
     const laneMutantIds = lanes && lanes.length <= 1024 && lanes.every((lane) => lane?.kind === 'mutant'
       && typeof lane.mutation?.id === 'string' && /^[a-f0-9]{64}$/.test(lane.mutation.id))
       ? lanes.map((lane) => lane.mutation.id) : null;
+    const laneJobIds = laneMutantIds && lanes.every((lane) => typeof lane.jobId === 'string'
+      && /^[a-f0-9]{64}$/.test(lane.jobId)) ? lanes.map((lane) => lane.jobId) : null;
+    const laneRunIds = laneMutantIds && lanes.every((lane) => typeof lane.runId === 'string'
+      && lane.runId.length <= 128 && /^[0-9]+-[0-9]+$/.test(lane.runId)) ? lanes.map((lane) => lane.runId) : null;
     emit('controller-request', { id: msg.id, command: msg.command,
       kind: ['baseline', 'mutant'].includes(kind) ? kind : null, mutantId, jobId, runId,
-      ...(lanes ? { laneCount: lanes.length, laneMutantIds } : {}) });
+      ...(lanes ? { laneCount: lanes.length, laneMutantIds, laneJobIds, laneRunIds } : {}) });
     if (msg.command === 'run' && kind === 'mutant' && !attempted) startProfile(msg.id);
   }));
   process.on('exit', (code) => emit('controller-exit', { code }));

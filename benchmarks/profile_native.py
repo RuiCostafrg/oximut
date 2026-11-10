@@ -158,7 +158,9 @@ def controller_capture_inventory(directory, qualification=None):
             if any('laneCount' in e and (type(e['laneCount']) is not int or e['laneCount'] < 1
                                          or not isinstance(e.get('laneMutantIds'), list)
                                          or len(e['laneMutantIds']) != e['laneCount']
-                                         or e['laneMutantIds'][0] != e.get('mutantId'))
+                                         or e['laneMutantIds'][0] != e.get('mutantId')
+                                         or any(not isinstance(e.get(key), list) or len(e[key]) != e['laneCount']
+                                                for key in ('laneJobIds', 'laneRunIds')))
                    for e in mutants):
                 errors.append(f'unidentified shared-lane batch: {timeline.name}')
             # Every lane of a batch starts exactly one fork inside its request window.
@@ -248,10 +250,12 @@ def controller_capture_inventory(directory, qualification=None):
                              'jobs': [{'kind': e.get('kind'), 'job_id': e.get('jobId'),
                                        'run_id': e.get('runId'), 'mutant_id': e.get('mutantId')}
                                       for e in requests if e.get('command') == 'run' and 'laneCount' not in e] +
-                                     [{'kind': 'mutant', 'job_id': identity, 'run_id': e.get('runId'),
-                                       'mutant_id': identity}
+                                     [{'kind': 'mutant', 'job_id': job_id, 'run_id': run_id, 'mutant_id': identity}
                                       for e in requests if e.get('command') == 'run' and 'laneCount' in e
-                                      for identity in (e['laneMutantIds'] if isinstance(e.get('laneMutantIds'), list) else [])],
+                                      and all(isinstance(e.get(key), list) and len(e[key]) == len(e.get('laneMutantIds') or [])
+                                              for key in ('laneMutantIds', 'laneJobIds', 'laneRunIds'))
+                                      for identity, job_id, run_id in zip(e['laneMutantIds'], e['laneJobIds'],
+                                                                          e['laneRunIds'], strict=True)],
                              'first_mutant_window': profile_window})
         except (OSError, ValueError, KeyError, TypeError, StopIteration, OverflowError) as error:
             errors.append(f'invalid controller capture {timeline.name}: {error}')

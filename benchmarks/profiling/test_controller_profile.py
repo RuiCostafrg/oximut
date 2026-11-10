@@ -343,7 +343,28 @@ fs.appendFileSync = function(file, data, ...args) {
             events = [json.loads(line) for line in next(root.glob('controller-*.jsonl')).read_text().splitlines()]
             batches = [e for e in events if e['type'] == 'controller-request' and 'laneCount' in e]
             self.assertEqual([e['laneMutantIds'] for e in batches], [ids[:2], ids[2:]])
-            # A batch that names a lane the qualification does not know must not reconcile.
+            self.assertEqual([e['laneJobIds'] for e in batches], [ids[:2], ids[2:]])
+            self.assertEqual([e['laneRunIds'] for e in batches], [[e['runId']] * len(e['laneMutantIds']) for e in batches])
+        with tempfile.TemporaryDirectory() as tmp:
+            # A lane whose job identity is not its mutation's must fail, not hide behind the first lane's.
+            root = Path(tmp)
+            ids = [secrets.token_hex(32) for _ in range(3)]
+            result = self.fixture(root, request_ids=ids, mutant_job_ids=[ids[0], secrets.token_hex(32), ids[2]],
+                                  batches=[2, 1])
+            self.assertTrue(any('job identity differs' in e for e in result['errors']))
+            self.assertFalse(result['workload_reconciled'])
+        with tempfile.TemporaryDirectory() as tmp:
+            # A lane from a different run is rejected as well.
+            root = Path(tmp)
+            ids = [secrets.token_hex(32) for _ in range(3)]
+            self.fixture(root, request_ids=ids, batches=[2, 1])
+            timeline = next(root.glob('controller-*.jsonl'))
+            events = [json.loads(line) for line in timeline.read_text().splitlines()]
+            batch = next(e for e in events if e.get('laneCount') == 2)
+            batch['laneRunIds'][1] = '1-2'
+            self.write_events(timeline, events)
+            self.assertTrue(any('different qualification run' in e for e in self.capture(root)['errors']))
+        # A batch that names a lane the qualification does not know must not reconcile.
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             ids = [secrets.token_hex(32) for _ in range(3)]
