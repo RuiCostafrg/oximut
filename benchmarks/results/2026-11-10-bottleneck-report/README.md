@@ -24,7 +24,7 @@ python3 benchmarks/bottleneck_report_lanes.py render --data benchmarks/results/2
   --output-dir benchmarks/results/2026-11-10-bottleneck-report
 ~~~
 
-Re-extract from downloaded artifacts with `bottleneck_report_lanes.py extract --help`; pass `--notes notes.json` to record experiment outcomes (the rejected overlap and lane-prepare experiments) next to the ranked bottlenecks they concern. The notes are stored in `data.json`, not in the renderer.
+Re-extract from downloaded artifacts with `bottleneck_report_lanes.py extract --help`; pass `--notes benchmarks/results/2026-11-10-bottleneck-report/notes.json` to record experiment outcomes (the rejected overlap and lane-prepare experiments) next to the ranked bottlenecks they concern. The notes are stored in `data.json`, not in the renderer.
 
 ## Limits
 

@@ -37,6 +37,15 @@ esc, table, share, legend, stacked_bars, ratio_chart = (
 
 # ----------------------------------------------------------------------------- extract
 
+def check_notes(notes):
+    """Notes attach to ranked bottlenecks by exact name; an unknown name would silently hide evidence."""
+    if not isinstance(notes, dict) or not all(isinstance(k, str) and isinstance(v, str) for k, v in notes.items()):
+        raise SystemExit('notes must be a JSON object of strings')
+    unknown = sorted(set(notes) - set(OWNERS))
+    if unknown:
+        raise SystemExit(f'notes name no known bottleneck: {unknown}')
+
+
 def check_inputs(concurrency, benchmark, benchmark_low, controller, profiles):
     """Refuse evidence that does not describe one workload at one matched shared-lane concurrency."""
     if concurrency['benchmark'] != concurrency['controller'] or concurrency['controller'] != concurrency['profiles']:
@@ -81,8 +90,7 @@ def extract(args):
                 return f'{name} {runs[name]}: {os.path.relpath(path, root)}'
         return path
     notes = json.loads(base.consume(args.notes, inputs)) if args.notes else {}
-    if not isinstance(notes, dict) or not all(isinstance(k, str) and isinstance(v, str) for k, v in notes.items()):
-        raise SystemExit('notes must be a JSON object of strings')
+    check_notes(notes)
     return {'schema': SCHEMA, 'generated': args.generated, 'notes': notes, 'runs': runs, 'concurrency': concurrency['benchmark'],
             'concurrency_low': concurrency['benchmark_low'], 'benchmark': benchmark, 'benchmark_low': benchmark_low,
             'controller': controller, 'profiles': profiles,
@@ -548,6 +556,7 @@ def main(argv=None):
         data = json.loads(args.data.read_text(encoding='utf-8'))
         if data.get('schema') != SCHEMA:
             raise SystemExit(f'unsupported data schema {data.get("schema")}; expected {SCHEMA}')
+        check_notes(data.get('notes', {}))
         args.output_dir.mkdir(parents=True, exist_ok=True)
         # Render every page before replacing any, so a failure leaves the previous set intact.
         for name, text in render_all(data).items():

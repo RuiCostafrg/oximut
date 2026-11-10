@@ -618,7 +618,7 @@
   "controller 42809383591: capture/profiles/controller-6357.jsonl": "a0b93da6918de72c56061edc8412542dec05870112488935251cb9b0301845e8",
   "controller 42809383591: capture/qualification/00-oximut/report.json": "f1bf595a37b6e0fa76d0e8ecd8c9551663fda9fc0c1f3cfb861c65d240b1dacc",
   "controller 42809383591: capture/qualification/measurements.jsonl": "b7142a73ef329705b0bde90a40bee3c5d9e1706c62dd38d16b615f26fbe19882",
-  "notes: notes.json": "1456d2944652138dc3b09ed593bf9d18f677a3591afd2ae7f10c83957b19c480",
+  "notes: notes.json": "25768f672b89638d042180d26ce22c89d6dc9d16dcd7213878a54d157a3e7a74",
   "profiles 42809377478: capture/diagnostic.json": "62f2cbfe15f23f0a5e2019c8a8730f7e93f343a53ccc3bb044d85bc80649e818",
   "profiles 42809377478: capture/profiles/CPU.20261110.114222.6701.0.001.cpuprofile": "df06297a3f26c1dacb4395e2ccd620526a01b050368a7759b110f1a02ed6abe4",
   "profiles 42809377478: capture/profiles/CPU.20261110.114223.6718.0.001.cpuprofile": "c8920348982a2d76487c81f5bac1a0a2d96a4f19deef331b1e4b817040ae00ab",
@@ -688,7 +688,7 @@
   "profiles 42809377478: capture/qualification/measurements.jsonl": "4e07c15f18d72b8da4878e70628c62eeff420d0752dac5c57c745d9139d0a855"
  },
  "notes": {
-  "First mutant batch pays for cold lanes": "Tried and rejected on this workload: PR #61 built the lane context on a spare controller during the baselines and was slower (after/before 1.082 at 4 workers), so moving that setup off the critical path did not help. It did not isolate createVitest from the other setup, so this report does not claim setup is free. This capture shows where the batch's time goes: cold per-lane module fetch and collect (165\u2013290 ms against 20\u201360 ms in later batches) against 114 ms before its first fork.",
+  "First mutant batch pays for cold lanes": "Tried and rejected on this workload: PR #61 built the lane context on a spare controller during the baselines and was slower (after/before 1.082 at 4 workers), so moving that setup off the critical path did not help. It did not isolate createVitest from the other setup, so this report does not claim setup is free. This capture shows where the batch's time goes: cold per-lane module fetch and collect (184\u2013290 ms against 19\u201364 ms in later batches) against 114 ms before its first fork.",
   "Instrumented baseline runs after the original baseline": "Tried at 4 and 2 workers on this workload and rejected: PR #59 ran it concurrently on a second slot and measured no wall gain (4 workers: after/before 0.991 [0.957, 1.249]; baseline phases 1292 \u2192 1282 ms) at +15% CPU. The two baselines are CPU-bound, so overlap does not reach this bound; only a shorter instrumented run would."
  },
  "profiles": {

@@ -168,6 +168,18 @@ class LaneReport(unittest.TestCase):
         self.assertIn('Candidate: overlap it with the original baseline', pages['index.html'])
         self.assertNotIn('notes', {k for k in lanes.OWNERS if 'rejected' in lanes.OWNERS[k]})
 
+    def test_notes_must_name_a_ranked_bottleneck(self):
+        lanes.check_notes({})
+        lanes.check_notes(load()['notes'])
+        for bad in ({'Misspelled bottleneck': 'x'}, {'Controller boot before the first job': 3}, ['x']):
+            with self.subTest(bad), self.assertRaises(SystemExit):
+                lanes.check_notes(bad)
+        changed = load()
+        changed['notes'] = {'Misspelled bottleneck': 'hidden evidence'}
+        result, pages = render_changed(changed)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertEqual(pages, {})
+
     def test_charts_describe_the_comparisons_they_plot(self):
         index = (REPORT / 'index.html').read_text(encoding='utf-8')
         data = load()
