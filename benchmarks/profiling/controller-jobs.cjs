@@ -143,8 +143,14 @@ if (dir && process.argv[1]?.endsWith('/m2-worker.ts')) {
       && /^(?:baseline|instrumented-baseline(?:-[0-9]+)?|[a-f0-9]{64})$/.test(job.jobId) ? job.jobId : null;
     const runId = typeof job?.runId === 'string' && job.runId.length <= 128
       && /^[0-9]+-[0-9]+$/.test(job.runId) ? job.runId : null;
+    // A shared-lane batch is its first lane's request carrying every lane's request.
+    const lanes = msg.command === 'run' && Array.isArray(job?.lanes) ? job.lanes : undefined;
+    const laneMutantIds = lanes && lanes.length <= 1024 && lanes.every((lane) => lane?.kind === 'mutant'
+      && typeof lane.mutation?.id === 'string' && /^[a-f0-9]{64}$/.test(lane.mutation.id))
+      ? lanes.map((lane) => lane.mutation.id) : null;
     emit('controller-request', { id: msg.id, command: msg.command,
-      kind: ['baseline', 'mutant'].includes(kind) ? kind : null, mutantId, jobId, runId });
+      kind: ['baseline', 'mutant'].includes(kind) ? kind : null, mutantId, jobId, runId,
+      ...(lanes ? { laneCount: lanes.length, laneMutantIds } : {}) });
     if (msg.command === 'run' && kind === 'mutant' && !attempted) startProfile(msg.id);
   }));
   process.on('exit', (code) => emit('controller-exit', { code }));
