@@ -420,23 +420,16 @@ test(
   },
 );
 
-test(
-  'prepare drops the context of an unsupported project',
-  { timeout: 90000 },
-  async (t) => {
-    const s = await fixture(t);
-    await writeFile(
-      join(s.root, 'vitest.config.mjs'),
-      "export default { test: { include: ['*.test.ts'], environment: 'jsdom' } };",
-    );
-    const lanes = new SharedLanes();
-    await assert.rejects(
-      lanes.prepare({ ...s.job('survived'), workers: 2 }),
-      /Shared lanes require/,
-    );
-    assert.equal(lanes.context, undefined);
-  },
-);
+test('prepare drops the context of an unsupported project', { timeout: 90000 }, async (t) => {
+  const s = await fixture(t);
+  await writeFile(
+    join(s.root, 'vitest.config.mjs'),
+    "export default { test: { include: ['*.test.ts'], environment: 'jsdom' } };",
+  );
+  const lanes = new SharedLanes();
+  await assert.rejects(lanes.prepare({ ...s.job('survived'), workers: 2 }), /Shared lanes require/);
+  assert.equal(lanes.context, undefined);
+});
 
 test(
   'a prepared controller runs the first batch without rebuilding its lanes',
