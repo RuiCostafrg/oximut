@@ -564,8 +564,9 @@ impl<'a> Scheduler<'a> {
     }
     pub fn run_jobs(&mut self, jobs: Vec<(usize, Request)>, results: &mut [MutantResult]) {
         if self.options.shared_controller && self.slots.len() >= 2 {
-            // Fixed for the run, so that a smaller batch reuses the same lanes.
-            let width = self.slots.len().min(jobs.len());
+            // Fixed at the first batch, so that later batches reuse the same lanes.
+            let total = jobs.len();
+            let mut width = None;
             let mut pending: VecDeque<_> = jobs.into();
             while let Some(first) = pending.pop_front() {
                 // A request too large to wrap in a lane batch still runs normally.
@@ -586,7 +587,8 @@ impl<'a> Scheduler<'a> {
                 let pids: Vec<_> = self.slots.iter().flatten().map(|w| w.child.id()).collect();
                 let capacity = self.budget.capacity(&pids);
                 let limit = self.budget.baseline_fork_limit(capacity, &pids);
-                while batch.len() < limit {
+                let width = *width.get_or_insert(self.slots.len().min(total).min(limit));
+                while batch.len() < limit.min(width) {
                     let Some(next) = pending.front() else { break };
                     if encoded_len(&next.1.resident) != encoded_len(&batch[0].1.resident)
                         || next
