@@ -155,6 +155,19 @@ class LaneReport(unittest.TestCase):
         result, _ = render_changed(fast)
         self.assertEqual(result.returncode, 0, result.stderr)
 
+    def test_experiment_notes_come_from_the_data_not_the_renderer(self):
+        data = load()
+        self.assertEqual(data['notes'], json.loads((REPORT / 'notes.json').read_text(encoding='utf-8')))
+        self.assertIn('notes: notes.json', data['inputs'])
+        self.assertIn('Tried and rejected', (REPORT / 'index.html').read_text(encoding='utf-8'))
+        bare = copy.deepcopy(data)
+        bare['notes'] = {}
+        result, pages = render_changed(bare)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertNotIn('rejected', pages['index.html'])
+        self.assertIn('Candidate: overlap it with the original baseline', pages['index.html'])
+        self.assertNotIn('notes', {k for k in lanes.OWNERS if 'rejected' in lanes.OWNERS[k]})
+
     def test_charts_describe_the_comparisons_they_plot(self):
         index = (REPORT / 'index.html').read_text(encoding='utf-8')
         data = load()

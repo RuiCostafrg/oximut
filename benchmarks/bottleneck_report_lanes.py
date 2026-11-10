@@ -74,11 +74,16 @@ def extract(args):
 
     def rel(path):
         path = str(Path(path).resolve())
+        if args.notes and path == str(args.notes.resolve()):
+            return f'notes: {args.notes.name}'
         for name, root in roots.items():
             if path.startswith(root + os.sep):
                 return f'{name} {runs[name]}: {os.path.relpath(path, root)}'
         return path
-    return {'schema': SCHEMA, 'generated': args.generated, 'runs': runs, 'concurrency': concurrency['benchmark'],
+    notes = json.loads(base.consume(args.notes, inputs)) if args.notes else {}
+    if not isinstance(notes, dict) or not all(isinstance(k, str) and isinstance(v, str) for k, v in notes.items()):
+        raise SystemExit('notes must be a JSON object of strings')
+    return {'schema': SCHEMA, 'generated': args.generated, 'notes': notes, 'runs': runs, 'concurrency': concurrency['benchmark'],
             'concurrency_low': concurrency['benchmark_low'], 'benchmark': benchmark, 'benchmark_low': benchmark_low,
             'controller': controller, 'profiles': profiles,
             'inputs': {rel(k): v for k, v in inputs.items()}}
@@ -288,7 +293,7 @@ def render_overview(d):
     for i, (name, ms, why) in enumerate(a['estimates'], 1):
         body.append(f'<div class="rank"><h3>#{i} {esc(name)}: up to {ms:.0f} ms '
                     f'({100 * ms / a["wall"]:.0f}% of the capture)</h3><p>{esc(why)}</p>'
-                    f'<p class="note">{esc(OWNERS.get(name, ""))}</p></div>')
+                    f'<p class="note">{esc(d.get("notes", {}).get(name) or OWNERS.get(name, ""))}</p></div>')
     body.append(controller_cpu_section(d))
     body.append('<h2>Evidence and limits</h2><ul>' + ''.join(f'<li>{x}</li>' for x in [
         f'Paired campaigns: runs {esc(d["runs"]["benchmark"])} ({w} workers) and {esc(d["runs"]["benchmark_low"])} '
@@ -317,14 +322,9 @@ OWNERS = {
         'Not covered by an open thread. A prewarmed spare fork (#45) was closed under the earlier CPU/RSS rule; '
         'wall time is now the only acceptance metric, so a pre-spawned idle fork pool deserves a fresh measurement.',
     'Instrumented baseline runs after the original baseline':
-        'Tried and rejected: PR #59 ran it concurrently on a second slot and measured no wall gain (4 workers: '
-        'after/before 0.991 [0.957, 1.249]; baseline phases 1292 → 1282 ms) at +15% CPU. The two baselines are CPU-bound, '
-        'so this bound is not reachable by overlap; only a shorter instrumented run would help.',
+        'Candidate: overlap it with the original baseline, or shorten the instrumented run itself.',
     'First mutant batch pays for cold lanes':
-        'Tried and rejected: PR #61 built the lane context during the baselines and was slower (after/before 1.082 at '
-        '4 workers), so createVitest setup is not the cost. This capture agrees: the batch spends its time in '
-        'cold per-lane module fetch/transform (fetch + collect 165–290 ms against 20–60 ms later), not in the '
-        '114 ms before its first fork.',
+        'Candidate: warm the per-lane module transforms before the first batch.',
     'Controller boot before the first job':
         'Candidates: a persistent Node compile cache for the controller (V8 validates entries by content), or shipping the '
         'controller entry as plain JavaScript so Node skips type stripping.',
@@ -535,6 +535,7 @@ def main(argv=None):
     for name in ('benchmark', 'benchmark-low', 'controller', 'profiles'):
         ex.add_argument(f'--{name}', required=True, type=Path)
         ex.add_argument(f'--{name}-run', required=True)
+    ex.add_argument('--notes', type=Path, help='JSON object of per-bottleneck notes (e.g. recorded experiment outcomes)')
     ex.add_argument('--generated', required=True, help='provenance line shown on every page')
     ex.add_argument('--output', required=True, type=Path)
     rd = sub.add_parser('render')
