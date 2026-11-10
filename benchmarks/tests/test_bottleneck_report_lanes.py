@@ -128,11 +128,30 @@ class LaneReport(unittest.TestCase):
             'missing concurrency': lambda c, b, lo, ct, p: c.update(benchmark_low=None),
             'different workload': lambda c, b, lo, ct, p: lo.update(workload_sha256='other'),
             'failed controller capture': lambda c, b, lo, ct, p: ct['identity'].update(passed=False),
+            'one baseline only': lambda c, b, lo, ct, p: ct['jobs'].remove(
+                next(j for j in ct['jobs'] if j['kind'] == 'baseline' and j['forks'])),
             'no shared-lane batches': lambda c, b, lo, ct, p: [j.update(lanes=None) for j in ct['jobs']],
         }
         for name, mutate in cases.items():
             with self.subTest(name), self.assertRaises(SystemExit):
                 check(mutate)
+
+    def test_a_single_mutant_batch_still_renders_and_estimates_stay_non_negative(self):
+        data = load()
+        single = copy.deepcopy(data)
+        jobs = single['controller']['jobs']
+        keep = next(j for j in jobs if j['lanes'])
+        single['controller']['jobs'] = [j for j in jobs if not j['lanes'] or j is keep]
+        result, pages = render_changed(single)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn('No later full batch', pages['index.html'])
+        # A first batch faster than the later ones saves nothing; it must not report a negative saving.
+        fast = copy.deepcopy(data)
+        first = next(j for j in fast['controller']['jobs'] if j['lanes'])
+        first['end'] = first['start'] + 1
+        self.assertTrue(all(ms >= 0 for _, ms, _ in lanes.analyse(fast)['estimates']))
+        result, _ = render_changed(fast)
+        self.assertEqual(result.returncode, 0, result.stderr)
 
     def test_charts_describe_the_comparisons_they_plot(self):
         index = (REPORT / 'index.html').read_text(encoding='utf-8')

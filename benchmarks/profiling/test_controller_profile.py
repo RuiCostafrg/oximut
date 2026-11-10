@@ -364,6 +364,13 @@ fs.appendFileSync = function(file, data, ...args) {
                     break
             self.write_events(timeline, events)
             self.assertTrue(any('unidentified shared-lane batch' in e for e in self.capture(root)['errors']))
+            # A lane whose worker never started leaves the batch short of its declared lanes.
+            short = copy.deepcopy(events)
+            batch = next(e for e in short if e['type'] == 'controller-request' and e.get('laneCount') == 2)
+            lane_fork = next(e for e in short if e['type'] == 'fork' and e['monotonicMs'] >= batch['monotonicMs'])
+            short = [e for e in short if e.get('childPid') != lane_fork['childPid']]
+            self.write_events(timeline, short)
+            self.assertTrue(any('forked 1 workers for 2 lanes' in e for e in self.capture(root)['errors']))
             # An empty batch is invalid evidence, not a crash.
             for e in events:
                 if 'laneMutantIds' in e:

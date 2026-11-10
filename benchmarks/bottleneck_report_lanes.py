@@ -53,6 +53,8 @@ def check_inputs(concurrency, benchmark, benchmark_low, controller, profiles):
         raise SystemExit('the controller capture did not pass; refusing a timeline built on it')
     if not any(j['lanes'] for j in controller['jobs']):
         raise SystemExit('the controller capture shows no shared-lane batches')
+    if sum(j['kind'] == 'baseline' and bool(j['forks']) for j in controller['jobs']) < 2:
+        raise SystemExit('the controller capture needs an original and an instrumented baseline job')
 
 
 def extract(args):
@@ -129,7 +131,8 @@ def analyse(d):
     # A fork pool could hide every bootstrap but the first job's.
     hidable_boot = sum(critical_boot[1:])
     full = [j for j in mutants if j['lanes'] == workers]
-    cold_excess = full[0]['_wall'] - statistics.median(j['_wall'] for j in full[1:]) if len(full) > 1 else 0.0
+    cold_excess = (max(full[0]['_wall'] - statistics.median(j['_wall'] for j in full[1:]), 0.0)
+                   if len(full) > 1 else 0.0)
     # Lane time nobody used after the cold batch: lanes x batch wall minus the forks' lifetimes.
     idle_lane_ms = sum(workers * j['_wall'] - sum(f['exit'] - f['fork'] for f in j['forks'])
                        for j in mutants[1:])
@@ -149,7 +152,7 @@ def analyse(d):
          cold_excess, f'The first full batch takes {full[0]["_wall"]:.0f} ms against a median of '
                       f'{statistics.median(j["_wall"] for j in full[1:]):.0f} ms for the later full batches; '
                       f'its controller CPU is {full[0]["controller_cpu_ms"]:.0f} ms of that wall.'
-         if cold_excess else 'No later full batch to compare against.'),
+         if len(full) > 1 else 'No later full batch to compare against.'),
         ('Controller boot before the first job',
          boot_ms, f'{initialize["start"] - c["controller_start_ms"]:.0f} ms from Node start to the initialize request plus '
                   f'{initialize["end"] - initialize["start"]:.0f} ms to answer it (Node, Vitest import, createVitest).'),
@@ -262,9 +265,11 @@ def render_overview(d):
                        'last exit → reply', 'job wall', 'controller CPU'], rows,
                       'Per job, ms: median fork step durations and controller-visible stages (one capture)'))
     first, later = a['mutants'][0], a['mutants'][1:]
-    body.append(f'<p><b>The first mutant batch is the odd one out:</b> {first["_wall"]:.0f} ms and '
-                f'{first["controller_cpu_ms"]:.0f} ms of controller CPU, against {later[0]["_wall"]:.0f} ms and '
-                f'{later[0]["controller_cpu_ms"]:.0f} ms for the next. All {d["concurrency"]} lanes share one controller process, '
+    compare = (f' against {later[0]["_wall"]:.0f} ms and {later[0]["controller_cpu_ms"]:.0f} ms for the next'
+               if later else '')
+    body.append(f'<p><b>The first mutant batch:</b> {first["_wall"]:.0f} ms and '
+                f'{first["controller_cpu_ms"]:.0f} ms of controller CPU{compare}. '
+                f'All {d["concurrency"]} lanes share one controller process, '
                 'whose main thread serves every fork\'s module requests (CPU here is process-wide, all threads). The first '
                 'batch plausibly pays for cold Vite transforms in each lane project: the CPU profile makes transform/resolve '
                 'the largest controller category, but only a per-batch profile would prove it. After that, a batch is '

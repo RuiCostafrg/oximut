@@ -161,6 +161,16 @@ def controller_capture_inventory(directory, qualification=None):
                                          or e['laneMutantIds'][0] != e.get('mutantId'))
                    for e in mutants):
                 errors.append(f'unidentified shared-lane batch: {timeline.name}')
+            # Every lane of a batch starts exactly one fork inside its request window.
+            for request in mutants:
+                if 'laneCount' not in request or type(request['laneCount']) is not int:
+                    continue
+                reply = next((e for e in replies if e.get('id') == request.get('id')), None)
+                started = [e for e in events if e['type'] == 'fork' and reply is not None
+                           and request['monotonicMs'] <= e['monotonicMs'] <= reply['monotonicMs']]
+                if len(started) != request['laneCount']:
+                    errors.append(f'shared-lane batch forked {len(started)} workers for {request["laneCount"]} lanes: '
+                                  f'{timeline.name}')
             lane_ids = [[*(e['laneMutantIds'] if 'laneCount' in e and isinstance(e.get('laneMutantIds'), list)
                           else [e.get('mutantId')])] for e in mutants]
             starts = [e for e in events if e['type'] == 'profile-started']
