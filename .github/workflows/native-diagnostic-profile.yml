@@ -11,6 +11,10 @@ on:
           - accounting
           - controller-jobs
           - segments
+      concurrency:
+        description: 'Matched parallelism: Oximut --workers and Stryker concurrency'
+        type: string
+        default: '1'
   pull_request:
     types: [opened, reopened, synchronize, labeled]
 
@@ -84,6 +88,7 @@ jobs:
         shell: bash
         env:
           CAPTURE_MODE: ${{ inputs.capture_mode || 'accounting' }}
+          MATCHED_CONCURRENCY: ${{ inputs.concurrency || '1' }}
         run: |
           set -euo pipefail
           case "$CAPTURE_MODE" in
@@ -93,7 +98,7 @@ jobs:
             *) echo 'Unsupported capture mode' >&2; exit 1 ;;
           esac
           python3 benchmarks/profile_native.py --binary "$PROFILE_ROOT/oximut" \
-            "$CAPTURE_ARG" --output "$PROFILE_ROOT/capture" 2>&1 | tee "$PROFILE_ROOT/diagnostic.log"
+            "$CAPTURE_ARG" --concurrency "$MATCHED_CONCURRENCY" --output "$PROFILE_ROOT/capture" 2>&1 | tee "$PROFILE_ROOT/diagnostic.log"
       - name: Publish diagnostic status and remove dependency symlinks
         if: always()
         shell: bash

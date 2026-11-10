@@ -643,12 +643,15 @@ def main(argv=None):
                        help='Trace complete controller jobs with a partial first-mutant CPU sample window; no whole-tree CPU attribution')
     modes.add_argument('--accounting', action='store_true',
                        help='Measure Rust sampling-thread self CPU, without Node or Python profilers')
+    parser.add_argument('--concurrency', type=workload.concurrency_arg, default=1,
+                        help='Matched parallelism for Oximut --workers and Stryker concurrency (default 1)')
     args = parser.parse_args(argv)
+    workload.require_matched_concurrency(args.concurrency)
     output = args.output.resolve()
     output.mkdir(parents=True, exist_ok=False)
     profiles = output / 'profiles'
     profiles.mkdir()
-    result = {'diagnostic_only': True, 'profiler_overhead': True,
+    result = {'diagnostic_only': True, 'profiler_overhead': True, 'concurrency': args.concurrency,
               'node_capture_mode': ('rust-accounting-self' if args.accounting else 'controller-jobs' if args.controller_jobs else
                                     'partial-inspector-startup' if args.segments else 'exit-time-cpu-prof'),
               'qualification_errors': [], 'failure': None,
@@ -694,6 +697,7 @@ def main(argv=None):
         cmd = [sys.executable, str(ROOT / 'benchmarks/real_project.py'),
                '--binary', str(inputs.binary), '--adapter', str(inputs.adapter),
                '--adapter-source-dir', str(adapter), '--defer-ratios',
+               '--concurrency', str(args.concurrency),
                '--tools', 'vitest', 'oximut', 'stryker', '--warmups', '0',
                '--repetitions', '1', '--timeout', '600', '--output', str(output / 'qualification')]
         result['command'] = cmd
