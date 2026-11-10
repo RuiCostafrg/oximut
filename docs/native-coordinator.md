@@ -289,8 +289,9 @@ plugins) is off the mutant critical path. With a shared controller and a nonempt
 mutant inventory, the scheduler queues one internal `prepare-lanes` job beside the
 original baseline. It takes the first free spare slot. That controller initializes
 as usual, retires its ordinary Vitest instance and builds the lanes with
-`workers` = min(slots, mutants) as the lane count. It reads no test files and starts
-no fork. The first lane batch is then assigned to that controller, waiting for its
+`workers` = min(slots, mutants) as the lane count. The adapter neither discovers nor
+reads test files and starts no fork; the coordinator still takes its usual input
+fingerprint, which also detects any input change before the batch reaches the controller. The first lane batch is then assigned to that controller, waiting for its
 acknowledgement when the baselines finish first, and fixes the batch width to the
 prepared one so the context is reused. Later batches run as before.
 

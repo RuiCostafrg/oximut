@@ -444,6 +444,10 @@ test(
     assert.equal(prepared.outcome, 'skipped');
     assert.deepEqual(prepared.tests, { passed: 0, failed: 0, skipped: 0 });
     const result = await c.run({ ...jobs[0], workers: 3, lanes: jobs });
+    // The batch itself reports nothing: every result belongs to a lane.
+    assert.equal(result.outcome, 'skipped');
+    assert.deepEqual(result.tests, { passed: 0, failed: 0, skipped: 0 });
+    assert.deepEqual(result.errors, []);
     assert.deepEqual(
       result.lanes.map((lane) => lane.outcome),
       ['failed', 'passed', 'timeout'],
