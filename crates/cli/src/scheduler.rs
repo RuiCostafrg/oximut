@@ -148,8 +148,10 @@ const MAX_LANE_BATCH: usize = 8 * 1024 * 1024 - 64;
 /// Time a batch has to report once a lane is stopped at the job deadline.
 const LANE_REPORT_MS: u64 = 1000;
 
-fn lane_batch(batch: &[(usize, Request)]) -> Request {
+fn lane_batch(batch: &[(usize, Request)], width: usize) -> Request {
     let mut request = batch[0].1.clone();
+    // The adapter keeps this many lanes, so a smaller batch reuses its context.
+    request.workers = Some(width.max(batch.len()).min(1024));
     request.deadline_ms = request.deadline_ms.saturating_add(LANE_REPORT_MS);
     request.lanes = Some(batch.iter().map(|(_, r)| r.clone()).collect());
     request
@@ -562,6 +564,9 @@ impl<'a> Scheduler<'a> {
     }
     pub fn run_jobs(&mut self, jobs: Vec<(usize, Request)>, results: &mut [MutantResult]) {
         if self.options.shared_controller && self.slots.len() >= 2 {
+            // Fixed at the first batch, so that later batches reuse the same lanes.
+            let total = jobs.len();
+            let mut width = None;
             let mut pending: VecDeque<_> = jobs.into();
             while let Some(first) = pending.pop_front() {
                 // A request too large to wrap in a lane batch still runs normally.
@@ -582,7 +587,8 @@ impl<'a> Scheduler<'a> {
                 let pids: Vec<_> = self.slots.iter().flatten().map(|w| w.child.id()).collect();
                 let capacity = self.budget.capacity(&pids);
                 let limit = self.budget.baseline_fork_limit(capacity, &pids);
-                while batch.len() < limit {
+                let width = *width.get_or_insert(self.slots.len().min(total).min(limit));
+                while batch.len() < limit.min(width) {
                     let Some(next) = pending.front() else { break };
                     if encoded_len(&next.1.resident) != encoded_len(&batch[0].1.resident)
                         || next
@@ -605,7 +611,7 @@ impl<'a> Scheduler<'a> {
                     encoded += lane;
                     batch.push(pending.pop_front().unwrap());
                 }
-                let response = self.execute(&lane_batch(&batch));
+                let response = self.execute(&lane_batch(&batch, width));
                 self.lanes_ran = true;
                 // Unsupported projects run with one controller per worker instead.
                 if response.lanes.is_none()
@@ -850,7 +856,10 @@ mod tests {
     fn a_lane_batch_can_report_after_its_lanes_reach_the_job_deadline() {
         let mut job = request();
         job.deadline_ms = 5000;
-        let batch = lane_batch(&[(0, job.clone()), (1, job)]);
+        let batch = lane_batch(&[(0, job.clone()), (1, job)], 4);
+        assert_eq!(batch.workers, Some(4));
+        let huge = vec![(0, request()); 1025];
+        assert_eq!(lane_batch(&huge, 2).workers, Some(1024));
         assert_eq!(batch.deadline_ms, 5000 + LANE_REPORT_MS);
         assert!(
             batch
