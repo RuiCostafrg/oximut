@@ -316,8 +316,15 @@ OWNERS = {
     'Fresh-fork bootstrap on the critical path':
         'Not covered by an open thread. A prewarmed spare fork (#45) was closed under the earlier CPU/RSS rule; '
         'wall time is now the only acceptance metric, so a pre-spawned idle fork pool deserves a fresh measurement.',
-    'Instrumented baseline runs after the original baseline': 'Open thread: perf/instrumented-baseline-overlap.',
-    'First mutant batch pays for cold lanes': 'Open thread: perf/lane-context-warmup.',
+    'Instrumented baseline runs after the original baseline':
+        'Tried and rejected: PR #59 ran it concurrently on a second slot and measured no wall gain (4 workers: '
+        'after/before 0.991 [0.957, 1.249]; baseline phases 1292 → 1282 ms) at +15% CPU. The two baselines are CPU-bound, '
+        'so this bound is not reachable by overlap; only a shorter instrumented run would help.',
+    'First mutant batch pays for cold lanes':
+        'Tried and rejected: PR #61 built the lane context during the baselines and was slower (after/before 1.082 at '
+        '4 workers), so createVitest setup is not the cost. This capture agrees: the batch spends its time in '
+        'cold per-lane module fetch/transform (fetch + collect 165–290 ms against 20–60 ms later), not in the '
+        '114 ms before its first fork.',
     'Controller boot before the first job':
         'Candidates: a persistent Node compile cache for the controller (V8 validates entries by content), or shipping the '
         'controller entry as plain JavaScript so Node skips type stripping.',
