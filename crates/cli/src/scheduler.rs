@@ -230,7 +230,10 @@ impl<'a> Scheduler<'a> {
             // One spare builds the lane context while the baselines run; the
             // first batch is then assigned to it. A failed prepare only drops
             // the spare: the batch builds its own context as before.
-            let width = self.slots.len().min(mutants).clamp(1, 1024);
+            // As for a batch, no more lanes than memory admission affords.
+            let capacity = self.budget.capacity(&[]);
+            let limit = self.budget.baseline_fork_limit(capacity, &[]);
+            let width = self.slots.len().min(mutants).min(limit).clamp(1, 1024);
             let mut request = request.clone();
             request.workers = Some(width);
             self.lane_width = width;
@@ -538,8 +541,10 @@ impl<'a> Scheduler<'a> {
                         Ok(worker) => self.slots[slot] = Some(worker),
                         Err(error) => {
                             if is_internal(index) {
-                                self.diagnostics
-                                    .push(format!("spare start failed: {error}"));
+                                self.diagnostics.push(format!(
+                                    "{} start failed: {error}",
+                                    internal_label(index)
+                                ));
                             } else {
                                 completed.push((index, infrastructure(&request, error)));
                             }
@@ -552,8 +557,6 @@ impl<'a> Scheduler<'a> {
                     Ok(()) => {
                         if index == PREPARE_JOB {
                             self.lane_slot = Some(slot);
-                            // This controller gives up its ordinary Vitest instance.
-                            self.lanes_ran = true;
                         }
                         if !is_internal(index) {
                             self.budget.active += 1;
@@ -568,7 +571,8 @@ impl<'a> Scheduler<'a> {
                     }
                     Err(error) => {
                         if is_internal(index) {
-                            self.diagnostics.push(format!("spare send failed: {error}"));
+                            self.diagnostics
+                                .push(format!("{} send failed: {error}", internal_label(index)));
                         } else {
                             completed.push((index, infrastructure(&request, error)));
                         }
@@ -624,6 +628,9 @@ impl<'a> Scheduler<'a> {
     fn retire_lane_controllers(&mut self) {
         if std::mem::take(&mut self.lanes_ran) {
             self.close_slots(&(0..self.slots.len()).collect::<Vec<_>>());
+        } else if let Some(slot) = self.lane_slot {
+            // A prepared controller has also given it up; no other has.
+            self.close_slots(&[slot]);
         }
     }
     pub fn run_jobs(&mut self, jobs: Vec<(usize, Request)>, results: &mut [MutantResult]) {
@@ -1064,7 +1071,9 @@ mod tests {
         assert_eq!(scheduler.lane_slot, None);
         scheduler.spares.clear();
         scheduler.prepare_spares(&request(), 10);
-        assert_eq!(scheduler.spares[0].1.workers, Some(scheduler.slots.len()));
+        let width = scheduler.spares[0].1.workers.unwrap();
+        assert!((1..=scheduler.slots.len()).contains(&width));
+        assert_eq!(scheduler.lane_width, width);
         // Without a shared controller each spare is an ordinary warm.
         let other = persistent_options(&["--no-shared-controller"]);
         let mut scheduler = Scheduler::new(&other).unwrap();
@@ -1111,7 +1120,8 @@ mod tests {
         .unwrap();
         assert_eq!(sent["workers"], 2);
         assert_eq!(scheduler.lane_slot, Some(1));
-        assert!(scheduler.lanes_ran);
+        // Only the prepared controller gave up its ordinary instance.
+        assert!(!scheduler.lanes_ran);
     }
 
     #[test]
@@ -1237,6 +1247,29 @@ mod tests {
         scheduler.retire_lane_controllers();
         assert!(scheduler.slots[0].is_none());
         assert!(!scheduler.lanes_ran);
+    }
+
+    #[test]
+    fn only_the_prepared_controller_is_retired_without_a_lane_batch() {
+        let _guard = PROCESS_TEST.lock().unwrap();
+        let options = options();
+        let mut scheduler = Scheduler::new(&options).unwrap();
+        let script = "import pathlib,sys,time\nwhile not (pathlib.Path(sys.argv[1])/'stop').exists(): time.sleep(0.01)";
+        let slots: Vec<_> = (0..2)
+            .map(|_| {
+                let directory = tempfile::tempdir().unwrap();
+                let mut controller =
+                    worker(tempfile::tempdir().unwrap(), script, &[directory.path()]);
+                controller.directory = directory;
+                Some(controller)
+            })
+            .collect();
+        scheduler.slots = slots;
+        scheduler.lane_slot = Some(1);
+        scheduler.retire_lane_controllers();
+        assert!(scheduler.slots[0].is_some());
+        assert!(scheduler.slots[1].is_none());
+        assert_eq!(scheduler.lane_slot, None);
     }
 
     #[test]
