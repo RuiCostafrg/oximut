@@ -159,6 +159,9 @@ def controller_capture_inventory(directory, qualification=None):
                                          or not isinstance(e.get('laneMutantIds'), list)
                                          or len(e['laneMutantIds']) != e['laneCount']
                                          or e['laneMutantIds'][0] != e.get('mutantId')
+                                         or not isinstance(e.get('laneJobIds'), list) or not isinstance(e.get('laneRunIds'), list)
+                                         or e['laneJobIds'][:1] != [e.get('jobId')]
+                                         or e['laneRunIds'][:1] != [e.get('runId')]
                                          or any(not isinstance(e.get(key), list) or len(e[key]) != e['laneCount']
                                                 for key in ('laneJobIds', 'laneRunIds')))
                    for e in mutants):

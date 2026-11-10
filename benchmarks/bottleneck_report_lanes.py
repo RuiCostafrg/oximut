@@ -53,8 +53,8 @@ def check_inputs(concurrency, benchmark, benchmark_low, controller, profiles):
         raise SystemExit('the controller capture did not pass; refusing a timeline built on it')
     if not any(j['lanes'] for j in controller['jobs']):
         raise SystemExit('the controller capture shows no shared-lane batches')
-    if sum(j['kind'] == 'baseline' and bool(j['forks']) for j in controller['jobs']) < 2:
-        raise SystemExit('the controller capture needs an original and an instrumented baseline job')
+    if sum(j['kind'] == 'baseline' and bool(j['forks']) for j in controller['jobs']) != 2:
+        raise SystemExit('the controller capture needs exactly one original and one instrumented baseline job')
 
 
 def extract(args):

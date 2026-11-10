@@ -130,6 +130,8 @@ class LaneReport(unittest.TestCase):
             'failed controller capture': lambda c, b, lo, ct, p: ct['identity'].update(passed=False),
             'one baseline only': lambda c, b, lo, ct, p: ct['jobs'].remove(
                 next(j for j in ct['jobs'] if j['kind'] == 'baseline' and j['forks'])),
+            'extra baseline': lambda c, b, lo, ct, p: ct['jobs'].append(copy.deepcopy(
+                next(j for j in ct['jobs'] if j['kind'] == 'baseline' and j['forks']))),
             'no shared-lane batches': lambda c, b, lo, ct, p: [j.update(lanes=None) for j in ct['jobs']],
         }
         for name, mutate in cases.items():

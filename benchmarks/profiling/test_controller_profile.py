@@ -364,6 +364,18 @@ fs.appendFileSync = function(file, data, ...args) {
             batch['laneRunIds'][1] = '1-2'
             self.write_events(timeline, events)
             self.assertTrue(any('different qualification run' in e for e in self.capture(root)['errors']))
+        with tempfile.TemporaryDirectory() as tmp:
+            # The outer request's identity must be the first lane's, or foreign outer IDs would pass.
+            root = Path(tmp)
+            ids = [secrets.token_hex(32) for _ in range(3)]
+            self.fixture(root, request_ids=ids, batches=[2, 1])
+            timeline = next(root.glob('controller-*.jsonl'))
+            clean = [json.loads(line) for line in timeline.read_text().splitlines()]
+            for key, value in (('jobId', secrets.token_hex(32)), ('runId', '1-2')):
+                events = copy.deepcopy(clean)
+                next(e for e in events if e.get('laneCount') == 2)[key] = value
+                self.write_events(timeline, events)
+                self.assertTrue(any('unidentified shared-lane batch' in e for e in self.capture(root)['errors']), key)
         # A batch that names a lane the qualification does not know must not reconcile.
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
