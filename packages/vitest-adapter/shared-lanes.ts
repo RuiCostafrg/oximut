@@ -1,9 +1,15 @@
 import { readFile } from 'node:fs/promises';
 import { getCompileCacheDir } from 'node:module';
-import { resolve } from 'node:path';
+import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createVitest, ForksPoolWorker, version } from 'vitest/node';
 import { envelope, type Request, type Result } from './protocol.ts';
+import {
+  fingerprint,
+  type ProjectLike,
+  type TransformService,
+  TransformShare,
+} from './transform-share.ts';
 
 type Context = Awaited<ReturnType<typeof createVitest>>;
 const runner = fileURLToPath(new URL('./lane-runner.mjs', import.meta.url));
@@ -20,10 +26,12 @@ export class SharedLanes {
   private files = new Map<string, string[]>();
   private failures = new Map<string, string>();
   private deadline = 0;
+  private transforms = new TransformShare();
 
   async close() {
     const context = this.context;
     this.context = undefined;
+    this.transforms.clear();
     await context?.close();
   }
 
@@ -161,7 +169,12 @@ export class SharedLanes {
             '--require',
             fileURLToPath(new URL('./compile-cache.cjs', import.meta.url)),
           ];
+      // A new context owns new servers, module graphs and transform services.
+      this.transforms.clear();
+      this.shareTransforms(context, batch.root);
     } else if (changed) {
+      // The resident code changed: no lane may serve a previous batch's result.
+      this.transforms.clear();
       for (const project of this.context.projects) project.vite.moduleGraph.invalidateAll();
     }
     const ctx = this.context;
@@ -300,4 +313,38 @@ export class SharedLanes {
       lanes,
     };
   }
+
+  /**
+   * Give every lane project the same transform cache. Lanes whose configs can
+   * change transformed output must not share, so a missing service, a shared
+   * service instance or an unserializable config leaves sharing off entirely.
+   */
+  private shareTransforms(context: Context, root: string): void {
+    const services: TransformService[] = [];
+    const seen = new Set<TransformService>();
+    for (const project of context.projects) {
+      const service = (project as unknown as { _transformService?: unknown })._transformService;
+      if (!isTransformService(service) || seen.has(service)) return;
+      seen.add(service);
+      services.push(service);
+    }
+    let names: string[];
+    try {
+      names = context.projects.map((project) => fingerprint(project as unknown as ProjectLike));
+    } catch {
+      return;
+    }
+    // lane-runner.mjs lives outside the project root but is transformed per lane too.
+    const allowed = [resolve(root), dirname(runner)];
+    for (const [index, service] of services.entries())
+      this.transforms.wrap(service, names[index], allowed);
+  }
+}
+
+function isTransformService(value: unknown): value is TransformService {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    typeof (value as { fetch?: unknown }).fetch === 'function'
+  );
 }

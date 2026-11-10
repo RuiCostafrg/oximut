@@ -279,6 +279,15 @@ Vitest still resets modules between them, but process-level state such as patche
 globals or native addon state can carry from one file to the next. Use
 `--no-shared-controller` when tests depend on a process per file.
 
+Lanes share module transforms: `transform-share.ts` wraps each lane project's
+`ModuleTransformService.fetch` so one lane transforms a file and every other lane
+is served that result (single flight, keyed by pipeline fingerprint, url, importer
+for bare specifiers and tmp-copy mode). Only plain fetches of project files are
+shared; externalized modules, `node_modules`, errors, cache-validation fetches and
+results whose tmp copy vanished go to the lane's own service. The share is cleared
+whenever `SharedLanes` invalidates the module graphs (changed resident modules),
+on close and on every new context, and `fsModuleCache` stays off.
+
 This depends on
 private details of Vitest 5.1.0; `shared-lanes.ts` refuses any other version.
 

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { fork } from 'node:child_process';
 import { mkdir, mkdtemp, readFile, rm, symlink, writeFile } from 'node:fs/promises';
-import { resolve, join } from 'node:path';
+import { join, resolve } from 'node:path';
 import test from 'node:test';
 
 import { SharedLanes } from '../shared-lanes.ts';
@@ -389,3 +389,92 @@ test('a smaller batch reuses the lanes of a stable width', { timeout: 90000 }, a
   await lanes.run({ ...jobs[1], lanes: [jobs[1]] });
   assert.notEqual(lanes.context, context);
 });
+
+test(
+  'lanes share one transform per file and a changed resident module invalidates it',
+  { timeout: 90000 },
+  async (t) => {
+    const s = await fixture(t);
+    const transforms = join(s.root, 'transforms');
+    await writeFile(transforms, '');
+    await writeFile(
+      join(s.root, 'vitest.config.mjs'),
+      `import { appendFileSync } from 'node:fs';
+export default {
+  plugins: [{ name: 'count', enforce: 'post', transform(code, id) {
+    if (!id.includes('node_modules')) appendFileSync(${JSON.stringify(transforms)}, id + '\\n');
+  } }],
+  test: { include: ['probe.test.ts'], testTimeout: 300 },
+};`,
+    );
+    await writeFile(
+      join(s.root, 'probe.test.ts'),
+      `import { test, expect } from 'vitest';
+import { appendFileSync } from 'node:fs';
+import * as subject from './subject';
+test('probe', () => {
+  appendFileSync(${JSON.stringify(join(s.root, 'events'))},
+    JSON.stringify({ id: subject.active, marker: subject.marker }) + '\\n');
+  expect(subject.active).toMatch(/^survived/);
+});`,
+    );
+    await writeFile(join(s.root, 'events'), '');
+    const resident = (marker) => {
+      const code = `export const active = process.env.OXIMUT_ACTIVE_MUTANT; export const marker = '${marker}';`;
+      return {
+        id: '__resident__',
+        file: join(s.root, 'subject.ts'),
+        code,
+        map: { version: 3, sources: ['subject.ts'], names: [], mappings: 'AAAA' },
+      };
+    };
+    const batch = (marker) => {
+      const module = resident(marker);
+      const jobs = ['survived', 'survived2', 'survived3'].map((id) => ({
+        ...s.job(id),
+        resident: [module],
+        mutation: { ...module, id },
+      }));
+      return { ...jobs[0], workers: 3, lanes: jobs };
+    };
+    const seen = async () => (await readFile(transforms, 'utf8')).split('\n').filter(Boolean);
+    const events = async () =>
+      (await readFile(join(s.root, 'events'), 'utf8')).split('\n').filter(Boolean).map(JSON.parse);
+    const lanes = new SharedLanes();
+    t.after(() => lanes.close());
+
+    const first = await lanes.run(batch('a'));
+    assert.deepEqual(
+      first.lanes.map((lane) => lane.outcome),
+      ['passed', 'passed', 'passed'],
+    );
+    const firstSeen = await seen();
+    // Three lanes, one transform per file.
+    assert.equal(new Set(firstSeen).size, firstSeen.length);
+    assert.ok(firstSeen.some((id) => id.endsWith('probe.test.ts')));
+    assert.ok(firstSeen.some((id) => id.endsWith('subject.ts')));
+    assert.ok(lanes.transforms.stats.hits > 0);
+    assert.deepEqual(
+      (await events()).map((event) => event.marker),
+      ['a', 'a', 'a'],
+    );
+
+    // An unchanged resident module keeps the shared results.
+    await lanes.run(batch('a'));
+    assert.deepEqual(await seen(), firstSeen);
+
+    // A changed resident module must never be served from the earlier cache.
+    await writeFile(join(s.root, 'events'), '');
+    const generation = lanes.transforms.generation;
+    await lanes.run(batch('b'));
+    assert.ok(lanes.transforms.generation > generation);
+    assert.deepEqual(
+      (await events()).map((event) => event.marker),
+      ['b', 'b', 'b'],
+    );
+    const after = await seen();
+    // Invalidation dropped every lane's graph: each file was transformed once more
+    // for all lanes together, not once per lane.
+    for (const id of new Set(after)) assert.equal(after.filter((seen) => seen === id).length, 2);
+  },
+);
