@@ -335,7 +335,13 @@ class NativeCoordinator(unittest.TestCase):
                 # CPU quota or memory admission can lower the requested limit.
                 expected = report['resources']['effectiveWorkers']
                 self.assertLessEqual(expected, workers)
-                self.assertEqual([run['workers'] for run in runs], [expected, expected])
+                forwarded = sorted(run['workers'] for run in runs)
+                if expected >= 2:
+                    # The two baselines overlap on separate slots and split the
+                    # admitted forks, so together they never exceed the limit.
+                    self.assertEqual(forwarded, [expected // 2, expected - expected // 2])
+                else:
+                    self.assertEqual(forwarded, [expected, expected])
                 self.assert_reaped(events)
 
     def test_healthy_controller_is_reused_and_closed(self):

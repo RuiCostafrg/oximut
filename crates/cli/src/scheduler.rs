@@ -163,6 +163,13 @@ fn one_lane_len(request: &Request) -> usize {
     wrapped.lanes = Some(vec![request.clone()]);
     encoded_len(&wrapped)
 }
+/// Fork budget for two baselines overlapped on separate slots: the original
+/// (first) run takes the extra worker when the admitted count is odd. Their
+/// sum never exceeds the admitted workers, and each side keeps at least one.
+fn overlap_fork_caps(n: usize) -> (usize, usize) {
+    let n = n.max(1);
+    (n.div_ceil(2), (n / 2).max(1))
+}
 fn exhausted(request: &Request, reason: &str) -> Response {
     if reason.starts_with("scheduler worker exited") {
         return infrastructure(
@@ -468,11 +475,14 @@ impl<'a> Scheduler<'a> {
                 // must each have admission headroom before they are launched.
                 if request.kind == "baseline" && self.options.execution == Execution::Persistent {
                     // Spares start alongside: wall time matters more than peak memory.
-                    request.workers = Some(
-                        self.budget
-                            .baseline_fork_limit(capacity, &active_pids)
-                            .min(1024),
-                    );
+                    // An overlapped baseline keeps the preset share of the admitted
+                    // forks, so two of them together never exceed that limit.
+                    let limit = self
+                        .budget
+                        .baseline_fork_limit(capacity, &active_pids)
+                        .min(1024);
+                    request.workers =
+                        Some(request.workers.map_or(limit, |cap| limit.min(cap).max(1)));
                 }
                 if self.slots[slot].is_none() {
                     match Worker::start(self.options) {
@@ -555,6 +565,41 @@ impl<'a> Scheduler<'a> {
             .pop()
             .expect("one serial result")
             .1
+    }
+    /// Runs the original and the first instrumented baseline at the same time
+    /// on two slots. Returns None when the caller must use the sequential path:
+    /// only persistent execution with two admitted workers and no queued spare
+    /// warm-ups (per-worker controllers) can overlap.
+    ///
+    /// Both baselines still pass through ordinary admission. When capacity
+    /// cannot admit the second while the first runs, dispatch waits for the
+    /// first to complete, which is exactly the sequential behaviour.
+    pub fn execute_pair(
+        &mut self,
+        first: &Request,
+        second: &Request,
+    ) -> Option<(Response, Response)> {
+        // Queued warm spares own slots 1.. by position; a baseline there would
+        // leave one spare without a slot and stall dispatch.
+        if self.options.execution != Execution::Persistent
+            || self.slots.len() < 2
+            || !self.spares.is_empty()
+        {
+            return None;
+        }
+        let (first_cap, second_cap) = overlap_fork_caps(self.slots.len());
+        let mut first = first.clone();
+        let mut second = second.clone();
+        first.workers = Some(first_cap);
+        second.workers = Some(second_cap);
+        let mut completed = self.dispatch(VecDeque::from([(0, first), (1, second)]), false);
+        // Dispatch accounts for every job it accepted, so both must be present.
+        if completed.len() != 2 {
+            return None;
+        }
+        completed.sort_by_key(|(index, _)| *index);
+        let mut responses = completed.into_iter().map(|(_, response)| response);
+        Some((responses.next()?, responses.next()?))
     }
     /// A controller that ran lanes has given up its ordinary Vitest instance.
     fn retire_lane_controllers(&mut self) {
@@ -877,6 +922,100 @@ mod tests {
             "mutation": null
         }))
         .unwrap()
+    }
+
+    #[test]
+    fn overlapped_baselines_split_the_admitted_forks() {
+        assert_eq!(overlap_fork_caps(2), (1, 1));
+        assert_eq!(overlap_fork_caps(3), (2, 1));
+        assert_eq!(overlap_fork_caps(4), (2, 2));
+        // Defensive: a pair implies two slots, but neither side may ask for none.
+        assert_eq!(overlap_fork_caps(1), (1, 1));
+        assert_eq!(overlap_fork_caps(0), (1, 1));
+    }
+
+    #[test]
+    fn execute_pair_requires_persistent_execution_and_two_slots() {
+        let _guard = PROCESS_TEST.lock().unwrap();
+        let mut fresh = options();
+        fresh.execution = Execution::Fresh;
+        let mut scheduler = Scheduler::new(&fresh).unwrap();
+        scheduler.slots = vec![None, None];
+        assert!(
+            scheduler.execute_pair(&request(), &request()).is_none(),
+            "fresh execution cannot overlap baselines"
+        );
+
+        let mut persistent = options();
+        persistent.execution = Execution::Persistent;
+        let mut scheduler = Scheduler::new(&persistent).unwrap();
+        scheduler.slots = vec![None];
+        assert!(
+            scheduler.execute_pair(&request(), &request()).is_none(),
+            "one slot has nothing to overlap"
+        );
+    }
+
+    #[test]
+    fn execute_pair_orders_responses_and_keeps_preset_fork_caps() {
+        let _guard = PROCESS_TEST.lock().unwrap();
+        let mut persistent = options();
+        persistent.execution = Execution::Persistent;
+        let mut scheduler = Scheduler::new(&persistent).unwrap();
+        scheduler.budget.effective_workers = 2;
+        // The instrumented side answers immediately while the original waits,
+        // so completion order is the opposite of request index order.
+        let script = "import json,os,pathlib,sys,time\nd=pathlib.Path(sys.argv[1])\ni=0\nwhile True:\n req=d/f'request-{i}.json'\n while not req.exists(): time.sleep(.01)\n r=json.loads(req.read_text())\n if r['jobId'] != 'instrumented-baseline': time.sleep(.2)\n (d/f'response-{i}.json.tmp').write_text(json.dumps({'protocol':r['protocol'],'runId':r['runId'],'jobId':r['jobId'],'generation':r['generation'],'outcome':'passed','tests':{'passed':1,'failed':0,'skipped':0},'errors':[]}))\n os.replace(d/f'response-{i}.json.tmp', d/f'response-{i}.json')\n i+=1";
+        let first_directory = tempfile::tempdir().unwrap();
+        let mut first = worker(
+            tempfile::tempdir().unwrap(),
+            script,
+            &[first_directory.path()],
+        );
+        first.directory = first_directory;
+        let second_directory = tempfile::tempdir().unwrap();
+        let mut second = worker(
+            tempfile::tempdir().unwrap(),
+            script,
+            &[second_directory.path()],
+        );
+        second.directory = second_directory;
+        scheduler.slots = vec![Some(first), Some(second)];
+        let mut original = request();
+        original.job_id = "baseline".into();
+        let mut instrumented = request();
+        instrumented.job_id = "instrumented-baseline".into();
+        instrumented.generation = 1;
+        let (original_response, instrumented_response) = scheduler
+            .execute_pair(&original, &instrumented)
+            .expect("two slots overlap");
+        assert_eq!(original_response.job_id, "baseline");
+        assert_eq!(original_response.generation, 0);
+        assert_eq!(instrumented_response.job_id, "instrumented-baseline");
+        assert_eq!(instrumented_response.generation, 1);
+        assert_eq!(
+            original_response.outcome,
+            TestOutcome::Passed,
+            "{:?}",
+            original_response.errors
+        );
+        assert_eq!(
+            instrumented_response.outcome,
+            TestOutcome::Passed,
+            "{:?}",
+            instrumented_response.errors
+        );
+        let sent = |slot: &Worker| -> Request {
+            serde_json::from_slice(&fs::read(slot.directory.path().join("request-0.json")).unwrap())
+                .unwrap()
+        };
+        let both = scheduler
+            .slots
+            .iter()
+            .map(|slot| sent(slot.as_ref().unwrap()));
+        for request in both {
+            assert_eq!(request.workers, Some(1), "each side keeps half of 2 forks");
+        }
     }
 
     #[test]

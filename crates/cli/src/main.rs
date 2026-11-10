@@ -1042,17 +1042,11 @@ fn run_attempt(options: &Options, previous: Option<RetryEvidence>) -> Result<Att
         "inputAndSchedulerPreparation",
         preparation_started.elapsed().as_secs_f64() * 1000.0,
     );
-    let baseline_started = Instant::now();
-    let mut baseline = scheduler.execute(&request);
-    phase_wall_ms.insert(
-        "originalBaseline",
-        baseline_started.elapsed().as_secs_f64() * 1000.0,
-    );
     // Instrumented runs validate inactive switching for the exact module groups
     // mutant jobs serve and, with selection, collect per-test coverage from the
     // same code. Normally one group and one run; groups split only to keep each
-    // request within the adapter's limit.
-    let instrumented_started = Instant::now();
+    // request within the adapter's limit. They are planned before the original
+    // baseline so the first one can overlap it on a second slot.
     let collect = options.test_selection;
     let budget = request_budget();
     let group_of: BTreeMap<String, usize> = groups
@@ -1095,12 +1089,66 @@ fn run_attempt(options: &Options, previous: Option<RetryEvidence>) -> Result<Att
         }
         runs.extend((0..groups.len()).map(|index| (Some(index), false)));
     }
+    // One instrumented baseline per run; the original baseline is generation 0.
+    let instrumented_request = |run: usize, generation: u64, base: &Request| -> Request {
+        let &(group, coverage) = &runs[run];
+        let mut built = base.clone();
+        built.generation = generation;
+        built.job_id = if runs.len() == 1 {
+            "instrumented-baseline".into()
+        } else {
+            format!("instrumented-baseline-{run}")
+        };
+        built.kind = "baseline".into();
+        built.mutation = None;
+        built.resident = group.and_then(|index| residual(&groups[index], coverage));
+        built.collect_coverage = coverage.then(|| probe_transforms.clone());
+        built
+    };
+    let limit = request_limit(budget);
+    // The first instrumented run shares the original baseline's wall time when
+    // a second slot is available. An untransportable request stays sequential so
+    // the loop can report it as an oversize infrastructure error.
+    let first_instrumented = if runs.is_empty() {
+        None
+    } else {
+        Some(instrumented_request(0, 1, &request)).filter(|first| encoded_len(first) <= limit)
+    };
+    let baseline_started = Instant::now();
+    let mut prebuilt: Option<Response> = None;
+    let mut pair_started: Option<Instant> = None;
+    let mut baseline: Response;
+    if let Some(first) = &first_instrumented {
+        match scheduler.execute_pair(&request, first) {
+            Some((original, instrumented)) => {
+                baseline = original;
+                prebuilt = Some(instrumented);
+                pair_started = Some(baseline_started);
+            }
+            None => baseline = scheduler.execute(&request),
+        }
+    } else {
+        baseline = scheduler.execute(&request);
+    }
+    drop(first_instrumented);
+    phase_wall_ms.insert(
+        "originalBaseline",
+        baseline_started.elapsed().as_secs_f64() * 1000.0,
+    );
+    let instrumented_started = Instant::now();
     for (run, &(group, coverage)) in runs.iter().enumerate() {
         if baseline.outcome != TestOutcome::Passed {
+            // The original-baseline oracle is authoritative: an overlapped
+            // instrumented result is discarded with the rest of the run.
             break;
         }
-        let started = Instant::now();
-        request.generation += 1;
+        // The overlapped run is measured from the moment the pair started.
+        let started = if run == 0 {
+            pair_started.take().unwrap_or_else(Instant::now)
+        } else {
+            Instant::now()
+        };
+        request.generation = run as u64 + 1;
         request.job_id = if runs.len() == 1 {
             "instrumented-baseline".into()
         } else {
@@ -1114,8 +1162,9 @@ fn run_attempt(options: &Options, previous: Option<RetryEvidence>) -> Result<Att
         // module too large to share a request) cannot be transported; refuse
         // it here, naming its largest module, instead of dispatching it.
         let size = encoded_len(&request);
-        let limit = request_limit(budget);
-        let mut collected = if size > limit {
+        let mut collected = if run == 0 && prebuilt.is_some() {
+            prebuilt.take().expect("overlapped first run completed")
+        } else if size > limit {
             let largest = group
                 .and_then(|index| {
                     groups[index]

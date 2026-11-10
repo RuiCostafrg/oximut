@@ -230,6 +230,37 @@ deadline, worker termination and post-job descendant cleanup gates are unchanged
 With one controller per worker, mutant jobs retain one test worker per controller;
 the shared controller below instead runs one per lane.
 
+## Overlapped baselines
+
+With persistent execution and at least two admitted workers, the first
+instrumented baseline starts on a second slot while the original baseline runs,
+instead of after it. Both are ordinary requests through the same admission and
+sampling loop; nothing about either oracle changes. The pair only overlaps when
+the first instrumented request is within the adapter's request limit and a free
+second slot exists.
+
+Guarantees:
+
+- The original baseline stays the authoritative oracle. If it does not pass, an
+  already finished instrumented result is discarded and no instrumented
+  baseline is reported.
+- Test counts are compared only after both responses have completed; the
+  instrumented result still cannot replace the original response except by
+  failing the run.
+- The admitted fork budget is split between the two baselines (the original
+  takes the extra fork when the count is odd), and each baseline's preset cap is
+  also bounded by the ordinary admission limit, so the two together never run
+  more fresh forks than the admitted workers.
+- Admission or slot unavailability falls back to the sequential path: a second
+  baseline that cannot be admitted simply waits for the first to finish.
+- Job ids and generations are unchanged (original generation 0, instrumented
+  runs 1..n). `phaseWallMs.originalBaseline` covers the whole overlapped pair
+  (both responses) and `instrumentedBaseline` then covers only the remaining
+  runs and validation; `disabledValidationRuns[].wallMs` for the overlapped run
+  is measured from the pair's start.
+- Runs with queued spare warm-ups (`--no-shared-controller`) stay sequential,
+  because those spares own the slots after the first.
+
 ## Spare controller warm-up
 
 Persistent runs with more than one admitted worker and a nonempty initial mutant
