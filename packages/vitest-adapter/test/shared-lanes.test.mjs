@@ -383,7 +383,9 @@ test('a smaller batch reuses the lanes of a stable width', { timeout: 90000 }, a
     .filter(Boolean)
     .map(JSON.parse);
   assert.ok(events.length);
+  // The idle lane last ran 'selected' too, so count processes as well.
   assert.deepEqual([...new Set(events.map((event) => event.id))], ['selected']);
+  assert.equal(new Set(events.map((event) => event.pid)).size, 1);
   await lanes.run({ ...jobs[1], lanes: [jobs[1]] });
   assert.notEqual(lanes.context, context);
 });
