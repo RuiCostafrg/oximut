@@ -82,6 +82,41 @@ class QualificationTests(unittest.TestCase):
             self.assertTrue(summary['captures']['errors'])
             self.assertNotIn('ratios', summary)
 
+    def test_matched_concurrency_is_recorded_and_bounded_by_the_usable_cpus(self):
+        """The capture runs at the requested worker count and refuses one Stryker could not match."""
+        with tempfile.TemporaryDirectory() as tmp, mock.patch.dict(os.environ, {'NODE_OPTIONS': '--trace-warnings'}), \
+                mock.patch.object(diagnostic.workload.os, 'sched_getaffinity', return_value={0, 1, 2, 3}):
+            out = Path(tmp) / 'capture'
+            diagnostic.main(['--binary', '/missing', '--output', str(out), '--concurrency', '4'])
+            self.assertEqual(json.loads((out / 'diagnostic.json').read_text())['concurrency'], 4)
+            with self.assertRaisesRegex(ValueError, 'exceeds 4 usable CPUs'):
+                diagnostic.main(['--binary', '/missing', '--output', str(Path(tmp) / 'other'), '--concurrency', '5'])
+            self.assertFalse((Path(tmp) / 'other').exists())
+
+    def test_matched_concurrency_reaches_the_workload_command(self):
+        """The harness that starts Oximut and Stryker must receive the requested concurrency."""
+        commands = []
+        real_run = subprocess.run
+
+        def run(cmd, **kwargs):
+            if not any(str(part).endswith('real_project.py') for part in cmd):
+                return real_run(cmd, **kwargs)
+            commands.append(cmd)
+            return mock.Mock(returncode=0)
+
+        env = {k: v for k, v in os.environ.items() if k != 'NODE_OPTIONS'}
+        for requested, expected in ((['--concurrency', '4'], '4'), ([], '1')):
+            commands.clear()
+            with tempfile.TemporaryDirectory() as tmp, mock.patch.dict(os.environ, env, clear=True), \
+                    mock.patch.object(diagnostic.workload.os, 'sched_getaffinity', return_value={0, 1, 2, 3}), \
+                    mock.patch.object(diagnostic.workload, 'execution_inputs', return_value={'inputs': 1}), \
+                    mock.patch.object(diagnostic.subprocess, 'run', side_effect=run):
+                diagnostic.main(['--binary', '/missing', '--output', str(Path(tmp) / 'capture'), '--controller-jobs',
+                                 *requested])
+            self.assertEqual(len(commands), 1)
+            cmd = commands[0]
+            self.assertEqual(cmd[cmd.index('--concurrency') + 1], expected)
+
 
 class ShimTests(unittest.TestCase):
     def test_initial_python_identity_failures_do_not_replace_supervisor_exit(self):

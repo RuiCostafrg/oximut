@@ -154,6 +154,30 @@ def controller_capture_inventory(directory, qualification=None):
             if any(e.get('error') or not e.get('result') for e in replies):
                 errors.append(f'controller error reply: {timeline.name}')
             mutants = [e for e in requests if e.get('kind') == 'mutant']
+            # A shared-lane batch carries one mutant per lane; a batch must name all of them.
+            if any('laneCount' in e and (type(e['laneCount']) is not int or e['laneCount'] < 1
+                                         or not isinstance(e.get('laneMutantIds'), list)
+                                         or len(e['laneMutantIds']) != e['laneCount']
+                                         or e['laneMutantIds'][0] != e.get('mutantId')
+                                         or not isinstance(e.get('laneJobIds'), list) or not isinstance(e.get('laneRunIds'), list)
+                                         or e['laneJobIds'][:1] != [e.get('jobId')]
+                                         or e['laneRunIds'][:1] != [e.get('runId')]
+                                         or any(not isinstance(e.get(key), list) or len(e[key]) != e['laneCount']
+                                                for key in ('laneJobIds', 'laneRunIds')))
+                   for e in mutants):
+                errors.append(f'unidentified shared-lane batch: {timeline.name}')
+            # Every lane of a batch starts exactly one fork inside its request window.
+            for request in mutants:
+                if 'laneCount' not in request or type(request['laneCount']) is not int:
+                    continue
+                reply = next((e for e in replies if e.get('id') == request.get('id')), None)
+                started = [e for e in events if e['type'] == 'fork' and reply is not None
+                           and request['monotonicMs'] <= e['monotonicMs'] <= reply['monotonicMs']]
+                if len(started) != request['laneCount']:
+                    errors.append(f'shared-lane batch forked {len(started)} workers for {request["laneCount"]} lanes: '
+                                  f'{timeline.name}')
+            lane_ids = [[*(e['laneMutantIds'] if 'laneCount' in e and isinstance(e.get('laneMutantIds'), list)
+                          else [e.get('mutantId')])] for e in mutants]
             starts = [e for e in events if e['type'] == 'profile-started']
             written = [e for e in events if e['type'] == 'profile-written']
             profile_window = None
@@ -222,12 +246,19 @@ def controller_capture_inventory(directory, qualification=None):
                                                        or counts[k] != 1 for k in critical)):
                     errors.append(f'invalid worker boundary counts: {timeline.name}/{pid}')
             observed.append({'timeline': timeline.name, 'request_count': len(requests),
-                             'mutant_count': len(mutants), 'observed_forks': len(forks),
-                             'mutant_ids': [e.get('mutantId') for e in mutants],
+                             'mutant_count': sum(map(len, lane_ids)), 'observed_forks': len(forks),
+                             'batch_sizes': [len(ids) for ids in lane_ids], 'mutant_request_count': len(mutants),
+                             'mutant_ids': [i for ids in lane_ids for i in ids],
                              'baseline_count': sum(e.get('kind') == 'baseline' for e in requests),
                              'jobs': [{'kind': e.get('kind'), 'job_id': e.get('jobId'),
                                        'run_id': e.get('runId'), 'mutant_id': e.get('mutantId')}
-                                      for e in requests if e.get('command') == 'run'],
+                                      for e in requests if e.get('command') == 'run' and 'laneCount' not in e] +
+                                     [{'kind': 'mutant', 'job_id': job_id, 'run_id': run_id, 'mutant_id': identity}
+                                      for e in requests if e.get('command') == 'run' and 'laneCount' in e
+                                      and all(isinstance(e.get(key), list) and len(e[key]) == len(e.get('laneMutantIds') or [])
+                                              for key in ('laneMutantIds', 'laneJobIds', 'laneRunIds'))
+                                      for identity, job_id, run_id in zip(e['laneMutantIds'], e['laneJobIds'],
+                                                                          e['laneRunIds'], strict=True)],
                              'first_mutant_window': profile_window})
         except (OSError, ValueError, KeyError, TypeError, StopIteration, OverflowError) as error:
             errors.append(f'invalid controller capture {timeline.name}: {error}')
@@ -264,7 +295,8 @@ def controller_capture_inventory(directory, qualification=None):
         instrumented_count = len(baselines) + int(coverage_only)
         expected = {'mutant_count': len(mutants), 'baseline_count': 1 + instrumented_count}
         actual = {key: sum(r[key] for r in observed) for key in expected}
-        if actual != expected or sum(r['request_count'] for r in observed) != sum(expected.values()) + 2 * len(observed):
+        if actual != expected or (sum(r['request_count'] for r in observed) !=
+                              expected['baseline_count'] + sum(r['mutant_request_count'] for r in observed) + 2 * len(observed)):
             raise ValueError(f'captured workload counts {actual} differ from qualification {expected}')
         expected_ids = [m['id'] for m in mutants]
         captured_ids = [identity for row in observed for identity in row['mutant_ids']]
@@ -643,12 +675,15 @@ def main(argv=None):
                        help='Trace complete controller jobs with a partial first-mutant CPU sample window; no whole-tree CPU attribution')
     modes.add_argument('--accounting', action='store_true',
                        help='Measure Rust sampling-thread self CPU, without Node or Python profilers')
+    parser.add_argument('--concurrency', type=workload.concurrency_arg, default=1,
+                        help='Matched parallelism for Oximut --workers and Stryker concurrency (default 1)')
     args = parser.parse_args(argv)
+    workload.require_matched_concurrency(args.concurrency)
     output = args.output.resolve()
     output.mkdir(parents=True, exist_ok=False)
     profiles = output / 'profiles'
     profiles.mkdir()
-    result = {'diagnostic_only': True, 'profiler_overhead': True,
+    result = {'diagnostic_only': True, 'profiler_overhead': True, 'concurrency': args.concurrency,
               'node_capture_mode': ('rust-accounting-self' if args.accounting else 'controller-jobs' if args.controller_jobs else
                                     'partial-inspector-startup' if args.segments else 'exit-time-cpu-prof'),
               'qualification_errors': [], 'failure': None,
@@ -694,6 +729,7 @@ def main(argv=None):
         cmd = [sys.executable, str(ROOT / 'benchmarks/real_project.py'),
                '--binary', str(inputs.binary), '--adapter', str(inputs.adapter),
                '--adapter-source-dir', str(adapter), '--defer-ratios',
+               '--concurrency', str(args.concurrency),
                '--tools', 'vitest', 'oximut', 'stryker', '--warmups', '0',
                '--repetitions', '1', '--timeout', '600', '--output', str(output / 'qualification')]
         result['command'] = cmd

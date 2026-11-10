@@ -211,6 +211,18 @@ sessions stopping each other's samples. Diagnostic fixture tests live beside
 the preload and run with `python3 -m unittest discover -s benchmarks/profiling
 -p 'test_*.py' -v` before the workflow builds or captures anything.
 
+The workflow's `concurrency` input (and `--concurrency` locally) runs the capture at a
+matched worker count, at most the usable CPUs. With the shared controller
+(two or more workers) one controller serves every lane, and a mutant batch is a single
+request carrying one mutant per lane. The preload records the batch's lane count and
+mutant identities; the capture reconciles every lane against the qualification report,
+and a batch of N lanes forks N workers inside one controller job. The report built
+from such a capture is [`benchmarks/results/2026-11-10-bottleneck-report`](../benchmarks/results/2026-11-10-bottleneck-report/README.md),
+rendered by `benchmarks/bottleneck_report_lanes.py`. Note the process boundary of the shared
+controller being profiled: each mutant's selected test files share one fork (Vitest resets modules between
+them, but process-level state such as patched globals or native addon state can carry over). Use
+`--no-shared-controller` for the per-file fork boundary; that is also the shape the 2026-11-07 report profiled.
+
 ### Startup and exit-time captures
 
 `Native diagnostic CPU profiles` is a separate Ubuntu 24.04 workflow. After this
