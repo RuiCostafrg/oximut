@@ -203,12 +203,27 @@ async function command(name: string, args: Request): Promise<unknown> {
     await vitest.close();
     return { closed: true };
   }
-  if (name !== 'run' && name !== 'warm') throw new Error(`Unknown command: ${name}`);
+  if (name !== 'run' && name !== 'warm' && name !== 'prepare-lanes')
+    throw new Error(`Unknown command: ${name}`);
   const started = performance.now();
   const job = (args as unknown as { request: Request }).request;
   validateRequest(job);
   if ((job.pool === 'threads' ? 'threads' : 'forks') !== pool)
     throw new Error('Pool cannot change after initialization');
+  if (name === 'prepare-lanes') {
+    // Build the lane context before the first batch; no test, module or fork runs.
+    if (!controllerReusable) throw new Error('Shared lanes require a reusable controller project');
+    await vitest.close();
+    sharedLanes ??= new (await import('./shared-lanes.ts')).SharedLanes();
+    await sharedLanes.prepare(job);
+    return {
+      warmed: true,
+      outcome: 'skipped',
+      tests: { passed: 0, failed: 0, skipped: 0 },
+      errors: [],
+      ...(job.resident ? { resident: job.resident.length } : {}),
+    };
+  }
   if (job.lanes) {
     // Custom plugins, runners, global setup or multiple projects can't be shared across lanes.
     if (!controllerReusable) throw new Error('Shared lanes require a reusable controller project');

@@ -704,6 +704,13 @@ pub struct Coordinator {
     poisoned: Option<String>,
 }
 
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum Mode {
+    Run,
+    Warm,
+    PrepareLanes,
+}
+
 impl Coordinator {
     pub fn new(worker: PathBuf) -> Self {
         Self {
@@ -797,14 +804,21 @@ impl Coordinator {
     }
 
     pub fn run(&mut self, options: &Options, request: &Request) -> Response {
-        self.run_inner(options, request, false)
+        self.run_inner(options, request, Mode::Run)
     }
 
     pub fn warm(&mut self, options: &Options, request: &Request) -> Response {
-        self.run_inner(options, request, true)
+        self.run_inner(options, request, Mode::Warm)
     }
 
-    fn run_inner(&mut self, options: &Options, request: &Request, warm: bool) -> Response {
+    /// Builds the shared Vitest lane context ahead of the first batch. The
+    /// request's `workers` is the lane count; no test, module or fork runs.
+    pub fn prepare_lanes(&mut self, options: &Options, request: &Request) -> Response {
+        self.run_inner(options, request, Mode::PrepareLanes)
+    }
+
+    fn run_inner(&mut self, options: &Options, request: &Request, mode: Mode) -> Response {
+        let warm = mode != Mode::Run;
         let started = Instant::now();
         let deadline = started + Duration::from_millis(request.deadline_ms);
         let timeout = |message: &str| empty(request, TestOutcome::Timeout, message);
@@ -925,7 +939,11 @@ impl Coordinator {
             Err(Wait::Deadline)
         } else {
             controller.request(
-                if warm { "warm" } else { "run" },
+                match mode {
+                    Mode::Run => "run",
+                    Mode::Warm => "warm",
+                    Mode::PrepareLanes => "prepare-lanes",
+                },
                 &serde_json::json!({ "request": args }),
                 deadline,
             )

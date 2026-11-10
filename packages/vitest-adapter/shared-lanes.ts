@@ -27,6 +27,143 @@ export class SharedLanes {
     await context?.close();
   }
 
+  /** Builds the lane context ahead of the first batch. Starts no pool or test. */
+  async prepare(request: Request): Promise<void> {
+    if (version !== '5.1.0') throw new Error('Shared lanes require Vitest 5.1.0');
+    // Validated 1..=1024 for coordinator requests; direct callers default to one.
+    const width = request.workers ?? 1;
+    await this.ensureContext(request.root, request.config, width);
+    try {
+      for (const project of this.context!.projects) this.requireSupported(project);
+    } catch (error) {
+      // Fail closed: a half-prepared context must not survive.
+      await this.close();
+      throw error;
+    }
+  }
+
+  private requireSupported(project: Context['projects'][number]) {
+    if (
+      project.config.environment !== 'node' ||
+      project.config.globalSetup?.length ||
+      project.config.browser.enabled
+    )
+      throw new Error('Shared lanes require Node projects without global setup');
+  }
+
+  private async ensureContext(root: string, config: string, width: number) {
+    // A stable lane count keeps the context across a smaller final batch.
+    if (this.context && this.width !== width) await this.close();
+    if (this.context) return;
+    const context = await createVitest('test', {
+      root,
+      config,
+      watch: false,
+      maxWorkers: width,
+      maxConcurrency: 1,
+      fileParallelism: true,
+      isolate: true,
+      bail: 0,
+      coverage: { enabled: false },
+      reporters: [],
+      // Mutation transforms vary without changing source bytes; disk cache keys do not.
+      fsModuleCache: false,
+      projects: Array.from({ length: width }, (_, index) => ({
+        extends: true,
+        plugins: [
+          {
+            name: 'oximut-shared-resident',
+            enforce: 'pre',
+            transform: (_code, id) => {
+              const module = this.modules.get(resolve(id.split('?')[0]));
+              if (module) return { code: module.code, map: JSON.stringify(module.map) };
+            },
+          },
+        ],
+        test: {
+          name: `oximut-lane-${index}`,
+          pool: {
+            name: 'oximut-lane-forks',
+            createPoolWorker: (options) => {
+              const worker = new ForksPoolWorker(options);
+              const start = worker.start.bind(worker);
+              const stop = worker.stop.bind(worker);
+              const send = worker.send.bind(worker);
+              const deserialize = worker.deserialize.bind(worker);
+              const name = options.project.name;
+              let timer: ReturnType<typeof setTimeout> | undefined;
+              let finished = false;
+              let stopping = false;
+              worker.start = async () => {
+                await start();
+                worker.on('exit', () => {
+                  clearTimeout(timer);
+                  if (!finished && !stopping && !this.failures.has(name))
+                    this.failures.set(name, LANE_EXITED);
+                });
+              };
+              worker.send = (message) => {
+                if (message.type === 'run') {
+                  // Pinned PoolRunner request shape. Send all selected Node files
+                  // in one isolated task: exactly one fresh OS fork per mutant.
+                  const run = message as unknown as {
+                    context: { files: { filepath: string }[] };
+                  };
+                  run.context.files = this.files.get(name)!.map((filepath) => ({ filepath }));
+                  timer = setTimeout(
+                    () => {
+                      this.failures.set(name, HARD_DEADLINE);
+                      (worker as unknown as { fork?: { kill(signal: string): void } }).fork?.kill(
+                        'SIGKILL',
+                      );
+                    },
+                    Math.max(1, this.deadline - performance.now()),
+                  );
+                }
+                return send(message);
+              };
+              worker.deserialize = (data) => {
+                const message = deserialize(data);
+                const wire = message as { type?: string; m?: string };
+                if (wire?.type === 'testfileFinished') finished = true;
+                if (wire?.m === 'onUnhandledError')
+                  this.failures.set(name, 'Unhandled lane worker error');
+                return message;
+              };
+              worker.stop = async () => {
+                stopping = true;
+                clearTimeout(timer);
+                await stop();
+              };
+              return worker;
+            },
+          },
+          runner,
+          isolate: true,
+          bail: 0,
+          maxWorkers: width,
+          fileParallelism: true,
+          maxConcurrency: 1,
+        },
+      })),
+    });
+    try {
+      await context.standalone();
+    } catch (error) {
+      await context.close();
+      throw error;
+    }
+    this.context = context;
+    this.width = width;
+    if (getCompileCacheDir())
+      for (const project of context.projects)
+        project.config.execArgv = [
+          ...project.config.execArgv,
+          '--require',
+          fileURLToPath(new URL('./compile-cache.cjs', import.meta.url)),
+        ];
+  }
+
   async run(batch: Request): Promise<Result> {
     if (version !== '5.1.0') throw new Error('Shared lanes require Vitest 5.1.0');
     const jobs = batch.lanes!;
@@ -52,119 +189,12 @@ export class SharedLanes {
     this.modules = modules;
     // A stable lane count keeps the context across a smaller final batch.
     const width = Math.max(batch.workers ?? jobs.length, jobs.length);
-    if (this.context && this.width !== width) await this.close();
-    if (!this.context) {
-      const context = await createVitest('test', {
-        root: batch.root,
-        config: batch.config,
-        watch: false,
-        maxWorkers: width,
-        maxConcurrency: 1,
-        fileParallelism: true,
-        isolate: true,
-        bail: 0,
-        coverage: { enabled: false },
-        reporters: [],
-        // Mutation transforms vary without changing source bytes; disk cache keys do not.
-        fsModuleCache: false,
-        projects: Array.from({ length: width }, (_, index) => ({
-          extends: true,
-          plugins: [
-            {
-              name: 'oximut-shared-resident',
-              enforce: 'pre',
-              transform: (_code, id) => {
-                const module = this.modules.get(resolve(id.split('?')[0]));
-                if (module) return { code: module.code, map: JSON.stringify(module.map) };
-              },
-            },
-          ],
-          test: {
-            name: `oximut-lane-${index}`,
-            pool: {
-              name: 'oximut-lane-forks',
-              createPoolWorker: (options) => {
-                const worker = new ForksPoolWorker(options);
-                const start = worker.start.bind(worker);
-                const stop = worker.stop.bind(worker);
-                const send = worker.send.bind(worker);
-                const deserialize = worker.deserialize.bind(worker);
-                const name = options.project.name;
-                let timer: ReturnType<typeof setTimeout> | undefined;
-                let finished = false;
-                let stopping = false;
-                worker.start = async () => {
-                  await start();
-                  worker.on('exit', () => {
-                    clearTimeout(timer);
-                    if (!finished && !stopping && !this.failures.has(name))
-                      this.failures.set(name, LANE_EXITED);
-                  });
-                };
-                worker.send = (message) => {
-                  if (message.type === 'run') {
-                    // Pinned PoolRunner request shape. Send all selected Node files
-                    // in one isolated task: exactly one fresh OS fork per mutant.
-                    const run = message as unknown as {
-                      context: { files: { filepath: string }[] };
-                    };
-                    run.context.files = this.files.get(name)!.map((filepath) => ({ filepath }));
-                    timer = setTimeout(
-                      () => {
-                        this.failures.set(name, HARD_DEADLINE);
-                        (worker as unknown as { fork?: { kill(signal: string): void } }).fork?.kill(
-                          'SIGKILL',
-                        );
-                      },
-                      Math.max(1, this.deadline - performance.now()),
-                    );
-                  }
-                  return send(message);
-                };
-                worker.deserialize = (data) => {
-                  const message = deserialize(data);
-                  const wire = message as { type?: string; m?: string };
-                  if (wire?.type === 'testfileFinished') finished = true;
-                  if (wire?.m === 'onUnhandledError')
-                    this.failures.set(name, 'Unhandled lane worker error');
-                  return message;
-                };
-                worker.stop = async () => {
-                  stopping = true;
-                  clearTimeout(timer);
-                  await stop();
-                };
-                return worker;
-              },
-            },
-            runner,
-            isolate: true,
-            bail: 0,
-            maxWorkers: width,
-            fileParallelism: true,
-            maxConcurrency: 1,
-          },
-        })),
-      });
-      try {
-        await context.standalone();
-      } catch (error) {
-        await context.close();
-        throw error;
-      }
-      this.context = context;
-      this.width = width;
-      if (getCompileCacheDir())
-        for (const project of context.projects)
-          project.config.execArgv = [
-            ...project.config.execArgv,
-            '--require',
-            fileURLToPath(new URL('./compile-cache.cjs', import.meta.url)),
-          ];
-    } else if (changed) {
-      for (const project of this.context.projects) project.vite.moduleGraph.invalidateAll();
+    const previous = this.context;
+    await this.ensureContext(batch.root, batch.config, width);
+    if (previous && this.context === previous && changed) {
+      for (const project of previous.projects) project.vite.moduleGraph.invalidateAll();
     }
-    const ctx = this.context;
+    const ctx = this.context!;
     for (const [index, project] of ctx.projects.entries()) {
       // Lanes beyond this batch stay idle: they receive no specification.
       if (jobs[index])
@@ -172,12 +202,7 @@ export class SharedLanes {
           ...project.config.env,
           OXIMUT_ACTIVE_MUTANT: jobs[index].mutation!.id,
         };
-      if (
-        project.config.environment !== 'node' ||
-        project.config.globalSetup?.length ||
-        project.config.browser.enabled
-      )
-        throw new Error('Shared lanes require Node projects without global setup');
+      this.requireSupported(project);
     }
     const specs = await new ctx.config.sequence.sequencer(ctx).sort(
       await ctx.globTestSpecifications(),

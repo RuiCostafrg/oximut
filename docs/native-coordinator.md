@@ -282,6 +282,27 @@ globals or native addon state can carry from one file to the next. Use
 This depends on
 private details of Vitest 5.1.0; `shared-lanes.ts` refuses any other version.
 
+### Lane context preparation
+
+Building the lane context (`createVitest` with one project per lane, `standalone()`,
+plugins) is off the mutant critical path. With a shared controller and a nonempty
+mutant inventory, the scheduler queues one internal `prepare-lanes` job beside the
+original baseline. It takes the first free spare slot. That controller initializes
+as usual, retires its ordinary Vitest instance and builds the lanes with
+`workers` = min(slots, mutants) as the lane count. It reads no test files and starts
+no fork. The first lane batch is then assigned to that controller, waiting for its
+acknowledgement when the baselines finish first, and fixes the batch width to the
+prepared one so the context is reused. Later batches run as before.
+
+The prepare keeps the resource admission, aggregate RSS accounting, deadlines, ownership
+discovery and shutdown rules of a spare warm: it never counts as an active real job and
+is aborted through verified cleanup if still in flight at shutdown. It fails closed:
+if the prepare errors (unsupported project, version, timeout, abort), only that spare is
+discarded, a diagnostic records it and the first batch builds its own context on the
+first slot exactly as without preparation. A controller that was prepared is retired like
+any controller that ran lanes. Results, per-mutant fresh forks, resident module
+validation and the deadline contract are unchanged.
+
 ## Release or follow-up
 
 If the qualified campaign meets all three targets with every gate passing,

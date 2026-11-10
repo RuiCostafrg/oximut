@@ -5,6 +5,19 @@ use std::collections::VecDeque;
 use std::sync::atomic::{AtomicBool, Ordering};
 // Internal warm acknowledgements never index the public mutant result array.
 const WARM_JOB: usize = usize::MAX;
+// Builds the shared lane context while the baselines run. Like a warm, it never
+// indexes the public mutant result array.
+const PREPARE_JOB: usize = usize::MAX - 1;
+fn is_internal(index: usize) -> bool {
+    index == WARM_JOB || index == PREPARE_JOB
+}
+fn internal_label(index: usize) -> &'static str {
+    if index == PREPARE_JOB {
+        "lane prepare"
+    } else {
+        "spare warm"
+    }
+}
 static INTERRUPTED: AtomicBool = AtomicBool::new(false);
 extern "C" fn interrupt_handler(_: libc::c_int) {
     INTERRUPTED.store(true, Ordering::Relaxed);
@@ -75,11 +88,17 @@ impl Worker {
         self.owned.extend(descendants(self.child.id()));
     }
     fn send(&mut self, index: usize, request: Request) -> Result<(), String> {
-        if index == WARM_JOB {
+        if is_internal(index) {
             fs::write(
-                self.directory
-                    .path()
-                    .join(format!("warm-{}", self.sequence)),
+                self.directory.path().join(format!(
+                    "{}-{}",
+                    if index == PREPARE_JOB {
+                        "prepare"
+                    } else {
+                        "warm"
+                    },
+                    self.sequence
+                )),
                 b"",
             )
             .map_err(|e| e.to_string())?;
@@ -141,6 +160,9 @@ pub struct Scheduler<'a> {
     cleanup_ok: bool,
     spares: VecDeque<(usize, Request)>,
     lanes_ran: bool,
+    /// Slot whose controller holds a prepared lane context, and its lane count.
+    lane_slot: Option<usize>,
+    lane_width: usize,
 }
 /// Whether a job still fits the request limit once wrapped as a one-lane batch.
 // Leaves room for the batch's own, slightly longer, deadline field.
@@ -193,13 +215,27 @@ impl<'a> Scheduler<'a> {
             cleanup_ok: true,
             spares: VecDeque::new(),
             lanes_ran: false,
+            lane_slot: None,
+            lane_width: 0,
         })
     }
-    pub fn prepare_spares(&mut self, request: &Request) {
-        if !(self.options.shared_controller && self.slots.len() >= 2)
-            && self.options.execution == Execution::Persistent
-            && coordinator::native_worker(&self.options.adapter).is_some()
+    /// `mutants` bounds the lane count of a shared controller.
+    pub fn prepare_spares(&mut self, request: &Request, mutants: usize) {
+        if self.options.execution != Execution::Persistent
+            || coordinator::native_worker(&self.options.adapter).is_none()
         {
+            return;
+        }
+        if self.options.shared_controller && self.slots.len() >= 2 {
+            // One spare builds the lane context while the baselines run; the
+            // first batch is then assigned to it. A failed prepare only drops
+            // the spare: the batch builds its own context as before.
+            let width = self.slots.len().min(mutants).clamp(1, 1024);
+            let mut request = request.clone();
+            request.workers = Some(width);
+            self.lane_width = width;
+            self.spares.push_back((PREPARE_JOB, request));
+        } else {
             self.spares
                 .extend((1..self.slots.len()).map(|_| (WARM_JOB, request.clone())));
         }
@@ -228,11 +264,15 @@ impl<'a> Scheduler<'a> {
             let Some(mut worker) = self.slots[slot].take() else {
                 continue;
             };
+            if self.lane_slot == Some(slot) {
+                self.lane_slot = None;
+            }
             worker.snapshot();
-            if worker
+            if let Some(label) = worker
                 .busy
                 .as_ref()
-                .is_some_and(|(index, _, _)| *index == WARM_JOB)
+                .filter(|(index, _, _)| is_internal(*index))
+                .map(|(index, _, _)| internal_label(*index))
             {
                 if let Some(result) = worker.ready() {
                     let (_, request, _) = worker.busy.take().unwrap();
@@ -240,7 +280,7 @@ impl<'a> Scheduler<'a> {
                     let response = result.unwrap_or_else(|error| infrastructure(&request, error));
                     let failed = response.outcome != TestOutcome::Skipped;
                     self.diagnostics.push(format!(
-                        "spare warm {}: {}",
+                        "{label} {}: {}",
                         if failed { "failed" } else { "ready" },
                         response.errors.join("; ")
                     ));
@@ -250,7 +290,7 @@ impl<'a> Scheduler<'a> {
                     }
                 } else {
                     self.diagnostics
-                        .push("spare warm abandoned at shutdown".into());
+                        .push(format!("{label} abandoned at shutdown"));
                     worker.abort();
                     if worker
                         .owned
@@ -352,16 +392,16 @@ impl<'a> Scheduler<'a> {
                 let ready = self.slots[slot].as_mut().and_then(Worker::ready);
                 if let Some(result) = ready {
                     self.sample(true);
-                    if self.slots[slot].as_ref().unwrap().busy.as_ref().unwrap().0 != WARM_JOB
+                    if !is_internal(self.slots[slot].as_ref().unwrap().busy.as_ref().unwrap().0)
                         && let Err(error) = &result
                         && error.starts_with("scheduler worker exited")
                     {
                         self.budget.exhausted(error.clone());
                     }
                     let worker = self.slots[slot].as_mut().expect("ready worker");
-                    let (index, request, _) = worker.busy.take().expect("ready job");
+                    let (index, request, started) = worker.busy.take().expect("ready job");
                     worker.sequence += 1;
-                    if index != WARM_JOB {
+                    if !is_internal(index) {
                         self.budget.active -= 1;
                     }
                     let response = if let Some(reason) = &self.budget.exhaustion {
@@ -369,13 +409,16 @@ impl<'a> Scheduler<'a> {
                     } else {
                         result.unwrap_or_else(|error| infrastructure(&request, error))
                     };
-                    let untrusted = (index == WARM_JOB && response.outcome != TestOutcome::Skipped)
+                    let untrusted = (is_internal(index)
+                        && response.outcome != TestOutcome::Skipped)
                         || response.outcome == TestOutcome::InfrastructureError
                         || response.outcome == TestOutcome::ResourceExhausted;
-                    if index == WARM_JOB {
+                    if is_internal(index) {
                         self.diagnostics.push(format!(
-                            "spare warm {}: {}",
+                            "{} {} ({} ms): {}",
+                            internal_label(index),
                             if untrusted { "failed" } else { "ready" },
+                            started.elapsed().as_millis(),
                             response.errors.join("; ")
                         ));
                     } else {
@@ -384,6 +427,9 @@ impl<'a> Scheduler<'a> {
                     if untrusted {
                         self.slots[slot].as_mut().unwrap().abort();
                         self.slots[slot] = None;
+                        if self.lane_slot == Some(slot) {
+                            self.lane_slot = None;
+                        }
                     }
                 }
             }
@@ -391,7 +437,7 @@ impl<'a> Scheduler<'a> {
                 for slot in 0..self.slots.len() {
                     if let Some(worker) = self.slots[slot].as_mut() {
                         if let Some((index, request, _)) = worker.busy.take()
-                            && index != WARM_JOB
+                            && !is_internal(index)
                         {
                             completed.push((index, exhausted(&request, &reason)));
                             self.budget.active -= 1;
@@ -400,10 +446,11 @@ impl<'a> Scheduler<'a> {
                         self.slots[slot] = None;
                     }
                 }
+                self.lane_slot = None;
                 completed.extend(
                     pending
                         .drain(..)
-                        .filter(|(index, _)| *index != WARM_JOB)
+                        .filter(|(index, _)| !is_internal(*index))
                         .map(|(index, request)| (index, exhausted(&request, &reason))),
                 );
                 break;
@@ -422,9 +469,17 @@ impl<'a> Scheduler<'a> {
             // ordering satisfied. A busy backlog keeps the cheap periodic cadence;
             // exact samples still run at least once per second and per response.
             let warming = pending.is_empty();
+            // A lane batch belongs to the controller that prepared the lane
+            // context; it waits while that controller is still preparing.
+            let lane_target = pending
+                .front()
+                .filter(|(_, request)| request.lanes.is_some())
+                .and(self.lane_slot);
             let free_slot = self.slots.iter().enumerate().position(|(index, slot)| {
                 if warming {
                     index > 0 && slot.is_none()
+                } else if let Some(target) = lane_target {
+                    index == target && slot.as_ref().is_none_or(|worker| worker.busy.is_none())
                 } else {
                     slot.as_ref().is_none_or(|worker| worker.busy.is_none())
                 }
@@ -444,7 +499,7 @@ impl<'a> Scheduler<'a> {
                     worker
                         .busy
                         .as_ref()
-                        .is_some_and(|(index, _, _)| *index != WARM_JOB)
+                        .is_some_and(|(index, _, _)| !is_internal(*index))
                 })
                 .map(|worker| worker.child.id())
                 .collect();
@@ -466,7 +521,11 @@ impl<'a> Scheduler<'a> {
                 };
                 // One serial baseline occupies the controller, but its fresh forks
                 // must each have admission headroom before they are launched.
-                if request.kind == "baseline" && self.options.execution == Execution::Persistent {
+                // A lane prepare carries its lane count in the same field.
+                if request.kind == "baseline"
+                    && self.options.execution == Execution::Persistent
+                    && index != PREPARE_JOB
+                {
                     // Spares start alongside: wall time matters more than peak memory.
                     request.workers = Some(
                         self.budget
@@ -478,7 +537,7 @@ impl<'a> Scheduler<'a> {
                     match Worker::start(self.options) {
                         Ok(worker) => self.slots[slot] = Some(worker),
                         Err(error) => {
-                            if index == WARM_JOB {
+                            if is_internal(index) {
                                 self.diagnostics
                                     .push(format!("spare start failed: {error}"));
                             } else {
@@ -491,7 +550,12 @@ impl<'a> Scheduler<'a> {
                 let worker = self.slots[slot].as_mut().unwrap();
                 match worker.send(index, request.clone()) {
                     Ok(()) => {
-                        if index != WARM_JOB {
+                        if index == PREPARE_JOB {
+                            self.lane_slot = Some(slot);
+                            // This controller gives up its ordinary Vitest instance.
+                            self.lanes_ran = true;
+                        }
+                        if !is_internal(index) {
                             self.budget.active += 1;
                         }
                         self.budget.max_active_jobs = self.budget.max_active_jobs.max(
@@ -503,7 +567,7 @@ impl<'a> Scheduler<'a> {
                         );
                     }
                     Err(error) => {
-                        if index == WARM_JOB {
+                        if is_internal(index) {
                             self.diagnostics.push(format!("spare send failed: {error}"));
                         } else {
                             completed.push((index, infrastructure(&request, error)));
@@ -566,7 +630,10 @@ impl<'a> Scheduler<'a> {
         if self.options.shared_controller && self.slots.len() >= 2 {
             // Fixed at the first batch, so that later batches reuse the same lanes.
             let total = jobs.len();
-            let mut width = None;
+            // A prepare that never started has nothing to hand over.
+            self.spares.retain(|(index, _)| *index != PREPARE_JOB);
+            // The prepared context already has its lane count.
+            let mut width = self.lane_slot.map(|_| self.lane_width);
             let mut pending: VecDeque<_> = jobs.into();
             while let Some(first) = pending.pop_front() {
                 // A request too large to wrap in a lane batch still runs normally.
@@ -757,12 +824,17 @@ pub fn worker_main() -> Result<(), String> {
             return Err("internal request exceeds 8 MiB".into());
         }
         let request = serde_json::from_slice(&bytes).map_err(|e| e.to_string())?;
-        let response = if directory.join(format!("warm-{sequence}")).exists() {
+        let warm = directory.join(format!("warm-{sequence}")).exists();
+        let prepare = directory.join(format!("prepare-{sequence}")).exists();
+        let response = if warm || prepare {
             if session.is_none() {
                 session = coordinator::native_worker(&options.adapter)
                     .map(|worker| Backend::Native(Box::new(coordinator::Coordinator::new(worker))));
             }
             match session.as_mut() {
+                Some(Backend::Native(coordinator)) if prepare => {
+                    coordinator.prepare_lanes(&options, &request)
+                }
                 Some(Backend::Native(coordinator)) => coordinator.warm(&options, &request),
                 _ => infrastructure(&request, "warm requires native coordinator"),
             }
@@ -798,6 +870,29 @@ mod tests {
                 "2",
             ]
             .into_iter()
+            .map(str::to_string),
+        )
+        .unwrap()
+        .unwrap()
+    }
+
+    fn persistent_options(extra: &[&str]) -> Options {
+        parse_options(
+            [
+                "--root",
+                concat!(env!("CARGO_MANIFEST_DIR"), "/../../fixtures/m1"),
+                "--source",
+                concat!(
+                    env!("CARGO_MANIFEST_DIR"),
+                    "/../../fixtures/m1/src/subject.ts"
+                ),
+                "--workers",
+                "2",
+                "--execution",
+                "persistent",
+            ]
+            .into_iter()
+            .chain(extra.iter().copied())
             .map(str::to_string),
         )
         .unwrap()
@@ -952,6 +1047,178 @@ mod tests {
         let spare = scheduler.slots[1].as_ref().expect("queued spare started");
         assert_eq!(spare.busy.as_ref().unwrap().0, WARM_JOB);
         assert!(spare.directory.path().join("warm-0").exists());
+    }
+
+    #[test]
+    fn a_shared_controller_prepares_one_lane_context_sized_by_the_mutants() {
+        let options = persistent_options(&[]);
+        assert!(options.shared_controller);
+        let mut scheduler = Scheduler::new(&options).unwrap();
+        scheduler.prepare_spares(&request(), 1);
+        let queued: Vec<_> = scheduler.spares.iter().collect();
+        assert_eq!(queued.len(), 1);
+        assert_eq!(queued[0].0, PREPARE_JOB);
+        assert_eq!(queued[0].1.workers, Some(1));
+        assert_eq!(scheduler.lane_width, 1);
+        // Nothing is assigned to a controller until the prepare is sent.
+        assert_eq!(scheduler.lane_slot, None);
+        scheduler.spares.clear();
+        scheduler.prepare_spares(&request(), 10);
+        assert_eq!(scheduler.spares[0].1.workers, Some(scheduler.slots.len()));
+        // Without a shared controller each spare is an ordinary warm.
+        let other = persistent_options(&["--no-shared-controller"]);
+        let mut scheduler = Scheduler::new(&other).unwrap();
+        scheduler.prepare_spares(&request(), 10);
+        assert!(scheduler.spares.iter().all(|(index, _)| *index == WARM_JOB));
+        assert_eq!(scheduler.spares.len(), scheduler.slots.len() - 1);
+    }
+
+    #[test]
+    fn a_prepare_is_sent_to_its_own_marker_and_keeps_its_lane_count() {
+        let _guard = PROCESS_TEST.lock().unwrap();
+        let options = persistent_options(&[]);
+        let mut scheduler = Scheduler::new(&options).unwrap();
+        scheduler.budget.effective_workers = 2;
+        scheduler.prepare_spares(&request(), 2);
+        let mut baseline = worker(
+            tempfile::tempdir().unwrap(),
+            "import time; time.sleep(60)",
+            &[],
+        );
+        let job = request();
+        let mut response = infrastructure(&job, "");
+        response.outcome = TestOutcome::Passed;
+        response.tests.passed = 1;
+        response.errors.clear();
+        cache::atomic(
+            &baseline.directory.path().join("response-0.json"),
+            &response,
+        )
+        .unwrap();
+        baseline.busy = Some((0, job, Instant::now()));
+        scheduler.slots = vec![Some(baseline), None];
+        scheduler.budget.active = 1;
+        // The baseline finishes while the prepare starts on the free slot.
+        let completed = scheduler.dispatch(VecDeque::new(), true);
+        assert_eq!(completed.len(), 1);
+        let spare = scheduler.slots[1].as_ref().expect("prepare started");
+        assert_eq!(spare.busy.as_ref().unwrap().0, PREPARE_JOB);
+        assert!(spare.directory.path().join("prepare-0").exists());
+        assert!(!spare.directory.path().join("warm-0").exists());
+        let sent: serde_json::Value = serde_json::from_slice(
+            &fs::read(spare.directory.path().join("request-0.json")).unwrap(),
+        )
+        .unwrap();
+        assert_eq!(sent["workers"], 2);
+        assert_eq!(scheduler.lane_slot, Some(1));
+        assert!(scheduler.lanes_ran);
+    }
+
+    #[test]
+    fn a_lane_batch_waits_for_and_runs_on_the_prepared_controller() {
+        let _guard = PROCESS_TEST.lock().unwrap();
+        let options = options();
+        let mut scheduler = Scheduler::new(&options).unwrap();
+        let idle = worker(
+            tempfile::tempdir().unwrap(),
+            "import time; time.sleep(60)",
+            &[],
+        );
+        let prepared = worker(
+            tempfile::tempdir().unwrap(),
+            "import time; time.sleep(60)",
+            &[],
+        );
+        let mut lanes = request();
+        lanes.lanes = Some(vec![request()]);
+        let mut response = infrastructure(&lanes, "");
+        response.outcome = TestOutcome::Skipped;
+        response.errors.clear();
+        let mut lane = infrastructure(&request(), "");
+        lane.outcome = TestOutcome::Passed;
+        lane.tests.passed = 1;
+        lane.errors.clear();
+        response.lanes = Some(vec![lane]);
+        // Both controllers could answer; only the prepared one may be asked.
+        for slot in [&idle, &prepared] {
+            cache::atomic(&slot.directory.path().join("response-0.json"), &response).unwrap();
+        }
+        scheduler.slots = vec![Some(idle), Some(prepared)];
+        scheduler.lane_slot = Some(1);
+        let completed = scheduler.dispatch(VecDeque::from([(0, lanes)]), true);
+        assert_eq!(completed.len(), 1);
+        assert_eq!(
+            completed[0].1.outcome,
+            TestOutcome::Skipped,
+            "{:?}",
+            completed[0].1.errors
+        );
+        assert!(
+            scheduler.slots[1]
+                .as_ref()
+                .unwrap()
+                .directory
+                .path()
+                .join("request-0.json")
+                .exists()
+        );
+        assert!(
+            !scheduler.slots[0]
+                .as_ref()
+                .unwrap()
+                .directory
+                .path()
+                .join("request-0.json")
+                .exists()
+        );
+    }
+
+    #[test]
+    fn a_failed_prepare_drops_the_lane_slot_and_only_the_spare() {
+        let _guard = PROCESS_TEST.lock().unwrap();
+        let options = options();
+        let mut scheduler = Scheduler::new(&options).unwrap();
+        let mut baseline = worker(
+            tempfile::tempdir().unwrap(),
+            "import time; time.sleep(60)",
+            &[],
+        );
+        let mut spare = worker(
+            tempfile::tempdir().unwrap(),
+            "import time; time.sleep(60)",
+            &[],
+        );
+        let job = request();
+        let mut failed = infrastructure(&job, "Shared lanes require a reusable controller project");
+        failed.outcome = TestOutcome::InfrastructureError;
+        cache::atomic(&spare.directory.path().join("response-0.json"), &failed).unwrap();
+        let mut passed = infrastructure(&job, "");
+        passed.outcome = TestOutcome::Passed;
+        passed.tests.passed = 1;
+        passed.errors.clear();
+        cache::atomic(&baseline.directory.path().join("response-0.json"), &passed).unwrap();
+        baseline.busy = Some((0, job.clone(), Instant::now()));
+        spare.busy = Some((PREPARE_JOB, job, Instant::now()));
+        scheduler.slots = vec![Some(baseline), Some(spare)];
+        scheduler.budget.active = 1;
+        scheduler.lane_slot = Some(1);
+        let completed = scheduler.dispatch(VecDeque::new(), true);
+        // The ordinary job is untouched; the spare is gone and the batch runs unprepared.
+        assert_eq!(completed.len(), 1);
+        assert_eq!(
+            completed[0].1.outcome,
+            TestOutcome::Passed,
+            "{:?}",
+            completed[0].1.errors
+        );
+        assert!(scheduler.slots[1].is_none());
+        assert_eq!(scheduler.lane_slot, None);
+        assert!(
+            scheduler
+                .diagnostics
+                .iter()
+                .any(|d| d.starts_with("lane prepare failed") && d.contains("Shared lanes require"))
+        );
     }
 
     #[test]

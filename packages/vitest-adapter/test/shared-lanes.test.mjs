@@ -102,6 +102,7 @@ test('after', () => {
     });
     await command('initialize', { ...job('init'), kind: 'baseline', mutation: null });
     return {
+      prepare: (request) => command('prepare-lanes', { request }),
       run: (request) => command('run', { request }),
       async close() {
         await command('close', {});
@@ -388,4 +389,102 @@ test('a smaller batch reuses the lanes of a stable width', { timeout: 90000 }, a
   assert.equal(new Set(events.map((event) => event.pid)).size, 1);
   await lanes.run({ ...jobs[1], lanes: [jobs[1]] });
   assert.notEqual(lanes.context, context);
+});
+
+test(
+  'prepare builds the lane context without a fork and run reuses it',
+  { timeout: 120000 },
+  async (t) => {
+    const s = await fixture(t);
+    const lanes = new SharedLanes();
+    t.after(() => lanes.close());
+    await lanes.prepare({ ...s.job('survived'), workers: 2 });
+    const context = lanes.context;
+    assert.ok(context);
+    assert.equal(context.projects.length, 2);
+    // No test file was evaluated: only the context itself exists.
+    await assert.rejects(readFile(join(s.root, 'events'), 'utf8'), { code: 'ENOENT' });
+    const jobs = ['survived', 'selected'].map(s.job);
+    const full = await lanes.run({ ...jobs[0], workers: 2, lanes: jobs });
+    assert.deepEqual(
+      full.lanes.map((lane) => lane.outcome),
+      ['passed', 'passed'],
+    );
+    assert.equal(lanes.context, context);
+    const rebuilt = await lanes.run({ ...jobs[1], workers: 3, lanes: [jobs[1]] });
+    assert.deepEqual(
+      rebuilt.lanes.map((lane) => lane.outcome),
+      ['passed'],
+    );
+    assert.notEqual(lanes.context, context);
+  },
+);
+
+test(
+  'prepare drops the context of an unsupported project',
+  { timeout: 90000 },
+  async (t) => {
+    const s = await fixture(t);
+    await writeFile(
+      join(s.root, 'vitest.config.mjs'),
+      "export default { test: { include: ['*.test.ts'], environment: 'jsdom' } };",
+    );
+    const lanes = new SharedLanes();
+    await assert.rejects(
+      lanes.prepare({ ...s.job('survived'), workers: 2 }),
+      /Shared lanes require/,
+    );
+    assert.equal(lanes.context, undefined);
+  },
+);
+
+test(
+  'a prepared controller runs the first batch without rebuilding its lanes',
+  { timeout: 120000 },
+  async (t) => {
+    const s = await fixture(t);
+    const ids = ['killed', 'survived', 'timeout'];
+    const c = await s.controller();
+    const jobs = ids.map(s.job);
+    const prepared = await c.prepare({ ...jobs[0], workers: 3 });
+    assert.equal(prepared.warmed, true);
+    assert.equal(prepared.outcome, 'skipped');
+    assert.deepEqual(prepared.tests, { passed: 0, failed: 0, skipped: 0 });
+    const result = await c.run({ ...jobs[0], workers: 3, lanes: jobs });
+    assert.deepEqual(
+      result.lanes.map((lane) => lane.outcome),
+      ['failed', 'passed', 'timeout'],
+    );
+    await assertGone(s.root);
+    await c.close();
+  },
+);
+
+test('a rejected prepare leaves the controller fail-closed', { timeout: 90000 }, async (t) => {
+  const s = await fixture(t);
+  await writeFile(
+    join(s.root, 'custom-runner.mjs'),
+    "export { TestRunner as default } from 'vitest';",
+  );
+  await writeFile(
+    join(s.root, 'vitest.config.mjs'),
+    "export default { test: { include: ['*.test.ts'], testTimeout: 300, runner: './custom-runner.mjs' } };",
+  );
+  const c = await s.controller();
+  const jobs = ['survived', 'selected'].map(s.job);
+  await assert.rejects(c.prepare({ ...jobs[0], workers: 2 }), /Shared lanes require/);
+  const result = await c
+    .run({ ...jobs[0], lanes: jobs })
+    .catch((error) => ({ errors: [error.message] }));
+  assert.equal(result.lanes, undefined);
+  assert.match(result.errors.join(';'), /Shared lanes require/);
+  await c.close();
+});
+
+test('a prepared controller closes cleanly', { timeout: 90000 }, async (t) => {
+  const s = await fixture(t);
+  const c = await s.controller();
+  const prepared = await c.prepare({ ...s.job('survived'), workers: 2 });
+  assert.equal(prepared.warmed, true);
+  await c.close();
 });

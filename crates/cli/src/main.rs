@@ -1036,7 +1036,7 @@ fn run_attempt(options: &Options, previous: Option<RetryEvidence>) -> Result<Att
         let mut warm_request = request.clone();
         warm_request.job_id = "spare-warm".into();
         warm_request.resident = groups.first().cloned();
-        scheduler.prepare_spares(&warm_request);
+        scheduler.prepare_spares(&warm_request, mutants.len());
     }
     phase_wall_ms.insert(
         "inputAndSchedulerPreparation",
