@@ -155,7 +155,8 @@ def controller_capture_inventory(directory, qualification=None):
                 errors.append(f'controller error reply: {timeline.name}')
             mutants = [e for e in requests if e.get('kind') == 'mutant']
             # A shared-lane batch carries one mutant per lane; a batch must name all of them.
-            if any('laneCount' in e and (type(e['laneCount']) is not int or not isinstance(e.get('laneMutantIds'), list)
+            if any('laneCount' in e and (type(e['laneCount']) is not int or e['laneCount'] < 1
+                                         or not isinstance(e.get('laneMutantIds'), list)
                                          or len(e['laneMutantIds']) != e['laneCount']
                                          or e['laneMutantIds'][0] != e.get('mutantId'))
                    for e in mutants):

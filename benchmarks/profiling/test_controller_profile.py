@@ -364,6 +364,14 @@ fs.appendFileSync = function(file, data, ...args) {
                     break
             self.write_events(timeline, events)
             self.assertTrue(any('unidentified shared-lane batch' in e for e in self.capture(root)['errors']))
+            # An empty batch is invalid evidence, not a crash.
+            for e in events:
+                if 'laneMutantIds' in e:
+                    e['laneMutantIds'] = []
+                    e['laneCount'] = 0
+                    break
+            self.write_events(timeline, events)
+            self.assertTrue(any('unidentified shared-lane batch' in e for e in self.capture(root)['errors']))
 
     def test_opt_out_and_noncontroller_are_inert(self):
         """Leave execution and output untouched outside the explicit controller opt-in."""

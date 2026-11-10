@@ -37,16 +37,8 @@ esc, table, share, legend, stacked_bars, ratio_chart = (
 
 # ----------------------------------------------------------------------------- extract
 
-def extract(args):
-    inputs = {}
-    benchmark = base.extract_benchmark(args.benchmark, inputs)
-    benchmark_low = base.extract_benchmark(args.benchmark_low, inputs)
-    controller = base.extract_controller(args.controller, inputs)
-    profiles = base.extract_profiles(args.profiles, inputs)
-    concurrency = {name: base.read_json(base.one(root, 'summary.json'), inputs).get('concurrency')
-                   for name, root in (('benchmark', args.benchmark), ('benchmark_low', args.benchmark_low))}
-    for name, root in (('controller', args.controller), ('profiles', args.profiles)):
-        concurrency[name] = base.read_json(base.one(root, 'capture/diagnostic.json'), inputs).get('concurrency')
+def check_inputs(concurrency, benchmark, benchmark_low, controller, profiles):
+    """Refuse evidence that does not describe one workload at one matched shared-lane concurrency."""
     if concurrency['benchmark'] != concurrency['controller'] or concurrency['controller'] != concurrency['profiles']:
         raise SystemExit(f'inputs ran at different concurrency: {concurrency}')
     if not isinstance(concurrency['benchmark'], int) or concurrency['benchmark'] < 2:
@@ -61,6 +53,19 @@ def extract(args):
         raise SystemExit('the controller capture did not pass; refusing a timeline built on it')
     if not any(j['lanes'] for j in controller['jobs']):
         raise SystemExit('the controller capture shows no shared-lane batches')
+
+
+def extract(args):
+    inputs = {}
+    benchmark = base.extract_benchmark(args.benchmark, inputs)
+    benchmark_low = base.extract_benchmark(args.benchmark_low, inputs)
+    controller = base.extract_controller(args.controller, inputs)
+    profiles = base.extract_profiles(args.profiles, inputs)
+    concurrency = {name: base.read_json(base.one(root, 'summary.json'), inputs).get('concurrency')
+                   for name, root in (('benchmark', args.benchmark), ('benchmark_low', args.benchmark_low))}
+    for name, root in (('controller', args.controller), ('profiles', args.profiles)):
+        concurrency[name] = base.read_json(base.one(root, 'capture/diagnostic.json'), inputs).get('concurrency')
+    check_inputs(concurrency, benchmark, benchmark_low, controller, profiles)
     runs = {'benchmark': args.benchmark_run, 'benchmark_low': args.benchmark_low_run,
             'controller': args.controller_run, 'profiles': args.profiles_run}
     roots = {k: str(getattr(args, k).resolve()) for k in runs}
@@ -191,7 +196,7 @@ def render_overview(d):
                 f'<span>{ox["wall_seconds"]:.2f} s vs {sk["wall_seconds"]:.2f} s</span></div>'
                 f'<div class="tile"><span>Still to cut to reach 0.50×</span><b>{gap:.0f} ms</b>'
                 f'<span>{100 * gap / wall_ms:.0f}% of the {wall_ms:.0f} ms run</span></div>'
-                f'<div class="tile"><span>Mutant phase (10 mutants)</span><b>{ph["mutationExecution"]:.0f} ms</b>'
+                f'<div class="tile"><span>Mutant phase ({workload["mutants"]} mutants)</span><b>{ph["mutationExecution"]:.0f} ms</b>'
                 f'<span>{share(ph["mutationExecution"], wall_ms)} of the run</span></div>'
                 f'<div class="tile"><span>Two baselines</span><b>{ph["originalBaseline"] + ph["instrumentedBaseline"]:.0f} ms</b>'
                 f'<span>{share(ph["originalBaseline"] + ph["instrumentedBaseline"], wall_ms)} of the run</span></div></div>')
@@ -224,10 +229,13 @@ def render_overview(d):
                       ('Instrumented baseline', x['instrumentedBaseline'], SLOTS[1]),
                       ('Mutant execution', x['mutationExecution'], SLOTS[2]),
                       ('Teardown + other', x['teardown'] + x['inputAndSchedulerPreparation'], SLOTS[3])]
-    body.append(stacked_bars([(f'Oximut, {w} workers', segs(ph)), (f'Oximut, {wl} workers', segs(phl)),
+    body.append('<p>Oximut bars are sums of the independently computed phase medians, so they can differ slightly from '
+                'the scored wall medians in the table above; Stryker bars are its scored wall medians.</p>')
+    body.append(stacked_bars([(f'Oximut, {w} workers (phase sum)', segs(ph)),
+                              (f'Oximut, {wl} workers (phase sum)', segs(phl)),
                               (f'Stryker, {w} workers', [('Stryker total', sk['wall_seconds'] * 1000, SLOTS[4])]),
                               (f'Stryker, {wl} workers', [('Stryker total', skl['wall_seconds'] * 1000, SLOTS[4])])],
-                             ' ms', 'Oximut wall time by phase at both worker counts next to Stryker'))
+                             ' ms', 'Oximut phase medians at both worker counts next to Stryker wall medians'))
     body.append(legend([(n, col) for n, _, col in segs(ph)] + [('Stryker total', SLOTS[4])]))
     body.append('<h3>Inside one run: the controller timeline</h3>')
     runs = a['runs']
@@ -256,9 +264,11 @@ def render_overview(d):
     first, later = a['mutants'][0], a['mutants'][1:]
     body.append(f'<p><b>The first mutant batch is the odd one out:</b> {first["_wall"]:.0f} ms and '
                 f'{first["controller_cpu_ms"]:.0f} ms of controller CPU, against {later[0]["_wall"]:.0f} ms and '
-                f'{later[0]["controller_cpu_ms"]:.0f} ms for the next. The controller ({workers_text(d)}) is a single '
-                'thread serving every fork\'s module requests, and the first batch hits cold Vite transforms in each lane '
-                'project. After that, a batch is dominated by fork bootstrap and the tests themselves.</p>')
+                f'{later[0]["controller_cpu_ms"]:.0f} ms for the next. All {d["concurrency"]} lanes share one controller process, '
+                'whose main thread serves every fork\'s module requests (CPU here is process-wide, all threads). The first '
+                'batch plausibly pays for cold Vite transforms in each lane project: the CPU profile makes transform/resolve '
+                'the largest controller category, but only a per-batch profile would prove it. After that, a batch is '
+                'dominated by fork bootstrap and the tests themselves.</p>')
     body.append(f'<p>Gaps between controller jobs total {a["gap_ms"]:.0f} ms: ' +
                 ', '.join(f'{esc(n)} {g:.0f} ms' for n, g in a['gaps']) + '. See the '
                 '<a href="timeline.html">fork timeline</a> for every fork.</p>')
@@ -313,10 +323,6 @@ OWNERS = {
 }
 
 
-def workers_text(d):
-    return f'one process shared by {d["concurrency"]} lanes'
-
-
 def controller_cpu_section(d):
     c, p = d['controller'], d['profiles']
     ctl = collections.Counter()
@@ -327,8 +333,8 @@ def controller_cpu_section(d):
     spawn = sum(us for x in p['roles']['controller'] for cat, name, where, us in x['functions']
                 if name == 'spawn' and where.endswith('child_process'))
     cpu_jobs = [(j['controller_cpu_ms'], j['end'] - j['start']) for j in c['jobs'] if j['forks']]
-    return (f'<h3>Why the controller matters</h3><p>The controller is one thread for all {d["concurrency"]} lanes. In the '
-            f'profiled run its busy time is {busy / 1e3:.0f} ms, of which Vite transform/resolve is '
+    return (f'<h3>Why the controller matters</h3><p>One controller process serves all {d["concurrency"]} lanes. In the '
+            f'profiled run its main thread is busy {busy / 1e3:.0f} ms, of which Vite transform/resolve is '
             f'{share(transform, busy)}, Node bootstrap and module loading {share(ctl.get("Node bootstrap/runtime", 0) + ctl.get("Node module loading/compile", 0), busy)}, '
             f'GC {share(ctl.get("GC", 0), busy)}, and the synchronous part of spawning forks '
             f'{spawn / 1e3:.0f} ms. In the controller-job capture its CPU is '
@@ -387,7 +393,7 @@ def render_timeline(d):
         job_rows.append((job['_label'], len(job['forks']), f'{job["_wall"]:.0f}', f'{job["controller_cpu_ms"]:.0f}',
                          share(job['controller_cpu_ms'], job['_wall'])))
     bars = [(j['_label'], [('Controller CPU', min(j['controller_cpu_ms'], j['_wall']), SLOTS[1]),
-                                          ('Controller not busy', max(j['_wall'] - j['controller_cpu_ms'], 0), SLOTS[0])])
+                                          ('Wall beyond controller CPU', max(j['_wall'] - j['controller_cpu_ms'], 0), SLOTS[0])])
             for j in runs]
     recon = [('originalBaseline', c['phases']['originalBaseline'],
               a['boot_ms'] + a['baselines'][0]['_wall'], 'controller boot + first baseline job'),
@@ -408,10 +414,11 @@ def render_timeline(d):
             '<details><summary>Data table</summary>' +
             table(['Fork', 'start ms'] + list(STEPS), fork_rows, f'Data for: {label}') + '</details>',
             '<h2>Controller CPU against job wall</h2>',
-            '<p>How much of each job the controller thread was busy. A job whose controller CPU approaches its wall time is '
-            'limited by the controller, not by its forks.</p>',
+            '<p>Controller-process CPU (all threads) against each job\'s wall time. A job whose controller CPU approaches its '
+            'wall time keeps the controller process busy throughout, which makes the controller a suspect rather '
+            'than proof of a bottleneck.</p>',
             stacked_bars(bars, ' ms', 'Controller CPU against job wall for each controller job'),
-            legend([('Controller CPU', SLOTS[1]), ('Controller not busy', SLOTS[0])]),
+            legend([('Controller CPU', SLOTS[1]), ('Wall beyond controller CPU', SLOTS[0])]),
             table(['Job', 'forks', 'wall ms', 'controller CPU ms', 'CPU / wall'], job_rows,
                   'Controller CPU (all threads of the process) against controller-visible job wall'),
             '<h2>Gaps between controller jobs</h2>',

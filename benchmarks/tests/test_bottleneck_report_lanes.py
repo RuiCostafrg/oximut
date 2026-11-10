@@ -110,13 +110,42 @@ class LaneReport(unittest.TestCase):
         self.assertAlmostEqual(again['Fresh-fork bootstrap on the critical path'],
                                by_name['Fresh-fork bootstrap on the critical path'])
 
-    def test_extraction_needs_lane_evidence_at_a_matched_concurrency(self):
-        args = type('Args', (), {})()
-        for name in ('benchmark', 'benchmark_low', 'controller', 'profiles'):
-            setattr(args, name, Path('/nonexistent'))
-        with self.assertRaises(SystemExit):
-            lanes.extract(args)
+    def test_extraction_inputs_must_describe_one_matched_lane_workload(self):
+        data = load()
 
+        def check(mutate=lambda *a: None):
+            benchmark, low = copy.deepcopy(data['benchmark']), copy.deepcopy(data['benchmark_low'])
+            controller, profiles = copy.deepcopy(data['controller']), copy.deepcopy(data['profiles'])
+            concurrency = {'benchmark': 4, 'benchmark_low': 2, 'controller': 4, 'profiles': 4}
+            mutate(concurrency, benchmark, low, controller, profiles)
+            lanes.check_inputs(concurrency, benchmark, low, controller, profiles)
+
+        check()  # the committed evidence is accepted
+        cases = {
+            'different concurrency': lambda c, b, lo, ct, p: c.update(controller=3),
+            'one worker': lambda c, b, lo, ct, p: c.update(benchmark=1, controller=1, profiles=1, benchmark_low=1),
+            'low campaign not lower': lambda c, b, lo, ct, p: c.update(benchmark_low=4),
+            'missing concurrency': lambda c, b, lo, ct, p: c.update(benchmark_low=None),
+            'different workload': lambda c, b, lo, ct, p: lo.update(workload_sha256='other'),
+            'failed controller capture': lambda c, b, lo, ct, p: ct['identity'].update(passed=False),
+            'no shared-lane batches': lambda c, b, lo, ct, p: [j.update(lanes=None) for j in ct['jobs']],
+        }
+        for name, mutate in cases.items():
+            with self.subTest(name), self.assertRaises(SystemExit):
+                check(mutate)
+
+    def test_charts_describe_the_comparisons_they_plot(self):
+        index = (REPORT / 'index.html').read_text(encoding='utf-8')
+        data = load()
+        ratio = data['benchmark']['ratios']['after_vs_stryker']['wall_seconds']
+        self.assertIn('aria-label="Oximut wall time divided by Stryker at 4 and 2 workers with targets"', index)
+        self.assertIn('<th>Paired median</th><th>95% CI low</th><th>95% CI high</th>', index)
+        self.assertIn(f'<tr><td>Wall / Stryker, 4 workers</td><td>{ratio["median"]:.3f}</td>'
+                      f'<td>{ratio["ci"][0]:.3f}</td><td>{ratio["ci"][1]:.3f}</td>', index)
+        self.assertIn('aria-label="Estimated upper bound on wall savings per bottleneck"', index)
+        self.assertIn('Oximut, 4 workers (phase sum)', index)
+        timeline = (REPORT / 'timeline.html').read_text(encoding='utf-8')
+        self.assertIn('aria-label="Controller CPU against job wall for each controller job"', timeline)
 
 if __name__ == '__main__':
     unittest.main()

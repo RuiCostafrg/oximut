@@ -51,6 +51,16 @@ jobs:
       - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # stable
         with:
           toolchain: '1.96.0'
+      - name: Validate the matched concurrency before building
+        env:
+          MATCHED_CONCURRENCY: ${{ inputs.concurrency || '1' }}
+        run: |
+          cpus=$(nproc)
+          if ! [[ "$MATCHED_CONCURRENCY" =~ ^[0-9]{1,4}$ ]] ||
+            (( 10#$MATCHED_CONCURRENCY < 1 || 10#$MATCHED_CONCURRENCY > 1024 || 10#$MATCHED_CONCURRENCY > cpus )); then
+            echo "::error::concurrency '$MATCHED_CONCURRENCY' must be an integer from 1 to 1024 and at most the $cpus usable CPUs"
+            exit 1
+          fi
       - name: Dependencies and fixture checks
         shell: bash
         run: |
