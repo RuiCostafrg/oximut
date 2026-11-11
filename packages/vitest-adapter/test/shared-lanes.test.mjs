@@ -459,8 +459,17 @@ test('probe', () => {
       ['a', 'a', 'a'],
     );
 
-    // An unchanged resident module keeps the shared results.
-    await lanes.run(batch('a'));
+    // An unchanged resident module keeps the shared results, and its lanes still ran.
+    await writeFile(join(s.root, 'events'), '');
+    const again = await lanes.run(batch('a'));
+    assert.deepEqual(
+      again.lanes.map((lane) => lane.outcome),
+      ['passed', 'passed', 'passed'],
+    );
+    assert.deepEqual(
+      (await events()).map((event) => event.marker),
+      ['a', 'a', 'a'],
+    );
     assert.deepEqual(await seen(), firstSeen);
 
     // A changed resident module must never be served from the earlier cache.

@@ -153,7 +153,9 @@ export class TransformShare {
       },
     );
     entries.set(key, promise);
-    return (await promise).result;
+    const slot = await promise;
+    // The stored entry must stay out of reach of whoever receives this result.
+    return slot.entry ? { ...slot.entry } : slot.result;
   }
 
   private store(result: unknown, prefixes: readonly string[]): TransformEntry | undefined {
@@ -209,10 +211,13 @@ export interface ProjectLike {
 }
 
 const LANE_TEST_KEYS = ['name', 'env', 'pool', 'runner'] as const;
-const MAX_DEPTH = 12;
+const MAX_DEPTH = 40;
 
 /**
  * A stable digest of everything that can change a project's transformed output.
+ * Functions are compared by source text, so lanes built from one template that
+ * differ only in values a closure captured are not told apart: callers must
+ * construct every lane from the same definition.
  * Per-lane identity, runtime environment and storage locations are excluded: two
  * lanes with the same fingerprint may serve each other's transform results.
  */
@@ -276,7 +281,9 @@ function stable(value: unknown): string {
 }
 
 function serialize(value: unknown, stack: object[], depth: number): string {
-  if (depth > MAX_DEPTH) return '"[depth]"';
+  // Never collapse what lies below the cap: a lossy digest could let lanes with
+  // different pipelines share results. The caller turns this into "no sharing".
+  if (depth > MAX_DEPTH) throw new Error('Config too deep to fingerprint');
   switch (typeof value) {
     case 'undefined':
       return 'undefined';
@@ -311,8 +318,6 @@ function serialize(value: unknown, stack: object[], depth: number): string {
     if (object instanceof Set)
       return `Set(${[...object].map((item) => serialize(item, stack, depth + 1)).join(',')})`;
     if (Array.isArray(object)) {
-      if (object.length && object.every(isPlugin))
-        return `plugins(${object.map((plugin) => JSON.stringify(plugin.name)).join(',')})`;
       return `[${object.map((item) => serialize(item, stack, depth + 1)).join(',')}]`;
     }
     const keys = Object.keys(object).sort();
@@ -329,8 +334,4 @@ function serialize(value: unknown, stack: object[], depth: number): string {
   } finally {
     stack.pop();
   }
-}
-
-function isPlugin(value: unknown): value is { name: string } {
-  return isRecord(value) && typeof value.name === 'string';
 }

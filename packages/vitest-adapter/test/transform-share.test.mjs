@@ -78,10 +78,16 @@ test('a failed computation is not shared and waiters fall back', async () => {
   assert.equal(ok.value.file, subject);
   assert.equal(healthy.calls.length, 1);
   assert.deepEqual(share.stats, { hits: 0, misses: 1, bypasses: 1 });
-  // The rejected entry is gone: the next lane transforms for itself.
+  // The rejected entry is gone: the next lane transforms for itself, and that
+  // successful retry is what lanes after it are served.
   const later = lane(share);
+  const after = lane(share);
   await later.service.fetch('/src/a.ts', undefined, environment, true);
   assert.equal(later.calls.length, 1);
+  const hit = await after.service.fetch('/src/a.ts', undefined, environment, true);
+  assert.equal(after.calls.length, 0);
+  assert.equal(hit.file, subject);
+  assert.equal(share.stats.hits, 1);
 });
 
 test('a hit whose tmp copy disappeared is refetched', async (t) => {
@@ -129,8 +135,16 @@ test('clear during an in-flight computation does not repopulate the new map', as
 
 test('results another lane cannot use are not stored', async () => {
   const cases = [
-    ['externalized', () => ({ externalize: '/repo/node_modules/x.js', type: 'module' })],
-    ['cache sentinel', () => ({ cache: true })],
+    [
+      'externalized',
+      () => ({
+        id: subject,
+        file: subject,
+        externalize: '/repo/node_modules/x.js',
+        type: 'module',
+      }),
+    ],
+    ['cache sentinel', () => ({ id: subject, file: subject, cache: true })],
     ['virtual file', () => ({ id: 'virtual:thing', file: 'virtual:thing' })],
     ['outside the prefixes', () => ({ id: '/elsewhere/a.ts', file: '/elsewhere/a.ts' })],
     [
@@ -156,7 +170,9 @@ test('a hit is a shallow copy of the stored result', async () => {
   const first = lane(share);
   const second = lane(share);
   const third = lane(share);
-  await first.service.fetch('/src/a.ts', undefined, environment, true);
+  const miss = await first.service.fetch('/src/a.ts', undefined, environment, true);
+  // The lane that computed the result gets a detached copy as well.
+  miss.code = 'mutated by the first lane';
   const one = await second.service.fetch('/src/a.ts', undefined, environment, true);
   const two = await third.service.fetch('/src/a.ts', undefined, environment, true);
   assert.notEqual(one, two);
@@ -250,6 +266,15 @@ test('fingerprints change with anything that shapes transformed output', () => {
   const plugin = project();
   plugin.vite.config.plugins = [{ name: 'different' }];
   assert.notEqual(fingerprint(base), fingerprint(plugin));
+  // Same plugin name, different transform behavior or options.
+  const left = project();
+  const right = project();
+  left.vite.config.plugins = [{ name: 'count', transform: (source) => `${source}a` }];
+  right.vite.config.plugins = [{ name: 'count', transform: (source) => `${source}b` }];
+  assert.notEqual(fingerprint(left), fingerprint(right));
+  const options = project();
+  options.vite.config.plugins = [{ name: 'count', options: { mode: 'strict' } }];
+  assert.notEqual(fingerprint(base), fingerprint(options));
   const alias = project();
   alias.vite.config.resolve.alias = { '@': '/repo/other' };
   assert.notEqual(fingerprint(base), fingerprint(alias));
@@ -265,4 +290,14 @@ test('cyclic and unserializable configs cannot crash the fingerprint', () => {
   cyclic.vite.config.cycle = cyclic.vite.config;
   const digest = fingerprint(cyclic);
   assert.match(digest, /^[a-f0-9]{64}$/);
+});
+
+test('a config too deep to fingerprint is refused, not truncated', () => {
+  const deep = project();
+  let node = deep.vite.config;
+  for (let level = 0; level < 100; level++) {
+    node.next = { level };
+    node = node.next;
+  }
+  assert.throws(() => fingerprint(deep), /too deep/);
 });
