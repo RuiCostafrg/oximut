@@ -146,7 +146,7 @@ the parent requested a build hold.
 
 `benchmarks/compare_candidates.py` runs one warmup pair and five measured pairs
 by default. Build both binaries **before** invoking it. The baseline is pinned to
-`c9c116fe65f144b76784d30c11481a3b60bf5f57` (main after #58, stable lane width on Vitest 5; `--before-commit`
+`6d8807a95a18dd7fdab5c677384ea9abe374f69a` (main after #60, bottleneck report; `--before-commit`
 overrides it). Revisions before the Vitest 5 upgrade can't be candidates: their adapter
 rejects Vitest 5.1.0 during initialization.
 The candidate includes the change under evaluation; pass its full commit SHA. Both use the same

@@ -6,6 +6,7 @@
       "compile-cache.cjs",
       "lane-runner.mjs",
       "test/shared-lanes.test.mjs",
+      "test/transform-share.test.mjs",
       "protocol.mjs",
       "test/protocol.test.mjs",
       "test/protocol-types.ts",
