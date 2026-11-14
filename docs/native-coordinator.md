@@ -178,7 +178,8 @@ deliberately in its own commit with the reason.
   today's, never weaker. Content-hashed cache fingerprints stay where they
   apply today: in cache-enabled runs, after the baseline and before
   publication.
-- Blocking `poll(2)` with deadlines replaces the 10/15 ms sleeps.
+- Blocking `poll(2)` with deadlines replaces the 10/15 ms sleeps (the
+  scheduler to slot leg followed later; see "Scheduler to slot hand-off").
 - Expected effect: two fewer processes (CPU and RSS), about 100 ms less per job.
 
 ### P3 — One process accountant
@@ -216,6 +217,39 @@ deliberately in its own commit with the reason.
   of on every switched expression. This is valid because each worker is fresh.
 - Avoid re-reading test files per job for the environment pragma (cache by
   content hash).
+
+## Scheduler to slot hand-off
+
+Each slot stays a separate `oximut --internal-worker` process: it is the
+subreaper whose descendants are exactly its controller tree, which is what
+leak checks, verified cleanup and per-slot memory accounting rely on, and a
+crashed slot only takes its own tree with it. The scheduler and the slot talk
+over a private socket pair: length-prefixed frames (4-byte big-endian length,
+a tag byte, then JSON) for run, warm and stop requests, responses and shutdown
+diagnostics. The channel is IPC, not durable state, so nothing on it is
+synced to disk; `options.json` stays a file written once when the slot starts.
+Requests stay within 8 MiB (checked by the slot from the header) and responses
+within 1 MiB (checked by the scheduler from the header).
+
+The slot blocks reading its channel. The scheduler waits with `poll(2)` on
+every busy slot's channel until the next resource sample (50 ms) or the
+earliest slot deadline, so a response is accepted, and the next job sent, as
+soon as it arrives; sampling keeps its own cadence and never gates dispatch.
+The slot marks its end close-on-exec, so only the slot holds it: a slot that
+dies hangs up the channel, which ends the wait at once. A slot whose scheduler
+hangs up shuts down with verified cleanup instead of waiting forever. Memory
+pressure admission keeps its short timed wait.
+
+Process exits are awaited with pidfds instead of fixed sleeps: the
+controller's exit after `close`, test forks still exiting after a job (the
+leak-check grace), verified cleanup and teardown, slot shutdown, and the
+global subreaper cleanup. A process that has exited but must be reaped by
+another parent cannot wake a pidfd wait, so when only such processes remain
+the wait falls back to the previous interval; so does every wait on kernels
+without pidfd. Every bound (deadlines, exit grace, cleanup and shutdown
+deadlines) is unchanged, and slot shutdown still snapshots ownership every
+10 ms. The relay adapter (`Session`) keeps its file protocol, since it is that
+adapter's contract; only its exit waits use pidfds.
 
 ## Parallel persistent baselines
 

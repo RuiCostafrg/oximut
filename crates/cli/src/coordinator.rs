@@ -43,15 +43,7 @@ pub fn native_worker(adapter: &Path) -> Option<PathBuf> {
 // ---------------------------------------------------------------------------
 // Identity-verified signalling.
 
-#[cfg(any(target_os = "linux", target_os = "android"))]
-fn pidfd_open(pid: u32) -> std::io::Result<std::os::fd::OwnedFd> {
-    use std::os::fd::FromRawFd;
-    let fd = unsafe { libc::syscall(libc::SYS_pidfd_open, pid as libc::c_int, 0) };
-    if fd < 0 {
-        return Err(std::io::Error::last_os_error());
-    }
-    Ok(unsafe { std::os::fd::OwnedFd::from_raw_fd(fd as i32) })
-}
+use wait::pidfd_open;
 
 #[cfg(any(target_os = "linux", target_os = "android"))]
 fn pidfd_signal(fd: &std::os::fd::OwnedFd, signal: libc::c_int) -> std::io::Result<()> {
@@ -621,7 +613,13 @@ impl Controller {
                     remaining.len()
                 ));
             }
-            thread::sleep(Duration::from_millis(5));
+            // Orphans become this subreaper's children: reaped at the top.
+            wait::any_exit(
+                remaining.keys().copied(),
+                deadline,
+                Duration::from_millis(5),
+                true,
+            );
         }
     }
 
@@ -634,16 +632,12 @@ impl Controller {
             Ok(Reply::Result(_)) => {
                 let _ = self.channel.shutdown(std::net::Shutdown::Both);
                 let exit_by = Instant::now() + Duration::from_millis(EXIT_MS);
-                loop {
-                    if self.child.try_wait().ok().flatten().is_some() {
-                        self.reaped = true;
-                        break true;
-                    }
-                    if Instant::now() >= exit_by {
-                        break false;
-                    }
-                    thread::sleep(Duration::from_millis(5));
-                }
+                let exited = wait::child_exit(&mut self.child, exit_by)
+                    .ok()
+                    .flatten()
+                    .is_some();
+                self.reaped |= exited;
+                exited
             }
             _ => false,
         };
@@ -760,13 +754,19 @@ impl Coordinator {
         };
         // Let exiting test forks finish (bounded); a process still present
         // afterwards is judged by the strict verification below.
+        // Wakes as each exits rather than on a fixed interval; their parent
+        // (the controller) reaps them, so this slot never reaps here.
         let grace = (Instant::now() + Duration::from_millis(EXIT_GRACE_MS)).min(deadline);
-        while owned_hint()
-            .iter()
-            .any(|(pid, start)| baseline.get(pid) != Some(start))
-            && Instant::now() < grace
-        {
-            thread::sleep(Duration::from_millis(2));
+        loop {
+            let exiting: Vec<u32> = owned_hint()
+                .into_iter()
+                .filter(|(pid, start)| baseline.get(pid) != Some(start))
+                .map(|(pid, _)| pid)
+                .collect();
+            if exiting.is_empty() || Instant::now() >= grace {
+                break;
+            }
+            wait::any_exit(exiting, grace, Duration::from_millis(2), false);
         }
         let unexpected = || -> Result<Vec<(u32, u64)>, Wait> {
             Ok(owned()
@@ -1039,7 +1039,12 @@ impl Coordinator {
             if Instant::now() >= deadline {
                 return Err("persistent adapter shutdown left owned descendants".into());
             }
-            thread::sleep(Duration::from_millis(5));
+            wait::any_exit(
+                remaining.keys().copied(),
+                deadline,
+                Duration::from_millis(5),
+                true,
+            );
         }
         closed.map_err(|error| format!("persistent adapter shutdown failed: {error}"))
     }
