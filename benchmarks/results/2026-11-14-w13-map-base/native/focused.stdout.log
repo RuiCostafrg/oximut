@@ -1,0 +1,19 @@
+✔ registration remains lazy, exact URL/path lookup only, then caches one parsed map (6.556659ms)
+✔ native Vite hook maps a real thrown frame and unregisters without removing another owner (6.410957ms)
+✔ native Vite mapping preserves absolute file URLs and escaped original filenames (4.093219ms)
+✔ missing maps and unsupported metadata fail without registration (2.226156ms)
+✔ corrupt bytes, JSON, map structure and source provenance fail closed on lookup (7.48478ms)
+✔ exact versions fail loudly (2.158907ms)
+✔ resolution really uses original importer, including conditional package exports (6.01578ms)
+✔ metadata, computed imports and context syntax reject (5.489182ms)
+✔ audited URL rewrite has precise original source map; string syntax is untouched (1.234049ms)
+✔ complete shared/API intersection stays native and has no native ingress into allowlist (231.442562ms)
+✔ oracle requires exact selector outcomes, inventory and failures; A/B cannot be swapped (1.117141ms)
+ℹ tests 11
+ℹ suites 0
+ℹ pass 11
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 390.403051

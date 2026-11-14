@@ -1,0 +1,51 @@
+{
+  "status": "complete structural qualification passed on this host; no performance qualification",
+  "performance": "structural only; no scored resources",
+  "steps": [
+    {
+      "name": "install",
+      "argv": [
+        "npm",
+        "ci",
+        "--ignore-scripts",
+        "--no-audit",
+        "--no-fund"
+      ],
+      "exitCode": 0
+    },
+    {
+      "name": "focused",
+      "argv": [
+        "/opt/hostedtoolcache/node/26.3.1/x64/bin/node",
+        "--experimental-import-meta-resolve",
+        "--test",
+        "--test-concurrency=1",
+        "/home/runner/work/oximut/oximut/benchmarks/experiments/vitest5-private-bootstrap/test-probe.mjs",
+        "/home/runner/work/oximut/oximut/benchmarks/experiments/vitest5-private-bootstrap/test-map-registration.mjs"
+      ],
+      "exitCode": 0
+    },
+    {
+      "name": "matrix",
+      "argv": [
+        "/opt/hostedtoolcache/node/26.3.1/x64/bin/node",
+        "--experimental-import-meta-resolve",
+        "/home/runner/work/oximut/oximut/benchmarks/experiments/vitest5-private-bootstrap/probe.mjs",
+        "/home/runner/work/_temp/w13-private-bootstrap/run"
+      ],
+      "exitCode": 0
+    }
+  ],
+  "runtime": {
+    "version": "v26.3.1",
+    "arch": "x64",
+    "platform": "linux",
+    "execPath": "/opt/hostedtoolcache/node/26.3.1/x64/bin/node",
+    "executableSha256": "0b52710a27133a3baf45f0d1f10689ab874f50e5821d8e611486d17e20bcacdd",
+    "archiveURL": "https://nodejs.org/dist/v26.3.1/node-v26.3.1-linux-x64.tar.xz",
+    "archiveSha256": "55647180e4ae58ffeaa3294e89aa4abda7c371dfbd64b44cbdb022980177aae0",
+    "checksumURL": "https://nodejs.org/dist/v26.3.1/SHASUMS256.txt",
+    "checksumFileSha256": "e0476a820b94cd0d80a4ab1e0d8451afe04eb40d88c479e454cffd4e7d8f29d9",
+    "verification": "HTTPS upstream checksum -> archive bytes -> extracted bin/node bytes == executed binary"
+  }
+}

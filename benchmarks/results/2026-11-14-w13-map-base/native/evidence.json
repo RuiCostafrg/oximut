@@ -1,0 +1,3225 @@
+{
+  "format": 1,
+  "status": "complete local structural matrix passed; native qualification pending",
+  "priorNegativeCommit": "328917cb2bee82b2059d91fdcb12f7f723fb0f0a",
+  "performance": "Unmeasured: wall, CPU, aggregate RSS, paired ratios/CIs",
+  "runs": {
+    "sequence": {
+      "stock": {
+        "workers": [
+          {
+            "pid": 2397,
+            "state": "R",
+            "ppid": 2382,
+            "group": 2382,
+            "startTime": "6814",
+            "entrypoint": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/workers/forks.js",
+            "exitCode": null,
+            "signal": "SIGTERM"
+          },
+          {
+            "pid": 2404,
+            "state": "R",
+            "ppid": 2382,
+            "group": 2382,
+            "startTime": "6827",
+            "entrypoint": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/workers/forks.js",
+            "exitCode": null,
+            "signal": "SIGTERM"
+          },
+          {
+            "pid": 2411,
+            "state": "R",
+            "ppid": 2382,
+            "group": 2382,
+            "startTime": "6838",
+            "entrypoint": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/workers/forks.js",
+            "exitCode": null,
+            "signal": "SIGTERM"
+          },
+          {
+            "pid": 2418,
+            "state": "R",
+            "ppid": 2382,
+            "group": 2382,
+            "startTime": "6848",
+            "entrypoint": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/workers/forks.js",
+            "exitCode": null,
+            "signal": "SIGTERM"
+          }
+        ],
+        "reports": [
+          {
+            "reason": "passed",
+            "errors": [],
+            "tests": [
+              {
+                "name": "arithmetic add",
+                "state": "passed"
+              },
+              {
+                "name": "arithmetic multiply",
+                "state": "passed"
+              },
+              {
+                "name": "fresh contamination state",
+                "state": "passed"
+              },
+              {
+                "name": "hooks setup and mocks",
+                "state": "passed"
+              },
+              {
+                "name": "mapped stack",
+                "state": "passed"
+              }
+            ],
+            "testErrors": []
+          },
+          {
+            "reason": "failed",
+            "errors": [],
+            "tests": [
+              {
+                "name": "arithmetic add",
+                "state": "failed"
+              },
+              {
+                "name": "arithmetic multiply",
+                "state": "passed"
+              },
+              {
+                "name": "fresh contamination state",
+                "state": "passed"
+              },
+              {
+                "name": "hooks setup and mocks",
+                "state": "passed"
+              },
+              {
+                "name": "mapped stack",
+                "state": "passed"
+              }
+            ],
+            "testErrors": [
+              {
+                "name": "arithmetic add",
+                "message": "expected 4 to be 3 // Object.is equality",
+                "stack": "AssertionError: expected 4 to be 3 // Object.is equality\n    at /home/runner/work/_temp/w13-private-bootstrap/run/fixture/state.test.ts:13:82\n    at file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/run.CjdgFZiW.js:1632:35\n    at file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/run.CjdgFZiW.js:2801:26\n    at file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/run.CjdgFZiW.js:3338:20\n    at new Promise (<anonymous>)\n    at runWithCancel (file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/run.CjdgFZiW.js:3333:10)\n    at file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/run.CjdgFZiW.js:3318:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/run.CjdgFZiW.js:3276:10)\n    at file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/run.CjdgFZiW.js:3922:64"
+              }
+            ]
+          },
+          {
+            "reason": "failed",
+            "errors": [],
+            "tests": [
+              {
+                "name": "arithmetic add",
+                "state": "passed"
+              },
+              {
+                "name": "arithmetic multiply",
+                "state": "failed"
+              },
+              {
+                "name": "fresh contamination state",
+                "state": "passed"
+              },
+              {
+                "name": "hooks setup and mocks",
+                "state": "passed"
+              },
+              {
+                "name": "mapped stack",
+                "state": "passed"
+              }
+            ],
+            "testErrors": [
+              {
+                "name": "arithmetic multiply",
+                "message": "expected 7 to be 6 // Object.is equality",
+                "stack": "AssertionError: expected 7 to be 6 // Object.is equality\n    at /home/runner/work/_temp/w13-private-bootstrap/run/fixture/state.test.ts:14:59\n    at file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/run.CjdgFZiW.js:1632:35\n    at file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/run.CjdgFZiW.js:2801:26\n    at file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/run.CjdgFZiW.js:3338:20\n    at new Promise (<anonymous>)\n    at runWithCancel (file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/run.CjdgFZiW.js:3333:10)\n    at file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/run.CjdgFZiW.js:3318:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/run.CjdgFZiW.js:3276:10)\n    at file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/run.CjdgFZiW.js:3922:64"
+              }
+            ]
+          },
+          {
+            "reason": "failed",
+            "errors": [],
+            "tests": [
+              {
+                "name": "arithmetic add",
+                "state": "failed"
+              },
+              {
+                "name": "arithmetic multiply",
+                "state": "passed"
+              },
+              {
+                "name": "fresh contamination state",
+                "state": "passed"
+              },
+              {
+                "name": "hooks setup and mocks",
+                "state": "passed"
+              },
+              {
+                "name": "mapped stack",
+                "state": "passed"
+              }
+            ],
+            "testErrors": [
+              {
+                "name": "arithmetic add",
+                "message": "expected 4 to be 3 // Object.is equality",
+                "stack": "AssertionError: expected 4 to be 3 // Object.is equality\n    at /home/runner/work/_temp/w13-private-bootstrap/run/fixture/state.test.ts:13:82\n    at file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/run.CjdgFZiW.js:1632:35\n    at file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/run.CjdgFZiW.js:2801:26\n    at file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/run.CjdgFZiW.js:3338:20\n    at new Promise (<anonymous>)\n    at runWithCancel (file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/run.CjdgFZiW.js:3333:10)\n    at file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/run.CjdgFZiW.js:3318:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/run.CjdgFZiW.js:3276:10)\n    at file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/run.CjdgFZiW.js:3922:64"
+              }
+            ]
+          }
+        ],
+        "cleanup": {
+          "code": 1,
+          "signal": null,
+          "deadlineFired": false,
+          "durationMs": 653.482986,
+          "observedAtDeadline": [],
+          "residualLive": [],
+          "remaining": [],
+          "noLiveDescendants": true
+        }
+      },
+      "candidate": {
+        "workers": [
+          {
+            "pid": 2440,
+            "state": "R",
+            "ppid": 2425,
+            "group": 2425,
+            "startTime": "6881",
+            "entrypoint": "/home/runner/work/_temp/w13-private-bootstrap/run/private-worker.mjs",
+            "exitCode": null,
+            "signal": "SIGTERM"
+          },
+          {
+            "pid": 2447,
+            "state": "R",
+            "ppid": 2425,
+            "group": 2425,
+            "startTime": "6896",
+            "entrypoint": "/home/runner/work/_temp/w13-private-bootstrap/run/private-worker.mjs",
+            "exitCode": null,
+            "signal": "SIGTERM"
+          },
+          {
+            "pid": 2454,
+            "state": "R",
+            "ppid": 2425,
+            "group": 2425,
+            "startTime": "6907",
+            "entrypoint": "/home/runner/work/_temp/w13-private-bootstrap/run/private-worker.mjs",
+            "exitCode": null,
+            "signal": "SIGTERM"
+          },
+          {
+            "pid": 2461,
+            "state": "R",
+            "ppid": 2425,
+            "group": 2425,
+            "startTime": "6918",
+            "entrypoint": "/home/runner/work/_temp/w13-private-bootstrap/run/private-worker.mjs",
+            "exitCode": null,
+            "signal": "SIGTERM"
+          }
+        ],
+        "reports": [
+          {
+            "reason": "passed",
+            "errors": [],
+            "tests": [
+              {
+                "name": "arithmetic add",
+                "state": "passed"
+              },
+              {
+                "name": "arithmetic multiply",
+                "state": "passed"
+              },
+              {
+                "name": "fresh contamination state",
+                "state": "passed"
+              },
+              {
+                "name": "hooks setup and mocks",
+                "state": "passed"
+              },
+              {
+                "name": "mapped stack",
+                "state": "passed"
+              }
+            ],
+            "testErrors": []
+          },
+          {
+            "reason": "failed",
+            "errors": [],
+            "tests": [
+              {
+                "name": "arithmetic add",
+                "state": "failed"
+              },
+              {
+                "name": "arithmetic multiply",
+                "state": "passed"
+              },
+              {
+                "name": "fresh contamination state",
+                "state": "passed"
+              },
+              {
+                "name": "hooks setup and mocks",
+                "state": "passed"
+              },
+              {
+                "name": "mapped stack",
+                "state": "passed"
+              }
+            ],
+            "testErrors": [
+              {
+                "name": "arithmetic add",
+                "message": "expected 4 to be 3 // Object.is equality",
+                "stack": "AssertionError: expected 4 to be 3 // Object.is equality\n    at /home/runner/work/_temp/w13-private-bootstrap/run/fixture/state.test.ts:13:82\n    at file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/run.CjdgFZiW.js:1632:35\n    at file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/run.CjdgFZiW.js:2801:26\n    at file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/run.CjdgFZiW.js:3338:20\n    at new Promise (<anonymous>)\n    at runWithCancel (file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/run.CjdgFZiW.js:3333:10)\n    at file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/run.CjdgFZiW.js:3318:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/run.CjdgFZiW.js:3276:10)\n    at file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/run.CjdgFZiW.js:3922:64"
+              }
+            ]
+          },
+          {
+            "reason": "failed",
+            "errors": [],
+            "tests": [
+              {
+                "name": "arithmetic add",
+                "state": "passed"
+              },
+              {
+                "name": "arithmetic multiply",
+                "state": "failed"
+              },
+              {
+                "name": "fresh contamination state",
+                "state": "passed"
+              },
+              {
+                "name": "hooks setup and mocks",
+                "state": "passed"
+              },
+              {
+                "name": "mapped stack",
+                "state": "passed"
+              }
+            ],
+            "testErrors": [
+              {
+                "name": "arithmetic multiply",
+                "message": "expected 7 to be 6 // Object.is equality",
+                "stack": "AssertionError: expected 7 to be 6 // Object.is equality\n    at /home/runner/work/_temp/w13-private-bootstrap/run/fixture/state.test.ts:14:59\n    at file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/run.CjdgFZiW.js:1632:35\n    at file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/run.CjdgFZiW.js:2801:26\n    at file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/run.CjdgFZiW.js:3338:20\n    at new Promise (<anonymous>)\n    at runWithCancel (file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/run.CjdgFZiW.js:3333:10)\n    at file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/run.CjdgFZiW.js:3318:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/run.CjdgFZiW.js:3276:10)\n    at file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/run.CjdgFZiW.js:3922:64"
+              }
+            ]
+          },
+          {
+            "reason": "failed",
+            "errors": [],
+            "tests": [
+              {
+                "name": "arithmetic add",
+                "state": "failed"
+              },
+              {
+                "name": "arithmetic multiply",
+                "state": "passed"
+              },
+              {
+                "name": "fresh contamination state",
+                "state": "passed"
+              },
+              {
+                "name": "hooks setup and mocks",
+                "state": "passed"
+              },
+              {
+                "name": "mapped stack",
+                "state": "passed"
+              }
+            ],
+            "testErrors": [
+              {
+                "name": "arithmetic add",
+                "message": "expected 4 to be 3 // Object.is equality",
+                "stack": "AssertionError: expected 4 to be 3 // Object.is equality\n    at /home/runner/work/_temp/w13-private-bootstrap/run/fixture/state.test.ts:13:82\n    at file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/run.CjdgFZiW.js:1632:35\n    at file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/run.CjdgFZiW.js:2801:26\n    at file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/run.CjdgFZiW.js:3338:20\n    at new Promise (<anonymous>)\n    at runWithCancel (file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/run.CjdgFZiW.js:3333:10)\n    at file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/run.CjdgFZiW.js:3318:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/run.CjdgFZiW.js:3276:10)\n    at file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/run.CjdgFZiW.js:3922:64"
+              }
+            ]
+          }
+        ],
+        "cleanup": {
+          "code": 1,
+          "signal": null,
+          "deadlineFired": false,
+          "durationMs": 684.354648,
+          "observedAtDeadline": [],
+          "residualLive": [],
+          "remaining": [],
+          "noLiveDescendants": true
+        }
+      }
+    },
+    "framework-stack": {
+      "stock": {
+        "workers": [
+          {
+            "pid": 2483,
+            "state": "R",
+            "ppid": 2468,
+            "group": 2468,
+            "startTime": "6952",
+            "entrypoint": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/workers/forks.js",
+            "exitCode": null,
+            "signal": "SIGTERM"
+          }
+        ],
+        "reports": [
+          {
+            "reason": "passed",
+            "errors": [],
+            "tests": [
+              {
+                "name": "bootstrap source-map frame",
+                "state": "passed"
+              }
+            ],
+            "testErrors": []
+          }
+        ],
+        "cleanup": {
+          "code": 0,
+          "signal": null,
+          "deadlineFired": false,
+          "durationMs": 369.316965,
+          "observedAtDeadline": [],
+          "residualLive": [],
+          "remaining": [],
+          "noLiveDescendants": true
+        }
+      },
+      "candidate": {
+        "workers": [
+          {
+            "pid": 2505,
+            "state": "R",
+            "ppid": 2490,
+            "group": 2490,
+            "startTime": "6990",
+            "entrypoint": "/home/runner/work/_temp/w13-private-bootstrap/run/private-worker.mjs",
+            "exitCode": null,
+            "signal": "SIGTERM"
+          }
+        ],
+        "reports": [
+          {
+            "reason": "passed",
+            "errors": [],
+            "tests": [
+              {
+                "name": "bootstrap source-map frame",
+                "state": "passed"
+              }
+            ],
+            "testErrors": []
+          }
+        ],
+        "cleanup": {
+          "code": 0,
+          "signal": null,
+          "deadlineFired": false,
+          "durationMs": 359.8102060000001,
+          "observedAtDeadline": [],
+          "residualLive": [],
+          "remaining": [],
+          "noLiveDescendants": true
+        }
+      }
+    },
+    "throw": {
+      "stock": {
+        "workers": [
+          {
+            "pid": 2528,
+            "state": "R",
+            "ppid": 2513,
+            "group": 2513,
+            "startTime": "7029",
+            "entrypoint": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/workers/forks.js",
+            "exitCode": null,
+            "signal": "SIGTERM"
+          }
+        ],
+        "reports": [
+          {
+            "reason": "failed",
+            "errors": [],
+            "tests": [
+              {
+                "name": "intentional throw",
+                "state": "failed"
+              }
+            ],
+            "testErrors": [
+              {
+                "name": "intentional throw",
+                "message": "intentional test throw",
+                "stack": "Error: intentional test throw\n    at /home/runner/work/_temp/w13-private-bootstrap/run/fixture/throw.test.ts:2:41\n    at file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/run.CjdgFZiW.js:1632:35\n    at file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/run.CjdgFZiW.js:2801:26\n    at file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/run.CjdgFZiW.js:3338:20\n    at new Promise (<anonymous>)\n    at runWithCancel (file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/run.CjdgFZiW.js:3333:10)\n    at file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/run.CjdgFZiW.js:3318:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/run.CjdgFZiW.js:3276:10)\n    at file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/run.CjdgFZiW.js:3922:64"
+              }
+            ]
+          }
+        ],
+        "cleanup": {
+          "code": 1,
+          "signal": null,
+          "deadlineFired": false,
+          "durationMs": 378.7782729999999,
+          "observedAtDeadline": [],
+          "residualLive": [],
+          "remaining": [],
+          "noLiveDescendants": true
+        }
+      },
+      "candidate": {
+        "workers": [
+          {
+            "pid": 2551,
+            "state": "R",
+            "ppid": 2536,
+            "group": 2536,
+            "startTime": "7070",
+            "entrypoint": "/home/runner/work/_temp/w13-private-bootstrap/run/private-worker.mjs",
+            "exitCode": null,
+            "signal": "SIGTERM"
+          }
+        ],
+        "reports": [
+          {
+            "reason": "failed",
+            "errors": [],
+            "tests": [
+              {
+                "name": "intentional throw",
+                "state": "failed"
+              }
+            ],
+            "testErrors": [
+              {
+                "name": "intentional throw",
+                "message": "intentional test throw",
+                "stack": "Error: intentional test throw\n    at /home/runner/work/_temp/w13-private-bootstrap/run/fixture/throw.test.ts:2:41\n    at file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/run.CjdgFZiW.js:1632:35\n    at file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/run.CjdgFZiW.js:2801:26\n    at file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/run.CjdgFZiW.js:3338:20\n    at new Promise (<anonymous>)\n    at runWithCancel (file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/run.CjdgFZiW.js:3333:10)\n    at file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/run.CjdgFZiW.js:3318:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/run.CjdgFZiW.js:3276:10)\n    at file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/run.CjdgFZiW.js:3922:64"
+              }
+            ]
+          }
+        ],
+        "cleanup": {
+          "code": 1,
+          "signal": null,
+          "deadlineFired": false,
+          "durationMs": 384.05747199999996,
+          "observedAtDeadline": [],
+          "residualLive": [],
+          "remaining": [],
+          "noLiveDescendants": true
+        }
+      }
+    },
+    "import-throw": {
+      "stock": {
+        "workers": [
+          {
+            "pid": 2573,
+            "state": "R",
+            "ppid": 2558,
+            "group": 2558,
+            "startTime": "7110",
+            "entrypoint": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/workers/forks.js",
+            "exitCode": null,
+            "signal": "SIGTERM"
+          }
+        ],
+        "reports": [
+          {
+            "reason": "failed",
+            "errors": [
+              {
+                "message": "intentional import throw",
+                "stack": "Error: intentional import throw\n    at /home/runner/work/_temp/w13-private-bootstrap/run/fixture/import-throw.test.ts:1:7\n    at VitestModuleEvaluator._runInlinedModule (file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/module-evaluator.js:261:189)\n    at file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/module-evaluator.js:130:62\n    at Traces.$ (file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/traces.js:143:27)\n    at VitestModuleEvaluator.runInlinedModule (file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/module-evaluator.js:130:21)\n    at VitestModuleRunner.directRequest (file:///home/runner/work/oximut/oximut/node_modules/vite/dist/node/module-runner.js:1281:80)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async VitestModuleRunner.cachedRequest (file:///home/runner/work/oximut/oximut/node_modules/vite/dist/node/module-runner.js:1188:73)"
+              }
+            ],
+            "tests": [],
+            "testErrors": []
+          }
+        ],
+        "cleanup": {
+          "code": 1,
+          "signal": null,
+          "deadlineFired": false,
+          "durationMs": 373.4103269999996,
+          "observedAtDeadline": [],
+          "residualLive": [],
+          "remaining": [],
+          "noLiveDescendants": true
+        }
+      },
+      "candidate": {
+        "workers": [
+          {
+            "pid": 2595,
+            "state": "R",
+            "ppid": 2580,
+            "group": 2580,
+            "startTime": "7152",
+            "entrypoint": "/home/runner/work/_temp/w13-private-bootstrap/run/private-worker.mjs",
+            "exitCode": null,
+            "signal": "SIGTERM"
+          }
+        ],
+        "reports": [
+          {
+            "reason": "failed",
+            "errors": [
+              {
+                "message": "intentional import throw",
+                "stack": "Error: intentional import throw\n    at /home/runner/work/_temp/w13-private-bootstrap/run/fixture/import-throw.test.ts:1:7\n    at VitestModuleEvaluator._runInlinedModule (file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/module-evaluator.js:261:189)\n    at file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/module-evaluator.js:130:62\n    at Traces.$ (file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/traces.js:143:27)\n    at VitestModuleEvaluator.runInlinedModule (file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/module-evaluator.js:130:21)\n    at VitestModuleRunner.directRequest (file:///home/runner/work/oximut/oximut/node_modules/vite/dist/node/module-runner.js:1281:80)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async VitestModuleRunner.cachedRequest (file:///home/runner/work/oximut/oximut/node_modules/vite/dist/node/module-runner.js:1188:73)"
+              }
+            ],
+            "tests": [],
+            "testErrors": []
+          }
+        ],
+        "cleanup": {
+          "code": 1,
+          "signal": null,
+          "deadlineFired": false,
+          "durationMs": 391.4479799999999,
+          "observedAtDeadline": [],
+          "residualLive": [],
+          "remaining": [],
+          "noLiveDescendants": true
+        }
+      }
+    },
+    "deadline": {
+      "stock": {
+        "deadline": true,
+        "cleanup": {
+          "code": null,
+          "signal": "SIGKILL",
+          "deadlineFired": true,
+          "durationMs": 5018.83885,
+          "observedAtDeadline": [
+            {
+              "pid": 2602,
+              "state": "S",
+              "ppid": 2360,
+              "group": 2602,
+              "startTime": "7171"
+            },
+            {
+              "pid": 2617,
+              "state": "R",
+              "ppid": 2602,
+              "group": 2602,
+              "startTime": "7193"
+            },
+            {
+              "pid": 2624,
+              "state": "S",
+              "ppid": 2617,
+              "group": 2602,
+              "startTime": "7204"
+            }
+          ],
+          "residualLive": [],
+          "remaining": [],
+          "noLiveDescendants": true
+        }
+      },
+      "candidate": {
+        "deadline": true,
+        "cleanup": {
+          "code": null,
+          "signal": "SIGKILL",
+          "deadlineFired": true,
+          "durationMs": 5032.685587,
+          "observedAtDeadline": [
+            {
+              "pid": 2634,
+              "state": "S",
+              "ppid": 2360,
+              "group": 2634,
+              "startTime": "7675"
+            },
+            {
+              "pid": 2649,
+              "state": "R",
+              "ppid": 2634,
+              "group": 2634,
+              "startTime": "7695"
+            },
+            {
+              "pid": 2656,
+              "state": "S",
+              "ppid": 2649,
+              "group": 2634,
+              "startTime": "7705"
+            }
+          ],
+          "residualLive": [],
+          "remaining": [],
+          "noLiveDescendants": true
+        }
+      }
+    }
+  },
+  "node": {
+    "version": "v26.3.1",
+    "platform": "linux",
+    "arch": "x64",
+    "sha256": "0b52710a27133a3baf45f0d1f10689ab874f50e5821d8e611486d17e20bcacdd"
+  },
+  "versions": {
+    "vitest": "5.1.0",
+    "vite": "8.3.5",
+    "@vitest/coverage-v8": "5.1.0",
+    "rolldown": "1.2.15",
+    "@babel/parser": "8.0.10",
+    "magic-string": "1.4.5"
+  },
+  "sources": [
+    {
+      "path": "/home/runner/work/oximut/oximut/benchmarks/experiments/vitest5-private-bootstrap/audited-inputs.json",
+      "sha256": "a3fc505f9e9ee96e98458afcc0d57ba0ea19e73348ae0deaab3e30c690d31dff"
+    },
+    {
+      "path": "/home/runner/work/oximut/oximut/benchmarks/experiments/vitest5-private-bootstrap/build.mjs",
+      "sha256": "632848f06b9b691838e0503a67cdd9eeebdcb7e319bf1e422a21a262977d2602"
+    },
+    {
+      "path": "/home/runner/work/oximut/oximut/benchmarks/experiments/vitest5-private-bootstrap/capture.py",
+      "sha256": "3fc9ae8e48b5d266b02f6b4e5f76aa90c6947a26b22e9b7f3ee8555c322cb89d"
+    },
+    {
+      "path": "/home/runner/work/oximut/oximut/benchmarks/experiments/vitest5-private-bootstrap/fixtures.mjs",
+      "sha256": "4ba2e60c2c91ba968cf52fb7f54bef6ec74971fb0918d538b03185eb80520bf0"
+    },
+    {
+      "path": "/home/runner/work/oximut/oximut/benchmarks/experiments/vitest5-private-bootstrap/framework-stack.mjs",
+      "sha256": "cead02d8bbb16e12c4bea333a0e8f1fff00b69110b42218c5ab06752e16fa23a"
+    },
+    {
+      "path": "/home/runner/work/oximut/oximut/benchmarks/experiments/vitest5-private-bootstrap/map-registration.mjs",
+      "sha256": "f080d1aaddbfd117a3374986d5bdaa487dcd95e13d4bf6b1baa2194ca6f0fa83"
+    },
+    {
+      "path": "/home/runner/work/oximut/oximut/benchmarks/experiments/vitest5-private-bootstrap/probe.mjs",
+      "sha256": "71e79be80677dda47c8f5d6466a680b96debc5e830488bd4e26e10778d64829a"
+    },
+    {
+      "path": "/home/runner/work/oximut/oximut/benchmarks/experiments/vitest5-private-bootstrap/README.md",
+      "sha256": "1e5a15729c573eaf1d9094bf0052a442dd71f2a0f7b5b0cb0771010ef3089fb2"
+    },
+    {
+      "path": "/home/runner/work/oximut/oximut/benchmarks/experiments/vitest5-private-bootstrap/test-map-registration.mjs",
+      "sha256": "0dc6714e6b16f0d91aedae881a533c210af95e65551afd09e63df8705ff0b7df"
+    },
+    {
+      "path": "/home/runner/work/oximut/oximut/benchmarks/experiments/vitest5-private-bootstrap/test-probe.mjs",
+      "sha256": "4efe6bc4aec9cbc857dc6f5878c47dd8a0a4adff727b3dd503cea1eda27120c0"
+    }
+  ],
+  "lock": {
+    "path": "/home/runner/work/oximut/oximut/package-lock.json",
+    "sha256": "6dc7a6c55362e0dc23c2c5395a7e3ecfeb7300337f75aa2c6ef610e3680abd92"
+  },
+  "installationSha256": "385a4cce14e568f0a2486b14617208c6ac8dd9aecfd5400a75851a8f52459166",
+  "compressedInstallationSha256": "f167286484cd7080d5195d84223d3b38d3c047900bf3c955b8fed2b5c6ce2461",
+  "topology": {
+    "worker": [
+      "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/acorn.C1kjbUFw.js",
+      "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/base.Cof-UHJf.js",
+      "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/console.CQZ877Hi.js",
+      "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/constants.DLYM6cZY.js",
+      "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/coverage.9iqXE2gN.js",
+      "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/coverage.jGCktcGP.js",
+      "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/display.BlTmubjj.js",
+      "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/globals.ZKtKSkEf.js",
+      "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/index.Bi0NXYPf.js",
+      "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/index.CZzC1gGg.js",
+      "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/index.D0heQG4v.js",
+      "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/index.DmDMHCg8.js",
+      "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/index.w_oBZ9N8.js",
+      "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/init-forks.BaDXQSD8.js",
+      "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/init.CO4AB7HZ.js",
+      "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/inspector.CvyFGlXm.js",
+      "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/module-dependencies._2Eei3FO.js",
+      "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/modules.BJuCwlRJ.js",
+      "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/native.upB-V0CK.js",
+      "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/nativeModuleMocker.Dh5azSB4.js",
+      "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/nativeModuleRunner.9xPIMzi7.js",
+      "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/node.B9mkVmLH.js",
+      "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/offset.Dy-5Fdfn.js",
+      "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/pathe.M-eThtNZ.zq3TM4NT.js",
+      "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/plugins.DPQHVT0p.js",
+      "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/rawSnapshot.DqSiqIEx.js",
+      "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/rpc.Uhkwr2NM.js",
+      "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/run.CjdgFZiW.js",
+      "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/setup-common.CqAQCXzx.js",
+      "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/source-map.DakdQc29.js",
+      "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/spy.DDMXghXv.js",
+      "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/tinyrainbow.Do8I1XRG.js",
+      "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/utils.DYj33du9.js",
+      "/home/runner/work/oximut/oximut/node_modules/vitest/dist/module-evaluator.js",
+      "/home/runner/work/oximut/oximut/node_modules/vitest/dist/path.js",
+      "/home/runner/work/oximut/oximut/node_modules/vitest/dist/task-utils.js",
+      "/home/runner/work/oximut/oximut/node_modules/vitest/dist/traces.js",
+      "/home/runner/work/oximut/oximut/node_modules/vitest/dist/workers/forks.js"
+    ],
+    "publicAPI": [
+      "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/display.BlTmubjj.js",
+      "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/index.CZzC1gGg.js",
+      "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/index.D0heQG4v.js",
+      "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/index.DmDMHCg8.js",
+      "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/offset.Dy-5Fdfn.js",
+      "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/pathe.M-eThtNZ.zq3TM4NT.js",
+      "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/plugins.DPQHVT0p.js",
+      "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/rawSnapshot.DqSiqIEx.js",
+      "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/rpc.Uhkwr2NM.js",
+      "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/run.CjdgFZiW.js",
+      "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/source-map.DakdQc29.js",
+      "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/spy.DDMXghXv.js",
+      "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/tinyrainbow.Do8I1XRG.js",
+      "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/utils.DYj33du9.js",
+      "/home/runner/work/oximut/oximut/node_modules/vitest/dist/index.js",
+      "/home/runner/work/oximut/oximut/node_modules/vitest/dist/task-utils.js"
+    ],
+    "shared": [
+      "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/display.BlTmubjj.js",
+      "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/index.CZzC1gGg.js",
+      "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/index.D0heQG4v.js",
+      "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/index.DmDMHCg8.js",
+      "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/offset.Dy-5Fdfn.js",
+      "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/pathe.M-eThtNZ.zq3TM4NT.js",
+      "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/plugins.DPQHVT0p.js",
+      "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/rawSnapshot.DqSiqIEx.js",
+      "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/rpc.Uhkwr2NM.js",
+      "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/run.CjdgFZiW.js",
+      "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/source-map.DakdQc29.js",
+      "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/spy.DDMXghXv.js",
+      "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/tinyrainbow.Do8I1XRG.js",
+      "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/utils.DYj33du9.js",
+      "/home/runner/work/oximut/oximut/node_modules/vitest/dist/task-utils.js"
+    ],
+    "selected": [
+      "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/base.Cof-UHJf.js",
+      "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/coverage.9iqXE2gN.js",
+      "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/index.w_oBZ9N8.js",
+      "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/init-forks.BaDXQSD8.js",
+      "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/setup-common.CqAQCXzx.js",
+      "/home/runner/work/oximut/oximut/node_modules/vitest/dist/workers/forks.js"
+    ],
+    "modules": [
+      {
+        "path": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/workers/forks.js",
+        "relative": "workers/forks.js",
+        "bytes": 1657,
+        "sha256": "5f29690add8191999d1234ff7eab934e6cb06cc727fd5ab31ee4962f14e0f926",
+        "edges": [
+          {
+            "kind": "ImportDeclaration",
+            "source": "../chunks/base.Cof-UHJf.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/base.Cof-UHJf.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "../chunks/init-forks.BaDXQSD8.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/init-forks.BaDXQSD8.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "node:vm",
+            "resolved": "node:vm"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "../chunks/spy.DDMXghXv.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/spy.DDMXghXv.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "../chunks/index.w_oBZ9N8.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/index.w_oBZ9N8.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "chai",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/chai/index.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "node:async_hooks",
+            "resolved": "node:async_hooks"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "../chunks/coverage.9iqXE2gN.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/coverage.9iqXE2gN.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "../chunks/coverage.jGCktcGP.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/coverage.jGCktcGP.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "../chunks/pathe.M-eThtNZ.zq3TM4NT.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/pathe.M-eThtNZ.zq3TM4NT.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "../chunks/rpc.Uhkwr2NM.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/rpc.Uhkwr2NM.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "vite/module-runner",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vite/dist/node/module-runner.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "../chunks/source-map.DakdQc29.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/source-map.DakdQc29.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "../chunks/index.D0heQG4v.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/index.D0heQG4v.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "../chunks/tinyrainbow.Do8I1XRG.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/tinyrainbow.Do8I1XRG.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "../chunks/index.DmDMHCg8.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/index.DmDMHCg8.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "../chunks/utils.DYj33du9.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/utils.DYj33du9.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "../chunks/setup-common.CqAQCXzx.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/setup-common.CqAQCXzx.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "../chunks/plugins.DPQHVT0p.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/plugins.DPQHVT0p.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "../chunks/index.CZzC1gGg.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/index.CZzC1gGg.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "../chunks/run.CjdgFZiW.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/run.CjdgFZiW.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "../chunks/display.BlTmubjj.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/display.BlTmubjj.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "../task-utils.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/task-utils.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "../chunks/rawSnapshot.DqSiqIEx.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/rawSnapshot.DqSiqIEx.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "../chunks/offset.Dy-5Fdfn.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/offset.Dy-5Fdfn.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "tinybench",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/tinybench/dist/index.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "expect-type",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/expect-type/dist/index.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "../chunks/init.CO4AB7HZ.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/init.CO4AB7HZ.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "node:fs",
+            "resolved": "node:fs"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "node:module",
+            "resolved": "node:module"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "node:url",
+            "resolved": "node:url"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "../chunks/index.Bi0NXYPf.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/index.Bi0NXYPf.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "../chunks/modules.BJuCwlRJ.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/modules.BJuCwlRJ.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "../path.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/path.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "node:path",
+            "resolved": "node:path"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "../module-evaluator.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/module-evaluator.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "../traces.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/traces.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "@vitest/mocker",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/@vitest/mocker/dist/index.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "@vitest/mocker/redirect",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/@vitest/mocker/dist/redirect.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "node:console",
+            "resolved": "node:console"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "../chunks/inspector.CvyFGlXm.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/inspector.CvyFGlXm.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "../chunks/module-dependencies._2Eei3FO.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/module-dependencies._2Eei3FO.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "node:perf_hooks",
+            "resolved": "node:perf_hooks"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "node:timers",
+            "resolved": "node:timers"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "node:timers/promises",
+            "resolved": "node:timers/promises"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "node:util",
+            "resolved": "node:util"
+          }
+        ],
+        "uncertain": []
+      },
+      {
+        "path": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/base.Cof-UHJf.js",
+        "relative": "chunks/base.Cof-UHJf.js",
+        "bytes": 10842,
+        "sha256": "007057a1125749b97327335cea7735563138617979ba762421b4b5a569c2bdbe",
+        "edges": [
+          {
+            "kind": "ImportDeclaration",
+            "source": "node:vm",
+            "resolved": "node:vm"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "./spy.DDMXghXv.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/spy.DDMXghXv.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "./index.w_oBZ9N8.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/index.w_oBZ9N8.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "./init.CO4AB7HZ.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/init.CO4AB7HZ.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "./module-dependencies._2Eei3FO.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/module-dependencies._2Eei3FO.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "../traces.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/traces.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "./rpc.Uhkwr2NM.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/rpc.Uhkwr2NM.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "./index.Bi0NXYPf.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/index.Bi0NXYPf.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "node:perf_hooks",
+            "resolved": "node:perf_hooks"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "./coverage.9iqXE2gN.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/coverage.9iqXE2gN.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "./index.CZzC1gGg.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/index.CZzC1gGg.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "./inspector.CvyFGlXm.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/inspector.CvyFGlXm.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "./run.CjdgFZiW.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/run.CjdgFZiW.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "node:module",
+            "resolved": "node:module"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "node:timers",
+            "resolved": "node:timers"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "node:timers/promises",
+            "resolved": "node:timers/promises"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "node:util",
+            "resolved": "node:util"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "./pathe.M-eThtNZ.zq3TM4NT.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/pathe.M-eThtNZ.zq3TM4NT.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "./setup-common.CqAQCXzx.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/setup-common.CqAQCXzx.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "./utils.DYj33du9.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/utils.DYj33du9.js"
+          },
+          {
+            "kind": "ImportExpression",
+            "source": "./console.CQZ877Hi.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/console.CQZ877Hi.js"
+          },
+          {
+            "kind": "ImportExpression",
+            "source": "./nativeModuleMocker.Dh5azSB4.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/nativeModuleMocker.Dh5azSB4.js"
+          },
+          {
+            "kind": "ImportExpression",
+            "source": "./nativeModuleRunner.9xPIMzi7.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/nativeModuleRunner.9xPIMzi7.js"
+          },
+          {
+            "kind": "ImportExpression",
+            "source": "./native.upB-V0CK.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/native.upB-V0CK.js"
+          }
+        ],
+        "uncertain": [
+          {
+            "kind": "MetaProperty",
+            "start": 1962,
+            "source": "import.meta"
+          }
+        ]
+      },
+      {
+        "path": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/spy.DDMXghXv.js",
+        "relative": "chunks/spy.DDMXghXv.js",
+        "bytes": 20142,
+        "sha256": "bb2390100c52aa3d62b92851f0d0e2b947aa84f41b7180f367e33de145d863f8",
+        "edges": [],
+        "uncertain": [
+          {
+            "kind": "MetaProperty",
+            "start": 4648,
+            "source": "new.target"
+          },
+          {
+            "kind": "MetaProperty",
+            "start": 4852,
+            "source": "new.target"
+          },
+          {
+            "kind": "MetaProperty",
+            "start": 5404,
+            "source": "new.target"
+          },
+          {
+            "kind": "MetaProperty",
+            "start": 5631,
+            "source": "new.target"
+          },
+          {
+            "kind": "MetaProperty",
+            "start": 5850,
+            "source": "new.target"
+          },
+          {
+            "kind": "MetaProperty",
+            "start": 6076,
+            "source": "new.target"
+          },
+          {
+            "kind": "MetaProperty",
+            "start": 12372,
+            "source": "new.target"
+          },
+          {
+            "kind": "MetaProperty",
+            "start": 12893,
+            "source": "new.target"
+          },
+          {
+            "kind": "MetaProperty",
+            "start": 13374,
+            "source": "new.target"
+          },
+          {
+            "kind": "MetaProperty",
+            "start": 15088,
+            "source": "new.target"
+          }
+        ]
+      },
+      {
+        "path": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/index.w_oBZ9N8.js",
+        "relative": "chunks/index.w_oBZ9N8.js",
+        "bytes": 7828,
+        "sha256": "1954243020c7f17b2a919269d9511edf37d53918f4372ffbc7e3cb0cef3ca93e",
+        "edges": [
+          {
+            "kind": "ImportDeclaration",
+            "source": "chai",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/chai/index.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "node:async_hooks",
+            "resolved": "node:async_hooks"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "./coverage.9iqXE2gN.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/coverage.9iqXE2gN.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "./rpc.Uhkwr2NM.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/rpc.Uhkwr2NM.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "./setup-common.CqAQCXzx.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/setup-common.CqAQCXzx.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "./utils.DYj33du9.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/utils.DYj33du9.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "./index.CZzC1gGg.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/index.CZzC1gGg.js"
+          },
+          {
+            "kind": "ImportExpression",
+            "source": "./node.B9mkVmLH.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/node.B9mkVmLH.js"
+          }
+        ],
+        "uncertain": []
+      },
+      {
+        "path": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/coverage.9iqXE2gN.js",
+        "relative": "chunks/coverage.9iqXE2gN.js",
+        "bytes": 1110,
+        "sha256": "72ad1e9f884eb2f9f7a4c3425a1420b564ea2c24072f427ba464464c8b17c1ac",
+        "edges": [
+          {
+            "kind": "ImportDeclaration",
+            "source": "./coverage.jGCktcGP.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/coverage.jGCktcGP.js"
+          }
+        ],
+        "uncertain": []
+      },
+      {
+        "path": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/coverage.jGCktcGP.js",
+        "relative": "chunks/coverage.jGCktcGP.js",
+        "bytes": 1495,
+        "sha256": "a48cc73fdf864cef9608f08ddfa0a483a0b78316b70681f1ea497cdb25e1727b",
+        "edges": [
+          {
+            "kind": "ImportDeclaration",
+            "source": "./pathe.M-eThtNZ.zq3TM4NT.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/pathe.M-eThtNZ.zq3TM4NT.js"
+          }
+        ],
+        "uncertain": [
+          {
+            "kind": "ImportExpression",
+            "start": 734,
+            "source": "import(\n\t\t\t/* @vite-ignore */\n\t\t\tbuiltInModule\n)"
+          }
+        ]
+      },
+      {
+        "path": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/pathe.M-eThtNZ.zq3TM4NT.js",
+        "relative": "chunks/pathe.M-eThtNZ.zq3TM4NT.js",
+        "bytes": 15436,
+        "sha256": "a8e26a400463a7398bf6ab3fa6f8ebcafe18d1157f060ac080bb65bc076d9649",
+        "edges": [],
+        "uncertain": []
+      },
+      {
+        "path": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/rpc.Uhkwr2NM.js",
+        "relative": "chunks/rpc.Uhkwr2NM.js",
+        "bytes": 3146,
+        "sha256": "da3c3cb0d73676937a61500e933ff2f9e932cd903c005dc9aa643f8b3bc9762b",
+        "edges": [
+          {
+            "kind": "ImportDeclaration",
+            "source": "vite/module-runner",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vite/dist/node/module-runner.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "./pathe.M-eThtNZ.zq3TM4NT.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/pathe.M-eThtNZ.zq3TM4NT.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "./source-map.DakdQc29.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/source-map.DakdQc29.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "./index.DmDMHCg8.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/index.DmDMHCg8.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "./utils.DYj33du9.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/utils.DYj33du9.js"
+          }
+        ],
+        "uncertain": []
+      },
+      {
+        "path": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/source-map.DakdQc29.js",
+        "relative": "chunks/source-map.DakdQc29.js",
+        "bytes": 63638,
+        "sha256": "688bad35a9fb82f54f9dd7d14d9659597dbe474208fff5901a1e4a6a7296d66d",
+        "edges": [
+          {
+            "kind": "ImportDeclaration",
+            "source": "./index.D0heQG4v.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/index.D0heQG4v.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "./pathe.M-eThtNZ.zq3TM4NT.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/pathe.M-eThtNZ.zq3TM4NT.js"
+          }
+        ],
+        "uncertain": []
+      },
+      {
+        "path": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/index.D0heQG4v.js",
+        "relative": "chunks/index.D0heQG4v.js",
+        "bytes": 56963,
+        "sha256": "62e1186114a0d317665428c43273a077599a539195d3bd21b114122ae94c3fb4",
+        "edges": [
+          {
+            "kind": "ImportDeclaration",
+            "source": "./tinyrainbow.Do8I1XRG.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/tinyrainbow.Do8I1XRG.js"
+          }
+        ],
+        "uncertain": []
+      },
+      {
+        "path": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/tinyrainbow.Do8I1XRG.js",
+        "relative": "chunks/tinyrainbow.Do8I1XRG.js",
+        "bytes": 3115,
+        "sha256": "f2c20e019c6e0762247464c159054d6e51e60d3e8ddec8348faf838c75430829",
+        "edges": [],
+        "uncertain": []
+      },
+      {
+        "path": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/index.DmDMHCg8.js",
+        "relative": "chunks/index.DmDMHCg8.js",
+        "bytes": 5646,
+        "sha256": "c4c7808bf490f89d226740a157800cf90bdeaaca48a6b23e78351f9a10434bb4",
+        "edges": [],
+        "uncertain": []
+      },
+      {
+        "path": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/utils.DYj33du9.js",
+        "relative": "chunks/utils.DYj33du9.js",
+        "bytes": 1713,
+        "sha256": "42e0f0589160e9f394c0038b60f5d5ccfe606e816da59a5aad5a6b33e2015cc6",
+        "edges": [],
+        "uncertain": []
+      },
+      {
+        "path": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/setup-common.CqAQCXzx.js",
+        "relative": "chunks/setup-common.CqAQCXzx.js",
+        "bytes": 1831,
+        "sha256": "7a0bfc5bf33f164e50172f28a2bcb716ebe9a286ea4c43011c5e9f4d8ed84b61",
+        "edges": [
+          {
+            "kind": "ImportDeclaration",
+            "source": "./source-map.DakdQc29.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/source-map.DakdQc29.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "./plugins.DPQHVT0p.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/plugins.DPQHVT0p.js"
+          },
+          {
+            "kind": "ImportExpression",
+            "source": "./globals.ZKtKSkEf.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/globals.ZKtKSkEf.js"
+          }
+        ],
+        "uncertain": []
+      },
+      {
+        "path": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/plugins.DPQHVT0p.js",
+        "relative": "chunks/plugins.DPQHVT0p.js",
+        "bytes": 1303,
+        "sha256": "e70395e51d08e67684f2a57f81d8043159c5fa29b66746a98fe684a8113a842a",
+        "edges": [
+          {
+            "kind": "ImportDeclaration",
+            "source": "./index.D0heQG4v.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/index.D0heQG4v.js"
+          }
+        ],
+        "uncertain": []
+      },
+      {
+        "path": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/globals.ZKtKSkEf.js",
+        "relative": "chunks/globals.ZKtKSkEf.js",
+        "bytes": 822,
+        "sha256": "f3e94df7fc46250a4208c046036aaf1a8b998ab533ccf507b99323aa08e7567d",
+        "edges": [
+          {
+            "kind": "ImportDeclaration",
+            "source": "./constants.DLYM6cZY.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/constants.DLYM6cZY.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "./index.CZzC1gGg.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/index.CZzC1gGg.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "./run.CjdgFZiW.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/run.CjdgFZiW.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "./index.D0heQG4v.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/index.D0heQG4v.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "./tinyrainbow.Do8I1XRG.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/tinyrainbow.Do8I1XRG.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "./display.BlTmubjj.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/display.BlTmubjj.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "./pathe.M-eThtNZ.zq3TM4NT.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/pathe.M-eThtNZ.zq3TM4NT.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "./source-map.DakdQc29.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/source-map.DakdQc29.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "../task-utils.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/task-utils.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "./utils.DYj33du9.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/utils.DYj33du9.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "./spy.DDMXghXv.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/spy.DDMXghXv.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "chai",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/chai/index.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "./plugins.DPQHVT0p.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/plugins.DPQHVT0p.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "./rawSnapshot.DqSiqIEx.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/rawSnapshot.DqSiqIEx.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "./offset.Dy-5Fdfn.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/offset.Dy-5Fdfn.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "./rpc.Uhkwr2NM.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/rpc.Uhkwr2NM.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "vite/module-runner",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vite/dist/node/module-runner.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "./index.DmDMHCg8.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/index.DmDMHCg8.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "tinybench",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/tinybench/dist/index.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "expect-type",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/expect-type/dist/index.js"
+          }
+        ],
+        "uncertain": []
+      },
+      {
+        "path": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/constants.DLYM6cZY.js",
+        "relative": "chunks/constants.DLYM6cZY.js",
+        "bytes": 800,
+        "sha256": "8f2a9b538cfe411ddbb9b329b6b50395fc944fcc0777b2a8d7522a87f4ed7ac6",
+        "edges": [],
+        "uncertain": []
+      },
+      {
+        "path": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/index.CZzC1gGg.js",
+        "relative": "chunks/index.CZzC1gGg.js",
+        "bytes": 315777,
+        "sha256": "abf79e430d545f69e3a732e816e0d3d3fc26c6bb56e29aa9337102ee673d02a1",
+        "edges": [
+          {
+            "kind": "ImportDeclaration",
+            "source": "./run.CjdgFZiW.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/run.CjdgFZiW.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "./utils.DYj33du9.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/utils.DYj33du9.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "./source-map.DakdQc29.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/source-map.DakdQc29.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "./spy.DDMXghXv.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/spy.DDMXghXv.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "./pathe.M-eThtNZ.zq3TM4NT.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/pathe.M-eThtNZ.zq3TM4NT.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "./index.D0heQG4v.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/index.D0heQG4v.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "./display.BlTmubjj.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/display.BlTmubjj.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "./tinyrainbow.Do8I1XRG.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/tinyrainbow.Do8I1XRG.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "chai",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/chai/index.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "chai",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/chai/index.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "../task-utils.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/task-utils.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "./plugins.DPQHVT0p.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/plugins.DPQHVT0p.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "./rawSnapshot.DqSiqIEx.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/rawSnapshot.DqSiqIEx.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "./rpc.Uhkwr2NM.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/rpc.Uhkwr2NM.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "tinybench",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/tinybench/dist/index.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "expect-type",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/expect-type/dist/index.js"
+          }
+        ],
+        "uncertain": []
+      },
+      {
+        "path": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/run.CjdgFZiW.js",
+        "relative": "chunks/run.CjdgFZiW.js",
+        "bytes": 167470,
+        "sha256": "695282581b97d7049132e1097f9c7421931cb00b9308bd533b4f7f709f5fedc3",
+        "edges": [
+          {
+            "kind": "ImportDeclaration",
+            "source": "./index.D0heQG4v.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/index.D0heQG4v.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "./tinyrainbow.Do8I1XRG.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/tinyrainbow.Do8I1XRG.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "./display.BlTmubjj.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/display.BlTmubjj.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "./pathe.M-eThtNZ.zq3TM4NT.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/pathe.M-eThtNZ.zq3TM4NT.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "./source-map.DakdQc29.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/source-map.DakdQc29.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "../task-utils.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/task-utils.js"
+          }
+        ],
+        "uncertain": []
+      },
+      {
+        "path": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/display.BlTmubjj.js",
+        "relative": "chunks/display.BlTmubjj.js",
+        "bytes": 5979,
+        "sha256": "ffb73158b5f09d4896ee5a11f4ec847b27c8651b67872f02edd30c78d4700180",
+        "edges": [
+          {
+            "kind": "ImportDeclaration",
+            "source": "./index.D0heQG4v.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/index.D0heQG4v.js"
+          }
+        ],
+        "uncertain": []
+      },
+      {
+        "path": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/task-utils.js",
+        "relative": "task-utils.js",
+        "bytes": 9451,
+        "sha256": "6ee1e38a6ed15b9024857514b737d2f1185cc01795f2d64be14107b5dcf0e2f8",
+        "edges": [
+          {
+            "kind": "ImportDeclaration",
+            "source": "./chunks/pathe.M-eThtNZ.zq3TM4NT.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/pathe.M-eThtNZ.zq3TM4NT.js"
+          }
+        ],
+        "uncertain": []
+      },
+      {
+        "path": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/rawSnapshot.DqSiqIEx.js",
+        "relative": "chunks/rawSnapshot.DqSiqIEx.js",
+        "bytes": 14172,
+        "sha256": "2a4dee5a06834ebde21f90b8e2d258357da5a3a0c7cf7b1dfd87fee62d8d95dd",
+        "edges": [
+          {
+            "kind": "ImportDeclaration",
+            "source": "./pathe.M-eThtNZ.zq3TM4NT.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/pathe.M-eThtNZ.zq3TM4NT.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "./offset.Dy-5Fdfn.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/offset.Dy-5Fdfn.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "./index.D0heQG4v.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/index.D0heQG4v.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "./plugins.DPQHVT0p.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/plugins.DPQHVT0p.js"
+          },
+          {
+            "kind": "ImportExpression",
+            "source": "magic-string",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/magic-string/dist/index.mjs"
+          }
+        ],
+        "uncertain": []
+      },
+      {
+        "path": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/offset.Dy-5Fdfn.js",
+        "relative": "chunks/offset.Dy-5Fdfn.js",
+        "bytes": 896,
+        "sha256": "0c631b8d81b57ca896d367eea6feae780cd5befc85c016b00073528dad99bfac",
+        "edges": [],
+        "uncertain": []
+      },
+      {
+        "path": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/node.B9mkVmLH.js",
+        "relative": "chunks/node.B9mkVmLH.js",
+        "bytes": 1511,
+        "sha256": "8a99ea67afda2ba17e6f4c3c9464406d8147875a2d05bff6c53351c8c4f3a72d",
+        "edges": [
+          {
+            "kind": "ImportDeclaration",
+            "source": "./utils.DYj33du9.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/utils.DYj33du9.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "node:fs",
+            "resolved": "node:fs"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "./pathe.M-eThtNZ.zq3TM4NT.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/pathe.M-eThtNZ.zq3TM4NT.js"
+          }
+        ],
+        "uncertain": []
+      },
+      {
+        "path": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/init.CO4AB7HZ.js",
+        "relative": "chunks/init.CO4AB7HZ.js",
+        "bytes": 16911,
+        "sha256": "2acaf726643ae4b90a1fea1af806fa854a6989ff6f77fc699be2716dc1ef3635",
+        "edges": [
+          {
+            "kind": "ImportDeclaration",
+            "source": "node:fs",
+            "resolved": "node:fs"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "node:module",
+            "resolved": "node:module"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "node:url",
+            "resolved": "node:url"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "vite/module-runner",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vite/dist/node/module-runner.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "./index.Bi0NXYPf.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/index.Bi0NXYPf.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "./pathe.M-eThtNZ.zq3TM4NT.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/pathe.M-eThtNZ.zq3TM4NT.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "./source-map.DakdQc29.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/source-map.DakdQc29.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "./tinyrainbow.Do8I1XRG.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/tinyrainbow.Do8I1XRG.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "../traces.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/traces.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "./rpc.Uhkwr2NM.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/rpc.Uhkwr2NM.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "./inspector.CvyFGlXm.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/inspector.CvyFGlXm.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "./utils.DYj33du9.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/utils.DYj33du9.js"
+          }
+        ],
+        "uncertain": [
+          {
+            "kind": "MetaProperty",
+            "start": 2277,
+            "source": "import.meta"
+          },
+          {
+            "kind": "ImportExpression",
+            "start": 2472,
+            "source": "import(packageId)"
+          }
+        ]
+      },
+      {
+        "path": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/index.Bi0NXYPf.js",
+        "relative": "chunks/index.Bi0NXYPf.js",
+        "bytes": 58032,
+        "sha256": "b70599b2a0dabab129b1901d9902b3e137a0bb77513984fbddb356a48ae91f59",
+        "edges": [
+          {
+            "kind": "ImportDeclaration",
+            "source": "node:fs",
+            "resolved": "node:fs"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "./pathe.M-eThtNZ.zq3TM4NT.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/pathe.M-eThtNZ.zq3TM4NT.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "./modules.BJuCwlRJ.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/modules.BJuCwlRJ.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "./utils.DYj33du9.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/utils.DYj33du9.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "node:url",
+            "resolved": "node:url"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "../path.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/path.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "../module-evaluator.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/module-evaluator.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "node:async_hooks",
+            "resolved": "node:async_hooks"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "node:path",
+            "resolved": "node:path"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "node:vm",
+            "resolved": "node:vm"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "@vitest/mocker",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/@vitest/mocker/dist/index.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "@vitest/mocker/redirect",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/@vitest/mocker/dist/redirect.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "vite/module-runner",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vite/dist/node/module-runner.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "../traces.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/traces.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "node:module",
+            "resolved": "node:module"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "node:console",
+            "resolved": "node:console"
+          },
+          {
+            "kind": "ImportExpression",
+            "source": "@edge-runtime/vm",
+            "unsupportedOptional": "Cannot find package '@edge-runtime/vm' imported from /home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/index.Bi0NXYPf.js"
+          },
+          {
+            "kind": "ImportExpression",
+            "source": "@edge-runtime/vm",
+            "unsupportedOptional": "Cannot find package '@edge-runtime/vm' imported from /home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/index.Bi0NXYPf.js"
+          },
+          {
+            "kind": "ImportExpression",
+            "source": "happy-dom",
+            "unsupportedOptional": "Cannot find package 'happy-dom' imported from /home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/index.Bi0NXYPf.js"
+          },
+          {
+            "kind": "ImportExpression",
+            "source": "happy-dom",
+            "unsupportedOptional": "Cannot find package 'happy-dom' imported from /home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/index.Bi0NXYPf.js"
+          },
+          {
+            "kind": "ImportExpression",
+            "source": "jsdom",
+            "unsupportedOptional": "Cannot find package 'jsdom' imported from /home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/index.Bi0NXYPf.js"
+          },
+          {
+            "kind": "ImportExpression",
+            "source": "jsdom",
+            "unsupportedOptional": "Cannot find package 'jsdom' imported from /home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/index.Bi0NXYPf.js"
+          },
+          {
+            "kind": "ImportExpression",
+            "source": "node:vm",
+            "resolved": "node:vm"
+          }
+        ],
+        "uncertain": [
+          {
+            "kind": "MetaProperty",
+            "start": 21517,
+            "source": "import.meta"
+          },
+          {
+            "kind": "MetaProperty",
+            "start": 21579,
+            "source": "import.meta"
+          },
+          {
+            "kind": "MetaProperty",
+            "start": 51766,
+            "source": "import.meta"
+          }
+        ]
+      },
+      {
+        "path": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/modules.BJuCwlRJ.js",
+        "relative": "chunks/modules.BJuCwlRJ.js",
+        "bytes": 1493,
+        "sha256": "102cca31e463f95e93e78a1972ac7eb3afc2ffef09a32c9c7da2b6dc63700bcb",
+        "edges": [
+          {
+            "kind": "ImportDeclaration",
+            "source": "node:module",
+            "resolved": "node:module"
+          }
+        ],
+        "uncertain": []
+      },
+      {
+        "path": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/path.js",
+        "relative": "path.js",
+        "bytes": 242,
+        "sha256": "0ae93ca73f863259989ba3603bca12b21ba21981f2bfce65bdffe8044e3a89ae",
+        "edges": [
+          {
+            "kind": "ImportDeclaration",
+            "source": "node:path",
+            "resolved": "node:path"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "node:url",
+            "resolved": "node:url"
+          }
+        ],
+        "uncertain": [
+          {
+            "kind": "MetaProperty",
+            "start": 108,
+            "source": "import.meta"
+          },
+          {
+            "kind": "MetaProperty",
+            "start": 179,
+            "source": "import.meta"
+          }
+        ]
+      },
+      {
+        "path": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/module-evaluator.js",
+        "relative": "module-evaluator.js",
+        "bytes": 17352,
+        "sha256": "1390c7d62f1174924bdae333d59734acd065983b9f9580bdd24b07b52e430a50",
+        "edges": [
+          {
+            "kind": "ImportDeclaration",
+            "source": "node:module",
+            "resolved": "node:module"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "node:url",
+            "resolved": "node:url"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "node:vm",
+            "resolved": "node:vm"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "vite/module-runner",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vite/dist/node/module-runner.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "./traces.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/traces.js"
+          }
+        ],
+        "uncertain": [
+          {
+            "kind": "ImportExpression",
+            "start": 4285,
+            "source": "import(file)"
+          }
+        ]
+      },
+      {
+        "path": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/traces.js",
+        "relative": "traces.js",
+        "bytes": 6067,
+        "sha256": "3180c9bca5229eb521764ef953e4a614fb3490bfe72c6dd04b5d35cbd57087b1",
+        "edges": [
+          {
+            "kind": "ImportExpression",
+            "source": "@opentelemetry/api",
+            "unsupportedOptional": "Cannot find package '@opentelemetry/api' imported from /home/runner/work/oximut/oximut/node_modules/vitest/dist/traces.js"
+          }
+        ],
+        "uncertain": [
+          {
+            "kind": "ImportExpression",
+            "start": 863,
+            "source": "import(\n\t\t\t\t/* @vite-ignore */\n\t\t\t\toptions.sdkPath\n)"
+          }
+        ]
+      },
+      {
+        "path": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/inspector.CvyFGlXm.js",
+        "relative": "chunks/inspector.CvyFGlXm.js",
+        "bytes": 1642,
+        "sha256": "a696d80f441273d263d802206f202988f77558210f376ac0a33860e7fee4071f",
+        "edges": [
+          {
+            "kind": "ImportDeclaration",
+            "source": "node:module",
+            "resolved": "node:module"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "node:url",
+            "resolved": "node:url"
+          }
+        ],
+        "uncertain": [
+          {
+            "kind": "MetaProperty",
+            "start": 120,
+            "source": "import.meta"
+          }
+        ]
+      },
+      {
+        "path": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/module-dependencies._2Eei3FO.js",
+        "relative": "chunks/module-dependencies._2Eei3FO.js",
+        "bytes": 2546,
+        "sha256": "af61e64839c517236e5953e7eaaa9dfd6292be19f92ed1c1a107389273a8e35e",
+        "edges": [
+          {
+            "kind": "ImportDeclaration",
+            "source": "node:module",
+            "resolved": "node:module"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "node:url",
+            "resolved": "node:url"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "./pathe.M-eThtNZ.zq3TM4NT.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/pathe.M-eThtNZ.zq3TM4NT.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "../path.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/path.js"
+          }
+        ],
+        "uncertain": []
+      },
+      {
+        "path": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/console.CQZ877Hi.js",
+        "relative": "chunks/console.CQZ877Hi.js",
+        "bytes": 4982,
+        "sha256": "0ca1147f6af6763f66c2c807103f4e135d66e73cff5ab369d7241fe8b0c35e86",
+        "edges": [
+          {
+            "kind": "ImportDeclaration",
+            "source": "node:console",
+            "resolved": "node:console"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "node:path",
+            "resolved": "node:path"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "node:stream",
+            "resolved": "node:stream"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "./source-map.DakdQc29.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/source-map.DakdQc29.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "./tinyrainbow.Do8I1XRG.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/tinyrainbow.Do8I1XRG.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "./utils.DYj33du9.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/utils.DYj33du9.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "./index.D0heQG4v.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/index.D0heQG4v.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "./pathe.M-eThtNZ.zq3TM4NT.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/pathe.M-eThtNZ.zq3TM4NT.js"
+          }
+        ],
+        "uncertain": []
+      },
+      {
+        "path": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/nativeModuleMocker.Dh5azSB4.js",
+        "relative": "chunks/nativeModuleMocker.Dh5azSB4.js",
+        "bytes": 10372,
+        "sha256": "46d9a50d992602e011508449177cf0cd9cf3784007f2f5797863eb94141a5a79",
+        "edges": [
+          {
+            "kind": "ImportDeclaration",
+            "source": "node:module",
+            "resolved": "node:module"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "node:url",
+            "resolved": "node:url"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "@vitest/mocker/transforms",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/@vitest/mocker/dist/transforms.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "./pathe.M-eThtNZ.zq3TM4NT.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/pathe.M-eThtNZ.zq3TM4NT.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "./acorn.C1kjbUFw.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/acorn.C1kjbUFw.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "./modules.BJuCwlRJ.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/modules.BJuCwlRJ.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "./index.Bi0NXYPf.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/index.Bi0NXYPf.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "node:fs",
+            "resolved": "node:fs"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "./utils.DYj33du9.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/utils.DYj33du9.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "../path.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/path.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "node:path",
+            "resolved": "node:path"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "../module-evaluator.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/module-evaluator.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "node:vm",
+            "resolved": "node:vm"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "vite/module-runner",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vite/dist/node/module-runner.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "../traces.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/traces.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "node:async_hooks",
+            "resolved": "node:async_hooks"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "@vitest/mocker",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/@vitest/mocker/dist/index.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "@vitest/mocker/redirect",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/@vitest/mocker/dist/redirect.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "node:console",
+            "resolved": "node:console"
+          }
+        ],
+        "uncertain": [
+          {
+            "kind": "MetaProperty",
+            "start": 7649,
+            "source": "import.meta"
+          },
+          {
+            "kind": "ImportExpression",
+            "start": 7799,
+            "source": "import(url.toString())"
+          },
+          {
+            "kind": "MetaProperty",
+            "start": 7878,
+            "source": "import.meta"
+          },
+          {
+            "kind": "ImportExpression",
+            "start": 8013,
+            "source": "import(resolvedId)"
+          },
+          {
+            "kind": "ImportExpression",
+            "start": 8334,
+            "source": "import(pathToFileURL(redirect).toString())"
+          },
+          {
+            "kind": "ImportExpression",
+            "start": 8466,
+            "source": "import(url.toString())"
+          },
+          {
+            "kind": "MetaProperty",
+            "start": 8857,
+            "source": "import.meta"
+          }
+        ]
+      },
+      {
+        "path": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/acorn.C1kjbUFw.js",
+        "relative": "chunks/acorn.C1kjbUFw.js",
+        "bytes": 219136,
+        "sha256": "7990d58d3afb1b977a2331399b2f92cb755fa9a4c65e14fe6a5415ca84f20f76",
+        "edges": [],
+        "uncertain": []
+      },
+      {
+        "path": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/nativeModuleRunner.9xPIMzi7.js",
+        "relative": "chunks/nativeModuleRunner.9xPIMzi7.js",
+        "bytes": 63431,
+        "sha256": "2bfee49bec113044a4578b018cdd2f64a345b3b1a71229f6583c330f9dadd879",
+        "edges": [
+          {
+            "kind": "ImportDeclaration",
+            "source": "node:url",
+            "resolved": "node:url"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "node:fs",
+            "resolved": "node:fs"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "node:module",
+            "resolved": "node:module"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "node:path",
+            "resolved": "node:path"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "node:process",
+            "resolved": "node:process"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "node:fs/promises",
+            "resolved": "node:fs/promises"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "node:assert",
+            "resolved": "node:assert"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "node:v8",
+            "resolved": "node:v8"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "node:util",
+            "resolved": "node:util"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "./pathe.M-eThtNZ.zq3TM4NT.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/pathe.M-eThtNZ.zq3TM4NT.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "vite/module-runner",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vite/dist/node/module-runner.js"
+          }
+        ],
+        "uncertain": [
+          {
+            "kind": "MetaProperty",
+            "start": 59963,
+            "source": "import.meta"
+          },
+          {
+            "kind": "ImportExpression",
+            "start": 63113,
+            "source": "import(pathToFileURL$1(path + queryParams).toString())"
+          }
+        ]
+      },
+      {
+        "path": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/native.upB-V0CK.js",
+        "relative": "chunks/native.upB-V0CK.js",
+        "bytes": 7240,
+        "sha256": "b260f216e9670e1847055fbbc8a832e1af6e1bafc80c392bbed858b8fe19a17b",
+        "edges": [
+          {
+            "kind": "ImportDeclaration",
+            "source": "node:module",
+            "resolved": "node:module"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "node:url",
+            "resolved": "node:url"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "node:worker_threads",
+            "resolved": "node:worker_threads"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "@vitest/mocker/transforms",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/@vitest/mocker/dist/transforms.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "./pathe.M-eThtNZ.zq3TM4NT.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/pathe.M-eThtNZ.zq3TM4NT.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "./acorn.C1kjbUFw.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/acorn.C1kjbUFw.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "magic-string",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/magic-string/dist/index.mjs"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "./tinyrainbow.Do8I1XRG.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/tinyrainbow.Do8I1XRG.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "../path.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/path.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "./modules.BJuCwlRJ.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/modules.BJuCwlRJ.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "node:path",
+            "resolved": "node:path"
+          }
+        ],
+        "uncertain": [
+          {
+            "kind": "MetaProperty",
+            "start": 3865,
+            "source": "import.meta"
+          }
+        ]
+      },
+      {
+        "path": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/init-forks.BaDXQSD8.js",
+        "relative": "chunks/init-forks.BaDXQSD8.js",
+        "bytes": 1671,
+        "sha256": "aa50c94052a80f8031334b4f2e7e9a20a9ccafda3b44ee996a8f988f81b22776",
+        "edges": [
+          {
+            "kind": "ImportDeclaration",
+            "source": "./init.CO4AB7HZ.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/init.CO4AB7HZ.js"
+          }
+        ],
+        "uncertain": []
+      },
+      {
+        "path": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/index.js",
+        "relative": "index.js",
+        "bytes": 1104,
+        "sha256": "a20db80e8657bcd160e1ec0e15340ba5be54d5b53686814c79d23302f7f2bd0a",
+        "edges": [
+          {
+            "kind": "ExportNamedDeclaration",
+            "source": "./chunks/index.CZzC1gGg.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/index.CZzC1gGg.js"
+          },
+          {
+            "kind": "ExportNamedDeclaration",
+            "source": "./chunks/rpc.Uhkwr2NM.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/rpc.Uhkwr2NM.js"
+          },
+          {
+            "kind": "ExportNamedDeclaration",
+            "source": "./chunks/run.CjdgFZiW.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/run.CjdgFZiW.js"
+          },
+          {
+            "kind": "ExportNamedDeclaration",
+            "source": "expect-type",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/expect-type/dist/index.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "chai",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/chai/index.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "./chunks/utils.DYj33du9.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/utils.DYj33du9.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "./chunks/source-map.DakdQc29.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/source-map.DakdQc29.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "./chunks/index.D0heQG4v.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/index.D0heQG4v.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "./chunks/tinyrainbow.Do8I1XRG.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/tinyrainbow.Do8I1XRG.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "./chunks/pathe.M-eThtNZ.zq3TM4NT.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/pathe.M-eThtNZ.zq3TM4NT.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "./chunks/spy.DDMXghXv.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/spy.DDMXghXv.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "./chunks/display.BlTmubjj.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/display.BlTmubjj.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "./task-utils.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/task-utils.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "./chunks/plugins.DPQHVT0p.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/plugins.DPQHVT0p.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "./chunks/rawSnapshot.DqSiqIEx.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/rawSnapshot.DqSiqIEx.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "./chunks/offset.Dy-5Fdfn.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/offset.Dy-5Fdfn.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "tinybench",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/tinybench/dist/index.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "vite/module-runner",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vite/dist/node/module-runner.js"
+          },
+          {
+            "kind": "ImportDeclaration",
+            "source": "./chunks/index.DmDMHCg8.js",
+            "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/index.DmDMHCg8.js"
+          }
+        ],
+        "uncertain": []
+      }
+    ],
+    "limitation": "Literal Vitest ESM graph. Computed imports and external dependencies remain native, not rewritten or declared universally supported."
+  },
+  "externals": [
+    {
+      "source": "node:module",
+      "importer": "\u0000rolldown/runtime.js",
+      "resolved": "node:module"
+    },
+    {
+      "source": "tinybench",
+      "importer": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/workers/forks.js",
+      "resolved": "file:///home/runner/work/oximut/oximut/node_modules/tinybench/dist/index.js"
+    },
+    {
+      "source": "../chunks/run.CjdgFZiW.js",
+      "importer": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/workers/forks.js",
+      "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/run.CjdgFZiW.js"
+    },
+    {
+      "source": "node:path",
+      "importer": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/workers/forks.js",
+      "resolved": "node:path"
+    },
+    {
+      "source": "vite/module-runner",
+      "importer": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/workers/forks.js",
+      "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vite/dist/node/module-runner.js"
+    },
+    {
+      "source": "../chunks/source-map.DakdQc29.js",
+      "importer": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/workers/forks.js",
+      "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/source-map.DakdQc29.js"
+    },
+    {
+      "source": "../chunks/coverage.jGCktcGP.js",
+      "importer": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/workers/forks.js",
+      "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/coverage.jGCktcGP.js"
+    },
+    {
+      "source": "../task-utils.js",
+      "importer": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/workers/forks.js",
+      "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/task-utils.js"
+    },
+    {
+      "source": "../traces.js",
+      "importer": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/workers/forks.js",
+      "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/traces.js"
+    },
+    {
+      "source": "../chunks/index.DmDMHCg8.js",
+      "importer": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/workers/forks.js",
+      "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/index.DmDMHCg8.js"
+    },
+    {
+      "source": "node:perf_hooks",
+      "importer": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/workers/forks.js",
+      "resolved": "node:perf_hooks"
+    },
+    {
+      "source": "node:timers",
+      "importer": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/workers/forks.js",
+      "resolved": "node:timers"
+    },
+    {
+      "source": "../chunks/utils.DYj33du9.js",
+      "importer": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/workers/forks.js",
+      "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/utils.DYj33du9.js"
+    },
+    {
+      "source": "../path.js",
+      "importer": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/workers/forks.js",
+      "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/path.js"
+    },
+    {
+      "source": "@vitest/mocker/redirect",
+      "importer": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/workers/forks.js",
+      "resolved": "file:///home/runner/work/oximut/oximut/node_modules/@vitest/mocker/dist/redirect.js"
+    },
+    {
+      "source": "../chunks/spy.DDMXghXv.js",
+      "importer": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/workers/forks.js",
+      "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/spy.DDMXghXv.js"
+    },
+    {
+      "source": "../chunks/offset.Dy-5Fdfn.js",
+      "importer": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/workers/forks.js",
+      "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/offset.Dy-5Fdfn.js"
+    },
+    {
+      "source": "../chunks/index.Bi0NXYPf.js",
+      "importer": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/workers/forks.js",
+      "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/index.Bi0NXYPf.js"
+    },
+    {
+      "source": "../chunks/tinyrainbow.Do8I1XRG.js",
+      "importer": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/workers/forks.js",
+      "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/tinyrainbow.Do8I1XRG.js"
+    },
+    {
+      "source": "node:url",
+      "importer": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/workers/forks.js",
+      "resolved": "node:url"
+    },
+    {
+      "source": "@vitest/mocker",
+      "importer": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/workers/forks.js",
+      "resolved": "file:///home/runner/work/oximut/oximut/node_modules/@vitest/mocker/dist/index.js"
+    },
+    {
+      "source": "chai",
+      "importer": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/workers/forks.js",
+      "resolved": "file:///home/runner/work/oximut/oximut/node_modules/chai/index.js"
+    },
+    {
+      "source": "../chunks/rawSnapshot.DqSiqIEx.js",
+      "importer": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/workers/forks.js",
+      "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/rawSnapshot.DqSiqIEx.js"
+    },
+    {
+      "source": "expect-type",
+      "importer": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/workers/forks.js",
+      "resolved": "file:///home/runner/work/oximut/oximut/node_modules/expect-type/dist/index.js"
+    },
+    {
+      "source": "../chunks/rpc.Uhkwr2NM.js",
+      "importer": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/workers/forks.js",
+      "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/rpc.Uhkwr2NM.js"
+    },
+    {
+      "source": "../chunks/display.BlTmubjj.js",
+      "importer": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/workers/forks.js",
+      "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/display.BlTmubjj.js"
+    },
+    {
+      "source": "../chunks/init.CO4AB7HZ.js",
+      "importer": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/workers/forks.js",
+      "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/init.CO4AB7HZ.js"
+    },
+    {
+      "source": "../chunks/index.CZzC1gGg.js",
+      "importer": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/workers/forks.js",
+      "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/index.CZzC1gGg.js"
+    },
+    {
+      "source": "node:fs",
+      "importer": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/workers/forks.js",
+      "resolved": "node:fs"
+    },
+    {
+      "source": "../chunks/module-dependencies._2Eei3FO.js",
+      "importer": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/workers/forks.js",
+      "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/module-dependencies._2Eei3FO.js"
+    },
+    {
+      "source": "node:console",
+      "importer": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/workers/forks.js",
+      "resolved": "node:console"
+    },
+    {
+      "source": "node:util",
+      "importer": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/workers/forks.js",
+      "resolved": "node:util"
+    },
+    {
+      "source": "node:async_hooks",
+      "importer": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/workers/forks.js",
+      "resolved": "node:async_hooks"
+    },
+    {
+      "source": "../chunks/pathe.M-eThtNZ.zq3TM4NT.js",
+      "importer": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/workers/forks.js",
+      "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/pathe.M-eThtNZ.zq3TM4NT.js"
+    },
+    {
+      "source": "node:timers/promises",
+      "importer": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/workers/forks.js",
+      "resolved": "node:timers/promises"
+    },
+    {
+      "source": "../chunks/modules.BJuCwlRJ.js",
+      "importer": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/workers/forks.js",
+      "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/modules.BJuCwlRJ.js"
+    },
+    {
+      "source": "../chunks/plugins.DPQHVT0p.js",
+      "importer": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/workers/forks.js",
+      "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/plugins.DPQHVT0p.js"
+    },
+    {
+      "source": "../module-evaluator.js",
+      "importer": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/workers/forks.js",
+      "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/module-evaluator.js"
+    },
+    {
+      "source": "node:module",
+      "importer": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/workers/forks.js",
+      "resolved": "node:module"
+    },
+    {
+      "source": "../chunks/index.D0heQG4v.js",
+      "importer": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/workers/forks.js",
+      "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/index.D0heQG4v.js"
+    },
+    {
+      "source": "node:vm",
+      "importer": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/workers/forks.js",
+      "resolved": "node:vm"
+    },
+    {
+      "source": "../chunks/inspector.CvyFGlXm.js",
+      "importer": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/workers/forks.js",
+      "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/inspector.CvyFGlXm.js"
+    },
+    {
+      "source": "./init.CO4AB7HZ.js",
+      "importer": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/init-forks.BaDXQSD8.js",
+      "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/init.CO4AB7HZ.js"
+    },
+    {
+      "source": "./run.CjdgFZiW.js",
+      "importer": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/base.Cof-UHJf.js",
+      "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/run.CjdgFZiW.js"
+    },
+    {
+      "source": "./pathe.M-eThtNZ.zq3TM4NT.js",
+      "importer": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/base.Cof-UHJf.js",
+      "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/pathe.M-eThtNZ.zq3TM4NT.js"
+    },
+    {
+      "source": "node:timers",
+      "importer": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/base.Cof-UHJf.js",
+      "resolved": "node:timers"
+    },
+    {
+      "source": "node:perf_hooks",
+      "importer": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/base.Cof-UHJf.js",
+      "resolved": "node:perf_hooks"
+    },
+    {
+      "source": "../traces.js",
+      "importer": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/base.Cof-UHJf.js",
+      "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/traces.js"
+    },
+    {
+      "source": "node:util",
+      "importer": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/base.Cof-UHJf.js",
+      "resolved": "node:util"
+    },
+    {
+      "source": "node:timers/promises",
+      "importer": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/base.Cof-UHJf.js",
+      "resolved": "node:timers/promises"
+    },
+    {
+      "source": "./index.CZzC1gGg.js",
+      "importer": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/base.Cof-UHJf.js",
+      "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/index.CZzC1gGg.js"
+    },
+    {
+      "source": "node:module",
+      "importer": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/base.Cof-UHJf.js",
+      "resolved": "node:module"
+    },
+    {
+      "source": "./spy.DDMXghXv.js",
+      "importer": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/base.Cof-UHJf.js",
+      "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/spy.DDMXghXv.js"
+    },
+    {
+      "source": "./rpc.Uhkwr2NM.js",
+      "importer": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/base.Cof-UHJf.js",
+      "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/rpc.Uhkwr2NM.js"
+    },
+    {
+      "source": "node:vm",
+      "importer": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/base.Cof-UHJf.js",
+      "resolved": "node:vm"
+    },
+    {
+      "source": "./index.Bi0NXYPf.js",
+      "importer": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/base.Cof-UHJf.js",
+      "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/index.Bi0NXYPf.js"
+    },
+    {
+      "source": "./utils.DYj33du9.js",
+      "importer": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/base.Cof-UHJf.js",
+      "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/utils.DYj33du9.js"
+    },
+    {
+      "source": "./init.CO4AB7HZ.js",
+      "importer": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/base.Cof-UHJf.js",
+      "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/init.CO4AB7HZ.js"
+    },
+    {
+      "source": "./module-dependencies._2Eei3FO.js",
+      "importer": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/base.Cof-UHJf.js",
+      "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/module-dependencies._2Eei3FO.js"
+    },
+    {
+      "source": "./inspector.CvyFGlXm.js",
+      "importer": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/base.Cof-UHJf.js",
+      "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/inspector.CvyFGlXm.js"
+    },
+    {
+      "source": "./index.CZzC1gGg.js",
+      "importer": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/index.w_oBZ9N8.js",
+      "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/index.CZzC1gGg.js"
+    },
+    {
+      "source": "./rpc.Uhkwr2NM.js",
+      "importer": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/index.w_oBZ9N8.js",
+      "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/rpc.Uhkwr2NM.js"
+    },
+    {
+      "source": "./utils.DYj33du9.js",
+      "importer": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/index.w_oBZ9N8.js",
+      "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/utils.DYj33du9.js"
+    },
+    {
+      "source": "node:async_hooks",
+      "importer": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/index.w_oBZ9N8.js",
+      "resolved": "node:async_hooks"
+    },
+    {
+      "source": "chai",
+      "importer": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/index.w_oBZ9N8.js",
+      "resolved": "file:///home/runner/work/oximut/oximut/node_modules/chai/index.js"
+    },
+    {
+      "source": "./coverage.jGCktcGP.js",
+      "importer": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/coverage.9iqXE2gN.js",
+      "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/coverage.jGCktcGP.js"
+    },
+    {
+      "source": "./plugins.DPQHVT0p.js",
+      "importer": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/setup-common.CqAQCXzx.js",
+      "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/plugins.DPQHVT0p.js"
+    },
+    {
+      "source": "./source-map.DakdQc29.js",
+      "importer": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/setup-common.CqAQCXzx.js",
+      "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/source-map.DakdQc29.js"
+    },
+    {
+      "dynamic": true,
+      "source": "./console.CQZ877Hi.js",
+      "importer": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/base.Cof-UHJf.js",
+      "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/console.CQZ877Hi.js"
+    },
+    {
+      "dynamic": true,
+      "source": "./native.upB-V0CK.js",
+      "importer": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/base.Cof-UHJf.js",
+      "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/native.upB-V0CK.js"
+    },
+    {
+      "dynamic": true,
+      "source": "./nativeModuleRunner.9xPIMzi7.js",
+      "importer": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/base.Cof-UHJf.js",
+      "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/nativeModuleRunner.9xPIMzi7.js"
+    },
+    {
+      "dynamic": true,
+      "source": "./nativeModuleMocker.Dh5azSB4.js",
+      "importer": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/base.Cof-UHJf.js",
+      "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/nativeModuleMocker.Dh5azSB4.js"
+    },
+    {
+      "dynamic": true,
+      "source": "./node.B9mkVmLH.js",
+      "importer": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/index.w_oBZ9N8.js",
+      "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/node.B9mkVmLH.js"
+    },
+    {
+      "dynamic": true,
+      "source": "./globals.ZKtKSkEf.js",
+      "importer": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/setup-common.CqAQCXzx.js",
+      "resolved": "file:///home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/globals.ZKtKSkEf.js"
+    }
+  ],
+  "transforms": [
+    {
+      "id": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/workers/forks.js",
+      "sourceSha256": "5f29690add8191999d1234ff7eab934e6cb06cc727fd5ab31ee4962f14e0f926",
+      "edits": []
+    },
+    {
+      "id": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/init-forks.BaDXQSD8.js",
+      "sourceSha256": "aa50c94052a80f8031334b4f2e7e9a20a9ccafda3b44ee996a8f988f81b22776",
+      "edits": []
+    },
+    {
+      "id": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/base.Cof-UHJf.js",
+      "sourceSha256": "007057a1125749b97327335cea7735563138617979ba762421b4b5a569c2bdbe",
+      "edits": [
+        {
+          "start": 1962,
+          "end": 1977,
+          "source": "import.meta.url"
+        }
+      ]
+    },
+    {
+      "id": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/index.w_oBZ9N8.js",
+      "sourceSha256": "1954243020c7f17b2a919269d9511edf37d53918f4372ffbc7e3cb0cef3ca93e",
+      "edits": []
+    },
+    {
+      "id": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/coverage.9iqXE2gN.js",
+      "sourceSha256": "72ad1e9f884eb2f9f7a4c3425a1420b564ea2c24072f427ba464464c8b17c1ac",
+      "edits": []
+    },
+    {
+      "id": "/home/runner/work/oximut/oximut/node_modules/vitest/dist/chunks/setup-common.CqAQCXzx.js",
+      "sourceSha256": "7a0bfc5bf33f164e50172f28a2bcb716ebe9a286ea4c43011c5e9f4d8ed84b61",
+      "edits": []
+    }
+  ],
+  "virtualRuntime": {
+    "id": "\u0000rolldown/runtime.js",
+    "sha256": "b8df5474d4a98c5b38ab10fc6806a9d8d8a3e78b367e3ff0fda8934739e4dcc8"
+  },
+  "bundle": {
+    "path": "/home/runner/work/_temp/w13-private-bootstrap/run/private-worker.mjs",
+    "sha256": "0f22102834b1bc2ad5ffc284cde71374db50fce0f649d0d05bdbbfad95240fad",
+    "mapSha256": "4478f9c9e627e200a7fa75ebe9d931152c93301248a95c5e6349155db159109e",
+    "registration": {
+      "path": "/home/runner/work/_temp/w13-private-bootstrap/run/private-worker.map-registration.json",
+      "sha256": "a87722a8278fa5a95f0cb01ee4ccd9cba11ede6f05328fb3871000d65ddb877e",
+      "helper": "file:///home/runner/work/oximut/oximut/benchmarks/experiments/vitest5-private-bootstrap/map-registration.mjs",
+      "helperSha256": "f080d1aaddbfd117a3374986d5bdaa487dcd95e13d4bf6b1baa2194ca6f0fa83"
+    }
+  },
+  "coverage": {
+    "modules": 6,
+    "sourceBytes": 24939,
+    "workerModules": 38,
+    "workerSourceBytes": 1123860
+  },
+  "fixtures": {
+    "subject.ts": "8618358e178185b3dac8088919d6c8c68fa50f946f92c4119f6ac9ae1e0c0076",
+    "dependency.ts": "7456cb24df88fdc20e144d0a2e7fdd03fdba48e49e41d74cae974551ba481f17",
+    "mapped.ts": "1fe4b66174bf777573c9119c0cd75624c6b6c264e02f678201e4b86295016b7a",
+    "external/state.cjs": "405fbb7cf742dde76e17f27016a7272971f716da601cfa5c43703e1df644f022",
+    "external/state.mjs": "c2f74efea20df9392a6af91189b15ca685ee7f9ef6b9d33680346e6ae9db625d",
+    "setup.ts": "6c1ea266a3d847411851f489147c30339fa4e34e01d88599d434053dd104fd2e",
+    "state.test.ts": "6a8e86a06f2b59f2e8b8841b908d6b577db14a2797548defeeb78058fb4b6919",
+    "framework-stack.test.ts": "12ab18da6edb6a6c23a89d9188e0e42ff90b6931f4e691d3dde8c733f9d70865",
+    "throw.test.ts": "9276eea5ee983240f95b89b2edacc284f0c4ddd6c14fbda476b3a200d670e73a",
+    "import-throw.test.ts": "68762e0747046c5e69fead6a2f020fa03518b7e29d837d5458292c863f083a70",
+    "deadline.test.ts": "b846e95dd7feab93b4ec3f8ce380db4696e82f3c76a37d88bb5ea3ac2bb7ff4b"
+  },
+  "mapCosts": {
+    "events": [
+      {
+        "pid": 2440,
+        "type": "map-registered",
+        "statBytes": 38763,
+        "mapReadBytes": 0,
+        "callbackCPU": {
+          "user": 373,
+          "system": 98
+        },
+        "heapDelta": 40992
+      },
+      {
+        "pid": 2447,
+        "type": "map-registered",
+        "statBytes": 38763,
+        "mapReadBytes": 0,
+        "callbackCPU": {
+          "user": 316,
+          "system": 58
+        },
+        "heapDelta": 40992
+      },
+      {
+        "pid": 2454,
+        "type": "map-registered",
+        "statBytes": 38763,
+        "mapReadBytes": 0,
+        "callbackCPU": {
+          "user": 331,
+          "system": 49
+        },
+        "heapDelta": 40992
+      },
+      {
+        "pid": 2461,
+        "type": "map-registered",
+        "statBytes": 38763,
+        "mapReadBytes": 0,
+        "callbackCPU": {
+          "user": 407,
+          "system": 4
+        },
+        "heapDelta": 40992
+      },
+      {
+        "pid": 2505,
+        "type": "map-registered",
+        "statBytes": 38763,
+        "mapReadBytes": 0,
+        "callbackCPU": {
+          "user": 431,
+          "system": 3
+        },
+        "heapDelta": 40992
+      },
+      {
+        "pid": 2505,
+        "type": "map-loaded",
+        "bytes": 38763,
+        "callbackCPU": {
+          "user": 754,
+          "system": 2
+        },
+        "heapDelta": 123928
+      },
+      {
+        "pid": 2551,
+        "type": "map-registered",
+        "statBytes": 38763,
+        "mapReadBytes": 0,
+        "callbackCPU": {
+          "user": 318,
+          "system": 63
+        },
+        "heapDelta": 40992
+      },
+      {
+        "pid": 2595,
+        "type": "map-registered",
+        "statBytes": 38763,
+        "mapReadBytes": 0,
+        "callbackCPU": {
+          "user": 406,
+          "system": 4
+        },
+        "heapDelta": 40992
+      },
+      {
+        "pid": 2595,
+        "type": "map-unregistered",
+        "lookups": 0
+      },
+      {
+        "pid": 2649,
+        "type": "map-registered",
+        "statBytes": 38763,
+        "mapReadBytes": 0,
+        "callbackCPU": {
+          "user": 354,
+          "system": 40
+        },
+        "heapDelta": 40992
+      }
+    ],
+    "scope": "Per-worker registration and first retrieval callback CPU/heap deltas only; excludes Vite map decoding/cache and logging. Not scored resources.",
+    "retainedCache": "Native Vite map/file-content caches are private and survive hook removal until this fresh OS process exits. Re-registration of the same URL is rejected."
+  }
+}
