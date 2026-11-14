@@ -17,6 +17,62 @@ import run as measurement
 ROOT = Path(__file__).resolve().parents[1]
 CORPUS = ROOT / 'benchmarks/real-project/colord'
 METRICS = m6.METRICS
+# Every workload shares the one vendored corpus (same source, tests and expected-test
+# lists); a manifest only chooses the mutation scope. The default keeps every existing
+# command, gate and test exactly as it was.
+WORKLOADS = {'colord': 'workload.json', 'colord-scale': 'workload-scale.json'}
+DEFAULT_WORKLOAD = 'colord'
+# Stryker operators outside the compared scope are always excluded; the compared families
+# map onto Stryker's own operators, and a family a workload does not declare is excluded too.
+STRYKER_ALWAYS_EXCLUDED = [
+    'EqualityOperator', 'AssignmentOperator', 'CallExpression', 'ArrayDeclaration',
+    'ArrowFunction', 'BlockStatement', 'ConditionalExpression', 'LogicalOperator',
+    'MethodExpression', 'ObjectLiteral', 'OptionalChaining', 'Regex', 'StringLiteral',
+    'UnaryOperator', 'UpdateOperator',
+]
+STRYKER_FAMILIES = {'arithmetic': 'ArithmeticOperator', 'boolean-literal': 'BooleanLiteral'}
+
+
+def workload_name(value):
+    """argparse type: only a declared workload may be selected."""
+    if value not in WORKLOADS:
+        raise argparse.ArgumentTypeError(
+            f'unknown workload {value!r}; choose from {", ".join(sorted(WORKLOADS))}')
+    return value
+
+
+def manifest_path(name=DEFAULT_WORKLOAD):
+    return CORPUS / WORKLOADS[workload_name(name)]
+
+
+def load_manifest(name=DEFAULT_WORKLOAD):
+    """Read a workload manifest; `extends` names a sibling manifest whose keys it overrides."""
+    manifest = measurement.read_json(manifest_path(name))
+    base = manifest.pop('extends', None)
+    if base is not None:
+        parent = measurement.read_json(CORPUS / base)
+        if 'extends' in parent:
+            raise ValueError('workload manifests may extend only a complete manifest')
+        manifest = {**parent, **manifest}
+    if manifest.get('name') != name:
+        raise ValueError(f'manifest {WORKLOADS[name]} does not declare name {name!r}')
+    unknown = set(manifest['families']) - STRYKER_FAMILIES.keys()
+    if unknown:
+        raise ValueError(f'workload declares families Stryker cannot be matched on: {sorted(unknown)}')
+    return manifest
+
+
+def stryker_excluded_mutations(manifest):
+    return STRYKER_ALWAYS_EXCLUDED + [
+        operator for family, operator in STRYKER_FAMILIES.items()
+        if family not in manifest['families']]
+
+
+def manifest_provenance_paths(name=DEFAULT_WORKLOAD):
+    """Every manifest file whose bytes decide the chosen workload."""
+    paths = [manifest_path(name)]
+    base = measurement.read_json(paths[0]).get('extends')
+    return paths + ([CORPUS / base] if base is not None else [])
 
 
 def verify_inputs(project, manifest):
@@ -72,13 +128,16 @@ def validate(tool, report_path, project, row, manifest):
         if any(m['file'] not in manifest['mutate'] for m in artifact['mutations'].values()):
             raise ValueError('mutant outside declared source scope')
         if not artifact['known_killed_sentinel_identity']:
-            # Exact production edit, directly asserted by the upstream invert tests.
-            filename = 'src/manipulate/invert.ts'
+            # Exact production edit the upstream tests directly assert; the manifest names it.
+            declared = manifest['sentinel']
+            filename = declared['file']
             source = (project / filename).read_text()
+            if source.count(declared['original']) < 1:
+                raise ValueError('declared sentinel edit is absent from the source')
             sentinel = filename + ':' + hashlib.sha256(
-                source.replace('255 - rgba.r', '255 + rgba.r', 1).encode()).hexdigest()
+                source.replace(declared['original'], declared['replacement'], 1).encode()).hexdigest()
             if artifact['mutations'].get(sentinel, {}).get('outcome') != 'killed':
-                raise ValueError('upstream invert arithmetic sentinel was not killed')
+                raise ValueError('declared upstream sentinel mutant was not killed')
             artifact['known_killed_sentinel_identity'] = sentinel
     return artifact
 
@@ -124,12 +183,7 @@ def prepare(project, manifest, concurrency=1):
         'files': ['src/**/*.ts', 'tests/**/*.ts', 'vitest.config.ts', 'package.json'],
         'testRunner': 'vitest', 'vitest': {'configFile': 'vitest.config.ts', 'related': False},
         'coverageAnalysis': 'perTest', 'concurrency': concurrency, 'checkers': [],
-        'mutator': {'excludedMutations': [
-            'EqualityOperator', 'AssignmentOperator', 'CallExpression', 'ArrayDeclaration',
-            'ArrowFunction', 'BlockStatement', 'ConditionalExpression', 'LogicalOperator',
-            'MethodExpression', 'ObjectLiteral', 'OptionalChaining', 'Regex', 'StringLiteral',
-            'UnaryOperator', 'UpdateOperator',
-        ]},
+        'mutator': {'excludedMutations': stryker_excluded_mutations(manifest)},
         'incremental': False, 'reporters': ['json', 'progress'],
         'tempDirName': '.stryker-tmp-real-project', 'cleanTempDir': True,
     }
@@ -235,6 +289,9 @@ def mode_args_error(values):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--workload', type=workload_name, default=DEFAULT_WORKLOAD,
+                        help='Mutation scope manifest on the vendored colord corpus: '
+                             + ', '.join(sorted(WORKLOADS)))
     parser.add_argument('--oximut-arg', action='append', default=[])
     parser.add_argument('--concurrency', type=concurrency_arg, default=1,
                         help='Matched parallelism: Stryker concurrency and Oximut --workers (1-1024, at most the usable CPUs)')
@@ -284,19 +341,20 @@ def main(argv=None):
     output = args.output.resolve()
     output.mkdir(parents=True, exist_ok=False)
     (output / '.gitignore').write_text('*/project/\n')
-    manifest = measurement.read_json(CORPUS / 'workload.json')
+    manifest = load_manifest(args.workload)
     verify_inputs(CORPUS, manifest)
     meta = measurement.metadata()
     if (meta['versions']['node'] != 'v26.3.1' or meta['versions']['vitest'] != '5.1.0'
             or meta['versions']['@stryker-mutator/core'] != '10.1.1'
             or meta['versions']['@stryker-mutator/vitest-runner'] != '10.1.1'):
         raise ValueError('pinned Node/Vitest/Stryker toolchain required')
-    meta.update(execution_inputs=execution_inputs(args), workload=manifest, diagnostic_unrestricted=args.diagnostic_unrestricted,
+    meta.update(execution_inputs=execution_inputs(args), workload=manifest, workload_name=args.workload, diagnostic_unrestricted=args.diagnostic_unrestricted,
                 concurrency=args.concurrency,
                 binary_sha256=measurement.file_hash(args.binary) if args.binary.exists() else None,
                 harness_sha256={str(path.relative_to(ROOT)): measurement.file_hash(path)
                                 for path in [Path(__file__), Path(m6.__file__), Path(measurement.__file__),
-                                             CORPUS / 'vitest.config.ts', CORPUS / 'package.json']},
+                                             CORPUS / 'vitest.config.ts', CORPUS / 'package.json',
+                                             *manifest_provenance_paths(args.workload)]},
                 policy='Clean private copies; no cache; sequential tools, alternating order. '
                        'RSS is sampled aggregate smaps_rollup, CPU is process-tree wait4 rusage. '
                        'All raw artifacts/projects retained. Ratios require all tests and exact full '
@@ -364,6 +422,7 @@ def main(argv=None):
                                                if measured else None)
                                        for metric in METRICS}})
     m6.write_json(output / 'summary.json', {'correctness_gate': passed, 'groups': groups, 'concurrency': args.concurrency,
+                                          'workload': args.workload,
                                           'ratios': ratios, 'raw_measurement_count': len(rows)})
     print(f'Exact comparison gate: {passed}; {output}', flush=True)
     return 0 if passed else 1

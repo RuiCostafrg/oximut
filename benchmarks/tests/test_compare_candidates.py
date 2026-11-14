@@ -12,8 +12,8 @@ import compare_candidates as campaign
 
 
 class CampaignTests(unittest.TestCase):
-    def evidence(self):
-        manifest = json.loads((campaign.workload.CORPUS / 'workload.json').read_text())
+    def evidence(self, workload_name='colord'):
+        manifest = campaign.workload.load_manifest(workload_name)
         provenance = {variant: {'binary_sha256': variant, 'adapter_source_sha256': {'runner': variant}}
                       for variant in campaign.VARIANTS}
         rows = []
@@ -36,7 +36,7 @@ class CampaignTests(unittest.TestCase):
                     rows.append(row)
         return rows, provenance
 
-    def test_paired_ratios_and_cpu_without_invented_cpu_target(self):
+    def test_paired_ratios_and_cpu_against_the_project_goal(self):
         rows, provenance, policy = self.strict_evidence()
         rows[-2]['resources']['phaseWallMs']['originalBaseline'] = 123.
         result = campaign.evaluate(rows, 1, 5, provenance, **policy)
@@ -48,7 +48,46 @@ class CampaignTests(unittest.TestCase):
         self.assertEqual(result['comparisons']['after_vs_stryker']['metrics']['wall_seconds']['paired_ratios'], [.2] * 5)
         self.assertEqual(result['comparisons']['after_vs_before']['metrics']['wall_seconds']['median'], .4)
         cpu = result['comparisons']['after_vs_stryker']['metrics']['cpu_seconds']
-        self.assertNotIn('target_ratio', cpu)
+        self.assertEqual(cpu['target_ratio'], .8)
+        self.assertEqual(cpu['status'], 'target met')
+        self.assertAlmostEqual(cpu['median_cpu_reduction_percent'], 60)
+
+    def test_workload_is_threaded_through_and_gates_identity(self):
+        rows, provenance = self.evidence('colord-scale')
+        scale = campaign.evaluate(rows, 1, 5, provenance, workload_name='colord-scale')
+        self.assertTrue(scale['correctness_gate']['passed'], scale['correctness_gate']['errors'])
+        self.assertEqual(scale['workload'], 'colord-scale')
+        self.assertIn('arithmetic families', scale['scope'])
+        self.assertIn('20 declared production mutation files', scale['scope'])
+        # Rows recorded for one workload never qualify as another.
+        crossed = campaign.evaluate(rows, 1, 5, provenance)
+        self.assertFalse(crossed['correctness_gate']['passed'])
+        self.assertEqual(crossed['comparisons'], {})
+        self.assertTrue(any('changed declared workload' in e or 'families' in e
+                            for e in crossed['correctness_gate']['errors']))
+        default_rows, default_provenance = self.evidence()
+        crossed = campaign.evaluate(default_rows, 1, 5, default_provenance, workload_name='colord-scale')
+        self.assertFalse(crossed['correctness_gate']['passed'])
+        default = campaign.evaluate(default_rows, 1, 5, default_provenance)
+        self.assertEqual(default['workload'], 'colord')
+        self.assertIn('5 declared production mutation files', default['scope'])
+        self.assertIn('102 upstream tests', default['scope'])
+
+    def test_subcommand_passes_the_workload_and_defaults_to_the_original(self):
+        args = SimpleNamespace(before_binary=Path('/b'), before_adapter_dir=Path('/a'), timeout=600)
+        command = campaign.subcommand(args, Path('/out'), False, 'before', ['oximut'])
+        self.assertEqual(command[command.index('--workload') + 1], 'colord')
+        args.workload = 'colord-scale'
+        command = campaign.subcommand(args, Path('/out'), False, 'before', ['oximut'])
+        self.assertEqual(command[command.index('--workload') + 1], 'colord-scale')
+
+    def test_unknown_workload_is_rejected(self):
+        import contextlib
+        import io
+        with contextlib.redirect_stderr(io.StringIO()) as stderr, self.assertRaises(SystemExit) as raised:
+            campaign.main(['--output', '/nonexistent/out', '--workload', 'nope'])
+        self.assertEqual(raised.exception.code, 2)
+        self.assertIn('unknown workload', stderr.getvalue())
 
     def test_target_misses_stay_valid_evidence(self):
         rows, provenance = self.evidence()
