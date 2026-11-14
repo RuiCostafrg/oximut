@@ -1,0 +1,23 @@
+{
+  "before_commit": "5dfd17e53cd7b067586b3ad47363cb3ecee5873e",
+  "after_commit": "afab0bb18722f8d9010b8fe4695bb3bb71323b66",
+  "build_flags": "--locked --release -p oximut-cli",
+  "cargo_target_dirs": {
+    "before": "/home/runner/work/_temp/w13-stock-target",
+    "after": "/home/runner/work/_temp/w13-candidate-target"
+  },
+  "before_source": "/home/runner/work/_temp/w13-stock",
+  "after_source": "/home/runner/work/oximut/oximut",
+  "binary_sha256": {
+    "before": "fd76e97832fe5c39749b3f7f65ed797793cf54e78426b581756b168fd53f7230",
+    "after": "5f931fa8f2559043579506864f280b40d55ec6d3ef9c9892d0a0acb65dd10a0e"
+  },
+  "tool_versions": {
+    "node": "v26.3.1",
+    "npm": "11.16.0",
+    "cargo": "cargo 1.96.0 (30a34c682 2026-05-25)",
+    "rustc": "rustc 1.96.0 (ac68faa20 2026-05-25)",
+    "python3": "Python 3.12.3"
+  },
+  "policy": "Correctness only. Both exact isolated builds complete before product commands. No scoring, profiler or retries."
+}

@@ -1,0 +1,24 @@
+{
+  "artifact.zip": {
+    "w13-product-raw.tar.gz": "bd624359200047ce0786632e75794e916fed6fc13b63c85f04ce4435516cf82a",
+    "w13-product-files.json": "fc2f886cd7791051705fe837a36d4f8904b4ae62557e40fda8bfbf18f8e83f0b"
+  },
+  "logs.zip": {
+    "0_correctness.txt": "aefbc95d085e9274928a96082a4b7d5a6e64c3a3c43b7d670db0d278f37e5f3d",
+    "correctness/system.txt": "43b9879145e11e1e01a8053cbd1a308c8885fbdf0d8f0a6a772f2f568fa18be9",
+    "correctness/1_Set up job.txt": "38607ac3a606522de30f82dfc488b97ede8e0019aa031fd9236cb9b748c00ac7",
+    "correctness/2_Run actions_checkout@3d3c42e5aac5ba805825da76410c181273ba90b1.txt": "28bf9dce078e1f1747bdb7e3f07756643c691f41e7453adb565835ef435dcc27",
+    "correctness/3_Run actions_setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1.txt": "4e04cd74b8ae5e57da13711fb5d7ed4a2da5fb0fe883ef7db7b0243ec7a7e6e0",
+    "correctness/4_Run dtolnay_rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8.txt": "5ab3a4f0b5a25cad0204cb131816e146a8d823ef04aab03eeac72cc8a3aab683",
+    "correctness/5_Preserve source before prerequisites.txt": "0fc6c79a3f47b486b3f521dd77c4531a8e579010a1d615adb0288aa99d67060f",
+    "correctness/6_Install and check types.txt": "a9f6604d93abc76de72b96ada789d2107b5c532a00a26a09be5082b34f6ca0c8",
+    "correctness/7_Real adapter integration before any product run.txt": "b609e8c739bc23b19ac36cbfb06f73e304936487509fe79d5b85fb76addf5263",
+    "correctness/8_Build exact stock and experiment into isolated targets.txt": "3a6b47d1f1946b0910be3c6384612b46df2ff4f4e611d7483e6b4f9a1d0bacd6",
+    "correctness/9_Serial colord10 and scale206, matched workers2 and4, one run each.txt": "b8fd0c80f32492024c2f6a6bfed45d942a7d234e7d006e5ef7cf28e75c2a3578",
+    "correctness/10_Preserve full raw evidence without dependency-directory symlinks.txt": "bfb6c0b923a5794b0a98e2313200dcdfe90de30b89f0d6cef031a412e50d29b1",
+    "correctness/11_Run actions_upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9.txt": "5d2e0a8e69d865016cd6740fd30fa09600d7c1c0d2cfeee03afb3e8c286222a5",
+    "correctness/21_Post Run actions_setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1.txt": "0edfe35b66efd51b8a5f12fbfbb88d711b73deea1f94cd75af47ea95388436ad",
+    "correctness/22_Post Run actions_checkout@3d3c42e5aac5ba805825da76410c181273ba90b1.txt": "c3fc6723a56deb0722273e74325c76f25ac978a30bc166b418d75bbd89ebbfb5",
+    "correctness/23_Complete job.txt": "e677df607fd4c6557ac4a84ad28793496fca135e24d0b79f7d89b5c0f73297f0"
+  }
+}

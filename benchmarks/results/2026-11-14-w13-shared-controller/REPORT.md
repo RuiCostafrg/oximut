@@ -1,4 +1,4 @@
-# W13 shared-controller integration: correctness gate pending
+# W13 shared-controller integration: bounded colord correctness passed
 
 Main `5dfd17e53cd7b067586b3ad47363cb3ecee5873e` was merged into the existing
 experiment branch as `c726d26c157f867e8f4ca5c18aa167345d98c8aa`. Prior probe
@@ -176,3 +176,84 @@ Adapter, bundle helper, thresholds and all mutant/inventory/sentinel gates are
 unchanged. No local product command ran and no scored campaign was repeated.
 A separately identified native attempt is required to complete the remaining
 correctness gate; this report makes no product-qualified or performance claim.
+
+## Final native correctness result (declared scope only)
+
+[Run 43651190848](https://github.com/RuiCostafrg/oximut/actions/runs/43651190848)
+completed successfully on exact tested head
+`afab0bb18722f8d9010b8fe4695bb3bb71323b66`. Real m2/shared-lane integration,
+three harness-wiring checks, both isolated release builds and all four product
+correctness configurations passed. No new candidate semantic or resource
+invariant failed. No assertion, threshold, budget or classification gate was
+relaxed to recover the two orchestration failures above. Both failures remain.
+
+Independent recovery recomputed exact edited-source identities directly from
+raw reports plus retained original project sources, not just the green summary.
+For colord at workers2 and4, all 10 IDs/outcomes agree across stock Oximut,
+opt-in Oximut and Stryker. For colord-scale at workers2 and4, all 206 agree.
+Raw Oximut IDs/outcomes also agree stock versus candidate. All 16 tool commands
+(four ordinary/stock/Stryker/candidate groups) have valid inventory, source/scope,
+sentinel, resource-measurement and cleanup evidence. Original baseline tests are
+102 passed / zero failed/skipped in every Oximut report; complete instrumented
+coverage and original/instrumented disabled-validation ledgers verify. Every
+sentinel is killed. Matched effective workers are exactly 2 or 4 as requested,
+with zero admission pauses. There are no sampled-memory errors, incomplete
+classifications, cached mutant provenance, timeout/tool cleanup errors or
+normal-command descendant cleanup interventions in the qualified observations.
+
+All 432 required candidate executions have 432 distinct real fork PIDs, with
+birth identities and actual command lines naming the prepared bundle. Dispatch
+selectors match every exact report mutant ID once, with full-file paths retained.
+No candidate mutant was executed by an unobserved stock fallback or warm/thread
+worker. Baselines are intentionally and explicitly stock, not bundled. The
+real-adapter integration fixture separately verifies full/file fallback, original
+URI and hard-hang cleanup with 12 observed distinct PID/realm markers.
+
+The recovered source tar's 127 regular files equal Git head `afab0bb` byte for
+byte. Both raw binaries match strict isolated-build metadata: stock is exactly
+main `5dfd17e53cd7b067586b3ad47363cb3ecee5873e`, candidate is the workflow head.
+Installed-file inventory, six-module allowlist, 15-module native closure,
+source/helper/bundle/map/registration hashes, per-config raw inputs, logs and
+selector/proc evidence are retained. Node 26.3.1 Linux x64 executable SHA-256
+`0b52710a27133a3baf45f0d1f10689ab874f50e5821d8e611486d17e20bcacdd`
+matches the previously accepted upstream-archive/extracted-binary native proof.
+Versions are npm 11.16.0, Rust/cargo 1.96.0, Python 3.12.3, Vitest/coverage 5.1.0,
+Vite 8.3.5 and pinned Stryker 10.1.1. No dependency/lockfile changed.
+
+`native-correctness-43651190848/artifact.zip` retains the complete raw artifact,
+including both binaries, all project/report/output files, full worker/validation/
+map traces, compressed file inventory, source tar and build/runtime provenance.
+GitHub artifact ID `14135444518` has digest
+`2c99541e2381378bc1b6c78c2cfef127ae158e2985ee76c1b6c82c2746eaa2dd`,
+which matches the retained ZIP. Full workflow logs are in `logs.zip`.
+`archive-file-hashes.json` binds every ZIP member; `verification.json` records
+independent source, binary, scope, outcome, budget and fork checks, with the
+executed offline checker in `verification-source.py`. No giant plaintext
+installed-dependency inventory is duplicated. `correctness.json` and
+`preparation.json` are readable summaries; full originals remain in the ZIP.
+
+This is a **bounded opt-in product-colord CORRECTNESS pass**, not general product
+qualification or a speedup. Coverage-provider/custom-loader support, arbitrary
+escaping descendants, relocation, explicit Rust resource-exhaustion negative
+fixtures and broad user configurations remain outside this new qualification.
+The unchanged native budget/descendant code and all strict resource observations
+in these ordinary product commands remain enforced. The native IPC fixture's
+map/fallback tests do not establish every CLI compile-cache/config combination.
+The source-checkout hook and absolute artifact/helper paths remain experimental;
+default CLI behavior, dependency pins, selection/order, deadlines and main are
+unchanged. Main stays unsettled.
+
+## Next justified scoring plan (not executed)
+
+A later separately authorized unprofiled paired native campaign can now compare
+stock main5dfd17e, this exact opt-in and pinned Stryker at the same scopes/workers,
+using existing strict correctness and build-integrity gates, one warmup and at
+least five measured pairs. Include full setup-command wall/tree CPU/RSS, or
+explicitly declare defensible install-time amortization, plus per-controller
+full validation, per-worker artifact checks, map registration/cache costs and
+invalidation. Diagnostic trace I/O is included in all current raw observations;
+it must not be subtracted as an invented saving. Keeping it or disabling only
+diagnostics for scoring must be declared and correctness requalified. Preserve
+fresh processes, exact identities/budgets/cleanup, and all three wall <=0.50x,
+CPU/peak aggregate RSS <=0.80x Stryker targets. No ratios, CIs, profiler or scored
+performance comparison were produced in this task.
