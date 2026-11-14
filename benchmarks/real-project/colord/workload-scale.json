@@ -1,0 +1,51 @@
+{
+  "name": "colord-scale",
+  "extends": "workload.json",
+  "description": "Whole-package style run on the same vendored colord corpus: 20 production files, 206 arithmetic edits, all 102 upstream tests. Measures per-mutant cost where the default workload (10 mutants) measures start-up cost.",
+  "mutate": [
+    "src/colorModels/cmyk.ts",
+    "src/colorModels/cmykString.ts",
+    "src/colorModels/hslString.ts",
+    "src/colorModels/hwbString.ts",
+    "src/colorModels/lab.ts",
+    "src/colorModels/lchString.ts",
+    "src/colorModels/rgb.ts",
+    "src/colorModels/rgbString.ts",
+    "src/colorModels/xyz.ts",
+    "src/colord.ts",
+    "src/get/getBrightness.ts",
+    "src/get/getContrast.ts",
+    "src/get/getLuminance.ts",
+    "src/manipulate/invert.ts",
+    "src/manipulate/lighten.ts",
+    "src/manipulate/mix.ts",
+    "src/manipulate/saturate.ts",
+    "src/plugins/lab.ts",
+    "src/plugins/mix.ts",
+    "src/plugins/names.ts"
+  ],
+  "families": [
+    "arithmetic"
+  ],
+  "sentinel": {
+    "file": "src/manipulate/invert.ts",
+    "original": "255 - rgba.r",
+    "replacement": "255 + rgba.r"
+  },
+  "scopeNotes": {
+    "familyChoice": "Arithmetic only. Stryker's BooleanLiteral operator also rewrites `!x` to `x`, which Oximut does not generate, so every file with a `!isPresent(..)`/`!match` guard (cmyk, lab, xyz, rgb, ...) breaks mutant-set equality when both families are compared. Both tools declare the same single family instead (Oximut --mutators arithmetic; Stryker excludes BooleanLiteral); the equality gate is unchanged.",
+    "excludedFiles": {
+      "src/get/getPerceivedDifference.ts": "90 mutants on both sides but 13 edits differ textually: Stryker reprints the mutated binary expression (dropping redundant parentheses and line breaks) while Oximut edits only the operator.",
+      "src/colorModels/hex.ts": "Textual divergence from redundant parentheses (1 Stryker-only edit, 2 Oximut-only).",
+      "src/colorModels/hsl.ts": "Redundant-parenthesis divergence (6 edits per tool differ).",
+      "src/colorModels/hsv.ts": "Redundant-parenthesis divergence (4 Stryker-only, 3 Oximut-only edits).",
+      "src/colorModels/hwb.ts": "Redundant-parenthesis divergence (6 edits per tool differ).",
+      "src/colorModels/lch.ts": "Redundant-parenthesis divergence (4 edits per tool differ).",
+      "src/helpers.ts": "Stryker mutates `%` (2 edits) which Oximut does not generate.",
+      "src/plugins/minify.ts": "Oximut mutates string-concatenation `+` (2 edits) which Stryker does not.",
+      "src/random.ts": "Math.random(): outcomes are not a stable cross-tool comparison.",
+      "src/constants.ts": "Module-level (static) edits are handled differently by the two tools' coverage models."
+    },
+    "method": "Mutant sets were compared offline by the sha256 of each exact edited file (the harness's identity): `oximut --list --mutators arithmetic` against Stryker 10.1.1's instrumenter (ArithmeticOperator mutants). Outcomes can only be confirmed by a native run."
+  }
+}

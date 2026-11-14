@@ -21,7 +21,7 @@ import m6
 import real_project as workload
 import targets
 
-BASELINE = '6d8807a95a18dd7fdab5c677384ea9abe374f69a'
+BASELINE = '1a16520b7cf5e81aa3553af3deed3a0b8e69cd44'
 METRICS = ('wall_seconds', 'cpu_seconds', 'peak_aggregate_rss_bytes')
 VARIANTS = ('before', 'after')
 # One instrumented baseline validates inactive switching for every switched file
@@ -180,14 +180,22 @@ def plan(warmups, repetitions):
                 ['stryker', 'oximut', 'vitest'])
 
 
+def scope_text(manifest):
+    """Describe the declared scope from the manifest, never from a fixed count."""
+    sources = sum(name.startswith('src/') for name in manifest['upstreamSha256'])
+    return (f"{len(manifest['mutate'])} declared production mutation files "
+            f"({', '.join(manifest['families'])} families), all {sources} source files available, "
+            f"all {len(manifest['expectedTests'])} upstream tests; not the full colord mutation scope.")
+
+
 def evaluate(rows, warmups, repetitions, provenance, failures=(), *,
              require_build_integrity=False, build_metadata=None, candidate_commits=None,
-             concurrency=1):
+             concurrency=1, workload_name=workload.DEFAULT_WORKLOAD):
     """No ratios until the entire campaign, including every warmup, qualifies."""
     integrity_errors = build_errors(provenance, build_metadata, candidate_commits or {},
                                    require_build_integrity)
     errors = list(failures) + integrity_errors
-    manifest = workload.measurement.read_json(workload.CORPUS / 'workload.json')
+    manifest = workload.load_manifest(workload_name)
     expected_inventory = m6.digest(sorted(manifest['expectedTests']))
     indexed = {}
     for row in rows:
@@ -216,7 +224,7 @@ def evaluate(rows, warmups, repetitions, provenance, failures=(), *,
                     errors.append(f'{label}: inconsistent warmup label')
                 if row.get('round') != 0:
                     errors.append(f'{label}: unexpected subcampaign round')
-                if row.get('workload_sha256') != m6.digest(manifest):
+                if row.get('workload_sha256') != workload.workload_digest(manifest):
                     errors.append(f'{label}: changed declared workload')
                 if row.get('declared_test_identity_sha256') != expected_inventory:
                     errors.append(f'{label}: unequal declared test inventory')
@@ -244,9 +252,9 @@ def evaluate(rows, warmups, repetitions, provenance, failures=(), *,
               'build_integrity': {'required': require_build_integrity,
                                   'passed': not integrity_errors, 'errors': integrity_errors},
               'warmup_pairs': warmups, 'measured_pairs': repetitions, 'concurrency': concurrency,
+              'workload': workload_name,
               'thresholds': targets.THRESHOLDS, 'targets_met': False, 'comparisons': {},
-              'scope': 'Five declared production mutation files, all 41 source files available, '
-                       'all 102 upstream tests; not the full colord mutation scope.',
+              'scope': scope_text(manifest),
               'confidence': 'Deterministic paired median percentile bootstrap, 10000 draws; '
                             'host/corpus-specific exploratory evidence.'}
     if errors:
@@ -287,6 +295,7 @@ def subcommand(args, directory, warmup, variant, tools):
             '--defer-ratios', '--tools', *tools, '--warmups', '1' if warmup else '0',
             '--repetitions', '0' if warmup else '1', '--timeout', str(args.timeout),
             '--concurrency', str(getattr(args, 'concurrency', 1)),
+            '--workload', getattr(args, 'workload', workload.DEFAULT_WORKLOAD),
             '--output', str(directory)] + [
                 f'--oximut-arg={arg}' for arg in
                 (getattr(args, 'after_oximut_arg', []) if variant == 'after' else [])]
@@ -301,6 +310,8 @@ def main(argv=None):
     signal.signal(signal.SIGTERM, stop_on_sigterm)
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--after-oximut-arg', action='append', default=[])
+    parser.add_argument('--workload', type=workload.workload_name, default=workload.DEFAULT_WORKLOAD,
+                        help='Mutation scope manifest: ' + ', '.join(sorted(workload.WORKLOADS)))
     parser.add_argument('--concurrency', type=workload.concurrency_arg, default=1,
                         help='Matched parallelism for Stryker and both Oximut candidates')
     parser.add_argument('--output', type=Path, required=True)
@@ -351,7 +362,7 @@ def main(argv=None):
         except (OSError, ValueError) as error:
             build_metadata_error = f'cannot read supplied build metadata: {error}'
     metadata = workload.measurement.metadata()
-    metadata.update(after_oximut_args=args.after_oximut_arg, before_commit=args.before_commit, after_commit=args.after_commit,
+    metadata.update(workload=args.workload, after_oximut_args=args.after_oximut_arg, before_commit=args.before_commit, after_commit=args.after_commit,
                     build_flags=args.build_flags, runtime_provenance=provenance,
                     build_metadata=build_metadata, build_metadata_error=build_metadata_error,
                     build_metadata_path=str(args.build_metadata) if args.build_metadata else None,
@@ -361,7 +372,9 @@ def main(argv=None):
                     warmups=args.warmups, repetitions=args.repetitions, concurrency=args.concurrency,
                     require_build_integrity=args.require_build_integrity,
                     harness_sha256={name: workload.measurement.file_hash(workload.ROOT / 'benchmarks' / name)
-                                    for name in ('compare_candidates.py', 'real_project.py', 'targets.py', 'm6.py', 'run.py')})
+                                    for name in ('compare_candidates.py', 'real_project.py', 'targets.py', 'm6.py', 'run.py')}
+                    | {str(path.relative_to(workload.ROOT)): workload.measurement.file_hash(path)
+                       for path in workload.manifest_provenance_paths(args.workload)})
     m6.write_json(output / 'metadata.json', metadata)
     failures, rows, attempts = [], [], []
     integrity = dict(require_build_integrity=args.require_build_integrity,
@@ -376,7 +389,7 @@ def main(argv=None):
         m6.write_json(output / 'attempts.json', [])
         result = evaluate([], args.warmups, args.repetitions, provenance,
                           [build_metadata_error] if build_metadata_error else [],
-                          concurrency=args.concurrency, **integrity)
+                          concurrency=args.concurrency, workload_name=args.workload, **integrity)
         result['after_oximut_args'] = args.after_oximut_arg
         m6.write_json(output / 'summary.json', result)
         print('Build integrity preflight failed: ' + '; '.join(preflight), file=sys.stderr)
@@ -421,7 +434,8 @@ def main(argv=None):
             if attempt.get('timed_out'):
                 break
     result = evaluate(rows, args.warmups, args.repetitions, provenance, failures,
-                      concurrency=getattr(args, 'concurrency', 1), **integrity)
+                      concurrency=getattr(args, 'concurrency', 1),
+                      workload_name=args.workload, **integrity)
     result['after_oximut_args'] = args.after_oximut_arg
     m6.write_json(output / 'summary.json', result)
     print(json.dumps(result, indent=2))

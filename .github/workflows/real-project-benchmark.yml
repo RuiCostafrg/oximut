@@ -11,6 +11,13 @@ on:
         type: string
         default: '1'
         description: 'Matched parallelism: Stryker concurrency and Oximut --workers'
+      workload:
+        type: choice
+        default: colord
+        options:
+          - colord
+          - colord-scale
+        description: 'Mutation scope on the vendored colord corpus: colord (10 mutants, start-up cost) or colord-scale (206 mutants, per-mutant cost)'
   pull_request:
 
 permissions:
@@ -54,8 +61,8 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 90
     env:
-      # Main c9c116f (after #58, stable lane width); diagnostic clocks and peak attribution stay off here.
-      BEFORE_COMMIT: 6d8807a95a18dd7fdab5c677384ea9abe374f69a
+      # Main 1a16520 (after #62, shared lane transforms); diagnostic clocks and peak attribution stay off here.
+      BEFORE_COMMIT: 1a16520b7cf5e81aa3553af3deed3a0b8e69cd44
       BUILD_FLAGS: --locked --release -p oximut-cli
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -134,11 +141,20 @@ jobs:
         env:
           AFTER_OXIMUT_ARGS: ${{ inputs.after_oximut_args || '' }}
           MATCHED_CONCURRENCY: ${{ inputs.concurrency || '1' }}
+          WORKLOAD: ${{ inputs.workload || 'colord' }}
         run: |
+          # Per tool command; the larger workload runs 20x the mutants, so it gets twice the
+          # headroom. A hang still ends well inside the 90 minute job limit.
+          case "$WORKLOAD" in
+            colord) run_timeout=600 ;;
+            colord-scale) run_timeout=1200 ;;
+            *) echo "::error::unknown workload '$WORKLOAD'"; exit 1 ;;
+          esac
           read -r -a words <<< "$AFTER_OXIMUT_ARGS"
           extra_args=()
           for word in "${words[@]}"; do extra_args+=("--after-oximut-arg=$word"); done
           python3 benchmarks/compare_candidates.py "${extra_args[@]}" --concurrency "$MATCHED_CONCURRENCY" \
+            --workload "$WORKLOAD" \
             --before-binary "$BINARY_DIR/before-oximut" \
             --before-adapter-dir "$BEFORE_WORKTREE/packages/vitest-adapter" \
             --before-commit "$BEFORE_COMMIT" \
@@ -146,14 +162,19 @@ jobs:
             --after-adapter-dir "$GITHUB_WORKSPACE/packages/vitest-adapter" \
             --after-commit "$AFTER_COMMIT" \
             --build-flags="$BUILD_FLAGS" --build-metadata "$BINARY_DIR/build-metadata.json" \
-            --require-build-integrity --warmups 1 --repetitions 5 --timeout 600 --output "$CAMPAIGN_DIR"
+            --require-build-integrity --warmups 1 --repetitions 5 --timeout "$run_timeout" --output "$CAMPAIGN_DIR"
       - name: Publish results, including missed targets and invalid campaigns
         if: ${{ !cancelled() }}
         run: |
           if ! test -f "$CAMPAIGN_DIR/summary.json"; then exit 0; fi
           {
             echo '### Real project comparison'
-            echo 'Five mutation source files; all 41 production files and 102 upstream tests available. Host/corpus-specific evidence; no full-colord performance claim.'
+            python3 - <<'PY'
+          import json, os, pathlib
+          summary = json.loads((pathlib.Path(os.environ['CAMPAIGN_DIR']) / 'summary.json').read_text())
+          print(f"Workload {summary.get('workload', 'unknown')}: {summary.get('scope', 'scope not recorded')} "
+                'Host/corpus-specific evidence; no full-colord performance claim.')
+          PY
             echo 'Target misses are evidence, not correctness failures. Invalid workload gates fail the job.'
             echo '```json'
             cat "$CAMPAIGN_DIR/summary.json"

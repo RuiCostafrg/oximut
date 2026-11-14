@@ -13,9 +13,60 @@ outcomes do not certify the third-party library's correctness.
 The workload declares five mutation source files: `extend.ts` and
 `manipulate/{invert,lighten,mix,saturate}.ts`. All 102 upstream tests remain
 available, including the scientific reference tests unrelated to those source
-files. This is a bounded real-project experiment, not a claim about the complete
-colord mutation scope or general JavaScript performance. The plugin tests exercise
+files. This default workload (`colord`) has only 10 mutants, so it mostly measures each
+tool's fixed start-up cost. A second manifest, `colord-scale` (see
+[Scale workload](#scale-workload)), runs 206 mutants on the same corpus to expose
+per-mutant cost. This is a bounded real-project experiment, not a claim about the
+complete colord mutation scope or general JavaScript performance. The plugin tests exercise
 registration state and the real import graph. Upstream has no async tests.
+
+## Scale workload
+
+`--workload NAME` (on `real_project.py` and `compare_candidates.py`, and the
+`workload` input of the benchmark workflow) selects the mutation scope. The default,
+`colord`, is exactly the five-file workload described above. `colord-scale` uses the
+same vendored corpus, tests and expected-test lists (it extends `workload.json` and
+overrides only the scope), so only the mutated files and families change:
+
+| | `colord` | `colord-scale` |
+|---|---|---|
+| Mutated files | 5 | 20 |
+| Families | arithmetic, boolean-literal | arithmetic |
+| Mutants (identical in both tools) | 10 | 206 |
+| Tests | 102 | 102 |
+
+Each manifest also names its **sentinel**: an exact production edit the upstream
+tests assert, which both tools must kill. Both manifests keep the `invert`
+`255 - rgba.r` to `255 + rgba.r` edit.
+
+The two tools must produce identical mutant sets, keyed on the SHA of the exact
+edited file, and the equality gate is not relaxed for the larger workload. That
+constrains the choice of files:
+
+- Stryker's `BooleanLiteral` also rewrites `!x` to `x`, which Oximut does not
+  generate. Most colord files guard with `!isPresent(..)` or `!match`, so any of them
+  breaks equality while that family is compared. `colord-scale` therefore declares the
+  arithmetic family alone for both tools (`--mutators arithmetic` for Oximut,
+  `BooleanLiteral` added to Stryker's excluded operators). The family declaration is
+  part of the equality gate, so a run that disagreed would still be rejected.
+- Stryker reprints a mutated binary expression, dropping redundant parentheses and line
+  breaks, while Oximut edits only the operator token. Files containing such
+  expressions yield textually different edits and are left out: `getPerceivedDifference.ts`
+  (13 of 90), `hsl.ts`, `hsv.ts`, `hwb.ts`, `lch.ts` and `hex.ts`.
+- Stryker's `ArithmeticOperator` also mutates `%` (`helpers.ts`), and Oximut also mutates
+  string concatenation (`plugins/minify.ts`); both files are left out.
+- `random.ts` (`Math.random`) and `constants.ts` (module-level edits) are left out as
+  not stable cross-tool comparisons.
+
+The manifest's `scopeNotes` repeats this. The sets were compared offline by hashing each
+edited file from `oximut --list --mutators arithmetic` and from Stryker 10.1.1's
+instrumenter; only a native run confirms outcomes. A workload name outside the
+declared set is rejected before anything runs. The chosen manifest and the one it
+extends are hashed into the run metadata, and the manifest digest is recorded in every
+row, so a campaign can never be mixed with rows from another workload.
+
+The workflow gives each tool command 600 seconds on `colord` and 1200 seconds on
+`colord-scale`.
 
 ## Reproduce
 
@@ -66,9 +117,13 @@ the overall cross-tool gate remains false because there is no comparison.
 
 Persistent execution defaults to fresh forks per test file. `--isolation fresh-thread` opts into fresh Vitest worker threads; see [m2.md](m2.md) for semantics. The benchmark measures the default unless its dispatch input passes extra arguments.
 
-Each run uses a new private copy, forks, `--concurrency` workers (one by default;
+Each run uses a new private copy, `--concurrency` workers (one by default;
 Stryker gets the same value, and it must not exceed the usable CPUs), file isolation and disabled
-outcome caches. Stryker `vitest.related: false` keeps all upstream tests in its
+outcome caches. The two tools do not run the same pool. Oximut runs one fresh Vitest fork
+per mutant. Stryker's configuration sets no pool, so its Vitest runner uses its default,
+`vitest.pool: threads`, and forces `maxWorkers: 1` per Stryker worker process, overriding the
+`pool: 'forks'` in the corpus's `vitest.config.ts` (read from the 10.1.1 runner source). Stryker's
+defaults are benchmarked as they are; its configuration is not changed to match. Stryker `vitest.related: false` keeps all upstream tests in its
 baseline. Both tools can conservatively select covered tests for mutants.
 No test assertion, parser complexity budget, isolation setting or cache validation
 is relaxed. This clean-run harness makes no cache invalidation claim; M6's
@@ -146,12 +201,13 @@ the parent requested a build hold.
 
 `benchmarks/compare_candidates.py` runs one warmup pair and five measured pairs
 by default. Build both binaries **before** invoking it. The baseline is pinned to
-`6d8807a95a18dd7fdab5c677384ea9abe374f69a` (main after #60, bottleneck report; `--before-commit`
+`1a16520b7cf5e81aa3553af3deed3a0b8e69cd44` (main after #62, shared lane transforms; `--before-commit`
 overrides it). Revisions before the Vitest 5 upgrade can't be candidates: their adapter
 rejects Vitest 5.1.0 during initialization.
 The candidate includes the change under evaluation; pass its full commit SHA. Both use the same
-arithmetic/boolean-literal declaration (the five-file scope has no Boolean
-literals), the same 41 available source files and all 102 upstream tests.
+family declaration (the default five-file scope has no Boolean literals), the same
+41 available source files and all 102 upstream tests. `--workload` selects the mutation scope
+and defaults to the original five-file one.
 
 The wrapper alternates before/after order each round. Each variant subcampaign
 serializes ordinary Vitest, Oximut and Stryker; tool order reverses on alternate
@@ -178,10 +234,11 @@ The summary reports paired **Oximut/Stryker** wall, CPU and sampled aggregate RS
 ratios for each variant, plus paired **after/before Oximut** ratios. Pairing uses
 the same outer round. Deterministic 10,000-draw bootstrap intervals reuse
 `targets.paired_interval`; warmups never contribute ratios. At least one warmup
-and five measured pairs are required. Candidate/Stryker targets are wall <= 0.80
-and RSS <= 0.50. A target is met only when the interval's upper bound meets the
-threshold, missed when its lower bound exceeds it, and otherwise inconclusive.
-CPU is reported without an invented target. Before/Stryker results provide
+and five measured pairs are required. Candidate/Stryker targets are the project
+goal: wall <= 0.50, CPU <= 0.80 and peak aggregate RSS <= 0.80. A target is met only when the
+interval's upper bound meets the threshold, missed when its lower bound exceeds it, and otherwise
+inconclusive. These statuses are reported evidence: no workflow passes `--require-targets`, so a
+missed target never fails a job (earlier revisions gated wall <= 0.80 and RSS <= 0.50). Before/Stryker results provide
 context; after/before measures the change without applying an extra threshold.
 Invalid gates fail the command. Missed or inconclusive performance targets remain
 published evidence and return success unless `--require-targets` is supplied.

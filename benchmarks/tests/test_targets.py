@@ -11,7 +11,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import targets
 
 
-def evidence(wall=.7, memory=.4, cpu=.6, repetitions=5):
+def evidence(wall=.45, memory=.4, cpu=.6, repetitions=5):
     rows = []
     for fixture in targets.FIXTURES:
         for index in range(repetitions + 1):
@@ -54,7 +54,7 @@ class TargetTests(unittest.TestCase):
                     self.assertEqual(fixture['status'], 'target met' if passed else 'invalid workload')
                     for name, metric in fixture['metrics'].items():
                         self.assertAlmostEqual(metric['median'],
-                                               {'wall_seconds': .7, 'peak_aggregate_rss_bytes': .4,
+                                               {'wall_seconds': .45, 'peak_aggregate_rss_bytes': .4,
                                                 'cpu_seconds': .6}[name])
                         if not passed:
                             self.assertEqual(metric['status'], 'invalid workload')
@@ -94,10 +94,29 @@ class TargetTests(unittest.TestCase):
         result = targets.evaluate(rows)
         self.assertTrue(result['targets_met'])
         self.assertAlmostEqual(result['fixtures'][0]['metrics']['cpu_seconds']['median_cpu_reduction_percent'], 40)
-        result = targets.evaluate(evidence(memory=.7))
+        result = targets.evaluate(evidence(memory=.9))
         self.assertFalse(result['targets_met'])
         self.assertEqual(result['fixtures'][0]['status'], 'target missed')
         self.assertEqual(result['fixtures'][0]['metrics']['wall_seconds']['status'], 'target met')
+
+    def test_thresholds_are_the_project_goal_and_cpu_is_a_target(self):
+        self.assertEqual(targets.THRESHOLDS,
+                         {'wall_seconds': .50, 'cpu_seconds': .80, 'peak_aggregate_rss_bytes': .80})
+        for metric, missed in (('wall_seconds', dict(wall=.6)), ('cpu_seconds', dict(cpu=.9)),
+                               ('peak_aggregate_rss_bytes', dict(memory=.9))):
+            with self.subTest(metric=metric):
+                result = targets.evaluate(evidence(**missed))
+                self.assertFalse(result['targets_met'])
+                self.assertEqual(result['fixtures'][0]['metrics'][metric]['status'], 'target missed')
+        # Missing the goal is published evidence, never a failing exit status.
+        with tempfile.TemporaryDirectory() as directory:
+            campaign = Path(directory)
+            (campaign / 'measurements.jsonl').write_text(
+                '\n'.join(json.dumps(row) for row in evidence(wall=.9)))
+            (campaign / 'summary.json').write_text(json.dumps({'correctness_gate': {'passed': True}}))
+            with contextlib.redirect_stdout(io.StringIO()):
+                self.assertEqual(targets.main([str(campaign)]), 0)
+                self.assertEqual(targets.main([str(campaign), '--require-targets']), 1)
 
     def test_smoke_missing_baseline_or_inaccurate_memory_cannot_certify(self):
         self.assertFalse(targets.evaluate(evidence(repetitions=1))['targets_met'])
@@ -125,7 +144,7 @@ class TargetTests(unittest.TestCase):
         self.assertFalse(targets.evaluate(rows)['targets_met'])
 
     def test_interval_is_deterministic_and_uncertainty_is_not_a_win(self):
-        pairs = [(x, 1.) for x in (.5, .6, .7, .95, 1.1)]
+        pairs = [(x, 1.) for x in (.3, .45, .5, .6, .9)]
         self.assertEqual(targets.paired_interval(pairs), targets.paired_interval(pairs))
         rows = evidence()
         for r in rows:

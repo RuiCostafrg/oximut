@@ -273,6 +273,194 @@ class MatchedConcurrencyTests(unittest.TestCase):
             benchmark.require_matched_concurrency(5, available=4)
 
 
+class WorkloadSelectionTests(unittest.TestCase):
+    """--workload picks the mutation scope on the one vendored corpus; default is unchanged."""
+    VERSIONS = {'node': 'v26.3.1', 'vitest': '5.1.0',
+                '@stryker-mutator/core': '10.1.1', '@stryker-mutator/vitest-runner': '10.1.1'}
+
+    def test_default_is_the_original_manifest_with_its_original_sentinel(self):
+        self.assertEqual(benchmark.DEFAULT_WORKLOAD, 'colord')
+        self.assertEqual(benchmark.manifest_path(), benchmark.CORPUS / 'workload.json')
+        manifest = benchmark.load_manifest()
+        self.assertEqual(manifest['mutate'], [
+            'src/manipulate/invert.ts', 'src/manipulate/lighten.ts', 'src/manipulate/mix.ts',
+            'src/manipulate/saturate.ts', 'src/extend.ts'])
+        self.assertEqual(manifest['families'], ['arithmetic', 'boolean-literal'])
+        self.assertEqual(manifest['sentinel'], {'file': 'src/manipulate/invert.ts',
+                                                'original': '255 - rgba.r',
+                                                'replacement': '255 + rgba.r'})
+        # Stryker's operator exclusions for the default are byte-for-byte what they always were.
+        self.assertEqual(benchmark.stryker_excluded_mutations(manifest), [
+            'EqualityOperator', 'AssignmentOperator', 'CallExpression', 'ArrayDeclaration',
+            'ArrowFunction', 'BlockStatement', 'ConditionalExpression', 'LogicalOperator',
+            'MethodExpression', 'ObjectLiteral', 'OptionalChaining', 'Regex', 'StringLiteral',
+            'UnaryOperator', 'UpdateOperator'])
+
+    def test_unknown_workload_is_rejected_before_any_side_effect(self):
+        import contextlib
+        import io
+        with self.assertRaises(argparse.ArgumentTypeError):
+            benchmark.workload_name('colord-huge')
+        with self.assertRaisesRegex(argparse.ArgumentTypeError, 'unknown workload'):
+            benchmark.load_manifest('../workload')
+        with tempfile.TemporaryDirectory() as tmp:
+            output = Path(tmp) / 'out'
+            with contextlib.redirect_stderr(io.StringIO()) as stderr, self.assertRaises(SystemExit) as raised:
+                benchmark.main(['--output', str(output), '--tools', 'vitest', '--workload', 'colord-huge'])
+            self.assertEqual(raised.exception.code, 2)
+            self.assertIn('unknown workload', stderr.getvalue())
+            self.assertFalse(output.exists())
+
+    def test_scale_manifest_shares_the_corpus_and_declares_one_family(self):
+        default, scale = benchmark.load_manifest('colord'), benchmark.load_manifest('colord-scale')
+        self.assertEqual(scale['name'], 'colord-scale')
+        self.assertNotIn('extends', scale)
+        for key in ('upstreamSha256', 'expectedTests', 'expectedOximutTests', 'upstreamMetadataSha256'):
+            self.assertEqual(scale[key], default[key], key)
+        benchmark.verify_inputs(benchmark.CORPUS, scale)
+        self.assertGreater(len(scale['mutate']), len(default['mutate']))
+        self.assertEqual(len(scale['mutate']), len(set(scale['mutate'])))
+        self.assertTrue({'src/manipulate/invert.ts'} <= set(scale['mutate']))
+        self.assertEqual(scale['sentinel'], default['sentinel'])
+        self.assertEqual(scale['families'], ['arithmetic'])
+        # Stryker is told to skip the family Oximut is not asked for, so scopes agree.
+        self.assertIn('BooleanLiteral', benchmark.stryker_excluded_mutations(scale))
+        self.assertNotIn('ArithmeticOperator', benchmark.stryker_excluded_mutations(scale))
+        # Every file left out is explained.
+        for name in scale['scopeNotes']['excludedFiles']:
+            self.assertNotIn(name, scale['mutate'])
+
+    def test_prepared_projects_follow_the_chosen_manifest(self):
+        for name, files in (('colord', 5), ('colord-scale', None)):
+            with self.subTest(workload=name), tempfile.TemporaryDirectory() as tmp:
+                manifest = benchmark.load_manifest(name)
+                project = Path(tmp) / 'project'
+                benchmark.prepare(project, manifest)
+                text = (project / 'stryker.config.mjs').read_text()
+                config = json.loads(text[len('export default { ...'):text.index(', jsonReporter')])
+                self.assertEqual(config['mutate'], manifest['mutate'])
+                self.assertEqual(config['mutator']['excludedMutations'],
+                                 benchmark.stryker_excluded_mutations(manifest))
+                self.assertEqual('BooleanLiteral' in config['mutator']['excludedMutations'],
+                                 name == 'colord-scale')
+                if files:
+                    self.assertEqual(len(config['mutate']), files)
+
+    def test_oximut_command_uses_the_manifest_scope_and_families(self):
+        args = SimpleNamespace(binary=Path('/b'), adapter=None, diagnostic_unrestricted=False)
+        for name in benchmark.WORKLOADS:
+            manifest = benchmark.load_manifest(name)
+            command = benchmark.command('oximut', args, Path('/p'), Path('/r'), manifest)
+            self.assertEqual([command[i + 1] for i, v in enumerate(command) if v == '--source'],
+                             manifest['mutate'])
+            self.assertEqual(command[command.index('--mutators') + 1], ','.join(manifest['families']))
+
+    def test_sentinel_comes_from_the_manifest(self):
+        manifest = copy.deepcopy(benchmark.load_manifest('colord'))
+        manifest['sentinel'] = {'file': 'src/manipulate/lighten.ts', 'original': 'amount * 100',
+                                'replacement': 'amount * 101'}
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp) / 'project'
+            benchmark.prepare(project, manifest)
+            source = (project / 'src/manipulate/lighten.ts').read_text()
+            self.assertIn('amount * 100', source)
+            sentinel = 'src/manipulate/lighten.ts:' + benchmark.hashlib.sha256(
+                source.replace('amount * 100', 'amount * 101', 1).encode()).hexdigest()
+            report = Path(tmp) / 'report.json'
+            report.write_text('{}')
+
+            def validated(outcome, mutations=None):
+                artifact = {'mutations': mutations or {sentinel: {'file': 'src/manipulate/lighten.ts',
+                                                                  'outcome': outcome}},
+                            'known_killed_sentinel_identity': None}
+                with mock.patch.object(benchmark.m6, 'artifact', return_value=artifact), \
+                     mock.patch.object(benchmark, 'validate_tests', return_value='digest'):
+                    return benchmark.validate('oximut', report, project, {}, manifest)
+
+            self.assertEqual(validated('killed')['known_killed_sentinel_identity'], sentinel)
+            with self.assertRaisesRegex(ValueError, 'sentinel mutant was not killed'):
+                validated('survived')
+            # The hard-coded invert edit is no longer consulted: its mutant alone is not enough.
+            invert = (project / 'src/manipulate/invert.ts').read_text()
+            invert_id = 'src/manipulate/invert.ts:' + benchmark.hashlib.sha256(
+                invert.replace('255 - rgba.r', '255 + rgba.r', 1).encode()).hexdigest()
+            with self.assertRaisesRegex(ValueError, 'sentinel mutant was not killed'):
+                validated('killed', {invert_id: {'file': 'src/manipulate/invert.ts', 'outcome': 'killed'}})
+            manifest['sentinel']['original'] = 'absent-text'
+            with self.assertRaisesRegex(ValueError, 'absent from the source'):
+                validated('killed')
+
+    def run_main(self, workload=None, tools=('vitest',)):
+        def prepare(project, manifest, concurrency=1):
+            project.mkdir()
+            for name in ('vitest.config.ts', 'stryker.config.mjs', 'package.json'):
+                (project / name).write_text('{}')
+        with tempfile.TemporaryDirectory() as tmp:
+            output = Path(tmp) / 'out'
+            argv = ['--tools', *tools, '--warmups', '1', '--repetitions', '0', '--output', str(output)]
+            if workload is not None:
+                argv += ['--workload', workload]
+            with mock.patch.object(benchmark.measurement, 'metadata',
+                                   return_value={'versions': self.VERSIONS}), \
+                 mock.patch.object(benchmark, 'prepare', side_effect=prepare), \
+                 mock.patch.object(benchmark.measurement, 'run_command', return_value={
+                     'wall_seconds': 1., 'cpu_seconds': 1., 'peak_aggregate_rss_bytes': 1.,
+                     'peak_process_count': 1}), \
+                 mock.patch.object(benchmark, 'validate', return_value={}):
+                benchmark.main(argv)
+            return (json.loads((output / 'metadata.json').read_text()),
+                    json.loads((output / 'summary.json').read_text()),
+                    json.loads((output / 'measurements.jsonl').read_text()))
+
+    def test_provenance_covers_the_chosen_manifest(self):
+        results = {name: self.run_main(name) for name in benchmark.WORKLOADS}
+        default_meta, default_summary, default_row = self.run_main()  # no flag: the default
+        self.assertEqual(default_meta['workload_name'], 'colord')
+        self.assertEqual(default_summary['workload'], 'colord')
+        self.assertEqual(default_row['workload_sha256'], results['colord'][2]['workload_sha256'])
+        scale_meta, scale_summary, scale_row = results['colord-scale']
+        self.assertEqual(scale_summary['workload'], 'colord-scale')
+        self.assertEqual(scale_meta['workload']['name'], 'colord-scale')
+        self.assertNotEqual(scale_row['workload_sha256'], default_row['workload_sha256'])
+        self.assertEqual(scale_row['workload_sha256'],
+                         benchmark.workload_digest(benchmark.load_manifest('colord-scale')))
+        self.assertEqual(scale_row['mutator_families'], ['arithmetic'])
+        hashes = scale_meta['harness_sha256']
+        for path in ('benchmarks/real-project/colord/workload-scale.json',
+                     'benchmarks/real-project/colord/workload.json'):
+            self.assertEqual(hashes[path], benchmark.measurement.file_hash(benchmark.ROOT / path))
+        self.assertNotIn('benchmarks/real-project/colord/workload-scale.json', default_meta['harness_sha256'])
+        self.assertIn('benchmarks/real-project/colord/workload.json', default_meta['harness_sha256'])
+
+    def test_editing_the_scale_manifest_changes_its_declared_identity(self):
+        scale = benchmark.load_manifest('colord-scale')
+        edited = {**scale, 'mutate': scale['mutate'][:-1]}
+        self.assertNotEqual(benchmark.workload_digest(scale), benchmark.workload_digest(edited))
+        edited = {**scale, 'families': ['arithmetic', 'boolean-literal']}
+        self.assertNotEqual(benchmark.workload_digest(scale), benchmark.workload_digest(edited))
+
+    def test_default_digest_matches_the_one_retained_campaigns_were_qualified_against(self):
+        # workload.json gained `name` and `sentinel`; the digest rows carry must not move.
+        import subprocess
+        old = subprocess.run(['git', 'show', '1a16520b7cf5e81aa3553af3deed3a0b8e69cd44:'
+                              'benchmarks/real-project/colord/workload.json'],
+                             cwd=benchmark.ROOT, capture_output=True, text=True)
+        if old.returncode:
+            self.skipTest('history unavailable')
+        self.assertEqual(benchmark.workload_digest(benchmark.load_manifest('colord')),
+                         benchmark.m6.digest(json.loads(old.stdout)))
+
+    def test_extends_must_name_a_complete_manifest(self):
+        with tempfile.TemporaryDirectory() as tmp, \
+             mock.patch.object(benchmark, 'CORPUS', Path(tmp)):
+            (Path(tmp) / 'a.json').write_text(json.dumps({'name': 'colord', 'families': ['arithmetic'],
+                                                          'extends': 'b.json'}))
+            (Path(tmp) / 'b.json').write_text(json.dumps({'extends': 'a.json'}))
+            with mock.patch.dict(benchmark.WORKLOADS, {'colord': 'a.json'}):
+                with self.assertRaisesRegex(ValueError, 'complete manifest'):
+                    benchmark.load_manifest('colord')
+
+
 if __name__ == '__main__':
     unittest.main()
 
