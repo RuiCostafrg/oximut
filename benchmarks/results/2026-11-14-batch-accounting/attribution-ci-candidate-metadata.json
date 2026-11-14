@@ -1,0 +1,29 @@
+{
+  "before_commit": "ab6239f786a83bfbb7ee4c4faa1ab275137f7835",
+  "after_commit": "be87866120f1cf2d38487f507788cf4b62277d39",
+  "build_flags": "--locked --release -p oximut-cli",
+  "rustflags": null,
+  "cargo_encoded_rustflags": null,
+  "cargo_target_dirs": {
+    "before": "/home/runner/work/_temp/real-project-before-target",
+    "after": "/home/runner/work/_temp/real-project-after-target"
+  },
+  "before_source": "/home/runner/work/_temp/real-project-before",
+  "after_source": "/home/runner/work/oximut/oximut",
+  "tool_versions": {
+    "rustc": "rustc 1.96.0 (ac68faa20 2026-05-25)",
+    "cargo": "cargo 1.96.0 (30a34c682 2026-05-25)",
+    "node": "v26.3.1",
+    "npm": "11.16.0",
+    "python3": "Python 3.13.18"
+  },
+  "binary_sha256": {
+    "before": "3289337648e43b1944c6f2b3fd9c0114d55c02190e1ba580069f4750b32dc806",
+    "after": "c11fa57ed602885154cd914c6f006f3f9289ab3e363aa241925f99775adf8b24"
+  },
+  "host": "Linux runnervm8axu0 7.0.0-1017-azure #17~24.04.1-Ubuntu SMP PREEMPT Thu Sep 24 18:46:57 UTC 2026 x86_64 x86_64 x86_64 GNU/Linux",
+  "timing_policy": "Both copied binaries built before timing; isolated compiled artifacts; registry downloads may be shared; no rebuilds during campaign",
+  "run_id": 43607914768,
+  "run_url": "https://github.com/RuiCostafrg/oximut/actions/runs/43607914768",
+  "diagnostic_only": true
+}
