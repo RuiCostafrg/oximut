@@ -37,7 +37,7 @@ test('registration remains lazy, exact URL/path lookup only, then caches one par
   const result = owner.retrieveSourceMap(f.bundle.href);
   assert.equal(owner.loaded, true);
   assert.equal(result.url, f.mapURL.href);
-  assert.deepEqual(result.map, f.map);
+  assert.deepEqual(result.map, { ...f.map, sources: [f.original.pathname] });
   await rm(f.mapURL);
   assert.equal(owner.retrieveSourceMap(f.bundle.pathname).map, result.map, 'Parsed map must not be read again');
 });
@@ -60,6 +60,24 @@ test('native Vite hook maps a real thrown frame and unregisters without removing
   await second.close();
   assert.equal(Error.prepareStackTrace, originalPrepare);
   assert.throws(() => registerBundleMap(f.bundle, f.metadata), /already registered/);
+});
+
+test('native Vite mapping preserves absolute file URLs and escaped original filenames', async t => {
+  for (const name of ['original.js', 'original space%#é.js']) {
+    const f = await fixture(t, (spec, map) => {
+      const original = new URL('./' + encodeURIComponent(name), spec.mapURL).href;
+      map.sources = [original];
+      spec.sources[0].url = original;
+      spec.mapSha256 = hash(JSON.stringify(map));
+    });
+    const owner = registerBundleMap(f.bundle, f.metadata);
+    t.after(() => owner.close());
+    const module = await import(f.bundle.href);
+    let stack;
+    try { module.boom(); } catch (error) { stack = error.stack; }
+    assert.ok(stack?.includes(`(${f.spec.sources[0].url}:3:`), `Original source URI diverged: ${stack}`);
+    await owner.close();
+  }
 });
 
 test('missing maps and unsupported metadata fail without registration', async t => {

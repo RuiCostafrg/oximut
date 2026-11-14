@@ -1,0 +1,52 @@
+name: W13 private bootstrap structural qualification
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [perf/vitest5-worker-bundle]
+    paths:
+      - .github/workflows/w13-private-bootstrap.yml
+      - benchmarks/experiments/vitest5-private-bootstrap/**
+      - package.json
+      - package-lock.json
+      - .node-version
+
+permissions:
+  contents: read
+
+concurrency:
+  group: w13-private-bootstrap-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  structural:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version-file: .node-version
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0
+        with:
+          python-version: '3.13'
+      - name: Complete pinned stock and candidate structural qualification
+        run: |
+          python3 benchmarks/experiments/vitest5-private-bootstrap/capture.py \
+            "$RUNNER_TEMP/w13-private-bootstrap" --node "$(command -v node)" --install
+      - name: Remove dependency symlinks from artifact inputs
+        if: always()
+        run: |
+          if test -d "$RUNNER_TEMP/w13-private-bootstrap"; then
+            find "$RUNNER_TEMP/w13-private-bootstrap" -type l -name node_modules -delete
+          fi
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        if: always()
+        with:
+          name: w13-private-bootstrap-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/w13-private-bootstrap/**
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 14

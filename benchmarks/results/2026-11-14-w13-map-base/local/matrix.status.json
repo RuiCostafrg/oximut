@@ -1,0 +1,9 @@
+{
+  "argv": [
+    "/tmp/oximut-v5-node/node-v26.3.1-linux-arm64/bin/node",
+    "--experimental-import-meta-resolve",
+    "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/benchmarks/experiments/vitest5-private-bootstrap/probe.mjs",
+    "/tmp/oximut-w13-map-base-parent-1/run"
+  ],
+  "exitCode": 0
+}

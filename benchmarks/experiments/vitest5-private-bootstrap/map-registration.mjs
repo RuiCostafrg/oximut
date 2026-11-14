@@ -42,7 +42,15 @@ export function registerBundleMap(bundleURL, metadataURL) {
         expected.delete(sourceURL);
       }
       if (expected.size) fail('missing or duplicate original sources');
-      parsed = decoded;
+      // Vite 8.3.5's DecodedMap resolves source paths with posixResolve, then
+      // supportRelativeURL restores the base's protocol. Absolute URL pathnames
+      // prevent its dirname(file:...) from becoming part of a source path.
+      // Keep percent escapes: Vite joins these pathnames back into file URLs.
+      parsed = { ...decoded, sources: decoded.sources.map(source => {
+        const url = new URL(source, mapURL);
+        fileURLToPath(url); // Validate that this is a local file URL.
+        return url.pathname;
+      }) };
       log({ type: 'map-loaded', bytes: bytes.length, callbackCPU: process.cpuUsage(cpu), heapDelta: process.memoryUsage().heapUsed - heapBefore });
     }
     return { url: mapURL.href, map: parsed };

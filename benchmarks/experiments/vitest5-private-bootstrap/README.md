@@ -1,12 +1,12 @@
 # Private bootstrap with scoped map consumption
 
-**Stopped: original source URI fidelity fails.** The registration maps the
-bootstrap basename/line/column, but the pinned Vite consumer produces a malformed
-full source URI containing an extra `file:` path component. The initially green
-filename-only capture is superseded by the full-URI audit in
-`benchmarks/results/2026-11-14-w13-map-registration/REPORT.md`. The helper/artifact
-was not repaired or rerun after discovery. Current oracles reject that URI.
-Native CI was not dispatched; this candidate is not qualified.
+**Local structural qualification passed; native Ubuntu qualification pending.**
+The latest map-base adapter supplies absolute encoded URL pathnames to Vite's
+path-oriented decoder and retains the file URL as its protocol base. Full original
+URIs, including escaped filenames, now pass. See the new capture in
+`benchmarks/results/2026-11-14-w13-map-base/REPORT.md`. Earlier failed artifacts
+and their reports, including `2026-11-14-w13-map-registration`, remain unchanged.
+No performance qualification or product integration is established.
 
 The revised candidate uses the same six audited inline modules and leaves all
 15 worker/public-API intersection modules native. `328917c` and `70ad922`, their
@@ -18,8 +18,8 @@ The new fix is in `map-registration.mjs`, an external probe helper imported by
 a banner in the new bundle. It uses native Vite 8.3.5's public ModuleRunner
 `retrieveSourceMap` option with an empty, non-fetching graph. It does not modify
 Vitest, redirect APIs/evaluators/mocks, replace Error.stack, or enable Node's
-process-wide source-map mode. Vite performs frame mapping; full-URI fidelity
-still fails in this revision.
+process-wide source-map mode. Vite performs frame mapping; the adapter only
+normalizes validated map source locations for that pinned consumer.
 The banner registers before worker bootstrap execution, avoiding a cached null
 map on the first thrown frame. All literal lazy framework imports remain native
 and lazy, with resolution relative to their original importer.
