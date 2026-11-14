@@ -3,6 +3,8 @@
   "packages/vitest-adapter/shared-lanes.ts": "eaa78ec2f62be90ea6fa6ebf85ac9d74351de80b81328355aeb65a5d675150b3",
   "benchmarks/experiments/vitest5-private-bootstrap/integration.mjs": "edafb91f7925425107911140943ee40594e351dec243c0be763bdf99a906d17f",
   "benchmarks/experiments/vitest5-private-bootstrap/test-integration.mjs": "fbc33dfd61e0d8cf01dcb1eecc8c9d671ea462bc20074a1c80727b17f36b5705",
-  "benchmarks/experiments/vitest5-private-bootstrap/correctness.py": "0d745c196c5496e7189cd72eee42a887e095b7cefb939dcbbc7c784fdc98c318",
-  ".github/workflows/w13-product-correctness.yml": "ab4ee8ee4e3ace824def08e261bcefb74ff7ac1917c28334d4fc90077f257559"
+  "benchmarks/experiments/vitest5-private-bootstrap/correctness.py": "fd9be3c77706f75a64b6fc9b437d5a737b70d7b56c53e8ae83c54e50e2d74426",
+  ".github/workflows/w13-product-correctness.yml": "5ddcff1a408552f7de8026e36eeda061a91c7ed56e65868c26fe2ed60eefb2c9",
+  "benchmarks/experiments/vitest5-private-bootstrap/test-correctness.py": "5eaa62bc236740e56b7a0d1b553ea248002a3c91f9117dcae0dabb07a2cac276",
+  "benchmarks/experiments/vitest5-private-bootstrap/stock-gate-fixture.json": "3e26264f1ba8a85ed3db4d13945c618b8bdf994c55fe994d4a434111d4ca6892"
 }

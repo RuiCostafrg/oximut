@@ -1,0 +1,10 @@
+{
+  "run": "https://github.com/RuiCostafrg/oximut/actions/runs/43649350205",
+  "head": "55c44d070983e27ae01604f4b6966fd1c703fd67",
+  "integration": "passed",
+  "isolatedBuilds": "passed; both raw binary hashes verify",
+  "ordinaryAndStockColord2": "ran; stock report complete, 10 mutants, 102 baseline tests",
+  "failure": "New harness called nonexistent disabled_validation_errors instead of existing phase_errors",
+  "notRun": "Stryker, candidate and remaining configs",
+  "fix": "Call existing unchanged phase_errors through tested wiring; three local tests verify actual captured stock ledger and reject corrupted ledger/admission/workers. No threshold relaxed."
+}

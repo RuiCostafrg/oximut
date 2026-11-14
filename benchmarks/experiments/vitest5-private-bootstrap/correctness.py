@@ -19,6 +19,11 @@ STOCK = '5dfd17e'  # resolved and pinned to the full SHA in the build metadata
 sha = workload.measurement.file_hash
 
 
+def validate_oximut_gates(row, manifest, workers):
+    assert not workload.parallelism_errors(row, workers), 'Matched concurrency/admission gate failed'
+    assert not campaign.phase_errors(row, manifest), 'Original/instrumented baseline validation ledger failed'
+
+
 def main(args):
     output = args.output.resolve(); output.mkdir()
     result = {'status': 'incomplete', 'policy': 'Correctness only: one run per configuration, no ratios/CIs/score; existing scope, sentinel, build and budget gates unchanged', 'configs': []}
@@ -69,8 +74,7 @@ def main(args):
                     assert not row.get('memory_errors') and row['memory_method']=='sum-live-smaps_rollup-rss'
                     assert not campaign.reap_descendants(),'Unexpected remaining descendant after command'
                     if tool=='oximut':
-                        assert not workload.parallelism_errors(row,workers),'Matched concurrency/admission gate failed'
-                        assert not campaign.disabled_validation_errors(row,manifest),'Original/instrumented baseline validation ledger failed'
+                        validate_oximut_gates(row,manifest,workers)
                     row['success']=True;rows[label]=row;m6.write_json(directory/'validated.json',row)
                 for label in ['stock','candidate']:
                     assert len(rows[label]['mutations'])==expected_count

@@ -153,3 +153,26 @@ entire setup command, not treat that diagnostic duration or any omitted prefix/
 suffix, extraction, validation or trace I/O as free.
 
 The automatically triggered unchanged standalone structural workflow is completed/success: https://github.com/RuiCostafrg/oximut/actions/runs/43648236524 (head 6d877f0fa3dd0fef5304f04d793bd17b681891d6). This is separate from actual product equivalence.
+
+## Second native attempt: harness name wiring, not a candidate assertion
+
+[Run 43649350205](https://github.com/RuiCostafrg/oximut/actions/runs/43649350205)
+at exact head `55c44d070983e27ae01604f4b6966fd1c703fd67` passed integration and
+both isolated release builds. Ordinary Vitest and stock Oximut colord/workers2
+ran. The stock report is complete with 10 mutants and 102 baseline tests. The
+new orchestration then raised AttributeError: I called the unchanged existing
+baseline-ledger validator by a nonexistent name (`disabled_validation_errors`)
+instead of `phase_errors`. Stryker/candidate and remaining configurations never
+ran. This is not a candidate equivalence or resource-budget pass/failure.
+
+The full artifact/log ZIPs, exact source and binary hash verification, report,
+traceback and metadata are retained in `native-harness-wiring-43649350205/`.
+The actual existing `phase_errors` function is now called, with its strict rules
+unchanged. Three cheap local wiring tests use the captured stock ledger, verify
+it passes, and verify missing instrumented validation, reduced concurrency and
+admission pauses reject. Python bytecode creation is disabled for that test to
+avoid introducing generated files into the installation-validation inputs.
+Adapter, bundle helper, thresholds and all mutant/inventory/sentinel gates are
+unchanged. No local product command ran and no scored campaign was repeated.
+A separately identified native attempt is required to complete the remaining
+correctness gate; this report makes no product-qualified or performance claim.

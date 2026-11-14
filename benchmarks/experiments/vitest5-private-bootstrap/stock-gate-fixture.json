@@ -1,0 +1,32 @@
+{
+  "cwd": "/home/runner/work/_temp/w13-product/qualification/colord-2w/stock/project",
+  "resources": {
+    "effectiveWorkers": 2,
+    "admissionPauses": 0,
+    "phaseWallMs": {
+      "finalInputValidation": 0.00025,
+      "inputAndSchedulerPreparation": 2.7402960000000003,
+      "instrumentedBaseline": 434.363835,
+      "mutationExecution": 1124.99506,
+      "mutationPlanning": 0.107332,
+      "originalBaseline": 802.861495,
+      "postBaselineValidation": 0.0003,
+      "teardown": 45.194368999999995
+    },
+    "disabledValidationRuns": [
+      {
+        "coverage": true,
+        "files": [
+          "/home/runner/work/_temp/w13-product/qualification/colord-2w/stock/project/src/extend.ts",
+          "/home/runner/work/_temp/w13-product/qualification/colord-2w/stock/project/src/manipulate/invert.ts",
+          "/home/runner/work/_temp/w13-product/qualification/colord-2w/stock/project/src/manipulate/lighten.ts",
+          "/home/runner/work/_temp/w13-product/qualification/colord-2w/stock/project/src/manipulate/mix.ts",
+          "/home/runner/work/_temp/w13-product/qualification/colord-2w/stock/project/src/manipulate/saturate.ts"
+        ],
+        "run": "instrumentedBaseline",
+        "wallMs": 433.094153
+      }
+    ]
+  },
+  "provenance": "Subset from unchanged raw stock main5df17e report and observation in native run43649350205 artifact; complete raw preserved separately."
+}

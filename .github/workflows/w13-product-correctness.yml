@@ -33,6 +33,7 @@ jobs:
           git archive HEAD Cargo.toml Cargo.lock rust-toolchain.toml crates experiments/oxc-smoke packages/vitest-adapter benchmarks/experiments/vitest5-private-bootstrap benchmarks/real-project/colord benchmarks/real_project.py benchmarks/run.py benchmarks/m6.py benchmarks/compare_candidates.py benchmarks/targets.py benchmarks/results/2026-11-14-w13-map-base/native/runtime-provenance.json package.json package-lock.json .node-version .github/workflows/w13-product-correctness.yml | gzip > "$RUNNER_TEMP/w13-product/source.tar.gz"
       - name: Install and check types
         run: |
+          python3 benchmarks/experiments/vitest5-private-bootstrap/test-correctness.py > "$RUNNER_TEMP/w13-product/harness-wiring.stdout.log" 2> "$RUNNER_TEMP/w13-product/harness-wiring.stderr.log"
           npm ci --ignore-scripts --no-audit --no-fund > "$RUNNER_TEMP/w13-product/install.stdout.log" 2> "$RUNNER_TEMP/w13-product/install.stderr.log"
           npm run typecheck > "$RUNNER_TEMP/w13-product/typecheck.stdout.log" 2> "$RUNNER_TEMP/w13-product/typecheck.stderr.log"
       - name: Real adapter integration before any product run
