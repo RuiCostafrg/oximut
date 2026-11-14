@@ -1043,6 +1043,13 @@ impl Budget {
                 "review wallNs and CPU failure counters; null CPU totals mean incomplete evidence";
         }
         self.accounting_diagnostics = profile.into_inner();
+        if force {
+            // A forced sample is as fresh as a periodic one when it finishes.
+            // Timing the next periodic sample from its start would make a slow
+            // forced sample (job completion) trigger an immediate, redundant
+            // exact periodic sample in front of the next dispatch.
+            self.last_sample = Instant::now();
+        }
         if let Err(error) = observed
             && self.exhaustion.is_none()
         {
@@ -1257,6 +1264,46 @@ mod tests {
         assert_eq!(state.broad_discoveries, 1);
         assert_eq!(state.capacity(&[]), 0);
         assert!(state.exhaustion.is_some());
+    }
+
+    #[test]
+    fn a_slow_forced_sample_defers_the_next_periodic_sample_from_its_end() {
+        let cli = std::process::id();
+        let identity = move |pid: u32| Ok(Some((if pid == cli { 0 } else { cli }, u64::from(pid))));
+        let mut state = budget();
+        // The forced sample outlasts the whole sampling interval.
+        state.sample_with_readers(
+            &[],
+            true,
+            || {
+                std::thread::sleep(Duration::from_millis(SAMPLE_MS + 20));
+                ProcessTable::collect([Ok(Some(cli))], identity)
+            },
+            identity,
+            |_| Ok(Some(MIB)),
+        );
+        assert_eq!(state.samples, 1);
+        assert!(state.exhaustion.is_none());
+        // Timed from its start, a periodic sample would be due again at once.
+        assert!(state.next_sample_at() > Instant::now() + Duration::from_millis(SAMPLE_MS / 2));
+        state.sample_with_readers(
+            &[],
+            false,
+            || panic!("a periodic sample right after a forced one must not discover"),
+            identity,
+            |_| Ok(Some(MIB)),
+        );
+        assert_eq!(state.samples, 1);
+        // The interval still elapses: a later periodic sample is taken.
+        state.last_sample = Instant::now() - Duration::from_millis(SAMPLE_MS);
+        state.sample_with_readers(
+            &[],
+            false,
+            || ProcessTable::collect([Ok(Some(cli))], identity),
+            identity,
+            |_| Ok(Some(MIB)),
+        );
+        assert_eq!(state.samples, 2);
     }
 
     #[test]
