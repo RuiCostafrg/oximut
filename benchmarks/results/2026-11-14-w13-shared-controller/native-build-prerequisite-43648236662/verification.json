@@ -1,0 +1,9 @@
+{
+  "head": "6d877f0fa3dd0fef5304f04d793bd17b681891d6",
+  "run": "https://github.com/RuiCostafrg/oximut/actions/runs/43648236662",
+  "integration": "passed with unchanged 25s IPC bound; 12 observed distinct worker PIDs; inactive/A/B/A and timeout matched stock",
+  "validationWallMs": 1744.199592,
+  "productGate": "not executed",
+  "failure": "Stock source archive omitted workspace member experiments/oxc-smoke; Cargo could not load workspace before compiling",
+  "response": "Preserve attempt, add that declared workspace member to source archive and verify all workspace manifests. No Rust, adapter, threshold or experiment relaxation."
+}

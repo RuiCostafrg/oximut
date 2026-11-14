@@ -1,0 +1,22 @@
+{
+  "artifact.zip": {
+    "w13-product-raw.tar.gz": "c31e98aed7bdf3daf0418816654961a7ff7992298f8fa5a0a38be863458748df",
+    "w13-product-files.json": "b609f6c8a6f6b0b8453d13aaf3f21790274b24e2689f1f23ec866d553d2e9457"
+  },
+  "logs.zip": {
+    "0_correctness.txt": "47413b8c9c962319b672aa04d24539c8e7c7ac6d259c02f3f1f18e25f91a0561",
+    "correctness/system.txt": "e63fb0e1d163efcc3e69e5333c3347d4e7311801726a946b0f297a39f951bbd7",
+    "correctness/1_Set up job.txt": "561255644c1ee516b64212b889c3f8d18db61a489c0484fca0a36cd0c182de4b",
+    "correctness/2_Run actions_checkout@3d3c42e5aac5ba805825da76410c181273ba90b1.txt": "b36a92833784ae138c3c4b2cfe9594baf4df8c550b760f1eefc3022ce96bb28c",
+    "correctness/3_Run actions_setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1.txt": "66c6ccde2d3ab33f23d80b5a4d4946615a3e1aedfea3aad169ce69328ecd8fe2",
+    "correctness/4_Run dtolnay_rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8.txt": "908763339d064514ef4f308776b555c0e1f635eb5019f872adf9b5f2a299aa2c",
+    "correctness/5_Preserve source before prerequisites.txt": "414c2262b93d75c7f3836df3a6a7d643947a7b293b9ba7bdbabe651e5d8eeb8c",
+    "correctness/6_Install and check types.txt": "4a8e0afa7955bab8cee2e2fef80cf7a3a69c105e034cc5b709869421a2ee6ad8",
+    "correctness/7_Real adapter integration before any product run.txt": "9ea27aa93aef6a9a00f583f42c8c0110146ffc16ac8d4a75f9d6527b9fb121f0",
+    "correctness/8_Build exact stock and experiment into isolated targets.txt": "b17588bb48351663f5ca2e93135d7b2800a4c17061a50924e66e30b01c399a03",
+    "correctness/10_Preserve full raw evidence without dependency-directory symlinks.txt": "3075d8a1fcdd1c8f1d3f746e1c740260b4020e73996c5b2bbe18a6e51e27327c",
+    "correctness/11_Run actions_upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9.txt": "172922202646483236340259d45ecfaca856daaf5d0132d2ab817f1f58a65910",
+    "correctness/22_Post Run actions_checkout@3d3c42e5aac5ba805825da76410c181273ba90b1.txt": "1c4a3f00bedce6bf82f3362221b1d369ca138d8c0f0b3ecc27bfa402136a932b",
+    "correctness/23_Complete job.txt": "4a9508fd490357852da96c99b4f87aa68b5d38ccb8a5854f7479201eeea213d6"
+  }
+}

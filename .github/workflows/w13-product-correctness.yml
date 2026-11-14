@@ -30,7 +30,7 @@ jobs:
         run: |
           mkdir "$RUNNER_TEMP/w13-product"
           git rev-parse HEAD > "$RUNNER_TEMP/w13-product/commit.txt"
-          git archive HEAD Cargo.toml Cargo.lock rust-toolchain.toml crates packages/vitest-adapter benchmarks/experiments/vitest5-private-bootstrap benchmarks/real-project/colord benchmarks/real_project.py benchmarks/run.py benchmarks/m6.py benchmarks/compare_candidates.py benchmarks/targets.py benchmarks/results/2026-11-14-w13-map-base/native/runtime-provenance.json package.json package-lock.json .node-version .github/workflows/w13-product-correctness.yml | gzip > "$RUNNER_TEMP/w13-product/source.tar.gz"
+          git archive HEAD Cargo.toml Cargo.lock rust-toolchain.toml crates experiments/oxc-smoke packages/vitest-adapter benchmarks/experiments/vitest5-private-bootstrap benchmarks/real-project/colord benchmarks/real_project.py benchmarks/run.py benchmarks/m6.py benchmarks/compare_candidates.py benchmarks/targets.py benchmarks/results/2026-11-14-w13-map-base/native/runtime-provenance.json package.json package-lock.json .node-version .github/workflows/w13-product-correctness.yml | gzip > "$RUNNER_TEMP/w13-product/source.tar.gz"
       - name: Install and check types
         run: |
           npm ci --ignore-scripts --no-audit --no-fund > "$RUNNER_TEMP/w13-product/install.stdout.log" 2> "$RUNNER_TEMP/w13-product/install.stderr.log"
@@ -52,7 +52,13 @@ jobs:
           set -euo pipefail
           stock="$RUNNER_TEMP/w13-stock"
           mkdir "$stock"
-          git archive 5dfd17e Cargo.toml Cargo.lock rust-toolchain.toml crates packages/vitest-adapter package.json package-lock.json | tar -x -C "$stock"
+          git archive 5dfd17e Cargo.toml Cargo.lock rust-toolchain.toml crates experiments/oxc-smoke packages/vitest-adapter package.json package-lock.json | tar -x -C "$stock"
+          python3 - <<'PY'
+          import os,pathlib,tomllib
+          stock=pathlib.Path(os.environ['RUNNER_TEMP'])/'w13-stock'
+          workspace=tomllib.loads((stock/'Cargo.toml').read_text())['workspace']['members']
+          assert all((stock/member/'Cargo.toml').is_file() for member in workspace),'Every pinned workspace member must be archived before building'
+          PY
           ln -s "$GITHUB_WORKSPACE/node_modules" "$stock/node_modules"
           cargo build --manifest-path "$stock/Cargo.toml" --target-dir "$RUNNER_TEMP/w13-stock-target" --locked --release -p oximut-cli > "$RUNNER_TEMP/w13-product/build-stock.stdout.log" 2> "$RUNNER_TEMP/w13-product/build-stock.stderr.log"
           cargo build --target-dir "$RUNNER_TEMP/w13-candidate-target" --locked --release -p oximut-cli > "$RUNNER_TEMP/w13-product/build-candidate.stdout.log" 2> "$RUNNER_TEMP/w13-product/build-candidate.stderr.log"

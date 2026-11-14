@@ -1,0 +1,11 @@
+info: syncing channel updates for 1.96.0-x86_64-unknown-linux-gnu
+info: latest update on 2026-05-28 for version 1.96.0 (ac68faa20 2026-05-25)
+info: downloading 2 components
+[1m[91merror[0m: failed to load manifest for workspace member `/home/runner/work/_temp/w13-stock/experiments/oxc-smoke`
+referenced by workspace at `/home/runner/work/_temp/w13-stock/Cargo.toml`
+
+Caused by:
+  failed to read `/home/runner/work/_temp/w13-stock/experiments/oxc-smoke/Cargo.toml`
+
+Caused by:
+  No such file or directory (os error 2)

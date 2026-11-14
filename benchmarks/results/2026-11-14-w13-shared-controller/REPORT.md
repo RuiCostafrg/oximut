@@ -119,3 +119,37 @@ The next justified scoring plan exists only after this exact correctness gate
 passes: a separately authorized unprofiled paired campaign accounting for setup,
 per-controller/worker validation, trace overhead and full tree CPU/RSS, with
 unchanged wall <=0.50x and CPU/RSS <=0.80x Stryker targets. No such scoring now.
+
+## First native attempt and corrected prerequisite
+
+[Run 43648236662](https://github.com/RuiCostafrg/oximut/actions/runs/43648236662)
+at exact head `6d877f0fa3dd0fef5304f04d793bd17b681891d6` passed the real
+m2/shared-lane integration test with the original 25-second IPC bound. Its
+fixture took about 11.5 seconds total; completed controller validation recorded
+1,744 ms. Stock/candidate original baseline and inactive/A/B/A/timeout outcomes
+matched. Twelve observed PID/realm identities were distinct, five candidate
+forks actually used the prepared entry, and full-file fallback/URI assertions
+passed. This resolves the local initialization timeout on the native fixture
+without weakening the bound. It does not prove product-colord correctness.
+
+The workflow then failed BEFORE compiling stock because the source archive
+omitted the Cargo workspace member `experiments/oxc-smoke`. All product cases
+were skipped. Complete raw artifact/log ZIPs, hashes, exact source equality and
+a verification summary are retained in `native-build-prerequisite-43648236662/`.
+GitHub's artifact digest `afa4ba69dca1381cc0a3012cf114b7b2971e8b7bd4cd3c5bf4e5c3eda1a35786`
+matches the recovered ZIP. The omitted workspace is a build prerequisite error,
+not a candidate semantic failure; no campaign had run.
+
+The sole follow-up correction adds the declared workspace member to both source
+archives and asserts every workspace manifest exists before cargo. Adapter,
+experiment, thresholds, dependency pins and metric gates are unchanged. A new
+workflow-file push reruns that corrected prerequisite and proceeds only if all
+original gates pass. This is not a blind product campaign retry. Result pending.
+
+Preparation timing scope is narrower than full end-to-end setup: the recorded
+prepare wall/CPU starts after initial module/version checks and mkdir, and ends
+before the final metadata write. Future performance accounting must time the
+entire setup command, not treat that diagnostic duration or any omitted prefix/
+suffix, extraction, validation or trace I/O as free.
+
+The automatically triggered unchanged standalone structural workflow is completed/success: https://github.com/RuiCostafrg/oximut/actions/runs/43648236524 (head 6d877f0fa3dd0fef5304f04d793bd17b681891d6). This is separate from actual product equivalence.
