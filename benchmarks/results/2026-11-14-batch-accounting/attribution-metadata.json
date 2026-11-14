@@ -1,0 +1,11 @@
+{
+  "source_commit": "ab6239f786a83bfbb7ee4c4faa1ab275137f7835",
+  "source_branch": "perf/pipelined-batches (PR #66 head)",
+  "instrumentation": "attribution.patch",
+  "binary_sha256": "9c906bbd0f5de8a1e0aa34518b91fe614e2a746f1cfac8d714334948e16030e0",
+  "host": "Linux localhost 6.17.0-PRoot-Distro #1 SMP PREEMPT_DYNAMIC Fri, 10 Oct 2025 00:00:00 +0000 aarch64 GNU/Linux (no CONFIG_PROC_CHILDREN: /proc/<pid>/task/<tid>/children absent)",
+  "node": "v26.3.1",
+  "command": "OXIMUT_BATCH_GAP_TRACE=<dir> python3 benchmarks/real_project.py --workload colord-scale --binary <instrumented release oximut> --adapter-source-dir packages/vitest-adapter --concurrency 2 --tools oximut --warmups 0 --repetitions 1 --output <dir> --timeout 1200 --defer-ratios",
+  "summarize": "python3 benchmarks/results/2026-11-14-batch-accounting/summarize.py <trace dir> 0 1 49 99",
+  "scope": "One overhead-bearing ARM capture, Oximut only; not a paired/scored comparison."
+}

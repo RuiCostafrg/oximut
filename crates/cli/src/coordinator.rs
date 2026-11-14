@@ -100,7 +100,7 @@ fn owned() -> Result<BTreeMap<u32, u64>, String> {
         });
         strict_owned(
             pids,
-            |pid| fs::read_to_string(format!("/proc/{pid}/stat")),
+            |pid| processes::read_proc(format!("/proc/{pid}/stat")),
             std::process::id(),
         )
     };

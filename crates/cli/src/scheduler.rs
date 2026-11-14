@@ -29,12 +29,59 @@ fn install_signals() {
 /// state, so nothing is synced to disk; `options.json` stays a file because
 /// it is written once when the slot starts, not per job.
 const RUN: u8 = b'R';
+/// A RUN whose lanes repeat the batch's resident modules (the same shared set,
+/// which every lane carries so the adapter can validate them identical): the
+/// lanes' copies are left out of the frame and restored by the slot.
+const RUN_LANES: u8 = b'L';
 const WARM: u8 = b'W';
 const STOP: u8 = b'S';
 const RESPONSE: u8 = b'A';
 const SHUTDOWN: u8 = b'D';
 /// Requests keep the adapter's 8 MiB limit.
 const MAX_REQUEST: usize = 8 * 1024 * 1024;
+
+/// The frame for a job. Lane batches whose every lane holds the very same
+/// resident set (by identity, never by comparing content) travel with the set
+/// once instead of once more per lane; nothing else changes on the wire.
+fn encode_request(index: usize, request: &Request) -> Result<(u8, Vec<u8>), String> {
+    if index == WARM_JOB {
+        return Ok((
+            WARM,
+            serde_json::to_vec(request).map_err(|e| e.to_string())?,
+        ));
+    }
+    let shared = match (&request.resident, &request.lanes) {
+        (Some(set), Some(lanes)) => lanes
+            .iter()
+            .all(|lane| lane.resident.as_ref().is_some_and(|r| Arc::ptr_eq(r, set))),
+        _ => false,
+    };
+    if !shared {
+        return Ok((RUN, serde_json::to_vec(request).map_err(|e| e.to_string())?));
+    }
+    let mut wire = request.clone();
+    for lane in wire.lanes.iter_mut().flatten() {
+        lane.resident = None;
+    }
+    Ok((
+        RUN_LANES,
+        serde_json::to_vec(&wire).map_err(|e| e.to_string())?,
+    ))
+}
+
+/// Inverse of `encode_request` for `RUN_LANES`: every lane takes the batch's
+/// resident set. A frame whose lanes already carry one is malformed.
+fn restore_lane_resident(request: &mut Request) -> Result<(), String> {
+    let (Some(set), Some(lanes)) = (&request.resident, &mut request.lanes) else {
+        return Err("malformed scheduler request".into());
+    };
+    for lane in lanes {
+        if lane.resident.replace(set.clone()).is_some() {
+            return Err("malformed scheduler request".into());
+        }
+    }
+    Ok(())
+}
 
 fn frame(tag: u8, payload: &[u8]) -> Vec<u8> {
     let mut bytes = Vec::with_capacity(payload.len() + 5);
@@ -192,8 +239,8 @@ impl Worker {
     }
     fn send(&mut self, index: usize, request: Request) -> Result<(), String> {
         assert!(self.busy.is_none() && self.pending.is_empty());
-        let payload = serde_json::to_vec(&request).map_err(|e| e.to_string())?;
-        self.pending = frame(if index == WARM_JOB { WARM } else { RUN }, &payload);
+        let (tag, payload) = encode_request(index, &request)?;
+        self.pending = frame(tag, &payload);
         self.busy = Some((index, request, Instant::now()));
         self.flush().map_err(|error| error.to_string())
     }
@@ -320,10 +367,67 @@ fn lane_batch(batch: &[(usize, Request)], width: usize) -> Request {
 }
 
 /// Encoded size of a batch holding just this request.
+#[cfg(test)]
 fn one_lane_len(request: &Request) -> usize {
     let mut wrapped = request.clone();
     wrapped.lanes = Some(vec![request.clone()]);
     encoded_len(&wrapped)
+}
+
+/// Exact encoded sizes of requests that share their resident modules.
+///
+/// Every request of a run repeats the same resident module set (megabytes),
+/// and lane assembly measures each candidate. Serializing that set once per
+/// request, per lane and per batch dominated assembly, so its size is taken
+/// once per set and added arithmetically: a present `resident` member costs
+/// one comma, its key and its value, and nothing otherwise.
+#[derive(Default)]
+struct RequestSizes {
+    /// Holds the set, so its address cannot be reused while cached.
+    resident: Option<(Arc<Vec<Mutation>>, usize)>,
+}
+impl RequestSizes {
+    const RESIDENT_MEMBER: usize = 1 + "\"resident\":".len();
+    /// `"lanes":[` + `]` and the comma that follows the lanes member.
+    const LANES_MEMBER: usize = "\"lanes\":[".len() + 1 + 1;
+
+    fn resident_len(&mut self, set: &Arc<Vec<Mutation>>) -> usize {
+        if let Some((cached, len)) = &self.resident
+            && Arc::ptr_eq(cached, set)
+        {
+            return *len;
+        }
+        let len = encoded_len(&**set);
+        self.resident = Some((set.clone(), len));
+        len
+    }
+    /// What `encoded_len(request)` would return.
+    fn request_len(&mut self, request: &mut Request) -> usize {
+        let Some(set) = request.resident.take() else {
+            return encoded_len(&*request);
+        };
+        let rest = encoded_len(&*request);
+        request.resident = Some(set.clone());
+        rest.saturating_add(Self::RESIDENT_MEMBER)
+            .saturating_add(self.resident_len(&set))
+    }
+    /// What `one_lane_len(request)` would return.
+    fn one_lane_len(&mut self, request: &mut Request) -> usize {
+        let one = self.request_len(request);
+        one.saturating_mul(2).saturating_add(Self::LANES_MEMBER)
+    }
+    /// Whether two requests carry the same resident modules, as encoded
+    /// (equal sizes) and by file.
+    fn same_resident(&mut self, a: &Request, b: &Request) -> bool {
+        match (&a.resident, &b.resident) {
+            (None, None) => true,
+            (Some(a), Some(b)) => {
+                (Arc::ptr_eq(a, b) || self.resident_len(a) == self.resident_len(b))
+                    && a.iter().map(|m| &m.file).eq(b.iter().map(|m| &m.file))
+            }
+            _ => false,
+        }
+    }
 }
 fn exhausted(request: &Request, reason: &str) -> Response {
     if reason.starts_with("scheduler worker exited") {
@@ -795,9 +899,11 @@ impl<'a> Scheduler<'a> {
             let total = jobs.len();
             let mut width = None;
             let mut pending: VecDeque<_> = jobs.into();
+            let mut sizes = RequestSizes::default();
             while let Some(first) = pending.pop_front() {
                 // A request too large to wrap in a lane batch still runs normally.
-                let mut encoded = one_lane_len(&first.1);
+                let mut first = first;
+                let mut encoded = sizes.one_lane_len(&mut first.1);
                 if encoded > MAX_LANE_BATCH {
                     self.retire_lane_controllers();
                     for (index, response) in self.dispatch(VecDeque::from([first]), false) {
@@ -819,22 +925,13 @@ impl<'a> Scheduler<'a> {
                 let limit = self.budget.baseline_fork_limit(capacity, &pids);
                 let width = *width.get_or_insert(self.slots.len().min(total).min(limit));
                 while batch.len() < limit.min(width) {
-                    let Some(next) = pending.front() else { break };
-                    if encoded_len(&next.1.resident) != encoded_len(&batch[0].1.resident)
-                        || next
-                            .1
-                            .resident
-                            .as_ref()
-                            .map(|r| r.iter().map(|m| &m.file).collect::<Vec<_>>())
-                            != batch[0]
-                                .1
-                                .resident
-                                .as_ref()
-                                .map(|r| r.iter().map(|m| &m.file).collect::<Vec<_>>())
-                    {
+                    let Some(next) = pending.front_mut() else {
+                        break;
+                    };
+                    if !sizes.same_resident(&next.1, &batch[0].1) {
                         break;
                     }
-                    let lane = encoded_len(&next.1) + 1;
+                    let lane = sizes.request_len(&mut next.1) + 1;
                     if encoded + lane > MAX_LANE_BATCH {
                         break;
                     }
@@ -1029,7 +1126,10 @@ fn serve(mut channel: UnixStream, options: &Options) -> Result<(), String> {
             }
             Some(frame) => frame,
         };
-        let request = serde_json::from_slice(&payload).map_err(|e| e.to_string())?;
+        let mut request: Request = serde_json::from_slice(&payload).map_err(|e| e.to_string())?;
+        if tag == RUN_LANES {
+            restore_lane_resident(&mut request)?;
+        }
         let response = match tag {
             WARM => {
                 if session.is_none() {
@@ -1042,7 +1142,7 @@ fn serve(mut channel: UnixStream, options: &Options) -> Result<(), String> {
                     _ => infrastructure(&request, "warm requires native coordinator"),
                 }
             }
-            RUN => execute_local(options, &request, &mut session),
+            RUN | RUN_LANES => execute_local(options, &request, &mut session),
             _ => return Err("malformed scheduler request".into()),
         };
         let bytes = serde_json::to_vec(&response).map_err(|e| e.to_string())?;
@@ -1159,6 +1259,127 @@ mod tests {
         assert!(scheduler.dispatch(VecDeque::new(), true).is_empty());
         assert!(scheduler.slots[1].as_ref().unwrap().busy.is_some());
         assert_eq!(scheduler.budget.active, 0);
+    }
+
+    #[test]
+    fn lanes_sharing_one_resident_set_travel_with_it_once() {
+        let module = |name: &str| Mutation {
+            id: "__oximut_resident__".into(),
+            file: format!("/p/{name}.ts"),
+            code: "c".repeat(10_000),
+            map: serde_json::json!({"version": 3, "sources": [], "mappings": ""}),
+        };
+        let set = Arc::new(vec![module("a"), module("b")]);
+        let lane = |id: &str, resident: Option<Arc<Vec<Mutation>>>| {
+            let mut job = request();
+            job.job_id = id.into();
+            job.kind = "mutant".into();
+            job.resident = resident;
+            job
+        };
+        let batch = |lanes: Vec<Request>| {
+            let mut top = lanes[0].clone();
+            top.lanes = Some(lanes);
+            top
+        };
+        let shared = batch(vec![
+            lane("1", Some(set.clone())),
+            lane("2", Some(set.clone())),
+        ]);
+        let (tag, payload) = encode_request(0, &shared).unwrap();
+        assert_eq!(tag, RUN_LANES);
+        let full = serde_json::to_vec(&shared).unwrap();
+        assert!(
+            payload.len() * 2 < full.len() + 30_000,
+            "{} {}",
+            payload.len(),
+            full.len()
+        );
+        // The slot restores exactly what the scheduler had.
+        let mut received: Request = serde_json::from_slice(&payload).unwrap();
+        assert!(
+            received
+                .lanes
+                .as_ref()
+                .unwrap()
+                .iter()
+                .all(|l| l.resident.is_none())
+        );
+        restore_lane_resident(&mut received).unwrap();
+        assert_eq!(serde_json::to_vec(&received).unwrap(), full);
+        assert!(received.lanes.iter().flatten().all(|l| Arc::ptr_eq(
+            l.resident.as_ref().unwrap(),
+            received.resident.as_ref().unwrap()
+        )));
+        // Equal content under another allocation is never assumed identical,
+        // so the adapter keeps validating such a batch itself.
+        let copy = Arc::new(set.as_ref().clone());
+        for lanes in [
+            vec![lane("1", Some(set.clone())), lane("2", Some(copy))],
+            vec![lane("1", Some(set.clone())), lane("2", None)],
+        ] {
+            let mut mixed = batch(lanes);
+            mixed.resident = Some(set.clone());
+            let (tag, payload) = encode_request(0, &mixed).unwrap();
+            assert_eq!(tag, RUN);
+            assert_eq!(payload, serde_json::to_vec(&mixed).unwrap());
+        }
+        // No lanes, no resident modules, or a warm job: unchanged frames.
+        let mut plain = lane("1", Some(set.clone()));
+        assert_eq!(encode_request(0, &plain).unwrap().0, RUN);
+        assert_eq!(encode_request(WARM_JOB, &shared).unwrap().0, WARM);
+        plain.resident = None;
+        let mut none = batch(vec![lane("1", None)]);
+        none.resident = None;
+        assert_eq!(encode_request(0, &none).unwrap().0, RUN);
+        // A frame whose lanes already hold modules, or that has none to
+        // share, is malformed.
+        let mut bad: Request =
+            serde_json::from_slice(&serde_json::to_vec(&shared).unwrap()).unwrap();
+        assert!(restore_lane_resident(&mut bad).is_err());
+        let mut bad = batch(vec![lane("1", None)]);
+        assert!(restore_lane_resident(&mut bad).is_err());
+        assert!(restore_lane_resident(&mut request()).is_err());
+    }
+
+    #[test]
+    fn cached_resident_sizes_equal_the_encoded_sizes() {
+        let module = |name: &str, code: &str| Mutation {
+            id: "__oximut_resident__".into(),
+            file: format!("/p/{name}.ts"),
+            code: code.into(),
+            map: serde_json::json!({"version": 3, "sources": ["é\"x"], "mappings": ""}),
+        };
+        let set = Arc::new(vec![module("a", "a = 1"), module("b", &"é\n".repeat(500))]);
+        let mut sizes = RequestSizes::default();
+        for resident in [
+            None,
+            Some(set.clone()),
+            Some(Arc::new(vec![module("c", "")])),
+        ] {
+            for mutation in [None, Some(module("m", "x"))] {
+                let mut job = request();
+                job.resident = resident.clone();
+                job.mutation = mutation;
+                assert_eq!(sizes.request_len(&mut job), encoded_len(&job));
+                assert_eq!(sizes.one_lane_len(&mut job), one_lane_len(&job));
+                assert_eq!(job.resident.is_some(), resident.is_some(), "restored");
+            }
+        }
+        // Equal sets by file and size match; a different file or size does not.
+        let (mut a, mut b) = (request(), request());
+        a.resident = Some(set.clone());
+        b.resident = Some(Arc::new(set.as_ref().clone()));
+        assert!(sizes.same_resident(&a, &b));
+        b.resident = Some(Arc::new(vec![module("a", "a = 2"), set[1].clone()]));
+        assert!(sizes.same_resident(&a, &b), "same size and files");
+        b.resident = Some(Arc::new(vec![module("a", "a = 22"), set[1].clone()]));
+        assert!(!sizes.same_resident(&a, &b));
+        b.resident = Some(Arc::new(vec![module("z", "a = 1"), set[1].clone()]));
+        assert!(!sizes.same_resident(&a, &b));
+        b.resident = None;
+        assert!(!sizes.same_resident(&a, &b));
+        assert!(sizes.same_resident(&b, &b.clone()));
     }
 
     #[test]
