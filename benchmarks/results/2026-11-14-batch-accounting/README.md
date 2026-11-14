@@ -179,3 +179,19 @@ the product branch. The small/diagnostic refs were already deleted in the prior
 continuation. `wall-ratios.html` plots the scored wall intervals versus #66.
 HTML preview could not run on this host because T3 browser libraries are missing;
 no browser setup or dependency installation was performed for evidence recovery.
+
+## Independent review and remaining coverage
+
+Read-only review of product head `be2a344` against main `6cc8ce0` found no concrete
+correctness regression. Normal scheduler batching still checks expanded request
+size before compacting, and the retained Arc prevents cache-address reuse.
+Forced exact accounting still precedes response acceptance.
+
+The review does not establish an atomic memory snapshot: reads are sequential,
+and the next periodic attempt is scheduled 50 ms after a forced scan finishes.
+The M5 contract now states this timing explicitly. A handcrafted compact frame
+is bounded on the wire but is not independently bounded after restoration at
+the slot boundary; normal scheduler generation enforces the expanded limit.
+Compact transport has helper roundtrip tests, but no dedicated socket integration
+case combining restoration with deadline, EOF or resource failure. These are
+remaining hardening/coverage opportunities, not demonstrated production failures.
