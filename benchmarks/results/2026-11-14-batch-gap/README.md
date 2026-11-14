@@ -80,4 +80,45 @@ No work is attributed to a narrower function without a clock around it.
   cost is secondary to accounting and transport. Streaming lanes is deferred;
   fresh-process isolation, whole-file selection and test order are unchanged.
 
-Validation and paired GitHub Actions results are recorded below after completion.
+## Validation
+
+- `cargo test -q --release -p oximut-cli`: 94 unit + nine integration tests passed.
+- Release CLI build and the requested TypeScript typecheck: passed.
+- `PYTHONPATH=tests python3 -m unittest tests.test_native_coordinator tests.test_contract`:
+  27 passed, using `target/debug/oximut` linked to the candidate release binary.
+- Adapter tests with `--test-concurrency=1`: all 83 passed, including shared lanes.
+- Benchmark harness: initial local full run, 175 tests, had three RSS observation
+  failures (`test_measurement.CommandTests`, 50 ms children exited before a live
+  memory snapshot). All three passed on an isolated recheck after the adapter
+  suite ended. All 175 tests passed together in each Actions campaign before
+  either candidate was built. No test or measurement gate was weakened.
+- `cargo fmt --all` and `git diff --check`: passed.
+
+Commands, exit codes, and compressed logs (including the initial failures) are
+retained in `validation/`. No adapter source was changed or reverted while any
+test ran. Diagnostics are absent from the candidate binary.
+
+## Paired GitHub Actions results
+
+Median [95% bootstrap interval], one warmup and five measured rounds; correctness
+gate passed in every campaign.
+
+Candidate `d844d94` (this change on top of #64) versus main `7297840`
+(runs 43595986333, 43595989528, 43595993830):
+
+| Workload | Wall | CPU | Peak RSS |
+|---|---|---|---|
+| colord-scale, 2w | 0.796 [0.767, 0.801] | 0.924 | 1.111 [1.011, 1.131] |
+| colord-scale, 4w | 0.873 [0.860, 0.878] | 0.949 | 1.105 [1.027, 1.121] |
+| colord, 4w | 0.914 [0.860, 0.948] | 0.980 | 0.991 |
+
+Isolation: candidate `d844d94` versus #64 alone (`3c03ac4`), colord-scale
+(runs 43597205960, 43597210750):
+
+| Workload | Wall | CPU | Peak RSS |
+|---|---|---|---|
+| colord-scale, 2w | 0.968 [0.954, 0.975] | 0.980 | 1.021 [0.921, 1.086] |
+| colord-scale, 4w | 0.991 [0.969, 0.993] | 0.997 | 1.002 [0.961, 1.024] |
+
+Most of the gain versus `7297840` (and its higher peak RSS) comes from #64's
+socket hand-off; this change alone is a small, CPU- and RSS-neutral wall gain.

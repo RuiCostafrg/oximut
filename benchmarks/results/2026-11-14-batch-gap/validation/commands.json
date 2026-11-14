@@ -1,0 +1,34 @@
+{
+  "commands": {
+    "cargo-tests": "cargo test -q --release -p oximut-cli",
+    "build": "cargo build -q --release -p oximut-cli",
+    "tsc": "node node_modules/typescript/bin/tsc -p packages/vitest-adapter/tsconfig.json",
+    "python-tests": "PYTHONPATH=tests python3 -m unittest tests.test_native_coordinator tests.test_contract",
+    "adapter-tests": "node --test --test-concurrency=1 packages/vitest-adapter/test/*.test.mjs",
+    "benchmark-tests": "python3 -m unittest discover -s benchmarks/tests",
+    "rss-recheck": "PYTHONPATH=benchmarks/tests python3 -m unittest -v test_measurement.CommandTests.test_opt_in_peak_snapshot_reconciles_with_the_reported_memory_peak test_measurement.CommandTests.test_explicit_environment_controls_peak_capture_in_both_directions test_measurement.CommandTests.test_reaped_child_cpu_and_process_tree_memory_are_recorded"
+  },
+  "exit_codes": {
+    "cargo-tests": 0,
+    "build": 0,
+    "tsc": 0,
+    "python-tests": 0,
+    "adapter-tests": 0,
+    "benchmark-tests": 1,
+    "rss-recheck": 0
+  },
+  "counts": {
+    "cargo_unit": 94,
+    "cargo_integration": 9,
+    "python": 27,
+    "adapter": 83,
+    "benchmarks": 175,
+    "initial_local_rss_failures": 3,
+    "isolated_rss_recheck_passes": 3
+  },
+  "notes": [
+    "Node 26.3.1 PATH as requested.",
+    "target/debug/oximut symlinks to the candidate release CLI for the Python suites.",
+    "The three local RSS snapshot tests failed during concurrent adapter work; all passed in the isolated recheck. The unchanged full 175-test harness passed in all GitHub Actions campaigns."
+  ]
+}
