@@ -1,0 +1,26 @@
+{
+  "before_commit": "7297840df3996c9e6098afbe6d37db41b294ee0b",
+  "after_commit": "1620854c74b3eee1027659730958bbcbcdea9e3b",
+  "build_flags": "--locked --release -p oximut-cli",
+  "rustflags": null,
+  "cargo_encoded_rustflags": null,
+  "cargo_target_dirs": {
+    "before": "/home/runner/work/_temp/real-project-before-target",
+    "after": "/home/runner/work/_temp/real-project-after-target"
+  },
+  "before_source": "/home/runner/work/_temp/real-project-before",
+  "after_source": "/home/runner/work/oximut/oximut",
+  "tool_versions": {
+    "rustc": "rustc 1.96.0 (ac68faa20 2026-05-25)",
+    "cargo": "cargo 1.96.0 (30a34c682 2026-05-25)",
+    "node": "v26.3.1",
+    "npm": "11.16.0",
+    "python3": "Python 3.13.18"
+  },
+  "binary_sha256": {
+    "before": "d7c8c79db45dd9c4efc7b5b44ed047abf057e57ec1d4c6a7d3bb7b767a3c2307",
+    "after": "af15ed329b1e3bc2d86c86e5adb17f656c3d79bc666d5b3a17e9e36b20e47c1d"
+  },
+  "host": "Linux ip-10-0-135-49 7.0.0-1014-aws #14~24.04.1-Ubuntu SMP PREEMPT Fri Sep 18 21:24:59 UTC 2026 x86_64 x86_64 x86_64 GNU/Linux",
+  "timing_policy": "Both copied binaries built before timing; isolated compiled artifacts; registry downloads may be shared; no rebuilds during campaign"
+}

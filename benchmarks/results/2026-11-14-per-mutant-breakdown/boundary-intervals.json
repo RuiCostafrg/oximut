@@ -21,6 +21,7 @@
     {
       "controller": "controller-23995",
       "pid": 24221,
+      "collectionMessages": 1,
       "requestToFork": 749.2682290000002,
       "forkToStarted": 437.4119270000001,
       "startedToRun": 0.8632809999999154,
@@ -32,6 +33,7 @@
     {
       "controller": "controller-23995",
       "pid": 24222,
+      "collectionMessages": 1,
       "requestToFork": 779.5765620000002,
       "forkToStarted": 369.493958,
       "startedToRun": 0.7950000000000728,
@@ -43,6 +45,7 @@
     {
       "controller": "controller-23995",
       "pid": 24271,
+      "collectionMessages": 1,
       "requestToFork": 20.66187499999978,
       "forkToStarted": 343.34744800000044,
       "startedToRun": 0.6136449999994511,
@@ -54,6 +57,7 @@
     {
       "controller": "controller-23995",
       "pid": 24272,
+      "collectionMessages": 1,
       "requestToFork": 33.18635399999948,
       "forkToStarted": 352.571562000001,
       "startedToRun": 0.5207289999998466,
@@ -65,6 +69,7 @@
     {
       "controller": "controller-23995",
       "pid": 24285,
+      "collectionMessages": 1,
       "requestToFork": 25.351823000000877,
       "forkToStarted": 347.7686969999995,
       "startedToRun": 0.40708400000039546,
@@ -76,6 +81,7 @@
     {
       "controller": "controller-23995",
       "pid": 24286,
+      "collectionMessages": 1,
       "requestToFork": 35.024999999999636,
       "forkToStarted": 316.8626039999999,
       "startedToRun": 0.5755730000000767,
@@ -87,6 +93,7 @@
     {
       "controller": "controller-23995",
       "pid": 24303,
+      "collectionMessages": 1,
       "requestToFork": 34.6607299999996,
       "forkToStarted": 340.4321350000009,
       "startedToRun": 0.7911459999995714,
@@ -98,6 +105,7 @@
     {
       "controller": "controller-23995",
       "pid": 24304,
+      "collectionMessages": 1,
       "requestToFork": 48.67937499999971,
       "forkToStarted": 292.358021,
       "startedToRun": 0.9178130000000237,
@@ -109,6 +117,7 @@
     {
       "controller": "controller-23995",
       "pid": 24317,
+      "collectionMessages": 1,
       "requestToFork": 29.040259999999762,
       "forkToStarted": 333.71364600000015,
       "startedToRun": 2.142812000000049,
@@ -120,6 +129,7 @@
     {
       "controller": "controller-23995",
       "pid": 24318,
+      "collectionMessages": 1,
       "requestToFork": 42.96536399999968,
       "forkToStarted": 345.2186980000006,
       "startedToRun": 0.4951039999996283,
@@ -131,6 +141,7 @@
     {
       "controller": "controller-23995",
       "pid": 24331,
+      "collectionMessages": 1,
       "requestToFork": 52.51369799999884,
       "forkToStarted": 430.73541600000135,
       "startedToRun": 4.090312999998787,
@@ -142,6 +153,7 @@
     {
       "controller": "controller-23995",
       "pid": 24332,
+      "collectionMessages": 1,
       "requestToFork": 70.88432300000022,
       "forkToStarted": 407.420415999999,
       "startedToRun": 0.3330729999997857,
@@ -153,6 +165,7 @@
     {
       "controller": "controller-23995",
       "pid": 24364,
+      "collectionMessages": 1,
       "requestToFork": 40.98099000000002,
       "forkToStarted": 540.4229159999995,
       "startedToRun": 1.8546879999994417,
@@ -164,6 +177,7 @@
     {
       "controller": "controller-23995",
       "pid": 24365,
+      "collectionMessages": 1,
       "requestToFork": 59.55807300000015,
       "forkToStarted": 471.00489599999855,
       "startedToRun": 1.4370830000007118,
@@ -175,6 +189,7 @@
     {
       "controller": "controller-23995",
       "pid": 24412,
+      "collectionMessages": 1,
       "requestToFork": 52.113697000000684,
       "forkToStarted": 968.7245829999993,
       "startedToRun": 0.6360419999982696,
@@ -186,6 +201,7 @@
     {
       "controller": "controller-23995",
       "pid": 24413,
+      "collectionMessages": 1,
       "requestToFork": 77.69718700000158,
       "forkToStarted": 921.1654679999992,
       "startedToRun": 0.44369799999913084,
@@ -197,6 +213,7 @@
     {
       "controller": "controller-23995",
       "pid": 24466,
+      "collectionMessages": 1,
       "requestToFork": 97.40140599999722,
       "forkToStarted": 499.18776100000105,
       "startedToRun": 0.7156250000007276,
@@ -208,6 +225,7 @@
     {
       "controller": "controller-23995",
       "pid": 24468,
+      "collectionMessages": 1,
       "requestToFork": 119.96848999999929,
       "forkToStarted": 466.80614499999865,
       "startedToRun": 1.6273959999998624,
@@ -219,6 +237,7 @@
     {
       "controller": "controller-23995",
       "pid": 24499,
+      "collectionMessages": 1,
       "requestToFork": 26.70578100000057,
       "forkToStarted": 372.06807299999855,
       "startedToRun": 0.7335420000017621,
@@ -230,6 +249,7 @@
     {
       "controller": "controller-23995",
       "pid": 24500,
+      "collectionMessages": 1,
       "requestToFork": 41.406301999999414,
       "forkToStarted": 326.08682300000146,
       "startedToRun": 0.3951039999992645,
@@ -241,6 +261,7 @@
     {
       "controller": "controller-23995",
       "pid": 24514,
+      "collectionMessages": 1,
       "requestToFork": 33.23624999999811,
       "forkToStarted": 366.91807300000073,
       "startedToRun": 1.2630729999982577,
@@ -252,6 +273,7 @@
     {
       "controller": "controller-23995",
       "pid": 24515,
+      "collectionMessages": 1,
       "requestToFork": 42.27729099999851,
       "forkToStarted": 357.0080730000009,
       "startedToRun": 0.47567699999854085,
@@ -263,6 +285,7 @@
     {
       "controller": "controller-23995",
       "pid": 24528,
+      "collectionMessages": 1,
       "requestToFork": 28.088801999998395,
       "forkToStarted": 398.7649999999994,
       "startedToRun": 0.5323430000025837,
@@ -274,6 +297,7 @@
     {
       "controller": "controller-23995",
       "pid": 24529,
+      "collectionMessages": 1,
       "requestToFork": 35.55942700000014,
       "forkToStarted": 359.36156199999823,
       "startedToRun": 0.6774479999985488,
@@ -285,6 +309,7 @@
     {
       "controller": "controller-23995",
       "pid": 24542,
+      "collectionMessages": 1,
       "requestToFork": 42.236041999996814,
       "forkToStarted": 370.2270830000016,
       "startedToRun": 1.8993230000014591,
@@ -296,6 +321,7 @@
     {
       "controller": "controller-23995",
       "pid": 24543,
+      "collectionMessages": 2,
       "requestToFork": 54.89973999999711,
       "forkToStarted": 341.0240620000004,
       "startedToRun": 0.28385400000115624,
@@ -307,6 +333,7 @@
     {
       "controller": "controller-23995",
       "pid": 24584,
+      "collectionMessages": 1,
       "requestToFork": 32.74645800000144,
       "forkToStarted": 341.87484400000176,
       "startedToRun": 0.26718699999764794,
@@ -318,6 +345,7 @@
     {
       "controller": "controller-23995",
       "pid": 24585,
+      "collectionMessages": 1,
       "requestToFork": 45.506719000000885,
       "forkToStarted": 323.9494790000026,
       "startedToRun": 0.6534369999972114,
@@ -329,6 +357,7 @@
     {
       "controller": "controller-23995",
       "pid": 24600,
+      "collectionMessages": 1,
       "requestToFork": 44.09432300000117,
       "forkToStarted": 345.4074999999975,
       "startedToRun": 0.25197900000057416,
@@ -340,6 +369,7 @@
     {
       "controller": "controller-23995",
       "pid": 24601,
+      "collectionMessages": 1,
       "requestToFork": 51.54849000000104,
       "forkToStarted": 336.1636449999969,
       "startedToRun": 0.34630200000174227,
@@ -351,6 +381,7 @@
     {
       "controller": "controller-23995",
       "pid": 24615,
+      "collectionMessages": 1,
       "requestToFork": 37.95401000000129,
       "forkToStarted": 434.245885999997,
       "startedToRun": 1.4684369999995397,
@@ -362,6 +393,7 @@
     {
       "controller": "controller-23995",
       "pid": 24616,
+      "collectionMessages": 1,
       "requestToFork": 50.48661400000128,
       "forkToStarted": 431.79546899999696,
       "startedToRun": 1.2877600000028906,
@@ -373,6 +405,7 @@
     {
       "controller": "controller-23995",
       "pid": 24638,
+      "collectionMessages": 1,
       "requestToFork": 28.930677000000287,
       "forkToStarted": 363.764739000002,
       "startedToRun": 1.6205209999970975,
@@ -384,6 +417,7 @@
     {
       "controller": "controller-23995",
       "pid": 24639,
+      "collectionMessages": 1,
       "requestToFork": 39.41776000000027,
       "forkToStarted": 351.5713539999997,
       "startedToRun": 0.4059900000029302,
@@ -395,6 +429,7 @@
     {
       "controller": "controller-23995",
       "pid": 24652,
+      "collectionMessages": 1,
       "requestToFork": 48.99067699999796,
       "forkToStarted": 421.80380199999854,
       "startedToRun": 0.9942710000032093,
@@ -406,6 +441,7 @@
     {
       "controller": "controller-23995",
       "pid": 24653,
+      "collectionMessages": 1,
       "requestToFork": 69.88067699999738,
       "forkToStarted": 445.6079690000006,
       "startedToRun": 0.3800520000004326,
@@ -417,6 +453,7 @@
     {
       "controller": "controller-23995",
       "pid": 24678,
+      "collectionMessages": 1,
       "requestToFork": 34.79510400000072,
       "forkToStarted": 359.6690099999978,
       "startedToRun": 0.9021350000002712,
@@ -428,6 +465,7 @@
     {
       "controller": "controller-23995",
       "pid": 24679,
+      "collectionMessages": 1,
       "requestToFork": 45.01489500000025,
       "forkToStarted": 355.4446879999996,
       "startedToRun": 1.3135929999989457,
@@ -439,6 +477,7 @@
     {
       "controller": "controller-23995",
       "pid": 24692,
+      "collectionMessages": 1,
       "requestToFork": 29.377188000002207,
       "forkToStarted": 385.9194269999971,
       "startedToRun": 1.1705730000030599,
@@ -450,6 +489,7 @@
     {
       "controller": "controller-23995",
       "pid": 24693,
+      "collectionMessages": 1,
       "requestToFork": 37.449219000001904,
       "forkToStarted": 332.29916599999706,
       "startedToRun": 0.5701570000019274,
@@ -461,6 +501,7 @@
     {
       "controller": "controller-23995",
       "pid": 24731,
+      "collectionMessages": 1,
       "requestToFork": 49.435936999998376,
       "forkToStarted": 372.8818229999997,
       "startedToRun": 0.40661499999987427,
@@ -472,6 +513,7 @@
     {
       "controller": "controller-23995",
       "pid": 24732,
+      "collectionMessages": 1,
       "requestToFork": 63.89515599999868,
       "forkToStarted": 323.1842710000019,
       "startedToRun": 0.41656199999852106,
@@ -483,6 +525,7 @@
     {
       "controller": "controller-23995",
       "pid": 24746,
+      "collectionMessages": 1,
       "requestToFork": 21.445051999999123,
       "forkToStarted": 369.7612500000032,
       "startedToRun": 0.3592709999975341,
@@ -494,6 +537,7 @@
     {
       "controller": "controller-23995",
       "pid": 24747,
+      "collectionMessages": 1,
       "requestToFork": 36.8813020000016,
       "forkToStarted": 336.55062499999985,
       "startedToRun": 0.5701039999985369,
@@ -505,6 +549,7 @@
     {
       "controller": "controller-23995",
       "pid": 24760,
+      "collectionMessages": 1,
       "requestToFork": 24.967812000002596,
       "forkToStarted": 349.44145800000115,
       "startedToRun": 0.7587500000008731,
@@ -516,6 +561,7 @@
     {
       "controller": "controller-23995",
       "pid": 24761,
+      "collectionMessages": 1,
       "requestToFork": 34.23822900000232,
       "forkToStarted": 380.0758849999984,
       "startedToRun": 0.6830730000001495,
@@ -527,6 +573,7 @@
     {
       "controller": "controller-23995",
       "pid": 24776,
+      "collectionMessages": 2,
       "requestToFork": 32.173384999994596,
       "forkToStarted": 426.19072900000174,
       "startedToRun": 1.1892710000029183,
@@ -538,6 +585,7 @@
     {
       "controller": "controller-23995",
       "pid": 24777,
+      "collectionMessages": 1,
       "requestToFork": 43.971301999998104,
       "forkToStarted": 360.1372909999991,
       "startedToRun": 0.5843749999985448,
@@ -549,6 +597,7 @@
     {
       "controller": "controller-23995",
       "pid": 24809,
+      "collectionMessages": 1,
       "requestToFork": 34.421510000000126,
       "forkToStarted": 364.97645800000464,
       "startedToRun": 1.4336979999934556,
@@ -560,6 +609,7 @@
     {
       "controller": "controller-23995",
       "pid": 24810,
+      "collectionMessages": 1,
       "requestToFork": 48.63843700000143,
       "forkToStarted": 334.4304170000032,
       "startedToRun": 1.0038019999992684,
@@ -571,6 +621,7 @@
     {
       "controller": "controller-23995",
       "pid": 24823,
+      "collectionMessages": 1,
       "requestToFork": 30.53156200000376,
       "forkToStarted": 365.51677099999506,
       "startedToRun": 3.631823000003351,
@@ -582,6 +633,7 @@
     {
       "controller": "controller-23995",
       "pid": 24824,
+      "collectionMessages": 1,
       "requestToFork": 44.57010400000581,
       "forkToStarted": 342.4276039999968,
       "startedToRun": 0.5577600000033271,
@@ -593,6 +645,7 @@
     {
       "controller": "controller-23995",
       "pid": 24837,
+      "collectionMessages": 1,
       "requestToFork": 29.64729200000147,
       "forkToStarted": 348.84916599999997,
       "startedToRun": 1.3514589999977034,
@@ -604,6 +657,7 @@
     {
       "controller": "controller-23995",
       "pid": 24838,
+      "collectionMessages": 1,
       "requestToFork": 41.07895799999824,
       "forkToStarted": 309.382031000001,
       "startedToRun": 0.59083400000236,
@@ -615,6 +669,7 @@
     {
       "controller": "controller-23995",
       "pid": 24863,
+      "collectionMessages": 1,
       "requestToFork": 20.25322900000174,
       "forkToStarted": 332.8255729999946,
       "startedToRun": 0.35619800000131363,
@@ -626,6 +681,7 @@
     {
       "controller": "controller-23995",
       "pid": 24864,
+      "collectionMessages": 1,
       "requestToFork": 28.04968799999915,
       "forkToStarted": 353.0778120000032,
       "startedToRun": 0.8076559999972233,
@@ -637,6 +693,7 @@
     {
       "controller": "controller-23995",
       "pid": 24885,
+      "collectionMessages": 1,
       "requestToFork": 42.29760399999941,
       "forkToStarted": 379.6072390000045,
       "startedToRun": 0.48635400000057416,
@@ -648,6 +705,7 @@
     {
       "controller": "controller-23995",
       "pid": 24886,
+      "collectionMessages": 1,
       "requestToFork": 50.76291599999968,
       "forkToStarted": 377.17093800000293,
       "startedToRun": 0.7331770000018878,
@@ -659,6 +717,7 @@
     {
       "controller": "controller-23995",
       "pid": 24899,
+      "collectionMessages": 1,
       "requestToFork": 44.162709000003815,
       "forkToStarted": 384.4835410000014,
       "startedToRun": 0.8317709999973886,
@@ -670,6 +729,7 @@
     {
       "controller": "controller-23995",
       "pid": 24900,
+      "collectionMessages": 1,
       "requestToFork": 56.88505300000543,
       "forkToStarted": 345.4186449999979,
       "startedToRun": 0.7518229999986943,
@@ -681,6 +741,7 @@
     {
       "controller": "controller-23995",
       "pid": 24913,
+      "collectionMessages": 1,
       "requestToFork": 28.459843999997247,
       "forkToStarted": 323.31947899999795,
       "startedToRun": 0.7132290000008652,
@@ -692,6 +753,7 @@
     {
       "controller": "controller-23995",
       "pid": 24914,
+      "collectionMessages": 1,
       "requestToFork": 34.30791699999827,
       "forkToStarted": 340.17973899999924,
       "startedToRun": 0.38703199999872595,
@@ -703,6 +765,7 @@
     {
       "controller": "controller-23995",
       "pid": 24927,
+      "collectionMessages": 1,
       "requestToFork": 30.510363999994297,
       "forkToStarted": 342.2233860000051,
       "startedToRun": 0.3971349999992526,
@@ -714,6 +777,7 @@
     {
       "controller": "controller-23995",
       "pid": 24928,
+      "collectionMessages": 1,
       "requestToFork": 38.57927099999506,
       "forkToStarted": 335.9947390000016,
       "startedToRun": 0.5068749999991269,
@@ -725,6 +789,7 @@
     {
       "controller": "controller-23995",
       "pid": 24941,
+      "collectionMessages": 1,
       "requestToFork": 30.828021000001172,
       "forkToStarted": 405.92645800000173,
       "startedToRun": 0.4014580000002752,
@@ -736,6 +801,7 @@
     {
       "controller": "controller-23995",
       "pid": 24942,
+      "collectionMessages": 1,
       "requestToFork": 42.80145800000173,
       "forkToStarted": 359.9143750000003,
       "startedToRun": 7.340260999997554,
@@ -747,6 +813,7 @@
     {
       "controller": "controller-23995",
       "pid": 24955,
+      "collectionMessages": 1,
       "requestToFork": 28.03650999999809,
       "forkToStarted": 484.42942700000276,
       "startedToRun": 1.7380730000004405,
@@ -758,6 +825,7 @@
     {
       "controller": "controller-23995",
       "pid": 24956,
+      "collectionMessages": 1,
       "requestToFork": 40.002291000004334,
       "forkToStarted": 431.69765599999664,
       "startedToRun": 0.631718999997247,
@@ -769,6 +837,7 @@
     {
       "controller": "controller-23995",
       "pid": 24987,
+      "collectionMessages": 1,
       "requestToFork": 52.445780999994895,
       "forkToStarted": 317.3822910000017,
       "startedToRun": 0.7506780000039726,
@@ -780,6 +849,7 @@
     {
       "controller": "controller-23995",
       "pid": 24990,
+      "collectionMessages": 1,
       "requestToFork": 64.9400519999981,
       "forkToStarted": 348.906041000002,
       "startedToRun": 1.5302609999998822,
@@ -791,6 +861,7 @@
     {
       "controller": "controller-23995",
       "pid": 25003,
+      "collectionMessages": 1,
       "requestToFork": 31.455051999997522,
       "forkToStarted": 411.46489499999734,
       "startedToRun": 0.44484400000510504,
@@ -802,6 +873,7 @@
     {
       "controller": "controller-23995",
       "pid": 25004,
+      "collectionMessages": 1,
       "requestToFork": 42.00911400000041,
       "forkToStarted": 351.7207289999933,
       "startedToRun": 1.7295320000048378,
@@ -813,6 +885,7 @@
     {
       "controller": "controller-23995",
       "pid": 25017,
+      "collectionMessages": 1,
       "requestToFork": 27.468697999996948,
       "forkToStarted": 335.3468750000029,
       "startedToRun": 1.8240619999996852,
@@ -824,6 +897,7 @@
     {
       "controller": "controller-23995",
       "pid": 25018,
+      "collectionMessages": 1,
       "requestToFork": 39.33343700000114,
       "forkToStarted": 311.45619799999986,
       "startedToRun": 1.0392189999984112,
@@ -835,6 +909,7 @@
     {
       "controller": "controller-23995",
       "pid": 25041,
+      "collectionMessages": 1,
       "requestToFork": 34.84223999999813,
       "forkToStarted": 532.823801999999,
       "startedToRun": 4.156823000004806,
@@ -846,6 +921,7 @@
     {
       "controller": "controller-23995",
       "pid": 25042,
+      "collectionMessages": 1,
       "requestToFork": 54.9130210000003,
       "forkToStarted": 452.6762499999968,
       "startedToRun": 0.8451039999999921,
@@ -857,6 +933,7 @@
     {
       "controller": "controller-23995",
       "pid": 25058,
+      "collectionMessages": 1,
       "requestToFork": 29.473593000002438,
       "forkToStarted": 362.7725519999949,
       "startedToRun": 5.404999999998836,
@@ -868,6 +945,7 @@
     {
       "controller": "controller-23995",
       "pid": 25059,
+      "collectionMessages": 1,
       "requestToFork": 42.02083300000231,
       "forkToStarted": 303.1733329999988,
       "startedToRun": 0.7789059999995516,
@@ -879,6 +957,7 @@
     {
       "controller": "controller-23995",
       "pid": 25072,
+      "collectionMessages": 1,
       "requestToFork": 30.43822899999941,
       "forkToStarted": 334.7608850000033,
       "startedToRun": 0.4116149999972549,
@@ -890,6 +969,7 @@
     {
       "controller": "controller-23995",
       "pid": 25073,
+      "collectionMessages": 1,
       "requestToFork": 43.154531000000134,
       "forkToStarted": 321.0284380000012,
       "startedToRun": 0.3932810000042082,
@@ -901,6 +981,7 @@
     {
       "controller": "controller-23995",
       "pid": 25086,
+      "collectionMessages": 1,
       "requestToFork": 76.76812499999505,
       "forkToStarted": 429.79192700000567,
       "startedToRun": 0.46979199999623233,
@@ -912,6 +993,7 @@
     {
       "controller": "controller-23995",
       "pid": 25087,
+      "collectionMessages": 1,
       "requestToFork": 84.4941669999971,
       "forkToStarted": 374.23833300000115,
       "startedToRun": 0.6340110000019195,
@@ -923,6 +1005,7 @@
     {
       "controller": "controller-23995",
       "pid": 25118,
+      "collectionMessages": 1,
       "requestToFork": 34.117760000001,
       "forkToStarted": 373.3476040000023,
       "startedToRun": 1.645260999997845,
@@ -934,6 +1017,7 @@
     {
       "controller": "controller-23995",
       "pid": 25119,
+      "collectionMessages": 1,
       "requestToFork": 41.63093700000172,
       "forkToStarted": 348.8232809999972,
       "startedToRun": 2.6647400000001653,
@@ -945,6 +1029,7 @@
     {
       "controller": "controller-23995",
       "pid": 25133,
+      "collectionMessages": 1,
       "requestToFork": 35.96552099999826,
       "forkToStarted": 335.44145800000115,
       "startedToRun": 0.29427099999884376,
@@ -956,6 +1041,7 @@
     {
       "controller": "controller-23995",
       "pid": 25134,
+      "collectionMessages": 1,
       "requestToFork": 52.197447999998985,
       "forkToStarted": 351.9639059999972,
       "startedToRun": 0.8101040000037756,
@@ -967,6 +1053,7 @@
     {
       "controller": "controller-23995",
       "pid": 25147,
+      "collectionMessages": 1,
       "requestToFork": 19.336718999998993,
       "forkToStarted": 344.3436970000039,
       "startedToRun": 1.0157299999991665,
@@ -978,6 +1065,7 @@
     {
       "controller": "controller-23995",
       "pid": 25148,
+      "collectionMessages": 1,
       "requestToFork": 36.74000000000524,
       "forkToStarted": 333.72260399999504,
       "startedToRun": 0.5929170000017621,
@@ -989,6 +1077,7 @@
     {
       "controller": "controller-23995",
       "pid": 25161,
+      "collectionMessages": 1,
       "requestToFork": 25.431719000000157,
       "forkToStarted": 360.1589060000042,
       "startedToRun": 0.35604199999943376,
@@ -1000,6 +1089,7 @@
     {
       "controller": "controller-23995",
       "pid": 25162,
+      "collectionMessages": 1,
       "requestToFork": 33.10432299999957,
       "forkToStarted": 354.2446869999985,
       "startedToRun": 0.3615630000058445,
@@ -1011,6 +1101,7 @@
     {
       "controller": "controller-23995",
       "pid": 25175,
+      "collectionMessages": 1,
       "requestToFork": 30.29911500000162,
       "forkToStarted": 358.72109400000045,
       "startedToRun": 0.3192179999969085,
@@ -1022,6 +1113,7 @@
     {
       "controller": "controller-23995",
       "pid": 25176,
+      "collectionMessages": 1,
       "requestToFork": 48.38083400000323,
       "forkToStarted": 281.4356770000013,
       "startedToRun": 1.6875,
@@ -1033,6 +1125,7 @@
     {
       "controller": "controller-23995",
       "pid": 25189,
+      "collectionMessages": 1,
       "requestToFork": 34.06916700000147,
       "forkToStarted": 331.6487500000003,
       "startedToRun": 0.2371350000030361,
@@ -1044,6 +1137,7 @@
     {
       "controller": "controller-23995",
       "pid": 25190,
+      "collectionMessages": 1,
       "requestToFork": 42.274427000003925,
       "forkToStarted": 322.3134379999974,
       "startedToRun": 0.4132289999979548,
@@ -1055,6 +1149,7 @@
     {
       "controller": "controller-23995",
       "pid": 25204,
+      "collectionMessages": 1,
       "requestToFork": 24.733384999999544,
       "forkToStarted": 320.30088599999726,
       "startedToRun": 0.5911980000018957,
@@ -1066,6 +1161,7 @@
     {
       "controller": "controller-23995",
       "pid": 25205,
+      "collectionMessages": 1,
       "requestToFork": 38.89239599999564,
       "forkToStarted": 278.70812500000466,
       "startedToRun": 0.680000000000291,
@@ -1077,6 +1173,7 @@
     {
       "controller": "controller-25218",
       "pid": 25256,
+      "collectionMessages": 1,
       "requestToFork": 414.82551999999987,
       "forkToStarted": 405.0539580000004,
       "startedToRun": 2.9655729999999494,
@@ -1088,6 +1185,7 @@
     {
       "controller": "controller-25218",
       "pid": 25257,
+      "collectionMessages": 1,
       "requestToFork": 425.6177080000002,
       "forkToStarted": 391.4247909999999,
       "startedToRun": 1.796198000000004,
@@ -1099,6 +1197,7 @@
     {
       "controller": "controller-25218",
       "pid": 25278,
+      "collectionMessages": 1,
       "requestToFork": 28.550780999999915,
       "forkToStarted": 324.04359399999976,
       "startedToRun": 0.5315110000001368,
@@ -1110,6 +1209,7 @@
     {
       "controller": "controller-25218",
       "pid": 25279,
+      "collectionMessages": 1,
       "requestToFork": 38.218073000000004,
       "forkToStarted": 317.6182289999997,
       "startedToRun": 1.9070840000003955,
@@ -1121,6 +1221,7 @@
     {
       "controller": "controller-25218",
       "pid": 25292,
+      "collectionMessages": 1,
       "requestToFork": 54.73984400000063,
       "forkToStarted": 375.8488019999995,
       "startedToRun": 0.41166599999996834,
@@ -1132,6 +1233,7 @@
     {
       "controller": "controller-25218",
       "pid": 25293,
+      "collectionMessages": 1,
       "requestToFork": 66.68171900000016,
       "forkToStarted": 361.6719270000003,
       "startedToRun": 0.8226559999993697,
@@ -1143,6 +1245,7 @@
     {
       "controller": "controller-25218",
       "pid": 25306,
+      "collectionMessages": 1,
       "requestToFork": 34.010677000000214,
       "forkToStarted": 361.43650999999954,
       "startedToRun": 0.5120320000005449,
@@ -1154,6 +1257,7 @@
     {
       "controller": "controller-25218",
       "pid": 25307,
+      "collectionMessages": 1,
       "requestToFork": 44.19255199999952,
       "forkToStarted": 285.0176040000006,
       "startedToRun": 2.2650519999997414,
@@ -1165,6 +1269,7 @@
     {
       "controller": "controller-25218",
       "pid": 25328,
+      "collectionMessages": 1,
       "requestToFork": 28.00031200000012,
       "forkToStarted": 349.4680210000006,
       "startedToRun": 0.4528119999995397,
@@ -1176,6 +1281,7 @@
     {
       "controller": "controller-25218",
       "pid": 25331,
+      "collectionMessages": 1,
       "requestToFork": 39.21296800000073,
       "forkToStarted": 342.7731249999997,
       "startedToRun": 1.4678649999996196,
@@ -1187,6 +1293,7 @@
     {
       "controller": "controller-25218",
       "pid": 25346,
+      "collectionMessages": 1,
       "requestToFork": 42.15062500000022,
       "forkToStarted": 377.07974000000104,
       "startedToRun": 0.6056769999995595,
@@ -1198,6 +1305,7 @@
     {
       "controller": "controller-25218",
       "pid": 25347,
+      "collectionMessages": 1,
       "requestToFork": 51.595886000000974,
       "forkToStarted": 393.63609299999916,
       "startedToRun": 0.6253130000004603,
@@ -1209,6 +1317,7 @@
     {
       "controller": "controller-25218",
       "pid": 25403,
+      "collectionMessages": 2,
       "requestToFork": 38.786926999999196,
       "forkToStarted": 333.25650999999925,
       "startedToRun": 0.6847920000000158,
@@ -1220,6 +1329,7 @@
     {
       "controller": "controller-25218",
       "pid": 25404,
+      "collectionMessages": 1,
       "requestToFork": 48.020572999999786,
       "forkToStarted": 340.44328099999984,
       "startedToRun": 0.345988999999463,
@@ -1231,6 +1341,7 @@
     {
       "controller": "controller-25218",
       "pid": 25417,
+      "collectionMessages": 1,
       "requestToFork": 30.848072999999204,
       "forkToStarted": 342.9349480000001,
       "startedToRun": 0.6614060000010795,
@@ -1242,6 +1353,7 @@
     {
       "controller": "controller-25218",
       "pid": 25418,
+      "collectionMessages": 1,
       "requestToFork": 37.33708400000069,
       "forkToStarted": 324.3603119999989,
       "startedToRun": 1.014791999999943,
@@ -1253,6 +1365,7 @@
     {
       "controller": "controller-25218",
       "pid": 25441,
+      "collectionMessages": 1,
       "requestToFork": 43.16411499999958,
       "forkToStarted": 443.03562500000044,
       "startedToRun": 0.34661400000004505,
@@ -1264,6 +1377,7 @@
     {
       "controller": "controller-25218",
       "pid": 25442,
+      "collectionMessages": 4,
       "requestToFork": 58.72927100000015,
       "forkToStarted": 402.4274999999998,
       "startedToRun": 1.2926040000002104,
@@ -1275,6 +1389,7 @@
     {
       "controller": "controller-25218",
       "pid": 25459,
+      "collectionMessages": 1,
       "requestToFork": 45.80708299999969,
       "forkToStarted": 378.7393229999998,
       "startedToRun": 5.672864000000118,
@@ -1286,6 +1401,7 @@
     {
       "controller": "controller-25218",
       "pid": 25460,
+      "collectionMessages": 1,
       "requestToFork": 52.94338500000049,
       "forkToStarted": 330.46192699999847,
       "startedToRun": 0.48161500000060187,
@@ -1297,6 +1413,7 @@
     {
       "controller": "controller-25218",
       "pid": 25478,
+      "collectionMessages": 1,
       "requestToFork": 42.89109400000052,
       "forkToStarted": 330.5223429999987,
       "startedToRun": 0.569167000001471,
@@ -1308,6 +1425,7 @@
     {
       "controller": "controller-25218",
       "pid": 25479,
+      "collectionMessages": 1,
       "requestToFork": 53.21333299999969,
       "forkToStarted": 357.4091150000004,
       "startedToRun": 0.35275999999976193,
@@ -1319,6 +1437,7 @@
     {
       "controller": "controller-25218",
       "pid": 25502,
+      "collectionMessages": 1,
       "requestToFork": 34.690834000000905,
       "forkToStarted": 351.12374999999884,
       "startedToRun": 0.35744700000032026,
@@ -1330,6 +1449,7 @@
     {
       "controller": "controller-25218",
       "pid": 25503,
+      "collectionMessages": 1,
       "requestToFork": 42.80249999999978,
       "forkToStarted": 289.00442699999985,
       "startedToRun": 0.30145900000024994,
@@ -1341,6 +1461,7 @@
     {
       "controller": "controller-25218",
       "pid": 25516,
+      "collectionMessages": 1,
       "requestToFork": 28.86421800000062,
       "forkToStarted": 336.9783329999991,
       "startedToRun": 2.4463550000000396,
@@ -1352,6 +1473,7 @@
     {
       "controller": "controller-25218",
       "pid": 25517,
+      "collectionMessages": 1,
       "requestToFork": 35.51375000000007,
       "forkToStarted": 357.7197390000001,
       "startedToRun": 0.8328650000003108,
@@ -1363,6 +1485,7 @@
     {
       "controller": "controller-25218",
       "pid": 25530,
+      "collectionMessages": 1,
       "requestToFork": 31.19958300000144,
       "forkToStarted": 390.8592710000012,
       "startedToRun": 0.5324479999981122,
@@ -1374,6 +1497,7 @@
     {
       "controller": "controller-25218",
       "pid": 25531,
+      "collectionMessages": 1,
       "requestToFork": 37.695104000002175,
       "forkToStarted": 379.38765599999897,
       "startedToRun": 0.30901100000119186,
@@ -1385,6 +1509,7 @@
     {
       "controller": "controller-25218",
       "pid": 25544,
+      "collectionMessages": 1,
       "requestToFork": 38.22630199999912,
       "forkToStarted": 370.06822900000043,
       "startedToRun": 0.29588499999954365,
@@ -1396,6 +1521,7 @@
     {
       "controller": "controller-25218",
       "pid": 25545,
+      "collectionMessages": 1,
       "requestToFork": 47.29333300000144,
       "forkToStarted": 359.17697899999985,
       "startedToRun": 0.32401000000027125,
@@ -1407,6 +1533,7 @@
     {
       "controller": "controller-25218",
       "pid": 25558,
+      "collectionMessages": 1,
       "requestToFork": 25.19458300000042,
       "forkToStarted": 324.5367189999997,
       "startedToRun": 1.1004160000011325,
@@ -1418,6 +1545,7 @@
     {
       "controller": "controller-25218",
       "pid": 25559,
+      "collectionMessages": 1,
       "requestToFork": 34.267030999999406,
       "forkToStarted": 369.68015600000217,
       "startedToRun": 0.8274999999994179,
@@ -1429,6 +1557,7 @@
     {
       "controller": "controller-25218",
       "pid": 25581,
+      "collectionMessages": 1,
       "requestToFork": 45.16421899999841,
       "forkToStarted": 384.3285939999987,
       "startedToRun": 0.7743750000008731,
@@ -1440,6 +1569,7 @@
     {
       "controller": "controller-25218",
       "pid": 25582,
+      "collectionMessages": 1,
       "requestToFork": 58.73010399999839,
       "forkToStarted": 337.2261980000003,
       "startedToRun": 0.70458299999882,
@@ -1451,6 +1581,7 @@
     {
       "controller": "controller-25218",
       "pid": 25605,
+      "collectionMessages": 1,
       "requestToFork": 31.133802000000287,
       "forkToStarted": 341.58400999999867,
       "startedToRun": 1.1944270000021788,
@@ -1462,6 +1593,7 @@
     {
       "controller": "controller-25218",
       "pid": 25606,
+      "collectionMessages": 1,
       "requestToFork": 39.602135000001,
       "forkToStarted": 316.1310940000003,
       "startedToRun": 3.73703100000057,
@@ -1473,6 +1605,7 @@
     {
       "controller": "controller-25218",
       "pid": 25619,
+      "collectionMessages": 1,
       "requestToFork": 37.58124999999927,
       "forkToStarted": 331.6034370000016,
       "startedToRun": 0.7945309999995516,
@@ -1484,6 +1617,7 @@
     {
       "controller": "controller-25218",
       "pid": 25620,
+      "collectionMessages": 1,
       "requestToFork": 46.00098900000012,
       "forkToStarted": 332.921406999998,
       "startedToRun": 1.6022389999998268,
@@ -1495,6 +1629,7 @@
     {
       "controller": "controller-25218",
       "pid": 25646,
+      "collectionMessages": 1,
       "requestToFork": 42.20869800000219,
       "forkToStarted": 386.1719269999994,
       "startedToRun": 3.955832999999984,
@@ -1506,6 +1641,7 @@
     {
       "controller": "controller-25218",
       "pid": 25647,
+      "collectionMessages": 1,
       "requestToFork": 58.153386000001774,
       "forkToStarted": 322.9264059999987,
       "startedToRun": 0.573541000001569,
@@ -1517,6 +1653,7 @@
     {
       "controller": "controller-25218",
       "pid": 25660,
+      "collectionMessages": 1,
       "requestToFork": 45.44677000000229,
       "forkToStarted": 397.4761980000003,
       "startedToRun": 0.6917189999985567,
@@ -1528,6 +1665,7 @@
     {
       "controller": "controller-25218",
       "pid": 25661,
+      "collectionMessages": 1,
       "requestToFork": 49.788958000001,
       "forkToStarted": 287.697447999999,
       "startedToRun": 0.4536980000011681,
@@ -1539,6 +1677,7 @@
     {
       "controller": "controller-25218",
       "pid": 25685,
+      "collectionMessages": 1,
       "requestToFork": 37.46208299999853,
       "forkToStarted": 325.639271,
       "startedToRun": 0.44874999999956344,
@@ -1550,6 +1689,7 @@
     {
       "controller": "controller-25218",
       "pid": 25686,
+      "collectionMessages": 1,
       "requestToFork": 43.991196999999374,
       "forkToStarted": 297.53515699999843,
       "startedToRun": 0.776666000001569,
@@ -1561,6 +1701,7 @@
     {
       "controller": "controller-25218",
       "pid": 25699,
+      "collectionMessages": 1,
       "requestToFork": 33.74057300000277,
       "forkToStarted": 370.28343699999823,
       "startedToRun": 1.3062500000014552,
@@ -1572,6 +1713,7 @@
     {
       "controller": "controller-25218",
       "pid": 25700,
+      "collectionMessages": 1,
       "requestToFork": 45.95109400000001,
       "forkToStarted": 349.88843700000143,
       "startedToRun": 0.5414060000002792,
@@ -1583,6 +1725,7 @@
     {
       "controller": "controller-25218",
       "pid": 25713,
+      "collectionMessages": 1,
       "requestToFork": 40.16968799999813,
       "forkToStarted": 349.0171870000013,
       "startedToRun": 0.36703100000158884,
@@ -1594,6 +1737,7 @@
     {
       "controller": "controller-25218",
       "pid": 25714,
+      "collectionMessages": 1,
       "requestToFork": 51.71400999999969,
       "forkToStarted": 373.45541700000103,
       "startedToRun": 1.7416669999984151,
@@ -1605,6 +1749,7 @@
     {
       "controller": "controller-25218",
       "pid": 25761,
+      "collectionMessages": 1,
       "requestToFork": 48.54255199999898,
       "forkToStarted": 361.5277079999978,
       "startedToRun": 2.468802000003052,
@@ -1616,6 +1761,7 @@
     {
       "controller": "controller-25218",
       "pid": 25762,
+      "collectionMessages": 1,
       "requestToFork": 60.02854199999638,
       "forkToStarted": 306.828802,
       "startedToRun": 0.44348900000113645,
@@ -1627,6 +1773,7 @@
     {
       "controller": "controller-25218",
       "pid": 25779,
+      "collectionMessages": 1,
       "requestToFork": 37.15843799999857,
       "forkToStarted": 313.001822000002,
       "startedToRun": 1.3612499999981083,
@@ -1638,6 +1785,7 @@
     {
       "controller": "controller-25218",
       "pid": 25780,
+      "collectionMessages": 1,
       "requestToFork": 46.99776099999872,
       "forkToStarted": 305.353489000001,
       "startedToRun": 0.5381249999991269,
@@ -1649,6 +1797,7 @@
     {
       "controller": "controller-25218",
       "pid": 25803,
+      "collectionMessages": 1,
       "requestToFork": 34.287239000001136,
       "forkToStarted": 381.53989600000205,
       "startedToRun": 0.6477079999967827,
@@ -1660,6 +1809,7 @@
     {
       "controller": "controller-25218",
       "pid": 25804,
+      "collectionMessages": 1,
       "requestToFork": 41.37859400000161,
       "forkToStarted": 315.9201040000007,
       "startedToRun": 0.4730730000010226,
@@ -1671,6 +1821,7 @@
     {
       "controller": "controller-25218",
       "pid": 25817,
+      "collectionMessages": 1,
       "requestToFork": 37.138177000000724,
       "forkToStarted": 351.5232820000019,
       "startedToRun": 2.6077079999995476,
@@ -1682,6 +1833,7 @@
     {
       "controller": "controller-25218",
       "pid": 25818,
+      "collectionMessages": 1,
       "requestToFork": 45.415468999999575,
       "forkToStarted": 370.8178650000009,
       "startedToRun": 0.6593749999992724,
@@ -1693,6 +1845,7 @@
     {
       "controller": "controller-25218",
       "pid": 25831,
+      "collectionMessages": 1,
       "requestToFork": 42.89286400000128,
       "forkToStarted": 391.0052609999984,
       "startedToRun": 0.9204680000038934,
@@ -1704,6 +1857,7 @@
     {
       "controller": "controller-25218",
       "pid": 25832,
+      "collectionMessages": 1,
       "requestToFork": 51.14552100000219,
       "forkToStarted": 364.6526559999984,
       "startedToRun": 0.34958299999925657,
@@ -1715,6 +1869,7 @@
     {
       "controller": "controller-25218",
       "pid": 25849,
+      "collectionMessages": 1,
       "requestToFork": 50.718438000003516,
       "forkToStarted": 502.1006769999949,
       "startedToRun": 1.5274480000007316,
@@ -1726,6 +1881,7 @@
     {
       "controller": "controller-25218",
       "pid": 25851,
+      "collectionMessages": 1,
       "requestToFork": 60.07755200000247,
       "forkToStarted": 445.61395800000173,
       "startedToRun": 0.7892189999984112,
@@ -1737,6 +1893,7 @@
     {
       "controller": "controller-25218",
       "pid": 25873,
+      "collectionMessages": 2,
       "requestToFork": 49.70249999999942,
       "forkToStarted": 429.75515599999926,
       "startedToRun": 0.8249480000013136,
@@ -1748,6 +1905,7 @@
     {
       "controller": "controller-25218",
       "pid": 25874,
+      "collectionMessages": 1,
       "requestToFork": 65.41213499999867,
       "forkToStarted": 421.3004690000016,
       "startedToRun": 0.6844270000001416,
@@ -1759,6 +1917,7 @@
     {
       "controller": "controller-25218",
       "pid": 25905,
+      "collectionMessages": 1,
       "requestToFork": 41.37984300000244,
       "forkToStarted": 369.7032289999988,
       "startedToRun": 5.893177999998443,
@@ -1770,6 +1929,7 @@
     {
       "controller": "controller-25218",
       "pid": 25906,
+      "collectionMessages": 1,
       "requestToFork": 61.685677000001306,
       "forkToStarted": 361.76958300000115,
       "startedToRun": 0.5709369999967748,
@@ -1781,6 +1941,7 @@
     {
       "controller": "controller-25218",
       "pid": 25922,
+      "collectionMessages": 1,
       "requestToFork": 41.474999999998545,
       "forkToStarted": 440.29515600000013,
       "startedToRun": 0.7794270000013057,
@@ -1792,6 +1953,7 @@
     {
       "controller": "controller-25218",
       "pid": 25923,
+      "collectionMessages": 1,
       "requestToFork": 57.5216139999975,
       "forkToStarted": 429.21010400000523,
       "startedToRun": 0.7300519999989774,
@@ -1803,6 +1965,7 @@
     {
       "controller": "controller-25218",
       "pid": 25955,
+      "collectionMessages": 1,
       "requestToFork": 54.542969000001904,
       "forkToStarted": 481.036927000001,
       "startedToRun": 0.8982289999985369,
@@ -1814,6 +1977,7 @@
     {
       "controller": "controller-25218",
       "pid": 25956,
+      "collectionMessages": 1,
       "requestToFork": 65.89776100000017,
       "forkToStarted": 441.34604099999706,
       "startedToRun": 0.4295840000049793,
@@ -1825,6 +1989,7 @@
     {
       "controller": "controller-25218",
       "pid": 25976,
+      "collectionMessages": 1,
       "requestToFork": 50.87265600000683,
       "forkToStarted": 477.5778119999959,
       "startedToRun": 1.61083299999882,
@@ -1836,6 +2001,7 @@
     {
       "controller": "controller-25218",
       "pid": 25977,
+      "collectionMessages": 1,
       "requestToFork": 64.6084370000026,
       "forkToStarted": 430.24828100000013,
       "startedToRun": 1.044063000001188,
@@ -1847,6 +2013,7 @@
     {
       "controller": "controller-25218",
       "pid": 26008,
+      "collectionMessages": 1,
       "requestToFork": 58.75807299999724,
       "forkToStarted": 608.399010000001,
       "startedToRun": 0.5553130000043893,
@@ -1858,6 +2025,7 @@
     {
       "controller": "controller-25218",
       "pid": 26009,
+      "collectionMessages": 1,
       "requestToFork": 74.92541699999856,
       "forkToStarted": 493.0612489999985,
       "startedToRun": 0.7828650000010384,
@@ -1869,6 +2037,7 @@
     {
       "controller": "controller-25218",
       "pid": 26097,
+      "collectionMessages": 2,
       "requestToFork": 135.84312499999942,
       "forkToStarted": 997.1140620000006,
       "startedToRun": 3.8455209999956423,
@@ -1880,6 +2049,7 @@
     {
       "controller": "controller-25218",
       "pid": 26110,
+      "collectionMessages": 1,
       "requestToFork": 152.97052099999564,
       "forkToStarted": 912.3047910000023,
       "startedToRun": 1.2587500000008731,
@@ -1891,6 +2061,7 @@
     {
       "controller": "controller-25218",
       "pid": 26183,
+      "collectionMessages": 1,
       "requestToFork": 58.04557200000272,
       "forkToStarted": 912.3846879999983,
       "startedToRun": 2.635207999999693,
@@ -1902,6 +2073,7 @@
     {
       "controller": "controller-25218",
       "pid": 26184,
+      "collectionMessages": 1,
       "requestToFork": 86.92364500000258,
       "forkToStarted": 875.6204690000013,
       "startedToRun": 1.2414579999967827,
@@ -1913,6 +2085,7 @@
     {
       "controller": "controller-25218",
       "pid": 26226,
+      "collectionMessages": 1,
       "requestToFork": 73.66624999999476,
       "forkToStarted": 936.1206770000063,
       "startedToRun": 1.7398439999960829,
@@ -1924,6 +2097,7 @@
     {
       "controller": "controller-25218",
       "pid": 26227,
+      "collectionMessages": 1,
       "requestToFork": 91.48104199999943,
       "forkToStarted": 792.6640100000004,
       "startedToRun": 1.2198439999992843,
@@ -1935,6 +2109,7 @@
     {
       "controller": "controller-25218",
       "pid": 26310,
+      "collectionMessages": 1,
       "requestToFork": 109.39385400000174,
       "forkToStarted": 1256.7964060000013,
       "startedToRun": 2.7228119999999763,
@@ -1946,6 +2121,7 @@
     {
       "controller": "controller-25218",
       "pid": 26315,
+      "collectionMessages": 1,
       "requestToFork": 146.89447900000232,
       "forkToStarted": 924.6729159999959,
       "startedToRun": 9.804167000002053,
@@ -1957,6 +2133,7 @@
     {
       "controller": "controller-25218",
       "pid": 26416,
+      "collectionMessages": 1,
       "requestToFork": 92.16385499999888,
       "forkToStarted": 1398.9260409999988,
       "startedToRun": 1.4176560000050813,
@@ -1968,6 +2145,7 @@
     {
       "controller": "controller-25218",
       "pid": 26423,
+      "collectionMessages": 1,
       "requestToFork": 165.5773960000006,
       "forkToStarted": 1149.8242180000016,
       "startedToRun": 1.6843749999970896,
@@ -1979,6 +2157,7 @@
     {
       "controller": "controller-25218",
       "pid": 26530,
+      "collectionMessages": 1,
       "requestToFork": 320.69900999999663,
       "forkToStarted": 1093.7126040000003,
       "startedToRun": 1.272343999997247,
@@ -1990,6 +2169,7 @@
     {
       "controller": "controller-25218",
       "pid": 26531,
+      "collectionMessages": 1,
       "requestToFork": 374.07953099999577,
       "forkToStarted": 856.9465100000016,
       "startedToRun": 5.116822999996657,
@@ -2001,6 +2181,7 @@
     {
       "controller": "controller-25218",
       "pid": 26804,
+      "collectionMessages": 1,
       "requestToFork": 311.88692699999956,
       "forkToStarted": 1829.6438539999945,
       "startedToRun": 1.508853999999701,
@@ -2012,6 +2193,7 @@
     {
       "controller": "controller-25218",
       "pid": 26807,
+      "collectionMessages": 1,
       "requestToFork": 353.6297919999997,
       "forkToStarted": 1583.1977600000027,
       "startedToRun": 0.9057809999940218,
@@ -2023,6 +2205,7 @@
     {
       "controller": "controller-25218",
       "pid": 27018,
+      "collectionMessages": 1,
       "requestToFork": 353.70338599999377,
       "forkToStarted": 1254.7673950000026,
       "startedToRun": 8.096615000002203,
@@ -2034,6 +2217,7 @@
     {
       "controller": "controller-25218",
       "pid": 27028,
+      "collectionMessages": 1,
       "requestToFork": 496.4142189999984,
       "forkToStarted": 1244.9153640000004,
       "startedToRun": 0.47473999999056105,
@@ -2045,6 +2229,7 @@
     {
       "controller": "controller-25218",
       "pid": 27220,
+      "collectionMessages": 1,
       "requestToFork": 310.383593999999,
       "forkToStarted": 1496.7686970000068,
       "startedToRun": 0.5537499999918509,
@@ -2056,6 +2241,7 @@
     {
       "controller": "controller-25218",
       "pid": 27222,
+      "collectionMessages": 1,
       "requestToFork": 405.82104199999594,
       "forkToStarted": 1091.3342700000067,
       "startedToRun": 4.134322999991127,
@@ -2067,6 +2253,7 @@
     {
       "controller": "controller-25218",
       "pid": 27463,
+      "collectionMessages": 1,
       "requestToFork": 354.94083300000057,
       "forkToStarted": 1601.4260940000095,
       "startedToRun": 0.8227599999954691,
@@ -2078,6 +2265,7 @@
     {
       "controller": "controller-25218",
       "pid": 27467,
+      "collectionMessages": 1,
       "requestToFork": 392.8631250000035,
       "forkToStarted": 1410.8904679999978,
       "startedToRun": 0.8111460000072839,
@@ -2089,6 +2277,7 @@
     {
       "controller": "controller-25218",
       "pid": 27676,
+      "collectionMessages": 2,
       "requestToFork": 530.7888539999985,
       "forkToStarted": 1310.4916139999987,
       "startedToRun": 0.3507289999979548,
@@ -2100,6 +2289,7 @@
     {
       "controller": "controller-25218",
       "pid": 27684,
+      "collectionMessages": 1,
       "requestToFork": 608.0470829999977,
       "forkToStarted": 1189.5880199999956,
       "startedToRun": 1.0197400000033667,
@@ -2111,6 +2301,7 @@
     {
       "controller": "controller-25218",
       "pid": 27787,
+      "collectionMessages": 1,
       "requestToFork": 183.86062500000116,
       "forkToStarted": 1095.0555729999905,
       "startedToRun": 3.5988020000077086,
@@ -2122,6 +2313,7 @@
     {
       "controller": "controller-25218",
       "pid": 27793,
+      "collectionMessages": 1,
       "requestToFork": 227.7488020000019,
       "forkToStarted": 1120.0985419999924,
       "startedToRun": 7.201927000001888,
@@ -2133,6 +2325,7 @@
     {
       "controller": "controller-25218",
       "pid": 27855,
+      "collectionMessages": 4,
       "requestToFork": 164.85421900000074,
       "forkToStarted": 846.9519259999943,
       "startedToRun": 19.739323000001605,
@@ -2144,6 +2337,7 @@
     {
       "controller": "controller-25218",
       "pid": 27857,
+      "collectionMessages": 1,
       "requestToFork": 188.4716669999907,
       "forkToStarted": 735.6511969999992,
       "startedToRun": 2.389219000004232,
@@ -2155,6 +2349,7 @@
     {
       "controller": "controller-25218",
       "pid": 27945,
+      "collectionMessages": 1,
       "requestToFork": 85.60739599999215,
       "forkToStarted": 832.7757810000039,
       "startedToRun": 0.5720829999918351,
@@ -2166,6 +2361,7 @@
     {
       "controller": "controller-25218",
       "pid": 27946,
+      "collectionMessages": 1,
       "requestToFork": 116.12854099999822,
       "forkToStarted": 834.677291999993,
       "startedToRun": 11.229948000007425,
@@ -2177,6 +2373,7 @@
     {
       "controller": "controller-27984",
       "pid": 28063,
+      "collectionMessages": 1,
       "requestToFork": 996.3164580000002,
       "forkToStarted": 792.9420829999999,
       "startedToRun": 5.138437999999951,
@@ -2188,6 +2385,7 @@
     {
       "controller": "controller-27984",
       "pid": 28069,
+      "collectionMessages": 1,
       "requestToFork": 1056.2380210000001,
       "forkToStarted": 915.0216139999998,
       "startedToRun": 3.531406000000061,
@@ -2199,6 +2397,7 @@
     {
       "controller": "controller-27984",
       "pid": 28160,
+      "collectionMessages": 1,
       "requestToFork": 87.24755200000072,
       "forkToStarted": 530.8116659999996,
       "startedToRun": 3.8771880000003875,
@@ -2210,6 +2409,7 @@
     {
       "controller": "controller-27984",
       "pid": 28161,
+      "collectionMessages": 1,
       "requestToFork": 110.44322900000043,
       "forkToStarted": 482.37937500000044,
       "startedToRun": 0.8178639999987354,
@@ -2221,6 +2421,7 @@
     {
       "controller": "controller-27984",
       "pid": 28310,
+      "collectionMessages": 1,
       "requestToFork": 89.26312500000131,
       "forkToStarted": 476.4120839999996,
       "startedToRun": 1.4341139999996813,
@@ -2232,6 +2433,7 @@
     {
       "controller": "controller-27984",
       "pid": 28312,
+      "collectionMessages": 1,
       "requestToFork": 112.11453200000142,
       "forkToStarted": 481.7909889999992,
       "startedToRun": 1.6865099999995437,
@@ -2243,6 +2445,7 @@
     {
       "controller": "controller-27984",
       "pid": 28335,
+      "collectionMessages": 1,
       "requestToFork": 41.77932300000066,
       "forkToStarted": 541.3211979999996,
       "startedToRun": 1.0134890000008454,
@@ -2254,6 +2457,7 @@
     {
       "controller": "controller-27984",
       "pid": 28336,
+      "collectionMessages": 1,
       "requestToFork": 68.34041700000125,
       "forkToStarted": 467.06380199999876,
       "startedToRun": 2.7391660000012052,
@@ -2265,6 +2469,7 @@
     {
       "controller": "controller-27984",
       "pid": 28367,
+      "collectionMessages": 1,
       "requestToFork": 59.372134999999616,
       "forkToStarted": 462.1772920000003,
       "startedToRun": 1.5405199999986507,
@@ -2276,6 +2481,7 @@
     {
       "controller": "controller-27984",
       "pid": 28368,
+      "collectionMessages": 1,
       "requestToFork": 76.51239499999974,
       "forkToStarted": 438.6700519999995,
       "startedToRun": 1.3295319999997446,
@@ -2287,721 +2493,721 @@
   ],
   "batch_intervals": [
     {
-      "controller": "controller-23995",
+      "controller": "controller-23995.jsonl",
       "lanes": 2,
       "requestToReply": 3094.7194259999997,
       "lastFinishedToReply": 22.556405999999697,
       "laneFinishSkew": 38.996250000000146
     },
     {
-      "controller": "controller-23995",
+      "controller": "controller-23995.jsonl",
       "lanes": 2,
       "requestToReply": 745.4152599999998,
       "lastFinishedToReply": 25.22291700000096,
       "laneFinishSkew": 33.82270799999969
     },
     {
-      "controller": "controller-23995",
+      "controller": "controller-23995.jsonl",
       "lanes": 2,
       "requestToReply": 795.0053120000011,
       "lastFinishedToReply": 24.117396000001463,
       "laneFinishSkew": 50.28031199999896
     },
     {
-      "controller": "controller-23995",
+      "controller": "controller-23995.jsonl",
       "lanes": 2,
       "requestToReply": 716.6253649999999,
       "lastFinishedToReply": 16.557135999999446,
       "laneFinishSkew": 96.20536399999946
     },
     {
-      "controller": "controller-23995",
+      "controller": "controller-23995.jsonl",
       "lanes": 2,
       "requestToReply": 779.9183329999996,
       "lastFinishedToReply": 25.22947899999963,
       "laneFinishSkew": 107.46312500000022
     },
     {
-      "controller": "controller-23995",
+      "controller": "controller-23995.jsonl",
       "lanes": 2,
       "requestToReply": 960.7745309999991,
       "lastFinishedToReply": 26.998020999999426,
       "laneFinishSkew": 101.96192700000029
     },
     {
-      "controller": "controller-23995",
+      "controller": "controller-23995.jsonl",
       "lanes": 2,
       "requestToReply": 1046.6213019999996,
       "lastFinishedToReply": 24.67880200000036,
       "laneFinishSkew": 129.33927099999892
     },
     {
-      "controller": "controller-23995",
+      "controller": "controller-23995.jsonl",
       "lanes": 2,
       "requestToReply": 1455.2427590000007,
       "lastFinishedToReply": 12.086301999999705,
       "laneFinishSkew": 132.13401000000158
     },
     {
-      "controller": "controller-23995",
+      "controller": "controller-23995.jsonl",
       "lanes": 2,
       "requestToReply": 1219.2797909999972,
       "lastFinishedToReply": 17.453488999999536,
       "laneFinishSkew": 108.07432300000073
     },
     {
-      "controller": "controller-23995",
+      "controller": "controller-23995.jsonl",
       "lanes": 2,
       "requestToReply": 711.2360420000005,
       "lastFinishedToReply": 13.600365000002057,
       "laneFinishSkew": 98.32171899999958
     },
     {
-      "controller": "controller-23995",
+      "controller": "controller-23995.jsonl",
       "lanes": 2,
       "requestToReply": 798.0809889999982,
       "lastFinishedToReply": 15.494426999997813,
       "laneFinishSkew": 94.6720830000013
     },
     {
-      "controller": "controller-23995",
+      "controller": "controller-23995.jsonl",
       "lanes": 2,
       "requestToReply": 750.9171349999997,
       "lastFinishedToReply": 16.195417000002635,
       "laneFinishSkew": 72.9789579999997
     },
     {
-      "controller": "controller-23995",
+      "controller": "controller-23995.jsonl",
       "lanes": 2,
       "requestToReply": 890.7131249999984,
       "lastFinishedToReply": 15.27932299999884,
       "laneFinishSkew": 95.1367190000019
     },
     {
-      "controller": "controller-23995",
+      "controller": "controller-23995.jsonl",
       "lanes": 2,
       "requestToReply": 708.4310410000035,
       "lastFinishedToReply": 16.288696999999956,
       "laneFinishSkew": 32.76260500000353
     },
     {
-      "controller": "controller-23995",
+      "controller": "controller-23995.jsonl",
       "lanes": 2,
       "requestToReply": 760.0741659999985,
       "lastFinishedToReply": 15.311665999997786,
       "laneFinishSkew": 66.90755200000058
     },
     {
-      "controller": "controller-23995",
+      "controller": "controller-23995.jsonl",
       "lanes": 2,
       "requestToReply": 921.7009890000008,
       "lastFinishedToReply": 19.402969000002486,
       "laneFinishSkew": 65.37578099999882
     },
     {
-      "controller": "controller-23995",
+      "controller": "controller-23995.jsonl",
       "lanes": 2,
       "requestToReply": 793.7382290000023,
       "lastFinishedToReply": 21.143385999999737,
       "laneFinishSkew": 78.2917180000004
     },
     {
-      "controller": "controller-23995",
+      "controller": "controller-23995.jsonl",
       "lanes": 2,
       "requestToReply": 1093.2308329999978,
       "lastFinishedToReply": 19.87749999999869,
       "laneFinishSkew": 258.443177000001
     },
     {
-      "controller": "controller-23995",
+      "controller": "controller-23995.jsonl",
       "lanes": 2,
       "requestToReply": 763.8539049999999,
       "lastFinishedToReply": 17.825832999998966,
       "laneFinishSkew": 78.62260400000014
     },
     {
-      "controller": "controller-23995",
+      "controller": "controller-23995.jsonl",
       "lanes": 2,
       "requestToReply": 848.840103999999,
       "lastFinishedToReply": 14.14166699999987,
       "laneFinishSkew": 174.0222909999975
     },
     {
-      "controller": "controller-23995",
+      "controller": "controller-23995.jsonl",
       "lanes": 2,
       "requestToReply": 755.8277080000007,
       "lastFinishedToReply": 18.581719000001613,
       "laneFinishSkew": 78.93744800000059
     },
     {
-      "controller": "controller-23995",
+      "controller": "controller-23995.jsonl",
       "lanes": 2,
       "requestToReply": 747.0218749999985,
       "lastFinishedToReply": 17.338959000000614,
       "laneFinishSkew": 99.88739599999826
     },
     {
-      "controller": "controller-23995",
+      "controller": "controller-23995.jsonl",
       "lanes": 2,
       "requestToReply": 724.6009370000029,
       "lastFinishedToReply": 14.948750000003201,
       "laneFinishSkew": 24.898228999998537
     },
     {
-      "controller": "controller-23995",
+      "controller": "controller-23995.jsonl",
       "lanes": 2,
       "requestToReply": 1163.5317699999941,
       "lastFinishedToReply": 14.645572999994329,
       "laneFinishSkew": 408.1149480000022
     },
     {
-      "controller": "controller-23995",
+      "controller": "controller-23995.jsonl",
       "lanes": 2,
       "requestToReply": 764.5560410000035,
       "lastFinishedToReply": 18.068802000001597,
       "laneFinishSkew": 49.06916700000147
     },
     {
-      "controller": "controller-23995",
+      "controller": "controller-23995.jsonl",
       "lanes": 2,
       "requestToReply": 747.8703640000022,
       "lastFinishedToReply": 16.523542000002635,
       "laneFinishSkew": 42.30552099999477
     },
     {
-      "controller": "controller-23995",
+      "controller": "controller-23995.jsonl",
       "lanes": 2,
       "requestToReply": 746.2532809999975,
       "lastFinishedToReply": 16.97984400000132,
       "laneFinishSkew": 89.99604099999851
     },
     {
-      "controller": "controller-23995",
+      "controller": "controller-23995.jsonl",
       "lanes": 2,
       "requestToReply": 728.6166139999987,
       "lastFinishedToReply": 17.848384999997506,
       "laneFinishSkew": 37.102240000000165
     },
     {
-      "controller": "controller-23995",
+      "controller": "controller-23995.jsonl",
       "lanes": 2,
       "requestToReply": 795.8857280000011,
       "lastFinishedToReply": 19.442342999995162,
       "laneFinishSkew": 44.935261000005994
     },
     {
-      "controller": "controller-23995",
+      "controller": "controller-23995.jsonl",
       "lanes": 2,
       "requestToReply": 746.3457290000006,
       "lastFinishedToReply": 16.259634999994887,
       "laneFinishSkew": 77.24447900000087
     },
     {
-      "controller": "controller-23995",
+      "controller": "controller-23995.jsonl",
       "lanes": 2,
       "requestToReply": 762.5984899999967,
       "lastFinishedToReply": 20.579532000003383,
       "laneFinishSkew": 135.09244799999578
     },
     {
-      "controller": "controller-23995",
+      "controller": "controller-23995.jsonl",
       "lanes": 2,
       "requestToReply": 754.3899989999991,
       "lastFinishedToReply": 18.530052000001888,
       "laneFinishSkew": 89.97213500000362
     },
     {
-      "controller": "controller-23995",
+      "controller": "controller-23995.jsonl",
       "lanes": 2,
       "requestToReply": 752.3956250000047,
       "lastFinishedToReply": 13.33510400000523,
       "laneFinishSkew": 73.70052099999884
     },
     {
-      "controller": "controller-23995",
+      "controller": "controller-23995.jsonl",
       "lanes": 2,
       "requestToReply": 887.9779679999992,
       "lastFinishedToReply": 16.681093999999575,
       "laneFinishSkew": 113.30536399999983
     },
     {
-      "controller": "controller-23995",
+      "controller": "controller-23995.jsonl",
       "lanes": 2,
       "requestToReply": 1017.2011969999949,
       "lastFinishedToReply": 34.18499999999767,
       "laneFinishSkew": 234.3738020000019
     },
     {
-      "controller": "controller-23995",
+      "controller": "controller-23995.jsonl",
       "lanes": 2,
       "requestToReply": 914.7964579999971,
       "lastFinishedToReply": 16.15682299999753,
       "laneFinishSkew": 74.27177099999972
     },
     {
-      "controller": "controller-23995",
+      "controller": "controller-23995.jsonl",
       "lanes": 2,
       "requestToReply": 707.3576560000001,
       "lastFinishedToReply": 29.30041699999856,
       "laneFinishSkew": 55.97317699999985
     },
     {
-      "controller": "controller-23995",
+      "controller": "controller-23995.jsonl",
       "lanes": 2,
       "requestToReply": 1098.1854689999964,
       "lastFinishedToReply": 14.86145899999974,
       "laneFinishSkew": 163.37343699999474
     },
     {
-      "controller": "controller-23995",
+      "controller": "controller-23995.jsonl",
       "lanes": 2,
       "requestToReply": 772.6923949999982,
       "lastFinishedToReply": 12.173957999999402,
       "laneFinishSkew": 105.32140599999548
     },
     {
-      "controller": "controller-23995",
+      "controller": "controller-23995.jsonl",
       "lanes": 2,
       "requestToReply": 749.6342179999992,
       "lastFinishedToReply": 14.921978999998828,
       "laneFinishSkew": 108.40499999999884
     },
     {
-      "controller": "controller-23995",
+      "controller": "controller-23995.jsonl",
       "lanes": 2,
       "requestToReply": 913.6134380000003,
       "lastFinishedToReply": 18.30380200000218,
       "laneFinishSkew": 124.28656300000148
     },
     {
-      "controller": "controller-23995",
+      "controller": "controller-23995.jsonl",
       "lanes": 2,
       "requestToReply": 713.247030999999,
       "lastFinishedToReply": 24.252499999995052,
       "laneFinishSkew": 2.313073000004806
     },
     {
-      "controller": "controller-23995",
+      "controller": "controller-23995.jsonl",
       "lanes": 2,
       "requestToReply": 739.0790619999971,
       "lastFinishedToReply": 22.022499999999127,
       "laneFinishSkew": 33.49385400000028
     },
     {
-      "controller": "controller-23995",
+      "controller": "controller-23995.jsonl",
       "lanes": 2,
       "requestToReply": 719.8233850000033,
       "lastFinishedToReply": 21.247864999997546,
       "laneFinishSkew": 33.35109300000477
     },
     {
-      "controller": "controller-23995",
+      "controller": "controller-23995.jsonl",
       "lanes": 2,
       "requestToReply": 760.1905210000041,
       "lastFinishedToReply": 15.940937999999733,
       "laneFinishSkew": 105.80692700000509
     },
     {
-      "controller": "controller-23995",
+      "controller": "controller-23995.jsonl",
       "lanes": 2,
       "requestToReply": 759.1965100000016,
       "lastFinishedToReply": 17.82151000000158,
       "laneFinishSkew": 123.8028639999975
     },
     {
-      "controller": "controller-23995",
+      "controller": "controller-23995.jsonl",
       "lanes": 2,
       "requestToReply": 721.0942710000018,
       "lastFinishedToReply": 20.078228999998828,
       "laneFinishSkew": 49.751718999999866
     },
     {
-      "controller": "controller-23995",
+      "controller": "controller-23995.jsonl",
       "lanes": 2,
       "requestToReply": 670.4851559999952,
       "lastFinishedToReply": 23.464270999997098,
       "laneFinishSkew": 78.51442700000189
     },
     {
-      "controller": "controller-25218",
+      "controller": "controller-25218.jsonl",
       "lanes": 2,
       "requestToReply": 2525.348488,
       "lastFinishedToReply": 26.955832999999984,
       "laneFinishSkew": 65.57526099999995
     },
     {
-      "controller": "controller-25218",
+      "controller": "controller-25218.jsonl",
       "lanes": 2,
       "requestToReply": 769.461354,
       "lastFinishedToReply": 22.947603999999956,
       "laneFinishSkew": 68.06177100000059
     },
     {
-      "controller": "controller-25218",
+      "controller": "controller-25218.jsonl",
       "lanes": 2,
       "requestToReply": 829.973489,
       "lastFinishedToReply": 16.16182299999946,
       "laneFinishSkew": 92.22656200000074
     },
     {
-      "controller": "controller-25218",
+      "controller": "controller-25218.jsonl",
       "lanes": 2,
       "requestToReply": 852.9777599999998,
       "lastFinishedToReply": 24.53421900000012,
       "laneFinishSkew": 77.81494799999928
     },
     {
-      "controller": "controller-25218",
+      "controller": "controller-25218.jsonl",
       "lanes": 2,
       "requestToReply": 749.7403640000011,
       "lastFinishedToReply": 22.34156299999995,
       "laneFinishSkew": 28.187239000000773
     },
     {
-      "controller": "controller-25218",
+      "controller": "controller-25218.jsonl",
       "lanes": 2,
       "requestToReply": 1052.8682289999997,
       "lastFinishedToReply": 19.13765599999897,
       "laneFinishSkew": 244.20192700000007
     },
     {
-      "controller": "controller-25218",
+      "controller": "controller-25218.jsonl",
       "lanes": 2,
       "requestToReply": 844.4009369999985,
       "lastFinishedToReply": 15.655416999999943,
       "laneFinishSkew": 102.4892179999988
     },
     {
-      "controller": "controller-25218",
+      "controller": "controller-25218.jsonl",
       "lanes": 2,
       "requestToReply": 689.7410940000009,
       "lastFinishedToReply": 15.331146000000444,
       "laneFinishSkew": 81.87557300000117
     },
     {
-      "controller": "controller-25218",
+      "controller": "controller-25218.jsonl",
       "lanes": 2,
       "requestToReply": 990.4497910000009,
       "lastFinishedToReply": 20.63427000000047,
       "laneFinishSkew": 149.82692700000007
     },
     {
-      "controller": "controller-25218",
+      "controller": "controller-25218.jsonl",
       "lanes": 2,
       "requestToReply": 785.8054680000005,
       "lastFinishedToReply": 12.978125000001455,
       "laneFinishSkew": 91.9261979999992
     },
     {
-      "controller": "controller-25218",
+      "controller": "controller-25218.jsonl",
       "lanes": 2,
       "requestToReply": 709.3655209999997,
       "lastFinishedToReply": 18.08802099999957,
       "laneFinishSkew": 29.12869800000044
     },
     {
-      "controller": "controller-25218",
+      "controller": "controller-25218.jsonl",
       "lanes": 2,
       "requestToReply": 696.6564060000001,
       "lastFinishedToReply": 15.907134999999471,
       "laneFinishSkew": 96.8772399999998
     },
     {
-      "controller": "controller-25218",
+      "controller": "controller-25218.jsonl",
       "lanes": 2,
       "requestToReply": 714.1177079999998,
       "lastFinishedToReply": 17.925209000000905,
       "laneFinishSkew": 4.483228999997664
     },
     {
-      "controller": "controller-25218",
+      "controller": "controller-25218.jsonl",
       "lanes": 2,
       "requestToReply": 829.1366140000027,
       "lastFinishedToReply": 29.4498960000019,
       "laneFinishSkew": 114.05015600000115
     },
     {
-      "controller": "controller-25218",
+      "controller": "controller-25218.jsonl",
       "lanes": 2,
       "requestToReply": 741.2671350000019,
       "lastFinishedToReply": 15.115157000000181,
       "laneFinishSkew": 40.58786400000099
     },
     {
-      "controller": "controller-25218",
+      "controller": "controller-25218.jsonl",
       "lanes": 2,
       "requestToReply": 777.4169790000014,
       "lastFinishedToReply": 24.67338600000221,
       "laneFinishSkew": 49.628436999999394
     },
     {
-      "controller": "controller-25218",
+      "controller": "controller-25218.jsonl",
       "lanes": 2,
       "requestToReply": 781.0835419999967,
       "lastFinishedToReply": 21.348489999996673,
       "laneFinishSkew": 139.37791700000162
     },
     {
-      "controller": "controller-25218",
+      "controller": "controller-25218.jsonl",
       "lanes": 2,
       "requestToReply": 713.4574990000001,
       "lastFinishedToReply": 16.140103999998246,
       "laneFinishSkew": 82.56729199999972
     },
     {
-      "controller": "controller-25218",
+      "controller": "controller-25218.jsonl",
       "lanes": 2,
       "requestToReply": 762.6731770000006,
       "lastFinishedToReply": 25.989166999999725,
       "laneFinishSkew": 2.3017190000027767
     },
     {
-      "controller": "controller-25218",
+      "controller": "controller-25218.jsonl",
       "lanes": 2,
       "requestToReply": 945.7659890000032,
       "lastFinishedToReply": 22.578333000001294,
       "laneFinishSkew": 129.02166600000055
     },
     {
-      "controller": "controller-25218",
+      "controller": "controller-25218.jsonl",
       "lanes": 2,
       "requestToReply": 1040.7678120000019,
       "lastFinishedToReply": 18.327084000000468,
       "laneFinishSkew": 400.2663539999994
     },
     {
-      "controller": "controller-25218",
+      "controller": "controller-25218.jsonl",
       "lanes": 2,
       "requestToReply": 739.2095310000004,
       "lastFinishedToReply": 15.204271000002336,
       "laneFinishSkew": 118.50369800000044
     },
     {
-      "controller": "controller-25218",
+      "controller": "controller-25218.jsonl",
       "lanes": 2,
       "requestToReply": 763.3277080000007,
       "lastFinishedToReply": 13.17364599999928,
       "laneFinishSkew": 83.69031199999881
     },
     {
-      "controller": "controller-25218",
+      "controller": "controller-25218.jsonl",
       "lanes": 2,
       "requestToReply": 754.8738019999982,
       "lastFinishedToReply": 23.769635999997263,
       "laneFinishSkew": 2.501717999999528
     },
     {
-      "controller": "controller-25218",
+      "controller": "controller-25218.jsonl",
       "lanes": 2,
       "requestToReply": 820.0760939999964,
       "lastFinishedToReply": 20.985937999997986,
       "laneFinishSkew": 76.72849000000133
     },
     {
-      "controller": "controller-25218",
+      "controller": "controller-25218.jsonl",
       "lanes": 2,
       "requestToReply": 723.8965620000017,
       "lastFinishedToReply": 24.83817700000145,
       "laneFinishSkew": 3.115520999999717
     },
     {
-      "controller": "controller-25218",
+      "controller": "controller-25218.jsonl",
       "lanes": 2,
       "requestToReply": 755.0787500000006,
       "lastFinishedToReply": 16.342291999997542,
       "laneFinishSkew": 114.24505200000203
     },
     {
-      "controller": "controller-25218",
+      "controller": "controller-25218.jsonl",
       "lanes": 2,
       "requestToReply": 721.7681770000017,
       "lastFinishedToReply": 20.689895999999862,
       "laneFinishSkew": 25.13000000000102
     },
     {
-      "controller": "controller-25218",
+      "controller": "controller-25218.jsonl",
       "lanes": 2,
       "requestToReply": 761.3988539999991,
       "lastFinishedToReply": 14.48348999999871,
       "laneFinishSkew": 86.88984399999754
     },
     {
-      "controller": "controller-25218",
+      "controller": "controller-25218.jsonl",
       "lanes": 2,
       "requestToReply": 893.2035420000029,
       "lastFinishedToReply": 16.889271000000008,
       "laneFinishSkew": 80.94333400000323
     },
     {
-      "controller": "controller-25218",
+      "controller": "controller-25218.jsonl",
       "lanes": 2,
       "requestToReply": 902.9577600000048,
       "lastFinishedToReply": 14.626406000003044,
       "laneFinishSkew": 106.86598999999842
     },
     {
-      "controller": "controller-25218",
+      "controller": "controller-25218.jsonl",
       "lanes": 2,
       "requestToReply": 795.102082999998,
       "lastFinishedToReply": 22.32385400000203,
       "laneFinishSkew": 43.26151099999697
     },
     {
-      "controller": "controller-25218",
+      "controller": "controller-25218.jsonl",
       "lanes": 2,
       "requestToReply": 1119.1852080000026,
       "lastFinishedToReply": 28.4242710000035,
       "laneFinishSkew": 19.297030999994604
     },
     {
-      "controller": "controller-25218",
+      "controller": "controller-25218.jsonl",
       "lanes": 2,
       "requestToReply": 977.5059370000017,
       "lastFinishedToReply": 17.57255200000509,
       "laneFinishSkew": 87.24400999999489
     },
     {
-      "controller": "controller-25218",
+      "controller": "controller-25218.jsonl",
       "lanes": 2,
       "requestToReply": 965.1160410000011,
       "lastFinishedToReply": 27.298957999999402,
       "laneFinishSkew": 108.55098999999609
     },
     {
-      "controller": "controller-25218",
+      "controller": "controller-25218.jsonl",
       "lanes": 2,
       "requestToReply": 1786.5721350000022,
       "lastFinishedToReply": 51.307917000005546,
       "laneFinishSkew": 132.61994799999957
     },
     {
-      "controller": "controller-25218",
+      "controller": "controller-25218.jsonl",
       "lanes": 2,
       "requestToReply": 2065.6371870000003,
       "lastFinishedToReply": 35.58927100000437,
       "laneFinishSkew": 235.80869800000073
     },
     {
-      "controller": "controller-25218",
+      "controller": "controller-25218.jsonl",
       "lanes": 2,
       "requestToReply": 1905.7346860000034,
       "lastFinishedToReply": 42.280103999997664,
       "laneFinishSkew": 137.76510400000552
     },
     {
-      "controller": "controller-25218",
+      "controller": "controller-25218.jsonl",
       "lanes": 2,
       "requestToReply": 2181.243644999995,
       "lastFinishedToReply": 40.688436999997066,
       "laneFinishSkew": 467.20729199999914
     },
     {
-      "controller": "controller-25218",
+      "controller": "controller-25218.jsonl",
       "lanes": 2,
       "requestToReply": 2424.834686000002,
       "lastFinishedToReply": 32.0914580000026,
       "laneFinishSkew": 437.8079690000013
     },
     {
-      "controller": "controller-25218",
+      "controller": "controller-25218.jsonl",
       "lanes": 2,
       "requestToReply": 3092.6002599999993,
       "lastFinishedToReply": 78.00213599999552,
       "laneFinishSkew": 648.0727600000027
     },
     {
-      "controller": "controller-25218",
+      "controller": "controller-25218.jsonl",
       "lanes": 2,
       "requestToReply": 3062.597342999994,
       "lastFinishedToReply": 81.67619800000102,
       "laneFinishSkew": 476.5447919999933
     },
     {
-      "controller": "controller-25218",
+      "controller": "controller-25218.jsonl",
       "lanes": 2,
       "requestToReply": 4394.680779999995,
       "lastFinishedToReply": 168.86817699999665,
       "laneFinishSkew": 1075.4841139999917
     },
     {
-      "controller": "controller-25218",
+      "controller": "controller-25218.jsonl",
       "lanes": 2,
       "requestToReply": 4087.894008999996,
       "lastFinishedToReply": 206.30567699999665,
       "laneFinishSkew": 409.6443750000035
     },
     {
-      "controller": "controller-25218",
+      "controller": "controller-25218.jsonl",
       "lanes": 2,
       "requestToReply": 4409.896456999995,
       "lastFinishedToReply": 201.03854100000171,
       "laneFinishSkew": 917.2633859999914
     },
     {
-      "controller": "controller-25218",
+      "controller": "controller-25218.jsonl",
       "lanes": 2,
       "requestToReply": 4717.3821339999995,
       "lastFinishedToReply": 75.91781299999275,
       "laneFinishSkew": 641.2677079999994
     },
     {
-      "controller": "controller-25218",
+      "controller": "controller-25218.jsonl",
       "lanes": 2,
       "requestToReply": 3629.4800499999983,
       "lastFinishedToReply": 52.58588499999314,
       "laneFinishSkew": 555.4786980000063
     },
     {
-      "controller": "controller-25218",
+      "controller": "controller-25218.jsonl",
       "lanes": 2,
       "requestToReply": 2610.6139059999987,
       "lastFinishedToReply": 48.89177100000961,
       "laneFinishSkew": 308.3415629999945
     },
     {
-      "controller": "controller-25218",
+      "controller": "controller-25218.jsonl",
       "lanes": 2,
       "requestToReply": 2393.526404999997,
       "lastFinishedToReply": 44.73744799999986,
       "laneFinishSkew": 532.6096350000007
     },
     {
-      "controller": "controller-25218",
+      "controller": "controller-25218.jsonl",
       "lanes": 2,
       "requestToReply": 1939.6904159999976,
       "lastFinishedToReply": 44.23067699999956,
       "laneFinishSkew": 225.7360420000041
     },
     {
-      "controller": "controller-27984",
+      "controller": "controller-27984.jsonl",
       "lanes": 2,
       "requestToReply": 6954.978852,
       "lastFinishedToReply": 59.68812500000058,
       "laneFinishSkew": 15.494426999999632
     },
     {
-      "controller": "controller-27984",
+      "controller": "controller-27984.jsonl",
       "lanes": 2,
       "requestToReply": 1703.5426549999993,
       "lastFinishedToReply": 32.04749999999876,
       "laneFinishSkew": 160.25536400000055
     },
     {
-      "controller": "controller-27984",
+      "controller": "controller-27984.jsonl",
       "lanes": 2,
       "requestToReply": 1089.6479690000015,
       "lastFinishedToReply": 50.73130200000014,
       "laneFinishSkew": 4.8140110000003915
     },
     {
-      "controller": "controller-27984",
+      "controller": "controller-27984.jsonl",
       "lanes": 2,
       "requestToReply": 1024.613958,
       "lastFinishedToReply": 33.79125000000022,
       "laneFinishSkew": 26.163645999999062
     },
     {
-      "controller": "controller-27984",
+      "controller": "controller-27984.jsonl",
       "lanes": 2,
       "requestToReply": 1299.7040619999989,
       "lastFinishedToReply": 44.629791999999725,
@@ -3109,5 +3315,15 @@
     449.8333849999999,
     514.3166659999988,
     227.70911500000147
-  ]
+  ],
+  "single_file_mutants": 198,
+  "single_file_medians_ms": {
+    "requestToFork": 44.12851600000249,
+    "forkToStarted": 368.2060155000004,
+    "startedToRun": 0.7860419999997248,
+    "importAndCollection": 257.15411499999936,
+    "executionAndReport": 85.73843750000015,
+    "teardown": 18.692369999998846,
+    "finishedToReply": 50.63005200000043
+  }
 }
