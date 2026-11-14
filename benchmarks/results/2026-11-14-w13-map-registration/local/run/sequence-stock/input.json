@@ -1,0 +1,7 @@
+{
+  "root": "/tmp/oximut-w13-map-registration-local-1/run/fixture",
+  "events": "/tmp/oximut-w13-map-registration-local-1/run/events.jsonl",
+  "scenario": "sequence",
+  "result": "/tmp/oximut-w13-map-registration-local-1/run/sequence-stock/result.json",
+  "workers": "/tmp/oximut-w13-map-registration-local-1/run/sequence-stock/workers.json"
+}

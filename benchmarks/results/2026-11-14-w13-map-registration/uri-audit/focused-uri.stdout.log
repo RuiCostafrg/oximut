@@ -1,0 +1,32 @@
+✔ registration remains lazy, exact URL/path lookup only, then caches one parsed map (66.152604ms)
+✖ native Vite hook maps a real thrown frame and unregisters without removing another owner (80.474219ms)
+✔ missing maps and unsupported metadata fail without registration (46.012396ms)
+✔ corrupt bytes, JSON, map structure and source provenance fail closed on lookup (142.670469ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 3
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 813.246822
+
+✖ failing tests:
+
+test at benchmarks/experiments/vitest5-private-bootstrap/test-map-registration.mjs:45:1
+✖ native Vite hook maps a real thrown frame and unregisters without removing another owner (80.474219ms)
+  AssertionError [ERR_ASSERTION]: Original source URI diverged: Error: mapped lookup
+      at Module.boom (file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/file:/tmp/w13-map-oUOZa3/original.js:3:1)
+      at TestContext.<anonymous> (file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/benchmarks/experiments/vitest5-private-bootstrap/test-map-registration.mjs:54:16)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+      at TestContext.<anonymous> (file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/benchmarks/experiments/vitest5-private-bootstrap/test-map-registration.mjs:56:10)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }

@@ -1,0 +1,12 @@
+{"pid":15903,"type":"map-registered","statBytes":39009,"mapReadBytes":0,"callbackCPU":{"user":447,"system":3122},"heapDelta":41240}
+{"pid":15912,"type":"map-registered","statBytes":39009,"mapReadBytes":0,"callbackCPU":{"user":3725,"system":36},"heapDelta":41240}
+{"pid":15919,"type":"map-registered","statBytes":39009,"mapReadBytes":0,"callbackCPU":{"user":3698,"system":32},"heapDelta":41240}
+{"pid":15919,"type":"map-unregistered","lookups":0}
+{"pid":15928,"type":"map-registered","statBytes":39009,"mapReadBytes":0,"callbackCPU":{"user":81,"system":1117},"heapDelta":41240}
+{"pid":15928,"type":"map-unregistered","lookups":0}
+{"pid":16009,"type":"map-registered","statBytes":39009,"mapReadBytes":0,"callbackCPU":{"user":3849,"system":709},"heapDelta":-492352}
+{"pid":16009,"type":"map-loaded","bytes":39009,"callbackCPU":{"user":214,"system":4072},"heapDelta":99064}
+{"pid":16072,"type":"map-registered","statBytes":39009,"mapReadBytes":0,"callbackCPU":{"user":2760,"system":117},"heapDelta":41240}
+{"pid":16144,"type":"map-registered","statBytes":39009,"mapReadBytes":0,"callbackCPU":{"user":3211,"system":50},"heapDelta":41240}
+{"pid":16144,"type":"map-unregistered","lookups":0}
+{"pid":16226,"type":"map-registered","statBytes":39009,"mapReadBytes":0,"callbackCPU":{"user":2217,"system":585},"heapDelta":41240}

@@ -1,0 +1,21 @@
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: Original bootstrap source URI diverged for PID 16009
++ actual - expected
+
++ '    at process.exit (file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/file:/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/base.Cof-UHJf.js:123:9)'
+- '    at process.exit (file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/base.Cof-UHJf.js:123:9)'
+
+    at validateBootstrapFrames (file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/benchmarks/experiments/vitest5-private-bootstrap/probe.mjs:202:12)
+    at file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/[eval1]:1:296 {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: '    at process.exit (file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/file:/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/base.Cof-UHJf.js:123:9)',
+  expected: '    at process.exit (file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/base.Cof-UHJf.js:123:9)',
+  operator: 'strictEqual',
+  diff: 'simple'
+}
+
+Node.js v26.3.1

@@ -1,0 +1,17 @@
+{
+  "status": "structural failure: malformed full original source URI",
+  "candidateAttempts": 1,
+  "candidateArtifactRepairedAfterFailure": false,
+  "nativeCI": "not dispatched; conditional qualification gate failed",
+  "supersedes": "local/capture.json and local/run/evidence.json green labels",
+  "failureEvidence": [
+    "uri-audit/captured-stacks.stderr.log",
+    "uri-audit/focused-uri.stdout.log",
+    "local/run/events.jsonl"
+  ],
+  "performance": "unmeasured; callback diagnostics only",
+  "priorCommitsPreserved": [
+    "328917cb2bee82b2059d91fdcb12f7f723fb0f0a",
+    "70ad922063071dc85c9e3604e6859f84cf7ff2b7"
+  ]
+}

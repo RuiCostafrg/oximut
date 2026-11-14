@@ -1,0 +1,40 @@
+{
+  "status": "complete structural qualification passed on this host; no performance qualification",
+  "performance": "structural only; no scored resources",
+  "steps": [
+    {
+      "name": "focused",
+      "argv": [
+        "/tmp/oximut-v5-node/node-v26.3.1-linux-arm64/bin/node",
+        "--experimental-import-meta-resolve",
+        "--test",
+        "--test-concurrency=1",
+        "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/benchmarks/experiments/vitest5-private-bootstrap/test-probe.mjs",
+        "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/benchmarks/experiments/vitest5-private-bootstrap/test-map-registration.mjs"
+      ],
+      "exitCode": 0
+    },
+    {
+      "name": "matrix",
+      "argv": [
+        "/tmp/oximut-v5-node/node-v26.3.1-linux-arm64/bin/node",
+        "--experimental-import-meta-resolve",
+        "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/benchmarks/experiments/vitest5-private-bootstrap/probe.mjs",
+        "/tmp/oximut-w13-map-registration-local-1/run"
+      ],
+      "exitCode": 0
+    }
+  ],
+  "runtime": {
+    "version": "v26.3.1",
+    "arch": "arm64",
+    "platform": "linux",
+    "execPath": "/tmp/oximut-v5-node/node-v26.3.1-linux-arm64/bin/node",
+    "executableSha256": "a76224241ff1ebcbf90adc2eb4600ddb048d19f883c6a9140b6c3ceab004e4f0",
+    "archiveURL": "https://nodejs.org/dist/v26.3.1/node-v26.3.1-linux-arm64.tar.xz",
+    "archiveSha256": "c021380e64d1314d1218ab1f31e0f5b0f28f1f54ac779ef72a16c2bda0ca5c30",
+    "checksumURL": "https://nodejs.org/dist/v26.3.1/SHASUMS256.txt",
+    "checksumFileSha256": "e0476a820b94cd0d80a4ab1e0d8451afe04eb40d88c479e454cffd4e7d8f29d9",
+    "verification": "HTTPS upstream checksum -> archive bytes -> extracted bin/node bytes == executed binary"
+  }
+}

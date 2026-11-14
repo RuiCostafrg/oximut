@@ -81,6 +81,17 @@ afterAll(() => {
   appendFileSync(${JSON.stringify(events)}, JSON.stringify({type:'dirtied-clock',pid:process.pid,now:Date.now()})+'\\n');
 });
 `,
+    'framework-stack.test.ts': `import { test, expect } from 'vitest';
+import { appendFileSync } from 'node:fs';
+test('bootstrap source-map frame', () => {
+  try { process.exit(7); throw new Error('missing exit guard'); }
+  catch (error) {
+    appendFileSync(${JSON.stringify(events)}, JSON.stringify({type:'bootstrap-stack',pid:process.pid,stack:error.stack})+'\\n');
+    expect(error.message).toContain('process.exit unexpectedly called with "7"');
+    expect(error.stack).toMatch(/base.Cof-UHJf.js:123:9/);
+  }
+});
+`,
     'throw.test.ts': `import { test } from 'vitest';
 test('intentional throw', () => { throw new Error('intentional test throw'); });
 `,

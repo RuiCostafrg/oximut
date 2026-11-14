@@ -145,9 +145,20 @@ export async function buildCandidate(output, evidence) {
     },
   }] });
   const bundle = join(output, 'private-worker.mjs');
-  try { await build.write({ file: bundle, format: 'es', codeSplitting: false, sourcemap: true }); } finally { await build.close(); }
+  const registration = new URL('./map-registration.mjs', import.meta.url);
+  const banner = `import { installBundleMap as __w13InstallBundleMap } from ${JSON.stringify(registration.href)};\n__w13InstallBundleMap(import.meta.url, new URL('./private-worker.map-registration.json', import.meta.url));`;
+  try { await build.write({ file: bundle, format: 'es', codeSplitting: false, sourcemap: true, banner }); } finally { await build.close(); }
   assert.deepEqual([...loaded].sort(), [...selected].sort(), 'Candidate allowlist not fully loaded');
   evidence.bundle = { path: bundle, sha256: hash(await readFile(bundle)), mapSha256: hash(await readFile(bundle + '.map')) };
+  const metadata = {
+    format: 1, bundleURL: pathToFileURL(bundle).href, mapURL: './private-worker.mjs.map',
+    mapSha256: evidence.bundle.mapSha256, viteVersion: pins.vite,
+    events: pathToFileURL(join(output, 'map-events.jsonl')).href,
+    sources: evidence.topology.modules.filter(module => selected.has(module.path)).map(module => ({ url: pathToFileURL(module.path).href, sha256: module.sha256 })),
+  };
+  const registrationFile = join(output, 'private-worker.map-registration.json');
+  await writeFile(registrationFile, JSON.stringify(metadata, null, 2) + '\n');
+  evidence.bundle.registration = { path: registrationFile, sha256: hash(await readFile(registrationFile)), helper: registration.href, helperSha256: hash(await readFile(registration)) };
   evidence.coverage = { modules: selected.size, sourceBytes: evidence.topology.modules.filter(m => selected.has(m.path)).reduce((sum,m) => sum + m.bytes, 0), workerModules: evidence.topology.worker.length, workerSourceBytes: evidence.topology.modules.filter(m => evidence.topology.worker.includes(m.path)).reduce((sum,m) => sum + m.bytes, 0) };
   return bundle;
 }

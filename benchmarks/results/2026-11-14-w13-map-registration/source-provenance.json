@@ -1,0 +1,15 @@
+{
+  "Cargo.lock": "b3a8971f6d2e099fd78654cc18d894d6131d6daa5678191780b76d9560aac50c",
+  "benchmarks/experiments/vitest5-private-bootstrap/README.md": "ca678a6477da2ff67207555c5e093fd6008602159839200ba1fbda0957d3bbf6",
+  "benchmarks/experiments/vitest5-private-bootstrap/audited-inputs.json": "a3fc505f9e9ee96e98458afcc0d57ba0ea19e73348ae0deaab3e30c690d31dff",
+  "benchmarks/experiments/vitest5-private-bootstrap/build.mjs": "632848f06b9b691838e0503a67cdd9eeebdcb7e319bf1e422a21a262977d2602",
+  "benchmarks/experiments/vitest5-private-bootstrap/capture.py": "3fc9ae8e48b5d266b02f6b4e5f76aa90c6947a26b22e9b7f3ee8555c322cb89d",
+  "benchmarks/experiments/vitest5-private-bootstrap/fixtures.mjs": "4ba2e60c2c91ba968cf52fb7f54bef6ec74971fb0918d538b03185eb80520bf0",
+  "benchmarks/experiments/vitest5-private-bootstrap/framework-stack.mjs": "cead02d8bbb16e12c4bea333a0e8f1fff00b69110b42218c5ab06752e16fa23a",
+  "benchmarks/experiments/vitest5-private-bootstrap/map-registration.mjs": "45d199d8f8573041a71306df76813cdadde335c6a0b666f7c0e519058b376451",
+  "benchmarks/experiments/vitest5-private-bootstrap/probe.mjs": "71e79be80677dda47c8f5d6466a680b96debc5e830488bd4e26e10778d64829a",
+  "benchmarks/experiments/vitest5-private-bootstrap/test-map-registration.mjs": "ac6186e2c1813e7a1e4ccae32954c48aacc431dfc89fd928f6f6d27ff739a775",
+  "benchmarks/experiments/vitest5-private-bootstrap/test-probe.mjs": "4efe6bc4aec9cbc857dc6f5878c47dd8a0a4adff727b3dd503cea1eda27120c0",
+  "package-lock.json": "6dc7a6c55362e0dc23c2c5395a7e3ecfeb7300337f75aa2c6ef610e3680abd92",
+  "package.json": "ac90d3f2e13ebbebbfe76581dcaca0dada1f32df0ced9dca2a4506e14c908eef"
+}

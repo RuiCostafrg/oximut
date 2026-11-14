@@ -1,80 +1,85 @@
-# Identity-safe private bootstrap: stopped on source-map fidelity
+# Private bootstrap with scoped map consumption
 
-This is ONE standalone experimental worker bundle. It preserves native collector
-and API identity, but **fails the bootstrap-stack fidelity gate**. It is not a
-qualified candidate, product backend or performance result. The earlier
-collector-inlining negative control at `328917c` is unchanged and is not reused
-as qualification.
+**Stopped: original source URI fidelity fails.** The registration maps the
+bootstrap basename/line/column, but the pinned Vite consumer produces a malformed
+full source URI containing an extra `file:` path component. The initially green
+filename-only capture is superseded by the full-URI audit in
+`benchmarks/results/2026-11-14-w13-map-registration/REPORT.md`. The helper/artifact
+was not repaired or rerun after discovery. Current oracles reject that URI.
+Native CI was not dispatched; this candidate is not qualified.
 
-The selected modules and source hashes are explicit in `audited-inputs.json`:
-`workers/forks.js`, `base.Cof-UHJf.js`, `init-forks.BaDXQSD8.js`,
-`index.w_oBZ9N8.js`, `coverage.9iqXE2gN.js`, and `setup-common.CqAQCXzx.js`.
-The recomputed worker/public-API intersection (all 15 files, including
-`run.CjdgFZiW.js`, `index.CZzC1gGg.js`, spy, source-map and snapshot owners)
-stays native. So do mocks, module evaluator, environment/provider loaders,
-native module loaders and every uncertain private module.
+The revised candidate uses the same six audited inline modules and leaves all
+15 worker/public-API intersection modules native. `328917c` and `70ad922`, their
+failure artifacts, and the historical reports remain unchanged. See
+`benchmarks/results/2026-11-14-w13-private-bootstrap/REPORT.md` for the previous
+bootstrap-frame failure; a new capture is required for this revision.
 
-`build.mjs` traverses literal imports, exports and lazy imports using Node's
-original importer URL, under `--experimental-import-meta-resolve`. It checks
-the pinned source hashes, the complete worker graph, the intersection, and the
-absence of native-to-inline ingress. The resolution test uses two distinct
-importer directories with conditional package exports to catch resolution
-relative to this script or require conditions instead of the original importer.
-This is a conservative audit of the declared Node-only experiment, not a proof
-about computed imports inside native modules or every plugin/custom loader.
+The new fix is in `map-registration.mjs`, an external probe helper imported by
+a banner in the new bundle. It uses native Vite 8.3.5's public ModuleRunner
+`retrieveSourceMap` option with an empty, non-fetching graph. It does not modify
+Vitest, redirect APIs/evaluators/mocks, replace Error.stack, or enable Node's
+process-wide source-map mode. Vite performs frame mapping; full-URI fidelity
+still fails in this revision.
+The banner registers before worker bootstrap execution, avoiding a cached null
+map on the first thrown frame. All literal lazy framework imports remain native
+and lazy, with resolution relative to their original importer.
 
-Only one metadata form is supported in inline source: the audited base module's
-`import.meta.url`, replaced syntactically with its original URL and a precise
-source map. Unknown metadata, context identifiers, computed imports, import
-attributes/options and unaudited inline modules reject. Literal lazy targets
-remain native absolute URLs and lazy. Node builtins and all external packages
-stay native, using import-condition resolution. The AST parser rejects unknown
-grammar. Audited source hashes reject new source even if its syntax parses.
-The bundler's known virtual runtime is retained as actual source plus hash.
+The registration metadata binds the bundle URL, map URL/hash, and all six
+original source URLs/content hashes. A missing map rejects on registration.
+Only exact bundle URL/path lookups may load it; JSON parsing, hashing and source
+validation happen once at first retrieval. Corrupt/unsupported maps throw rather
+than returning fabricated frames. The emitted map is resolved from its actual
+file URL; original source paths resolve against that map URL. The known
+Rolldown virtual runtime is retained as source plus hash.
 
-For an explicit future reproduction (the failure is expected; do not retry it
-to obtain a green result):
+Closing the registration owner removes its retrieval hook without clearing
+other Vitest runners. Vite's private map/file-content caches are not publicly
+removable and can remain until OS process exit. Repeat registration of a bundle
+URL rejects. This is a fresh-worker experiment, never a reusable runtime.
+Normal SIGTERM/deadline SIGKILL process destruction reclaims all state; graceful
+exit also requests hook cleanup. Tests explicitly exercise scoped cleanup.
+
+Run ONE complete capture in a new directory, on Linux with exact Node 26.3.1:
 
 ```sh
-npm ci --ignore-scripts --no-audit --no-fund
-node --experimental-import-meta-resolve --test benchmarks/experiments/vitest5-private-bootstrap/test-probe.mjs
-node --experimental-import-meta-resolve benchmarks/experiments/vitest5-private-bootstrap/probe.mjs /tmp/NEW-private-matrix
-node --experimental-import-meta-resolve benchmarks/experiments/vitest5-private-bootstrap/framework-stack.mjs /tmp/NEW-private-matrix /tmp/NEW-bootstrap-stack
+python3 benchmarks/experiments/vitest5-private-bootstrap/capture.py /tmp/NEW-w13-capture --node /path/to/node --install
 ```
 
-Both captures are required. A main-matrix pass alone is **not qualification**.
-The second gate reuses the first capture's exact bundle/map hashes, without
-rebuilding or repairing the candidate. It exercises a stack originating in
-the bundled base module, in addition to the matrix's project TypeScript stacks.
-Any invariant failure stops execution; raw results are written before report
-assertions. Each output directory must be new.
+An existing official distribution archive can be supplied with `--archive` to
+avoid downloading it again; it is still checked against fresh upstream HTTPS
+SHASUMS256. `--install` is used in native CI and can be omitted locally for the
+already pinned installation. The capture verifies both the archive hash and the
+extracted `bin/node` hash against the actually executed binary, snapshots source
+before prerequisites, and preserves every stdout/stderr/status including failures.
+No retries are automatic. Prerequisites/tests/probe and CI each have bounds.
 
-The main matrix uses actual import-time selectors and exact expected outcomes:
-inactive passes both arithmetic tests, A fails add only, B fails multiply only,
-then A fails add only again. All five test identities remain fixed. Each job
-uses a fresh real `ForksPoolWorker`, a distinct PID/birth identity, a setup realm
-UUID, `isolate: true`, and explicit pool drain before the next admission.
-The fixture dirties local/module state, globals, environment, a builtin function
-property and fake clocks. Native CJS/ESM external counters, hoisted mocks,
-spies, setup/hook counts, real late timers, mapped TypeScript stacks, test throws
-and import throws are checked against stock. Sources are hashed before/after.
+The complete matrix runs inactive/A/B/A with actual arithmetic differences,
+exact failures/inventory, distinct PIDs/realm markers and drained fresh forks.
+It includes global/env/builtin/local/native-external-module/clock state,
+setup/hooks/mocks/spies, late real timers, project TypeScript and bootstrap
+original-file/line/column stacks, test/import throws, and synchronous hangs with
+a real descendant. Both deadline groups must become entirely empty, including
+zombies. Arbitrarily daemonized descendants that escape their group remain
+outside this controlled cleanup proof. Coverage/providers/custom loaders are
+not universally qualified by this Node-only fixture.
 
-Deadline fixtures spawn an actual descendant then synchronously hang. A
-dedicated controller process group is killed at five seconds. PID/PPID/group/
-birth ticks are retained, and the group must become empty, including zombies,
-within bounded cleanup. Normal controllers must leave no live descendants;
-unexpected descendants trigger cleanup and structural failure. This controlled
-group oracle does not establish cleanup of arbitrary daemonized descendants
-that escape their group or production deadline integration.
+Focused tests cover original importer/conditional export resolution, unchanged
+allowlist/native intersection, unsupported syntax, selector rejection controls,
+registration cleanup, actual Vite mapping, lazy lookup, exact lookup identity,
+missing/corrupt maps and failed-validation caching. The legacy separate
+`framework-stack.mjs` preserves the earlier capture procedure; current
+qualification uses the unified `probe.mjs` matrix instead.
 
-The capture records complete installed-file hashes, Node executable hash,
-source snapshots/manifests, resolved imports, source edits, artifact/map hashes,
-stdout/stderr/statuses, job results, events and cleanup. Original installation
-URLs bind the artifact to its checkout; it is not a relocatable release bundle.
-Only unused, explicitly identified optional lazy environment/tracing packages
-may be absent; missing static or unknown lazy dependencies reject.
+Installation manifests are gzip-compressed with both compressed and original
+SHA-256 retained. Bundle/map/registration/helper/source/fixture/Node hashes and
+raw outcomes, job identities, cleanup and map events are retained. The artifact
+remains tied to its original installation URLs, not relocatable product output.
+Map events record registration/first-lookup CPU and heap deltas and bytes read.
+These diagnostics exclude Vite decoding/cache/logging costs and are not whole
+tree CPU/RSS, performance ratios or scores. Hashing/JSON/source validation and
+one additional registration-owner graph introduce real CPU/I/O/memory costs.
+No performance saving is assumed. No product defaults or dependencies change.
 
-See the retained result under
-`benchmarks/results/2026-11-14-w13-private-bootstrap/REPORT.md`. No native CI
-was dispatched because the full local gate failed. No profilers, scored runs,
-product integration, dependency changes or default-isolation changes occurred.
+Native Ubuntu structural qualification is a separate gate after local success;
+product/colord equivalence and an unprofiled paired performance campaign follow
+only after that. Main remains unsettled.

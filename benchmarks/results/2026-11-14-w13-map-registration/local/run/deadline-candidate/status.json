@@ -1,0 +1,32 @@
+{
+  "code": null,
+  "signal": "SIGKILL",
+  "deadlineFired": true,
+  "durationMs": 5119.524634000001,
+  "observedAtDeadline": [
+    {
+      "pid": 16197,
+      "state": "S",
+      "ppid": 15591,
+      "group": 16197,
+      "startTime": "143396768"
+    },
+    {
+      "pid": 16226,
+      "state": "R",
+      "ppid": 16197,
+      "group": 16197,
+      "startTime": "143396968"
+    },
+    {
+      "pid": 16233,
+      "state": "S",
+      "ppid": 16226,
+      "group": 16197,
+      "startTime": "143397063"
+    }
+  ],
+  "residualLive": [],
+  "remaining": [],
+  "noLiveDescendants": true
+}

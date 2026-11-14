@@ -1,0 +1,10 @@
+{
+  "argv": [
+    "/tmp/oximut-v5-node/node-v26.3.1-linux-arm64/bin/node",
+    "--experimental-import-meta-resolve",
+    "--input-type=module",
+    "-e",
+    "import {readFile} from 'node:fs/promises'; import {validateBootstrapFrames} from './benchmarks/experiments/vitest5-private-bootstrap/probe.mjs'; const events=(await readFile('benchmarks/results/2026-11-14-w13-map-registration/local/run/events.jsonl','utf8')).trim().split('\\n').map(JSON.parse); validateBootstrapFrames(events);"
+  ],
+  "exitCode": 1
+}

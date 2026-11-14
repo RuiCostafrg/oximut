@@ -1,0 +1,10 @@
+{
+  "code": 0,
+  "signal": null,
+  "deadlineFired": false,
+  "durationMs": 3102.3742700000003,
+  "observedAtDeadline": [],
+  "residualLive": [],
+  "remaining": [],
+  "noLiveDescendants": true
+}

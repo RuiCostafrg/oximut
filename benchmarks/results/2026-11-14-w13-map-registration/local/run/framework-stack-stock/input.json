@@ -1,0 +1,7 @@
+{
+  "root": "/tmp/oximut-w13-map-registration-local-1/run/fixture",
+  "events": "/tmp/oximut-w13-map-registration-local-1/run/events.jsonl",
+  "scenario": "framework-stack",
+  "result": "/tmp/oximut-w13-map-registration-local-1/run/framework-stack-stock/result.json",
+  "workers": "/tmp/oximut-w13-map-registration-local-1/run/framework-stack-stock/workers.json"
+}

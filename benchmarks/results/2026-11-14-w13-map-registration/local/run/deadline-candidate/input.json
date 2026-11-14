@@ -1,0 +1,8 @@
+{
+  "root": "/tmp/oximut-w13-map-registration-local-1/run/fixture",
+  "events": "/tmp/oximut-w13-map-registration-local-1/run/events.jsonl",
+  "scenario": "deadline",
+  "bundle": "/tmp/oximut-w13-map-registration-local-1/run/private-worker.mjs",
+  "result": "/tmp/oximut-w13-map-registration-local-1/run/deadline-candidate/result.json",
+  "workers": "/tmp/oximut-w13-map-registration-local-1/run/deadline-candidate/workers.json"
+}

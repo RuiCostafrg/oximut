@@ -1,0 +1,9 @@
+{
+  "argv": [
+    "/tmp/oximut-v5-node/node-v26.3.1-linux-arm64/bin/node",
+    "--experimental-import-meta-resolve",
+    "--test",
+    "benchmarks/experiments/vitest5-private-bootstrap/test-map-registration.mjs"
+  ],
+  "exitCode": 1
+}

@@ -1,0 +1,40 @@
+[
+  {
+    "pid": 15836,
+    "state": "R",
+    "ppid": 15812,
+    "group": 15812,
+    "startTime": "143393507",
+    "entrypoint": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/workers/forks.js",
+    "exitCode": null,
+    "signal": "SIGTERM"
+  },
+  {
+    "pid": 15843,
+    "state": "R",
+    "ppid": 15812,
+    "group": 15812,
+    "startTime": "143393640",
+    "entrypoint": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/workers/forks.js",
+    "exitCode": null,
+    "signal": "SIGTERM"
+  },
+  {
+    "pid": 15853,
+    "state": "R",
+    "ppid": 15812,
+    "group": 15812,
+    "startTime": "143393744",
+    "entrypoint": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/workers/forks.js",
+    "exitCode": null,
+    "signal": "SIGTERM"
+  },
+  {
+    "pid": 15861,
+    "state": "R",
+    "ppid": 15812,
+    "group": 15812,
+    "startTime": "143393847",
+    "entrypoint": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/workers/forks.js"
+  }
+]

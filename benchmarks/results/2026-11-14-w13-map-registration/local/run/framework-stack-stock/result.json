@@ -1,0 +1,27 @@
+{
+  "workers": [
+    {
+      "pid": 15977,
+      "state": "R",
+      "ppid": 15951,
+      "group": 15951,
+      "startTime": "143394799",
+      "entrypoint": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/workers/forks.js",
+      "exitCode": null,
+      "signal": "SIGTERM"
+    }
+  ],
+  "reports": [
+    {
+      "reason": "passed",
+      "errors": [],
+      "tests": [
+        {
+          "name": "bootstrap source-map frame",
+          "state": "passed"
+        }
+      ],
+      "testErrors": []
+    }
+  ]
+}

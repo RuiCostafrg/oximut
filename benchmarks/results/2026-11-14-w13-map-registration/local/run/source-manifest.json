@@ -1,0 +1,42 @@
+[
+  {
+    "path": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/benchmarks/experiments/vitest5-private-bootstrap/audited-inputs.json",
+    "sha256": "a3fc505f9e9ee96e98458afcc0d57ba0ea19e73348ae0deaab3e30c690d31dff"
+  },
+  {
+    "path": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/benchmarks/experiments/vitest5-private-bootstrap/build.mjs",
+    "sha256": "632848f06b9b691838e0503a67cdd9eeebdcb7e319bf1e422a21a262977d2602"
+  },
+  {
+    "path": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/benchmarks/experiments/vitest5-private-bootstrap/capture.py",
+    "sha256": "3fc9ae8e48b5d266b02f6b4e5f76aa90c6947a26b22e9b7f3ee8555c322cb89d"
+  },
+  {
+    "path": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/benchmarks/experiments/vitest5-private-bootstrap/fixtures.mjs",
+    "sha256": "4ba2e60c2c91ba968cf52fb7f54bef6ec74971fb0918d538b03185eb80520bf0"
+  },
+  {
+    "path": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/benchmarks/experiments/vitest5-private-bootstrap/framework-stack.mjs",
+    "sha256": "cead02d8bbb16e12c4bea333a0e8f1fff00b69110b42218c5ab06752e16fa23a"
+  },
+  {
+    "path": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/benchmarks/experiments/vitest5-private-bootstrap/map-registration.mjs",
+    "sha256": "45d199d8f8573041a71306df76813cdadde335c6a0b666f7c0e519058b376451"
+  },
+  {
+    "path": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/benchmarks/experiments/vitest5-private-bootstrap/probe.mjs",
+    "sha256": "29bcbd29314e230d4398e93a4b0fae7f02bdf24f290448e786ea556eb8206ef0"
+  },
+  {
+    "path": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/benchmarks/experiments/vitest5-private-bootstrap/README.md",
+    "sha256": "1edce3599ece76c92c18aaa533c742c5e1217f891bf0b88116bf998f6d2c980c"
+  },
+  {
+    "path": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/benchmarks/experiments/vitest5-private-bootstrap/test-map-registration.mjs",
+    "sha256": "459e6643d1115857e8944885ff7bd87a412bec01353f3d8f945e48f778c8800e"
+  },
+  {
+    "path": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/benchmarks/experiments/vitest5-private-bootstrap/test-probe.mjs",
+    "sha256": "4efe6bc4aec9cbc857dc6f5878c47dd8a0a4adff727b3dd503cea1eda27120c0"
+  }
+]

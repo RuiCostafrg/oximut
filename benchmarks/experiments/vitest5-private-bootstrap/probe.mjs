@@ -2,13 +2,14 @@ import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
 import { mkdir, readFile, writeFile, readdir } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { setTimeout as delay } from 'node:timers/promises';
-import { buildCandidate, checkVersions, pins, hash, manifest, require, repo } from './build.mjs';
+import { gzipSync } from 'node:zlib';
+import { buildCandidate, checkVersions, pins, hash, manifest, require, repo, dist } from './build.mjs';
 import { makeFixture, inventory, jobs } from './fixtures.mjs';
 
 const script = fileURLToPath(import.meta.url);
-const scenarios = ['sequence', 'throw', 'import-throw', 'deadline'];
+const scenarios = ['sequence', 'framework-stack', 'throw', 'import-throw', 'deadline'];
 const filesFor = scenario => scenario === 'sequence' ? 'state.test.ts' : scenario + '.test.ts';
 
 // Linux identities include birth ticks; never signal a PID based on its number alone.
@@ -192,6 +193,16 @@ function comparable(result) {
   return result.deadline ? { deadline: true } : result.reports.map(r => ({ reason: r.reason, tests: r.tests, errors: r.errors.map(e => e.message), testErrors: r.testErrors.map(e => ({ name: e.name, message: e.message })) }));
 }
 
+export function validateBootstrapFrames(events) {
+  const frames = events.filter(event => event.type === 'bootstrap-stack');
+  assert.equal(frames.length, 2, 'Missing matched stock/candidate bootstrap stacks');
+  const expected = `    at process.exit (${pathToFileURL(join(dist, 'chunks/base.Cof-UHJf.js')).href}:123:9)`;
+  for (const event of frames) {
+    const frame = event.stack.split('\n').find(line => line.includes('at process.exit ('));
+    assert.equal(frame, expected, `Original bootstrap source URI diverged for PID ${event.pid}`);
+  }
+}
+
 export async function main(output) {
   await mkdir(output); // Never overwrite any attempt.
   const evidence = { format: 1, status: 'incomplete', priorNegativeCommit: '328917cb2bee82b2059d91fdcb12f7f723fb0f0a', performance: 'Unmeasured: wall, CPU, aggregate RSS, paired ratios/CIs', runs: {} };
@@ -204,8 +215,10 @@ export async function main(output) {
     evidence.lock = { path: join(repo, 'package-lock.json'), sha256: hash(await readFile(join(repo, 'package-lock.json'))) };
     await writeFile(join(output, 'source-manifest.json'), JSON.stringify(evidence.sources, null, 2) + '\n');
     const installation = JSON.stringify(await manifest(join(repo, 'node_modules')), null, 2) + '\n';
-    await writeFile(join(output, 'installation.json'), installation);
+    const compressed = gzipSync(installation);
+    await writeFile(join(output, 'installation.json.gz'), compressed);
     evidence.installationSha256 = hash(installation);
+    evidence.compressedInstallationSha256 = hash(compressed);
     const bundle = await buildCandidate(output, evidence);
     const events = join(output, 'events.jsonl'), root = join(output, 'fixture');
     const fixtures = await makeFixture(root, events);
@@ -219,6 +232,7 @@ export async function main(output) {
       await writeFile(join(output, 'evidence.json'), JSON.stringify(evidence, null, 2) + '\n');
     }
     const observed = await readEvents(events);
+    validateBootstrapFrames(observed);
     for (const scenario of scenarios) {
       const setup = observed.filter(e => e.type === 'setup' && e.scenario === scenario);
       assert.equal(setup.length, scenario === 'sequence' ? 8 : 2);
@@ -226,7 +240,7 @@ export async function main(output) {
       assert.equal(new Set(setup.map(e => e.realm)).size, setup.length);
       assert.deepEqual(setup.map(e => e.selector), scenario === 'sequence' ? [...jobs,...jobs] : ['inactive','inactive']);
     }
-    assert.equal(new Set(observed.filter(e => e.type === 'setup').map(e => e.pid)).size, 14, 'Any job PID reuse');
+    assert.equal(new Set(observed.filter(e => e.type === 'setup').map(e => e.pid)).size, 16, 'Any job PID reuse');
     assert.equal(observed.filter(e => e.type === 'late').length, 0, 'Late asynchronous work escaped drain');
     assert.equal(observed.filter(e => e.type === 'dirtied-clock').length, 8);
     const hookEvents = observed.filter(e => e.type === 'hooks' && e.counts.before === 5);
@@ -235,8 +249,16 @@ export async function main(output) {
     assert.equal(observed.filter(e => e.type === 'stack').length, 8);
     for (const [name, digest] of Object.entries(evidence.fixtures)) assert.equal(hash(await readFile(join(root, name))), digest, `Fixture changed ${name}`);
     assert.equal(hash(await readFile(evidence.bundle.path)), evidence.bundle.sha256);
+    assert.equal(hash(await readFile(evidence.bundle.path + '.map')), evidence.bundle.mapSha256);
+    assert.equal(hash(await readFile(evidence.bundle.registration.path)), evidence.bundle.registration.sha256);
+    assert.equal(hash(await readFile(new URL(evidence.bundle.registration.helper))), evidence.bundle.registration.helperSha256);
+    const mapEvents = await readEvents(join(output, 'map-events.jsonl'));
+    assert.equal(mapEvents.filter(e => e.type === 'map-registered').length, 8);
+    const frameworkPID = evidence.runs['framework-stack'].candidate.workers[0].pid;
+    assert.equal(mapEvents.filter(e => e.type === 'map-loaded' && e.pid === frameworkPID).length, 1, 'Bootstrap map was not consumed');
+    evidence.mapCosts = { events: mapEvents, scope: 'Per-worker registration and first retrieval callback CPU/heap deltas only; excludes Vite map decoding/cache and logging. Not scored resources.', retainedCache: 'Native Vite map/file-content caches are private and survive hook removal until this fresh OS process exits. Re-registration of the same URL is rejected.' };
     assert.equal(hash(await readFile(evidence.lock.path)), evidence.lock.sha256, 'Lockfile changed');
-    evidence.status = 'local structural matrix passed; native qualification pending';
+    evidence.status = 'complete local structural matrix passed; native qualification pending';
   } catch (error) {
     evidence.status = 'structural failure'; evidence.failure = { message: error.message, stack: error.stack }; process.exitCode = 1;
   } finally {
