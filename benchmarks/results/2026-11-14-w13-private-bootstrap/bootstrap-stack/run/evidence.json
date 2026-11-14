@@ -1,0 +1,80 @@
+{
+  "status": "structural failure",
+  "prior": "/tmp/oximut-w13-private-attempt-1/run",
+  "performance": "unmeasured",
+  "results": {
+    "stock": {
+      "workers": [
+        {
+          "pid": 11960,
+          "state": "R",
+          "ppid": 11933,
+          "group": 11933,
+          "startTime": "143306227",
+          "entrypoint": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/workers/forks.js",
+          "exitCode": null,
+          "signal": "SIGTERM"
+        }
+      ],
+      "reports": [
+        {
+          "reason": "passed",
+          "errors": [],
+          "tests": [
+            {
+              "name": "bootstrap source-map frame",
+              "state": "passed"
+            }
+          ],
+          "testErrors": []
+        }
+      ],
+      "cleanup": {
+        "code": 0,
+        "signal": null,
+        "deadlineFired": false,
+        "durationMs": 2832.610155,
+        "observedAtDeadline": [],
+        "residualLive": [],
+        "remaining": [],
+        "noLiveDescendants": true
+      }
+    }
+  },
+  "bundle": {
+    "path": "/tmp/oximut-w13-private-attempt-1/run/private-worker.mjs",
+    "sha256": "ee86b87c433e42940c5d64bd47acc3d67b14ef5a6b0a6195a7940b9527e9c23b",
+    "mapSha256": "bf4d271037ba8f3eb7d82490e2c244f022b045b2edb81f429e381778c5eab1f1"
+  },
+  "sources": [
+    {
+      "path": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/benchmarks/experiments/vitest5-private-bootstrap/audited-inputs.json",
+      "sha256": "a3fc505f9e9ee96e98458afcc0d57ba0ea19e73348ae0deaab3e30c690d31dff"
+    },
+    {
+      "path": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/benchmarks/experiments/vitest5-private-bootstrap/build.mjs",
+      "sha256": "5d60c4c98e1026786ab96e0d4beea5f3fefbef64235a5f43a6b8e5b8d67578aa"
+    },
+    {
+      "path": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/benchmarks/experiments/vitest5-private-bootstrap/fixtures.mjs",
+      "sha256": "492aa7959386bed99272789f44b3adf2442c7139b0f4b4a23f38620b05d3ea23"
+    },
+    {
+      "path": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/benchmarks/experiments/vitest5-private-bootstrap/framework-stack.mjs",
+      "sha256": "cead02d8bbb16e12c4bea333a0e8f1fff00b69110b42218c5ab06752e16fa23a"
+    },
+    {
+      "path": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/benchmarks/experiments/vitest5-private-bootstrap/probe.mjs",
+      "sha256": "98b6b65ac668ecada7094f12af01e59359f00127d6dd122f57c84199e41e88dc"
+    },
+    {
+      "path": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/benchmarks/experiments/vitest5-private-bootstrap/test-probe.mjs",
+      "sha256": "4efe6bc4aec9cbc857dc6f5878c47dd8a0a4adff727b3dd503cea1eda27120c0"
+    }
+  ],
+  "fixtureSha256": "9e0378aa28ef5125d33af263a2eee85aed125226f3b63a61348a7d715fb3d74f",
+  "failure": {
+    "message": "{\"code\":1,\"signal\":null,\"deadlineFired\":false,\"durationMs\":2913.0131239999996,\"observedAtDeadline\":[],\"residualLive\":[],\"remaining\":[],\"noLiveDescendants\":true}\n\n1 !== 0\n",
+    "stack": "AssertionError [ERR_ASSERTION]: {\"code\":1,\"signal\":null,\"deadlineFired\":false,\"durationMs\":2913.0131239999996,\"observedAtDeadline\":[],\"residualLive\":[],\"remaining\":[],\"noLiveDescendants\":true}\n\n1 !== 0\n\n    at invoke (file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/benchmarks/experiments/vitest5-private-bootstrap/probe.mjs:168:10)\n    at async file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/benchmarks/experiments/vitest5-private-bootstrap/framework-stack.mjs:37:30"
+  }
+}

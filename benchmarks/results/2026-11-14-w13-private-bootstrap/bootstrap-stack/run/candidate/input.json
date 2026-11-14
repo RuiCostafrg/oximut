@@ -1,0 +1,8 @@
+{
+  "root": "/tmp/oximut-w13-framework-stack-attempt-1/run/fixture",
+  "events": "/tmp/oximut-w13-framework-stack-attempt-1/run/events.jsonl",
+  "scenario": "framework-stack",
+  "bundle": "/tmp/oximut-w13-private-attempt-1/run/private-worker.mjs",
+  "result": "/tmp/oximut-w13-framework-stack-attempt-1/run/candidate/result.json",
+  "workers": "/tmp/oximut-w13-framework-stack-attempt-1/run/candidate/workers.json"
+}

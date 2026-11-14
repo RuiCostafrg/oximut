@@ -1,0 +1,33 @@
+{
+  "workers": [
+    {
+      "pid": 30358,
+      "state": "R",
+      "ppid": 30328,
+      "group": 30328,
+      "startTime": "142186753",
+      "entrypoint": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/workers/forks.js",
+      "exitCode": null,
+      "signal": "SIGTERM"
+    }
+  ],
+  "reports": [
+    {
+      "reason": "failed",
+      "errors": [],
+      "tests": [
+        {
+          "name": "intentional throw",
+          "state": "failed"
+        }
+      ],
+      "testErrors": [
+        {
+          "name": "intentional throw",
+          "message": "intentional test throw",
+          "stack": "Error: intentional test throw\n    at /tmp/oximut-w13-private-attempt-1/run/fixture/throw.test.ts:2:41\n    at file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/run.CjdgFZiW.js:1632:35\n    at file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/run.CjdgFZiW.js:2801:26\n    at file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/run.CjdgFZiW.js:3338:20\n    at new Promise (<anonymous>)\n    at runWithCancel (file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/run.CjdgFZiW.js:3333:10)\n    at file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/run.CjdgFZiW.js:3318:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/run.CjdgFZiW.js:3276:10)\n    at file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/run.CjdgFZiW.js:3922:64"
+        }
+      ]
+    }
+  ]
+}

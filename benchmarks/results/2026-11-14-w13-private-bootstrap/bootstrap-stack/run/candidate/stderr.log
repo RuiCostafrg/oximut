@@ -1,0 +1,27 @@
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
++ actual - expected
+
+  [
+    {
+      name: 'bootstrap source-map frame',
++     state: 'failed'
+-     state: 'passed'
+    }
+  ]
+
+    at validateReport (file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/benchmarks/experiments/vitest5-private-bootstrap/probe.mjs:106:12)
+    at controller (file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/benchmarks/experiments/vitest5-private-bootstrap/probe.mjs:71:7)
+    at async file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/benchmarks/experiments/vitest5-private-bootstrap/probe.mjs:249:43 {
+  generatedMessage: true,
+  code: 'ERR_ASSERTION',
+  actual: [ { name: 'bootstrap source-map frame', state: 'failed' } ],
+  expected: [ { name: 'bootstrap source-map frame', state: 'passed' } ],
+  operator: 'deepStrictEqual',
+  diff: 'simple'
+}
+
+Node.js v26.3.1

@@ -1,0 +1,12 @@
+{
+  "status": "structural failure: bootstrap source-map stack fidelity",
+  "candidateDesigns": 1,
+  "candidateRepaired": false,
+  "nativeCI": "not dispatched: full local qualification failed",
+  "performance": "unmeasured",
+  "negativeControlCommitUnchanged": "328917cb2bee82b2059d91fdcb12f7f723fb0f0a",
+  "firstMatrixCapture": "matrix/run/evidence.json",
+  "supersedingFailure": "bootstrap-stack/run/evidence.json",
+  "stockFrame": "base.Cof-UHJf.js:123:9",
+  "candidateFrame": "private-worker.mjs:374:9"
+}

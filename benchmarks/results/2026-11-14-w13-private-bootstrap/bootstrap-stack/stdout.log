@@ -1,0 +1,1 @@
+{"output":"/tmp/oximut-w13-framework-stack-attempt-1/run","status":"structural failure","failure":"{\"code\":1,\"signal\":null,\"deadlineFired\":false,\"durationMs\":2913.0131239999996,\"observedAtDeadline\":[],\"residualLive\":[],\"remaining\":[],\"noLiveDescendants\":true}\n\n1 !== 0\n"}

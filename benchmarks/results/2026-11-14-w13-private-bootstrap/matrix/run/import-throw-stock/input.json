@@ -1,0 +1,7 @@
+{
+  "root": "/tmp/oximut-w13-private-attempt-1/run/fixture",
+  "events": "/tmp/oximut-w13-private-attempt-1/run/events.jsonl",
+  "scenario": "import-throw",
+  "result": "/tmp/oximut-w13-private-attempt-1/run/import-throw-stock/result.json",
+  "workers": "/tmp/oximut-w13-private-attempt-1/run/import-throw-stock/workers.json"
+}

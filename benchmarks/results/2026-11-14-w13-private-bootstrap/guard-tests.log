@@ -1,0 +1,14 @@
+✔ exact versions fail loudly (14.678906ms)
+✔ resolution really uses original importer, including conditional package exports (90.764739ms)
+✔ metadata, computed imports and context syntax reject (35.225729ms)
+✔ audited URL rewrite has precise original source map; string syntax is untouched (6.179479ms)
+✔ complete shared/API intersection stays native and has no native ingress into allowlist (1682.478072ms)
+✔ oracle requires exact selector outcomes, inventory and failures; A/B cannot be swapped (8.163333ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2317.694739

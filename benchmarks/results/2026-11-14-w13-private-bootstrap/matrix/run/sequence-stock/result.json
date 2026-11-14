@@ -1,0 +1,172 @@
+{
+  "workers": [
+    {
+      "pid": 30169,
+      "state": "R",
+      "ppid": 30124,
+      "group": 30124,
+      "startTime": "142185813",
+      "entrypoint": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/workers/forks.js",
+      "exitCode": null,
+      "signal": "SIGTERM"
+    },
+    {
+      "pid": 30182,
+      "state": "R",
+      "ppid": 30124,
+      "group": 30124,
+      "startTime": "142185882",
+      "entrypoint": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/workers/forks.js",
+      "exitCode": null,
+      "signal": "SIGTERM"
+    },
+    {
+      "pid": 30194,
+      "state": "R",
+      "ppid": 30124,
+      "group": 30124,
+      "startTime": "142185931",
+      "entrypoint": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/workers/forks.js",
+      "exitCode": null,
+      "signal": "SIGTERM"
+    },
+    {
+      "pid": 30212,
+      "state": "t",
+      "ppid": 30124,
+      "group": 30124,
+      "startTime": "142186002",
+      "entrypoint": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/workers/forks.js",
+      "exitCode": null,
+      "signal": "SIGTERM"
+    }
+  ],
+  "reports": [
+    {
+      "reason": "passed",
+      "errors": [],
+      "tests": [
+        {
+          "name": "arithmetic add",
+          "state": "passed"
+        },
+        {
+          "name": "arithmetic multiply",
+          "state": "passed"
+        },
+        {
+          "name": "fresh contamination state",
+          "state": "passed"
+        },
+        {
+          "name": "hooks setup and mocks",
+          "state": "passed"
+        },
+        {
+          "name": "mapped stack",
+          "state": "passed"
+        }
+      ],
+      "testErrors": []
+    },
+    {
+      "reason": "failed",
+      "errors": [],
+      "tests": [
+        {
+          "name": "arithmetic add",
+          "state": "failed"
+        },
+        {
+          "name": "arithmetic multiply",
+          "state": "passed"
+        },
+        {
+          "name": "fresh contamination state",
+          "state": "passed"
+        },
+        {
+          "name": "hooks setup and mocks",
+          "state": "passed"
+        },
+        {
+          "name": "mapped stack",
+          "state": "passed"
+        }
+      ],
+      "testErrors": [
+        {
+          "name": "arithmetic add",
+          "message": "expected 4 to be 3 // Object.is equality",
+          "stack": "AssertionError: expected 4 to be 3 // Object.is equality\n    at /tmp/oximut-w13-private-attempt-1/run/fixture/state.test.ts:13:82\n    at file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/run.CjdgFZiW.js:1632:35\n    at file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/run.CjdgFZiW.js:2801:26\n    at file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/run.CjdgFZiW.js:3338:20\n    at new Promise (<anonymous>)\n    at runWithCancel (file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/run.CjdgFZiW.js:3333:10)\n    at file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/run.CjdgFZiW.js:3318:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/run.CjdgFZiW.js:3276:10)\n    at file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/run.CjdgFZiW.js:3922:64"
+        }
+      ]
+    },
+    {
+      "reason": "failed",
+      "errors": [],
+      "tests": [
+        {
+          "name": "arithmetic add",
+          "state": "passed"
+        },
+        {
+          "name": "arithmetic multiply",
+          "state": "failed"
+        },
+        {
+          "name": "fresh contamination state",
+          "state": "passed"
+        },
+        {
+          "name": "hooks setup and mocks",
+          "state": "passed"
+        },
+        {
+          "name": "mapped stack",
+          "state": "passed"
+        }
+      ],
+      "testErrors": [
+        {
+          "name": "arithmetic multiply",
+          "message": "expected 7 to be 6 // Object.is equality",
+          "stack": "AssertionError: expected 7 to be 6 // Object.is equality\n    at /tmp/oximut-w13-private-attempt-1/run/fixture/state.test.ts:14:59\n    at file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/run.CjdgFZiW.js:1632:35\n    at file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/run.CjdgFZiW.js:2801:26\n    at file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/run.CjdgFZiW.js:3338:20\n    at new Promise (<anonymous>)\n    at runWithCancel (file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/run.CjdgFZiW.js:3333:10)\n    at file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/run.CjdgFZiW.js:3318:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/run.CjdgFZiW.js:3276:10)\n    at file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/run.CjdgFZiW.js:3922:64"
+        }
+      ]
+    },
+    {
+      "reason": "failed",
+      "errors": [],
+      "tests": [
+        {
+          "name": "arithmetic add",
+          "state": "failed"
+        },
+        {
+          "name": "arithmetic multiply",
+          "state": "passed"
+        },
+        {
+          "name": "fresh contamination state",
+          "state": "passed"
+        },
+        {
+          "name": "hooks setup and mocks",
+          "state": "passed"
+        },
+        {
+          "name": "mapped stack",
+          "state": "passed"
+        }
+      ],
+      "testErrors": [
+        {
+          "name": "arithmetic add",
+          "message": "expected 4 to be 3 // Object.is equality",
+          "stack": "AssertionError: expected 4 to be 3 // Object.is equality\n    at /tmp/oximut-w13-private-attempt-1/run/fixture/state.test.ts:13:82\n    at file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/run.CjdgFZiW.js:1632:35\n    at file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/run.CjdgFZiW.js:2801:26\n    at file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/run.CjdgFZiW.js:3338:20\n    at new Promise (<anonymous>)\n    at runWithCancel (file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/run.CjdgFZiW.js:3333:10)\n    at file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/run.CjdgFZiW.js:3318:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/run.CjdgFZiW.js:3276:10)\n    at file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/run.CjdgFZiW.js:3922:64"
+        }
+      ]
+    }
+  ]
+}

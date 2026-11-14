@@ -1,0 +1,275 @@
+[
+  {
+    "path": "chunks/acorn.C1kjbUFw.js",
+    "sha256": "7990d58d3afb1b977a2331399b2f92cb755fa9a4c65e14fe6a5415ca84f20f76",
+    "bytes": 219136,
+    "inline": false,
+    "reason": "Uncertain or native-reachable private module: retain original context and identity"
+  },
+  {
+    "path": "chunks/base.Cof-UHJf.js",
+    "sha256": "007057a1125749b97327335cea7735563138617979ba762421b4b5a569c2bdbe",
+    "bytes": 10842,
+    "inline": true,
+    "reason": "per-process bootstrap; one audited import.meta.url, literal lazy imports stay native"
+  },
+  {
+    "path": "chunks/console.CQZ877Hi.js",
+    "sha256": "0ca1147f6af6763f66c2c807103f4e135d66e73cff5ab369d7241fe8b0c35e86",
+    "bytes": 4982,
+    "inline": false,
+    "reason": "Uncertain or native-reachable private module: retain original context and identity"
+  },
+  {
+    "path": "chunks/constants.DLYM6cZY.js",
+    "sha256": "8f2a9b538cfe411ddbb9b329b6b50395fc944fcc0777b2a8d7522a87f4ed7ac6",
+    "bytes": 800,
+    "inline": false,
+    "reason": "Uncertain or native-reachable private module: retain original context and identity"
+  },
+  {
+    "path": "chunks/coverage.9iqXE2gN.js",
+    "sha256": "72ad1e9f884eb2f9f7a4c3425a1420b564ea2c24072f427ba464464c8b17c1ac",
+    "bytes": 1110,
+    "inline": true,
+    "reason": "coverage delegation; computed provider loader stays native"
+  },
+  {
+    "path": "chunks/coverage.jGCktcGP.js",
+    "sha256": "a48cc73fdf864cef9608f08ddfa0a483a0b78316b70681f1ea497cdb25e1727b",
+    "bytes": 1495,
+    "inline": false,
+    "reason": "Uncertain or native-reachable private module: retain original context and identity"
+  },
+  {
+    "path": "chunks/display.BlTmubjj.js",
+    "sha256": "ffb73158b5f09d4896ee5a11f4ec847b27c8651b67872f02edd30c78d4700180",
+    "bytes": 5979,
+    "inline": false,
+    "reason": "Public/API intersection: native singleton owner/closure"
+  },
+  {
+    "path": "chunks/globals.ZKtKSkEf.js",
+    "sha256": "f3e94df7fc46250a4208c046036aaf1a8b998ab533ccf507b99323aa08e7567d",
+    "bytes": 822,
+    "inline": false,
+    "reason": "Uncertain or native-reachable private module: retain original context and identity"
+  },
+  {
+    "path": "chunks/index.Bi0NXYPf.js",
+    "sha256": "b70599b2a0dabab129b1901d9902b3e137a0bb77513984fbddb356a48ae91f59",
+    "bytes": 58032,
+    "inline": false,
+    "reason": "Uncertain or native-reachable private module: retain original context and identity"
+  },
+  {
+    "path": "chunks/index.CZzC1gGg.js",
+    "sha256": "abf79e430d545f69e3a732e816e0d3d3fc26c6bb56e29aa9337102ee673d02a1",
+    "bytes": 315777,
+    "inline": false,
+    "reason": "Public/API intersection: native singleton owner/closure"
+  },
+  {
+    "path": "chunks/index.D0heQG4v.js",
+    "sha256": "62e1186114a0d317665428c43273a077599a539195d3bd21b114122ae94c3fb4",
+    "bytes": 56963,
+    "inline": false,
+    "reason": "Public/API intersection: native singleton owner/closure"
+  },
+  {
+    "path": "chunks/index.DmDMHCg8.js",
+    "sha256": "c4c7808bf490f89d226740a157800cf90bdeaaca48a6b23e78351f9a10434bb4",
+    "bytes": 5646,
+    "inline": false,
+    "reason": "Public/API intersection: native singleton owner/closure"
+  },
+  {
+    "path": "chunks/index.w_oBZ9N8.js",
+    "sha256": "1954243020c7f17b2a919269d9511edf37d53918f4372ffbc7e3cb0cef3ca93e",
+    "bytes": 7828,
+    "inline": true,
+    "reason": "runner construction; native TestRunner/API and state owners"
+  },
+  {
+    "path": "chunks/init-forks.BaDXQSD8.js",
+    "sha256": "aa50c94052a80f8031334b4f2e7e9a20a9ccafda3b44ee996a8f988f81b22776",
+    "bytes": 1671,
+    "inline": true,
+    "reason": "fork IPC wrapper; native init owns protocol"
+  },
+  {
+    "path": "chunks/init.CO4AB7HZ.js",
+    "sha256": "2acaf726643ae4b90a1fea1af806fa854a6989ff6f77fc699be2716dc1ef3635",
+    "bytes": 16911,
+    "inline": false,
+    "reason": "Uncertain or native-reachable private module: retain original context and identity"
+  },
+  {
+    "path": "chunks/inspector.CvyFGlXm.js",
+    "sha256": "a696d80f441273d263d802206f202988f77558210f376ac0a33860e7fee4071f",
+    "bytes": 1642,
+    "inline": false,
+    "reason": "Uncertain or native-reachable private module: retain original context and identity"
+  },
+  {
+    "path": "chunks/module-dependencies._2Eei3FO.js",
+    "sha256": "af61e64839c517236e5953e7eaaa9dfd6292be19f92ed1c1a107389273a8e35e",
+    "bytes": 2546,
+    "inline": false,
+    "reason": "Uncertain or native-reachable private module: retain original context and identity"
+  },
+  {
+    "path": "chunks/modules.BJuCwlRJ.js",
+    "sha256": "102cca31e463f95e93e78a1972ac7eb3afc2ffef09a32c9c7da2b6dc63700bcb",
+    "bytes": 1493,
+    "inline": false,
+    "reason": "Uncertain or native-reachable private module: retain original context and identity"
+  },
+  {
+    "path": "chunks/native.upB-V0CK.js",
+    "sha256": "b260f216e9670e1847055fbbc8a832e1af6e1bafc80c392bbed858b8fe19a17b",
+    "bytes": 7240,
+    "inline": false,
+    "reason": "Uncertain or native-reachable private module: retain original context and identity"
+  },
+  {
+    "path": "chunks/nativeModuleMocker.Dh5azSB4.js",
+    "sha256": "46d9a50d992602e011508449177cf0cd9cf3784007f2f5797863eb94141a5a79",
+    "bytes": 10372,
+    "inline": false,
+    "reason": "Uncertain or native-reachable private module: retain original context and identity"
+  },
+  {
+    "path": "chunks/nativeModuleRunner.9xPIMzi7.js",
+    "sha256": "2bfee49bec113044a4578b018cdd2f64a345b3b1a71229f6583c330f9dadd879",
+    "bytes": 63431,
+    "inline": false,
+    "reason": "Uncertain or native-reachable private module: retain original context and identity"
+  },
+  {
+    "path": "chunks/node.B9mkVmLH.js",
+    "sha256": "8a99ea67afda2ba17e6f4c3c9464406d8147875a2d05bff6c53351c8c4f3a72d",
+    "bytes": 1511,
+    "inline": false,
+    "reason": "Uncertain or native-reachable private module: retain original context and identity"
+  },
+  {
+    "path": "chunks/offset.Dy-5Fdfn.js",
+    "sha256": "0c631b8d81b57ca896d367eea6feae780cd5befc85c016b00073528dad99bfac",
+    "bytes": 896,
+    "inline": false,
+    "reason": "Public/API intersection: native singleton owner/closure"
+  },
+  {
+    "path": "chunks/pathe.M-eThtNZ.zq3TM4NT.js",
+    "sha256": "a8e26a400463a7398bf6ab3fa6f8ebcafe18d1157f060ac080bb65bc076d9649",
+    "bytes": 15436,
+    "inline": false,
+    "reason": "Public/API intersection: native singleton owner/closure"
+  },
+  {
+    "path": "chunks/plugins.DPQHVT0p.js",
+    "sha256": "e70395e51d08e67684f2a57f81d8043159c5fa29b66746a98fe684a8113a842a",
+    "bytes": 1303,
+    "inline": false,
+    "reason": "Public/API intersection: native singleton owner/closure"
+  },
+  {
+    "path": "chunks/rawSnapshot.DqSiqIEx.js",
+    "sha256": "2a4dee5a06834ebde21f90b8e2d258357da5a3a0c7cf7b1dfd87fee62d8d95dd",
+    "bytes": 14172,
+    "inline": false,
+    "reason": "Public/API intersection: native singleton owner/closure"
+  },
+  {
+    "path": "chunks/rpc.Uhkwr2NM.js",
+    "sha256": "da3c3cb0d73676937a61500e933ff2f9e932cd903c005dc9aa643f8b3bc9762b",
+    "bytes": 3146,
+    "inline": false,
+    "reason": "Public/API intersection: native singleton owner/closure"
+  },
+  {
+    "path": "chunks/run.CjdgFZiW.js",
+    "sha256": "695282581b97d7049132e1097f9c7421931cb00b9308bd533b4f7f709f5fedc3",
+    "bytes": 167470,
+    "inline": false,
+    "reason": "Public/API intersection: native singleton owner/closure"
+  },
+  {
+    "path": "chunks/setup-common.CqAQCXzx.js",
+    "sha256": "7a0bfc5bf33f164e50172f28a2bcb716ebe9a286ea4c43011c5e9f4d8ed84b61",
+    "bytes": 1831,
+    "inline": true,
+    "reason": "bootstrap setup; globals module stays native and lazy"
+  },
+  {
+    "path": "chunks/source-map.DakdQc29.js",
+    "sha256": "688bad35a9fb82f54f9dd7d14d9659597dbe474208fff5901a1e4a6a7296d66d",
+    "bytes": 63638,
+    "inline": false,
+    "reason": "Public/API intersection: native singleton owner/closure"
+  },
+  {
+    "path": "chunks/spy.DDMXghXv.js",
+    "sha256": "bb2390100c52aa3d62b92851f0d0e2b947aa84f41b7180f367e33de145d863f8",
+    "bytes": 20142,
+    "inline": false,
+    "reason": "Public/API intersection: native singleton owner/closure"
+  },
+  {
+    "path": "chunks/tinyrainbow.Do8I1XRG.js",
+    "sha256": "f2c20e019c6e0762247464c159054d6e51e60d3e8ddec8348faf838c75430829",
+    "bytes": 3115,
+    "inline": false,
+    "reason": "Public/API intersection: native singleton owner/closure"
+  },
+  {
+    "path": "chunks/utils.DYj33du9.js",
+    "sha256": "42e0f0589160e9f394c0038b60f5d5ccfe606e816da59a5aad5a6b33e2015cc6",
+    "bytes": 1713,
+    "inline": false,
+    "reason": "Public/API intersection: native singleton owner/closure"
+  },
+  {
+    "path": "index.js",
+    "sha256": "a20db80e8657bcd160e1ec0e15340ba5be54d5b53686814c79d23302f7f2bd0a",
+    "bytes": 1104,
+    "inline": false,
+    "reason": "Uncertain or native-reachable private module: retain original context and identity"
+  },
+  {
+    "path": "module-evaluator.js",
+    "sha256": "1390c7d62f1174924bdae333d59734acd065983b9f9580bdd24b07b52e430a50",
+    "bytes": 17352,
+    "inline": false,
+    "reason": "Uncertain or native-reachable private module: retain original context and identity"
+  },
+  {
+    "path": "path.js",
+    "sha256": "0ae93ca73f863259989ba3603bca12b21ba21981f2bfce65bdffe8044e3a89ae",
+    "bytes": 242,
+    "inline": false,
+    "reason": "Uncertain or native-reachable private module: retain original context and identity"
+  },
+  {
+    "path": "task-utils.js",
+    "sha256": "6ee1e38a6ed15b9024857514b737d2f1185cc01795f2d64be14107b5dcf0e2f8",
+    "bytes": 9451,
+    "inline": false,
+    "reason": "Public/API intersection: native singleton owner/closure"
+  },
+  {
+    "path": "traces.js",
+    "sha256": "3180c9bca5229eb521764ef953e4a614fb3490bfe72c6dd04b5d35cbd57087b1",
+    "bytes": 6067,
+    "inline": false,
+    "reason": "Uncertain or native-reachable private module: retain original context and identity"
+  },
+  {
+    "path": "workers/forks.js",
+    "sha256": "5f29690add8191999d1234ff7eab934e6cb06cc727fd5ab31ee4962f14e0f926",
+    "bytes": 1657,
+    "inline": true,
+    "reason": "fork entry and pinned import order"
+  }
+]

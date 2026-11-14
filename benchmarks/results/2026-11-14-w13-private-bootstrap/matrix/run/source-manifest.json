@@ -1,0 +1,22 @@
+[
+  {
+    "path": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/benchmarks/experiments/vitest5-private-bootstrap/audited-inputs.json",
+    "sha256": "a3fc505f9e9ee96e98458afcc0d57ba0ea19e73348ae0deaab3e30c690d31dff"
+  },
+  {
+    "path": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/benchmarks/experiments/vitest5-private-bootstrap/build.mjs",
+    "sha256": "5d60c4c98e1026786ab96e0d4beea5f3fefbef64235a5f43a6b8e5b8d67578aa"
+  },
+  {
+    "path": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/benchmarks/experiments/vitest5-private-bootstrap/fixtures.mjs",
+    "sha256": "492aa7959386bed99272789f44b3adf2442c7139b0f4b4a23f38620b05d3ea23"
+  },
+  {
+    "path": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/benchmarks/experiments/vitest5-private-bootstrap/probe.mjs",
+    "sha256": "cbbc28de61dd4254a60e222b545c00835b20888433e84df2b96e1c5e1bc08604"
+  },
+  {
+    "path": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/benchmarks/experiments/vitest5-private-bootstrap/test-probe.mjs",
+    "sha256": "4efe6bc4aec9cbc857dc6f5878c47dd8a0a4adff727b3dd503cea1eda27120c0"
+  }
+]

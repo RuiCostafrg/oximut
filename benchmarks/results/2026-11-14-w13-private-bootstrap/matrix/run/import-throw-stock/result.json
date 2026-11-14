@@ -1,0 +1,27 @@
+{
+  "workers": [
+    {
+      "pid": 30441,
+      "state": "R",
+      "ppid": 30415,
+      "group": 30415,
+      "startTime": "142187320",
+      "entrypoint": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/workers/forks.js",
+      "exitCode": null,
+      "signal": "SIGTERM"
+    }
+  ],
+  "reports": [
+    {
+      "reason": "failed",
+      "errors": [
+        {
+          "message": "intentional import throw",
+          "stack": "Error: intentional import throw\n    at /tmp/oximut-w13-private-attempt-1/run/fixture/import-throw.test.ts:1:7\n    at VitestModuleEvaluator._runInlinedModule (file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/module-evaluator.js:261:189)\n    at file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/module-evaluator.js:130:62\n    at Traces.$ (file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/traces.js:143:27)\n    at VitestModuleEvaluator.runInlinedModule (file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/module-evaluator.js:130:21)\n    at VitestModuleRunner.directRequest (file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vite/dist/node/module-runner.js:1281:80)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async VitestModuleRunner.cachedRequest (file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vite/dist/node/module-runner.js:1188:73)"
+        }
+      ],
+      "tests": [],
+      "testErrors": []
+    }
+  ]
+}

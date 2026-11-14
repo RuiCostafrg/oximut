@@ -1,0 +1,32 @@
+{
+  "code": null,
+  "signal": "SIGKILL",
+  "deadlineFired": true,
+  "durationMs": 5162.810519000006,
+  "observedAtDeadline": [
+    {
+      "pid": 30491,
+      "state": "S",
+      "ppid": 30028,
+      "group": 30491,
+      "startTime": "142187696"
+    },
+    {
+      "pid": 30515,
+      "state": "R",
+      "ppid": 30491,
+      "group": 30491,
+      "startTime": "142187889"
+    },
+    {
+      "pid": 30523,
+      "state": "S",
+      "ppid": 30515,
+      "group": 30491,
+      "startTime": "142187970"
+    }
+  ],
+  "residualLive": [],
+  "remaining": [],
+  "noLiveDescendants": true
+}
