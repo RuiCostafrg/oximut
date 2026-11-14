@@ -16,21 +16,286 @@
       "workload": "colord-scale",
       "workers": 2,
       "run_id": 43621387049,
-      "url": "https://github.com/RuiCostafrg/oximut/actions/runs/43621387049"
+      "url": "https://github.com/RuiCostafrg/oximut/actions/runs/43621387049",
+      "status": "completed",
+      "conclusion": "success",
+      "correctness_gate": {
+        "errors": [],
+        "passed": true
+      },
+      "build_integrity": {
+        "errors": [],
+        "passed": true,
+        "required": true
+      },
+      "evidence_directory": "campaigns/scale-2w",
+      "comparisons": {
+        "after_vs_before": {
+          "wall_seconds": {
+            "median": 0.9831609026406867,
+            "bootstrap_95_percent": [
+              0.9532530982069435,
+              0.9917597217559401
+            ]
+          },
+          "cpu_seconds": {
+            "median": 0.9932109376037374,
+            "bootstrap_95_percent": [
+              0.96984756972538,
+              0.9990566985358909
+            ]
+          },
+          "peak_aggregate_rss_bytes": {
+            "median": 1.0063666549428014,
+            "bootstrap_95_percent": [
+              0.9080002499427214,
+              1.024835886214442
+            ]
+          }
+        },
+        "after_vs_stryker": {
+          "wall_seconds": {
+            "median": 1.219866738808878,
+            "bootstrap_95_percent": [
+              1.2091347798858745,
+              1.2273921936907701
+            ]
+          },
+          "cpu_seconds": {
+            "median": 1.0424338519354062,
+            "bootstrap_95_percent": [
+              1.0337643023800431,
+              1.049226941278783
+            ]
+          },
+          "peak_aggregate_rss_bytes": {
+            "median": 0.8659869587457353,
+            "bootstrap_95_percent": [
+              0.8525981929566724,
+              0.8917313957671475
+            ]
+          }
+        }
+      },
+      "artifact": {
+        "id": 14124244301,
+        "node_id": "MDg6QXJ0aWZhY3QxNDEyNDI0NDMwMQ==",
+        "name": "real-project-comparison-36c0e9b0fbda4e523da98def8b227911f67aa747-1",
+        "size_in_bytes": 5886630,
+        "url": "https://api.github.com/repos/RuiCostafrg/oximut/actions/artifacts/14124244301",
+        "archive_download_url": "https://api.github.com/repos/RuiCostafrg/oximut/actions/artifacts/14124244301/zip",
+        "expired": false,
+        "digest": "sha256:c85df01e97c2c4835f66bb186f7599d3e46f2f1a9a97e5491536aa38b6b1181f",
+        "created_at": "2026-11-14T17:45:27Z",
+        "updated_at": "2026-11-14T17:45:27Z",
+        "expires_at": "2026-11-28T17:45:25Z",
+        "workflow_run": {
+          "id": 43621387049,
+          "repository_id": 1431290496,
+          "head_repository_id": 1431290496,
+          "head_branch": "w11-2w",
+          "head_sha": "36c0e9b0fbda4e523da98def8b227911f67aa747"
+        }
+      },
+      "artifact_archive_sha256": "1120dec370f3e5dec78b9de3237ce833ad087dbd94c7ab155c2b60d3bbdf5c67",
+      "temporary_ref_deleted": true
     },
     {
       "ref": "w11-4w",
       "workload": "colord-scale",
       "workers": 4,
       "run_id": 43621390731,
-      "url": "https://github.com/RuiCostafrg/oximut/actions/runs/43621390731"
+      "url": "https://github.com/RuiCostafrg/oximut/actions/runs/43621390731",
+      "status": "completed",
+      "conclusion": "success",
+      "correctness_gate": {
+        "errors": [],
+        "passed": true
+      },
+      "build_integrity": {
+        "errors": [],
+        "passed": true,
+        "required": true
+      },
+      "evidence_directory": "campaigns/scale-4w",
+      "comparisons": {
+        "after_vs_before": {
+          "wall_seconds": {
+            "median": 0.9743517627670024,
+            "bootstrap_95_percent": [
+              0.9092272158856309,
+              0.9935802085400974
+            ]
+          },
+          "cpu_seconds": {
+            "median": 0.9940014141140437,
+            "bootstrap_95_percent": [
+              0.9270271464591114,
+              1.0162090586248758
+            ]
+          },
+          "peak_aggregate_rss_bytes": {
+            "median": 0.964092121131192,
+            "bootstrap_95_percent": [
+              0.9502646920316331,
+              1.0079738178376934
+            ]
+          }
+        },
+        "after_vs_stryker": {
+          "wall_seconds": {
+            "median": 1.167378611482627,
+            "bootstrap_95_percent": [
+              1.145127734552891,
+              1.1992749490311974
+            ]
+          },
+          "cpu_seconds": {
+            "median": 0.9682629775978546,
+            "bootstrap_95_percent": [
+              0.9534560293802895,
+              0.9951658291772411
+            ]
+          },
+          "peak_aggregate_rss_bytes": {
+            "median": 0.7719920823758295,
+            "bootstrap_95_percent": [
+              0.7420213996338667,
+              0.7848530368363522
+            ]
+          }
+        }
+      },
+      "artifact": {
+        "id": 14125005191,
+        "node_id": "MDg6QXJ0aWZhY3QxNDEyNTAwNTE5MQ==",
+        "name": "real-project-comparison-36c0e9b0fbda4e523da98def8b227911f67aa747-1",
+        "size_in_bytes": 5887119,
+        "url": "https://api.github.com/repos/RuiCostafrg/oximut/actions/artifacts/14125005191",
+        "archive_download_url": "https://api.github.com/repos/RuiCostafrg/oximut/actions/artifacts/14125005191/zip",
+        "expired": false,
+        "digest": "sha256:415e93ad9c438859bd6f5b7cdba0a744bb788534fe09f39ff5494a88a2015434",
+        "created_at": "2026-11-14T17:38:28Z",
+        "updated_at": "2026-11-14T17:38:28Z",
+        "expires_at": "2026-11-28T17:38:26Z",
+        "workflow_run": {
+          "id": 43621390731,
+          "repository_id": 1431290496,
+          "head_repository_id": 1431290496,
+          "head_branch": "w11-4w",
+          "head_sha": "36c0e9b0fbda4e523da98def8b227911f67aa747"
+        }
+      },
+      "artifact_archive_sha256": "1ceadeaa2dc9192fb2d6d02d0ebedeaec8d2c1cc1527ff2c6393ebd98af1ef6a",
+      "temporary_ref_deleted": true
     },
     {
       "ref": "w11-small",
       "workload": "colord",
       "workers": 4,
       "run_id": 43621394309,
-      "url": "https://github.com/RuiCostafrg/oximut/actions/runs/43621394309"
+      "url": "https://github.com/RuiCostafrg/oximut/actions/runs/43621394309",
+      "status": "completed",
+      "conclusion": "success",
+      "correctness_gate": {
+        "errors": [],
+        "passed": true
+      },
+      "build_integrity": {
+        "errors": [],
+        "passed": true,
+        "required": true
+      },
+      "evidence_directory": "campaigns/small-4w",
+      "comparisons": {
+        "after_vs_before": {
+          "wall_seconds": {
+            "median": 1.0000648530859977,
+            "bootstrap_95_percent": [
+              0.9813227277717861,
+              1.0390665449726126
+            ]
+          },
+          "cpu_seconds": {
+            "median": 1.0013337888345406,
+            "bootstrap_95_percent": [
+              0.9877251030909331,
+              1.0270963722757014
+            ]
+          },
+          "peak_aggregate_rss_bytes": {
+            "median": 0.9897929863514661,
+            "bootstrap_95_percent": [
+              0.9593882509265471,
+              1.0409801155269252
+            ]
+          }
+        },
+        "after_vs_stryker": {
+          "wall_seconds": {
+            "median": 0.6334961983955933,
+            "bootstrap_95_percent": [
+              0.6251368777425138,
+              0.6543312817575714
+            ]
+          },
+          "cpu_seconds": {
+            "median": 0.7059383354821981,
+            "bootstrap_95_percent": [
+              0.7010615923454881,
+              0.722753979812183
+            ]
+          },
+          "peak_aggregate_rss_bytes": {
+            "median": 0.5941264322309288,
+            "bootstrap_95_percent": [
+              0.5683241437054586,
+              0.6131755962180724
+            ]
+          }
+        }
+      },
+      "artifact": {
+        "id": 14124191797,
+        "node_id": "MDg6QXJ0aWZhY3QxNDEyNDE5MTc5Nw==",
+        "name": "real-project-comparison-36c0e9b0fbda4e523da98def8b227911f67aa747-1",
+        "size_in_bytes": 3045981,
+        "url": "https://api.github.com/repos/RuiCostafrg/oximut/actions/artifacts/14124191797",
+        "archive_download_url": "https://api.github.com/repos/RuiCostafrg/oximut/actions/artifacts/14124191797/zip",
+        "expired": false,
+        "digest": "sha256:06562f06d95c36945e13155322e9a25b3c7c4c58b8b01eb4402d572c3f809a14",
+        "created_at": "2026-11-14T17:34:47Z",
+        "updated_at": "2026-11-14T17:34:47Z",
+        "expires_at": "2026-11-28T17:34:44Z",
+        "workflow_run": {
+          "id": 43621394309,
+          "repository_id": 1431290496,
+          "head_repository_id": 1431290496,
+          "head_branch": "w11-small",
+          "head_sha": "36c0e9b0fbda4e523da98def8b227911f67aa747"
+        }
+      },
+      "artifact_archive_sha256": "64e6183bd8eaa37105f3cfdbba839bc1087eb846764a6490b344d9e0f5ead906",
+      "temporary_ref_deleted": true
     }
-  ]
+  ],
+  "acceptance": {
+    "both_scale_wall_intervals_below_1": true,
+    "small_workload_detected_regression": false,
+    "cpu_or_rss_regression_beyond_noise": false,
+    "strict_noninferiority_proven": false,
+    "decision": "Scale wall targets met; small workload and CPU/RSS show no detected regression. Five pairs do not establish strict noninferiority."
+  },
+  "evidence_recovery": {
+    "product_review_base": "be2a344f588ffa9ad7538e448557e5cc13d479ee",
+    "implementation_changed": false,
+    "new_builds_or_local_benchmarks": false,
+    "scale_archives_verified_against_downloads": true,
+    "scale_files_verified_per_artifact": 2129,
+    "ratio_medians_verified_against_five_pairs": true,
+    "only_refs_deleted_this_continuation": [
+      "w11-2w",
+      "w11-4w"
+    ]
+  }
 }

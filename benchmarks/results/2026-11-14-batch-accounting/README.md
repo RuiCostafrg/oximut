@@ -109,16 +109,27 @@ peak RSS, raw measurements and bootstrap uncertainty intervals.
 
 | Workload | Workers | Run | Status |
 | --- | ---: | --- | --- |
-| colord-scale | 2 | [43621387049](https://github.com/RuiCostafrg/oximut/actions/runs/43621387049) | Pending |
-| colord-scale | 4 | [43621390731](https://github.com/RuiCostafrg/oximut/actions/runs/43621390731) | Pending |
+| colord-scale | 2 | [43621387049](https://github.com/RuiCostafrg/oximut/actions/runs/43621387049) | Correctness passed; complete |
+| colord-scale | 4 | [43621390731](https://github.com/RuiCostafrg/oximut/actions/runs/43621390731) | Correctness passed; complete |
 | colord | 4 | [43621394309](https://github.com/RuiCostafrg/oximut/actions/runs/43621394309) | Correctness passed; complete |
 
-Small colord is consistent with no change; its wall interval crosses 1.0, so
-this is not proof of exact nonregression. No overall acceptance claim yet. Require both scale wall-ratio 95% intervals below 1.0,
-small-workload nonregression and CPU/RSS no worse beyond noise. On completion,
-download each artifact, retain raw results and build metadata, record wall/CPU/
-RSS medians and intervals against #66 and Stryker, and check
-`correctness_gate.passed`. Delete temporary refs after evidence is recovered.
+Both scale wall-ratio 95% intervals lie below 1.0: the measured scale wall
+improvement target is met at both worker counts. CPU and RSS show no regression
+beyond noise; small colord is consistent with no change. This satisfies the
+requested improvement check with no detected regression in the other measured
+metrics. It does **not** prove strict noninferiority: small-colord wall's upper
+bound is 1.0391, scale-4w CPU's is 1.0162, and scale-2w RSS's is 1.0248. With
+five pairs, modest regressions remain compatible with those intervals.
+
+All three scored runs passed the full correctness and required build-integrity
+gates. The exact colord-scale scope is 206 mutants across 20 declared arithmetic
+mutation files, with all 41 source files and all 102 upstream tests available;
+small colord has 10 mutants across five declared files. This is host/corpus-
+specific evidence, not a full-colord or general performance guarantee.
+
+Against Stryker, scale wall time remains slower: 1.2199 at 2w and 1.1674 at 4w;
+W11 does not close that gap. The retained pre-fix diagnostic identifies exact RSS
+sampling as the largest remaining component, but does not justify weakening it.
 
 ## Validation
 
@@ -141,11 +152,30 @@ archives, full summary JSON and build metadata are under `campaigns/`.
 
 | Config | Comparison | Wall | CPU | Peak aggregate RSS | Gate |
 | --- | --- | --- | --- | --- | --- |
+| colord-scale 2w | after_vs_before | 0.9832 [0.9533, 0.9918] | 0.9932 [0.9698, 0.9991] | 1.0064 [0.9080, 1.0248] | Passed |
+| colord-scale 2w | after_vs_stryker | 1.2199 [1.2091, 1.2274] | 1.0424 [1.0338, 1.0492] | 0.8660 [0.8526, 0.8917] | Passed |
+| colord-scale 4w | after_vs_before | 0.9744 [0.9092, 0.9936] | 0.9940 [0.9270, 1.0162] | 0.9641 [0.9503, 1.0080] | Passed |
+| colord-scale 4w | after_vs_stryker | 1.1674 [1.1451, 1.1993] | 0.9683 [0.9535, 0.9952] | 0.7720 [0.7420, 0.7849] | Passed |
 | colord 4w | after_vs_before | 1.0001 [0.9813, 1.0391] | 1.0013 [0.9877, 1.0271] | 0.9898 [0.9594, 1.0410] | Passed |
 | colord 4w | after_vs_stryker | 0.6335 [0.6251, 0.6543] | 0.7059 [0.7011, 0.7228] | 0.5941 [0.5683, 0.6132] | Passed |
 
-Remaining handoff: recover scale runs 43621387049 and 43621390731 when finished,
-record both comparison families with intervals and correctness gates, and remove
-`w11-2w`/`w11-4w` after downloading raw artifacts. Keep #66 as the denominator.
-Do not infer acceptance from diagnostic medians or the successful small run.
-No PR was opened and main was not touched.
+Each `campaigns/*/raw-artifact.tar.gz` preserves the entire downloaded artifact,
+including raw per-round measurements, logs, reports, scope checks and build
+metadata. `summary.json`, `build-metadata.json`, `artifact-api.json`,
+`workflow.log.gz` and `raw-inventory.json` are also retained separately. Inventories
+contain per-file SHA-256 values and the complete archive hash. Both scale
+archives were checked byte-for-byte against all 2,129 downloaded files before
+ref cleanup. Paired medians were checked against the five stored ratios; recorded
+SHAs, repetitions, worker counts, empty extra args and gates were also checked.
+
+No product implementation changed during evidence recovery; no builds or local
+benchmarks were run. Product code remains the independently reviewed `be2a344`.
+No PR was opened and main was not touched. The next step is parent review of the
+implementation and this evidence, not another scored campaign selected by result.
+
+Both `w11-2w` and `w11-4w` were deleted only after complete artifact recovery
+and archive verification. The temporary baseline-override commit remains outside
+the product branch. The small/diagnostic refs were already deleted in the prior
+continuation. `wall-ratios.html` plots the scored wall intervals versus #66.
+HTML preview could not run on this host because T3 browser libraries are missing;
+no browser setup or dependency installation was performed for evidence recovery.
