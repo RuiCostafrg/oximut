@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { getCompileCacheDir } from 'node:module';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { createVitest, ForksPoolWorker, version } from 'vitest/node';
+import { createVitest, ForksPoolWorker, ThreadsPoolWorker, version } from 'vitest/node';
 import { envelope, type Request, type Result } from './protocol.ts';
 import {
   fingerprint,
@@ -16,12 +16,13 @@ const runner = fileURLToPath(new URL('./lane-runner.mjs', import.meta.url));
 const HARD_DEADLINE = 'Job deadline exceeded';
 const LANE_EXITED = 'Lane worker exited before completion';
 // Vitest's unattributed report of a pool worker that exited.
-const POOL_EXIT = /^\[vitest-pool\]: Worker oximut-lane-forks emitted error\.$/;
+const POOL_EXIT = /^\[vitest-pool\]: Worker oximut-lane-(?:forks|threads) emitted error\.$/;
 
-/** Experimental pinned-runtime batch execution. No assignment survives pool drain. */
+/** Fresh-worker batch execution. No assignment survives pool drain. */
 export class SharedLanes {
   private context?: Context;
   private width = 0;
+  private pool: 'forks' | 'threads' = 'forks';
   private modules = new Map<string, NonNullable<Request['mutation']>>();
   private files = new Map<string, string[]>();
   private failures = new Map<string, string>();
@@ -38,6 +39,7 @@ export class SharedLanes {
   async run(batch: Request): Promise<Result> {
     if (version !== '5.1.0') throw new Error('Shared lanes require Vitest 5.1.0');
     const jobs = batch.lanes!;
+    const pool = batch.pool === 'threads' ? 'threads' : 'forks';
     // The batch's own deadline adds time to report after a lane is stopped.
     this.deadline = performance.now() + jobs[0].deadlineMs;
     this.failures.clear();
@@ -60,7 +62,7 @@ export class SharedLanes {
     this.modules = modules;
     // A stable lane count keeps the context across a smaller final batch.
     const width = Math.max(batch.workers ?? jobs.length, jobs.length);
-    if (this.context && this.width !== width) await this.close();
+    if (this.context && (this.width !== width || this.pool !== pool)) await this.close();
     if (!this.context) {
       const context = await createVitest('test', {
         root: batch.root,
@@ -90,9 +92,12 @@ export class SharedLanes {
           test: {
             name: `oximut-lane-${index}`,
             pool: {
-              name: 'oximut-lane-forks',
+              name: `oximut-lane-${pool}`,
               createPoolWorker: (options) => {
-                const worker = new ForksPoolWorker(options);
+                const worker =
+                  pool === 'threads'
+                    ? new ThreadsPoolWorker(options)
+                    : new ForksPoolWorker(options);
                 const start = worker.start.bind(worker);
                 const stop = worker.stop.bind(worker);
                 const send = worker.send.bind(worker);
@@ -112,7 +117,7 @@ export class SharedLanes {
                 worker.send = (message) => {
                   if (message.type === 'run') {
                     // Pinned PoolRunner request shape. Send all selected Node files
-                    // in one isolated task: exactly one fresh OS fork per mutant.
+                    // in one isolated task: exactly one fresh worker per mutant.
                     const run = message as unknown as {
                       context: { files: { filepath: string }[] };
                     };
@@ -120,9 +125,17 @@ export class SharedLanes {
                     timer = setTimeout(
                       () => {
                         this.failures.set(name, HARD_DEADLINE);
-                        (worker as unknown as { fork?: { kill(signal: string): void } }).fork?.kill(
-                          'SIGKILL',
-                        );
+                        if (worker instanceof ThreadsPoolWorker) {
+                          // terminate() also stops synchronous infinite loops. The pool
+                          // still owns stop() and awaits exit before the next batch.
+                          void (
+                            worker as unknown as { thread: { terminate(): Promise<number> } }
+                          ).thread.terminate();
+                        } else {
+                          (worker as unknown as { fork: { kill(signal: string): void } }).fork.kill(
+                            'SIGKILL',
+                          );
+                        }
                       },
                       Math.max(1, this.deadline - performance.now()),
                     );
@@ -162,6 +175,7 @@ export class SharedLanes {
       }
       this.context = context;
       this.width = width;
+      this.pool = pool;
       if (getCompileCacheDir())
         for (const project of context.projects)
           project.config.execArgv = [

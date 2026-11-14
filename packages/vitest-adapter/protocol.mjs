@@ -47,7 +47,6 @@ export function validateRequest(value) {
   if (value.lanes !== undefined) {
     if (
       value.kind !== 'mutant' ||
-      value.pool !== undefined ||
       value.collectCoverage !== undefined ||
       !Array.isArray(value.lanes) ||
       value.lanes.length < 1 ||
@@ -65,7 +64,7 @@ export function validateRequest(value) {
         job.runId !== value.runId ||
         job.deadlineMs !== value.lanes[0].deadlineMs ||
         /** @type {number} */ (job.deadlineMs) > /** @type {number} */ (value.deadlineMs) ||
-        job.pool !== undefined ||
+        job.pool !== value.pool ||
         job.collectCoverage !== undefined ||
         ids.has(job.jobId)
       )
