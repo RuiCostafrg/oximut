@@ -1,0 +1,97 @@
+name: W13 opt-in product colord correctness
+on:
+  workflow_dispatch:
+  push:
+    branches: [perf/vitest5-worker-bundle]
+    paths: [.github/workflows/w13-product-correctness.yml]
+permissions:
+  contents: read
+concurrency:
+  group: w13-product-correctness-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  correctness:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      CARGO_BUILD_JOBS: 3
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version-file: .node-version
+      - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8
+        with:
+          toolchain: 1.96.0
+      - name: Preserve source before prerequisites
+        run: |
+          mkdir "$RUNNER_TEMP/w13-product"
+          git rev-parse HEAD > "$RUNNER_TEMP/w13-product/commit.txt"
+          git archive HEAD Cargo.toml Cargo.lock rust-toolchain.toml crates packages/vitest-adapter benchmarks/experiments/vitest5-private-bootstrap benchmarks/real-project/colord benchmarks/real_project.py benchmarks/run.py benchmarks/m6.py benchmarks/compare_candidates.py benchmarks/targets.py benchmarks/results/2026-11-14-w13-map-base/native/runtime-provenance.json package.json package-lock.json .node-version .github/workflows/w13-product-correctness.yml | gzip > "$RUNNER_TEMP/w13-product/source.tar.gz"
+      - name: Install and check types
+        run: |
+          npm ci --ignore-scripts --no-audit --no-fund > "$RUNNER_TEMP/w13-product/install.stdout.log" 2> "$RUNNER_TEMP/w13-product/install.stderr.log"
+          npm run typecheck > "$RUNNER_TEMP/w13-product/typecheck.stdout.log" 2> "$RUNNER_TEMP/w13-product/typecheck.stderr.log"
+      - name: Real adapter integration before any product run
+        run: |
+          python3 - <<'PY'
+          import json,os,pathlib,subprocess
+          root=pathlib.Path(os.environ['RUNNER_TEMP'])/'w13-product'
+          env={**os.environ,'W13_INTEGRATION_TEST_OUTPUT':str(root/'integration')}
+          cmd=['node','--experimental-import-meta-resolve','--test','benchmarks/experiments/vitest5-private-bootstrap/test-integration.mjs']
+          with (root/'integration.stdout.log').open('wb') as stdout,(root/'integration.stderr.log').open('wb') as stderr:
+              run=subprocess.run(cmd,env=env,stdout=stdout,stderr=stderr,timeout=180)
+          (root/'integration.status.json').write_text(json.dumps({'argv':cmd,'exitCode':run.returncode},indent=2)+'\n')
+          assert run.returncode==0,'Integration invariant failed; do not build/run product qualification'
+          PY
+      - name: Build exact stock and experiment into isolated targets
+        run: |
+          set -euo pipefail
+          stock="$RUNNER_TEMP/w13-stock"
+          mkdir "$stock"
+          git archive 5dfd17e Cargo.toml Cargo.lock rust-toolchain.toml crates packages/vitest-adapter package.json package-lock.json | tar -x -C "$stock"
+          ln -s "$GITHUB_WORKSPACE/node_modules" "$stock/node_modules"
+          cargo build --manifest-path "$stock/Cargo.toml" --target-dir "$RUNNER_TEMP/w13-stock-target" --locked --release -p oximut-cli > "$RUNNER_TEMP/w13-product/build-stock.stdout.log" 2> "$RUNNER_TEMP/w13-product/build-stock.stderr.log"
+          cargo build --target-dir "$RUNNER_TEMP/w13-candidate-target" --locked --release -p oximut-cli > "$RUNNER_TEMP/w13-product/build-candidate.stdout.log" 2> "$RUNNER_TEMP/w13-product/build-candidate.stderr.log"
+          mkdir "$RUNNER_TEMP/w13-product/binaries"
+          cp "$RUNNER_TEMP/w13-stock-target/release/oximut" "$RUNNER_TEMP/w13-product/binaries/stock"
+          cp "$RUNNER_TEMP/w13-candidate-target/release/oximut" "$RUNNER_TEMP/w13-product/binaries/candidate"
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib,subprocess
+          temp=pathlib.Path(os.environ['RUNNER_TEMP']);root=temp/'w13-product'
+          capture=lambda *cmd:subprocess.check_output(cmd,text=True).strip()
+          meta={'before_commit':capture('git','rev-parse','5dfd17e'),'after_commit':capture('git','rev-parse','HEAD'),'build_flags':'--locked --release -p oximut-cli','cargo_target_dirs':{'before':str(temp/'w13-stock-target'),'after':str(temp/'w13-candidate-target')},'before_source':str(temp/'w13-stock'),'after_source':os.environ['GITHUB_WORKSPACE'],'binary_sha256':{v:hashlib.sha256((root/'binaries'/n).read_bytes()).hexdigest() for v,n in [('before','stock'),('after','candidate')]},'tool_versions':{n:capture(n,'--version') for n in ['node','npm','cargo','rustc','python3']},'policy':'Correctness only. Both exact isolated builds complete before product commands. No scoring, profiler or retries.'}
+          (root/'build-metadata.json').write_text(json.dumps(meta,indent=2)+'\n')
+          PY
+      - name: Serial colord10 and scale206, matched workers2 and4, one run each
+        run: |
+          python3 benchmarks/experiments/vitest5-private-bootstrap/correctness.py "$RUNNER_TEMP/w13-product/qualification" \
+            --before-binary "$RUNNER_TEMP/w13-product/binaries/stock" \
+            --after-binary "$RUNNER_TEMP/w13-product/binaries/candidate" \
+            --stock-source "$RUNNER_TEMP/w13-stock" \
+            --build-metadata "$RUNNER_TEMP/w13-product/build-metadata.json" \
+            > "$RUNNER_TEMP/w13-product/qualification.stdout.log" 2> "$RUNNER_TEMP/w13-product/qualification.stderr.log"
+      - name: Preserve full raw evidence without dependency-directory symlinks
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib,tarfile
+          temp=pathlib.Path(os.environ['RUNNER_TEMP']);root=temp/'w13-product'
+          if root.exists():
+              with tarfile.open(temp/'w13-product-raw.tar.gz','w:gz') as t:
+                  t.add(root,arcname='raw',filter=lambda m:None if m.issym() or 'node_modules' in pathlib.Path(m.name).parts else m)
+              inventory={str(p.relative_to(root)):hashlib.sha256(p.read_bytes()).hexdigest() for p in root.rglob('*') if p.is_file() and not p.is_symlink() and 'node_modules' not in p.relative_to(root).parts}
+              (temp/'w13-product-files.json').write_text(json.dumps(inventory,indent=2)+'\n')
+          PY
+      - if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: w13-product-correctness-${{ github.sha }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/w13-product-raw.tar.gz
+            ${{ runner.temp }}/w13-product-files.json
+          if-no-files-found: error
+          retention-days: 14

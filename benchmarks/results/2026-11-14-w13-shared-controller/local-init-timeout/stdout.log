@@ -1,0 +1,18 @@
+✖ real m2 shared lanes preserve stock outcomes, file/full selection, exact maps and fresh forks (67198.682318ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 67724.015807
+
+✖ failing tests:
+
+test at benchmarks/experiments/vitest5-private-bootstrap/test-integration.mjs:10:1
+✖ real m2 shared lanes preserve stock outcomes, file/full selection, exact maps and fresh forks (67198.682318ms)
+  Error: IPC deadline 
+      at Timeout._onTimeout (file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/benchmarks/experiments/vitest5-private-bootstrap/test-integration.mjs:41:61)
+      at listOnTimeout (node:internal/timers:605:17)
+      at process.processTimers (node:internal/timers:541:7)

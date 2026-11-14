@@ -9,6 +9,7 @@ import { SelectionSupport } from './m3-selection.ts';
 
 const selectionSupport = new SelectionSupport();
 let sharedLanes: import('./shared-lanes.ts').SharedLanes | undefined;
+let workerBundleExperiment: import('./shared-lanes.ts').WorkerBundleExperiment | undefined;
 let controllerReusable = false;
 const compileCacheFlush = fileURLToPath(new URL('./compile-cache.cjs', import.meta.url));
 
@@ -93,6 +94,16 @@ async function command(name: string, args: Request): Promise<unknown> {
     // The native coordinator sends requests directly; validate them here.
     validateRequest(args);
     pool = args.pool === 'threads' ? 'threads' : 'forks';
+    if (process.env.OXIMUT_EXPERIMENT_PRIVATE_BOOTSTRAP) {
+      const hook = new URL(
+        '../../benchmarks/experiments/vitest5-private-bootstrap/integration.mjs',
+        import.meta.url,
+      ).href;
+      workerBundleExperiment = await (await import(hook)).loadExperimentalBundle(
+        process.env.OXIMUT_EXPERIMENT_PRIVATE_BOOTSTRAP,
+        pool,
+      );
+    }
     mutation = args.mutation;
     probes = args.collectCoverage;
     resident = args.resident;
@@ -187,6 +198,11 @@ async function command(name: string, args: Request): Promise<unknown> {
     );
     // A lane installs its own runner, which would replace a configured one.
     controllerReusable = !unsupported && !vitest.projects.some((project) => project.config.runner);
+    if (workerBundleExperiment) {
+      if (!controllerReusable)
+        throw new Error('W13 bundle requires an uncustomized reusable controller');
+      for (const project of vitest.projects) workerBundleExperiment.validateConfig(project);
+    }
     return {
       versions: { node: process.version, vitest: version },
       controllerPid: process.pid,
@@ -213,10 +229,15 @@ async function command(name: string, args: Request): Promise<unknown> {
     // Custom plugins, runners, global setup or multiple projects can't be shared across lanes.
     if (!controllerReusable) throw new Error('Shared lanes require a reusable controller project');
     await vitest.close();
-    sharedLanes ??= new (await import('./shared-lanes.ts')).SharedLanes();
+    sharedLanes ??= new (await import('./shared-lanes.ts')).SharedLanes(workerBundleExperiment);
     return sharedLanes.run(job);
   }
   const next = job.mutation;
+  if (workerBundleExperiment) {
+    if (name === 'run' && job.kind !== 'baseline')
+      throw new Error('W13 bundle requires shared mutant lanes; stock fallback rejected');
+    workerBundleExperiment.baseline(job, name);
+  }
   const probesChanged = JSON.stringify(probes) !== JSON.stringify(job.collectCoverage);
   if (probesChanged || job.collectCoverage) {
     // Probe changes affect every source file and attribution dependency.

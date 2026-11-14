@@ -1,0 +1,8 @@
+{
+  "packages/vitest-adapter/m2-worker.ts": "62060a717fe7c2ed319caa9f0997d582ed5f1f37b14548e5e6f5dadaf655edd7",
+  "packages/vitest-adapter/shared-lanes.ts": "eaa78ec2f62be90ea6fa6ebf85ac9d74351de80b81328355aeb65a5d675150b3",
+  "benchmarks/experiments/vitest5-private-bootstrap/integration.mjs": "edafb91f7925425107911140943ee40594e351dec243c0be763bdf99a906d17f",
+  "benchmarks/experiments/vitest5-private-bootstrap/test-integration.mjs": "fbc33dfd61e0d8cf01dcb1eecc8c9d671ea462bc20074a1c80727b17f36b5705",
+  "benchmarks/experiments/vitest5-private-bootstrap/correctness.py": "0d745c196c5496e7189cd72eee42a887e095b7cefb939dcbbc7c784fdc98c318",
+  ".github/workflows/w13-product-correctness.yml": "b14b5b78bf1b052580b53efb36620419ca337c6c880aa6bce745bfd94439f46d"
+}

@@ -12,6 +12,15 @@ import {
 } from './transform-share.ts';
 
 type Context = Awaited<ReturnType<typeof createVitest>>;
+/** Experimental installation-bound override. Baselines remain stock. */
+export interface WorkerBundleExperiment {
+  entrypoint: string;
+  baseline(job: Request, command: string): void;
+  validateConfig(project: Context['projects'][number]): void;
+  configure(worker: ForksPoolWorker): void;
+  started(worker: ForksPoolWorker): void;
+  dispatched(worker: ForksPoolWorker, message: unknown): void;
+}
 const runner = fileURLToPath(new URL('./lane-runner.mjs', import.meta.url));
 const HARD_DEADLINE = 'Job deadline exceeded';
 const LANE_EXITED = 'Lane worker exited before completion';
@@ -41,6 +50,10 @@ class ExitOnlyThreadsPoolWorker extends ThreadsPoolWorker {
 
 /** Fresh-worker batch execution. No assignment survives pool drain. */
 export class SharedLanes {
+  private experiment?: WorkerBundleExperiment;
+  constructor(experiment?: WorkerBundleExperiment) {
+    this.experiment = experiment;
+  }
   private context?: Context;
   private width = 0;
   private pool: 'forks' | 'threads' = 'forks';
@@ -66,6 +79,7 @@ export class SharedLanes {
     if (version !== '5.1.0') throw new Error('Shared lanes require Vitest 5.1.0');
     const jobs = batch.lanes!;
     const pool = batch.pool === 'threads' ? 'threads' : 'forks';
+    if (this.experiment && pool !== 'forks') throw new Error('W13 bundle rejects threads');
     // The batch's own deadline adds time to report after a lane is stopped.
     this.deadline = performance.now() + jobs[0].deadlineMs;
     this.failures.clear();
@@ -124,6 +138,7 @@ export class SharedLanes {
                   pool === 'threads'
                     ? new ExitOnlyThreadsPoolWorker(options)
                     : new ForksPoolWorker(options);
+                if (worker instanceof ForksPoolWorker) this.experiment?.configure(worker);
                 const start = worker.start.bind(worker);
                 const stop = worker.stop.bind(worker);
                 const send = worker.send.bind(worker);
@@ -134,6 +149,7 @@ export class SharedLanes {
                 let stopping = false;
                 worker.start = async () => {
                   await start();
+                  if (worker instanceof ForksPoolWorker) this.experiment?.started(worker);
                   if (worker instanceof ThreadsPoolWorker) this.threads.add(worker);
                   worker.on('exit', () => {
                     clearTimeout(timer);
@@ -149,6 +165,8 @@ export class SharedLanes {
                       context: { files: { filepath: string }[] };
                     };
                     run.context.files = this.files.get(name)!.map((filepath) => ({ filepath }));
+                    if (worker instanceof ForksPoolWorker)
+                      this.experiment?.dispatched(worker, message);
                     timer = setTimeout(
                       () => {
                         this.failures.set(name, HARD_DEADLINE);

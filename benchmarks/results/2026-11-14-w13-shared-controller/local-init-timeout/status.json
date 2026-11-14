@@ -1,0 +1,7 @@
+{
+  "exitCode": 1,
+  "observedFailure": "IPC deadline during candidate initialize; no validated-controller/fork record; stock sequence completed",
+  "thresholdMs": 25000,
+  "sourceBase": "c726d26c157f867e8f4ca5c18aa167345d98c8aa",
+  "originalSourceReconstruction": "Three Biome line wraps reversed; bytes verified against prepared validation manifest"
+}
