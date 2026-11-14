@@ -1,0 +1,743 @@
+{
+  "after_oximut_args": [],
+  "build_integrity": {
+    "errors": [],
+    "passed": true,
+    "required": true
+  },
+  "comparisons": {
+    "after_vs_before": {
+      "denominator": "before/oximut",
+      "metrics": {
+        "cpu_seconds": {
+          "bootstrap_95_percent": [
+            0.9770250860820293,
+            1.0018559355507353
+          ],
+          "max": 1.0018559355507353,
+          "median": 0.9971944376449869,
+          "median_cpu_reduction_percent": 0.2805562355013058,
+          "min": 0.9770250860820293,
+          "paired_ratios": [
+            0.9872614960876245,
+            0.9770250860820293,
+            0.9971944376449869,
+            0.9979453801763011,
+            1.0018559355507353
+          ]
+        },
+        "peak_aggregate_rss_bytes": {
+          "bootstrap_95_percent": [
+            0.9607804734741842,
+            1.024459046156587
+          ],
+          "max": 1.024459046156587,
+          "median": 1.0019925094871562,
+          "min": 0.9607804734741842,
+          "paired_ratios": [
+            0.9607804734741842,
+            1.024459046156587,
+            1.0019925094871562,
+            0.9806937822804926,
+            1.0200306129845103
+          ]
+        },
+        "wall_seconds": {
+          "bootstrap_95_percent": [
+            0.9693074505408737,
+            0.9932661181570873
+          ],
+          "max": 0.9932661181570873,
+          "median": 0.9913302225259921,
+          "min": 0.9693074505408737,
+          "paired_ratios": [
+            0.9771888526994987,
+            0.9693074505408737,
+            0.9922829351836443,
+            0.9913302225259921,
+            0.9932661181570873
+          ]
+        }
+      },
+      "numerator": "after/oximut"
+    },
+    "after_vs_stryker": {
+      "denominator": "after/stryker",
+      "metrics": {
+        "cpu_seconds": {
+          "bootstrap_95_percent": [
+            0.9387725426166789,
+            0.9559027700916474
+          ],
+          "max": 0.9559027700916474,
+          "median": 0.9464355124615301,
+          "median_cpu_reduction_percent": 5.356448753846987,
+          "median_target_met": false,
+          "min": 0.9387725426166789,
+          "paired_ratios": [
+            0.9464355124615301,
+            0.9429269507783071,
+            0.9524617907939383,
+            0.9559027700916474,
+            0.9387725426166789
+          ],
+          "status": "target missed",
+          "target_ratio": 0.8
+        },
+        "peak_aggregate_rss_bytes": {
+          "bootstrap_95_percent": [
+            0.7923091840419414,
+            0.8138454176607761
+          ],
+          "max": 0.8138454176607761,
+          "median": 0.7996944809351424,
+          "median_target_met": true,
+          "min": 0.7923091840419414,
+          "paired_ratios": [
+            0.7963246036469888,
+            0.8138454176607761,
+            0.8083399197622883,
+            0.7923091840419414,
+            0.7996944809351424
+          ],
+          "status": "inconclusive",
+          "target_ratio": 0.8
+        },
+        "wall_seconds": {
+          "bootstrap_95_percent": [
+            1.1438350149406271,
+            1.1702428017772912
+          ],
+          "max": 1.1702428017772912,
+          "median": 1.1601238747721854,
+          "median_target_met": false,
+          "min": 1.1438350149406271,
+          "paired_ratios": [
+            1.1601238747721854,
+            1.1536715172817285,
+            1.1702428017772912,
+            1.1676100705627035,
+            1.1438350149406271
+          ],
+          "status": "target missed",
+          "target_ratio": 0.5
+        }
+      },
+      "numerator": "after/oximut"
+    },
+    "before_vs_stryker": {
+      "denominator": "before/stryker",
+      "metrics": {
+        "cpu_seconds": {
+          "bootstrap_95_percent": [
+            0.9482113980425125,
+            0.9666597281112188
+          ],
+          "max": 0.9666597281112188,
+          "median": 0.9571459650881863,
+          "median_cpu_reduction_percent": 4.285403491181372,
+          "median_target_met": false,
+          "min": 0.9482113980425125,
+          "paired_ratios": [
+            0.9632698850295454,
+            0.9666597281112188,
+            0.9543716290482058,
+            0.9571459650881863,
+            0.9482113980425125
+          ],
+          "status": "target missed",
+          "target_ratio": 0.8
+        },
+        "peak_aggregate_rss_bytes": {
+          "bootstrap_95_percent": [
+            0.7729759480070924,
+            0.8156545136371759
+          ],
+          "max": 0.8156545136371759,
+          "median": 0.7999126039070026,
+          "median_target_met": true,
+          "min": 0.7729759480070924,
+          "paired_ratios": [
+            0.8153202304754554,
+            0.7917759633502051,
+            0.8156545136371759,
+            0.7999126039070026,
+            0.7729759480070924
+          ],
+          "status": "inconclusive",
+          "target_ratio": 0.8
+        },
+        "wall_seconds": {
+          "bootstrap_95_percent": [
+            1.1611724926366305,
+            1.1933088653433854
+          ],
+          "max": 1.1933088653433854,
+          "median": 1.1795937067526727,
+          "median_target_met": false,
+          "min": 1.1611724926366305,
+          "paired_ratios": [
+            1.187802958200763,
+            1.1933088653433854,
+            1.1661554927974909,
+            1.1795937067526727,
+            1.1611724926366305
+          ],
+          "status": "target missed",
+          "target_ratio": 0.5
+        }
+      },
+      "numerator": "before/oximut"
+    }
+  },
+  "concurrency": 4,
+  "confidence": "Deterministic paired median percentile bootstrap, 10000 draws; host/corpus-specific exploratory evidence.",
+  "correctness_gate": {
+    "errors": [],
+    "passed": true
+  },
+  "measured_pairs": 5,
+  "phase_evidence": {
+    "after": [
+      {
+        "disabledValidationRuns": [
+          {
+            "coverage": true,
+            "files": [
+              "/home/runner/work/_temp/real-project-comparison/00-after/00-oximut/project/src/colorModels/cmyk.ts",
+              "/home/runner/work/_temp/real-project-comparison/00-after/00-oximut/project/src/colorModels/cmykString.ts",
+              "/home/runner/work/_temp/real-project-comparison/00-after/00-oximut/project/src/colorModels/hslString.ts",
+              "/home/runner/work/_temp/real-project-comparison/00-after/00-oximut/project/src/colorModels/hwbString.ts",
+              "/home/runner/work/_temp/real-project-comparison/00-after/00-oximut/project/src/colorModels/lab.ts",
+              "/home/runner/work/_temp/real-project-comparison/00-after/00-oximut/project/src/colorModels/lchString.ts",
+              "/home/runner/work/_temp/real-project-comparison/00-after/00-oximut/project/src/colorModels/rgb.ts",
+              "/home/runner/work/_temp/real-project-comparison/00-after/00-oximut/project/src/colorModels/rgbString.ts",
+              "/home/runner/work/_temp/real-project-comparison/00-after/00-oximut/project/src/colorModels/xyz.ts",
+              "/home/runner/work/_temp/real-project-comparison/00-after/00-oximut/project/src/colord.ts",
+              "/home/runner/work/_temp/real-project-comparison/00-after/00-oximut/project/src/get/getBrightness.ts",
+              "/home/runner/work/_temp/real-project-comparison/00-after/00-oximut/project/src/get/getContrast.ts",
+              "/home/runner/work/_temp/real-project-comparison/00-after/00-oximut/project/src/get/getLuminance.ts",
+              "/home/runner/work/_temp/real-project-comparison/00-after/00-oximut/project/src/manipulate/invert.ts",
+              "/home/runner/work/_temp/real-project-comparison/00-after/00-oximut/project/src/manipulate/lighten.ts",
+              "/home/runner/work/_temp/real-project-comparison/00-after/00-oximut/project/src/manipulate/mix.ts",
+              "/home/runner/work/_temp/real-project-comparison/00-after/00-oximut/project/src/manipulate/saturate.ts",
+              "/home/runner/work/_temp/real-project-comparison/00-after/00-oximut/project/src/plugins/lab.ts",
+              "/home/runner/work/_temp/real-project-comparison/00-after/00-oximut/project/src/plugins/mix.ts",
+              "/home/runner/work/_temp/real-project-comparison/00-after/00-oximut/project/src/plugins/names.ts"
+            ],
+            "run": "instrumentedBaseline",
+            "wallMs": 538.84869
+          }
+        ],
+        "phaseWallMs": {
+          "finalInputValidation": 0.000458,
+          "inputAndSchedulerPreparation": 29.068197,
+          "instrumentedBaseline": 540.714418,
+          "mutationExecution": 16874.856351,
+          "mutationPlanning": 11.477086,
+          "originalBaseline": 644.311274,
+          "postBaselineValidation": 0.00020800000000000001,
+          "teardown": 25.124963
+        },
+        "report_file": "/home/runner/work/_temp/real-project-comparison/00-after/00-oximut/report.json",
+        "round": 0,
+        "warmup": true
+      },
+      {
+        "disabledValidationRuns": [
+          {
+            "coverage": true,
+            "files": [
+              "/home/runner/work/_temp/real-project-comparison/01-after/00-oximut/project/src/colorModels/cmyk.ts",
+              "/home/runner/work/_temp/real-project-comparison/01-after/00-oximut/project/src/colorModels/cmykString.ts",
+              "/home/runner/work/_temp/real-project-comparison/01-after/00-oximut/project/src/colorModels/hslString.ts",
+              "/home/runner/work/_temp/real-project-comparison/01-after/00-oximut/project/src/colorModels/hwbString.ts",
+              "/home/runner/work/_temp/real-project-comparison/01-after/00-oximut/project/src/colorModels/lab.ts",
+              "/home/runner/work/_temp/real-project-comparison/01-after/00-oximut/project/src/colorModels/lchString.ts",
+              "/home/runner/work/_temp/real-project-comparison/01-after/00-oximut/project/src/colorModels/rgb.ts",
+              "/home/runner/work/_temp/real-project-comparison/01-after/00-oximut/project/src/colorModels/rgbString.ts",
+              "/home/runner/work/_temp/real-project-comparison/01-after/00-oximut/project/src/colorModels/xyz.ts",
+              "/home/runner/work/_temp/real-project-comparison/01-after/00-oximut/project/src/colord.ts",
+              "/home/runner/work/_temp/real-project-comparison/01-after/00-oximut/project/src/get/getBrightness.ts",
+              "/home/runner/work/_temp/real-project-comparison/01-after/00-oximut/project/src/get/getContrast.ts",
+              "/home/runner/work/_temp/real-project-comparison/01-after/00-oximut/project/src/get/getLuminance.ts",
+              "/home/runner/work/_temp/real-project-comparison/01-after/00-oximut/project/src/manipulate/invert.ts",
+              "/home/runner/work/_temp/real-project-comparison/01-after/00-oximut/project/src/manipulate/lighten.ts",
+              "/home/runner/work/_temp/real-project-comparison/01-after/00-oximut/project/src/manipulate/mix.ts",
+              "/home/runner/work/_temp/real-project-comparison/01-after/00-oximut/project/src/manipulate/saturate.ts",
+              "/home/runner/work/_temp/real-project-comparison/01-after/00-oximut/project/src/plugins/lab.ts",
+              "/home/runner/work/_temp/real-project-comparison/01-after/00-oximut/project/src/plugins/mix.ts",
+              "/home/runner/work/_temp/real-project-comparison/01-after/00-oximut/project/src/plugins/names.ts"
+            ],
+            "run": "instrumentedBaseline",
+            "wallMs": 572.636533
+          }
+        ],
+        "phaseWallMs": {
+          "finalInputValidation": 0.000365,
+          "inputAndSchedulerPreparation": 28.690551000000003,
+          "instrumentedBaseline": 574.5558520000001,
+          "mutationExecution": 17031.81766,
+          "mutationPlanning": 12.19923,
+          "originalBaseline": 645.250133,
+          "postBaselineValidation": 0.000523,
+          "teardown": 23.939269999999997
+        },
+        "report_file": "/home/runner/work/_temp/real-project-comparison/01-after/00-oximut/report.json",
+        "round": 1,
+        "warmup": false
+      },
+      {
+        "disabledValidationRuns": [
+          {
+            "coverage": true,
+            "files": [
+              "/home/runner/work/_temp/real-project-comparison/02-after/00-oximut/project/src/colorModels/cmyk.ts",
+              "/home/runner/work/_temp/real-project-comparison/02-after/00-oximut/project/src/colorModels/cmykString.ts",
+              "/home/runner/work/_temp/real-project-comparison/02-after/00-oximut/project/src/colorModels/hslString.ts",
+              "/home/runner/work/_temp/real-project-comparison/02-after/00-oximut/project/src/colorModels/hwbString.ts",
+              "/home/runner/work/_temp/real-project-comparison/02-after/00-oximut/project/src/colorModels/lab.ts",
+              "/home/runner/work/_temp/real-project-comparison/02-after/00-oximut/project/src/colorModels/lchString.ts",
+              "/home/runner/work/_temp/real-project-comparison/02-after/00-oximut/project/src/colorModels/rgb.ts",
+              "/home/runner/work/_temp/real-project-comparison/02-after/00-oximut/project/src/colorModels/rgbString.ts",
+              "/home/runner/work/_temp/real-project-comparison/02-after/00-oximut/project/src/colorModels/xyz.ts",
+              "/home/runner/work/_temp/real-project-comparison/02-after/00-oximut/project/src/colord.ts",
+              "/home/runner/work/_temp/real-project-comparison/02-after/00-oximut/project/src/get/getBrightness.ts",
+              "/home/runner/work/_temp/real-project-comparison/02-after/00-oximut/project/src/get/getContrast.ts",
+              "/home/runner/work/_temp/real-project-comparison/02-after/00-oximut/project/src/get/getLuminance.ts",
+              "/home/runner/work/_temp/real-project-comparison/02-after/00-oximut/project/src/manipulate/invert.ts",
+              "/home/runner/work/_temp/real-project-comparison/02-after/00-oximut/project/src/manipulate/lighten.ts",
+              "/home/runner/work/_temp/real-project-comparison/02-after/00-oximut/project/src/manipulate/mix.ts",
+              "/home/runner/work/_temp/real-project-comparison/02-after/00-oximut/project/src/manipulate/saturate.ts",
+              "/home/runner/work/_temp/real-project-comparison/02-after/00-oximut/project/src/plugins/lab.ts",
+              "/home/runner/work/_temp/real-project-comparison/02-after/00-oximut/project/src/plugins/mix.ts",
+              "/home/runner/work/_temp/real-project-comparison/02-after/00-oximut/project/src/plugins/names.ts"
+            ],
+            "run": "instrumentedBaseline",
+            "wallMs": 564.719891
+          }
+        ],
+        "phaseWallMs": {
+          "finalInputValidation": 0.000349,
+          "inputAndSchedulerPreparation": 29.616933000000003,
+          "instrumentedBaseline": 566.323582,
+          "mutationExecution": 16805.15294,
+          "mutationPlanning": 11.807903,
+          "originalBaseline": 638.088447,
+          "postBaselineValidation": 0.000176,
+          "teardown": 23.697395999999998
+        },
+        "report_file": "/home/runner/work/_temp/real-project-comparison/02-after/00-oximut/report.json",
+        "round": 2,
+        "warmup": false
+      },
+      {
+        "disabledValidationRuns": [
+          {
+            "coverage": true,
+            "files": [
+              "/home/runner/work/_temp/real-project-comparison/03-after/00-oximut/project/src/colorModels/cmyk.ts",
+              "/home/runner/work/_temp/real-project-comparison/03-after/00-oximut/project/src/colorModels/cmykString.ts",
+              "/home/runner/work/_temp/real-project-comparison/03-after/00-oximut/project/src/colorModels/hslString.ts",
+              "/home/runner/work/_temp/real-project-comparison/03-after/00-oximut/project/src/colorModels/hwbString.ts",
+              "/home/runner/work/_temp/real-project-comparison/03-after/00-oximut/project/src/colorModels/lab.ts",
+              "/home/runner/work/_temp/real-project-comparison/03-after/00-oximut/project/src/colorModels/lchString.ts",
+              "/home/runner/work/_temp/real-project-comparison/03-after/00-oximut/project/src/colorModels/rgb.ts",
+              "/home/runner/work/_temp/real-project-comparison/03-after/00-oximut/project/src/colorModels/rgbString.ts",
+              "/home/runner/work/_temp/real-project-comparison/03-after/00-oximut/project/src/colorModels/xyz.ts",
+              "/home/runner/work/_temp/real-project-comparison/03-after/00-oximut/project/src/colord.ts",
+              "/home/runner/work/_temp/real-project-comparison/03-after/00-oximut/project/src/get/getBrightness.ts",
+              "/home/runner/work/_temp/real-project-comparison/03-after/00-oximut/project/src/get/getContrast.ts",
+              "/home/runner/work/_temp/real-project-comparison/03-after/00-oximut/project/src/get/getLuminance.ts",
+              "/home/runner/work/_temp/real-project-comparison/03-after/00-oximut/project/src/manipulate/invert.ts",
+              "/home/runner/work/_temp/real-project-comparison/03-after/00-oximut/project/src/manipulate/lighten.ts",
+              "/home/runner/work/_temp/real-project-comparison/03-after/00-oximut/project/src/manipulate/mix.ts",
+              "/home/runner/work/_temp/real-project-comparison/03-after/00-oximut/project/src/manipulate/saturate.ts",
+              "/home/runner/work/_temp/real-project-comparison/03-after/00-oximut/project/src/plugins/lab.ts",
+              "/home/runner/work/_temp/real-project-comparison/03-after/00-oximut/project/src/plugins/mix.ts",
+              "/home/runner/work/_temp/real-project-comparison/03-after/00-oximut/project/src/plugins/names.ts"
+            ],
+            "run": "instrumentedBaseline",
+            "wallMs": 559.180433
+          }
+        ],
+        "phaseWallMs": {
+          "finalInputValidation": 0.000315,
+          "inputAndSchedulerPreparation": 29.321908,
+          "instrumentedBaseline": 560.808262,
+          "mutationExecution": 17028.016866,
+          "mutationPlanning": 11.693508,
+          "originalBaseline": 655.276941,
+          "postBaselineValidation": 0.000312,
+          "teardown": 26.3947
+        },
+        "report_file": "/home/runner/work/_temp/real-project-comparison/03-after/00-oximut/report.json",
+        "round": 3,
+        "warmup": false
+      },
+      {
+        "disabledValidationRuns": [
+          {
+            "coverage": true,
+            "files": [
+              "/home/runner/work/_temp/real-project-comparison/04-after/00-oximut/project/src/colorModels/cmyk.ts",
+              "/home/runner/work/_temp/real-project-comparison/04-after/00-oximut/project/src/colorModels/cmykString.ts",
+              "/home/runner/work/_temp/real-project-comparison/04-after/00-oximut/project/src/colorModels/hslString.ts",
+              "/home/runner/work/_temp/real-project-comparison/04-after/00-oximut/project/src/colorModels/hwbString.ts",
+              "/home/runner/work/_temp/real-project-comparison/04-after/00-oximut/project/src/colorModels/lab.ts",
+              "/home/runner/work/_temp/real-project-comparison/04-after/00-oximut/project/src/colorModels/lchString.ts",
+              "/home/runner/work/_temp/real-project-comparison/04-after/00-oximut/project/src/colorModels/rgb.ts",
+              "/home/runner/work/_temp/real-project-comparison/04-after/00-oximut/project/src/colorModels/rgbString.ts",
+              "/home/runner/work/_temp/real-project-comparison/04-after/00-oximut/project/src/colorModels/xyz.ts",
+              "/home/runner/work/_temp/real-project-comparison/04-after/00-oximut/project/src/colord.ts",
+              "/home/runner/work/_temp/real-project-comparison/04-after/00-oximut/project/src/get/getBrightness.ts",
+              "/home/runner/work/_temp/real-project-comparison/04-after/00-oximut/project/src/get/getContrast.ts",
+              "/home/runner/work/_temp/real-project-comparison/04-after/00-oximut/project/src/get/getLuminance.ts",
+              "/home/runner/work/_temp/real-project-comparison/04-after/00-oximut/project/src/manipulate/invert.ts",
+              "/home/runner/work/_temp/real-project-comparison/04-after/00-oximut/project/src/manipulate/lighten.ts",
+              "/home/runner/work/_temp/real-project-comparison/04-after/00-oximut/project/src/manipulate/mix.ts",
+              "/home/runner/work/_temp/real-project-comparison/04-after/00-oximut/project/src/manipulate/saturate.ts",
+              "/home/runner/work/_temp/real-project-comparison/04-after/00-oximut/project/src/plugins/lab.ts",
+              "/home/runner/work/_temp/real-project-comparison/04-after/00-oximut/project/src/plugins/mix.ts",
+              "/home/runner/work/_temp/real-project-comparison/04-after/00-oximut/project/src/plugins/names.ts"
+            ],
+            "run": "instrumentedBaseline",
+            "wallMs": 530.481745
+          }
+        ],
+        "phaseWallMs": {
+          "finalInputValidation": 0.000496,
+          "inputAndSchedulerPreparation": 28.205879,
+          "instrumentedBaseline": 532.069763,
+          "mutationExecution": 17003.942626,
+          "mutationPlanning": 11.408368000000001,
+          "originalBaseline": 637.900948,
+          "postBaselineValidation": 0.000277,
+          "teardown": 27.504959999999997
+        },
+        "report_file": "/home/runner/work/_temp/real-project-comparison/04-after/00-oximut/report.json",
+        "round": 4,
+        "warmup": false
+      },
+      {
+        "disabledValidationRuns": [
+          {
+            "coverage": true,
+            "files": [
+              "/home/runner/work/_temp/real-project-comparison/05-after/00-oximut/project/src/colorModels/cmyk.ts",
+              "/home/runner/work/_temp/real-project-comparison/05-after/00-oximut/project/src/colorModels/cmykString.ts",
+              "/home/runner/work/_temp/real-project-comparison/05-after/00-oximut/project/src/colorModels/hslString.ts",
+              "/home/runner/work/_temp/real-project-comparison/05-after/00-oximut/project/src/colorModels/hwbString.ts",
+              "/home/runner/work/_temp/real-project-comparison/05-after/00-oximut/project/src/colorModels/lab.ts",
+              "/home/runner/work/_temp/real-project-comparison/05-after/00-oximut/project/src/colorModels/lchString.ts",
+              "/home/runner/work/_temp/real-project-comparison/05-after/00-oximut/project/src/colorModels/rgb.ts",
+              "/home/runner/work/_temp/real-project-comparison/05-after/00-oximut/project/src/colorModels/rgbString.ts",
+              "/home/runner/work/_temp/real-project-comparison/05-after/00-oximut/project/src/colorModels/xyz.ts",
+              "/home/runner/work/_temp/real-project-comparison/05-after/00-oximut/project/src/colord.ts",
+              "/home/runner/work/_temp/real-project-comparison/05-after/00-oximut/project/src/get/getBrightness.ts",
+              "/home/runner/work/_temp/real-project-comparison/05-after/00-oximut/project/src/get/getContrast.ts",
+              "/home/runner/work/_temp/real-project-comparison/05-after/00-oximut/project/src/get/getLuminance.ts",
+              "/home/runner/work/_temp/real-project-comparison/05-after/00-oximut/project/src/manipulate/invert.ts",
+              "/home/runner/work/_temp/real-project-comparison/05-after/00-oximut/project/src/manipulate/lighten.ts",
+              "/home/runner/work/_temp/real-project-comparison/05-after/00-oximut/project/src/manipulate/mix.ts",
+              "/home/runner/work/_temp/real-project-comparison/05-after/00-oximut/project/src/manipulate/saturate.ts",
+              "/home/runner/work/_temp/real-project-comparison/05-after/00-oximut/project/src/plugins/lab.ts",
+              "/home/runner/work/_temp/real-project-comparison/05-after/00-oximut/project/src/plugins/mix.ts",
+              "/home/runner/work/_temp/real-project-comparison/05-after/00-oximut/project/src/plugins/names.ts"
+            ],
+            "run": "instrumentedBaseline",
+            "wallMs": 565.662498
+          }
+        ],
+        "phaseWallMs": {
+          "finalInputValidation": 0.0005589999999999999,
+          "inputAndSchedulerPreparation": 28.248112,
+          "instrumentedBaseline": 567.26624,
+          "mutationExecution": 16776.259267,
+          "mutationPlanning": 11.666683,
+          "originalBaseline": 629.809724,
+          "postBaselineValidation": 0.00017999999999999998,
+          "teardown": 25.389757
+        },
+        "report_file": "/home/runner/work/_temp/real-project-comparison/05-after/00-oximut/report.json",
+        "round": 5,
+        "warmup": false
+      }
+    ],
+    "before": [
+      {
+        "disabledValidationRuns": [
+          {
+            "coverage": true,
+            "files": [
+              "/home/runner/work/_temp/real-project-comparison/00-before/00-oximut/project/src/colorModels/cmyk.ts",
+              "/home/runner/work/_temp/real-project-comparison/00-before/00-oximut/project/src/colorModels/cmykString.ts",
+              "/home/runner/work/_temp/real-project-comparison/00-before/00-oximut/project/src/colorModels/hslString.ts",
+              "/home/runner/work/_temp/real-project-comparison/00-before/00-oximut/project/src/colorModels/hwbString.ts",
+              "/home/runner/work/_temp/real-project-comparison/00-before/00-oximut/project/src/colorModels/lab.ts",
+              "/home/runner/work/_temp/real-project-comparison/00-before/00-oximut/project/src/colorModels/lchString.ts",
+              "/home/runner/work/_temp/real-project-comparison/00-before/00-oximut/project/src/colorModels/rgb.ts",
+              "/home/runner/work/_temp/real-project-comparison/00-before/00-oximut/project/src/colorModels/rgbString.ts",
+              "/home/runner/work/_temp/real-project-comparison/00-before/00-oximut/project/src/colorModels/xyz.ts",
+              "/home/runner/work/_temp/real-project-comparison/00-before/00-oximut/project/src/colord.ts",
+              "/home/runner/work/_temp/real-project-comparison/00-before/00-oximut/project/src/get/getBrightness.ts",
+              "/home/runner/work/_temp/real-project-comparison/00-before/00-oximut/project/src/get/getContrast.ts",
+              "/home/runner/work/_temp/real-project-comparison/00-before/00-oximut/project/src/get/getLuminance.ts",
+              "/home/runner/work/_temp/real-project-comparison/00-before/00-oximut/project/src/manipulate/invert.ts",
+              "/home/runner/work/_temp/real-project-comparison/00-before/00-oximut/project/src/manipulate/lighten.ts",
+              "/home/runner/work/_temp/real-project-comparison/00-before/00-oximut/project/src/manipulate/mix.ts",
+              "/home/runner/work/_temp/real-project-comparison/00-before/00-oximut/project/src/manipulate/saturate.ts",
+              "/home/runner/work/_temp/real-project-comparison/00-before/00-oximut/project/src/plugins/lab.ts",
+              "/home/runner/work/_temp/real-project-comparison/00-before/00-oximut/project/src/plugins/mix.ts",
+              "/home/runner/work/_temp/real-project-comparison/00-before/00-oximut/project/src/plugins/names.ts"
+            ],
+            "run": "instrumentedBaseline",
+            "wallMs": 628.3993820000001
+          }
+        ],
+        "phaseWallMs": {
+          "finalInputValidation": 0.000366,
+          "inputAndSchedulerPreparation": 27.992347000000002,
+          "instrumentedBaseline": 630.722954,
+          "mutationExecution": 17357.520236,
+          "mutationPlanning": 11.876748,
+          "originalBaseline": 762.8979820000001,
+          "postBaselineValidation": 0.000595,
+          "teardown": 23.634459
+        },
+        "report_file": "/home/runner/work/_temp/real-project-comparison/00-before/00-oximut/report.json",
+        "round": 0,
+        "warmup": true
+      },
+      {
+        "disabledValidationRuns": [
+          {
+            "coverage": true,
+            "files": [
+              "/home/runner/work/_temp/real-project-comparison/01-before/00-oximut/project/src/colorModels/cmyk.ts",
+              "/home/runner/work/_temp/real-project-comparison/01-before/00-oximut/project/src/colorModels/cmykString.ts",
+              "/home/runner/work/_temp/real-project-comparison/01-before/00-oximut/project/src/colorModels/hslString.ts",
+              "/home/runner/work/_temp/real-project-comparison/01-before/00-oximut/project/src/colorModels/hwbString.ts",
+              "/home/runner/work/_temp/real-project-comparison/01-before/00-oximut/project/src/colorModels/lab.ts",
+              "/home/runner/work/_temp/real-project-comparison/01-before/00-oximut/project/src/colorModels/lchString.ts",
+              "/home/runner/work/_temp/real-project-comparison/01-before/00-oximut/project/src/colorModels/rgb.ts",
+              "/home/runner/work/_temp/real-project-comparison/01-before/00-oximut/project/src/colorModels/rgbString.ts",
+              "/home/runner/work/_temp/real-project-comparison/01-before/00-oximut/project/src/colorModels/xyz.ts",
+              "/home/runner/work/_temp/real-project-comparison/01-before/00-oximut/project/src/colord.ts",
+              "/home/runner/work/_temp/real-project-comparison/01-before/00-oximut/project/src/get/getBrightness.ts",
+              "/home/runner/work/_temp/real-project-comparison/01-before/00-oximut/project/src/get/getContrast.ts",
+              "/home/runner/work/_temp/real-project-comparison/01-before/00-oximut/project/src/get/getLuminance.ts",
+              "/home/runner/work/_temp/real-project-comparison/01-before/00-oximut/project/src/manipulate/invert.ts",
+              "/home/runner/work/_temp/real-project-comparison/01-before/00-oximut/project/src/manipulate/lighten.ts",
+              "/home/runner/work/_temp/real-project-comparison/01-before/00-oximut/project/src/manipulate/mix.ts",
+              "/home/runner/work/_temp/real-project-comparison/01-before/00-oximut/project/src/manipulate/saturate.ts",
+              "/home/runner/work/_temp/real-project-comparison/01-before/00-oximut/project/src/plugins/lab.ts",
+              "/home/runner/work/_temp/real-project-comparison/01-before/00-oximut/project/src/plugins/mix.ts",
+              "/home/runner/work/_temp/real-project-comparison/01-before/00-oximut/project/src/plugins/names.ts"
+            ],
+            "run": "instrumentedBaseline",
+            "wallMs": 576.773514
+          }
+        ],
+        "phaseWallMs": {
+          "finalInputValidation": 0.000447,
+          "inputAndSchedulerPreparation": 28.938835,
+          "instrumentedBaseline": 578.6994490000001,
+          "mutationExecution": 17437.148116,
+          "mutationPlanning": 11.855628,
+          "originalBaseline": 654.040964,
+          "postBaselineValidation": 0.000298,
+          "teardown": 28.264013000000002
+        },
+        "report_file": "/home/runner/work/_temp/real-project-comparison/01-before/00-oximut/report.json",
+        "round": 1,
+        "warmup": false
+      },
+      {
+        "disabledValidationRuns": [
+          {
+            "coverage": true,
+            "files": [
+              "/home/runner/work/_temp/real-project-comparison/02-before/00-oximut/project/src/colorModels/cmyk.ts",
+              "/home/runner/work/_temp/real-project-comparison/02-before/00-oximut/project/src/colorModels/cmykString.ts",
+              "/home/runner/work/_temp/real-project-comparison/02-before/00-oximut/project/src/colorModels/hslString.ts",
+              "/home/runner/work/_temp/real-project-comparison/02-before/00-oximut/project/src/colorModels/hwbString.ts",
+              "/home/runner/work/_temp/real-project-comparison/02-before/00-oximut/project/src/colorModels/lab.ts",
+              "/home/runner/work/_temp/real-project-comparison/02-before/00-oximut/project/src/colorModels/lchString.ts",
+              "/home/runner/work/_temp/real-project-comparison/02-before/00-oximut/project/src/colorModels/rgb.ts",
+              "/home/runner/work/_temp/real-project-comparison/02-before/00-oximut/project/src/colorModels/rgbString.ts",
+              "/home/runner/work/_temp/real-project-comparison/02-before/00-oximut/project/src/colorModels/xyz.ts",
+              "/home/runner/work/_temp/real-project-comparison/02-before/00-oximut/project/src/colord.ts",
+              "/home/runner/work/_temp/real-project-comparison/02-before/00-oximut/project/src/get/getBrightness.ts",
+              "/home/runner/work/_temp/real-project-comparison/02-before/00-oximut/project/src/get/getContrast.ts",
+              "/home/runner/work/_temp/real-project-comparison/02-before/00-oximut/project/src/get/getLuminance.ts",
+              "/home/runner/work/_temp/real-project-comparison/02-before/00-oximut/project/src/manipulate/invert.ts",
+              "/home/runner/work/_temp/real-project-comparison/02-before/00-oximut/project/src/manipulate/lighten.ts",
+              "/home/runner/work/_temp/real-project-comparison/02-before/00-oximut/project/src/manipulate/mix.ts",
+              "/home/runner/work/_temp/real-project-comparison/02-before/00-oximut/project/src/manipulate/saturate.ts",
+              "/home/runner/work/_temp/real-project-comparison/02-before/00-oximut/project/src/plugins/lab.ts",
+              "/home/runner/work/_temp/real-project-comparison/02-before/00-oximut/project/src/plugins/mix.ts",
+              "/home/runner/work/_temp/real-project-comparison/02-before/00-oximut/project/src/plugins/names.ts"
+            ],
+            "run": "instrumentedBaseline",
+            "wallMs": 579.7566840000001
+          }
+        ],
+        "phaseWallMs": {
+          "finalInputValidation": 0.00048100000000000004,
+          "inputAndSchedulerPreparation": 28.909328000000002,
+          "instrumentedBaseline": 581.399873,
+          "mutationExecution": 17341.684495999998,
+          "mutationPlanning": 11.988272,
+          "originalBaseline": 654.9381490000001,
+          "postBaselineValidation": 0.000171,
+          "teardown": 27.081833
+        },
+        "report_file": "/home/runner/work/_temp/real-project-comparison/02-before/00-oximut/report.json",
+        "round": 2,
+        "warmup": false
+      },
+      {
+        "disabledValidationRuns": [
+          {
+            "coverage": true,
+            "files": [
+              "/home/runner/work/_temp/real-project-comparison/03-before/00-oximut/project/src/colorModels/cmyk.ts",
+              "/home/runner/work/_temp/real-project-comparison/03-before/00-oximut/project/src/colorModels/cmykString.ts",
+              "/home/runner/work/_temp/real-project-comparison/03-before/00-oximut/project/src/colorModels/hslString.ts",
+              "/home/runner/work/_temp/real-project-comparison/03-before/00-oximut/project/src/colorModels/hwbString.ts",
+              "/home/runner/work/_temp/real-project-comparison/03-before/00-oximut/project/src/colorModels/lab.ts",
+              "/home/runner/work/_temp/real-project-comparison/03-before/00-oximut/project/src/colorModels/lchString.ts",
+              "/home/runner/work/_temp/real-project-comparison/03-before/00-oximut/project/src/colorModels/rgb.ts",
+              "/home/runner/work/_temp/real-project-comparison/03-before/00-oximut/project/src/colorModels/rgbString.ts",
+              "/home/runner/work/_temp/real-project-comparison/03-before/00-oximut/project/src/colorModels/xyz.ts",
+              "/home/runner/work/_temp/real-project-comparison/03-before/00-oximut/project/src/colord.ts",
+              "/home/runner/work/_temp/real-project-comparison/03-before/00-oximut/project/src/get/getBrightness.ts",
+              "/home/runner/work/_temp/real-project-comparison/03-before/00-oximut/project/src/get/getContrast.ts",
+              "/home/runner/work/_temp/real-project-comparison/03-before/00-oximut/project/src/get/getLuminance.ts",
+              "/home/runner/work/_temp/real-project-comparison/03-before/00-oximut/project/src/manipulate/invert.ts",
+              "/home/runner/work/_temp/real-project-comparison/03-before/00-oximut/project/src/manipulate/lighten.ts",
+              "/home/runner/work/_temp/real-project-comparison/03-before/00-oximut/project/src/manipulate/mix.ts",
+              "/home/runner/work/_temp/real-project-comparison/03-before/00-oximut/project/src/manipulate/saturate.ts",
+              "/home/runner/work/_temp/real-project-comparison/03-before/00-oximut/project/src/plugins/lab.ts",
+              "/home/runner/work/_temp/real-project-comparison/03-before/00-oximut/project/src/plugins/mix.ts",
+              "/home/runner/work/_temp/real-project-comparison/03-before/00-oximut/project/src/plugins/names.ts"
+            ],
+            "run": "instrumentedBaseline",
+            "wallMs": 534.736481
+          }
+        ],
+        "phaseWallMs": {
+          "finalInputValidation": 0.000449,
+          "inputAndSchedulerPreparation": 28.905739999999998,
+          "instrumentedBaseline": 536.433024,
+          "mutationExecution": 17196.918813,
+          "mutationPlanning": 11.390867,
+          "originalBaseline": 654.1297959999999,
+          "postBaselineValidation": 6.400000000000001e-05,
+          "teardown": 25.232495
+        },
+        "report_file": "/home/runner/work/_temp/real-project-comparison/03-before/00-oximut/report.json",
+        "round": 3,
+        "warmup": false
+      },
+      {
+        "disabledValidationRuns": [
+          {
+            "coverage": true,
+            "files": [
+              "/home/runner/work/_temp/real-project-comparison/04-before/00-oximut/project/src/colorModels/cmyk.ts",
+              "/home/runner/work/_temp/real-project-comparison/04-before/00-oximut/project/src/colorModels/cmykString.ts",
+              "/home/runner/work/_temp/real-project-comparison/04-before/00-oximut/project/src/colorModels/hslString.ts",
+              "/home/runner/work/_temp/real-project-comparison/04-before/00-oximut/project/src/colorModels/hwbString.ts",
+              "/home/runner/work/_temp/real-project-comparison/04-before/00-oximut/project/src/colorModels/lab.ts",
+              "/home/runner/work/_temp/real-project-comparison/04-before/00-oximut/project/src/colorModels/lchString.ts",
+              "/home/runner/work/_temp/real-project-comparison/04-before/00-oximut/project/src/colorModels/rgb.ts",
+              "/home/runner/work/_temp/real-project-comparison/04-before/00-oximut/project/src/colorModels/rgbString.ts",
+              "/home/runner/work/_temp/real-project-comparison/04-before/00-oximut/project/src/colorModels/xyz.ts",
+              "/home/runner/work/_temp/real-project-comparison/04-before/00-oximut/project/src/colord.ts",
+              "/home/runner/work/_temp/real-project-comparison/04-before/00-oximut/project/src/get/getBrightness.ts",
+              "/home/runner/work/_temp/real-project-comparison/04-before/00-oximut/project/src/get/getContrast.ts",
+              "/home/runner/work/_temp/real-project-comparison/04-before/00-oximut/project/src/get/getLuminance.ts",
+              "/home/runner/work/_temp/real-project-comparison/04-before/00-oximut/project/src/manipulate/invert.ts",
+              "/home/runner/work/_temp/real-project-comparison/04-before/00-oximut/project/src/manipulate/lighten.ts",
+              "/home/runner/work/_temp/real-project-comparison/04-before/00-oximut/project/src/manipulate/mix.ts",
+              "/home/runner/work/_temp/real-project-comparison/04-before/00-oximut/project/src/manipulate/saturate.ts",
+              "/home/runner/work/_temp/real-project-comparison/04-before/00-oximut/project/src/plugins/lab.ts",
+              "/home/runner/work/_temp/real-project-comparison/04-before/00-oximut/project/src/plugins/mix.ts",
+              "/home/runner/work/_temp/real-project-comparison/04-before/00-oximut/project/src/plugins/names.ts"
+            ],
+            "run": "instrumentedBaseline",
+            "wallMs": 569.773707
+          }
+        ],
+        "phaseWallMs": {
+          "finalInputValidation": 0.00033299999999999996,
+          "inputAndSchedulerPreparation": 28.462174,
+          "instrumentedBaseline": 571.367308,
+          "mutationExecution": 17116.794406,
+          "mutationPlanning": 11.578646999999998,
+          "originalBaseline": 649.708205,
+          "postBaselineValidation": 0.000267,
+          "teardown": 24.016665
+        },
+        "report_file": "/home/runner/work/_temp/real-project-comparison/04-before/00-oximut/report.json",
+        "round": 4,
+        "warmup": false
+      },
+      {
+        "disabledValidationRuns": [
+          {
+            "coverage": true,
+            "files": [
+              "/home/runner/work/_temp/real-project-comparison/05-before/00-oximut/project/src/colorModels/cmyk.ts",
+              "/home/runner/work/_temp/real-project-comparison/05-before/00-oximut/project/src/colorModels/cmykString.ts",
+              "/home/runner/work/_temp/real-project-comparison/05-before/00-oximut/project/src/colorModels/hslString.ts",
+              "/home/runner/work/_temp/real-project-comparison/05-before/00-oximut/project/src/colorModels/hwbString.ts",
+              "/home/runner/work/_temp/real-project-comparison/05-before/00-oximut/project/src/colorModels/lab.ts",
+              "/home/runner/work/_temp/real-project-comparison/05-before/00-oximut/project/src/colorModels/lchString.ts",
+              "/home/runner/work/_temp/real-project-comparison/05-before/00-oximut/project/src/colorModels/rgb.ts",
+              "/home/runner/work/_temp/real-project-comparison/05-before/00-oximut/project/src/colorModels/rgbString.ts",
+              "/home/runner/work/_temp/real-project-comparison/05-before/00-oximut/project/src/colorModels/xyz.ts",
+              "/home/runner/work/_temp/real-project-comparison/05-before/00-oximut/project/src/colord.ts",
+              "/home/runner/work/_temp/real-project-comparison/05-before/00-oximut/project/src/get/getBrightness.ts",
+              "/home/runner/work/_temp/real-project-comparison/05-before/00-oximut/project/src/get/getContrast.ts",
+              "/home/runner/work/_temp/real-project-comparison/05-before/00-oximut/project/src/get/getLuminance.ts",
+              "/home/runner/work/_temp/real-project-comparison/05-before/00-oximut/project/src/manipulate/invert.ts",
+              "/home/runner/work/_temp/real-project-comparison/05-before/00-oximut/project/src/manipulate/lighten.ts",
+              "/home/runner/work/_temp/real-project-comparison/05-before/00-oximut/project/src/manipulate/mix.ts",
+              "/home/runner/work/_temp/real-project-comparison/05-before/00-oximut/project/src/manipulate/saturate.ts",
+              "/home/runner/work/_temp/real-project-comparison/05-before/00-oximut/project/src/plugins/lab.ts",
+              "/home/runner/work/_temp/real-project-comparison/05-before/00-oximut/project/src/plugins/mix.ts",
+              "/home/runner/work/_temp/real-project-comparison/05-before/00-oximut/project/src/plugins/names.ts"
+            ],
+            "run": "instrumentedBaseline",
+            "wallMs": 535.7723199999999
+          }
+        ],
+        "phaseWallMs": {
+          "finalInputValidation": 0.00031,
+          "inputAndSchedulerPreparation": 28.552929000000002,
+          "instrumentedBaseline": 537.368556,
+          "mutationExecution": 16934.210948,
+          "mutationPlanning": 11.326032999999999,
+          "originalBaseline": 625.168138,
+          "postBaselineValidation": 0.00018099999999999998,
+          "teardown": 23.17897
+        },
+        "report_file": "/home/runner/work/_temp/real-project-comparison/05-before/00-oximut/report.json",
+        "round": 5,
+        "warmup": false
+      }
+    ]
+  },
+  "scope": "20 declared production mutation files (arithmetic families), all 41 source files available, all 102 upstream tests; not the full colord mutation scope.",
+  "targets_met": false,
+  "thresholds": {
+    "cpu_seconds": 0.8,
+    "peak_aggregate_rss_bytes": 0.8,
+    "wall_seconds": 0.5
+  },
+  "warmup_pairs": 1,
+  "workload": "colord-scale"
+}

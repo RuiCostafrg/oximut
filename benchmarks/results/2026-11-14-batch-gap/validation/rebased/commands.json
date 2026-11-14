@@ -1,0 +1,38 @@
+{
+  "source_head_at_start": "ab6239f786a83bfbb7ee4c4faa1ab275137f7835",
+  "base": "d31479b1b1e3f796e066411106171e3ba46f0978",
+  "binary_sha256": "73e03a2a04adf17b0f3a355e240ee164dd60be942786e10f09c3005f2a37f396",
+  "date": "2026-11-14",
+  "commands": {
+    "cargo": "cargo test -q --release -p oximut-cli",
+    "build": "cargo build -q --release -p oximut-cli",
+    "tsc": "node node_modules/typescript/bin/tsc -p packages/vitest-adapter/tsconfig.json",
+    "python": "PYTHONPATH=tests python3 -m unittest tests.test_native_coordinator tests.test_contract",
+    "adapter": "node --test --test-concurrency=1 packages/vitest-adapter/test/*.test.mjs",
+    "lifecycle-recheck": "node --test --test-concurrency=1 packages/vitest-adapter/test/lifecycle.test.mjs",
+    "benchmarks": "python3 -m unittest discover -s benchmarks/tests"
+  },
+  "exit_codes": {
+    "cargo": 0,
+    "build": 0,
+    "tsc": 0,
+    "python": 0,
+    "adapter": 1,
+    "lifecycle-recheck": 0,
+    "benchmarks": 0
+  },
+  "counts": {
+    "cargo_unit": 94,
+    "cargo_integration": 9,
+    "python": 27,
+    "adapter_total": 88,
+    "adapter_initial_passes": 87,
+    "lifecycle_isolated_passes": 1,
+    "benchmarks": 176
+  },
+  "notes": [
+    "Node 26.3.1 on the requested PATH. The Python suites use target/debug/oximut symlinked to the release binary.",
+    "The lifecycle adapter test initially reported Controller did not close; the same test passed when run alone, without changes to product or tests.",
+    "Original paired campaigns measured pre-rebase binaries; no benchmark claim is made for the rebased head."
+  ]
+}

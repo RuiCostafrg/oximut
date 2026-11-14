@@ -1,0 +1,626 @@
+{
+  "candidate": "d844d94e87de33c705e4b318bacedb5093e891e3",
+  "base": "3c03ac4c4002f6455d537f86f85dc3866fa2e172",
+  "before": "7297840df3996c9e6098afbe6d37db41b294ee0b",
+  "acceptance": {
+    "scale_2w_wall_interval_below_one": true,
+    "scale_4w_wall_interval_below_one": true,
+    "colord_wall_not_regressed": true,
+    "no_significant_cpu_or_rss_regression": false,
+    "all_correctness_and_build_gates": true
+  },
+  "passed": false,
+  "campaigns": [
+    {
+      "config": "colord-scale-2w",
+      "label": "colord-scale \u00b7 2 workers",
+      "run": 43595986333,
+      "url": "https://github.com/RuiCostafrg/oximut/actions/runs/43595986333",
+      "correctness": true,
+      "build_integrity": true,
+      "ratios": {
+        "after_vs_before": {
+          "cpu_seconds": {
+            "bootstrap_95_percent": [
+              0.9141076085485119,
+              0.9385731452137716
+            ],
+            "max": 0.9385731452137716,
+            "median": 0.9236813792737515,
+            "median_cpu_reduction_percent": 7.631862072624851,
+            "min": 0.9141076085485119,
+            "paired_ratios": [
+              0.9155143907076612,
+              0.9141076085485119,
+              0.9241579165771865,
+              0.9236813792737515,
+              0.9385731452137716
+            ]
+          },
+          "peak_aggregate_rss_bytes": {
+            "bootstrap_95_percent": [
+              1.0109813906872174,
+              1.1308282152850966
+            ],
+            "max": 1.1308282152850966,
+            "median": 1.1112403217545868,
+            "min": 1.0109813906872174,
+            "paired_ratios": [
+              1.1015277987042338,
+              1.1308282152850966,
+              1.1121312966864585,
+              1.1112403217545868,
+              1.0109813906872174
+            ]
+          },
+          "wall_seconds": {
+            "bootstrap_95_percent": [
+              0.7673224309265011,
+              0.8011216685866369
+            ],
+            "max": 0.8011216685866369,
+            "median": 0.7963036198430586,
+            "min": 0.7673224309265011,
+            "paired_ratios": [
+              0.7867737832181421,
+              0.7673224309265011,
+              0.7963036198430586,
+              0.8011216685866369,
+              0.8009866105732624
+            ]
+          }
+        },
+        "after_vs_stryker": {
+          "cpu_seconds": {
+            "bootstrap_95_percent": [
+              1.0539944411760565,
+              1.1111150923368687
+            ],
+            "max": 1.1111150923368687,
+            "median": 1.086353453772501,
+            "median_cpu_reduction_percent": -8.635345377250104,
+            "median_target_met": false,
+            "min": 1.0539944411760565,
+            "paired_ratios": [
+              1.0749572660791322,
+              1.0939121905568585,
+              1.086353453772501,
+              1.0539944411760565,
+              1.1111150923368687
+            ],
+            "status": "target missed",
+            "target_ratio": 0.8
+          },
+          "peak_aggregate_rss_bytes": {
+            "bootstrap_95_percent": [
+              0.9121921060441192,
+              0.9413332252540707
+            ],
+            "max": 0.9413332252540707,
+            "median": 0.9226479182426319,
+            "median_target_met": false,
+            "min": 0.9121921060441192,
+            "paired_ratios": [
+              0.9216707681136034,
+              0.9399344519792784,
+              0.9413332252540707,
+              0.9121921060441192,
+              0.9226479182426319
+            ],
+            "status": "target missed",
+            "target_ratio": 0.8
+          },
+          "wall_seconds": {
+            "bootstrap_95_percent": [
+              1.252620501364948,
+              1.3091271820324168
+            ],
+            "max": 1.3091271820324168,
+            "median": 1.2915605441951703,
+            "median_target_met": false,
+            "min": 1.252620501364948,
+            "paired_ratios": [
+              1.282301495198967,
+              1.2915605441951703,
+              1.2985881918263333,
+              1.252620501364948,
+              1.3091271820324168
+            ],
+            "status": "target missed",
+            "target_ratio": 0.5
+          }
+        }
+      }
+    },
+    {
+      "config": "colord-scale-4w",
+      "label": "colord-scale \u00b7 4 workers",
+      "run": 43595989528,
+      "url": "https://github.com/RuiCostafrg/oximut/actions/runs/43595989528",
+      "correctness": true,
+      "build_integrity": true,
+      "ratios": {
+        "after_vs_before": {
+          "cpu_seconds": {
+            "bootstrap_95_percent": [
+              0.9455799240867192,
+              0.9543584042120717
+            ],
+            "max": 0.9543584042120717,
+            "median": 0.9486906059856681,
+            "median_cpu_reduction_percent": 5.130939401433188,
+            "min": 0.9455799240867192,
+            "paired_ratios": [
+              0.9478877786666117,
+              0.9543584042120717,
+              0.9486906059856681,
+              0.9492225249301814,
+              0.9455799240867192
+            ]
+          },
+          "peak_aggregate_rss_bytes": {
+            "bootstrap_95_percent": [
+              1.0272753553966238,
+              1.1212489013518603
+            ],
+            "max": 1.1212489013518603,
+            "median": 1.1051681106135887,
+            "min": 1.0272753553966238,
+            "paired_ratios": [
+              1.1051681106135887,
+              1.1212489013518603,
+              1.0854086492037098,
+              1.1136501630902904,
+              1.0272753553966238
+            ]
+          },
+          "wall_seconds": {
+            "bootstrap_95_percent": [
+              0.8597306835560548,
+              0.8776570699428122
+            ],
+            "max": 0.8776570699428122,
+            "median": 0.8734974906135808,
+            "min": 0.8597306835560548,
+            "paired_ratios": [
+              0.8703156840740423,
+              0.8748857563226258,
+              0.8734974906135808,
+              0.8776570699428122,
+              0.8597306835560548
+            ]
+          }
+        },
+        "after_vs_stryker": {
+          "cpu_seconds": {
+            "bootstrap_95_percent": [
+              0.9843592698116764,
+              0.9928000428854984
+            ],
+            "max": 0.9928000428854984,
+            "median": 0.9848884502360498,
+            "median_cpu_reduction_percent": 1.5111549763950238,
+            "median_target_met": false,
+            "min": 0.9843592698116764,
+            "paired_ratios": [
+              0.9848884502360498,
+              0.9928000428854984,
+              0.9843592698116764,
+              0.9898908716468475,
+              0.9846878891871639
+            ],
+            "status": "target missed",
+            "target_ratio": 0.8
+          },
+          "peak_aggregate_rss_bytes": {
+            "bootstrap_95_percent": [
+              0.7771924084873301,
+              0.8188125503034337
+            ],
+            "max": 0.8188125503034337,
+            "median": 0.806058912486028,
+            "median_target_met": false,
+            "min": 0.7771924084873301,
+            "paired_ratios": [
+              0.807111697270975,
+              0.8188125503034337,
+              0.7771924084873301,
+              0.7982086228999393,
+              0.806058912486028
+            ],
+            "status": "inconclusive",
+            "target_ratio": 0.8
+          },
+          "wall_seconds": {
+            "bootstrap_95_percent": [
+              1.1822116040588109,
+              1.1998812836579003
+            ],
+            "max": 1.1998812836579003,
+            "median": 1.1853693748433702,
+            "median_target_met": false,
+            "min": 1.1822116040588109,
+            "paired_ratios": [
+              1.1853693748433702,
+              1.1935484989750302,
+              1.1846764377064722,
+              1.1998812836579003,
+              1.1822116040588109
+            ],
+            "status": "target missed",
+            "target_ratio": 0.5
+          }
+        }
+      }
+    },
+    {
+      "config": "colord-4w",
+      "label": "colord \u00b7 4 workers",
+      "run": 43595993830,
+      "url": "https://github.com/RuiCostafrg/oximut/actions/runs/43595993830",
+      "correctness": true,
+      "build_integrity": true,
+      "ratios": {
+        "after_vs_before": {
+          "cpu_seconds": {
+            "bootstrap_95_percent": [
+              0.9571427092889929,
+              1.0083338627654945
+            ],
+            "max": 1.0083338627654945,
+            "median": 0.980310669040966,
+            "median_cpu_reduction_percent": 1.9689330959034024,
+            "min": 0.9571427092889929,
+            "paired_ratios": [
+              1.0083338627654945,
+              0.9882199565669535,
+              0.9571427092889929,
+              0.9742251240181593,
+              0.980310669040966
+            ]
+          },
+          "peak_aggregate_rss_bytes": {
+            "bootstrap_95_percent": [
+              0.9402312043945232,
+              1.0478789844520968
+            ],
+            "max": 1.0478789844520968,
+            "median": 0.9909211272933611,
+            "min": 0.9402312043945232,
+            "paired_ratios": [
+              0.9909211272933611,
+              0.9402312043945232,
+              1.0478789844520968,
+              0.9648635051764768,
+              1.0372952271921934
+            ]
+          },
+          "wall_seconds": {
+            "bootstrap_95_percent": [
+              0.8603219204226978,
+              0.9478313631783818
+            ],
+            "max": 0.9478313631783818,
+            "median": 0.9142664410110731,
+            "min": 0.8603219204226978,
+            "paired_ratios": [
+              0.9142664410110731,
+              0.8603219204226978,
+              0.905233737412564,
+              0.9478313631783818,
+              0.9459559202491588
+            ]
+          }
+        },
+        "after_vs_stryker": {
+          "cpu_seconds": {
+            "bootstrap_95_percent": [
+              0.6788770889413671,
+              0.6967198356612136
+            ],
+            "max": 0.6967198356612136,
+            "median": 0.691271997226377,
+            "median_cpu_reduction_percent": 30.872800277362302,
+            "median_target_met": true,
+            "min": 0.6788770889413671,
+            "paired_ratios": [
+              0.6922734189450951,
+              0.691271997226377,
+              0.6788770889413671,
+              0.6967198356612136,
+              0.6884597140078486
+            ],
+            "status": "target met",
+            "target_ratio": 0.8
+          },
+          "peak_aggregate_rss_bytes": {
+            "bootstrap_95_percent": [
+              0.574942509693477,
+              0.5989910635936867
+            ],
+            "max": 0.5989910635936867,
+            "median": 0.583935544771238,
+            "median_target_met": true,
+            "min": 0.574942509693477,
+            "paired_ratios": [
+              0.5801542416452442,
+              0.583935544771238,
+              0.5901912694680136,
+              0.574942509693477,
+              0.5989910635936867
+            ],
+            "status": "target met",
+            "target_ratio": 0.8
+          },
+          "wall_seconds": {
+            "bootstrap_95_percent": [
+              0.6047267299254764,
+              0.6440710842872844
+            ],
+            "max": 0.6440710842872844,
+            "median": 0.6290999485981993,
+            "median_target_met": false,
+            "min": 0.6047267299254764,
+            "paired_ratios": [
+              0.6290999485981993,
+              0.6295245929775055,
+              0.6209523405924908,
+              0.6440710842872844,
+              0.6047267299254764
+            ],
+            "status": "target missed",
+            "target_ratio": 0.5
+          }
+        }
+      }
+    }
+  ],
+  "isolated_campaigns": [
+    {
+      "config": "isolate-scale-2w",
+      "label": "colord-scale \u00b7 2 workers",
+      "run": 43597205960,
+      "url": "https://github.com/RuiCostafrg/oximut/actions/runs/43597205960",
+      "correctness": true,
+      "build_integrity": true,
+      "ratios": {
+        "after_vs_before": {
+          "cpu_seconds": {
+            "bootstrap_95_percent": [
+              0.9753234673664122,
+              0.9875800872019037
+            ],
+            "max": 0.9875800872019037,
+            "median": 0.9803407197639978,
+            "median_cpu_reduction_percent": 1.9659280236002163,
+            "min": 0.9753234673664122,
+            "paired_ratios": [
+              0.9753234673664122,
+              0.9864479532182158,
+              0.9875800872019037,
+              0.9803407197639978,
+              0.9795495008879525
+            ]
+          },
+          "peak_aggregate_rss_bytes": {
+            "bootstrap_95_percent": [
+              0.921128972801436,
+              1.0863843735042684
+            ],
+            "max": 1.0863843735042684,
+            "median": 1.0208495735186127,
+            "min": 0.921128972801436,
+            "paired_ratios": [
+              1.0278145018979907,
+              1.0208495735186127,
+              1.0863843735042684,
+              0.921128972801436,
+              1.0205477066669761
+            ]
+          },
+          "wall_seconds": {
+            "bootstrap_95_percent": [
+              0.9536257549500086,
+              0.9752374389421226
+            ],
+            "max": 0.9752374389421226,
+            "median": 0.9677086906561551,
+            "min": 0.9536257549500086,
+            "paired_ratios": [
+              0.9536257549500086,
+              0.9752374389421226,
+              0.965413403900687,
+              0.9678044748623835,
+              0.9677086906561551
+            ]
+          }
+        },
+        "after_vs_stryker": {
+          "cpu_seconds": {
+            "bootstrap_95_percent": [
+              1.0522821596815357,
+              1.063408255166699
+            ],
+            "max": 1.063408255166699,
+            "median": 1.0579905579650608,
+            "median_cpu_reduction_percent": -5.799055796506081,
+            "median_target_met": false,
+            "min": 1.0522821596815357,
+            "paired_ratios": [
+              1.0592445143352984,
+              1.063408255166699,
+              1.0522821596815357,
+              1.0579905579650608,
+              1.052745817727274
+            ],
+            "status": "target missed",
+            "target_ratio": 0.8
+          },
+          "peak_aggregate_rss_bytes": {
+            "bootstrap_95_percent": [
+              0.8524684185805048,
+              0.8935036849160118
+            ],
+            "max": 0.8935036849160118,
+            "median": 0.8918676730525891,
+            "median_target_met": false,
+            "min": 0.8524684185805048,
+            "paired_ratios": [
+              0.8918676730525891,
+              0.8919340430467335,
+              0.8935036849160118,
+              0.8524684185805048,
+              0.8895713591840039
+            ],
+            "status": "target missed",
+            "target_ratio": 0.8
+          },
+          "wall_seconds": {
+            "bootstrap_95_percent": [
+              1.2406442080744096,
+              1.2642248869475405
+            ],
+            "max": 1.2642248869475405,
+            "median": 1.2534806424481832,
+            "median_target_met": false,
+            "min": 1.2406442080744096,
+            "paired_ratios": [
+              1.2406442080744096,
+              1.2642248869475405,
+              1.2458948953925821,
+              1.2570252153012427,
+              1.2534806424481832
+            ],
+            "status": "target missed",
+            "target_ratio": 0.5
+          }
+        }
+      }
+    },
+    {
+      "config": "isolate-scale-4w",
+      "label": "colord-scale \u00b7 4 workers",
+      "run": 43597210750,
+      "url": "https://github.com/RuiCostafrg/oximut/actions/runs/43597210750",
+      "correctness": true,
+      "build_integrity": true,
+      "ratios": {
+        "after_vs_before": {
+          "cpu_seconds": {
+            "bootstrap_95_percent": [
+              0.9770250860820293,
+              1.0018559355507353
+            ],
+            "max": 1.0018559355507353,
+            "median": 0.9971944376449869,
+            "median_cpu_reduction_percent": 0.2805562355013058,
+            "min": 0.9770250860820293,
+            "paired_ratios": [
+              0.9872614960876245,
+              0.9770250860820293,
+              0.9971944376449869,
+              0.9979453801763011,
+              1.0018559355507353
+            ]
+          },
+          "peak_aggregate_rss_bytes": {
+            "bootstrap_95_percent": [
+              0.9607804734741842,
+              1.024459046156587
+            ],
+            "max": 1.024459046156587,
+            "median": 1.0019925094871562,
+            "min": 0.9607804734741842,
+            "paired_ratios": [
+              0.9607804734741842,
+              1.024459046156587,
+              1.0019925094871562,
+              0.9806937822804926,
+              1.0200306129845103
+            ]
+          },
+          "wall_seconds": {
+            "bootstrap_95_percent": [
+              0.9693074505408737,
+              0.9932661181570873
+            ],
+            "max": 0.9932661181570873,
+            "median": 0.9913302225259921,
+            "min": 0.9693074505408737,
+            "paired_ratios": [
+              0.9771888526994987,
+              0.9693074505408737,
+              0.9922829351836443,
+              0.9913302225259921,
+              0.9932661181570873
+            ]
+          }
+        },
+        "after_vs_stryker": {
+          "cpu_seconds": {
+            "bootstrap_95_percent": [
+              0.9387725426166789,
+              0.9559027700916474
+            ],
+            "max": 0.9559027700916474,
+            "median": 0.9464355124615301,
+            "median_cpu_reduction_percent": 5.356448753846987,
+            "median_target_met": false,
+            "min": 0.9387725426166789,
+            "paired_ratios": [
+              0.9464355124615301,
+              0.9429269507783071,
+              0.9524617907939383,
+              0.9559027700916474,
+              0.9387725426166789
+            ],
+            "status": "target missed",
+            "target_ratio": 0.8
+          },
+          "peak_aggregate_rss_bytes": {
+            "bootstrap_95_percent": [
+              0.7923091840419414,
+              0.8138454176607761
+            ],
+            "max": 0.8138454176607761,
+            "median": 0.7996944809351424,
+            "median_target_met": true,
+            "min": 0.7923091840419414,
+            "paired_ratios": [
+              0.7963246036469888,
+              0.8138454176607761,
+              0.8083399197622883,
+              0.7923091840419414,
+              0.7996944809351424
+            ],
+            "status": "inconclusive",
+            "target_ratio": 0.8
+          },
+          "wall_seconds": {
+            "bootstrap_95_percent": [
+              1.1438350149406271,
+              1.1702428017772912
+            ],
+            "max": 1.1702428017772912,
+            "median": 1.1601238747721854,
+            "median_target_met": false,
+            "min": 1.1438350149406271,
+            "paired_ratios": [
+              1.1601238747721854,
+              1.1536715172817285,
+              1.1702428017772912,
+              1.1676100705627035,
+              1.1438350149406271
+            ],
+            "status": "target missed",
+            "target_ratio": 0.5
+          }
+        }
+      }
+    }
+  ],
+  "current_branch_base": "d31479b1b1e3f796e066411106171e3ba46f0978",
+  "isolation_candidate": "4328cdc",
+  "isolation_candidate_note": "Only workflow baseline differs from d844d94; after-binary SHA256 matches exactly across all five campaigns.",
+  "current_base_note": "Branch was rebased onto main containing merged #64 and #65 before continuation; paired campaigns measured pre-rebase d844d94, not the rebased head."
+}
