@@ -61,8 +61,8 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 90
     env:
-      # Main 1a16520 (after #62, shared lane transforms); diagnostic clocks and peak attribution stay off here.
-      BEFORE_COMMIT: 1a16520b7cf5e81aa3553af3deed3a0b8e69cd44
+      # Main 7297840 (after #63, colord-scale workload); diagnostic clocks and peak attribution stay off here.
+      BEFORE_COMMIT: 7297840df3996c9e6098afbe6d37db41b294ee0b
       BUILD_FLAGS: --locked --release -p oximut-cli
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

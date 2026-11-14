@@ -65,6 +65,24 @@ class QualificationTests(unittest.TestCase):
                 row['mutations'] = {str(i): {'outcome': outcome} for i in range(count)}
             self.assertTrue(self.errors(rows))
 
+    def test_scale_qualification_accepts_survivors_but_requires_206_matching_edits(self):
+        """The scale gate checks outcome equality, including genuine survivors."""
+        rows = self.rows()
+        for row in rows:
+            row['mutations'] = {str(i): {'outcome': 'survived' if i == 205 else 'killed'}
+                                for i in range(206)}
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / 'summary.json').write_text(json.dumps({'correctness_gate': True, 'ratios': []}))
+            def check():
+                (root / 'measurements.jsonl').write_text('\n'.join(json.dumps(r) for r in rows))
+                return diagnostic.qualification_errors(root, 0, 'colord-scale')
+            self.assertEqual(check(), [])
+            rows[1]['mutations'].pop('205')
+            self.assertTrue(check())
+            rows[1]['mutations']['205'] = {'outcome': 'killed'}
+            self.assertTrue(check())
+
     def test_missing_summary_rejected(self):
         """Treat absent qualification evidence as failure."""
         with tempfile.TemporaryDirectory() as tmp:

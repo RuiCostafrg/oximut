@@ -1,0 +1,3113 @@
+{
+  "scope": "Overhead-bearing ARM local diagnostic; independent medians are not additive",
+  "mutants": 206,
+  "batches": 103,
+  "fork_medians_ms": {
+    "requestToFork": 44.38132800000267,
+    "forkToStarted": 369.6916925000005,
+    "startedToRun": 0.7901824999989913,
+    "importAndCollection": 257.58039050000116,
+    "executionAndReport": 86.89565049999874,
+    "teardown": 18.692369999998846,
+    "finishedToReply": 48.97153650000655
+  },
+  "batch_medians_ms": {
+    "requestToReply": 795.8857280000011,
+    "lastFinishedToReply": 20.078228999998828,
+    "laneFinishSkew": 91.9261979999992
+  },
+  "between_batch_median_ms": 234.85223899999983,
+  "forks": [
+    {
+      "controller": "controller-23995",
+      "pid": 24221,
+      "requestToFork": 749.2682290000002,
+      "forkToStarted": 437.4119270000001,
+      "startedToRun": 0.8632809999999154,
+      "importAndCollection": 1783.3095830000002,
+      "executionAndReport": 62.313749999999345,
+      "teardown": 37.516718000000765,
+      "finishedToReply": 61.55265599999984
+    },
+    {
+      "controller": "controller-23995",
+      "pid": 24222,
+      "requestToFork": 779.5765620000002,
+      "forkToStarted": 369.493958,
+      "startedToRun": 0.7950000000000728,
+      "importAndCollection": 1833.5948429999999,
+      "executionAndReport": 88.70265699999982,
+      "teardown": 15.590573000001314,
+      "finishedToReply": 22.556405999999697
+    },
+    {
+      "controller": "controller-23995",
+      "pid": 24271,
+      "requestToFork": 20.66187499999978,
+      "forkToStarted": 343.34744800000044,
+      "startedToRun": 0.6136449999994511,
+      "importAndCollection": 276.2811980000006,
+      "executionAndReport": 79.28817699999854,
+      "teardown": 23.224427000001015,
+      "finishedToReply": 25.22291700000096
+    },
+    {
+      "controller": "controller-23995",
+      "pid": 24272,
+      "requestToFork": 33.18635399999948,
+      "forkToStarted": 352.571562000001,
+      "startedToRun": 0.5207289999998466,
+      "importAndCollection": 215.07135500000004,
+      "executionAndReport": 85.01963499999874,
+      "teardown": 33.258176999999705,
+      "finishedToReply": 59.045625000000655
+    },
+    {
+      "controller": "controller-23995",
+      "pid": 24285,
+      "requestToFork": 25.351823000000877,
+      "forkToStarted": 347.7686969999995,
+      "startedToRun": 0.40708400000039546,
+      "importAndCollection": 280.05968699999903,
+      "executionAndReport": 67.0203130000009,
+      "teardown": 16.66067699999985,
+      "finishedToReply": 74.39770800000042
+    },
+    {
+      "controller": "controller-23995",
+      "pid": 24286,
+      "requestToFork": 35.024999999999636,
+      "forkToStarted": 316.8626039999999,
+      "startedToRun": 0.5755730000000767,
+      "importAndCollection": 240.05348900000172,
+      "executionAndReport": 178.37124999999833,
+      "teardown": 21.47833300000093,
+      "finishedToReply": 24.117396000001463
+    },
+    {
+      "controller": "controller-23995",
+      "pid": 24303,
+      "requestToFork": 34.6607299999996,
+      "forkToStarted": 340.4321350000009,
+      "startedToRun": 0.7911459999995714,
+      "importAndCollection": 276.60380199999963,
+      "executionAndReport": 47.580416000000696,
+      "teardown": 12.191407000000254,
+      "finishedToReply": 16.557135999999446
+    },
+    {
+      "controller": "controller-23995",
+      "pid": 24304,
+      "requestToFork": 48.67937499999971,
+      "forkToStarted": 292.358021,
+      "startedToRun": 0.9178130000000237,
+      "importAndCollection": 185.14135400000123,
+      "executionAndReport": 76.766302,
+      "teardown": 18.971457999999984,
+      "finishedToReply": 112.76249999999891
+    },
+    {
+      "controller": "controller-23995",
+      "pid": 24317,
+      "requestToFork": 29.040259999999762,
+      "forkToStarted": 333.71364600000015,
+      "startedToRun": 2.142812000000049,
+      "importAndCollection": 279.5985419999997,
+      "executionAndReport": 110.1935940000003,
+      "teardown": 21.92218700000012,
+      "finishedToReply": 25.22947899999963
+    },
+    {
+      "controller": "controller-23995",
+      "pid": 24318,
+      "requestToFork": 42.96536399999968,
+      "forkToStarted": 345.2186980000006,
+      "startedToRun": 0.4951039999996283,
+      "importAndCollection": 155.52562500000022,
+      "executionAndReport": 103.02093799999966,
+      "teardown": 17.601926999999705,
+      "finishedToReply": 132.69260399999985
+    },
+    {
+      "controller": "controller-23995",
+      "pid": 24331,
+      "requestToFork": 52.51369799999884,
+      "forkToStarted": 430.73541600000135,
+      "startedToRun": 4.090312999998787,
+      "importAndCollection": 369.5762500000001,
+      "executionAndReport": 76.86083300000064,
+      "teardown": 24.890260000000126,
+      "finishedToReply": 26.998020999999426
+    },
+    {
+      "controller": "controller-23995",
+      "pid": 24332,
+      "requestToFork": 70.88432300000022,
+      "forkToStarted": 407.420415999999,
+      "startedToRun": 0.3330729999997857,
+      "importAndCollection": 172.93494800000008,
+      "executionAndReport": 180.2418230000003,
+      "teardown": 32.06432300000051,
+      "finishedToReply": 128.9599479999997
+    },
+    {
+      "controller": "controller-23995",
+      "pid": 24364,
+      "requestToFork": 40.98099000000002,
+      "forkToStarted": 540.4229159999995,
+      "startedToRun": 1.8546879999994417,
+      "importAndCollection": 358.4863540000006,
+      "executionAndReport": 80.19755199999963,
+      "teardown": 24.01000000000022,
+      "finishedToReply": 24.67880200000036
+    },
+    {
+      "controller": "controller-23995",
+      "pid": 24365,
+      "requestToFork": 59.55807300000015,
+      "forkToStarted": 471.00489599999855,
+      "startedToRun": 1.4370830000007118,
+      "importAndCollection": 283.9840100000001,
+      "executionAndReport": 76.61916700000074,
+      "teardown": 18.221874999999272,
+      "finishedToReply": 154.01807299999928
+    },
+    {
+      "controller": "controller-23995",
+      "pid": 24412,
+      "requestToFork": 52.113697000000684,
+      "forkToStarted": 968.7245829999993,
+      "startedToRun": 0.6360419999982696,
+      "importAndCollection": 337.7866670000003,
+      "executionAndReport": 83.89546800000244,
+      "teardown": 7.632187999999587,
+      "finishedToReply": 12.086301999999705
+    },
+    {
+      "controller": "controller-23995",
+      "pid": 24413,
+      "requestToFork": 77.69718700000158,
+      "forkToStarted": 921.1654679999992,
+      "startedToRun": 0.44369799999913084,
+      "importAndCollection": 257.46546899999885,
+      "executionAndReport": 54.25062500000058,
+      "teardown": 20.704688000001624,
+      "finishedToReply": 144.2203120000013
+    },
+    {
+      "controller": "controller-23995",
+      "pid": 24466,
+      "requestToFork": 97.40140599999722,
+      "forkToStarted": 499.18776100000105,
+      "startedToRun": 0.7156250000007276,
+      "importAndCollection": 535.2475000000013,
+      "executionAndReport": 69.27400999999736,
+      "teardown": 14.3421350000026,
+      "finishedToReply": 17.453488999999536
+    },
+    {
+      "controller": "controller-23995",
+      "pid": 24468,
+      "requestToFork": 119.96848999999929,
+      "forkToStarted": 466.80614499999865,
+      "startedToRun": 1.6273959999998624,
+      "importAndCollection": 407.526926999999,
+      "executionAndReport": 97.82302100000015,
+      "teardown": 14.453229000002466,
+      "finishedToReply": 125.52781200000027
+    },
+    {
+      "controller": "controller-23995",
+      "pid": 24499,
+      "requestToFork": 26.70578100000057,
+      "forkToStarted": 372.06807299999855,
+      "startedToRun": 0.7335420000017621,
+      "importAndCollection": 236.3565099999978,
+      "executionAndReport": 61.77177099999972,
+      "teardown": 13.092240000001766,
+      "finishedToReply": 13.600365000002057
+    },
+    {
+      "controller": "controller-23995",
+      "pid": 24500,
+      "requestToFork": 41.406301999999414,
+      "forkToStarted": 326.08682300000146,
+      "startedToRun": 0.3951039999992645,
+      "importAndCollection": 183.66630200000145,
+      "executionAndReport": 47.75942699999723,
+      "teardown": 15.527969000002486,
+      "finishedToReply": 111.92208400000163
+    },
+    {
+      "controller": "controller-23995",
+      "pid": 24514,
+      "requestToFork": 33.23624999999811,
+      "forkToStarted": 366.91807300000073,
+      "startedToRun": 1.2630729999982577,
+      "importAndCollection": 299.73171800000273,
+      "executionAndReport": 81.43744800000059,
+      "teardown": 14.184582999998383,
+      "finishedToReply": 15.494426999997813
+    },
+    {
+      "controller": "controller-23995",
+      "pid": 24515,
+      "requestToFork": 42.27729099999851,
+      "forkToStarted": 357.0080730000009,
+      "startedToRun": 0.47567699999854085,
+      "importAndCollection": 202.750677,
+      "executionAndReport": 85.40276100000119,
+      "teardown": 21.933436999999685,
+      "finishedToReply": 110.1665099999991
+    },
+    {
+      "controller": "controller-23995",
+      "pid": 24528,
+      "requestToFork": 28.088801999998395,
+      "forkToStarted": 398.7649999999994,
+      "startedToRun": 0.5323430000025837,
+      "importAndCollection": 263.9723959999974,
+      "executionAndReport": 43.36317699999927,
+      "teardown": 12.875625000000582,
+      "finishedToReply": 16.195417000002635
+    },
+    {
+      "controller": "controller-23995",
+      "pid": 24529,
+      "requestToFork": 35.55942700000014,
+      "forkToStarted": 359.36156199999823,
+      "startedToRun": 0.6774479999985488,
+      "importAndCollection": 209.31505200000174,
+      "executionAndReport": 56.8292709999987,
+      "teardown": 14.446875000001455,
+      "finishedToReply": 89.17437500000233
+    },
+    {
+      "controller": "controller-23995",
+      "pid": 24542,
+      "requestToFork": 42.236041999996814,
+      "forkToStarted": 370.2270830000016,
+      "startedToRun": 1.8993230000014591,
+      "importAndCollection": 379.71005199999854,
+      "executionAndReport": 81.36130200000116,
+      "teardown": 14.40208299999722,
+      "finishedToReply": 15.27932299999884
+    },
+    {
+      "controller": "controller-23995",
+      "pid": 24543,
+      "requestToFork": 54.89973999999711,
+      "forkToStarted": 341.0240620000004,
+      "startedToRun": 0.28385400000115624,
+      "importAndCollection": 134.5088020000003,
+      "executionAndReport": 249.5806249999987,
+      "teardown": 30.00619799999913,
+      "finishedToReply": 110.41604200000074
+    },
+    {
+      "controller": "controller-23995",
+      "pid": 24584,
+      "requestToFork": 32.74645800000144,
+      "forkToStarted": 341.87484400000176,
+      "startedToRun": 0.26718699999764794,
+      "importAndCollection": 257.8411980000019,
+      "executionAndReport": 59.41265700000076,
+      "teardown": 15.288540999998077,
+      "finishedToReply": 16.288696999999956
+    },
+    {
+      "controller": "controller-23995",
+      "pid": 24585,
+      "requestToFork": 45.506719000000885,
+      "forkToStarted": 323.9494790000026,
+      "startedToRun": 0.6534369999972114,
+      "importAndCollection": 212.0144790000013,
+      "executionAndReport": 77.25562499999796,
+      "teardown": 31.657500000001164,
+      "finishedToReply": 49.05130200000349
+    },
+    {
+      "controller": "controller-23995",
+      "pid": 24600,
+      "requestToFork": 44.09432300000117,
+      "forkToStarted": 345.4074999999975,
+      "startedToRun": 0.25197900000057416,
+      "importAndCollection": 265.91599000000133,
+      "executionAndReport": 89.09270800000013,
+      "teardown": 14.807396000000153,
+      "finishedToReply": 15.311665999997786
+    },
+    {
+      "controller": "controller-23995",
+      "pid": 24601,
+      "requestToFork": 51.54849000000104,
+      "forkToStarted": 336.1636449999969,
+      "startedToRun": 0.34630200000174227,
+      "importAndCollection": 214.7574999999997,
+      "executionAndReport": 75.03901100000076,
+      "teardown": 20.324843999998848,
+      "finishedToReply": 82.21921799999836
+    },
+    {
+      "controller": "controller-23995",
+      "pid": 24615,
+      "requestToFork": 37.95401000000129,
+      "forkToStarted": 434.245885999997,
+      "startedToRun": 1.4684369999995397,
+      "importAndCollection": 330.85489600000074,
+      "executionAndReport": 97.77479099999982,
+      "teardown": 18.938750000001164,
+      "finishedToReply": 19.402969000002486
+    },
+    {
+      "controller": "controller-23995",
+      "pid": 24616,
+      "requestToFork": 50.48661400000128,
+      "forkToStarted": 431.79546899999696,
+      "startedToRun": 1.2877600000028906,
+      "importAndCollection": 245.85364599999957,
+      "executionAndReport": 107.49874999999884,
+      "teardown": 14.290625000001455,
+      "finishedToReply": 84.77875000000131
+    },
+    {
+      "controller": "controller-23995",
+      "pid": 24638,
+      "requestToFork": 28.930677000000287,
+      "forkToStarted": 363.764739000002,
+      "startedToRun": 1.6205209999970975,
+      "importAndCollection": 295.99489600000015,
+      "executionAndReport": 82.28401000000304,
+      "teardown": 20.47697899999912,
+      "finishedToReply": 21.143385999999737
+    },
+    {
+      "controller": "controller-23995",
+      "pid": 24639,
+      "requestToFork": 39.41776000000027,
+      "forkToStarted": 351.5713539999997,
+      "startedToRun": 0.4059900000029302,
+      "importAndCollection": 142.17458299999998,
+      "executionAndReport": 160.7334379999993,
+      "teardown": 18.770571999997628,
+      "finishedToReply": 99.43510400000014
+    },
+    {
+      "controller": "controller-23995",
+      "pid": 24652,
+      "requestToFork": 48.99067699999796,
+      "forkToStarted": 421.80380199999854,
+      "startedToRun": 0.9942710000032093,
+      "importAndCollection": 253.57624999999825,
+      "executionAndReport": 347.98833300000115,
+      "teardown": 18.090572999997676,
+      "finishedToReply": 19.87749999999869
+    },
+    {
+      "controller": "controller-23995",
+      "pid": 24653,
+      "requestToFork": 69.88067699999738,
+      "forkToStarted": 445.6079690000006,
+      "startedToRun": 0.3800520000004326,
+      "importAndCollection": 222.11312499999985,
+      "executionAndReport": 76.92833299999984,
+      "teardown": 16.692291999999725,
+      "finishedToReply": 278.3206769999997
+    },
+    {
+      "controller": "controller-23995",
+      "pid": 24678,
+      "requestToFork": 34.79510400000072,
+      "forkToStarted": 359.6690099999978,
+      "startedToRun": 0.9021350000002712,
+      "importAndCollection": 265.25526100000206,
+      "executionAndReport": 85.40656200000012,
+      "teardown": 14.476770999997825,
+      "finishedToReply": 17.825832999998966
+    },
+    {
+      "controller": "controller-23995",
+      "pid": 24679,
+      "requestToFork": 45.01489500000025,
+      "forkToStarted": 355.4446879999996,
+      "startedToRun": 1.3135929999989457,
+      "importAndCollection": 201.80875000000015,
+      "executionAndReport": 63.82354200000191,
+      "teardown": 14.872134999997797,
+      "finishedToReply": 96.4484369999991
+    },
+    {
+      "controller": "controller-23995",
+      "pid": 24692,
+      "requestToFork": 29.377188000002207,
+      "forkToStarted": 385.9194269999971,
+      "startedToRun": 1.1705730000030599,
+      "importAndCollection": 346.0109889999985,
+      "executionAndReport": 72.22025999999823,
+      "teardown": 13.540782000000036,
+      "finishedToReply": 14.14166699999987
+    },
+    {
+      "controller": "controller-23995",
+      "pid": 24693,
+      "requestToFork": 37.449219000001904,
+      "forkToStarted": 332.29916599999706,
+      "startedToRun": 0.5701570000019274,
+      "importAndCollection": 242.07791599999837,
+      "executionAndReport": 48.27968800000235,
+      "teardown": 24.9591139999975,
+      "finishedToReply": 188.16395799999736
+    },
+    {
+      "controller": "controller-23995",
+      "pid": 24731,
+      "requestToFork": 49.435936999998376,
+      "forkToStarted": 372.8818229999997,
+      "startedToRun": 0.40661499999987427,
+      "importAndCollection": 233.65343700000085,
+      "executionAndReport": 80.86817700000029,
+      "teardown": 13.353645999999571,
+      "finishedToReply": 18.581719000001613
+    },
+    {
+      "controller": "controller-23995",
+      "pid": 24732,
+      "requestToFork": 63.89515599999868,
+      "forkToStarted": 323.1842710000019,
+      "startedToRun": 0.41656199999852106,
+      "importAndCollection": 219.01041700000133,
+      "executionAndReport": 51.80213499999809,
+      "teardown": 18.997917000000598,
+      "finishedToReply": 97.5191670000022
+    },
+    {
+      "controller": "controller-23995",
+      "pid": 24746,
+      "requestToFork": 21.445051999999123,
+      "forkToStarted": 369.7612500000032,
+      "startedToRun": 0.3592709999975341,
+      "importAndCollection": 259.494791000001,
+      "executionAndReport": 78.62255199999709,
+      "teardown": 15.255938000002061,
+      "finishedToReply": 17.338959000000614
+    },
+    {
+      "controller": "controller-23995",
+      "pid": 24747,
+      "requestToFork": 36.8813020000016,
+      "forkToStarted": 336.55062499999985,
+      "startedToRun": 0.5701039999985369,
+      "importAndCollection": 178.0989580000023,
+      "executionAndReport": 77.69453099999737,
+      "teardown": 18.705520999999862,
+      "finishedToReply": 117.22635499999888
+    },
+    {
+      "controller": "controller-23995",
+      "pid": 24760,
+      "requestToFork": 24.967812000002596,
+      "forkToStarted": 349.44145800000115,
+      "startedToRun": 0.7587500000008731,
+      "importAndCollection": 242.27619799999957,
+      "executionAndReport": 92.2079689999955,
+      "teardown": 13.304323000003933,
+      "finishedToReply": 14.948750000003201
+    },
+    {
+      "controller": "controller-23995",
+      "pid": 24761,
+      "requestToFork": 34.23822900000232,
+      "forkToStarted": 380.0758849999984,
+      "startedToRun": 0.6830730000001495,
+      "importAndCollection": 191.46958299999824,
+      "executionAndReport": 78.28718800000206,
+      "teardown": 23.282082999998238,
+      "finishedToReply": 39.84697900000174
+    },
+    {
+      "controller": "controller-23995",
+      "pid": 24776,
+      "requestToFork": 32.173384999994596,
+      "forkToStarted": 426.19072900000174,
+      "startedToRun": 1.1892710000029183,
+      "importAndCollection": 319.867760000001,
+      "executionAndReport": 369.46505199999956,
+      "teardown": 13.109895999994478,
+      "finishedToReply": 14.645572999994329
+    },
+    {
+      "controller": "controller-23995",
+      "pid": 24777,
+      "requestToFork": 43.971301999998104,
+      "forkToStarted": 360.1372909999991,
+      "startedToRun": 0.5843749999985448,
+      "importAndCollection": 249.90885400000116,
+      "executionAndReport": 86.16942700000072,
+      "teardown": 13.664167000002635,
+      "finishedToReply": 422.7605209999965
+    },
+    {
+      "controller": "controller-23995",
+      "pid": 24809,
+      "requestToFork": 34.421510000000126,
+      "forkToStarted": 364.97645800000464,
+      "startedToRun": 1.4336979999934556,
+      "importAndCollection": 178.10218700000405,
+      "executionAndReport": 167.5533859999996,
+      "teardown": 17.509635000002163,
+      "finishedToReply": 18.068802000001597
+    },
+    {
+      "controller": "controller-23995",
+      "pid": 24810,
+      "requestToFork": 48.63843700000143,
+      "forkToStarted": 334.4304170000032,
+      "startedToRun": 1.0038019999992684,
+      "importAndCollection": 243.0517699999982,
+      "executionAndReport": 70.29364599999826,
+      "teardown": 18.67921899999783,
+      "finishedToReply": 67.13796900000307
+    },
+    {
+      "controller": "controller-23995",
+      "pid": 24823,
+      "requestToFork": 30.53156200000376,
+      "forkToStarted": 365.51677099999506,
+      "startedToRun": 3.631823000003351,
+      "importAndCollection": 169.86161400000128,
+      "executionAndReport": 161.80505199999607,
+      "teardown": 15.07312500000262,
+      "finishedToReply": 16.523542000002635
+    },
+    {
+      "controller": "controller-23995",
+      "pid": 24824,
+      "requestToFork": 44.57010400000581,
+      "forkToStarted": 342.4276039999968,
+      "startedToRun": 0.5577600000033271,
+      "importAndCollection": 207.20984399999725,
+      "executionAndReport": 94.27598900000157,
+      "teardown": 17.633802999996988,
+      "finishedToReply": 58.829062999997404
+    },
+    {
+      "controller": "controller-23995",
+      "pid": 24837,
+      "requestToFork": 29.64729200000147,
+      "forkToStarted": 348.84916599999997,
+      "startedToRun": 1.3514589999977034,
+      "importAndCollection": 168.47312399999646,
+      "executionAndReport": 180.9523960000006,
+      "teardown": 15.975834000004397,
+      "finishedToReply": 16.97984400000132
+    },
+    {
+      "controller": "controller-23995",
+      "pid": 24838,
+      "requestToFork": 41.07895799999824,
+      "forkToStarted": 309.382031000001,
+      "startedToRun": 0.59083400000236,
+      "importAndCollection": 212.2033850000007,
+      "executionAndReport": 76.02218799999537,
+      "teardown": 18.316823000001023,
+      "finishedToReply": 106.97588499999983
+    },
+    {
+      "controller": "controller-23995",
+      "pid": 24863,
+      "requestToFork": 20.25322900000174,
+      "forkToStarted": 332.8255729999946,
+      "startedToRun": 0.35619800000131363,
+      "importAndCollection": 267.74812500000553,
+      "executionAndReport": 89.58510399999795,
+      "teardown": 16.858072999995784,
+      "finishedToReply": 17.848384999997506
+    },
+    {
+      "controller": "controller-23995",
+      "pid": 24864,
+      "requestToFork": 28.04968799999915,
+      "forkToStarted": 353.0778120000032,
+      "startedToRun": 0.8076559999972233,
+      "importAndCollection": 194.84645900000032,
+      "executionAndReport": 96.88437400000112,
+      "teardown": 14.74781300000177,
+      "finishedToReply": 54.95062499999767
+    },
+    {
+      "controller": "controller-23995",
+      "pid": 24885,
+      "requestToFork": 42.29760399999941,
+      "forkToStarted": 379.6072390000045,
+      "startedToRun": 0.48635400000057416,
+      "importAndCollection": 284.5231769999955,
+      "executionAndReport": 69.529011000006,
+      "teardown": 17.71270799999911,
+      "finishedToReply": 19.442342999995162
+    },
+    {
+      "controller": "controller-23995",
+      "pid": 24886,
+      "requestToFork": 50.76291599999968,
+      "forkToStarted": 377.17093800000293,
+      "startedToRun": 0.7331770000018878,
+      "importAndCollection": 227.18640600000072,
+      "executionAndReport": 75.65468699999474,
+      "teardown": 20.142084000006435,
+      "finishedToReply": 64.37760400000116
+    },
+    {
+      "controller": "controller-23995",
+      "pid": 24899,
+      "requestToFork": 44.162709000003815,
+      "forkToStarted": 384.4835410000014,
+      "startedToRun": 0.8317709999973886,
+      "importAndCollection": 240.44645799999853,
+      "executionAndReport": 60.16161500000453,
+      "teardown": 12.347603999995044,
+      "finishedToReply": 16.259634999994887
+    },
+    {
+      "controller": "controller-23995",
+      "pid": 24900,
+      "requestToFork": 56.88505300000543,
+      "forkToStarted": 345.4186449999979,
+      "startedToRun": 0.7518229999986943,
+      "importAndCollection": 177.78375000000233,
+      "executionAndReport": 72.00234400000045,
+      "teardown": 13.018176999998104,
+      "finishedToReply": 93.50411399999575
+    },
+    {
+      "controller": "controller-23995",
+      "pid": 24913,
+      "requestToFork": 28.459843999997247,
+      "forkToStarted": 323.31947899999795,
+      "startedToRun": 0.7132290000008652,
+      "importAndCollection": 289.53958299999795,
+      "executionAndReport": 99.98682299999928,
+      "teardown": 17.571302000003925,
+      "finishedToReply": 20.579532000003383
+    },
+    {
+      "controller": "controller-23995",
+      "pid": 24914,
+      "requestToFork": 34.30791699999827,
+      "forkToStarted": 340.17973899999924,
+      "startedToRun": 0.38703199999872595,
+      "importAndCollection": 176.59453100000246,
+      "executionAndReport": 55.457290999998804,
+      "teardown": 15.466874999998254,
+      "finishedToReply": 155.67197999999917
+    },
+    {
+      "controller": "controller-23995",
+      "pid": 24927,
+      "requestToFork": 30.510363999994297,
+      "forkToStarted": 342.2233860000051,
+      "startedToRun": 0.3971349999992526,
+      "importAndCollection": 269.3982810000016,
+      "executionAndReport": 93.33078099999693,
+      "teardown": 15.625886000001628,
+      "finishedToReply": 18.530052000001888
+    },
+    {
+      "controller": "controller-23995",
+      "pid": 24928,
+      "requestToFork": 38.57927099999506,
+      "forkToStarted": 335.9947390000016,
+      "startedToRun": 0.5068749999991269,
+      "importAndCollection": 187.56838499999867,
+      "executionAndReport": 83.23854199999914,
+      "teardown": 17.018646000004082,
+      "finishedToReply": 108.5021870000055
+    },
+    {
+      "controller": "controller-23995",
+      "pid": 24941,
+      "requestToFork": 30.828021000001172,
+      "forkToStarted": 405.92645800000173,
+      "startedToRun": 0.4014580000002752,
+      "importAndCollection": 256.8427609999999,
+      "executionAndReport": 45.061822999996366,
+      "teardown": 12.579270000001998,
+      "finishedToReply": 13.33510400000523
+    },
+    {
+      "controller": "controller-23995",
+      "pid": 24942,
+      "requestToFork": 42.80145800000173,
+      "forkToStarted": 359.9143750000003,
+      "startedToRun": 7.340260999997554,
+      "importAndCollection": 183.36671800000477,
+      "executionAndReport": 71.93718799999624,
+      "teardown": 15.467499999998836,
+      "finishedToReply": 87.03562500000407
+    },
+    {
+      "controller": "controller-23995",
+      "pid": 24955,
+      "requestToFork": 28.03650999999809,
+      "forkToStarted": 484.42942700000276,
+      "startedToRun": 1.7380730000004405,
+      "importAndCollection": 270.0279690000025,
+      "executionAndReport": 87.06489499999589,
+      "teardown": 15.211875000000873,
+      "finishedToReply": 16.681093999999575
+    },
+    {
+      "controller": "controller-23995",
+      "pid": 24956,
+      "requestToFork": 40.002291000004334,
+      "forkToStarted": 431.69765599999664,
+      "startedToRun": 0.631718999997247,
+      "importAndCollection": 203.15692700000363,
+      "executionAndReport": 82.50291699999798,
+      "teardown": 15.340000000003783,
+      "finishedToReply": 129.9864579999994
+    },
+    {
+      "controller": "controller-23995",
+      "pid": 24987,
+      "requestToFork": 52.445780999994895,
+      "forkToStarted": 317.3822910000017,
+      "startedToRun": 0.7506780000039726,
+      "importAndCollection": 316.6891659999965,
+      "executionAndReport": 61.374478999998246,
+      "teardown": 17.76817700000538,
+      "finishedToReply": 268.55880199999956
+    },
+    {
+      "controller": "controller-23995",
+      "pid": 24990,
+      "requestToFork": 64.9400519999981,
+      "forkToStarted": 348.906041000002,
+      "startedToRun": 1.5302609999998822,
+      "importAndCollection": 266.1458849999981,
+      "executionAndReport": 301.4939579999991,
+      "teardown": 32.945833999998285,
+      "finishedToReply": 34.18499999999767
+    },
+    {
+      "controller": "controller-23995",
+      "pid": 25003,
+      "requestToFork": 31.455051999997522,
+      "forkToStarted": 411.46489499999734,
+      "startedToRun": 0.44484400000510504,
+      "importAndCollection": 294.643541999998,
+      "executionAndReport": 86.35953100000188,
+      "teardown": 12.225416999994195,
+      "finishedToReply": 90.42859399999725
+    },
+    {
+      "controller": "controller-23995",
+      "pid": 25004,
+      "requestToFork": 42.00911400000041,
+      "forkToStarted": 351.7207289999933,
+      "startedToRun": 1.7295320000048378,
+      "importAndCollection": 201.5435409999991,
+      "executionAndReport": 301.6367190000019,
+      "teardown": 15.183853999995335,
+      "finishedToReply": 16.15682299999753
+    },
+    {
+      "controller": "controller-23995",
+      "pid": 25017,
+      "requestToFork": 27.468697999996948,
+      "forkToStarted": 335.3468750000029,
+      "startedToRun": 1.8240619999996852,
+      "importAndCollection": 232.84375,
+      "executionAndReport": 80.57385400000203,
+      "teardown": 24.403645999998844,
+      "finishedToReply": 29.30041699999856
+    },
+    {
+      "controller": "controller-23995",
+      "pid": 25018,
+      "requestToFork": 39.33343700000114,
+      "forkToStarted": 311.45619799999986,
+      "startedToRun": 1.0392189999984112,
+      "importAndCollection": 197.32864600000175,
+      "executionAndReport": 72.92656200000056,
+      "teardown": 17.704322999998112,
+      "finishedToReply": 85.27359399999841
+    },
+    {
+      "controller": "controller-23995",
+      "pid": 25041,
+      "requestToFork": 34.84223999999813,
+      "forkToStarted": 532.823801999999,
+      "startedToRun": 4.156823000004806,
+      "importAndCollection": 179.04176999999618,
+      "executionAndReport": 169.0859380000038,
+      "teardown": 14.78755199999432,
+      "finishedToReply": 178.23489599999448
+    },
+    {
+      "controller": "controller-23995",
+      "pid": 25042,
+      "requestToFork": 54.9130210000003,
+      "forkToStarted": 452.6762499999968,
+      "startedToRun": 0.8451039999999921,
+      "importAndCollection": 231.93302100000437,
+      "executionAndReport": 342.95661399999517,
+      "teardown": 14.366249999999127,
+      "finishedToReply": 14.86145899999974
+    },
+    {
+      "controller": "controller-23995",
+      "pid": 25058,
+      "requestToFork": 29.473593000002438,
+      "forkToStarted": 362.7725519999949,
+      "startedToRun": 5.404999999998836,
+      "importAndCollection": 298.7438540000003,
+      "executionAndReport": 64.12343800000235,
+      "teardown": 11.666197999998985,
+      "finishedToReply": 12.173957999999402
+    },
+    {
+      "controller": "controller-23995",
+      "pid": 25059,
+      "requestToFork": 42.02083300000231,
+      "forkToStarted": 303.1733329999988,
+      "startedToRun": 0.7789059999995516,
+      "importAndCollection": 130.93942699999752,
+      "executionAndReport": 178.28453200000513,
+      "teardown": 19.537915999993857,
+      "finishedToReply": 117.49536399999488
+    },
+    {
+      "controller": "controller-23995",
+      "pid": 25072,
+      "requestToFork": 30.43822899999941,
+      "forkToStarted": 334.7608850000033,
+      "startedToRun": 0.4116149999972549,
+      "importAndCollection": 301.16666700000496,
+      "executionAndReport": 67.93484299999545,
+      "teardown": 14.035209000001487,
+      "finishedToReply": 14.921978999998828
+    },
+    {
+      "controller": "controller-23995",
+      "pid": 25073,
+      "requestToFork": 43.154531000000134,
+      "forkToStarted": 321.0284380000012,
+      "startedToRun": 0.3932810000042082,
+      "importAndCollection": 184.78359400000045,
+      "executionAndReport": 76.9473949999956,
+      "teardown": 17.598541999999725,
+      "finishedToReply": 123.32697899999766
+    },
+    {
+      "controller": "controller-23995",
+      "pid": 25086,
+      "requestToFork": 76.76812499999505,
+      "forkToStarted": 429.79192700000567,
+      "startedToRun": 0.46979199999623233,
+      "importAndCollection": 307.9976040000038,
+      "executionAndReport": 80.2821879999974,
+      "teardown": 17.789113999999245,
+      "finishedToReply": 18.30380200000218
+    },
+    {
+      "controller": "controller-23995",
+      "pid": 25087,
+      "requestToFork": 84.4941669999971,
+      "forkToStarted": 374.23833300000115,
+      "startedToRun": 0.6340110000019195,
+      "importAndCollection": 223.7319789999965,
+      "executionAndReport": 87.92458299999998,
+      "teardown": 22.84849000000395,
+      "finishedToReply": 142.59036500000366
+    },
+    {
+      "controller": "controller-23995",
+      "pid": 25118,
+      "requestToFork": 34.117760000001,
+      "forkToStarted": 373.3476040000023,
+      "startedToRun": 1.645260999997845,
+      "importAndCollection": 211.53546800000186,
+      "executionAndReport": 68.3484380000009,
+      "teardown": 21.734113999998954,
+      "finishedToReply": 24.252499999995052
+    },
+    {
+      "controller": "controller-23995",
+      "pid": 25119,
+      "requestToFork": 41.63093700000172,
+      "forkToStarted": 348.8232809999972,
+      "startedToRun": 2.6647400000001653,
+      "importAndCollection": 178.0506250000035,
+      "executionAndReport": 115.51187499999651,
+      "teardown": 14.152915999999095,
+      "finishedToReply": 26.56557299999986
+    },
+    {
+      "controller": "controller-23995",
+      "pid": 25133,
+      "requestToFork": 35.96552099999826,
+      "forkToStarted": 335.44145800000115,
+      "startedToRun": 0.29427099999884376,
+      "importAndCollection": 257.69531200000347,
+      "executionAndReport": 87.65999999999622,
+      "teardown": 19.53349000000162,
+      "finishedToReply": 22.022499999999127
+    },
+    {
+      "controller": "controller-23995",
+      "pid": 25134,
+      "requestToFork": 52.197447999998985,
+      "forkToStarted": 351.9639059999972,
+      "startedToRun": 0.8101040000037756,
+      "importAndCollection": 179.64974000000075,
+      "executionAndReport": 98.94150999999692,
+      "teardown": 10.582500000004075,
+      "finishedToReply": 55.51635399999941
+    },
+    {
+      "controller": "controller-23995",
+      "pid": 25147,
+      "requestToFork": 19.336718999998993,
+      "forkToStarted": 344.3436970000039,
+      "startedToRun": 1.0157299999991665,
+      "importAndCollection": 268.6959889999998,
+      "executionAndReport": 65.18338500000391,
+      "teardown": 20.60963599999377,
+      "finishedToReply": 21.247864999997546
+    },
+    {
+      "controller": "controller-23995",
+      "pid": 25148,
+      "requestToFork": 36.74000000000524,
+      "forkToStarted": 333.72260399999504,
+      "startedToRun": 0.5929170000017621,
+      "importAndCollection": 206.91473899999983,
+      "executionAndReport": 87.25416699999914,
+      "teardown": 13.266562000004342,
+      "finishedToReply": 54.59895800000231
+    },
+    {
+      "controller": "controller-23995",
+      "pid": 25161,
+      "requestToFork": 25.431719000000157,
+      "forkToStarted": 360.1589060000042,
+      "startedToRun": 0.35604199999943376,
+      "importAndCollection": 297.42567699999927,
+      "executionAndReport": 60.87723900000128,
+      "teardown": 12.042551999998977,
+      "finishedToReply": 15.940937999999733
+    },
+    {
+      "controller": "controller-23995",
+      "pid": 25162,
+      "requestToFork": 33.10432299999957,
+      "forkToStarted": 354.2446869999985,
+      "startedToRun": 0.3615630000058445,
+      "importAndCollection": 199.53505199999927,
+      "executionAndReport": 51.19703099999606,
+      "teardown": 19.634479000000283,
+      "finishedToReply": 121.74786500000482
+    },
+    {
+      "controller": "controller-23995",
+      "pid": 25175,
+      "requestToFork": 30.29911500000162,
+      "forkToStarted": 358.72109400000045,
+      "startedToRun": 0.3192179999969085,
+      "importAndCollection": 271.6627090000038,
+      "executionAndReport": 80.37286399999721,
+      "teardown": 12.7383850000042,
+      "finishedToReply": 17.82151000000158
+    },
+    {
+      "controller": "controller-23995",
+      "pid": 25176,
+      "requestToFork": 48.38083400000323,
+      "forkToStarted": 281.4356770000013,
+      "startedToRun": 1.6875,
+      "importAndCollection": 194.12025999999605,
+      "executionAndReport": 91.94786500000191,
+      "teardown": 18.756406000000425,
+      "finishedToReply": 141.62437399999908
+    },
+    {
+      "controller": "controller-23995",
+      "pid": 25189,
+      "requestToFork": 34.06916700000147,
+      "forkToStarted": 331.6487500000003,
+      "startedToRun": 0.2371350000030361,
+      "importAndCollection": 294.8043749999997,
+      "executionAndReport": 40.25661499999842,
+      "teardown": 19.591613999997207,
+      "finishedToReply": 20.078228999998828
+    },
+    {
+      "controller": "controller-23995",
+      "pid": 25190,
+      "requestToFork": 42.274427000003925,
+      "forkToStarted": 322.3134379999974,
+      "startedToRun": 0.4132289999979548,
+      "importAndCollection": 205.4985930000039,
+      "executionAndReport": 80.76463599999988,
+      "teardown": 16.996562000000267,
+      "finishedToReply": 69.8299479999987
+    },
+    {
+      "controller": "controller-23995",
+      "pid": 25204,
+      "requestToFork": 24.733384999999544,
+      "forkToStarted": 320.30088599999726,
+      "startedToRun": 0.5911980000018957,
+      "importAndCollection": 250.82650999999896,
+      "executionAndReport": 50.568906000000425,
+      "teardown": 21.000937999997404,
+      "finishedToReply": 23.464270999997098
+    },
+    {
+      "controller": "controller-23995",
+      "pid": 25205,
+      "requestToFork": 38.89239599999564,
+      "forkToStarted": 278.70812500000466,
+      "startedToRun": 0.680000000000291,
+      "importAndCollection": 188.02067700000043,
+      "executionAndReport": 62.20525999999518,
+      "teardown": 13.923281000003044,
+      "finishedToReply": 101.97869799999899
+    },
+    {
+      "controller": "controller-25218",
+      "pid": 25256,
+      "requestToFork": 414.82551999999987,
+      "forkToStarted": 405.0539580000004,
+      "startedToRun": 2.9655729999999494,
+      "importAndCollection": 1527.981823,
+      "executionAndReport": 147.5657809999998,
+      "teardown": 23.253125000000182,
+      "finishedToReply": 26.955832999999984
+    },
+    {
+      "controller": "controller-25218",
+      "pid": 25257,
+      "requestToFork": 425.6177080000002,
+      "forkToStarted": 391.4247909999999,
+      "startedToRun": 1.796198000000004,
+      "importAndCollection": 1539.408437,
+      "executionAndReport": 74.57025999999996,
+      "teardown": 26.928178000000116,
+      "finishedToReply": 92.53109399999994
+    },
+    {
+      "controller": "controller-25218",
+      "pid": 25278,
+      "requestToFork": 28.550780999999915,
+      "forkToStarted": 324.04359399999976,
+      "startedToRun": 0.5315110000001368,
+      "importAndCollection": 291.18677000000025,
+      "executionAndReport": 102.20109400000001,
+      "teardown": 21.683489999999438,
+      "finishedToReply": 22.947603999999956
+    },
+    {
+      "controller": "controller-25218",
+      "pid": 25279,
+      "requestToFork": 38.218073000000004,
+      "forkToStarted": 317.6182289999997,
+      "startedToRun": 1.9070840000003955,
+      "importAndCollection": 230.99546799999916,
+      "executionAndReport": 89.71312500000022,
+      "teardown": 20.304740000000493,
+      "finishedToReply": 91.00937500000055
+    },
+    {
+      "controller": "controller-25218",
+      "pid": 25292,
+      "requestToFork": 54.73984400000063,
+      "forkToStarted": 375.8488019999995,
+      "startedToRun": 0.41166599999996834,
+      "importAndCollection": 314.1601040000005,
+      "executionAndReport": 68.65124999999989,
+      "teardown": 13.322499999999309,
+      "finishedToReply": 16.16182299999946
+    },
+    {
+      "controller": "controller-25218",
+      "pid": 25293,
+      "requestToFork": 66.68171900000016,
+      "forkToStarted": 361.6719270000003,
+      "startedToRun": 0.8226559999993697,
+      "importAndCollection": 222.24494800000048,
+      "executionAndReport": 70.16385399999945,
+      "teardown": 15.921719000000849,
+      "finishedToReply": 108.3883850000002
+    },
+    {
+      "controller": "controller-25218",
+      "pid": 25306,
+      "requestToFork": 34.010677000000214,
+      "forkToStarted": 361.43650999999954,
+      "startedToRun": 0.5120320000005449,
+      "importAndCollection": 287.8343219999997,
+      "executionAndReport": 66.83505200000036,
+      "teardown": 8.936458999999559,
+      "finishedToReply": 102.3491669999994
+    },
+    {
+      "controller": "controller-25218",
+      "pid": 25307,
+      "requestToFork": 44.19255199999952,
+      "forkToStarted": 285.0176040000006,
+      "startedToRun": 2.2650519999997414,
+      "importAndCollection": 221.80041700000038,
+      "executionAndReport": 275.1679159999994,
+      "teardown": 23.04984400000012,
+      "finishedToReply": 24.53421900000012
+    },
+    {
+      "controller": "controller-25218",
+      "pid": 25328,
+      "requestToFork": 28.00031200000012,
+      "forkToStarted": 349.4680210000006,
+      "startedToRun": 0.4528119999995397,
+      "importAndCollection": 276.8146880000004,
+      "executionAndReport": 72.66296800000055,
+      "teardown": 18.164479999999458,
+      "finishedToReply": 22.34156299999995
+    },
+    {
+      "controller": "controller-25218",
+      "pid": 25331,
+      "requestToFork": 39.21296800000073,
+      "forkToStarted": 342.7731249999997,
+      "startedToRun": 1.4678649999996196,
+      "importAndCollection": 247.92895800000042,
+      "executionAndReport": 67.82864599999994,
+      "teardown": 10.922344000000521,
+      "finishedToReply": 50.528802000000724
+    },
+    {
+      "controller": "controller-25218",
+      "pid": 25346,
+      "requestToFork": 42.15062500000022,
+      "forkToStarted": 377.07974000000104,
+      "startedToRun": 0.6056769999995595,
+      "importAndCollection": 326.93354100000033,
+      "executionAndReport": 42.759062999999514,
+      "teardown": 18.646405999999843,
+      "finishedToReply": 263.33958299999904
+    },
+    {
+      "controller": "controller-25218",
+      "pid": 25347,
+      "requestToFork": 51.595886000000974,
+      "forkToStarted": 393.63609299999916,
+      "startedToRun": 0.6253130000004603,
+      "importAndCollection": 253.88775999999962,
+      "executionAndReport": 333.9855210000005,
+      "teardown": 18.465833000000202,
+      "finishedToReply": 19.13765599999897
+    },
+    {
+      "controller": "controller-25218",
+      "pid": 25403,
+      "requestToFork": 38.786926999999196,
+      "forkToStarted": 333.25650999999925,
+      "startedToRun": 0.6847920000000158,
+      "importAndCollection": 272.241406000001,
+      "executionAndReport": 183.7758849999991,
+      "teardown": 14.450417000000016,
+      "finishedToReply": 15.655416999999943
+    },
+    {
+      "controller": "controller-25218",
+      "pid": 25404,
+      "requestToFork": 48.020572999999786,
+      "forkToStarted": 340.44328099999984,
+      "startedToRun": 0.345988999999463,
+      "importAndCollection": 215.44760400000087,
+      "executionAndReport": 121.99885499999982,
+      "teardown": 23.884530999999697,
+      "finishedToReply": 118.14463499999874
+    },
+    {
+      "controller": "controller-25218",
+      "pid": 25417,
+      "requestToFork": 30.848072999999204,
+      "forkToStarted": 342.9349480000001,
+      "startedToRun": 0.6614060000010795,
+      "importAndCollection": 239.74734399999943,
+      "executionAndReport": 60.21817700000065,
+      "teardown": 14.621874999998909,
+      "finishedToReply": 15.331146000000444
+    },
+    {
+      "controller": "controller-25218",
+      "pid": 25418,
+      "requestToFork": 37.33708400000069,
+      "forkToStarted": 324.3603119999989,
+      "startedToRun": 1.014791999999943,
+      "importAndCollection": 158.66812500000015,
+      "executionAndReport": 71.15406199999961,
+      "teardown": 10.728073000000222,
+      "finishedToReply": 97.20671900000161
+    },
+    {
+      "controller": "controller-25218",
+      "pid": 25441,
+      "requestToFork": 43.16411499999958,
+      "forkToStarted": 443.03562500000044,
+      "startedToRun": 0.34661400000004505,
+      "importAndCollection": 289.7503649999999,
+      "executionAndReport": 43.69187500000044,
+      "teardown": 13.285832999999911,
+      "finishedToReply": 170.46119700000054
+    },
+    {
+      "controller": "controller-25218",
+      "pid": 25442,
+      "requestToFork": 58.72927100000015,
+      "forkToStarted": 402.4274999999998,
+      "startedToRun": 1.2926040000002104,
+      "importAndCollection": 155.93473900000026,
+      "executionAndReport": 351.43140700000004,
+      "teardown": 16.64505199999985,
+      "finishedToReply": 20.63427000000047
+    },
+    {
+      "controller": "controller-25218",
+      "pid": 25459,
+      "requestToFork": 45.80708299999969,
+      "forkToStarted": 378.7393229999998,
+      "startedToRun": 5.672864000000118,
+      "importAndCollection": 280.23994800000037,
+      "executionAndReport": 62.368124999999054,
+      "teardown": 12.428646000000299,
+      "finishedToReply": 12.978125000001455
+    },
+    {
+      "controller": "controller-25218",
+      "pid": 25460,
+      "requestToFork": 52.94338500000049,
+      "forkToStarted": 330.46192699999847,
+      "startedToRun": 0.48161500000060187,
+      "importAndCollection": 216.2342179999996,
+      "executionAndReport": 80.78000000000065,
+      "teardown": 15.303749999999127,
+      "finishedToReply": 104.90432300000066
+    },
+    {
+      "controller": "controller-25218",
+      "pid": 25478,
+      "requestToFork": 42.89109400000052,
+      "forkToStarted": 330.5223429999987,
+      "startedToRun": 0.569167000001471,
+      "importAndCollection": 249.97296899999856,
+      "executionAndReport": 67.32192700000087,
+      "teardown": 13.904896000000008,
+      "finishedToReply": 18.08802099999957
+    },
+    {
+      "controller": "controller-25218",
+      "pid": 25479,
+      "requestToFork": 53.21333299999969,
+      "forkToStarted": 357.4091150000004,
+      "startedToRun": 0.35275999999976193,
+      "importAndCollection": 172.90562499999942,
+      "executionAndReport": 78.26796900000045,
+      "teardown": 28.079635000000053,
+      "finishedToReply": 47.21671900000001
+    },
+    {
+      "controller": "controller-25218",
+      "pid": 25502,
+      "requestToFork": 34.690834000000905,
+      "forkToStarted": 351.12374999999884,
+      "startedToRun": 0.35744700000032026,
+      "importAndCollection": 250.91119799999979,
+      "executionAndReport": 43.66604200000074,
+      "teardown": 14.374061999998958,
+      "finishedToReply": 15.907134999999471
+    },
+    {
+      "controller": "controller-25218",
+      "pid": 25503,
+      "requestToFork": 42.80249999999978,
+      "forkToStarted": 289.00442699999985,
+      "startedToRun": 0.30145900000024994,
+      "importAndCollection": 169.36661400000048,
+      "executionAndReport": 82.39703100000042,
+      "teardown": 16.4112499999992,
+      "finishedToReply": 112.78437499999927
+    },
+    {
+      "controller": "controller-25218",
+      "pid": 25516,
+      "requestToFork": 28.86421800000062,
+      "forkToStarted": 336.9783329999991,
+      "startedToRun": 2.4463550000000396,
+      "importAndCollection": 267.4703640000007,
+      "executionAndReport": 60.43322899999839,
+      "teardown": 11.85703199999989,
+      "finishedToReply": 17.925209000000905
+    },
+    {
+      "controller": "controller-25218",
+      "pid": 25517,
+      "requestToFork": 35.51375000000007,
+      "forkToStarted": 357.7197390000001,
+      "startedToRun": 0.8328650000003108,
+      "importAndCollection": 210.43380199999956,
+      "executionAndReport": 87.20911400000114,
+      "teardown": 16.612082999999984,
+      "finishedToReply": 22.40843799999857
+    },
+    {
+      "controller": "controller-25218",
+      "pid": 25530,
+      "requestToFork": 31.19958300000144,
+      "forkToStarted": 390.8592710000012,
+      "startedToRun": 0.5324479999981122,
+      "importAndCollection": 285.3125,
+      "executionAndReport": 91.78291600000011,
+      "teardown": 25.799792000001617,
+      "finishedToReply": 29.4498960000019
+    },
+    {
+      "controller": "controller-25218",
+      "pid": 25531,
+      "requestToFork": 37.695104000002175,
+      "forkToStarted": 379.38765599999897,
+      "startedToRun": 0.30901100000119186,
+      "importAndCollection": 203.0401039999997,
+      "executionAndReport": 65.20468699999765,
+      "teardown": 24.58770800000275,
+      "finishedToReply": 143.50005200000305
+    },
+    {
+      "controller": "controller-25218",
+      "pid": 25544,
+      "requestToFork": 38.22630199999912,
+      "forkToStarted": 370.06822900000043,
+      "startedToRun": 0.29588499999954365,
+      "importAndCollection": 251.05640600000334,
+      "executionAndReport": 66.50515599999926,
+      "teardown": 14.58770899999945,
+      "finishedToReply": 15.115157000000181
+    },
+    {
+      "controller": "controller-25218",
+      "pid": 25545,
+      "requestToFork": 47.29333300000144,
+      "forkToStarted": 359.17697899999985,
+      "startedToRun": 0.32401000000027125,
+      "importAndCollection": 192.78536499999973,
+      "executionAndReport": 85.98442699999941,
+      "teardown": 21.47697899999912,
+      "finishedToReply": 55.70302100000117
+    },
+    {
+      "controller": "controller-25218",
+      "pid": 25558,
+      "requestToFork": 25.19458300000042,
+      "forkToStarted": 324.5367189999997,
+      "startedToRun": 1.1004160000011325,
+      "importAndCollection": 255.94354199999725,
+      "executionAndReport": 96.33989600000132,
+      "teardown": 49.193906000000425,
+      "finishedToReply": 74.3018230000016
+    },
+    {
+      "controller": "controller-25218",
+      "pid": 25559,
+      "requestToFork": 34.267030999999406,
+      "forkToStarted": 369.68015600000217,
+      "startedToRun": 0.8274999999994179,
+      "importAndCollection": 232.48275999999896,
+      "executionAndReport": 115.48614599999928,
+      "teardown": 18.38119799999913,
+      "finishedToReply": 24.67338600000221
+    },
+    {
+      "controller": "controller-25218",
+      "pid": 25581,
+      "requestToFork": 45.16421899999841,
+      "forkToStarted": 384.3285939999987,
+      "startedToRun": 0.7743750000008731,
+      "importAndCollection": 186.563854,
+      "executionAndReport": 142.90401000000202,
+      "teardown": 20.11687499999971,
+      "finishedToReply": 21.348489999996673
+    },
+    {
+      "controller": "controller-25218",
+      "pid": 25582,
+      "requestToFork": 58.73010399999839,
+      "forkToStarted": 337.2261980000003,
+      "startedToRun": 0.70458299999882,
+      "importAndCollection": 182.05119800000102,
+      "executionAndReport": 41.64505199999985,
+      "teardown": 20.524688000001333,
+      "finishedToReply": 160.7264069999983
+    },
+    {
+      "controller": "controller-25218",
+      "pid": 25605,
+      "requestToFork": 31.133802000000287,
+      "forkToStarted": 341.58400999999867,
+      "startedToRun": 1.1944270000021788,
+      "importAndCollection": 252.37114599999768,
+      "executionAndReport": 71.03401000000304,
+      "teardown": 12.054739999999583,
+      "finishedToReply": 16.140103999998246
+    },
+    {
+      "controller": "controller-25218",
+      "pid": 25606,
+      "requestToFork": 39.602135000001,
+      "forkToStarted": 316.1310940000003,
+      "startedToRun": 3.73703100000057,
+      "importAndCollection": 171.367968999999,
+      "executionAndReport": 83.91187400000126,
+      "teardown": 25.47432299999855,
+      "finishedToReply": 98.70739599999797
+    },
+    {
+      "controller": "controller-25218",
+      "pid": 25619,
+      "requestToFork": 37.58124999999927,
+      "forkToStarted": 331.6034370000016,
+      "startedToRun": 0.7945309999995516,
+      "importAndCollection": 267.42895900000076,
+      "executionAndReport": 99.2758329999997,
+      "teardown": 23.75380199999927,
+      "finishedToReply": 25.989166999999725
+    },
+    {
+      "controller": "controller-25218",
+      "pid": 25620,
+      "requestToFork": 46.00098900000012,
+      "forkToStarted": 332.921406999998,
+      "startedToRun": 1.6022389999998268,
+      "importAndCollection": 191.6858850000026,
+      "executionAndReport": 162.17177099999753,
+      "teardown": 16.125417000002926,
+      "finishedToReply": 28.2908860000025
+    },
+    {
+      "controller": "controller-25218",
+      "pid": 25646,
+      "requestToFork": 42.20869800000219,
+      "forkToStarted": 386.1719269999994,
+      "startedToRun": 3.955832999999984,
+      "importAndCollection": 276.33708399999887,
+      "executionAndReport": 85.49244800000088,
+      "teardown": 15.044999000001553,
+      "finishedToReply": 151.59999900000184
+    },
+    {
+      "controller": "controller-25218",
+      "pid": 25647,
+      "requestToFork": 58.153386000001774,
+      "forkToStarted": 322.9264059999987,
+      "startedToRun": 0.573541000001569,
+      "importAndCollection": 191.37942699999985,
+      "executionAndReport": 350.154896,
+      "teardown": 18.852865000000747,
+      "finishedToReply": 22.578333000001294
+    },
+    {
+      "controller": "controller-25218",
+      "pid": 25660,
+      "requestToFork": 45.44677000000229,
+      "forkToStarted": 397.4761980000003,
+      "startedToRun": 0.6917189999985567,
+      "importAndCollection": 272.7635420000006,
+      "executionAndReport": 306.06249899999966,
+      "teardown": 17.553854999998293,
+      "finishedToReply": 18.327084000000468
+    },
+    {
+      "controller": "controller-25218",
+      "pid": 25661,
+      "requestToFork": 49.788958000001,
+      "forkToStarted": 287.697447999999,
+      "startedToRun": 0.4536980000011681,
+      "importAndCollection": 199.73822899999868,
+      "executionAndReport": 84.49604100000215,
+      "teardown": 16.760260999999446,
+      "finishedToReply": 418.5934379999999
+    },
+    {
+      "controller": "controller-25218",
+      "pid": 25685,
+      "requestToFork": 37.46208299999853,
+      "forkToStarted": 325.639271,
+      "startedToRun": 0.44874999999956344,
+      "importAndCollection": 288.4007810000003,
+      "executionAndReport": 72.05437499999971,
+      "teardown": 14.389531000000716,
+      "finishedToReply": 15.204271000002336
+    },
+    {
+      "controller": "controller-25218",
+      "pid": 25686,
+      "requestToFork": 43.991196999999374,
+      "forkToStarted": 297.53515699999843,
+      "startedToRun": 0.776666000001569,
+      "importAndCollection": 193.10697900000014,
+      "executionAndReport": 70.09156299999813,
+      "teardown": 20.855364000002737,
+      "finishedToReply": 133.70796900000278
+    },
+    {
+      "controller": "controller-25218",
+      "pid": 25699,
+      "requestToFork": 33.74057300000277,
+      "forkToStarted": 370.28343699999823,
+      "startedToRun": 1.3062500000014552,
+      "importAndCollection": 258.0973959999974,
+      "executionAndReport": 86.72640600000159,
+      "teardown": 12.61307300000044,
+      "finishedToReply": 13.17364599999928
+    },
+    {
+      "controller": "controller-25218",
+      "pid": 25700,
+      "requestToFork": 45.95109400000001,
+      "forkToStarted": 349.88843700000143,
+      "startedToRun": 0.5414060000002792,
+      "importAndCollection": 193.5494269999981,
+      "executionAndReport": 76.53338600000279,
+      "teardown": 20.405259999999544,
+      "finishedToReply": 96.86395799999809
+    },
+    {
+      "controller": "controller-25218",
+      "pid": 25713,
+      "requestToFork": 40.16968799999813,
+      "forkToStarted": 349.0171870000013,
+      "startedToRun": 0.36703100000158884,
+      "importAndCollection": 252.8320829999975,
+      "executionAndReport": 88.71817700000247,
+      "teardown": 16.946249999997235,
+      "finishedToReply": 23.769635999997263
+    },
+    {
+      "controller": "controller-25218",
+      "pid": 25714,
+      "requestToFork": 51.71400999999969,
+      "forkToStarted": 373.45541700000103,
+      "startedToRun": 1.7416669999984151,
+      "importAndCollection": 204.02630200000203,
+      "executionAndReport": 97.66505200000029,
+      "teardown": 19.749478999998246,
+      "finishedToReply": 26.27135399999679
+    },
+    {
+      "controller": "controller-25218",
+      "pid": 25761,
+      "requestToFork": 48.54255199999898,
+      "forkToStarted": 361.5277079999978,
+      "startedToRun": 2.468802000003052,
+      "importAndCollection": 328.900781999997,
+      "executionAndReport": 57.65031200000158,
+      "teardown": 14.944062999999005,
+      "finishedToReply": 20.985937999997986
+    },
+    {
+      "controller": "controller-25218",
+      "pid": 25762,
+      "requestToFork": 60.02854199999638,
+      "forkToStarted": 306.828802,
+      "startedToRun": 0.44348900000113645,
+      "importAndCollection": 210.80812499999956,
+      "executionAndReport": 144.25270799999998,
+      "teardown": 18.54656299999988,
+      "finishedToReply": 97.71442799999932
+    },
+    {
+      "controller": "controller-25218",
+      "pid": 25779,
+      "requestToFork": 37.15843799999857,
+      "forkToStarted": 313.001822000002,
+      "startedToRun": 1.3612499999981083,
+      "importAndCollection": 241.64687500000218,
+      "executionAndReport": 102.7744789999997,
+      "teardown": 26.793229999999312,
+      "finishedToReply": 27.953698000001168
+    },
+    {
+      "controller": "controller-25218",
+      "pid": 25780,
+      "requestToFork": 46.99776099999872,
+      "forkToStarted": 305.353489000001,
+      "startedToRun": 0.5381249999991269,
+      "importAndCollection": 186.96656200000143,
+      "executionAndReport": 159.202448,
+      "teardown": 24.064063000001624,
+      "finishedToReply": 24.83817700000145
+    },
+    {
+      "controller": "controller-25218",
+      "pid": 25803,
+      "requestToFork": 34.287239000001136,
+      "forkToStarted": 381.53989600000205,
+      "startedToRun": 0.6477079999967827,
+      "importAndCollection": 254.78578200000265,
+      "executionAndReport": 67.47583300000042,
+      "teardown": 15.190103999997518,
+      "finishedToReply": 16.342291999997542
+    },
+    {
+      "controller": "controller-25218",
+      "pid": 25804,
+      "requestToFork": 41.37859400000161,
+      "forkToStarted": 315.9201040000007,
+      "startedToRun": 0.4730730000010226,
+      "importAndCollection": 192.7818739999966,
+      "executionAndReport": 73.93776100000105,
+      "teardown": 19.729427000002033,
+      "finishedToReply": 130.58734399999958
+    },
+    {
+      "controller": "controller-25218",
+      "pid": 25817,
+      "requestToFork": 37.138177000000724,
+      "forkToStarted": 351.5232820000019,
+      "startedToRun": 2.6077079999995476,
+      "importAndCollection": 250.84291599999779,
+      "executionAndReport": 58.966198000001896,
+      "teardown": 14.580782000000909,
+      "finishedToReply": 20.689895999999862
+    },
+    {
+      "controller": "controller-25218",
+      "pid": 25818,
+      "requestToFork": 45.415468999999575,
+      "forkToStarted": 370.8178650000009,
+      "startedToRun": 0.6593749999992724,
+      "importAndCollection": 210.27572900000087,
+      "executionAndReport": 48.779843000000255,
+      "teardown": 23.859166999998706,
+      "finishedToReply": 45.81989600000088
+    },
+    {
+      "controller": "controller-25218",
+      "pid": 25831,
+      "requestToFork": 42.89286400000128,
+      "forkToStarted": 391.0052609999984,
+      "startedToRun": 0.9204680000038934,
+      "importAndCollection": 260.508593999999,
+      "executionAndReport": 51.58817699999781,
+      "teardown": 13.991198000003351,
+      "finishedToReply": 14.48348999999871
+    },
+    {
+      "controller": "controller-25218",
+      "pid": 25832,
+      "requestToFork": 51.14552100000219,
+      "forkToStarted": 364.6526559999984,
+      "startedToRun": 0.34958299999925657,
+      "importAndCollection": 160.83255199999985,
+      "executionAndReport": 83.04520800000319,
+      "teardown": 13.238958999994793,
+      "finishedToReply": 101.37333399999625
+    },
+    {
+      "controller": "controller-25218",
+      "pid": 25849,
+      "requestToFork": 50.718438000003516,
+      "forkToStarted": 502.1006769999949,
+      "startedToRun": 1.5274480000007316,
+      "importAndCollection": 276.5752600000051,
+      "executionAndReport": 45.392447999998694,
+      "teardown": 16.325363999996625,
+      "finishedToReply": 16.889271000000008
+    },
+    {
+      "controller": "controller-25218",
+      "pid": 25851,
+      "requestToFork": 60.07755200000247,
+      "forkToStarted": 445.61395800000173,
+      "startedToRun": 0.7892189999984112,
+      "importAndCollection": 182.9250519999987,
+      "executionAndReport": 105.96515599999839,
+      "teardown": 14.357657000000472,
+      "finishedToReply": 97.83260500000324
+    },
+    {
+      "controller": "controller-25218",
+      "pid": 25873,
+      "requestToFork": 49.70249999999942,
+      "forkToStarted": 429.75515599999926,
+      "startedToRun": 0.8249480000013136,
+      "importAndCollection": 192.83427099999972,
+      "executionAndReport": 215.21447900000203,
+      "teardown": 13.845103999999992,
+      "finishedToReply": 14.626406000003044
+    },
+    {
+      "controller": "controller-25218",
+      "pid": 25874,
+      "requestToFork": 65.41213499999867,
+      "forkToStarted": 421.3004690000016,
+      "startedToRun": 0.6844270000001416,
+      "importAndCollection": 213.30635400000028,
+      "executionAndReport": 80.76197900000261,
+      "teardown": 44.68447899999592,
+      "finishedToReply": 121.49239600000146
+    },
+    {
+      "controller": "controller-25218",
+      "pid": 25905,
+      "requestToFork": 41.37984300000244,
+      "forkToStarted": 369.7032289999988,
+      "startedToRun": 5.893177999998443,
+      "importAndCollection": 177.66676999999618,
+      "executionAndReport": 178.13520900000003,
+      "teardown": 21.494062000005215,
+      "finishedToReply": 22.32385400000203
+    },
+    {
+      "controller": "controller-25218",
+      "pid": 25906,
+      "requestToFork": 61.685677000001306,
+      "forkToStarted": 361.76958300000115,
+      "startedToRun": 0.5709369999967748,
+      "importAndCollection": 192.44364599999972,
+      "executionAndReport": 113.046875,
+      "teardown": 42.04718799999682,
+      "finishedToReply": 65.585364999999
+    },
+    {
+      "controller": "controller-25218",
+      "pid": 25922,
+      "requestToFork": 41.474999999998545,
+      "forkToStarted": 440.29515600000013,
+      "startedToRun": 0.7794270000013057,
+      "importAndCollection": 406.1125000000029,
+      "executionAndReport": 182.8018230000016,
+      "teardown": 37.76541599999473,
+      "finishedToReply": 47.721301999998104
+    },
+    {
+      "controller": "controller-25218",
+      "pid": 25923,
+      "requestToFork": 57.5216139999975,
+      "forkToStarted": 429.21010400000523,
+      "startedToRun": 0.7300519999989774,
+      "importAndCollection": 274.31677099999797,
+      "executionAndReport": 328.9823959999994,
+      "teardown": 27.843646000001172,
+      "finishedToReply": 28.4242710000035
+    },
+    {
+      "controller": "controller-25218",
+      "pid": 25955,
+      "requestToFork": 54.542969000001904,
+      "forkToStarted": 481.036927000001,
+      "startedToRun": 0.8982289999985369,
+      "importAndCollection": 367.8359899999996,
+      "executionAndReport": 55.619269999995595,
+      "teardown": 16.105052000006253,
+      "finishedToReply": 17.57255200000509
+    },
+    {
+      "controller": "controller-25218",
+      "pid": 25956,
+      "requestToFork": 65.89776100000017,
+      "forkToStarted": 441.34604099999706,
+      "startedToRun": 0.4295840000049793,
+      "importAndCollection": 241.59588499999518,
+      "executionAndReport": 123.42010400000436,
+      "teardown": 18.030259999999544,
+      "finishedToReply": 104.81656199999998
+    },
+    {
+      "controller": "controller-25218",
+      "pid": 25976,
+      "requestToFork": 50.87265600000683,
+      "forkToStarted": 477.5778119999959,
+      "startedToRun": 1.61083299999882,
+      "importAndCollection": 334.61411500000395,
+      "executionAndReport": 73.14166699999623,
+      "teardown": 25.257187000002887,
+      "finishedToReply": 27.298957999999402
+    },
+    {
+      "controller": "controller-25218",
+      "pid": 25977,
+      "requestToFork": 64.6084370000026,
+      "forkToStarted": 430.24828100000013,
+      "startedToRun": 1.044063000001188,
+      "importAndCollection": 244.48385399999825,
+      "executionAndReport": 88.88145800000348,
+      "teardown": 22.185781000000134,
+      "finishedToReply": 135.8499479999955
+    },
+    {
+      "controller": "controller-25218",
+      "pid": 26008,
+      "requestToFork": 58.75807299999724,
+      "forkToStarted": 608.399010000001,
+      "startedToRun": 0.5553130000043893,
+      "importAndCollection": 341.17166599999473,
+      "executionAndReport": 593.7602079999997,
+      "teardown": 55.28958400000556,
+      "finishedToReply": 183.9278650000051
+    },
+    {
+      "controller": "controller-25218",
+      "pid": 26009,
+      "requestToFork": 74.92541699999856,
+      "forkToStarted": 493.0612489999985,
+      "startedToRun": 0.7828650000010384,
+      "importAndCollection": 354.46656200000143,
+      "executionAndReport": 812.0281249999971,
+      "teardown": 50.52197900000465,
+      "finishedToReply": 51.307917000005546
+    },
+    {
+      "controller": "controller-25218",
+      "pid": 26097,
+      "requestToFork": 135.84312499999942,
+      "forkToStarted": 997.1140620000006,
+      "startedToRun": 3.8455209999956423,
+      "importAndCollection": 440.5861980000045,
+      "executionAndReport": 452.65900999999576,
+      "teardown": 34.06505200000538,
+      "finishedToReply": 35.58927100000437
+    },
+    {
+      "controller": "controller-25218",
+      "pid": 26110,
+      "requestToFork": 152.97052099999564,
+      "forkToStarted": 912.3047910000023,
+      "startedToRun": 1.2587500000008731,
+      "importAndCollection": 545.4495830000014,
+      "executionAndReport": 182.2555729999949,
+      "teardown": 27.165521000002627,
+      "finishedToReply": 271.3979690000051
+    },
+    {
+      "controller": "controller-25218",
+      "pid": 26183,
+      "requestToFork": 58.04557200000272,
+      "forkToStarted": 912.3846879999983,
+      "startedToRun": 2.635207999999693,
+      "importAndCollection": 609.3774479999993,
+      "executionAndReport": 281.0116660000058,
+      "teardown": 40.64208299999882,
+      "finishedToReply": 42.280103999997664
+    },
+    {
+      "controller": "controller-25218",
+      "pid": 26184,
+      "requestToFork": 86.92364500000258,
+      "forkToStarted": 875.6204690000013,
+      "startedToRun": 1.2414579999967827,
+      "importAndCollection": 524.8504690000045,
+      "executionAndReport": 237.05343699999503,
+      "teardown": 68.98984400000336,
+      "finishedToReply": 180.04520800000319
+    },
+    {
+      "controller": "controller-25218",
+      "pid": 26226,
+      "requestToFork": 73.66624999999476,
+      "forkToStarted": 936.1206770000063,
+      "startedToRun": 1.7398439999960829,
+      "importAndCollection": 815.9235410000038,
+      "executionAndReport": 313.1048959999971,
+      "teardown": 31.16598900000099,
+      "finishedToReply": 40.688436999997066
+    },
+    {
+      "controller": "controller-25218",
+      "pid": 26227,
+      "requestToFork": 91.48104199999943,
+      "forkToStarted": 792.6640100000004,
+      "startedToRun": 1.2198439999992843,
+      "importAndCollection": 561.9532810000019,
+      "executionAndReport": 226.0297389999978,
+      "teardown": 78.65869799999928,
+      "finishedToReply": 507.8957289999962
+    },
+    {
+      "controller": "controller-25218",
+      "pid": 26310,
+      "requestToFork": 109.39385400000174,
+      "forkToStarted": 1256.7964060000013,
+      "startedToRun": 2.7228119999999763,
+      "importAndCollection": 779.061093999997,
+      "executionAndReport": 244.7690619999994,
+      "teardown": 31.170364999998128,
+      "finishedToReply": 32.0914580000026
+    },
+    {
+      "controller": "controller-25218",
+      "pid": 26315,
+      "requestToFork": 146.89447900000232,
+      "forkToStarted": 924.6729159999959,
+      "startedToRun": 9.804167000002053,
+      "importAndCollection": 603.3231250000026,
+      "executionAndReport": 270.24057199999515,
+      "teardown": 43.04177100000379,
+      "finishedToReply": 469.8994270000039
+    },
+    {
+      "controller": "controller-25218",
+      "pid": 26416,
+      "requestToFork": 92.16385499999888,
+      "forkToStarted": 1398.9260409999988,
+      "startedToRun": 1.4176560000050813,
+      "importAndCollection": 1213.1078119999947,
+      "executionAndReport": 308.98276000000624,
+      "teardown": 51.89192699999694,
+      "finishedToReply": 78.00213599999552
+    },
+    {
+      "controller": "controller-25218",
+      "pid": 26423,
+      "requestToFork": 165.5773960000006,
+      "forkToStarted": 1149.8242180000016,
+      "startedToRun": 1.6843749999970896,
+      "importAndCollection": 831.8066670000044,
+      "executionAndReport": 217.63270799999736,
+      "teardown": 47.27890599999955,
+      "finishedToReply": 726.0748959999983
+    },
+    {
+      "controller": "controller-25218",
+      "pid": 26530,
+      "requestToFork": 320.69900999999663,
+      "forkToStarted": 1093.7126040000003,
+      "startedToRun": 1.272343999997247,
+      "importAndCollection": 1196.2666140000001,
+      "executionAndReport": 368.9705729999987,
+      "teardown": 45.05171800000244,
+      "finishedToReply": 81.67619800000102
+    },
+    {
+      "controller": "controller-25218",
+      "pid": 26531,
+      "requestToFork": 374.07953099999577,
+      "forkToStarted": 856.9465100000016,
+      "startedToRun": 5.116822999996657,
+      "importAndCollection": 961.4910410000011,
+      "executionAndReport": 306.7424480000045,
+      "teardown": 38.93130199999723,
+      "finishedToReply": 558.2209899999943
+    },
+    {
+      "controller": "controller-25218",
+      "pid": 26804,
+      "requestToFork": 311.88692699999956,
+      "forkToStarted": 1829.6438539999945,
+      "startedToRun": 1.508853999999701,
+      "importAndCollection": 1636.2293740000023,
+      "executionAndReport": 446.5435940000025,
+      "teardown": 151.6876040000061,
+      "finishedToReply": 168.86817699999665
+    },
+    {
+      "controller": "controller-25218",
+      "pid": 26807,
+      "requestToFork": 353.6297919999997,
+      "forkToStarted": 1583.1977600000027,
+      "startedToRun": 0.9057809999940218,
+      "importAndCollection": 1056.3746870000032,
+      "executionAndReport": 156.22046900000714,
+      "teardown": 54.79067699999723,
+      "finishedToReply": 1244.3522909999883
+    },
+    {
+      "controller": "controller-25218",
+      "pid": 27018,
+      "requestToFork": 353.70338599999377,
+      "forkToStarted": 1254.7673950000026,
+      "startedToRun": 8.096615000002203,
+      "importAndCollection": 1865.416560999991,
+      "executionAndReport": 399.6043750000099,
+      "teardown": 203.67041700000118,
+      "finishedToReply": 206.30567699999665
+    },
+    {
+      "controller": "controller-25218",
+      "pid": 27028,
+      "requestToFork": 496.4142189999984,
+      "forkToStarted": 1244.9153640000004,
+      "startedToRun": 0.47473999999056105,
+      "importAndCollection": 1198.3481759999995,
+      "executionAndReport": 531.791458000007,
+      "teardown": 55.70114599999215,
+      "finishedToReply": 615.9500520000001
+    },
+    {
+      "controller": "controller-25218",
+      "pid": 27220,
+      "requestToFork": 310.383593999999,
+      "forkToStarted": 1496.7686970000068,
+      "startedToRun": 0.5537499999918509,
+      "importAndCollection": 2020.9412500000035,
+      "executionAndReport": 380.21062499999243,
+      "teardown": 183.74791600000754,
+      "finishedToReply": 201.03854100000171
+    },
+    {
+      "controller": "controller-25218",
+      "pid": 27222,
+      "requestToFork": 405.82104199999594,
+      "forkToStarted": 1091.3342700000067,
+      "startedToRun": 4.134322999991127,
+      "importAndCollection": 1371.6025000000081,
+      "executionAndReport": 418.70239500000025,
+      "teardown": 74.25541699999303,
+      "finishedToReply": 1118.3019269999932
+    },
+    {
+      "controller": "controller-25218",
+      "pid": 27463,
+      "requestToFork": 354.94083300000057,
+      "forkToStarted": 1601.4260940000095,
+      "startedToRun": 0.8227599999954691,
+      "importAndCollection": 2018.262447000001,
+      "executionAndReport": 666.0121870000003,
+      "teardown": 71.03723999999056,
+      "finishedToReply": 75.91781299999275
+    },
+    {
+      "controller": "controller-25218",
+      "pid": 27467,
+      "requestToFork": 392.8631250000035,
+      "forkToStarted": 1410.8904679999978,
+      "startedToRun": 0.8111460000072839,
+      "importAndCollection": 1376.1339059999882,
+      "executionAndReport": 819.4979680000106,
+      "teardown": 142.50578099999984,
+      "finishedToReply": 717.1855209999921
+    },
+    {
+      "controller": "controller-25218",
+      "pid": 27676,
+      "requestToFork": 530.7888539999985,
+      "forkToStarted": 1310.4916139999987,
+      "startedToRun": 0.3507289999979548,
+      "importAndCollection": 1291.0325509999966,
+      "executionAndReport": 444.2304170000134,
+      "teardown": 42.6026559999882,
+      "finishedToReply": 52.58588499999314
+    },
+    {
+      "controller": "controller-25218",
+      "pid": 27684,
+      "requestToFork": 608.0470829999977,
+      "forkToStarted": 1189.5880199999956,
+      "startedToRun": 1.0197400000033667,
+      "importAndCollection": 939.724218000003,
+      "executionAndReport": 283.03640599999926,
+      "teardown": 73.25994800000626,
+      "finishedToReply": 608.0645829999994
+    },
+    {
+      "controller": "controller-25218",
+      "pid": 27787,
+      "requestToFork": 183.86062500000116,
+      "forkToStarted": 1095.0555729999905,
+      "startedToRun": 3.5988020000077086,
+      "importAndCollection": 969.8154680000007,
+      "executionAndReport": 309.39166699998896,
+      "teardown": 32.25031200000376,
+      "finishedToReply": 48.89177100000961
+    },
+    {
+      "controller": "controller-25218",
+      "pid": 27793,
+      "requestToFork": 227.7488020000019,
+      "forkToStarted": 1120.0985419999924,
+      "startedToRun": 7.201927000001888,
+      "importAndCollection": 751.330833,
+      "executionAndReport": 147.00046799999836,
+      "teardown": 34.523386000000755,
+      "finishedToReply": 357.2333340000041
+    },
+    {
+      "controller": "controller-25218",
+      "pid": 27855,
+      "requestToFork": 164.85421900000074,
+      "forkToStarted": 846.9519259999943,
+      "startedToRun": 19.739323000001605,
+      "importAndCollection": 624.8088019999996,
+      "executionAndReport": 692.4346870000008,
+      "teardown": 39.19286500000453,
+      "finishedToReply": 44.73744799999986
+    },
+    {
+      "controller": "controller-25218",
+      "pid": 27857,
+      "requestToFork": 188.4716669999907,
+      "forkToStarted": 735.6511969999992,
+      "startedToRun": 2.389219000004232,
+      "importAndCollection": 601.0147909999941,
+      "executionAndReport": 288.652448000008,
+      "teardown": 114.89520800000173,
+      "finishedToReply": 577.3470830000006
+    },
+    {
+      "controller": "controller-25218",
+      "pid": 27945,
+      "requestToFork": 85.60739599999215,
+      "forkToStarted": 832.7757810000039,
+      "startedToRun": 0.5720829999918351,
+      "importAndCollection": 744.5547910000023,
+      "executionAndReport": 231.94968800000788,
+      "teardown": 42.8186449999921,
+      "finishedToReply": 44.23067699999956
+    },
+    {
+      "controller": "controller-25218",
+      "pid": 27946,
+      "requestToFork": 116.12854099999822,
+      "forkToStarted": 834.677291999993,
+      "startedToRun": 11.229948000007425,
+      "importAndCollection": 565.3795309999987,
+      "executionAndReport": 142.30838499999663,
+      "teardown": 37.887134999997215,
+      "finishedToReply": 269.96671900000365
+    },
+    {
+      "controller": "controller-27984",
+      "pid": 28063,
+      "requestToFork": 996.3164580000002,
+      "forkToStarted": 792.9420829999999,
+      "startedToRun": 5.138437999999951,
+      "importAndCollection": 4779.029060000001,
+      "executionAndReport": 306.370261,
+      "teardown": 49.874479000000065,
+      "finishedToReply": 75.18255200000021
+    },
+    {
+      "controller": "controller-27984",
+      "pid": 28069,
+      "requestToFork": 1056.2380210000001,
+      "forkToStarted": 915.0216139999998,
+      "startedToRun": 3.531406000000061,
+      "importAndCollection": 4605.893488000001,
+      "executionAndReport": 314.6061979999995,
+      "teardown": 35.949219000000085,
+      "finishedToReply": 59.68812500000058
+    },
+    {
+      "controller": "controller-27984",
+      "pid": 28160,
+      "requestToFork": 87.24755200000072,
+      "forkToStarted": 530.8116659999996,
+      "startedToRun": 3.8771880000003875,
+      "importAndCollection": 943.0775509999985,
+      "executionAndReport": 106.48119800000131,
+      "teardown": 23.84864600000037,
+      "finishedToReply": 32.04749999999876
+    },
+    {
+      "controller": "controller-27984",
+      "pid": 28161,
+      "requestToFork": 110.44322900000043,
+      "forkToStarted": 482.37937500000044,
+      "startedToRun": 0.8178639999987354,
+      "importAndCollection": 798.8979159999999,
+      "executionAndReport": 118.70140700000047,
+      "teardown": 40.349426999999196,
+      "finishedToReply": 192.30286399999932
+    },
+    {
+      "controller": "controller-27984",
+      "pid": 28310,
+      "requestToFork": 89.26312500000131,
+      "forkToStarted": 476.4120839999996,
+      "startedToRun": 1.4341139999996813,
+      "importAndCollection": 358.6940100000011,
+      "executionAndReport": 108.29932299999928,
+      "teardown": 34.98145900000054,
+      "finishedToReply": 55.54531300000053
+    },
+    {
+      "controller": "controller-27984",
+      "pid": 28312,
+      "requestToFork": 112.11453200000142,
+      "forkToStarted": 481.7909889999992,
+      "startedToRun": 1.6865099999995437,
+      "importAndCollection": 323.2315630000012,
+      "executionAndReport": 120.093073,
+      "teardown": 32.68468699999903,
+      "finishedToReply": 50.73130200000014
+    },
+    {
+      "controller": "controller-27984",
+      "pid": 28335,
+      "requestToFork": 41.77932300000066,
+      "forkToStarted": 541.3211979999996,
+      "startedToRun": 1.0134890000008454,
+      "importAndCollection": 342.79333399999996,
+      "executionAndReport": 63.91536399999859,
+      "teardown": 27.26255200000014,
+      "finishedToReply": 33.79125000000022
+    },
+    {
+      "controller": "controller-27984",
+      "pid": 28336,
+      "requestToFork": 68.34041700000125,
+      "forkToStarted": 467.06380199999876,
+      "startedToRun": 2.7391660000012052,
+      "importAndCollection": 323.401249999999,
+      "executionAndReport": 103.11442700000043,
+      "teardown": 33.956874999999854,
+      "finishedToReply": 59.95489599999928
+    },
+    {
+      "controller": "controller-27984",
+      "pid": 28367,
+      "requestToFork": 59.372134999999616,
+      "forkToStarted": 462.1772920000003,
+      "startedToRun": 1.5405199999986507,
+      "importAndCollection": 515.8478130000003,
+      "executionAndReport": 216.13651000000027,
+      "teardown": 42.39104199999929,
+      "finishedToReply": 44.629791999999725
+    },
+    {
+      "controller": "controller-27984",
+      "pid": 28368,
+      "requestToFork": 76.51239499999974,
+      "forkToStarted": 438.6700519999995,
+      "startedToRun": 1.3295319999997446,
+      "importAndCollection": 309.95807199999945,
+      "executionAndReport": 425.8466670000016,
+      "teardown": 29.61510399999861,
+      "finishedToReply": 47.38734399999885
+    }
+  ],
+  "batch_intervals": [
+    {
+      "controller": "controller-23995",
+      "lanes": 2,
+      "requestToReply": 3094.7194259999997,
+      "lastFinishedToReply": 22.556405999999697,
+      "laneFinishSkew": 38.996250000000146
+    },
+    {
+      "controller": "controller-23995",
+      "lanes": 2,
+      "requestToReply": 745.4152599999998,
+      "lastFinishedToReply": 25.22291700000096,
+      "laneFinishSkew": 33.82270799999969
+    },
+    {
+      "controller": "controller-23995",
+      "lanes": 2,
+      "requestToReply": 795.0053120000011,
+      "lastFinishedToReply": 24.117396000001463,
+      "laneFinishSkew": 50.28031199999896
+    },
+    {
+      "controller": "controller-23995",
+      "lanes": 2,
+      "requestToReply": 716.6253649999999,
+      "lastFinishedToReply": 16.557135999999446,
+      "laneFinishSkew": 96.20536399999946
+    },
+    {
+      "controller": "controller-23995",
+      "lanes": 2,
+      "requestToReply": 779.9183329999996,
+      "lastFinishedToReply": 25.22947899999963,
+      "laneFinishSkew": 107.46312500000022
+    },
+    {
+      "controller": "controller-23995",
+      "lanes": 2,
+      "requestToReply": 960.7745309999991,
+      "lastFinishedToReply": 26.998020999999426,
+      "laneFinishSkew": 101.96192700000029
+    },
+    {
+      "controller": "controller-23995",
+      "lanes": 2,
+      "requestToReply": 1046.6213019999996,
+      "lastFinishedToReply": 24.67880200000036,
+      "laneFinishSkew": 129.33927099999892
+    },
+    {
+      "controller": "controller-23995",
+      "lanes": 2,
+      "requestToReply": 1455.2427590000007,
+      "lastFinishedToReply": 12.086301999999705,
+      "laneFinishSkew": 132.13401000000158
+    },
+    {
+      "controller": "controller-23995",
+      "lanes": 2,
+      "requestToReply": 1219.2797909999972,
+      "lastFinishedToReply": 17.453488999999536,
+      "laneFinishSkew": 108.07432300000073
+    },
+    {
+      "controller": "controller-23995",
+      "lanes": 2,
+      "requestToReply": 711.2360420000005,
+      "lastFinishedToReply": 13.600365000002057,
+      "laneFinishSkew": 98.32171899999958
+    },
+    {
+      "controller": "controller-23995",
+      "lanes": 2,
+      "requestToReply": 798.0809889999982,
+      "lastFinishedToReply": 15.494426999997813,
+      "laneFinishSkew": 94.6720830000013
+    },
+    {
+      "controller": "controller-23995",
+      "lanes": 2,
+      "requestToReply": 750.9171349999997,
+      "lastFinishedToReply": 16.195417000002635,
+      "laneFinishSkew": 72.9789579999997
+    },
+    {
+      "controller": "controller-23995",
+      "lanes": 2,
+      "requestToReply": 890.7131249999984,
+      "lastFinishedToReply": 15.27932299999884,
+      "laneFinishSkew": 95.1367190000019
+    },
+    {
+      "controller": "controller-23995",
+      "lanes": 2,
+      "requestToReply": 708.4310410000035,
+      "lastFinishedToReply": 16.288696999999956,
+      "laneFinishSkew": 32.76260500000353
+    },
+    {
+      "controller": "controller-23995",
+      "lanes": 2,
+      "requestToReply": 760.0741659999985,
+      "lastFinishedToReply": 15.311665999997786,
+      "laneFinishSkew": 66.90755200000058
+    },
+    {
+      "controller": "controller-23995",
+      "lanes": 2,
+      "requestToReply": 921.7009890000008,
+      "lastFinishedToReply": 19.402969000002486,
+      "laneFinishSkew": 65.37578099999882
+    },
+    {
+      "controller": "controller-23995",
+      "lanes": 2,
+      "requestToReply": 793.7382290000023,
+      "lastFinishedToReply": 21.143385999999737,
+      "laneFinishSkew": 78.2917180000004
+    },
+    {
+      "controller": "controller-23995",
+      "lanes": 2,
+      "requestToReply": 1093.2308329999978,
+      "lastFinishedToReply": 19.87749999999869,
+      "laneFinishSkew": 258.443177000001
+    },
+    {
+      "controller": "controller-23995",
+      "lanes": 2,
+      "requestToReply": 763.8539049999999,
+      "lastFinishedToReply": 17.825832999998966,
+      "laneFinishSkew": 78.62260400000014
+    },
+    {
+      "controller": "controller-23995",
+      "lanes": 2,
+      "requestToReply": 848.840103999999,
+      "lastFinishedToReply": 14.14166699999987,
+      "laneFinishSkew": 174.0222909999975
+    },
+    {
+      "controller": "controller-23995",
+      "lanes": 2,
+      "requestToReply": 755.8277080000007,
+      "lastFinishedToReply": 18.581719000001613,
+      "laneFinishSkew": 78.93744800000059
+    },
+    {
+      "controller": "controller-23995",
+      "lanes": 2,
+      "requestToReply": 747.0218749999985,
+      "lastFinishedToReply": 17.338959000000614,
+      "laneFinishSkew": 99.88739599999826
+    },
+    {
+      "controller": "controller-23995",
+      "lanes": 2,
+      "requestToReply": 724.6009370000029,
+      "lastFinishedToReply": 14.948750000003201,
+      "laneFinishSkew": 24.898228999998537
+    },
+    {
+      "controller": "controller-23995",
+      "lanes": 2,
+      "requestToReply": 1163.5317699999941,
+      "lastFinishedToReply": 14.645572999994329,
+      "laneFinishSkew": 408.1149480000022
+    },
+    {
+      "controller": "controller-23995",
+      "lanes": 2,
+      "requestToReply": 764.5560410000035,
+      "lastFinishedToReply": 18.068802000001597,
+      "laneFinishSkew": 49.06916700000147
+    },
+    {
+      "controller": "controller-23995",
+      "lanes": 2,
+      "requestToReply": 747.8703640000022,
+      "lastFinishedToReply": 16.523542000002635,
+      "laneFinishSkew": 42.30552099999477
+    },
+    {
+      "controller": "controller-23995",
+      "lanes": 2,
+      "requestToReply": 746.2532809999975,
+      "lastFinishedToReply": 16.97984400000132,
+      "laneFinishSkew": 89.99604099999851
+    },
+    {
+      "controller": "controller-23995",
+      "lanes": 2,
+      "requestToReply": 728.6166139999987,
+      "lastFinishedToReply": 17.848384999997506,
+      "laneFinishSkew": 37.102240000000165
+    },
+    {
+      "controller": "controller-23995",
+      "lanes": 2,
+      "requestToReply": 795.8857280000011,
+      "lastFinishedToReply": 19.442342999995162,
+      "laneFinishSkew": 44.935261000005994
+    },
+    {
+      "controller": "controller-23995",
+      "lanes": 2,
+      "requestToReply": 746.3457290000006,
+      "lastFinishedToReply": 16.259634999994887,
+      "laneFinishSkew": 77.24447900000087
+    },
+    {
+      "controller": "controller-23995",
+      "lanes": 2,
+      "requestToReply": 762.5984899999967,
+      "lastFinishedToReply": 20.579532000003383,
+      "laneFinishSkew": 135.09244799999578
+    },
+    {
+      "controller": "controller-23995",
+      "lanes": 2,
+      "requestToReply": 754.3899989999991,
+      "lastFinishedToReply": 18.530052000001888,
+      "laneFinishSkew": 89.97213500000362
+    },
+    {
+      "controller": "controller-23995",
+      "lanes": 2,
+      "requestToReply": 752.3956250000047,
+      "lastFinishedToReply": 13.33510400000523,
+      "laneFinishSkew": 73.70052099999884
+    },
+    {
+      "controller": "controller-23995",
+      "lanes": 2,
+      "requestToReply": 887.9779679999992,
+      "lastFinishedToReply": 16.681093999999575,
+      "laneFinishSkew": 113.30536399999983
+    },
+    {
+      "controller": "controller-23995",
+      "lanes": 2,
+      "requestToReply": 1017.2011969999949,
+      "lastFinishedToReply": 34.18499999999767,
+      "laneFinishSkew": 234.3738020000019
+    },
+    {
+      "controller": "controller-23995",
+      "lanes": 2,
+      "requestToReply": 914.7964579999971,
+      "lastFinishedToReply": 16.15682299999753,
+      "laneFinishSkew": 74.27177099999972
+    },
+    {
+      "controller": "controller-23995",
+      "lanes": 2,
+      "requestToReply": 707.3576560000001,
+      "lastFinishedToReply": 29.30041699999856,
+      "laneFinishSkew": 55.97317699999985
+    },
+    {
+      "controller": "controller-23995",
+      "lanes": 2,
+      "requestToReply": 1098.1854689999964,
+      "lastFinishedToReply": 14.86145899999974,
+      "laneFinishSkew": 163.37343699999474
+    },
+    {
+      "controller": "controller-23995",
+      "lanes": 2,
+      "requestToReply": 772.6923949999982,
+      "lastFinishedToReply": 12.173957999999402,
+      "laneFinishSkew": 105.32140599999548
+    },
+    {
+      "controller": "controller-23995",
+      "lanes": 2,
+      "requestToReply": 749.6342179999992,
+      "lastFinishedToReply": 14.921978999998828,
+      "laneFinishSkew": 108.40499999999884
+    },
+    {
+      "controller": "controller-23995",
+      "lanes": 2,
+      "requestToReply": 913.6134380000003,
+      "lastFinishedToReply": 18.30380200000218,
+      "laneFinishSkew": 124.28656300000148
+    },
+    {
+      "controller": "controller-23995",
+      "lanes": 2,
+      "requestToReply": 713.247030999999,
+      "lastFinishedToReply": 24.252499999995052,
+      "laneFinishSkew": 2.313073000004806
+    },
+    {
+      "controller": "controller-23995",
+      "lanes": 2,
+      "requestToReply": 739.0790619999971,
+      "lastFinishedToReply": 22.022499999999127,
+      "laneFinishSkew": 33.49385400000028
+    },
+    {
+      "controller": "controller-23995",
+      "lanes": 2,
+      "requestToReply": 719.8233850000033,
+      "lastFinishedToReply": 21.247864999997546,
+      "laneFinishSkew": 33.35109300000477
+    },
+    {
+      "controller": "controller-23995",
+      "lanes": 2,
+      "requestToReply": 760.1905210000041,
+      "lastFinishedToReply": 15.940937999999733,
+      "laneFinishSkew": 105.80692700000509
+    },
+    {
+      "controller": "controller-23995",
+      "lanes": 2,
+      "requestToReply": 759.1965100000016,
+      "lastFinishedToReply": 17.82151000000158,
+      "laneFinishSkew": 123.8028639999975
+    },
+    {
+      "controller": "controller-23995",
+      "lanes": 2,
+      "requestToReply": 721.0942710000018,
+      "lastFinishedToReply": 20.078228999998828,
+      "laneFinishSkew": 49.751718999999866
+    },
+    {
+      "controller": "controller-23995",
+      "lanes": 2,
+      "requestToReply": 670.4851559999952,
+      "lastFinishedToReply": 23.464270999997098,
+      "laneFinishSkew": 78.51442700000189
+    },
+    {
+      "controller": "controller-25218",
+      "lanes": 2,
+      "requestToReply": 2525.348488,
+      "lastFinishedToReply": 26.955832999999984,
+      "laneFinishSkew": 65.57526099999995
+    },
+    {
+      "controller": "controller-25218",
+      "lanes": 2,
+      "requestToReply": 769.461354,
+      "lastFinishedToReply": 22.947603999999956,
+      "laneFinishSkew": 68.06177100000059
+    },
+    {
+      "controller": "controller-25218",
+      "lanes": 2,
+      "requestToReply": 829.973489,
+      "lastFinishedToReply": 16.16182299999946,
+      "laneFinishSkew": 92.22656200000074
+    },
+    {
+      "controller": "controller-25218",
+      "lanes": 2,
+      "requestToReply": 852.9777599999998,
+      "lastFinishedToReply": 24.53421900000012,
+      "laneFinishSkew": 77.81494799999928
+    },
+    {
+      "controller": "controller-25218",
+      "lanes": 2,
+      "requestToReply": 749.7403640000011,
+      "lastFinishedToReply": 22.34156299999995,
+      "laneFinishSkew": 28.187239000000773
+    },
+    {
+      "controller": "controller-25218",
+      "lanes": 2,
+      "requestToReply": 1052.8682289999997,
+      "lastFinishedToReply": 19.13765599999897,
+      "laneFinishSkew": 244.20192700000007
+    },
+    {
+      "controller": "controller-25218",
+      "lanes": 2,
+      "requestToReply": 844.4009369999985,
+      "lastFinishedToReply": 15.655416999999943,
+      "laneFinishSkew": 102.4892179999988
+    },
+    {
+      "controller": "controller-25218",
+      "lanes": 2,
+      "requestToReply": 689.7410940000009,
+      "lastFinishedToReply": 15.331146000000444,
+      "laneFinishSkew": 81.87557300000117
+    },
+    {
+      "controller": "controller-25218",
+      "lanes": 2,
+      "requestToReply": 990.4497910000009,
+      "lastFinishedToReply": 20.63427000000047,
+      "laneFinishSkew": 149.82692700000007
+    },
+    {
+      "controller": "controller-25218",
+      "lanes": 2,
+      "requestToReply": 785.8054680000005,
+      "lastFinishedToReply": 12.978125000001455,
+      "laneFinishSkew": 91.9261979999992
+    },
+    {
+      "controller": "controller-25218",
+      "lanes": 2,
+      "requestToReply": 709.3655209999997,
+      "lastFinishedToReply": 18.08802099999957,
+      "laneFinishSkew": 29.12869800000044
+    },
+    {
+      "controller": "controller-25218",
+      "lanes": 2,
+      "requestToReply": 696.6564060000001,
+      "lastFinishedToReply": 15.907134999999471,
+      "laneFinishSkew": 96.8772399999998
+    },
+    {
+      "controller": "controller-25218",
+      "lanes": 2,
+      "requestToReply": 714.1177079999998,
+      "lastFinishedToReply": 17.925209000000905,
+      "laneFinishSkew": 4.483228999997664
+    },
+    {
+      "controller": "controller-25218",
+      "lanes": 2,
+      "requestToReply": 829.1366140000027,
+      "lastFinishedToReply": 29.4498960000019,
+      "laneFinishSkew": 114.05015600000115
+    },
+    {
+      "controller": "controller-25218",
+      "lanes": 2,
+      "requestToReply": 741.2671350000019,
+      "lastFinishedToReply": 15.115157000000181,
+      "laneFinishSkew": 40.58786400000099
+    },
+    {
+      "controller": "controller-25218",
+      "lanes": 2,
+      "requestToReply": 777.4169790000014,
+      "lastFinishedToReply": 24.67338600000221,
+      "laneFinishSkew": 49.628436999999394
+    },
+    {
+      "controller": "controller-25218",
+      "lanes": 2,
+      "requestToReply": 781.0835419999967,
+      "lastFinishedToReply": 21.348489999996673,
+      "laneFinishSkew": 139.37791700000162
+    },
+    {
+      "controller": "controller-25218",
+      "lanes": 2,
+      "requestToReply": 713.4574990000001,
+      "lastFinishedToReply": 16.140103999998246,
+      "laneFinishSkew": 82.56729199999972
+    },
+    {
+      "controller": "controller-25218",
+      "lanes": 2,
+      "requestToReply": 762.6731770000006,
+      "lastFinishedToReply": 25.989166999999725,
+      "laneFinishSkew": 2.3017190000027767
+    },
+    {
+      "controller": "controller-25218",
+      "lanes": 2,
+      "requestToReply": 945.7659890000032,
+      "lastFinishedToReply": 22.578333000001294,
+      "laneFinishSkew": 129.02166600000055
+    },
+    {
+      "controller": "controller-25218",
+      "lanes": 2,
+      "requestToReply": 1040.7678120000019,
+      "lastFinishedToReply": 18.327084000000468,
+      "laneFinishSkew": 400.2663539999994
+    },
+    {
+      "controller": "controller-25218",
+      "lanes": 2,
+      "requestToReply": 739.2095310000004,
+      "lastFinishedToReply": 15.204271000002336,
+      "laneFinishSkew": 118.50369800000044
+    },
+    {
+      "controller": "controller-25218",
+      "lanes": 2,
+      "requestToReply": 763.3277080000007,
+      "lastFinishedToReply": 13.17364599999928,
+      "laneFinishSkew": 83.69031199999881
+    },
+    {
+      "controller": "controller-25218",
+      "lanes": 2,
+      "requestToReply": 754.8738019999982,
+      "lastFinishedToReply": 23.769635999997263,
+      "laneFinishSkew": 2.501717999999528
+    },
+    {
+      "controller": "controller-25218",
+      "lanes": 2,
+      "requestToReply": 820.0760939999964,
+      "lastFinishedToReply": 20.985937999997986,
+      "laneFinishSkew": 76.72849000000133
+    },
+    {
+      "controller": "controller-25218",
+      "lanes": 2,
+      "requestToReply": 723.8965620000017,
+      "lastFinishedToReply": 24.83817700000145,
+      "laneFinishSkew": 3.115520999999717
+    },
+    {
+      "controller": "controller-25218",
+      "lanes": 2,
+      "requestToReply": 755.0787500000006,
+      "lastFinishedToReply": 16.342291999997542,
+      "laneFinishSkew": 114.24505200000203
+    },
+    {
+      "controller": "controller-25218",
+      "lanes": 2,
+      "requestToReply": 721.7681770000017,
+      "lastFinishedToReply": 20.689895999999862,
+      "laneFinishSkew": 25.13000000000102
+    },
+    {
+      "controller": "controller-25218",
+      "lanes": 2,
+      "requestToReply": 761.3988539999991,
+      "lastFinishedToReply": 14.48348999999871,
+      "laneFinishSkew": 86.88984399999754
+    },
+    {
+      "controller": "controller-25218",
+      "lanes": 2,
+      "requestToReply": 893.2035420000029,
+      "lastFinishedToReply": 16.889271000000008,
+      "laneFinishSkew": 80.94333400000323
+    },
+    {
+      "controller": "controller-25218",
+      "lanes": 2,
+      "requestToReply": 902.9577600000048,
+      "lastFinishedToReply": 14.626406000003044,
+      "laneFinishSkew": 106.86598999999842
+    },
+    {
+      "controller": "controller-25218",
+      "lanes": 2,
+      "requestToReply": 795.102082999998,
+      "lastFinishedToReply": 22.32385400000203,
+      "laneFinishSkew": 43.26151099999697
+    },
+    {
+      "controller": "controller-25218",
+      "lanes": 2,
+      "requestToReply": 1119.1852080000026,
+      "lastFinishedToReply": 28.4242710000035,
+      "laneFinishSkew": 19.297030999994604
+    },
+    {
+      "controller": "controller-25218",
+      "lanes": 2,
+      "requestToReply": 977.5059370000017,
+      "lastFinishedToReply": 17.57255200000509,
+      "laneFinishSkew": 87.24400999999489
+    },
+    {
+      "controller": "controller-25218",
+      "lanes": 2,
+      "requestToReply": 965.1160410000011,
+      "lastFinishedToReply": 27.298957999999402,
+      "laneFinishSkew": 108.55098999999609
+    },
+    {
+      "controller": "controller-25218",
+      "lanes": 2,
+      "requestToReply": 1786.5721350000022,
+      "lastFinishedToReply": 51.307917000005546,
+      "laneFinishSkew": 132.61994799999957
+    },
+    {
+      "controller": "controller-25218",
+      "lanes": 2,
+      "requestToReply": 2065.6371870000003,
+      "lastFinishedToReply": 35.58927100000437,
+      "laneFinishSkew": 235.80869800000073
+    },
+    {
+      "controller": "controller-25218",
+      "lanes": 2,
+      "requestToReply": 1905.7346860000034,
+      "lastFinishedToReply": 42.280103999997664,
+      "laneFinishSkew": 137.76510400000552
+    },
+    {
+      "controller": "controller-25218",
+      "lanes": 2,
+      "requestToReply": 2181.243644999995,
+      "lastFinishedToReply": 40.688436999997066,
+      "laneFinishSkew": 467.20729199999914
+    },
+    {
+      "controller": "controller-25218",
+      "lanes": 2,
+      "requestToReply": 2424.834686000002,
+      "lastFinishedToReply": 32.0914580000026,
+      "laneFinishSkew": 437.8079690000013
+    },
+    {
+      "controller": "controller-25218",
+      "lanes": 2,
+      "requestToReply": 3092.6002599999993,
+      "lastFinishedToReply": 78.00213599999552,
+      "laneFinishSkew": 648.0727600000027
+    },
+    {
+      "controller": "controller-25218",
+      "lanes": 2,
+      "requestToReply": 3062.597342999994,
+      "lastFinishedToReply": 81.67619800000102,
+      "laneFinishSkew": 476.5447919999933
+    },
+    {
+      "controller": "controller-25218",
+      "lanes": 2,
+      "requestToReply": 4394.680779999995,
+      "lastFinishedToReply": 168.86817699999665,
+      "laneFinishSkew": 1075.4841139999917
+    },
+    {
+      "controller": "controller-25218",
+      "lanes": 2,
+      "requestToReply": 4087.894008999996,
+      "lastFinishedToReply": 206.30567699999665,
+      "laneFinishSkew": 409.6443750000035
+    },
+    {
+      "controller": "controller-25218",
+      "lanes": 2,
+      "requestToReply": 4409.896456999995,
+      "lastFinishedToReply": 201.03854100000171,
+      "laneFinishSkew": 917.2633859999914
+    },
+    {
+      "controller": "controller-25218",
+      "lanes": 2,
+      "requestToReply": 4717.3821339999995,
+      "lastFinishedToReply": 75.91781299999275,
+      "laneFinishSkew": 641.2677079999994
+    },
+    {
+      "controller": "controller-25218",
+      "lanes": 2,
+      "requestToReply": 3629.4800499999983,
+      "lastFinishedToReply": 52.58588499999314,
+      "laneFinishSkew": 555.4786980000063
+    },
+    {
+      "controller": "controller-25218",
+      "lanes": 2,
+      "requestToReply": 2610.6139059999987,
+      "lastFinishedToReply": 48.89177100000961,
+      "laneFinishSkew": 308.3415629999945
+    },
+    {
+      "controller": "controller-25218",
+      "lanes": 2,
+      "requestToReply": 2393.526404999997,
+      "lastFinishedToReply": 44.73744799999986,
+      "laneFinishSkew": 532.6096350000007
+    },
+    {
+      "controller": "controller-25218",
+      "lanes": 2,
+      "requestToReply": 1939.6904159999976,
+      "lastFinishedToReply": 44.23067699999956,
+      "laneFinishSkew": 225.7360420000041
+    },
+    {
+      "controller": "controller-27984",
+      "lanes": 2,
+      "requestToReply": 6954.978852,
+      "lastFinishedToReply": 59.68812500000058,
+      "laneFinishSkew": 15.494426999999632
+    },
+    {
+      "controller": "controller-27984",
+      "lanes": 2,
+      "requestToReply": 1703.5426549999993,
+      "lastFinishedToReply": 32.04749999999876,
+      "laneFinishSkew": 160.25536400000055
+    },
+    {
+      "controller": "controller-27984",
+      "lanes": 2,
+      "requestToReply": 1089.6479690000015,
+      "lastFinishedToReply": 50.73130200000014,
+      "laneFinishSkew": 4.8140110000003915
+    },
+    {
+      "controller": "controller-27984",
+      "lanes": 2,
+      "requestToReply": 1024.613958,
+      "lastFinishedToReply": 33.79125000000022,
+      "laneFinishSkew": 26.163645999999062
+    },
+    {
+      "controller": "controller-27984",
+      "lanes": 2,
+      "requestToReply": 1299.7040619999989,
+      "lastFinishedToReply": 44.629791999999725,
+      "laneFinishSkew": 2.757551999999123
+    }
+  ],
+  "between_batch_intervals_ms": [
+    238.56307300000117,
+    196.52994799999942,
+    221.2072909999988,
+    201.32687500000065,
+    264.630677000001,
+    700.8460410000007,
+    288.01187500000015,
+    287.1405730000006,
+    234.58989600000132,
+    288.52708300000086,
+    240.8697400000019,
+    247.08281200000056,
+    247.39145799999824,
+    200.1879689999987,
+    198.70843800000148,
+    249.92109399999754,
+    205.33484300000055,
+    196.9333340000012,
+    230.5792709999987,
+    199.93182300000262,
+    280.9349999999977,
+    218.19020799999998,
+    197.3078650000025,
+    194.19416700000147,
+    191.64989599999535,
+    235.88572900000145,
+    220.1639060000016,
+    218.51140699999814,
+    214.3000519999987,
+    187.47057300000597,
+    243.34208300000319,
+    225.83729199999652,
+    242.32005199999548,
+    245.32536500000424,
+    266.8422400000054,
+    234.7040100000013,
+    264.8145829999994,
+    216.2938540000032,
+    203.54119799999899,
+    239.43255200000567,
+    221.44765599999664,
+    221.37098900000274,
+    315.38593799999944,
+    229.20640599999751,
+    218.45921799999633,
+    311.6592709999968,
+    192.12776000000304,
+    294.4069790000003,
+    198.75624999999945,
+    216.0842190000003,
+    227.18098999999984,
+    181.7434889999986,
+    211.70791700000154,
+    261.2341140000008,
+    351.4865099999988,
+    271.84770899999967,
+    242.23562499999935,
+    214.12614500000018,
+    364.1958340000001,
+    265.95900999999867,
+    221.30218799999784,
+    204.73312499999884,
+    221.3229680000004,
+    218.42380200000116,
+    209.40854200000103,
+    235.73666599999706,
+    200.35015699999713,
+    230.0468230000006,
+    223.11775999999736,
+    244.67078100000072,
+    218.05708300000333,
+    197.76104100000157,
+    305.2197399999968,
+    196.9255720000001,
+    187.64416699999856,
+    211.59229100000084,
+    196.31588499999634,
+    291.8398959999977,
+    213.87192700000014,
+    235.00046799999836,
+    288.78890699999465,
+    211.32953100000304,
+    468.0809369999988,
+    495.2324479999952,
+    528.761354000002,
+    800.0429690000019,
+    1064.7984369999976,
+    1084.0704680000053,
+    3407.910727000002,
+    2616.019634000011,
+    2883.9158319999988,
+    2339.648749,
+    2565.117968000006,
+    1187.0671350000048,
+    945.6448430000019,
+    765.824271000005,
+    353.5611979999994,
+    449.8333849999999,
+    514.3166659999988,
+    227.70911500000147
+  ]
+}
