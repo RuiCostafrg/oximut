@@ -1,0 +1,54 @@
+{
+  "format": 1,
+  "classification": "incomplete",
+  "performance": "unmeasured: wall, CPU, aggregate RSS, ratios and confidence intervals",
+  "parent": "6cc8ce0",
+  "priorProbe": "e036f54c6c4a255a55a411e96a353bf56c7fa995",
+  "node": "v26.3.1",
+  "versions": {
+    "vitest": "5.1.0",
+    "vite": "8.3.5",
+    "@vitest/coverage-v8": "5.1.0",
+    "rolldown": "1.2.15",
+    "@babel/parser": "8.0.10",
+    "magic-string": "1.4.5"
+  },
+  "sources": [
+    {
+      "path": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/package.json",
+      "sha256": "cc2979885d9d149c8456128e7ae48038d815352cf1e6d1932eb631057a99f973"
+    },
+    {
+      "path": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vite/package.json",
+      "sha256": "c9586ac07b42763a8a7f6aac6b4a805d70f057bd8c67c43da81c0cc4e5da8293"
+    },
+    {
+      "path": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/@vitest/coverage-v8/package.json",
+      "sha256": "b2871207403892d7ae29fd6d14f1c58016cdcb975fb9a32aa7f2588943d0f66c"
+    },
+    {
+      "path": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/rolldown/package.json",
+      "sha256": "c7e56b94afb72aaffe463718e98a76330140a2737b4c79b19232b9a55a17b585"
+    },
+    {
+      "path": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/@babel/parser/package.json",
+      "sha256": "12a6d09397ae1b01314e7dbe9d232cfd7ad3c27f75b78bce1123fad809cc5537"
+    },
+    {
+      "path": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/magic-string/package.json",
+      "sha256": "0539d1dc939f260490f5f448e13a0ede43ce58c9a04c67eb87fd334a79d4ef3c"
+    }
+  ],
+  "externals": [],
+  "edits": [],
+  "platform": {
+    "platform": "linux",
+    "arch": "arm64"
+  },
+  "installationSha256": "8702943bedb418189a62cf78338ba768115c2335f0c1099d0db0eedc30d735f9",
+  "nodeBinarySha256": "a76224241ff1ebcbf90adc2eb4600ddb048d19f883c6a9140b6c3ceab004e4f0",
+  "failure": {
+    "message": "Cannot find package '@edge-runtime/vm' imported from /root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/index.Bi0NXYPf.js",
+    "stack": "Error [ERR_MODULE_NOT_FOUND]: Cannot find package '@edge-runtime/vm' imported from /root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/index.Bi0NXYPf.js\n    at Object.getPackageJSONURL (node:internal/modules/package_json_reader:301:9)\n    at packageResolve (node:internal/modules/esm/resolve:768:81)\n    at moduleResolve (node:internal/modules/esm/resolve:859:18)\n    at defaultResolve (node:internal/modules/esm/resolve:992:11)\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:704:20)\n    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:724:38)\n    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:762:56)\n    at Object.resolve (node:internal/modules/esm/loader:926:25)\n    at visit (file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/benchmarks/experiments/vitest5-worker-bundle-probe/probe.mjs:50:35)\n    at visit (file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/benchmarks/experiments/vitest5-worker-bundle-probe/probe.mjs:57:56)"
+  }
+}

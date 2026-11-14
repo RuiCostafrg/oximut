@@ -1,0 +1,70 @@
+{
+  "workers": [
+    {
+      "pid": 26570,
+      "entrypoint": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/workers/forks.js",
+      "exitCode": null,
+      "signal": "SIGTERM"
+    },
+    {
+      "pid": 26590,
+      "entrypoint": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/workers/forks.js",
+      "exitCode": null,
+      "signal": "SIGTERM"
+    },
+    {
+      "pid": 26597,
+      "entrypoint": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/workers/forks.js",
+      "exitCode": null,
+      "signal": "SIGTERM"
+    },
+    {
+      "pid": 26604,
+      "entrypoint": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/workers/forks.js",
+      "exitCode": null,
+      "signal": "SIGTERM"
+    }
+  ],
+  "reports": [
+    {
+      "reason": "passed",
+      "errors": [],
+      "tests": [
+        {
+          "name": "collector identity and import-time selector",
+          "state": "passed"
+        }
+      ]
+    },
+    {
+      "reason": "passed",
+      "errors": [],
+      "tests": [
+        {
+          "name": "collector identity and import-time selector",
+          "state": "passed"
+        }
+      ]
+    },
+    {
+      "reason": "passed",
+      "errors": [],
+      "tests": [
+        {
+          "name": "collector identity and import-time selector",
+          "state": "passed"
+        }
+      ]
+    },
+    {
+      "reason": "passed",
+      "errors": [],
+      "tests": [
+        {
+          "name": "collector identity and import-time selector",
+          "state": "passed"
+        }
+      ]
+    }
+  ]
+}

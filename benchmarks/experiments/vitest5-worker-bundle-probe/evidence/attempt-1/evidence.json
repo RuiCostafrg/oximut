@@ -1,0 +1,56 @@
+{
+  "format": 1,
+  "classification": "incomplete",
+  "performance": "unmeasured: wall, CPU, aggregate RSS, ratios and confidence intervals",
+  "parent": "6cc8ce0",
+  "priorProbe": "e036f54c6c4a255a55a411e96a353bf56c7fa995",
+  "node": "v26.3.1",
+  "versions": {
+    "vitest": "5.1.0",
+    "vite": "8.3.5",
+    "@vitest/coverage-v8": "5.1.0",
+    "rolldown": "1.2.15",
+    "@babel/parser": "8.0.10",
+    "magic-string": "1.4.5"
+  },
+  "sources": [
+    {
+      "path": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/package.json",
+      "sha256": "cc2979885d9d149c8456128e7ae48038d815352cf1e6d1932eb631057a99f973"
+    },
+    {
+      "path": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vite/package.json",
+      "sha256": "c9586ac07b42763a8a7f6aac6b4a805d70f057bd8c67c43da81c0cc4e5da8293"
+    },
+    {
+      "path": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/@vitest/coverage-v8/package.json",
+      "sha256": "b2871207403892d7ae29fd6d14f1c58016cdcb975fb9a32aa7f2588943d0f66c"
+    },
+    {
+      "path": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/rolldown/package.json",
+      "sha256": "c7e56b94afb72aaffe463718e98a76330140a2737b4c79b19232b9a55a17b585"
+    },
+    {
+      "path": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/@babel/parser/package.json",
+      "sha256": "12a6d09397ae1b01314e7dbe9d232cfd7ad3c27f75b78bce1123fad809cc5537"
+    },
+    {
+      "path": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/magic-string/package.json",
+      "sha256": "0539d1dc939f260490f5f448e13a0ede43ce58c9a04c67eb87fd334a79d4ef3c"
+    },
+    {
+      "path": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/benchmarks/experiments/vitest5-worker-bundle-probe/probe.mjs",
+      "sha256": "63c01df28dff25ae647bfffc4944a098e5b4992ade8509ef1a8320b2889aa743"
+    },
+    {
+      "path": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/package-lock.json",
+      "sha256": "6dc7a6c55362e0dc23c2c5395a7e3ecfeb7300337f75aa2c6ef610e3680abd92"
+    }
+  ],
+  "externals": [],
+  "edits": [],
+  "failure": {
+    "message": "Cannot find native binding. npm has a bug related to optional dependencies (https://github.com/npm/cli/issues/4828). Please try `npm i` again after removing both package-lock.json and node_modules directory.",
+    "stack": "Error: Cannot find native binding. npm has a bug related to optional dependencies (https://github.com/npm/cli/issues/4828). Please try `npm i` again after removing both package-lock.json and node_modules directory.\n    at file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/rolldown/dist/shared/binding-BMtuZhvP.mjs:601:34\n    at file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/rolldown/dist/shared/binding-BMtuZhvP.mjs:9:49\n    at file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/rolldown/dist/shared/normalize-string-or-regex-DUkI3MrN.mjs:4:46\n    at ModuleJob.run (node:internal/modules/esm/module_job:439:25)\n    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:646:26)\n    at async main (file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/benchmarks/experiments/vitest5-worker-bundle-probe/probe.mjs:127:26)\n    at async file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/benchmarks/experiments/vitest5-worker-bundle-probe/probe.mjs:179:123"
+  }
+}

@@ -1,0 +1,9 @@
+file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/benchmarks/experiments/vitest5-worker-bundle-probe/probe.mjs:132
+      ctx.projects[0].config.env.OXIMUT_ACTIVE_MUTANT = selector;
+                                                      ^
+
+TypeError: Cannot set properties of undefined (setting 'OXIMUT_ACTIVE_MUTANT')
+    at controller (file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/benchmarks/experiments/vitest5-worker-bundle-probe/probe.mjs:132:55)
+    at async file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/benchmarks/experiments/vitest5-worker-bundle-probe/probe.mjs:244:43
+
+Node.js v26.3.1

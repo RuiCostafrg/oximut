@@ -1,0 +1,8 @@
+{
+  "benchmarks/experiments/vitest5-worker-bundle-probe/probe.mjs": "1ea6ed4cf0c6559a1c7052b0c8d4d9d44adf3d125889896231dac2e7840b1da8",
+  "benchmarks/experiments/vitest5-worker-bundle-probe/test-probe.mjs": "75c69a9fb9296e1044bdb2e5f11429ac1e333a80acab512a8964ba1671e10977",
+  "benchmarks/experiments/vitest5-worker-bundle-probe/README.md": "b146a74d349724876aaf17ea9e3524153e314739c3720fca868c3c67858473b7",
+  "benchmarks/experiments/vitest5-worker-bundle-probe/REPORT.md": "a5ba92ca20d7c6227c43f970f1d0417d3e9d0b1270ec9299fb07f5ac134fe47e",
+  "package-lock.json": "6dc7a6c55362e0dc23c2c5395a7e3ecfeb7300337f75aa2c6ef610e3680abd92",
+  "package.json": "ac90d3f2e13ebbebbfe76581dcaca0dada1f32df0ced9dca2a4506e14c908eef"
+}

@@ -1,0 +1,459 @@
+{
+  "format": 1,
+  "classification": "incomplete",
+  "performance": "unmeasured: wall, CPU, aggregate RSS, ratios and confidence intervals",
+  "parent": "6cc8ce0",
+  "priorProbe": "e036f54c6c4a255a55a411e96a353bf56c7fa995",
+  "node": "v26.3.1",
+  "versions": {
+    "vitest": "5.1.0",
+    "vite": "8.3.5",
+    "@vitest/coverage-v8": "5.1.0",
+    "rolldown": "1.2.15",
+    "@babel/parser": "8.0.10",
+    "magic-string": "1.4.5"
+  },
+  "sources": [
+    {
+      "path": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/package.json",
+      "sha256": "cc2979885d9d149c8456128e7ae48038d815352cf1e6d1932eb631057a99f973"
+    },
+    {
+      "path": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vite/package.json",
+      "sha256": "c9586ac07b42763a8a7f6aac6b4a805d70f057bd8c67c43da81c0cc4e5da8293"
+    },
+    {
+      "path": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/@vitest/coverage-v8/package.json",
+      "sha256": "b2871207403892d7ae29fd6d14f1c58016cdcb975fb9a32aa7f2588943d0f66c"
+    },
+    {
+      "path": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/rolldown/package.json",
+      "sha256": "c7e56b94afb72aaffe463718e98a76330140a2737b4c79b19232b9a55a17b585"
+    },
+    {
+      "path": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/@babel/parser/package.json",
+      "sha256": "12a6d09397ae1b01314e7dbe9d232cfd7ad3c27f75b78bce1123fad809cc5537"
+    },
+    {
+      "path": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/magic-string/package.json",
+      "sha256": "0539d1dc939f260490f5f448e13a0ede43ce58c9a04c67eb87fd334a79d4ef3c"
+    },
+    {
+      "path": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/benchmarks/experiments/vitest5-worker-bundle-probe/probe.mjs",
+      "sha256": "96febf7d973136ce50ec5283ff7237764520f8b2855cc452355c98463c7ff5c8"
+    },
+    {
+      "path": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/package-lock.json",
+      "sha256": "6dc7a6c55362e0dc23c2c5395a7e3ecfeb7300337f75aa2c6ef610e3680abd92"
+    },
+    {
+      "path": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/workers/forks.js",
+      "sha256": "5f29690add8191999d1234ff7eab934e6cb06cc727fd5ab31ee4962f14e0f926"
+    },
+    {
+      "path": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/base.Cof-UHJf.js",
+      "sha256": "007057a1125749b97327335cea7735563138617979ba762421b4b5a569c2bdbe"
+    },
+    {
+      "path": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/run.CjdgFZiW.js",
+      "sha256": "695282581b97d7049132e1097f9c7421931cb00b9308bd533b4f7f709f5fedc3"
+    }
+  ],
+  "externals": [
+    {
+      "source": "tinybench",
+      "importer": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/workers/forks.js",
+      "resolved": "file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/tinybench/dist/index.js"
+    },
+    {
+      "source": "node:path",
+      "importer": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/workers/forks.js",
+      "resolved": "node:path"
+    },
+    {
+      "source": "vite/module-runner",
+      "importer": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/workers/forks.js",
+      "resolved": "file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vite/dist/node/module-runner.js"
+    },
+    {
+      "source": "../chunks/source-map.DakdQc29.js",
+      "importer": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/workers/forks.js",
+      "resolved": "file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/source-map.DakdQc29.js"
+    },
+    {
+      "source": "../chunks/coverage.jGCktcGP.js",
+      "importer": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/workers/forks.js",
+      "resolved": "file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/coverage.jGCktcGP.js"
+    },
+    {
+      "source": "../task-utils.js",
+      "importer": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/workers/forks.js",
+      "resolved": "file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/task-utils.js"
+    },
+    {
+      "source": "../traces.js",
+      "importer": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/workers/forks.js",
+      "resolved": "file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/traces.js"
+    },
+    {
+      "source": "../chunks/index.DmDMHCg8.js",
+      "importer": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/workers/forks.js",
+      "resolved": "file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/index.DmDMHCg8.js"
+    },
+    {
+      "source": "node:perf_hooks",
+      "importer": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/workers/forks.js",
+      "resolved": "node:perf_hooks"
+    },
+    {
+      "source": "../chunks/init-forks.BaDXQSD8.js",
+      "importer": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/workers/forks.js",
+      "resolved": "file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/init-forks.BaDXQSD8.js"
+    },
+    {
+      "source": "node:timers",
+      "importer": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/workers/forks.js",
+      "resolved": "node:timers"
+    },
+    {
+      "source": "../chunks/utils.DYj33du9.js",
+      "importer": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/workers/forks.js",
+      "resolved": "file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/utils.DYj33du9.js"
+    },
+    {
+      "source": "../path.js",
+      "importer": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/workers/forks.js",
+      "resolved": "file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/path.js"
+    },
+    {
+      "source": "@vitest/mocker/redirect",
+      "importer": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/workers/forks.js",
+      "resolved": "file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/@vitest/mocker/dist/redirect.js"
+    },
+    {
+      "source": "../chunks/spy.DDMXghXv.js",
+      "importer": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/workers/forks.js",
+      "resolved": "file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/spy.DDMXghXv.js"
+    },
+    {
+      "source": "../chunks/offset.Dy-5Fdfn.js",
+      "importer": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/workers/forks.js",
+      "resolved": "file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/offset.Dy-5Fdfn.js"
+    },
+    {
+      "source": "../chunks/index.Bi0NXYPf.js",
+      "importer": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/workers/forks.js",
+      "resolved": "file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/index.Bi0NXYPf.js"
+    },
+    {
+      "source": "../chunks/tinyrainbow.Do8I1XRG.js",
+      "importer": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/workers/forks.js",
+      "resolved": "file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/tinyrainbow.Do8I1XRG.js"
+    },
+    {
+      "source": "node:url",
+      "importer": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/workers/forks.js",
+      "resolved": "node:url"
+    },
+    {
+      "source": "../chunks/setup-common.CqAQCXzx.js",
+      "importer": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/workers/forks.js",
+      "resolved": "file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/setup-common.CqAQCXzx.js"
+    },
+    {
+      "source": "@vitest/mocker",
+      "importer": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/workers/forks.js",
+      "resolved": "file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/@vitest/mocker/dist/index.js"
+    },
+    {
+      "source": "chai",
+      "importer": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/workers/forks.js",
+      "resolved": "file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/chai/index.js"
+    },
+    {
+      "source": "../chunks/rawSnapshot.DqSiqIEx.js",
+      "importer": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/workers/forks.js",
+      "resolved": "file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/rawSnapshot.DqSiqIEx.js"
+    },
+    {
+      "source": "expect-type",
+      "importer": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/workers/forks.js",
+      "resolved": "file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/expect-type/dist/index.js"
+    },
+    {
+      "source": "../chunks/rpc.Uhkwr2NM.js",
+      "importer": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/workers/forks.js",
+      "resolved": "file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/rpc.Uhkwr2NM.js"
+    },
+    {
+      "source": "../chunks/index.w_oBZ9N8.js",
+      "importer": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/workers/forks.js",
+      "resolved": "file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/index.w_oBZ9N8.js"
+    },
+    {
+      "source": "../chunks/display.BlTmubjj.js",
+      "importer": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/workers/forks.js",
+      "resolved": "file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/display.BlTmubjj.js"
+    },
+    {
+      "source": "../chunks/init.CO4AB7HZ.js",
+      "importer": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/workers/forks.js",
+      "resolved": "file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/init.CO4AB7HZ.js"
+    },
+    {
+      "source": "../chunks/index.CZzC1gGg.js",
+      "importer": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/workers/forks.js",
+      "resolved": "file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/index.CZzC1gGg.js"
+    },
+    {
+      "source": "node:fs",
+      "importer": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/workers/forks.js",
+      "resolved": "node:fs"
+    },
+    {
+      "source": "node:console",
+      "importer": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/workers/forks.js",
+      "resolved": "node:console"
+    },
+    {
+      "source": "node:util",
+      "importer": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/workers/forks.js",
+      "resolved": "node:util"
+    },
+    {
+      "source": "node:async_hooks",
+      "importer": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/workers/forks.js",
+      "resolved": "node:async_hooks"
+    },
+    {
+      "source": "../chunks/pathe.M-eThtNZ.zq3TM4NT.js",
+      "importer": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/workers/forks.js",
+      "resolved": "file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/pathe.M-eThtNZ.zq3TM4NT.js"
+    },
+    {
+      "source": "node:timers/promises",
+      "importer": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/workers/forks.js",
+      "resolved": "node:timers/promises"
+    },
+    {
+      "source": "../chunks/modules.BJuCwlRJ.js",
+      "importer": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/workers/forks.js",
+      "resolved": "file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/modules.BJuCwlRJ.js"
+    },
+    {
+      "source": "../chunks/plugins.DPQHVT0p.js",
+      "importer": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/workers/forks.js",
+      "resolved": "file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/plugins.DPQHVT0p.js"
+    },
+    {
+      "source": "../chunks/coverage.9iqXE2gN.js",
+      "importer": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/workers/forks.js",
+      "resolved": "file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/coverage.9iqXE2gN.js"
+    },
+    {
+      "source": "../module-evaluator.js",
+      "importer": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/workers/forks.js",
+      "resolved": "file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/module-evaluator.js"
+    },
+    {
+      "source": "../chunks/module-dependencies._2Eei3FO.js",
+      "importer": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/workers/forks.js",
+      "resolved": "file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/module-dependencies._2Eei3FO.js"
+    },
+    {
+      "source": "node:module",
+      "importer": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/workers/forks.js",
+      "resolved": "node:module"
+    },
+    {
+      "source": "../chunks/index.D0heQG4v.js",
+      "importer": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/workers/forks.js",
+      "resolved": "file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/index.D0heQG4v.js"
+    },
+    {
+      "source": "node:vm",
+      "importer": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/workers/forks.js",
+      "resolved": "node:vm"
+    },
+    {
+      "source": "../chunks/inspector.CvyFGlXm.js",
+      "importer": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/workers/forks.js",
+      "resolved": "file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/inspector.CvyFGlXm.js"
+    },
+    {
+      "source": "./pathe.M-eThtNZ.zq3TM4NT.js",
+      "importer": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/base.Cof-UHJf.js",
+      "resolved": "file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/pathe.M-eThtNZ.zq3TM4NT.js"
+    },
+    {
+      "source": "./coverage.9iqXE2gN.js",
+      "importer": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/base.Cof-UHJf.js",
+      "resolved": "file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/coverage.9iqXE2gN.js"
+    },
+    {
+      "source": "./console.CQZ877Hi.js",
+      "importer": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/base.Cof-UHJf.js",
+      "resolved": "file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/console.CQZ877Hi.js"
+    },
+    {
+      "source": "./native.upB-V0CK.js",
+      "importer": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/base.Cof-UHJf.js",
+      "resolved": "file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/native.upB-V0CK.js"
+    },
+    {
+      "source": "node:timers",
+      "importer": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/base.Cof-UHJf.js",
+      "resolved": "node:timers"
+    },
+    {
+      "source": "node:perf_hooks",
+      "importer": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/base.Cof-UHJf.js",
+      "resolved": "node:perf_hooks"
+    },
+    {
+      "source": "../traces.js",
+      "importer": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/base.Cof-UHJf.js",
+      "resolved": "file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/traces.js"
+    },
+    {
+      "source": "node:util",
+      "importer": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/base.Cof-UHJf.js",
+      "resolved": "node:util"
+    },
+    {
+      "source": "node:timers/promises",
+      "importer": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/base.Cof-UHJf.js",
+      "resolved": "node:timers/promises"
+    },
+    {
+      "source": "./nativeModuleRunner.9xPIMzi7.js",
+      "importer": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/base.Cof-UHJf.js",
+      "resolved": "file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/nativeModuleRunner.9xPIMzi7.js"
+    },
+    {
+      "source": "./index.w_oBZ9N8.js",
+      "importer": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/base.Cof-UHJf.js",
+      "resolved": "file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/index.w_oBZ9N8.js"
+    },
+    {
+      "source": "./index.CZzC1gGg.js",
+      "importer": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/base.Cof-UHJf.js",
+      "resolved": "file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/index.CZzC1gGg.js"
+    },
+    {
+      "source": "node:module",
+      "importer": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/base.Cof-UHJf.js",
+      "resolved": "node:module"
+    },
+    {
+      "source": "./nativeModuleMocker.Dh5azSB4.js",
+      "importer": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/base.Cof-UHJf.js",
+      "resolved": "file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/nativeModuleMocker.Dh5azSB4.js"
+    },
+    {
+      "source": "./spy.DDMXghXv.js",
+      "importer": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/base.Cof-UHJf.js",
+      "resolved": "file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/spy.DDMXghXv.js"
+    },
+    {
+      "source": "./rpc.Uhkwr2NM.js",
+      "importer": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/base.Cof-UHJf.js",
+      "resolved": "file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/rpc.Uhkwr2NM.js"
+    },
+    {
+      "source": "node:vm",
+      "importer": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/base.Cof-UHJf.js",
+      "resolved": "node:vm"
+    },
+    {
+      "source": "./index.Bi0NXYPf.js",
+      "importer": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/base.Cof-UHJf.js",
+      "resolved": "file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/index.Bi0NXYPf.js"
+    },
+    {
+      "source": "./setup-common.CqAQCXzx.js",
+      "importer": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/base.Cof-UHJf.js",
+      "resolved": "file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/setup-common.CqAQCXzx.js"
+    },
+    {
+      "source": "./utils.DYj33du9.js",
+      "importer": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/base.Cof-UHJf.js",
+      "resolved": "file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/utils.DYj33du9.js"
+    },
+    {
+      "source": "./init.CO4AB7HZ.js",
+      "importer": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/base.Cof-UHJf.js",
+      "resolved": "file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/init.CO4AB7HZ.js"
+    },
+    {
+      "source": "./module-dependencies._2Eei3FO.js",
+      "importer": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/base.Cof-UHJf.js",
+      "resolved": "file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/module-dependencies._2Eei3FO.js"
+    },
+    {
+      "source": "./inspector.CvyFGlXm.js",
+      "importer": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/base.Cof-UHJf.js",
+      "resolved": "file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/inspector.CvyFGlXm.js"
+    },
+    {
+      "source": "./pathe.M-eThtNZ.zq3TM4NT.js",
+      "importer": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/run.CjdgFZiW.js",
+      "resolved": "file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/pathe.M-eThtNZ.zq3TM4NT.js"
+    },
+    {
+      "source": "./tinyrainbow.Do8I1XRG.js",
+      "importer": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/run.CjdgFZiW.js",
+      "resolved": "file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/tinyrainbow.Do8I1XRG.js"
+    },
+    {
+      "source": "../task-utils.js",
+      "importer": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/run.CjdgFZiW.js",
+      "resolved": "file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/task-utils.js"
+    },
+    {
+      "source": "./source-map.DakdQc29.js",
+      "importer": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/run.CjdgFZiW.js",
+      "resolved": "file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/source-map.DakdQc29.js"
+    },
+    {
+      "source": "./display.BlTmubjj.js",
+      "importer": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/run.CjdgFZiW.js",
+      "resolved": "file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/display.BlTmubjj.js"
+    },
+    {
+      "source": "./index.D0heQG4v.js",
+      "importer": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/run.CjdgFZiW.js",
+      "resolved": "file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/index.D0heQG4v.js"
+    }
+  ],
+  "edits": [
+    {
+      "id": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/workers/forks.js",
+      "sites": []
+    },
+    {
+      "id": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/base.Cof-UHJf.js",
+      "sites": [
+        {
+          "start": 1962,
+          "end": 1977,
+          "original": "import.meta.url"
+        }
+      ]
+    },
+    {
+      "id": "/root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/vitest/dist/chunks/run.CjdgFZiW.js",
+      "sites": []
+    }
+  ],
+  "platform": {
+    "platform": "linux",
+    "arch": "arm64"
+  },
+  "installationSha256": "8702943bedb418189a62cf78338ba768115c2335f0c1099d0db0eedc30d735f9",
+  "nodeBinarySha256": "a76224241ff1ebcbf90adc2eb4600ddb048d19f883c6a9140b6c3ceab004e4f0",
+  "failure": {
+    "message": "Build failed with 1 error:\n\n[plugin explicit-v5-negative-boundary] \u0000rolldown/runtime.js\nAssertionError: Unexpected inline module: \u0000rolldown/runtime.js\nAssertionError [ERR_ASSERTION]: Unexpected inline module: \u0000rolldown/runtime.js\n    at TransformPluginContextImpl.transform (file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/benchmarks/experiments/vitest5-worker-bundle-probe/probe.mjs:159:16)\n    at plugin (file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/rolldown/dist/shared/bindingify-input-options-BMZwyvQ7.mjs:1699:30)\n    at file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/rolldown/dist/shared/bindingify-input-options-BMZwyvQ7.mjs:2087:21\n    at plugin.<computed> (file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/rolldown/dist/shared/bindingify-input-options-BMZwyvQ7.mjs:2284:18)",
+    "stack": "Error: Build failed with 1 error:\n\n[plugin explicit-v5-negative-boundary] \u0000rolldown/runtime.js\nAssertionError: Unexpected inline module: \u0000rolldown/runtime.js\nAssertionError [ERR_ASSERTION]: Unexpected inline module: \u0000rolldown/runtime.js\n    at TransformPluginContextImpl.transform (file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/benchmarks/experiments/vitest5-worker-bundle-probe/probe.mjs:159:16)\n    at plugin (file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/rolldown/dist/shared/bindingify-input-options-BMZwyvQ7.mjs:1699:30)\n    at file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/rolldown/dist/shared/bindingify-input-options-BMZwyvQ7.mjs:2087:21\n    at plugin.<computed> (file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/rolldown/dist/shared/bindingify-input-options-BMZwyvQ7.mjs:2284:18)\n    at aggregateBindingErrorsIntoJsError (file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/rolldown/dist/shared/error-D0SD8_tL.mjs:49:18)\n    at unwrapBindingResult (file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/rolldown/dist/shared/error-D0SD8_tL.mjs:19:128)\n    at #build (file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/node_modules/rolldown/dist/shared/rolldown-CMhwwZPA.mjs:145:34)\n    at async main (file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/benchmarks/experiments/vitest5-worker-bundle-probe/probe.mjs:166:11)\n    at async file:///root/.t3/worktrees/oximut/t3-8d8fd2c8-76fe618371a29e13/benchmarks/experiments/vitest5-worker-bundle-probe/probe.mjs:200:123"
+  }
+}

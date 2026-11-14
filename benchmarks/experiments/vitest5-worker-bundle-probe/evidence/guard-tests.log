@@ -1,0 +1,12 @@
+✔ reject unsupported metadata and resolution before bundle execution (52.020729ms)
+✔ reject computed imports and CommonJS require (3.14401ms)
+✔ only actual URL syntax changes, and source contents survive in map (8.332708ms)
+✔ version mismatch rejects (2.783125ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 259.490365
