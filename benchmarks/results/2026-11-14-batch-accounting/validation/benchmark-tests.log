@@ -1,0 +1,737 @@
+.......................Build integrity preflight failed: expected distinct candidate executables but binary hashes are identical; missing or malformed build metadata
+Build integrity preflight failed: cannot read supplied build metadata: [Errno 2] No such file or directory: '/data/data/com.termux/files/usr/tmp/tmpz855fxef/missing.json'
+Build integrity preflight failed: cannot read supplied build metadata: Expecting property name enclosed in double quotes: line 1 column 2 (char 1)
+..................round 0: before (warmup)
+round 0: after (warmup)
+round 1: after (measured)
+round 1: before (measured)
+round 2: before (measured)
+round 2: after (measured)
+round 3: after (measured)
+round 3: before (measured)
+round 4: before (measured)
+round 4: after (measured)
+round 5: after (measured)
+round 5: before (measured)
+{
+  "phase_evidence": {
+    "before": [],
+    "after": []
+  },
+  "correctness_gate": {
+    "passed": false,
+    "errors": [
+      "missing, duplicate or unexpected round/variant/tool evidence"
+    ]
+  },
+  "build_integrity": {
+    "required": false,
+    "passed": true,
+    "errors": []
+  },
+  "warmup_pairs": 1,
+  "measured_pairs": 5,
+  "concurrency": 1,
+  "workload": "colord",
+  "thresholds": {
+    "wall_seconds": 0.5,
+    "cpu_seconds": 0.8,
+    "peak_aggregate_rss_bytes": 0.8
+  },
+  "targets_met": false,
+  "comparisons": {},
+  "scope": "5 declared production mutation files (arithmetic, boolean-literal families), all 41 source files available, all 102 upstream tests; not the full colord mutation scope.",
+  "confidence": "Deterministic paired median percentile bootstrap, 10000 draws; host/corpus-specific exploratory evidence.",
+  "after_oximut_args": []
+}
+round 0: before (warmup)
+round 0: after (warmup)
+round 1: after (measured)
+round 1: before (measured)
+round 2: before (measured)
+round 2: after (measured)
+round 3: after (measured)
+round 3: before (measured)
+round 4: before (measured)
+round 4: after (measured)
+round 5: after (measured)
+round 5: before (measured)
+.{
+  "phase_evidence": {
+    "before": [],
+    "after": []
+  },
+  "correctness_gate": {
+    "passed": false,
+    "errors": [
+      "round 0 before: descendants outlived the subcampaign root",
+      "round 0 after: descendants outlived the subcampaign root",
+      "round 1 after: descendants outlived the subcampaign root",
+      "round 1 before: descendants outlived the subcampaign root",
+      "round 2 before: descendants outlived the subcampaign root",
+      "round 2 after: descendants outlived the subcampaign root",
+      "round 3 after: descendants outlived the subcampaign root",
+      "round 3 before: descendants outlived the subcampaign root",
+      "round 4 before: descendants outlived the subcampaign root",
+      "round 4 after: descendants outlived the subcampaign root",
+      "round 5 after: descendants outlived the subcampaign root",
+      "round 5 before: descendants outlived the subcampaign root",
+      "missing, duplicate or unexpected round/variant/tool evidence"
+    ]
+  },
+  "build_integrity": {
+    "required": false,
+    "passed": true,
+    "errors": []
+  },
+  "warmup_pairs": 1,
+  "measured_pairs": 5,
+  "concurrency": 1,
+  "workload": "colord",
+  "thresholds": {
+    "wall_seconds": 0.5,
+    "cpu_seconds": 0.8,
+    "peak_aggregate_rss_bytes": 0.8
+  },
+  "targets_met": false,
+  "comparisons": {},
+  "scope": "5 declared production mutation files (arithmetic, boolean-literal families), all 41 source files available, all 102 upstream tests; not the full colord mutation scope.",
+  "confidence": "Deterministic paired median percentile bootstrap, 10000 draws; host/corpus-specific exploratory evidence.",
+  "after_oximut_args": []
+}
+round 0: before (warmup)
+round 0: after (warmup)
+round 1: after (measured)
+round 1: before (measured)
+round 2: before (measured)
+round 2: after (measured)
+round 3: after (measured)
+round 3: before (measured)
+round 4: before (measured)
+round 4: after (measured)
+round 5: after (measured)
+round 5: before (measured)
+{
+  "phase_evidence": {
+    "before": [],
+    "after": []
+  },
+  "correctness_gate": {
+    "passed": false,
+    "errors": [
+      "round 0 before: subcampaign metadata lacks a versions object",
+      "round 0 after: subcampaign metadata lacks a versions object",
+      "round 1 after: subcampaign metadata lacks a versions object",
+      "round 1 before: subcampaign metadata lacks a versions object",
+      "round 2 before: subcampaign metadata lacks a versions object",
+      "round 2 after: subcampaign metadata lacks a versions object",
+      "round 3 after: subcampaign metadata lacks a versions object",
+      "round 3 before: subcampaign metadata lacks a versions object",
+      "round 4 before: subcampaign metadata lacks a versions object",
+      "round 4 after: subcampaign metadata lacks a versions object",
+      "round 5 after: subcampaign metadata lacks a versions object",
+      "round 5 before: subcampaign metadata lacks a versions object",
+      "missing, duplicate or unexpected round/variant/tool evidence"
+    ]
+  },
+  "build_integrity": {
+    "required": false,
+    "passed": true,
+    "errors": []
+  },
+  "warmup_pairs": 1,
+  "measured_pairs": 5,
+  "concurrency": 1,
+  "workload": "colord",
+  "thresholds": {
+    "wall_seconds": 0.5,
+    "cpu_seconds": 0.8,
+    "peak_aggregate_rss_bytes": 0.8
+  },
+  "targets_met": false,
+  "comparisons": {},
+  "scope": "5 declared production mutation files (arithmetic, boolean-literal families), all 41 source files available, all 102 upstream tests; not the full colord mutation scope.",
+  "confidence": "Deterministic paired median percentile bootstrap, 10000 draws; host/corpus-specific exploratory evidence.",
+  "after_oximut_args": []
+}
+round 0: before (warmup)
+round 0: after (warmup)
+round 1: after (measured)
+round 1: before (measured)
+round 2: before (measured)
+round 2: after (measured)
+round 3: after (measured)
+round 3: before (measured)
+round 4: before (measured)
+round 4: after (measured)
+round 5: after (measured)
+round 5: before (measured)
+{
+  "phase_evidence": {
+    "before": [],
+    "after": []
+  },
+  "correctness_gate": {
+    "passed": false,
+    "errors": [
+      "round 0 before: subcampaign metadata lacks a versions object",
+      "round 0 after: subcampaign metadata lacks a versions object",
+      "round 1 after: subcampaign metadata lacks a versions object",
+      "round 1 before: subcampaign metadata lacks a versions object",
+      "round 2 before: subcampaign metadata lacks a versions object",
+      "round 2 after: subcampaign metadata lacks a versions object",
+      "round 3 after: subcampaign metadata lacks a versions object",
+      "round 3 before: subcampaign metadata lacks a versions object",
+      "round 4 before: subcampaign metadata lacks a versions object",
+      "round 4 after: subcampaign metadata lacks a versions object",
+      "round 5 after: subcampaign metadata lacks a versions object",
+      "round 5 before: subcampaign metadata lacks a versions object",
+      "missing, duplicate or unexpected round/variant/tool evidence"
+    ]
+  },
+  "build_integrity": {
+    "required": false,
+    "passed": true,
+    "errors": []
+  },
+  "warmup_pairs": 1,
+  "measured_pairs": 5,
+  "concurrency": 1,
+  "workload": "colord",
+  "thresholds": {
+    "wall_seconds": 0.5,
+    "cpu_seconds": 0.8,
+    "peak_aggregate_rss_bytes": 0.8
+  },
+  "targets_met": false,
+  "comparisons": {},
+  "scope": "5 declared production mutation files (arithmetic, boolean-literal families), all 41 source files available, all 102 upstream tests; not the full colord mutation scope.",
+  "confidence": "Deterministic paired median percentile bootstrap, 10000 draws; host/corpus-specific exploratory evidence.",
+  "after_oximut_args": []
+}
+round 0: before (warmup)
+round 0: after (warmup)
+round 1: after (measured)
+round 1: before (measured)
+round 2: before (measured)
+round 2: after (measured)
+round 3: after (measured)
+round 3: before (measured)
+round 4: before (measured)
+round 4: after (measured)
+round 5: after (measured)
+round 5: before (measured)
+{
+  "phase_evidence": {
+    "before": [],
+    "after": []
+  },
+  "correctness_gate": {
+    "passed": false,
+    "errors": [
+      "round 0 before: subcampaign metadata lacks a versions object",
+      "round 0 after: subcampaign metadata lacks a versions object",
+      "round 1 after: subcampaign metadata lacks a versions object",
+      "round 1 before: subcampaign metadata lacks a versions object",
+      "round 2 before: subcampaign metadata lacks a versions object",
+      "round 2 after: subcampaign metadata lacks a versions object",
+      "round 3 after: subcampaign metadata lacks a versions object",
+      "round 3 before: subcampaign metadata lacks a versions object",
+      "round 4 before: subcampaign metadata lacks a versions object",
+      "round 4 after: subcampaign metadata lacks a versions object",
+      "round 5 after: subcampaign metadata lacks a versions object",
+      "round 5 before: subcampaign metadata lacks a versions object",
+      "missing, duplicate or unexpected round/variant/tool evidence"
+    ]
+  },
+  "build_integrity": {
+    "required": false,
+    "passed": true,
+    "errors": []
+  },
+  "warmup_pairs": 1,
+  "measured_pairs": 5,
+  "concurrency": 1,
+  "workload": "colord",
+  "thresholds": {
+    "wall_seconds": 0.5,
+    "cpu_seconds": 0.8,
+    "peak_aggregate_rss_bytes": 0.8
+  },
+  "targets_met": false,
+  "comparisons": {},
+  "scope": "5 declared production mutation files (arithmetic, boolean-literal families), all 41 source files available, all 102 upstream tests; not the full colord mutation scope.",
+  "confidence": "Deterministic paired median percentile bootstrap, 10000 draws; host/corpus-specific exploratory evidence.",
+  "after_oximut_args": []
+}
+round 0: before (warmup)
+round 0: after (warmup)
+round 1: after (measured)
+round 1: before (measured)
+round 2: before (measured)
+round 2: after (measured)
+round 3: after (measured)
+round 3: before (measured)
+round 4: before (measured)
+round 4: after (measured)
+round 5: after (measured)
+round 5: before (measured)
+{
+  "phase_evidence": {
+    "before": [],
+    "after": []
+  },
+  "correctness_gate": {
+    "passed": false,
+    "errors": [
+      "round 0 before: subcampaign metadata lacks a versions object",
+      "round 0 after: subcampaign metadata lacks a versions object",
+      "round 1 after: subcampaign metadata lacks a versions object",
+      "round 1 before: subcampaign metadata lacks a versions object",
+      "round 2 before: subcampaign metadata lacks a versions object",
+      "round 2 after: subcampaign metadata lacks a versions object",
+      "round 3 after: subcampaign metadata lacks a versions object",
+      "round 3 before: subcampaign metadata lacks a versions object",
+      "round 4 before: subcampaign metadata lacks a versions object",
+      "round 4 after: subcampaign metadata lacks a versions object",
+      "round 5 after: subcampaign metadata lacks a versions object",
+      "round 5 before: subcampaign metadata lacks a versions object",
+      "missing, duplicate or unexpected round/variant/tool evidence"
+    ]
+  },
+  "build_integrity": {
+    "required": false,
+    "passed": true,
+    "errors": []
+  },
+  "warmup_pairs": 1,
+  "measured_pairs": 5,
+  "concurrency": 1,
+  "workload": "colord",
+  "thresholds": {
+    "wall_seconds": 0.5,
+    "cpu_seconds": 0.8,
+    "peak_aggregate_rss_bytes": 0.8
+  },
+  "targets_met": false,
+  "comparisons": {},
+  "scope": "5 declared production mutation files (arithmetic, boolean-literal families), all 41 source files available, all 102 upstream tests; not the full colord mutation scope.",
+  "confidence": "Deterministic paired median percentile bootstrap, 10000 draws; host/corpus-specific exploratory evidence.",
+  "after_oximut_args": []
+}
+round 0: before (warmup)
+round 0: after (warmup)
+round 1: after (measured)
+round 1: before (measured)
+round 2: before (measured)
+round 2: after (measured)
+round 3: after (measured)
+round 3: before (measured)
+round 4: before (measured)
+round 4: after (measured)
+round 5: after (measured)
+round 5: before (measured)
+.{
+  "phase_evidence": {
+    "before": [],
+    "after": []
+  },
+  "correctness_gate": {
+    "passed": false,
+    "errors": [
+      "round 0 before: subcampaign metadata lacks a versions object",
+      "round 0 after: subcampaign metadata lacks a versions object",
+      "round 1 after: subcampaign metadata lacks a versions object",
+      "round 1 before: subcampaign metadata lacks a versions object",
+      "round 2 before: subcampaign metadata lacks a versions object",
+      "round 2 after: subcampaign metadata lacks a versions object",
+      "round 3 after: subcampaign metadata lacks a versions object",
+      "round 3 before: subcampaign metadata lacks a versions object",
+      "round 4 before: subcampaign metadata lacks a versions object",
+      "round 4 after: subcampaign metadata lacks a versions object",
+      "round 5 after: subcampaign metadata lacks a versions object",
+      "round 5 before: subcampaign metadata lacks a versions object",
+      "missing, duplicate or unexpected round/variant/tool evidence"
+    ]
+  },
+  "build_integrity": {
+    "required": false,
+    "passed": true,
+    "errors": []
+  },
+  "warmup_pairs": 1,
+  "measured_pairs": 5,
+  "concurrency": 1,
+  "workload": "colord",
+  "thresholds": {
+    "wall_seconds": 0.5,
+    "cpu_seconds": 0.8,
+    "peak_aggregate_rss_bytes": 0.8
+  },
+  "targets_met": false,
+  "comparisons": {},
+  "scope": "5 declared production mutation files (arithmetic, boolean-literal families), all 41 source files available, all 102 upstream tests; not the full colord mutation scope.",
+  "confidence": "Deterministic paired median percentile bootstrap, 10000 draws; host/corpus-specific exploratory evidence.",
+  "after_oximut_args": []
+}
+round 0: before (warmup)
+.{
+  "phase_evidence": {
+    "before": [],
+    "after": []
+  },
+  "correctness_gate": {
+    "passed": false,
+    "errors": [
+      "round 0 before: Command '['subcampaign']' timed out after 330 seconds",
+      "missing, duplicate or unexpected round/variant/tool evidence"
+    ]
+  },
+  "build_integrity": {
+    "required": false,
+    "passed": true,
+    "errors": []
+  },
+  "warmup_pairs": 1,
+  "measured_pairs": 5,
+  "concurrency": 1,
+  "workload": "colord",
+  "thresholds": {
+    "wall_seconds": 0.5,
+    "cpu_seconds": 0.8,
+    "peak_aggregate_rss_bytes": 0.8
+  },
+  "targets_met": false,
+  "comparisons": {},
+  "scope": "5 declared production mutation files (arithmetic, boolean-literal families), all 41 source files available, all 102 upstream tests; not the full colord mutation scope.",
+  "confidence": "Deterministic paired median percentile bootstrap, 10000 draws; host/corpus-specific exploratory evidence.",
+  "after_oximut_args": []
+}
+round 0: before (warmup)
+round 0: after (warmup)
+round 1: after (measured)
+round 1: before (measured)
+round 2: before (measured)
+round 2: after (measured)
+round 3: after (measured)
+round 3: before (measured)
+round 4: before (measured)
+round 4: after (measured)
+round 5: after (measured)
+round 5: before (measured)
+................{
+  "phase_evidence": {
+    "before": [],
+    "after": []
+  },
+  "correctness_gate": {
+    "passed": false,
+    "errors": [
+      "missing, duplicate or unexpected round/variant/tool evidence"
+    ]
+  },
+  "build_integrity": {
+    "required": false,
+    "passed": true,
+    "errors": []
+  },
+  "warmup_pairs": 1,
+  "measured_pairs": 5,
+  "concurrency": 1,
+  "workload": "colord",
+  "thresholds": {
+    "wall_seconds": 0.5,
+    "cpu_seconds": 0.8,
+    "peak_aggregate_rss_bytes": 0.8
+  },
+  "targets_met": false,
+  "comparisons": {},
+  "scope": "5 declared production mutation files (arithmetic, boolean-literal families), all 41 source files available, all 102 upstream tests; not the full colord mutation scope.",
+  "confidence": "Deterministic paired median percentile bootstrap, 10000 draws; host/corpus-specific exploratory evidence.",
+  "after_oximut_args": []
+}
+unchanged: stryker m1 None
+changed: stryker m1 None
+.............prime: oximut m1 None
+incremental: oximut m1 None
+forced: oximut m1 None
+..Correctness gate: passed; /data/data/com.termux/files/usr/tmp/tmpxp_lncdi/.oximut/result/summary.json
+....measured-01-pure-stryker: /root/.t3/worktrees/oximut/t3-70aeded9-05f9ddead373f23e/node_modules/.bin/stryker run benchmarks/config/pure.mjs
+  success=True, wall=1.000s, CPU=1.000s, RSS=1000
+measured-02-pure-stryker: /root/.t3/worktrees/oximut/t3-70aeded9-05f9ddead373f23e/node_modules/.bin/stryker run benchmarks/config/pure.mjs
+  success=True, wall=1.000s, CPU=1.000s, RSS=1000
+......F....................................F....{
+  "diagnostic_only": true,
+  "profiler_overhead": true,
+  "concurrency": 4,
+  "workload": "colord",
+  "node_capture_mode": "exit-time-cpu-prof",
+  "qualification_errors": [],
+  "failure": "ValueError: start with NODE_OPTIONS unset to keep profiler options explicit",
+  "scope": "Unchanged colord: 41 sources, 102 tests, five mutation sources, ten arithmetic edits. One capture, no warmup campaign.",
+  "limits": "Node sampling and Python supervisor self CPU only; no complete process-tree CPU partition. Rust resource sampling remains unattributed. External benchmark sampler CPU is outside wait4 product-tree CPU; it perturbs wall time.",
+  "captures": {
+    "observed": [],
+    "orphan_profiles": [],
+    "minimum_role_evidence": {
+      "vitest_node": [],
+      "oximut_node": [],
+      "stryker_node": [],
+      "oximut_adapter": [],
+      "oximut_supervisor": [],
+      "oximut_controller": [],
+      "oximut_test_fork": []
+    },
+    "oximut_chain": "unclassified",
+    "errors": [
+      "no Node identities captured",
+      "oximut process chain unclassifiable: no native coordinator evidence and no legacy relay capture",
+      "no Python supervisor identities captured",
+      "missing finalized Node capture for vitest",
+      "missing finalized Node capture for oximut",
+      "missing finalized Node capture for stryker",
+      "missing finalized process-role capture: oximut_adapter",
+      "missing finalized process-role capture: oximut_supervisor",
+      "missing finalized process-role capture: oximut_controller",
+      "missing finalized process-role capture: oximut_test_fork"
+    ],
+    "role_evidence_policy": "Finalized full profiles or explicitly partial segments. Missing lifecycle exits/full profiles still fail capture validation.",
+    "completeness": "Unknown: processes killed before preload/dump and overridden environments may be absent; raw orphan profiles retained."
+  },
+  "passed": false
+}
+{
+  "diagnostic_only": true,
+  "profiler_overhead": true,
+  "concurrency": 4,
+  "workload": "colord",
+  "node_capture_mode": "controller-jobs",
+  "qualification_errors": [
+    "missing/malformed qualification evidence: [Errno 2] No such file or directory: '/data/data/com.termux/files/usr/tmp/tmpeyn2v6p8/capture/qualification/summary.json'"
+  ],
+  "failure": null,
+  "scope": "Unchanged colord: 41 sources, 102 tests, five mutation sources, ten arithmetic edits. One capture, no warmup campaign.",
+  "limits": "Node sampling and Python supervisor self CPU only; no complete process-tree CPU partition. Rust resource sampling remains unattributed. External benchmark sampler CPU is outside wait4 product-tree CPU; it perturbs wall time.",
+  "execution_inputs": {
+    "inputs": 1
+  },
+  "source_commit": "3052c2bef1c03fcf65a2cb23980300cc01630e2b",
+  "helper_sha256": {
+    "benchmarks/profile_native.py": "73f2ce7f7d0f6d5cbd9dc364b5aa95dfda40e8b66d653e263d56d4e7049ae513",
+    "benchmarks/profiling/controller-jobs.cjs": "f70ef5fd9af5677bb52e85444d76e7847125885be0ce0b76aeb50b83c7449bb5",
+    "benchmarks/profiling/node-identity.cjs": "2046d70bac7db57bc53f7a31f43a63c2a36190c570e23662ac1183a5371a600f",
+    "benchmarks/profiling/node-segments.cjs": "ad5ca48917af6d77e06c14c07f117f104d5f5199f0776b1c7ea530c25764fa83",
+    "benchmarks/profiling/python-shim.py": "6c54882a40842cc233713a84cdf905cea7e46c553914e4459be53d05e140e806",
+    "benchmarks/profiling/test_accounting_profile.py": "669878cf9631a9ed392cfaf36fafa6f9ae84ed1b45ae962100be595b8a258fb4",
+    "benchmarks/profiling/test_controller_profile.py": "936242a68f542aeb0302a4e784a4cd6c402da92a7bdbdd6c9a40e4a773421dad",
+    "benchmarks/profiling/test_performance_report.py": "71b12413ea4f29c814ac907f24c20519c0a732f07a37ddc11e660e2483a5fac6"
+  },
+  "node_options": "--require=\"/root/.t3/worktrees/oximut/t3-70aeded9-05f9ddead373f23e/benchmarks/profiling/controller-jobs.cjs\"",
+  "command": [
+    "/data/data/com.termux/files/usr/bin/python3",
+    "/root/.t3/worktrees/oximut/t3-70aeded9-05f9ddead373f23e/benchmarks/real_project.py",
+    "--binary",
+    "/missing",
+    "--adapter",
+    "/root/.t3/worktrees/oximut/t3-70aeded9-05f9ddead373f23e/packages/vitest-adapter/m2-runner.mjs",
+    "--adapter-source-dir",
+    "/root/.t3/worktrees/oximut/t3-70aeded9-05f9ddead373f23e/packages/vitest-adapter",
+    "--defer-ratios",
+    "--concurrency",
+    "4",
+    "--workload",
+    "colord",
+    "--tools",
+    "vitest",
+    "oximut",
+    "stryker",
+    "--warmups",
+    "0",
+    "--repetitions",
+    "1",
+    "--timeout",
+    "600",
+    "--output",
+    "/data/data/com.termux/files/usr/tmp/tmpeyn2v6p8/capture/qualification"
+  ],
+  "captures": {
+    "observed": [],
+    "errors": [
+      "no usable controller timelines",
+      "workload reconciliation failed: [Errno 2] No such file or directory: '/data/data/com.termux/files/usr/tmp/tmpeyn2v6p8/capture/qualification/00-oximut/report.json'"
+    ],
+    "orphan_profiles": [],
+    "workload_reconciled": false,
+    "scope": "Request observation to local send return (not recipient delivery/callback completion); partial controller CPU sampling. Sampling starts during profiler activation, omitting some request prefix, and may include inspector overhead. Not full-request or process-tree CPU profiling."
+  },
+  "passed": false
+}
+{
+  "diagnostic_only": true,
+  "profiler_overhead": true,
+  "concurrency": 1,
+  "workload": "colord",
+  "node_capture_mode": "controller-jobs",
+  "qualification_errors": [
+    "missing/malformed qualification evidence: [Errno 2] No such file or directory: '/data/data/com.termux/files/usr/tmp/tmpsubybe1t/capture/qualification/summary.json'"
+  ],
+  "failure": null,
+  "scope": "Unchanged colord: 41 sources, 102 tests, five mutation sources, ten arithmetic edits. One capture, no warmup campaign.",
+  "limits": "Node sampling and Python supervisor self CPU only; no complete process-tree CPU partition. Rust resource sampling remains unattributed. External benchmark sampler CPU is outside wait4 product-tree CPU; it perturbs wall time.",
+  "execution_inputs": {
+    "inputs": 1
+  },
+  "source_commit": "3052c2bef1c03fcf65a2cb23980300cc01630e2b",
+  "helper_sha256": {
+    "benchmarks/profile_native.py": "73f2ce7f7d0f6d5cbd9dc364b5aa95dfda40e8b66d653e263d56d4e7049ae513",
+    "benchmarks/profiling/controller-jobs.cjs": "f70ef5fd9af5677bb52e85444d76e7847125885be0ce0b76aeb50b83c7449bb5",
+    "benchmarks/profiling/node-identity.cjs": "2046d70bac7db57bc53f7a31f43a63c2a36190c570e23662ac1183a5371a600f",
+    "benchmarks/profiling/node-segments.cjs": "ad5ca48917af6d77e06c14c07f117f104d5f5199f0776b1c7ea530c25764fa83",
+    "benchmarks/profiling/python-shim.py": "6c54882a40842cc233713a84cdf905cea7e46c553914e4459be53d05e140e806",
+    "benchmarks/profiling/test_accounting_profile.py": "669878cf9631a9ed392cfaf36fafa6f9ae84ed1b45ae962100be595b8a258fb4",
+    "benchmarks/profiling/test_controller_profile.py": "936242a68f542aeb0302a4e784a4cd6c402da92a7bdbdd6c9a40e4a773421dad",
+    "benchmarks/profiling/test_performance_report.py": "71b12413ea4f29c814ac907f24c20519c0a732f07a37ddc11e660e2483a5fac6"
+  },
+  "node_options": "--require=\"/root/.t3/worktrees/oximut/t3-70aeded9-05f9ddead373f23e/benchmarks/profiling/controller-jobs.cjs\"",
+  "command": [
+    "/data/data/com.termux/files/usr/bin/python3",
+    "/root/.t3/worktrees/oximut/t3-70aeded9-05f9ddead373f23e/benchmarks/real_project.py",
+    "--binary",
+    "/missing",
+    "--adapter",
+    "/root/.t3/worktrees/oximut/t3-70aeded9-05f9ddead373f23e/packages/vitest-adapter/m2-runner.mjs",
+    "--adapter-source-dir",
+    "/root/.t3/worktrees/oximut/t3-70aeded9-05f9ddead373f23e/packages/vitest-adapter",
+    "--defer-ratios",
+    "--concurrency",
+    "1",
+    "--workload",
+    "colord",
+    "--tools",
+    "vitest",
+    "oximut",
+    "stryker",
+    "--warmups",
+    "0",
+    "--repetitions",
+    "1",
+    "--timeout",
+    "600",
+    "--output",
+    "/data/data/com.termux/files/usr/tmp/tmpsubybe1t/capture/qualification"
+  ],
+  "captures": {
+    "observed": [],
+    "errors": [
+      "no usable controller timelines",
+      "workload reconciliation failed: [Errno 2] No such file or directory: '/data/data/com.termux/files/usr/tmp/tmpsubybe1t/capture/qualification/00-oximut/report.json'"
+    ],
+    "orphan_profiles": [],
+    "workload_reconciled": false,
+    "scope": "Request observation to local send return (not recipient delivery/callback completion); partial controller CPU sampling. Sampling starts during profiler activation, omitting some request prefix, and may include inspector overhead. Not full-request or process-tree CPU profiling."
+  },
+  "passed": false
+}.....................
+{
+  "diagnostic_only": true,
+  "profiler_overhead": true,
+  "concurrency": 1,
+  "workload": "colord",
+  "node_capture_mode": "exit-time-cpu-prof",
+  "qualification_errors": [],
+  "failure": "ValueError: start with NODE_OPTIONS unset to keep profiler options explicit",
+  "scope": "Unchanged colord: 41 sources, 102 tests, five mutation sources, ten arithmetic edits. One capture, no warmup campaign.",
+  "limits": "Node sampling and Python supervisor self CPU only; no complete process-tree CPU partition. Rust resource sampling remains unattributed. External benchmark sampler CPU is outside wait4 product-tree CPU; it perturbs wall time.",
+  "captures": {
+    "observed": [],
+    "orphan_profiles": [],
+    "minimum_role_evidence": {
+      "vitest_node": [],
+      "oximut_node": [],
+      "stryker_node": [],
+      "oximut_adapter": [],
+      "oximut_supervisor": [],
+      "oximut_controller": [],
+      "oximut_test_fork": []
+    },
+    "oximut_chain": "unclassified",
+    "errors": [
+      "no Node identities captured",
+      "oximut process chain unclassifiable: no native coordinator evidence and no legacy relay capture",
+      "no Python supervisor identities captured",
+      "missing finalized Node capture for vitest",
+      "missing finalized Node capture for oximut",
+      "missing finalized Node capture for stryker",
+      "missing finalized process-role capture: oximut_adapter",
+      "missing finalized process-role capture: oximut_supervisor",
+      "missing finalized process-role capture: oximut_controller",
+      "missing finalized process-role capture: oximut_test_fork"
+    ],
+    "role_evidence_policy": "Finalized full profiles or explicitly partial segments. Missing lifecycle exits/full profiles still fail capture validation.",
+    "completeness": "Unknown: processes killed before preload/dump and overridden environments may be absent; raw orphan profiles retained."
+  },
+  "passed": false
+}
+round 0: vitest
+  success=True wall=2.000s cpu=2.000s rss=2.0
+round 0: oximut
+  success=True wall=2.000s cpu=2.000s rss=2.0
+round 0: stryker
+  success=True wall=2.000s cpu=2.000s rss=2.0
+round 1: stryker
+  success=True wall=2.000s cpu=2.000s rss=2.0
+round 1: oximut
+  success=True wall=2.000s cpu=2.000s rss=2.0
+round 1: vitest
+  success=True wall=2.000s cpu=2.000s rss=2.0
+Exact comparison gate: True; /data/data/com.termux/files/usr/tmp/tmpcnaol6nf/campaign
+round 0: vitest
+  success=False wall=2.000s cpu=2.000s rss=2.0
+round 0: oximut
+  success=False wall=2.000s cpu=2.000s rss=2.0
+round 0: stryker
+  success=False wall=2.000s cpu=2.000s rss=2.0
+round 1: stryker
+  success=True wall=2.000s cpu=2.000s rss=2.0
+round 1: oximut
+  success=True wall=2.000s cpu=2.000s rss=2.0
+round 1: vitest
+  success=True wall=2.000s cpu=2.000s rss=2.0
+Exact comparison gate: False; /data/data/com.termux/files/usr/tmp/tmp0g47s1hx/campaign
+........round 0: vitest
+  success=True wall=1.000s cpu=1.000s rss=1.0
+Exact comparison gate: False; /data/data/com.termux/files/usr/tmp/tmpzekou_0b/warmup
+.......round 0: vitest
+  success=True wall=1.000s cpu=1.000s rss=1.0
+Exact comparison gate: False; /data/data/com.termux/files/usr/tmp/tmpd8nrh2g2/out
+round 0: vitest
+  success=True wall=1.000s cpu=1.000s rss=1.0
+Exact comparison gate: False; /data/data/com.termux/files/usr/tmp/tmpdsiguhy2/out
+round 0: vitest
+  success=True wall=1.000s cpu=1.000s rss=1.0
+Exact comparison gate: False; /data/data/com.termux/files/usr/tmp/tmpcp46m54s/out
+.............
+======================================================================
+FAIL: test_explicit_environment_controls_peak_capture_in_both_directions (test_measurement.CommandTests.test_explicit_environment_controls_peak_capture_in_both_directions)
+Honor explicit profiling environments rather than parent switches.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/root/.t3/worktrees/oximut/t3-70aeded9-05f9ddead373f23e/benchmarks/tests/test_measurement.py", line 160, in test_explicit_environment_controls_peak_capture_in_both_directions
+    self.assertIsNotNone(result.get('peak_rss_snapshot'))
+    ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: unexpectedly None
+
+======================================================================
+FAIL: test_segment_preload_is_inherited_by_ipc_fork_and_terminated_worker_thread (test_profile_native.NodeFixtureTests.test_segment_preload_is_inherited_by_ipc_fork_and_terminated_worker_thread)
+Capture partial isolate stacks while preserving fork IPC.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/root/.t3/worktrees/oximut/t3-70aeded9-05f9ddead373f23e/benchmarks/tests/test_profile_native.py", line 436, in test_segment_preload_is_inherited_by_ipc_fork_and_terminated_worker_thread
+    self.assertTrue(all(r['partial_segments_finalized'] for r in nodes), inventory)
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: False is not true : {'observed': [{'identity': 'node-10100-0.json', 'profiles': [], 'partial_segment_count': 1, 'partial_segment_range': ['Segment.10100.0.141939454.0.cpuprofile', 'Segment.10100.0.141939454.0.cpuprofile'], 'partial_segments_finalized': True, 'exit_observed': True, 'capture_present_and_finalized': False}, {'identity': 'node-10100-1.json', 'profiles': [], 'partial_segment_count': 0, 'partial_segment_range': [], 'partial_segments_finalized': False, 'exit_observed': False, 'capture_present_and_finalized': False}, {'identity': 'node-10117-0.json', 'profiles': [], 'partial_segment_count': 1, 'partial_segment_range': ['Segment.10117.0.141939532.0.cpuprofile', 'Segment.10117.0.141939532.0.cpuprofile'], 'partial_segments_finalized': True, 'exit_observed': True, 'capture_present_and_finalized': False}], 'orphan_profiles': [], 'minimum_role_evidence': {}, 'oximut_chain': 'legacy', 'errors': ['incomplete capture: node-10100-0.json', 'incomplete capture: node-10100-1.json', 'incomplete capture: node-10117-0.json', 'no Python supervisor identities captured'], 'role_evidence_policy': 'Finalized full profiles or explicitly partial segments. Missing lifecycle exits/full profiles still fail capture validation.', 'completeness': 'Unknown: processes killed before preload/dump and overridden environments may be absent; raw orphan profiles retained.'}
+
+----------------------------------------------------------------------
+Ran 176 tests in 213.514s
+
+FAILED (failures=2)

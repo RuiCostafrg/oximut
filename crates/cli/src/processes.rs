@@ -4,7 +4,7 @@ use std::{
     fs,
 };
 
-/// Reads a pseudo-file without querying its reported size (usually zero).
+/// Reads a pseudo-file with an initial buffer for small accounting records.
 /// Continue through short reads until EOF: a short record is not proof that
 /// a procfs/seq_file or cgroup stream has ended.
 pub fn read_proc(path: impl AsRef<std::path::Path>) -> std::io::Result<String> {

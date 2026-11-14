@@ -1,0 +1,36 @@
+{
+  "candidate_commit": "3052c2bef1c03fcf65a2cb23980300cc01630e2b",
+  "baseline_commit": "ab6239f786a83bfbb7ee4c4faa1ab275137f7835",
+  "temporary_workflow_commit": "36c0e9b0fbda4e523da98def8b227911f67aa747",
+  "refs": [
+    "w11-2w",
+    "w11-4w",
+    "w11-small"
+  ],
+  "instrumented": false,
+  "warmups": 1,
+  "measured_repetitions": 5,
+  "runs": [
+    {
+      "ref": "w11-2w",
+      "workload": "colord-scale",
+      "workers": 2,
+      "run_id": 43621387049,
+      "url": "https://github.com/RuiCostafrg/oximut/actions/runs/43621387049"
+    },
+    {
+      "ref": "w11-4w",
+      "workload": "colord-scale",
+      "workers": 4,
+      "run_id": 43621390731,
+      "url": "https://github.com/RuiCostafrg/oximut/actions/runs/43621390731"
+    },
+    {
+      "ref": "w11-small",
+      "workload": "colord",
+      "workers": 4,
+      "run_id": 43621394309,
+      "url": "https://github.com/RuiCostafrg/oximut/actions/runs/43621394309"
+    }
+  ]
+}
