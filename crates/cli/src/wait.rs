@@ -51,6 +51,12 @@ fn events(
             revents: 0,
         })
         .collect();
+    poll(&mut items, until)?;
+    Ok(items.iter().map(|item| item.revents).collect())
+}
+
+/// Waits on per-descriptor interests, returning early on interruption.
+pub fn poll(items: &mut [libc::pollfd], until: Instant) -> std::io::Result<()> {
     // Round up so a sub-millisecond remainder does not become a busy loop.
     let wait = remaining(until);
     let millis = wait
@@ -63,9 +69,9 @@ fn events(
         if error.kind() != std::io::ErrorKind::Interrupted {
             return Err(error);
         }
-        return Ok(vec![0; items.len()]);
+        return Ok(());
     }
-    Ok(items.iter().map(|item| item.revents).collect())
+    Ok(())
 }
 
 /// Waits until one of `pids` exits, at most until `until`.

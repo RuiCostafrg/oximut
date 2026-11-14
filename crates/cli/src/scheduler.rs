@@ -66,10 +66,13 @@ fn take_frame(buffer: &mut Vec<u8>, limit: usize) -> Result<Option<(u8, Vec<u8>)
     Ok(Some((tag, payload)))
 }
 
-/// Writes a whole frame to the scheduler's non-blocking end within `deadline`.
+/// Writes STOP to the scheduler's non-blocking end within `deadline`.
 fn write_frame(channel: &mut UnixStream, bytes: &[u8], deadline: Instant) -> std::io::Result<()> {
     let mut written = 0;
     while written < bytes.len() {
+        if INTERRUPTED.load(Ordering::Relaxed) {
+            return Err(std::io::ErrorKind::Interrupted.into());
+        }
         match channel.write(&bytes[written..]) {
             Ok(0) => return Err(std::io::ErrorKind::WriteZero.into()),
             Ok(count) => written += count,
@@ -80,7 +83,10 @@ fn write_frame(channel: &mut UnixStream, bytes: &[u8], deadline: Instant) -> std
                         "scheduler worker did not accept its request",
                     ));
                 }
-                wait::writable(channel.as_raw_fd(), deadline)?;
+                wait::writable(
+                    channel.as_raw_fd(),
+                    deadline.min(Instant::now() + Duration::from_millis(50)),
+                )?;
             }
             Err(error) if error.kind() == std::io::ErrorKind::Interrupted => {}
             Err(error) => return Err(error),
@@ -130,6 +136,7 @@ struct Worker {
     child: std::process::Child,
     channel: UnixStream,
     received: Vec<u8>,
+    pending: Vec<u8>,
     /// The worker closed its end, which it does only by exiting.
     hung_up: bool,
     owned: BTreeMap<u32, u64>,
@@ -173,6 +180,7 @@ impl Worker {
             child,
             channel,
             received: vec![],
+            pending: vec![],
             hung_up: false,
             owned: BTreeMap::new(),
             busy: None,
@@ -183,14 +191,29 @@ impl Worker {
         self.owned.extend(descendants(self.child.id()));
     }
     fn send(&mut self, index: usize, request: Request) -> Result<(), String> {
+        assert!(self.busy.is_none() && self.pending.is_empty());
         let payload = serde_json::to_vec(&request).map_err(|e| e.to_string())?;
-        let bytes = frame(if index == WARM_JOB { WARM } else { RUN }, &payload);
-        let deadline = Instant::now() + Duration::from_millis(request.deadline_ms + 16_000);
-        match write_frame(&mut self.channel, &bytes, deadline) {
-            Err(error) if !peer_gone(&error) => return Err(error.to_string()),
-            _ => {}
-        }
+        self.pending = frame(if index == WARM_JOB { WARM } else { RUN }, &payload);
         self.busy = Some((index, request, Instant::now()));
+        self.flush().map_err(|error| error.to_string())
+    }
+    /// Advances the outgoing frame without ever waiting for socket capacity.
+    fn flush(&mut self) -> std::io::Result<()> {
+        let mut written = 0;
+        while written < self.pending.len() {
+            match self.channel.write(&self.pending[written..]) {
+                Ok(0) => return Err(std::io::ErrorKind::WriteZero.into()),
+                Ok(count) => written += count,
+                Err(error) if error.kind() == std::io::ErrorKind::WouldBlock => break,
+                Err(error) if error.kind() == std::io::ErrorKind::Interrupted => break,
+                Err(error) if peer_gone(&error) => {
+                    self.hung_up = true;
+                    break;
+                }
+                Err(error) => return Err(error),
+            }
+        }
+        self.pending.drain(..written);
         Ok(())
     }
     /// Reads what the worker has sent, at most one frame ahead, and returns
@@ -216,6 +239,11 @@ impl Worker {
     }
     fn ready(&mut self) -> Option<Result<Response, String>> {
         self.busy.as_ref()?;
+        if !self.hung_up
+            && let Err(error) = self.flush()
+        {
+            return Some(Err(format!("scheduler worker channel failed: {error}")));
+        }
         let received = self.receive();
         let (_, request, started) = self.busy.as_ref()?;
         match received {
@@ -396,6 +424,11 @@ impl<'a> Scheduler<'a> {
                     }
                     continue;
                 }
+            }
+            if !worker.pending.is_empty() {
+                // A partial request cannot be followed by STOP on this stream.
+                failed_signals.push(worker);
+                continue;
             }
             let stop_by = Instant::now() + Duration::from_secs(7);
             if let Err(error) = write_frame(&mut worker.channel, &frame(STOP, b""), stop_by)
@@ -698,9 +731,9 @@ impl<'a> Scheduler<'a> {
         }
         completed
     }
-    /// What the dispatch loop waits for: input or a hang-up on any busy
+    /// What the dispatch loop waits for: input, pending output or a hang-up on any busy
     /// slot's channel, until the next resource sample or slot deadline.
-    fn events(&self) -> (Vec<RawFd>, Instant) {
+    fn events(&self) -> (Vec<libc::pollfd>, Instant) {
         let mut until = self.budget.next_sample_at();
         let mut fds = vec![];
         for worker in self.slots.iter().flatten() {
@@ -709,7 +742,16 @@ impl<'a> Scheduler<'a> {
                     // `ready` reports this on the next pass.
                     return (vec![], Instant::now());
                 }
-                fds.push(worker.channel.as_raw_fd());
+                fds.push(libc::pollfd {
+                    fd: worker.channel.as_raw_fd(),
+                    events: libc::POLLIN
+                        | if worker.pending.is_empty() {
+                            0
+                        } else {
+                            libc::POLLOUT
+                        },
+                    revents: 0,
+                });
                 until = until.min(*started + Worker::limit(request) + Duration::from_millis(1));
             }
         }
@@ -717,11 +759,23 @@ impl<'a> Scheduler<'a> {
     }
     /// Blocks until a job event or the next sample, instead of a fixed sleep:
     /// a response is accepted as soon as it arrives.
-    fn wait_for_events(&self) {
-        let (fds, until) = self.events();
-        if wait::readable(&fds, until).is_err() {
+    fn wait_for_events(&mut self) {
+        let (mut fds, until) = self.events();
+        if wait::poll(&mut fds, until).is_err() {
             thread::sleep(Duration::from_millis(10));
         }
+        for worker in self.slots.iter_mut().flatten() {
+            if !worker.pending.is_empty()
+                && fds.iter().any(|fd| {
+                    fd.fd == worker.channel.as_raw_fd()
+                        && fd.revents & (libc::POLLHUP | libc::POLLERR) != 0
+                })
+            {
+                worker.hung_up = true;
+            }
+        }
+        // `ready` flushes writable slots on the next dispatch pass, before
+        // checking responses and deadlines. Empty buffers drop POLLOUT interest.
     }
     pub fn execute(&mut self, request: &Request) -> Response {
         self.dispatch(VecDeque::from([(0, request.clone())]), true)
@@ -1141,6 +1195,88 @@ mod tests {
         .unwrap()
     }
 
+    /// Force a partial request even on hosts with large default socket buffers.
+    fn stalled() -> (Worker, UnixStream, Vec<u8>) {
+        let (mut job, peer) = detached();
+        let size: libc::c_int = 4096;
+        assert_eq!(
+            unsafe {
+                libc::setsockopt(
+                    job.channel.as_raw_fd(),
+                    libc::SOL_SOCKET,
+                    libc::SO_SNDBUF,
+                    (&size as *const libc::c_int).cast(),
+                    std::mem::size_of_val(&size) as libc::socklen_t,
+                )
+            },
+            0
+        );
+        let mut request = request();
+        request.root = "x".repeat(1024 * 1024);
+        let expected = frame(RUN, &serde_json::to_vec(&request).unwrap());
+        let started = Instant::now();
+        job.send(0, request).unwrap();
+        assert!(started.elapsed() < Duration::from_secs(2), "send blocked");
+        assert!(!job.pending.is_empty());
+        assert!(job.busy.as_ref().unwrap().2 >= started);
+        (job, peer, expected)
+    }
+
+    #[test]
+    fn partial_request_is_flushed_by_dispatch_without_blocking_send() {
+        let _guard = PROCESS_TEST.lock().unwrap_or_else(|e| e.into_inner());
+        let options = options();
+        let mut scheduler = Scheduler::new(&options).unwrap();
+        let (job, mut peer, expected) = stalled();
+        peer.set_nonblocking(true).unwrap();
+        scheduler.slots = vec![Some(job)];
+        let mut received = vec![];
+        let deadline = Instant::now() + Duration::from_secs(10);
+        while !scheduler.slots[0].as_ref().unwrap().pending.is_empty() {
+            assert!(Instant::now() < deadline, "pending request never drained");
+            let (fds, until) = scheduler.events();
+            assert_ne!(fds[0].events & libc::POLLOUT, 0);
+            assert!(until <= scheduler.budget.next_sample_at());
+            assert_eq!(
+                peer.read_to_end(&mut received).unwrap_err().kind(),
+                std::io::ErrorKind::WouldBlock
+            );
+            scheduler.wait_for_events();
+            assert!(scheduler.slots[0].as_mut().unwrap().ready().is_none());
+        }
+        assert_eq!(
+            peer.read_to_end(&mut received).unwrap_err().kind(),
+            std::io::ErrorKind::WouldBlock
+        );
+        assert_eq!(received, expected);
+        assert_eq!(scheduler.events().0[0].events, libc::POLLIN);
+    }
+
+    #[test]
+    fn shutdown_skips_stop_when_request_bytes_are_pending() {
+        let _guard = PROCESS_TEST.lock().unwrap_or_else(|e| e.into_inner());
+        let options = options();
+        let mut scheduler = Scheduler::new(&options).unwrap();
+        let (job, mut peer, expected) = stalled();
+        let written = expected.len() - job.pending.len();
+        scheduler.slots = vec![Some(job)];
+        let started = Instant::now();
+        scheduler.close_slots(&[0]);
+        assert!(
+            started.elapsed() < Duration::from_secs(3),
+            "shutdown waited for STOP"
+        );
+        let mut received = vec![];
+        peer.read_to_end(&mut received).unwrap();
+        assert_eq!(
+            received,
+            expected[..written],
+            "STOP must not follow a partial frame"
+        );
+        assert!(scheduler.slots[0].is_none());
+        assert!(scheduler.cleanup_ok, "{:?}", scheduler.diagnostics);
+    }
+
     #[test]
     fn shutdown_abandons_warm_before_stop_and_reaps_descendants() {
         let _guard = PROCESS_TEST.lock().unwrap_or_else(|e| e.into_inner());
@@ -1249,7 +1385,10 @@ mod tests {
             peer.write_all(&frame(RESPONSE, &passed(&request))).unwrap();
             peer
         });
-        assert_ne!(woken(fds)[0] & libc::POLLIN, 0);
+        assert_ne!(
+            woken(fds.iter().map(|fd| fd.fd).collect())[0] & libc::POLLIN,
+            0
+        );
         let _peer = writer.join().unwrap();
         // The response is read as soon as it is there.
         let completed = scheduler.dispatch(VecDeque::new(), true);
