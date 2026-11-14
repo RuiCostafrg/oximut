@@ -4,27 +4,16 @@ use std::{
     fs,
 };
 
-/// Reads a small pseudo-file (`/proc`, cgroup control files) with the minimum
-/// syscalls: open, one read, close. `fs::read_to_string` adds a `statx` and an
-/// `lseek` to size its buffer (procfs reports size 0) and a final read to find
-/// the end, which doubled the syscalls of every sampled file. The kernel emits
-/// a pseudo-file record whole when it fits, so a read that does not fill the
-/// buffer has reached the end; one that does is continued to the end.
+/// Reads a pseudo-file without querying its reported size (usually zero).
+/// Continue through short reads until EOF: a short record is not proof that
+/// a procfs/seq_file or cgroup stream has ended.
 pub fn read_proc(path: impl AsRef<std::path::Path>) -> std::io::Result<String> {
-    use std::io::Read;
-    let mut file = fs::File::open(path)?;
-    let mut chunk = [0u8; 4096];
-    let count = loop {
-        match file.read(&mut chunk) {
-            Ok(count) => break count,
-            Err(error) if error.kind() == std::io::ErrorKind::Interrupted => {}
-            Err(error) => return Err(error),
-        }
-    };
-    let mut bytes = chunk[..count].to_vec();
-    if count == chunk.len() {
-        file.read_to_end(&mut bytes)?;
-    }
+    read_record(fs::File::open(path)?)
+}
+
+fn read_record(mut reader: impl std::io::Read) -> std::io::Result<String> {
+    let mut bytes = Vec::with_capacity(4096);
+    reader.read_to_end(&mut bytes)?;
     String::from_utf8(bytes).map_err(|_| {
         std::io::Error::new(
             std::io::ErrorKind::InvalidData,
@@ -255,6 +244,44 @@ impl ProcessTable {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn pseudo_file_reads_continue_after_short_reads_and_interruptions() {
+        struct ShortReads {
+            interrupted: bool,
+            remaining: &'static [u8],
+        }
+        impl std::io::Read for ShortReads {
+            fn read(&mut self, buffer: &mut [u8]) -> std::io::Result<usize> {
+                if !self.interrupted {
+                    self.interrupted = true;
+                    return Err(std::io::ErrorKind::Interrupted.into());
+                }
+                let count = buffer.len().min(self.remaining.len()).min(3);
+                buffer[..count].copy_from_slice(&self.remaining[..count]);
+                self.remaining = &self.remaining[count..];
+                Ok(count)
+            }
+        }
+        assert_eq!(
+            read_record(ShortReads {
+                interrupted: false,
+                remaining: b"123 456 789 1234",
+            })
+            .unwrap(),
+            "123 456 789 1234"
+        );
+        struct FailedRead;
+        impl std::io::Read for FailedRead {
+            fn read(&mut self, _: &mut [u8]) -> std::io::Result<usize> {
+                Err(std::io::ErrorKind::PermissionDenied.into())
+            }
+        }
+        assert_eq!(
+            read_record(FailedRead).unwrap_err().kind(),
+            std::io::ErrorKind::PermissionDenied
+        );
+    }
 
     #[test]
     fn read_proc_returns_whole_files_of_every_size_like_read_to_string() {
