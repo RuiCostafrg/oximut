@@ -62,11 +62,10 @@ process.on('message', (message) => {
         ...(args.request.resident ? { resident: args.request.resident.length } : {}) } });
     };
     if (mode.startsWith('nonblocking')) {
+      // Held until a mutant releases it; a warm still held at shutdown is
+      // abandoned (aborted) before its slot is asked to stop.
       const wait = () => {
-        const workerDirectory = readFileSync(`/proc/${process.ppid}/cmdline`, 'utf8').split('\0')[2];
-        const stopping = existsSync(workerDirectory + '/stop');
-        if (!stopping && !existsSync(process.env.OXIMUT_FAKE_LOG + '.release')) return setTimeout(wait, 10);
-        if (stopping) log({ event: 'warm-stopping' });
+        if (!existsSync(process.env.OXIMUT_FAKE_LOG + '.release')) return setTimeout(wait, 10);
         finish();
       };
       wait(); return;

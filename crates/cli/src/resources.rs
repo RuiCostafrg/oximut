@@ -752,6 +752,11 @@ impl Budget {
         state.sample(&[], true);
         Ok(state)
     }
+    /// When the next periodic sample falls due: the scheduler's longest wait
+    /// for a job event, so sampling keeps its cadence without gating dispatch.
+    pub fn next_sample_at(&self) -> Instant {
+        self.last_sample + Duration::from_millis(SAMPLE_MS)
+    }
     /// Admission under memory pressure: a broad sample at most once per
     /// sampling interval, so waiting never rescans the host on every poll.
     pub fn sample_admission(&mut self, workers: &[u32]) {

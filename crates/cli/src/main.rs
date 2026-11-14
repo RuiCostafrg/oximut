@@ -4,6 +4,7 @@ mod coordinator;
 mod processes;
 mod resources;
 mod scheduler;
+mod wait;
 use oximut_core::{
     Coverage, Mutant, MutantResult, Mutation, Outcome, PROTOCOL, Provenance, Report, Request,
     Response, Summary, TestOutcome, Tests,
@@ -436,19 +437,20 @@ fn terminate(child: &mut std::process::Child, owned: &BTreeMap<u32, u64>) {
     {
         let deadline = Instant::now() + Duration::from_millis(500);
         loop {
-            let mut pending = false;
+            let mut pending = vec![];
             for (&pid, &start) in owned {
                 if still_owned(pid, start)
                     && unsafe { libc::waitpid(pid as i32, std::ptr::null_mut(), libc::WNOHANG) }
                         == 0
                 {
-                    pending = true;
+                    pending.push(pid);
                 }
             }
-            if !pending || Instant::now() >= deadline {
+            if pending.is_empty() || Instant::now() >= deadline {
                 break;
             }
-            thread::sleep(Duration::from_millis(5));
+            // Pending processes are running children: wake when one exits.
+            wait::any_exit(pending, deadline, Duration::from_millis(5), true);
         }
     }
 }
@@ -510,7 +512,9 @@ fn invoke(options: &Options, request: &Request) -> Response {
                 terminate(&mut child, &owned);
                 return Err("adapter exceeded controller deadline and was terminated".into());
             }
-            thread::sleep(Duration::from_millis(10));
+            // Wake on the adapter's exit, or for the next ownership snapshot.
+            let until = (last_snapshot + Duration::from_millis(50)).min(started + limit);
+            wait::any_exit([child.id()], until, Duration::from_millis(10), true);
         };
         owned.extend(descendants(std::process::id()));
         owned.remove(&child.id());
@@ -552,17 +556,24 @@ fn shuffle<T>(items: &mut [T], mut state: u64) {
     }
 }
 
+/// Responses from an adapter or a scheduler worker are at most 1 MiB.
+const RESPONSE_LIMIT: usize = 1_048_576;
+
 fn read_response(path: &Path, request: &Request) -> Result<Response, String> {
     let file = fs::File::open(path).map_err(|e| format!("missing adapter response: {e}"))?;
     let mut bytes = Vec::new();
-    file.take(1_048_577)
+    file.take(RESPONSE_LIMIT as u64 + 1)
         .read_to_end(&mut bytes)
         .map_err(|e| e.to_string())?;
-    if bytes.len() > 1_048_576 {
+    parse_response(&bytes, request)
+}
+
+fn parse_response(bytes: &[u8], request: &Request) -> Result<Response, String> {
+    if bytes.len() > RESPONSE_LIMIT {
         return Err("adapter response exceeds 1 MiB limit".into());
     }
     let response: Response =
-        serde_json::from_slice(&bytes).map_err(|e| format!("malformed adapter response: {e}"))?;
+        serde_json::from_slice(bytes).map_err(|e| format!("malformed adapter response: {e}"))?;
     response.validate(request)?;
     Ok(response)
 }
@@ -693,7 +704,13 @@ impl Session {
             if Instant::now() >= deadline {
                 break Err("persistent adapter shutdown exceeded deadline".into());
             }
-            thread::sleep(Duration::from_millis(10));
+            // Wake on exit, or for the next ownership snapshot.
+            wait::any_exit(
+                [self.child.id()],
+                (Instant::now() + Duration::from_millis(10)).min(deadline),
+                Duration::from_millis(10),
+                true,
+            );
         };
         self.snapshot();
         terminate(&mut self.child, &self.owned);
@@ -1602,6 +1619,11 @@ fn main() -> ExitCode {
         }
     }
 }
+
+/// Tests that spawn processes or reap descendants of the test process run
+/// one at a time: a global cleanup must never touch another test's children.
+#[cfg(test)]
+static PROCESS_TEST: std::sync::Mutex<()> = std::sync::Mutex::new(());
 
 #[cfg(test)]
 mod tests {
