@@ -1,7 +1,7 @@
 //! Linux sampled admission control. Never claims to install an OS hard limit.
 use super::{
     Options,
-    processes::{ProcessTable, identity},
+    processes::{ProcessTable, identity, read_proc},
 };
 use serde::Serialize;
 use std::{
@@ -298,7 +298,7 @@ pub struct Cgroup {
     pub initial_oom_events: Option<u64>,
 }
 fn number(path: &Path) -> Option<u64> {
-    fs::read_to_string(path).ok()?.trim().parse().ok()
+    read_proc(path).ok()?.trim().parse().ok()
 }
 fn unescape(value: &str) -> String {
     value
@@ -371,7 +371,7 @@ fn parse_hierarchy_paths(
     result
 }
 fn oom_events(path: &Path) -> Option<u64> {
-    let value = fs::read_to_string(path).ok()?;
+    let value = read_proc(path).ok()?;
     if let Ok(number) = value.trim().parse() {
         return Some(number);
     }
@@ -383,8 +383,8 @@ fn oom_events(path: &Path) -> Option<u64> {
     })
 }
 fn memory_limit(path: &Path) -> Result<Option<u64>, String> {
-    let value = fs::read_to_string(path)
-        .map_err(|e| format!("cgroup memory limit {}: {e}", path.display()))?;
+    let value =
+        read_proc(path).map_err(|e| format!("cgroup memory limit {}: {e}", path.display()))?;
     if value.trim() == "max" {
         return Ok(None);
     }
@@ -468,34 +468,31 @@ pub fn cpu_limit() -> usize {
     limit.max(1)
 }
 fn meminfo(key: &str) -> Option<u64> {
-    fs::read_to_string("/proc/meminfo")
-        .ok()?
-        .lines()
-        .find_map(|line| {
-            let (name, rest) = line.split_once(':')?;
-            (name == key)
-                .then(|| {
-                    rest.split_whitespace()
-                        .next()?
-                        .parse::<u64>()
-                        .ok()?
-                        .checked_mul(1024)
-                })
-                .flatten()
-        })
+    read_proc("/proc/meminfo").ok()?.lines().find_map(|line| {
+        let (name, rest) = line.split_once(':')?;
+        (name == key)
+            .then(|| {
+                rest.split_whitespace()
+                    .next()?
+                    .parse::<u64>()
+                    .ok()?
+                    .checked_mul(1024)
+            })
+            .flatten()
+    })
 }
 fn rss(pid: u32) -> Result<Option<u64>, String> {
     // stat's RSS counter can lag resident allocations by tens of MiB. A rollup
     // walks the mappings and gives admission a current resident working set.
     // Older/restricted kernels retain the documented approximate fallback.
-    match fs::read_to_string(format!("/proc/{pid}/smaps_rollup")) {
+    match read_proc(format!("/proc/{pid}/smaps_rollup")) {
         Ok(rollup) => {
             return match rollup_rss(&rollup) {
                 Ok(bytes) => Ok(Some(bytes)),
                 Err(error) => {
                     // A task can lose its memory map between open and read.
                     // An empty rollup is safe only after confirming its exit.
-                    let stat = fs::read_to_string(format!("/proc/{pid}/stat"));
+                    let stat = read_proc(format!("/proc/{pid}/stat"));
                     let exited = match &stat {
                         Ok(stat) => stat
                             .rsplit_once(')')
@@ -522,7 +519,7 @@ fn rss(pid: u32) -> Result<Option<u64>, String> {
             ) => {}
         Err(error) => return Err(format!("RSS rollup unavailable for PID {pid}: {error}")),
     }
-    let stat = match fs::read_to_string(format!("/proc/{pid}/stat")) {
+    let stat = match read_proc(format!("/proc/{pid}/stat")) {
         Ok(stat) => stat,
         Err(error)
             if error.kind() == std::io::ErrorKind::NotFound
@@ -545,7 +542,7 @@ fn rss(pid: u32) -> Result<Option<u64>, String> {
 }
 // Kernel counters are an escalation hint, never admission or peak evidence.
 fn rss_counter(pid: u32) -> Result<Option<u64>, String> {
-    let statm = match fs::read_to_string(format!("/proc/{pid}/statm")) {
+    let statm = match read_proc(format!("/proc/{pid}/statm")) {
         Ok(statm) => statm,
         Err(error)
             if error.kind() == std::io::ErrorKind::NotFound

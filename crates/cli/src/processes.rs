@@ -4,8 +4,37 @@ use std::{
     fs,
 };
 
+/// Reads a small pseudo-file (`/proc`, cgroup control files) with the minimum
+/// syscalls: open, one read, close. `fs::read_to_string` adds a `statx` and an
+/// `lseek` to size its buffer (procfs reports size 0) and a final read to find
+/// the end, which doubled the syscalls of every sampled file. The kernel emits
+/// a pseudo-file record whole when it fits, so a read that does not fill the
+/// buffer has reached the end; one that does is continued to the end.
+pub fn read_proc(path: impl AsRef<std::path::Path>) -> std::io::Result<String> {
+    use std::io::Read;
+    let mut file = fs::File::open(path)?;
+    let mut chunk = [0u8; 4096];
+    let count = loop {
+        match file.read(&mut chunk) {
+            Ok(count) => break count,
+            Err(error) if error.kind() == std::io::ErrorKind::Interrupted => {}
+            Err(error) => return Err(error),
+        }
+    };
+    let mut bytes = chunk[..count].to_vec();
+    if count == chunk.len() {
+        file.read_to_end(&mut bytes)?;
+    }
+    String::from_utf8(bytes).map_err(|_| {
+        std::io::Error::new(
+            std::io::ErrorKind::InvalidData,
+            "stream did not contain valid UTF-8",
+        )
+    })
+}
+
 pub fn identity(pid: u32) -> Result<Option<(u32, u64)>, String> {
-    let stat = match fs::read_to_string(format!("/proc/{pid}/stat")) {
+    let stat = match read_proc(format!("/proc/{pid}/stat")) {
         Ok(stat) => stat,
         Err(error)
             if error.kind() == std::io::ErrorKind::NotFound
@@ -38,7 +67,7 @@ fn gone(error: &std::io::Error) -> bool {
 /// Children of every thread of `pid`, or `None` when the process is gone. An
 /// exited (zombie) process has already handed its children to a subreaper.
 fn children(pid: u32) -> Result<Option<Vec<u32>>, String> {
-    match fs::read_to_string(format!("/proc/{pid}/stat")) {
+    match read_proc(format!("/proc/{pid}/stat")) {
         Ok(stat) => {
             let state = stat
                 .rsplit_once(')')
@@ -68,7 +97,7 @@ fn children(pid: u32) -> Result<Option<Vec<u32>>, String> {
 /// read as empty; if its task entry is gone after the read, report it as
 /// vanished. A later exit is harmless: this list was already captured.
 fn read_task_children(task: &std::path::Path) -> std::io::Result<String> {
-    let list = fs::read_to_string(task.join("children"))?;
+    let list = read_proc(task.join("children"))?;
     fs::metadata(task.join("stat"))?;
     Ok(list)
 }
@@ -226,6 +255,43 @@ impl ProcessTable {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn read_proc_returns_whole_files_of_every_size_like_read_to_string() {
+        let dir = tempfile::tempdir().unwrap();
+        for size in [0usize, 1, 4095, 4096, 4097, 8192, 20_000] {
+            let path = dir.path().join(format!("f{size}"));
+            let text: String = (0..size)
+                .map(|i| char::from(b'a' + (i % 26) as u8))
+                .collect();
+            fs::write(&path, &text).unwrap();
+            assert_eq!(read_proc(&path).unwrap(), text, "{size} bytes");
+        }
+        let multibyte = "é".repeat(2049); // a character straddles the first chunk
+        fs::write(dir.path().join("m"), &multibyte).unwrap();
+        assert_eq!(read_proc(dir.path().join("m")).unwrap(), multibyte);
+        fs::write(dir.path().join("bad"), [0xff, 0xfe]).unwrap();
+        assert_eq!(
+            read_proc(dir.path().join("bad")).unwrap_err().kind(),
+            std::io::ErrorKind::InvalidData
+        );
+        assert_eq!(
+            read_proc(dir.path().join("none")).unwrap_err().kind(),
+            std::io::ErrorKind::NotFound
+        );
+        #[cfg(any(target_os = "linux", target_os = "android"))]
+        {
+            let me = std::process::id();
+            let stat = read_proc(format!("/proc/{me}/stat")).unwrap();
+            assert!(stat.starts_with(&format!("{me} (")), "{stat}");
+            assert_eq!(
+                parse_identity(&stat).map(|(parent, _)| parent),
+                identity(me).unwrap().map(|(parent, _)| parent)
+            );
+            let meminfo = read_proc("/proc/meminfo").unwrap();
+            assert!(meminfo.len() > 1024 && meminfo.contains("MemAvailable"));
+        }
+    }
 
     #[test]
     fn one_collection_projects_nested_sibling_unrelated_and_adopted_trees() {
