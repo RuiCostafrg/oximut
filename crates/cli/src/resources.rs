@@ -1211,6 +1211,55 @@ mod tests {
     }
 
     #[test]
+    fn admission_reuses_a_recent_completion_sample_and_preserves_exhaustion() {
+        let mut state = seeded_counter_budget();
+        state.last_broad = Instant::now();
+        let before = (
+            state.samples,
+            state.exact_samples,
+            state.current,
+            state.admission_worker_cost_bytes,
+            state.observed_workers.clone(),
+        );
+        // Even if a periodic sample is due, the broad completion observation is
+        // still fresh. Batch assembly must not walk the same idle tree twice.
+        state.last_sample = Instant::now() - Duration::from_secs(1);
+        state.sample_admission(&[]);
+        assert_eq!(
+            (
+                state.samples,
+                state.exact_samples,
+                state.current,
+                state.admission_worker_cost_bytes,
+                state.observed_workers.clone()
+            ),
+            before
+        );
+        state.exhausted("completion exceeded budget");
+        state.sample_admission(&[]);
+        assert_eq!(state.capacity(&[]), 0);
+        assert_eq!(
+            state.exhaustion.as_deref(),
+            Some("completion exceeded budget")
+        );
+    }
+
+    #[test]
+    fn admission_refreshes_an_expired_broad_sample_and_rejects_uncertain_memory() {
+        let mut state = seeded_counter_budget();
+        state.last_broad = Instant::now() - Duration::from_millis(SAMPLE_MS);
+        // Force must bypass the periodic rate limiter and counter shortcuts.
+        state.last_sample = Instant::now();
+        state.available_reader = || None;
+        let before = state.samples;
+        state.sample_admission(&[]);
+        assert_eq!(state.samples, before + 1);
+        assert_eq!(state.broad_discoveries, 1);
+        assert_eq!(state.capacity(&[]), 0);
+        assert!(state.exhaustion.is_some());
+    }
+
+    #[test]
     fn forced_samples_read_every_pid_exactly_without_counters() {
         let mut state = seeded_counter_budget();
         assert_eq!(counter_sample(&mut state, true, 20 * MIB, 0), (2, 0));

@@ -808,9 +808,12 @@ impl<'a> Scheduler<'a> {
                     continue;
                 }
                 let mut batch = vec![first];
-                // Admission remains centralized; the baseline fork limit reserves
-                // headroom for every lane, while the single slot owns the whole tree.
-                self.sample(true);
+                // Completion already took a strict broad sample before accepting
+                // the previous result. Reuse it while fresh, just as ordinary
+                // admission does, instead of walking the same idle tree twice.
+                // The fork limit still reserves headroom for every lane; dispatch
+                // rechecks exhaustion/capacity and promotes counter samples to exact.
+                self.sample_with(|budget, pids| budget.sample_admission(pids));
                 let pids: Vec<_> = self.slots.iter().flatten().map(|w| w.child.id()).collect();
                 let capacity = self.budget.capacity(&pids);
                 let limit = self.budget.baseline_fork_limit(capacity, &pids);
