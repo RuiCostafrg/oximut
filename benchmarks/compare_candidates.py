@@ -224,7 +224,7 @@ def evaluate(rows, warmups, repetitions, provenance, failures=(), *,
                     errors.append(f'{label}: inconsistent warmup label')
                 if row.get('round') != 0:
                     errors.append(f'{label}: unexpected subcampaign round')
-                if row.get('workload_sha256') != m6.digest(manifest):
+                if row.get('workload_sha256') != workload.workload_digest(manifest):
                     errors.append(f'{label}: changed declared workload')
                 if row.get('declared_test_identity_sha256') != expected_inventory:
                     errors.append(f'{label}: unequal declared test inventory')

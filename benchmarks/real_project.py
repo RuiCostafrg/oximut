@@ -62,6 +62,17 @@ def load_manifest(name=DEFAULT_WORKLOAD):
     return manifest
 
 
+# The digest recorded in every row identifies the measured scope. Descriptive keys and the
+# sentinel gate are left out so a manifest gaining them keeps the digest retained campaigns
+# were qualified against; the manifest files themselves are hashed into run provenance.
+WORKLOAD_IDENTITY_EXCLUDED = {'name', 'sentinel', 'extends', 'description', 'scopeNotes'}
+
+
+def workload_digest(manifest):
+    return m6.digest({key: value for key, value in manifest.items()
+                      if key not in WORKLOAD_IDENTITY_EXCLUDED})
+
+
 def stryker_excluded_mutations(manifest):
     return STRYKER_ALWAYS_EXCLUDED + [
         operator for family, operator in STRYKER_FAMILIES.items()
@@ -387,7 +398,7 @@ def main(argv=None):
                 row = measurement.run_command(cmd, project, directory / 'output.log',
                                               args.timeout, .02, 16_777_216, env)
                 row.update(execution_inputs=inputs, tool=tool, round=index, warmup=index < args.warmups,
-                           report_file=str(report), workload_sha256=m6.digest(manifest),
+                           report_file=str(report), workload_sha256=workload_digest(manifest),
                            mutator_families=(['unrestricted'] if tool == 'oximut'
                                              and args.diagnostic_unrestricted else manifest['families']))
                 try:

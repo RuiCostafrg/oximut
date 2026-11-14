@@ -24,7 +24,7 @@ class CampaignTests(unittest.TestCase):
                                warmup=index == 0, success=True,
                                memory_method='sum-live-smaps_rollup-rss', memory_errors=[],
                                declared_test_identity_sha256=campaign.m6.digest(sorted(manifest['expectedTests'])),
-                               workload_sha256=campaign.m6.digest(manifest),
+                               workload_sha256=campaign.workload.workload_digest(manifest),
                                mutator_families=manifest['families'],
                                execution_inputs=copy.deepcopy(provenance[variant]),
                                mutations={} if tool == 'vitest' else {'exact': {'outcome': 'killed'}},

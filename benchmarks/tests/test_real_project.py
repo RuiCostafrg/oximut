@@ -423,7 +423,7 @@ class WorkloadSelectionTests(unittest.TestCase):
         self.assertEqual(scale_meta['workload']['name'], 'colord-scale')
         self.assertNotEqual(scale_row['workload_sha256'], default_row['workload_sha256'])
         self.assertEqual(scale_row['workload_sha256'],
-                         benchmark.m6.digest(benchmark.load_manifest('colord-scale')))
+                         benchmark.workload_digest(benchmark.load_manifest('colord-scale')))
         self.assertEqual(scale_row['mutator_families'], ['arithmetic'])
         hashes = scale_meta['harness_sha256']
         for path in ('benchmarks/real-project/colord/workload-scale.json',
@@ -435,7 +435,20 @@ class WorkloadSelectionTests(unittest.TestCase):
     def test_editing_the_scale_manifest_changes_its_declared_identity(self):
         scale = benchmark.load_manifest('colord-scale')
         edited = {**scale, 'mutate': scale['mutate'][:-1]}
-        self.assertNotEqual(benchmark.m6.digest(scale), benchmark.m6.digest(edited))
+        self.assertNotEqual(benchmark.workload_digest(scale), benchmark.workload_digest(edited))
+        edited = {**scale, 'families': ['arithmetic', 'boolean-literal']}
+        self.assertNotEqual(benchmark.workload_digest(scale), benchmark.workload_digest(edited))
+
+    def test_default_digest_matches_the_one_retained_campaigns_were_qualified_against(self):
+        # workload.json gained `name` and `sentinel`; the digest rows carry must not move.
+        import subprocess
+        old = subprocess.run(['git', 'show', '1a16520b7cf5e81aa3553af3deed3a0b8e69cd44:'
+                              'benchmarks/real-project/colord/workload.json'],
+                             cwd=benchmark.ROOT, capture_output=True, text=True)
+        if old.returncode:
+            self.skipTest('history unavailable')
+        self.assertEqual(benchmark.workload_digest(benchmark.load_manifest('colord')),
+                         benchmark.m6.digest(json.loads(old.stdout)))
 
     def test_extends_must_name_a_complete_manifest(self):
         with tempfile.TemporaryDirectory() as tmp, \
