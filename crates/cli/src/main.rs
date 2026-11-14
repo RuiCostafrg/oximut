@@ -316,7 +316,6 @@ fn parse_options(mut args: impl Iterator<Item = String>) -> Result<Option<Option
     let shared_controller = !no_shared_controller
         && execution == Execution::Persistent
         && workers >= 2
-        && isolation == Isolation::FreshProcess
         && coordinator::native_worker(&adapter).is_some();
     Ok(Some(Options {
         root,
@@ -1646,6 +1645,37 @@ mod tests {
         .unwrap()
         .unwrap();
         assert_eq!(thread.isolation, Isolation::FreshThread);
+        let shared_thread_args = [
+            "--source",
+            concat!(
+                env!("CARGO_MANIFEST_DIR"),
+                "/../../fixtures/m1/src/subject.ts"
+            ),
+            "--execution",
+            "persistent",
+            "--isolation",
+            "fresh-thread",
+            "--workers",
+            "2",
+        ];
+        assert!(
+            parse(&shared_thread_args)
+                .unwrap()
+                .unwrap()
+                .shared_controller
+        );
+        assert!(
+            !parse(
+                &shared_thread_args
+                    .into_iter()
+                    .chain(["--no-shared-controller"])
+                    .collect::<Vec<_>>()
+            )
+            .unwrap()
+            .unwrap()
+            .shared_controller
+        );
+
         assert!(
             parse(&["--isolation", "fresh-thread"])
                 .err()

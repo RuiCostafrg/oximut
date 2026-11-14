@@ -264,11 +264,16 @@ carry zero tests and never enter baseline or mutant results.
 
 ## Shared controller (default for parallel persistent runs)
 
-With at least two admitted workers, persistent execution, fresh-process isolation and
-the native adapter, mutants run in one controller. Lanes are named Vitest
+With at least two admitted workers, persistent execution and the native adapter,
+mutants run in one controller. Lanes are named Vitest
 projects; each mutant still gets one fresh OS process for all its selected
 files, and stop-at-first-failure applies per mutant. `--no-shared-controller`
-selects one controller per worker. Projects whose controller can't be shared
+selects one controller per worker. With `--isolation fresh-thread`, each mutant
+instead gets one fresh worker thread for all selected files inside the same shared
+controller. The pool drains and awaits every thread's termination before lane
+reassignment, including hard deadlines; test order within a file is unchanged.
+This remains opt-in and has the thread-mode limitations described in [m2.md](m2.md).
+Projects whose controller can't be shared
 (custom plugins or runners, global setup, non-Node test files) fall back to one controller
 per worker and record a diagnostic; configurations that persistent execution
 already rejects, such as multiple projects, are still rejected.

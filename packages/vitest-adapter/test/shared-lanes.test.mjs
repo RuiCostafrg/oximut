@@ -3,6 +3,7 @@ import { fork } from 'node:child_process';
 import { mkdir, mkdtemp, readFile, rm, symlink, writeFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import test from 'node:test';
+import { ThreadsPoolWorker } from 'vitest/node';
 
 import { SharedLanes } from '../shared-lanes.ts';
 
@@ -73,10 +74,10 @@ test('after', () => {
       map: { version: 3, sources: ['subject.ts'], names: [], mappings: 'AAAA' },
     },
   });
-  async function controller() {
+  async function controller(pool, execArgv = []) {
     const child = fork(join(repository, 'packages/vitest-adapter/m2-worker.ts'), [], {
       stdio: ['ignore', 'pipe', 'pipe', 'ipc'],
-      execArgv: [],
+      execArgv,
     });
     let diagnostics = '';
     child.stderr.on('data', (data) => {
@@ -100,7 +101,7 @@ test('after', () => {
       child.kill('SIGKILL');
       await exited;
     });
-    await command('initialize', { ...job('init'), kind: 'baseline', mutation: null });
+    await command('initialize', { ...job('init'), kind: 'baseline', mutation: null, pool });
     return {
       run: (request) => command('run', { request }),
       async close() {
@@ -339,25 +340,30 @@ test('a custom runner falls back to one controller per worker', { timeout: 90000
   assert.match(result.errors.join(';'), /Shared lanes require/);
 });
 
-test('an unexplained batch error outranks a lane timeout', { timeout: 90000 }, async (t) => {
-  const s = await fixture(t);
-  const lanes = new SharedLanes();
-  t.after(() => lanes.close());
-  const jobs = ['survived', 'selected'].map(s.job);
-  await lanes.run({ ...jobs[0], lanes: jobs });
-  const run = lanes.context.runTestSpecifications.bind(lanes.context);
-  lanes.context.runTestSpecifications = async (...args) => {
-    const result = await run(...args);
-    return { ...result, unhandledErrors: [...result.unhandledErrors, new Error('unrelated')] };
-  };
-  const hung = ['hang', 'survived'].map((id) => ({ ...s.job(id), deadlineMs: 3000 }));
-  const result = await lanes.run({ ...hung[0], lanes: hung });
-  process.exitCode = undefined;
-  assert.deepEqual(
-    result.lanes.map((lane) => lane.outcome),
-    ['infrastructure-error', 'infrastructure-error'],
+for (const pool of ['forks', 'threads'])
+  test(
+    `an unexplained ${pool} batch error outranks a lane timeout`,
+    { timeout: 90000 },
+    async (t) => {
+      const s = await fixture(t);
+      const lanes = new SharedLanes();
+      t.after(() => lanes.close());
+      const jobs = ['survived', 'selected'].map((id) => ({ ...s.job(id), pool }));
+      await lanes.run({ ...jobs[0], lanes: jobs });
+      const run = lanes.context.runTestSpecifications.bind(lanes.context);
+      lanes.context.runTestSpecifications = async (...args) => {
+        const result = await run(...args);
+        return { ...result, unhandledErrors: [...result.unhandledErrors, new Error('unrelated')] };
+      };
+      const hung = ['hang', 'survived'].map((id) => ({ ...s.job(id), pool, deadlineMs: 3000 }));
+      const result = await lanes.run({ ...hung[0], lanes: hung });
+      process.exitCode = undefined;
+      assert.deepEqual(
+        result.lanes.map((lane) => lane.outcome),
+        ['infrastructure-error', 'infrastructure-error'],
+      );
+    },
   );
-});
 
 test('a smaller batch reuses the lanes of a stable width', { timeout: 90000 }, async (t) => {
   const s = await fixture(t);
@@ -485,5 +491,194 @@ test('probe', () => {
     // Invalidation dropped every lane's graph: each file was transformed once more
     // for all lanes together, not once per lane.
     for (const id of new Set(after)) assert.equal(after.filter((seen) => seen === id).length, 2);
+  },
+);
+
+test(
+  'shared fresh threads overlap, isolate mutants, drain deadlines and reuse lanes',
+  { timeout: 120000 },
+  async (t) => {
+    const s = await fixture(t);
+    // Record actual thread identities and make reuse of a test runtime observable.
+    await writeFile(
+      join(s.root, 'shared.test.ts'),
+      `
+import { test, expect } from 'vitest';
+import { appendFileSync, existsSync, readdirSync, writeFileSync } from 'node:fs';
+import { threadId } from 'node:worker_threads';
+import { active, count } from './subject';
+const root = ${JSON.stringify(s.root)};
+appendFileSync(root+'/events', JSON.stringify({id:active, pid:process.pid, threadId})+'\\n');
+test('fresh runtime and overlap', { timeout: 10000 }, async () => {
+  expect(threadId).toBeGreaterThan(0);
+  expect(count()).toBe(0);
+  expect(globalThis.__laneLeak).toBeUndefined();
+  globalThis.__laneLeak = active;
+  if (existsSync(root+'/barrier')) {
+    writeFileSync(root+'/ready-'+active, '');
+    while (readdirSync(root).filter(n => n.startsWith('ready-')).length < 3)
+      await new Promise(r => setTimeout(r, 5));
+  }
+});
+test('mutation', async () => {
+  if (active === 'timeout') await new Promise(r => setTimeout(r, 10000));
+  if (active === 'hang') while (true) {}
+  expect(active).not.toBe('killed');
+});
+test('local bail', () => expect(active).not.toBe('killed'));
+`,
+    );
+    await writeFile(
+      join(s.root, 'other.test.ts'),
+      `
+import { test, expect } from 'vitest';
+import { count } from './subject';
+// Selected files share a worker, but Vitest still resets evaluated modules.
+test('fresh modules in a second file', () => expect(count()).toBe(0));
+`,
+    );
+    const threads = [];
+    const originalStart = ThreadsPoolWorker.prototype.start;
+    ThreadsPoolWorker.prototype.start = async function () {
+      await originalStart.call(this);
+      threads.push(this.thread);
+    };
+    t.after(() => {
+      ThreadsPoolWorker.prototype.start = originalStart;
+      process.exitCode = undefined; // expected mutant failures in this process
+    });
+    const jobs = ['killed', 'survived', 'timeout'].map((id) => ({ ...s.job(id), pool: 'threads' }));
+    const lanes = new SharedLanes();
+    t.after(() => lanes.close());
+    await writeFile(join(s.root, 'barrier'), '');
+    const run = (jobs) => lanes.run({ ...jobs[0], workers: 3, lanes: jobs });
+    for (let i = 0; i < 2; i++) {
+      const result = await run(jobs);
+      assert.deepEqual(
+        result.lanes.map((l) => l.outcome),
+        ['failed', 'passed', 'timeout'],
+      );
+      assert.equal(result.lanes[0].tests.failed, 1); // local bail
+      assert.ok(threads.every((thread) => thread.threadId === -1));
+    }
+    const events = (await readFile(join(s.root, 'events'), 'utf8'))
+      .trim()
+      .split('\n')
+      .map(JSON.parse);
+    assert.equal(new Set(events.map((e) => e.pid)).size, 1);
+    assert.equal(events[0].pid, process.pid);
+    assert.equal(new Set(events.map((e) => e.threadId)).size, 6);
+    await rm(join(s.root, 'barrier'));
+    const hung = ['hang', 'survived'].map((id) => ({
+      ...s.job(id),
+      pool: 'threads',
+      deadlineMs: 5000,
+    }));
+    const stopped = await run(hung);
+    assert.deepEqual(
+      stopped.lanes.map((l) => l.outcome),
+      ['timeout', 'passed'],
+    );
+    assert.ok(threads.every((thread) => thread.threadId === -1));
+    const context = lanes.context;
+    const again = await run([jobs[1]]);
+    assert.equal(again.lanes[0].outcome, 'passed');
+    assert.equal(lanes.context, context);
+    // Switching pool at a stable width must create a new context.
+    const forked = { ...jobs[1], pool: undefined };
+    assert.equal((await run([forked])).lanes[0].outcome, 'failed'); // threadId assertion
+    assert.notEqual(lanes.context, context);
+  },
+);
+
+test(
+  'thread lane requests pass through the persistent controller',
+  { timeout: 90000 },
+  async (t) => {
+    const s = await fixture(t);
+    // Do not send process-killing fixtures into the controller's process.
+    const c = await s.controller('threads');
+    const jobs = ['killed', 'survived', 'timeout'].map((id) => ({ ...s.job(id), pool: 'threads' }));
+    const result = await c.run({ ...jobs[0], lanes: jobs });
+    assert.deepEqual(
+      result.lanes.map((l) => l.outcome),
+      ['failed', 'passed', 'timeout'],
+    );
+    await c.close();
+  },
+);
+
+test(
+  'thread OOM preserves its healthy neighbour and the following batch',
+  { timeout: 90000 },
+  async (t) => {
+    const s = await fixture(t);
+    const lifecycle = join(s.root, 'threads.jsonl');
+    const preload = join(s.root, 'limit-threads.cjs');
+    // Bound only test workers, leaving the controller enough heap for Vite.
+    await writeFile(
+      preload,
+      `
+const threads = require('node:worker_threads');
+const { appendFileSync } = require('node:fs');
+const OriginalWorker = threads.Worker;
+threads.Worker = class extends OriginalWorker {
+  constructor(file, options) {
+    super(file, { ...options, resourceLimits: { maxOldGenerationSizeMb: 96 } });
+    const id = this.threadId;
+    const record = (event) => appendFileSync(${JSON.stringify(lifecycle)}, JSON.stringify({ id, ...event })+'\\n');
+    this.on('error', error => record({ error: error.code }));
+    this.on('exit', code => record({ exit: code, threadId: this.threadId }));
+  }
+};
+require('node:module').syncBuiltinESMExports();
+`,
+    );
+    await writeFile(
+      join(s.root, 'shared.test.ts'),
+      `
+import { test, expect } from 'vitest';
+import { existsSync, writeFileSync } from 'node:fs';
+import { resourceLimits } from 'node:worker_threads';
+import { active } from './subject';
+test('bounded heap', { timeout: 15000 }, async () => {
+  expect(resourceLimits.maxOldGenerationSizeMb).toBe(96);
+  if (active === 'oom') {
+    while (!existsSync(${JSON.stringify(join(s.root, 'healthy-ready'))}))
+      await new Promise(r => setTimeout(r, 5));
+    const retained = [];
+    while (true) retained.push(new Array(128 * 1024).fill(retained.length));
+  }
+  writeFileSync(${JSON.stringify(join(s.root, 'healthy-ready'))}, '');
+  await new Promise(r => setTimeout(r, 500));
+  expect(active).toBe('survived');
+});
+`,
+    );
+    const c = await s.controller('threads', ['--require', preload]);
+    const jobs = ['oom', 'survived'].map((id) => ({ ...s.job(id), pool: 'threads' }));
+    const result = await c.run({ ...jobs[0], workers: 2, lanes: jobs });
+    assert.deepEqual(
+      result.lanes.map((lane) => lane.jobId),
+      ['oom', 'survived'],
+    );
+    assert.equal(result.lanes[0].outcome, 'infrastructure-error');
+    assert.deepEqual(result.lanes[0].errors, ['Lane worker exited before completion']);
+    assert.deepEqual(evidence(result.lanes[1]), {
+      outcome: 'passed',
+      tests: { passed: 1, failed: 0, skipped: 0 },
+    });
+    const events = (await readFile(lifecycle, 'utf8')).trim().split('\n').map(JSON.parse);
+    const oom = events.find((event) => event.error === 'ERR_WORKER_OUT_OF_MEMORY');
+    assert.ok(oom, 'a real worker heap exhaustion occurred');
+    assert.equal(events.filter((event) => event.exit !== undefined).length, 2);
+    assert.ok(
+      events.filter((event) => event.exit !== undefined).every((event) => event.threadId === -1),
+    );
+    assert.equal(events.find((event) => event.id === oom.id && event.exit !== undefined).exit, 1);
+    const again = await c.run({ ...jobs[1], workers: 2, lanes: [jobs[1]] });
+    assert.equal(again.lanes[0].jobId, 'survived');
+    assert.equal(again.lanes[0].outcome, 'passed');
+    await c.close();
   },
 );

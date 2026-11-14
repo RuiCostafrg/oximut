@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { getCompileCacheDir } from 'node:module';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { createVitest, ForksPoolWorker, version } from 'vitest/node';
+import { createVitest, ForksPoolWorker, ThreadsPoolWorker, version } from 'vitest/node';
 import { envelope, type Request, type Result } from './protocol.ts';
 import {
   fingerprint,
@@ -16,28 +16,56 @@ const runner = fileURLToPath(new URL('./lane-runner.mjs', import.meta.url));
 const HARD_DEADLINE = 'Job deadline exceeded';
 const LANE_EXITED = 'Lane worker exited before completion';
 // Vitest's unattributed report of a pool worker that exited.
-const POOL_EXIT = /^\[vitest-pool\]: Worker oximut-lane-forks emitted error\.$/;
+const POOL_EXIT = /^\[vitest-pool\]: Worker oximut-lane-(?:forks|threads) emitted error\.$/;
 
-/** Experimental pinned-runtime batch execution. No assignment survives pool drain. */
+/**
+ * Node always terminates a Worker after its native `error` event. Report only
+ * its following exit, like forks: Vitest removes its pool error listener after
+ * the first notification, so forwarding both would throw in the controller.
+ * RPC/unhandled test errors still use Vitest's normal reporting path.
+ */
+class ExitOnlyThreadsPoolWorker extends ThreadsPoolWorker {
+  override async start() {
+    await super.start();
+    super.on('error', () => {});
+  }
+
+  override on(event: string, callback: Parameters<ThreadsPoolWorker['on']>[1]) {
+    if (event !== 'error') super.on(event, callback);
+  }
+
+  override off(event: string, callback: Parameters<ThreadsPoolWorker['on']>[1]) {
+    if (event !== 'error') super.off(event, callback);
+  }
+}
+
+/** Fresh-worker batch execution. No assignment survives pool drain. */
 export class SharedLanes {
   private context?: Context;
   private width = 0;
+  private pool: 'forks' | 'threads' = 'forks';
   private modules = new Map<string, NonNullable<Request['mutation']>>();
   private files = new Map<string, string[]>();
   private failures = new Map<string, string>();
   private deadline = 0;
+  private threads = new Set<ThreadsPoolWorker>();
   private transforms = new TransformShare();
 
   async close() {
     const context = this.context;
     this.context = undefined;
     this.transforms.clear();
-    await context?.close();
+    try {
+      await context?.close();
+    } finally {
+      await this.drainThreads();
+    }
   }
 
   async run(batch: Request): Promise<Result> {
     if (version !== '5.1.0') throw new Error('Shared lanes require Vitest 5.1.0');
     const jobs = batch.lanes!;
+    const pool = batch.pool === 'threads' ? 'threads' : 'forks';
     // The batch's own deadline adds time to report after a lane is stopped.
     this.deadline = performance.now() + jobs[0].deadlineMs;
     this.failures.clear();
@@ -60,7 +88,7 @@ export class SharedLanes {
     this.modules = modules;
     // A stable lane count keeps the context across a smaller final batch.
     const width = Math.max(batch.workers ?? jobs.length, jobs.length);
-    if (this.context && this.width !== width) await this.close();
+    if (this.context && (this.width !== width || this.pool !== pool)) await this.close();
     if (!this.context) {
       const context = await createVitest('test', {
         root: batch.root,
@@ -90,9 +118,12 @@ export class SharedLanes {
           test: {
             name: `oximut-lane-${index}`,
             pool: {
-              name: 'oximut-lane-forks',
+              name: `oximut-lane-${pool}`,
               createPoolWorker: (options) => {
-                const worker = new ForksPoolWorker(options);
+                const worker =
+                  pool === 'threads'
+                    ? new ExitOnlyThreadsPoolWorker(options)
+                    : new ForksPoolWorker(options);
                 const start = worker.start.bind(worker);
                 const stop = worker.stop.bind(worker);
                 const send = worker.send.bind(worker);
@@ -103,6 +134,7 @@ export class SharedLanes {
                 let stopping = false;
                 worker.start = async () => {
                   await start();
+                  if (worker instanceof ThreadsPoolWorker) this.threads.add(worker);
                   worker.on('exit', () => {
                     clearTimeout(timer);
                     if (!finished && !stopping && !this.failures.has(name))
@@ -112,7 +144,7 @@ export class SharedLanes {
                 worker.send = (message) => {
                   if (message.type === 'run') {
                     // Pinned PoolRunner request shape. Send all selected Node files
-                    // in one isolated task: exactly one fresh OS fork per mutant.
+                    // in one isolated task: exactly one fresh worker per mutant.
                     const run = message as unknown as {
                       context: { files: { filepath: string }[] };
                     };
@@ -120,9 +152,17 @@ export class SharedLanes {
                     timer = setTimeout(
                       () => {
                         this.failures.set(name, HARD_DEADLINE);
-                        (worker as unknown as { fork?: { kill(signal: string): void } }).fork?.kill(
-                          'SIGKILL',
-                        );
+                        if (worker instanceof ThreadsPoolWorker) {
+                          // terminate() also stops synchronous infinite loops. The pool
+                          // still owns stop() and awaits exit before the next batch.
+                          void (
+                            worker as unknown as { thread: { terminate(): Promise<number> } }
+                          ).thread.terminate();
+                        } else {
+                          (worker as unknown as { fork: { kill(signal: string): void } }).fork.kill(
+                            'SIGKILL',
+                          );
+                        }
                       },
                       Math.max(1, this.deadline - performance.now()),
                     );
@@ -137,10 +177,15 @@ export class SharedLanes {
                     this.failures.set(name, 'Unhandled lane worker error');
                   return message;
                 };
-                worker.stop = async () => {
+                let stopped: Promise<void> | undefined;
+                worker.stop = () => {
                   stopping = true;
                   clearTimeout(timer);
-                  await stop();
+                  if (!(worker instanceof ThreadsPoolWorker)) return stop();
+                  stopped ??= stop().then(() => {
+                    this.threads.delete(worker);
+                  });
+                  return stopped;
                 };
                 return worker;
               },
@@ -162,6 +207,7 @@ export class SharedLanes {
       }
       this.context = context;
       this.width = width;
+      this.pool = pool;
       if (getCompileCacheDir())
         for (const project of context.projects)
           project.config.execArgv = [
@@ -223,6 +269,9 @@ export class SharedLanes {
       if (typeof pool?.close !== 'function')
         throw new Error('Unsupported Vitest pool: missing termination handle');
       await pool.close();
+      // An unexpected exit marks the runner stopped, so Vitest may skip stop().
+      // Still drain thread stdio and termination before returning/reassigning.
+      await this.drainThreads();
     } catch (error) {
       await this.close();
       throw error;
@@ -312,6 +361,10 @@ export class SharedLanes {
       ...(batch.resident ? { resident: batch.resident.length } : {}),
       lanes,
     };
+  }
+
+  private async drainThreads() {
+    await Promise.all([...this.threads].map((worker) => worker.stop()));
   }
 
   /**

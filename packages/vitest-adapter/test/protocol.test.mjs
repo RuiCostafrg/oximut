@@ -289,10 +289,24 @@ test('shared lane batches reject every inconsistent assignment', () => {
     [batch([lane('a', { collectCoverage: [mutation] })]), /Invalid lane assignment/],
     [batch([lane('a', { lanes: [lane('b')] })]), /Invalid lane assignment/],
     [batch([lane('a', { resident }), lane('b')], { resident }), /identical resident/],
-    [batch([lane('a')], { pool: 'threads' }), /Invalid shared controller lanes/],
+    [batch([lane('a')], { pool: 'threads' }), /Invalid lane assignment/],
     [batch([lane('a')], { collectCoverage: [mutation] }), /Invalid shared controller lanes/],
     [batch([lane('a')], { kind: 'baseline', mutation: null }), /Invalid shared controller lanes/],
     [batch([]), /Invalid shared controller lanes/],
   ])
     assert.throws(() => runtime.validateRequest(request), message);
+});
+
+test('shared batches require every lane to use the same isolation pool', () => {
+  const job = { ...mutant, resident: [mutation] };
+  const batch = { ...job, lanes: [job, { ...job, jobId: 'second' }] };
+  runtime.validateRequest(batch);
+  const threads = { ...job, pool: 'threads' };
+  runtime.validateRequest({ ...threads, lanes: [threads, { ...threads, jobId: 'second' }] });
+  for (const invalid of [
+    { ...batch, pool: 'threads' },
+    { ...batch, lanes: [{ ...job, pool: 'threads' }] },
+    { ...threads, lanes: [threads, { ...job, jobId: 'second' }] },
+  ])
+    assert.throws(() => runtime.validateRequest(invalid), /Invalid lane assignment/);
 });

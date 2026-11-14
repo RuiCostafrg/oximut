@@ -17,11 +17,17 @@ import real_project as workload
 
 ROOT = workload.ROOT
 SUPPORT = ROOT / 'benchmarks/profiling'
+# Executed edits each mutation tool must report per workload, and whether every one of
+# them must be killed. The cross-tool outcome equality is the harness's correctness gate.
+EXPECTED_EDITS = {'colord': (10, True), 'colord-scale': (206, False)}
+# Per tool command, matching the benchmark workflow's headroom for the larger workload.
+RUN_TIMEOUT = {'colord': 600, 'colord-scale': 1200}
 
 
-def qualification_errors(directory, code):
+def qualification_errors(directory, code, workload_name=workload.DEFAULT_WORKLOAD):
     """Require one complete equivalent workload group without published ratios."""
     errors = []
+    count, all_killed = EXPECTED_EDITS[workload_name]
     if code != 0:
         errors.append(f'qualification harness exited {code}')
     try:
@@ -36,9 +42,9 @@ def qualification_errors(directory, code):
                 or not comparisons[0]['ratio_eligible'] or summary['ratios']):
             errors.append('exact workload gate failed or ratios were published')
         for row in rows:
-            if row['tool'] != 'vitest' and (len(row.get('mutations', {})) != 10 or any(
-                    m['outcome'] != 'killed' for m in row['mutations'].values())):
-                errors.append('require exactly ten killed edits per mutation tool')
+            if row['tool'] != 'vitest' and (len(row.get('mutations', {})) != count or (all_killed and any(
+                    m['outcome'] != 'killed' for m in row['mutations'].values()))):
+                errors.append(f'require exactly {count} {"killed " if all_killed else ""}edits per mutation tool')
     except (OSError, ValueError, KeyError, TypeError) as error:
         errors.append(f'missing/malformed qualification evidence: {error}')
     return errors
@@ -677,6 +683,8 @@ def main(argv=None):
                        help='Measure Rust sampling-thread self CPU, without Node or Python profilers')
     parser.add_argument('--concurrency', type=workload.concurrency_arg, default=1,
                         help='Matched parallelism for Oximut --workers and Stryker concurrency (default 1)')
+    parser.add_argument('--workload', type=workload.workload_name, default=workload.DEFAULT_WORKLOAD,
+                        help='Mutation scope: ' + ', '.join(sorted(workload.WORKLOADS)))
     args = parser.parse_args(argv)
     workload.require_matched_concurrency(args.concurrency)
     output = args.output.resolve()
@@ -684,10 +692,14 @@ def main(argv=None):
     profiles = output / 'profiles'
     profiles.mkdir()
     result = {'diagnostic_only': True, 'profiler_overhead': True, 'concurrency': args.concurrency,
+              'workload': args.workload,
               'node_capture_mode': ('rust-accounting-self' if args.accounting else 'controller-jobs' if args.controller_jobs else
                                     'partial-inspector-startup' if args.segments else 'exit-time-cpu-prof'),
               'qualification_errors': [], 'failure': None,
-              'scope': 'Unchanged colord: 41 sources, 102 tests, five mutation sources, ten arithmetic edits. One capture, no warmup campaign.',
+              'scope': ('Unchanged colord: 41 sources, 102 tests, five mutation sources, ten arithmetic edits.'
+                        if args.workload == 'colord' else
+                        'colord-scale: 41 sources, 102 tests, 20 mutation sources, 206 arithmetic edits.')
+                       + ' One capture, no warmup campaign.',
               'limits': ('CLI sampling-thread self CPU, excluding worker CPU; clock overhead is included, no complete process-tree CPU partition.' if args.accounting else
                          'Node sampling and Python supervisor self CPU only; no complete process-tree CPU partition. Rust resource sampling remains unattributed.') +
                         ' External benchmark sampler CPU is outside wait4 product-tree CPU; it perturbs wall time.'}
@@ -729,13 +741,14 @@ def main(argv=None):
         cmd = [sys.executable, str(ROOT / 'benchmarks/real_project.py'),
                '--binary', str(inputs.binary), '--adapter', str(inputs.adapter),
                '--adapter-source-dir', str(adapter), '--defer-ratios',
-               '--concurrency', str(args.concurrency),
+               '--concurrency', str(args.concurrency), '--workload', args.workload,
                '--tools', 'vitest', 'oximut', 'stryker', '--warmups', '0',
-               '--repetitions', '1', '--timeout', '600', '--output', str(output / 'qualification')]
+               '--repetitions', '1', '--timeout', str(RUN_TIMEOUT[args.workload]),
+               '--output', str(output / 'qualification')]
         result['command'] = cmd
         with (output / 'qualification.log').open('w') as log:
             code = subprocess.run(cmd, cwd=ROOT, env=env, stdout=log, stderr=subprocess.STDOUT).returncode
-        result['qualification_errors'] = qualification_errors(output / 'qualification', code)
+        result['qualification_errors'] = qualification_errors(output / 'qualification', code, args.workload)
         if workload.execution_inputs(inputs) != result['execution_inputs']:
             result['qualification_errors'].append('binary/adapter changed during capture')
     except Exception as error:
