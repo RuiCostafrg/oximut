@@ -1,0 +1,37 @@
+Refreshing run status every 15 seconds. Press Ctrl+C to quit.
+
+* perf/vitest5-worker-bundle W13 ONE unscored failure diagnostic · 43673898960
+Triggered via push about 1 minute ago
+
+JOBS
+* diagnostic (ID 132689714588)
+  ✓ Set up job
+  ✓ Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+  ✓ Run actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+  ✓ Preserve new diagnostic sources before prerequisites
+  ✓ Install exact pins and check types
+  ✓ Deterministic FOUR-lane faults, original parent cleanup tests, strict outer cleanup
+  ✓ Recover exact original binaries and sources; no fresh Rust build
+  ✓ ONE unscored workers4 scale206 stock and diagnostic candidate invocation
+  * Preserve every raw status, error, source and hash even on failure
+  * Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+  * Post Run actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+  * Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+✓ perf/vitest5-worker-bundle W13 ONE unscored failure diagnostic · 43673898960
+Triggered via push about 1 minute ago
+
+JOBS
+✓ diagnostic in 1m29s (ID 132689714588)
+  ✓ Set up job
+  ✓ Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+  ✓ Run actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+  ✓ Preserve new diagnostic sources before prerequisites
+  ✓ Install exact pins and check types
+  ✓ Deterministic FOUR-lane faults, original parent cleanup tests, strict outer cleanup
+  ✓ Recover exact original binaries and sources; no fresh Rust build
+  ✓ ONE unscored workers4 scale206 stock and diagnostic candidate invocation
+  ✓ Preserve every raw status, error, source and hash even on failure
+  ✓ Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+  ✓ Post Run actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+  ✓ Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+  ✓ Complete job

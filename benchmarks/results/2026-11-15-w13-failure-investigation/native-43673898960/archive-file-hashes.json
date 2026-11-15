@@ -1,0 +1,23 @@
+{
+  "artifact.zip": {
+    "w13-failure-diagnostic-raw.tar.gz": "844cefab82c3c6fc78ae8c2a63428584a51ec492ff84be99b6e84736d6c3c381",
+    "w13-failure-diagnostic-files.json": "5676f00d5b4c070a176ba2d733384ba57c0132f069e5abb42731cb3a0078fc22"
+  },
+  "logs.zip": {
+    "0_diagnostic.txt": "d03d5652acce4877d92f5e5e9418246306dd736e16db952413cb7afee7106f28",
+    "diagnostic/system.txt": "2cfc83b62a722503954df28ae534709b2ad02fc0630644314e8ed018a56145e1",
+    "diagnostic/1_Set up job.txt": "1d053f7b9bb20b52c5b7341189135f5702808b96f7c8722165be7f36bd6e2d05",
+    "diagnostic/2_Run actions_checkout@3d3c42e5aac5ba805825da76410c181273ba90b1.txt": "25d83e69552a8284b7d47e1472dc17b3d96e1d191b9cc18353c6b4bdc6b0942c",
+    "diagnostic/3_Run actions_setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1.txt": "cf735d10f81c805746ca5da07eb590f792fc4400e1619d154d06ab9c254a5d4c",
+    "diagnostic/4_Preserve new diagnostic sources before prerequisites.txt": "d3706b2b2c3504b0ee661d8e84bbe6d18afb3d060d767264042e8c43d740fa69",
+    "diagnostic/5_Install exact pins and check types.txt": "6aac28aa931f28e314b17fe51b1b0671c314c76727a7a830d8f526a4a4189bff",
+    "diagnostic/6_Deterministic FOUR-lane faults, original parent cleanup tests, strict outer cleanup.txt": "1b9d396228692029af16bbfb9457f1d42111115e708b8d2b85ce3ff4fc8c35a9",
+    "diagnostic/7_Recover exact original binaries and sources; no fresh Rust build.txt": "1ac04074fa1d5c6da9f6d546c575ea6065bd7dd87aec00e52dfc948a9674ce30",
+    "diagnostic/8_ONE unscored workers4 scale206 stock and diagnostic candidate invocation.txt": "04e502332839609e9d28156c5e849cc23473a1c72a5e33ba4e0a58ca10a4f6bd",
+    "diagnostic/9_Preserve every raw status, error, source and hash even on failure.txt": "e04926114c17a42b3e916afd07a08f5f639fe6af220299d6ed869b61a1b6c3d3",
+    "diagnostic/10_Run actions_upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9.txt": "8a69c4d5e20ecbb8fa29dcd4dbaf57d9183ebb8e8737cf8bf1c2529f875bfe06",
+    "diagnostic/19_Post Run actions_setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1.txt": "9afac7690aa4f24d88cb55e2e267dc8b416a039cd5cb1648e8fe487633357736",
+    "diagnostic/20_Post Run actions_checkout@3d3c42e5aac5ba805825da76410c181273ba90b1.txt": "4b33edac1679a9c0a9d932923c267ffcf9c0fecfa840f20e275ac21913e36940",
+    "diagnostic/21_Complete job.txt": "dfd46ee978d5dd2ef68a68a344505bb5e4a2a63c1de1b39d6f65404a72df71d1"
+  }
+}

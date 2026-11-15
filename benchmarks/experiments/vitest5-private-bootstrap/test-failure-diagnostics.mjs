@@ -24,6 +24,14 @@ test('bounded nested errors retain original causes without invoking accessors or
   assert.ok(Buffer.byteLength(JSON.stringify(huge))<LIMITS.eventBytes);
   assert.equal(huge.stringsTruncated,true);assert.equal(huge.commandTruncated,true);
 });
+test('native lazy Error.stack is captured without invoking an arbitrary stack getter',()=>{
+  const original=new Error('native stack fixture');
+  const record=diagnosticRecord('fork-start',{error:original});
+  assert.match(record.error.stack,/native stack fixture/);
+  assert.match(record.error.stack,/test-failure-diagnostics.mjs/);
+  const arbitrary={message:'plain'};Object.defineProperty(arbitrary,'stack',{get(){throw Error('must not invoke arbitrary stack getter')}});
+  assert.equal(diagnosticRecord('plain',{error:arbitrary}).error.stack,undefined);
+});
 test('capture storage failures reject explicitly',()=>{
   assert.throws(()=>diagnosticWriter('/nonexistent/w13-diagnostic/events.jsonl',{controller:process.pid,owner:'test'})('started-check',{error:new Error('cause')}),/ENOENT/);
 });

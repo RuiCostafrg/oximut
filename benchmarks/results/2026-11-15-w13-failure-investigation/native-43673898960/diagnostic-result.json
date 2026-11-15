@@ -1,0 +1,93 @@
+{
+  "binary_provenance": {
+    "after": {
+      "binary_sha256": "5f931fa8f2559043579506864f280b40d55ec6d3ef9c9892d0a0acb65dd10a0e"
+    },
+    "before": {
+      "binary_sha256": "fd76e97832fe5c39749b3f7f65ed797793cf54e78426b581756b168fd53f7230"
+    }
+  },
+  "diagnostic_events": [],
+  "exact_ids_outcomes_equal": true,
+  "head": "a3254ef2aeae8218055be18b4e8b67487395b4e2",
+  "original_build_metadata": {
+    "after_commit": "88b7d6712648979dc7438a4044abf0f63650d463",
+    "after_source": "/home/runner/work/oximut/oximut",
+    "before_commit": "5dfd17e53cd7b067586b3ad47363cb3ecee5873e",
+    "before_source": "/home/runner/work/_temp/w13-stock",
+    "binary_sha256": {
+      "after": "5f931fa8f2559043579506864f280b40d55ec6d3ef9c9892d0a0acb65dd10a0e",
+      "before": "fd76e97832fe5c39749b3f7f65ed797793cf54e78426b581756b168fd53f7230"
+    },
+    "build_flags": "--locked --release -p oximut-cli",
+    "cargo_target_dirs": {
+      "after": "/home/runner/work/_temp/w13-candidate-target",
+      "before": "/home/runner/work/_temp/w13-stock-target"
+    },
+    "policy": "Both exact isolated builds complete before timing. No profiler or retries. Preparation is measured per candidate invocation; see score policy.",
+    "tool_versions": {
+      "cargo": "cargo 1.96.0 (30a34c682 2026-05-25)",
+      "node": "v26.3.1",
+      "npm": "11.16.0",
+      "python3": "Python 3.12.3",
+      "rustc": "rustc 1.96.0 (ac68faa20 2026-05-25)"
+    }
+  },
+  "policy": "ONE UN-SCORED diagnostic pair only. All original scored results remain invalid/suppressed. No ratios, bootstrap, requalification or retries. Exact original release binaries reused; current TS adapter override selected explicitly.",
+  "prepared_manifest_sha256": "915b5551c2bbb9dea2ad7cf7e0e38f2534c3e4ec951a52ac7776e580820823eb",
+  "roles": {
+    "diagnostic_candidate": {
+      "exit_code": 1,
+      "nonordinary_mutants": [],
+      "summary": {
+        "complete": true,
+        "infrastructureError": 0,
+        "invalid": 0,
+        "killed": 202,
+        "noCoverage": 0,
+        "resourceExhausted": 0,
+        "score": 98.05825242718447,
+        "scoreDenominator": 206,
+        "skipped": 0,
+        "survived": 4,
+        "timeout": 0,
+        "total": 206
+      },
+      "validation": "existing correctness/resource/phase/inventory gates passed for this invocation"
+    },
+    "stock": {
+      "exit_code": 1,
+      "nonordinary_mutants": [],
+      "summary": {
+        "complete": true,
+        "infrastructureError": 0,
+        "invalid": 0,
+        "killed": 202,
+        "noCoverage": 0,
+        "resourceExhausted": 0,
+        "score": 98.05825242718447,
+        "scoreDenominator": 206,
+        "skipped": 0,
+        "survived": 4,
+        "timeout": 0,
+        "total": 206
+      },
+      "validation": "existing correctness/resource/phase/inventory gates passed for this invocation"
+    }
+  },
+  "runtime": {
+    "arch": "x64",
+    "execPath": "/opt/hostedtoolcache/node/26.3.1/x64/bin/node",
+    "platform": "linux",
+    "sha256": "0b52710a27133a3baf45f0d1f10689ab874f50e5821d8e611486d17e20bcacdd",
+    "version": "v26.3.1"
+  },
+  "status": "original failure not reproduced in ONE unscored pair; NOT resolved or requalified",
+  "trace_counts": {
+    "fork": 206,
+    "run": 206,
+    "stock-baseline": 2,
+    "validated-controller": 2,
+    "validated-fork-artifact": 206
+  }
+}

@@ -1,5 +1,7 @@
 // Error-only W13 experiment diagnostics. No result rewriting or environment capture.
 import { appendFileSync } from 'node:fs';
+import { types } from 'node:util';
+const nativeStackGetter = Object.getOwnPropertyDescriptor(new Error(), 'stack')?.get;
 
 export const LIMITS = Object.freeze({ events: 256, eventBytes: 16384, nodes: 8, depth: 3, strings: 6000 });
 function data(object, key) {
@@ -27,9 +29,17 @@ export function diagnosticRecord(stage, details = {}) {
     if (depth > LIMITS.depth || nodes++ >= LIMITS.nodes) return { truncated: 'depth/node limit' };
     seen.add(value);
     const result = {};
-    for (const [key, max] of [['name',80],['message',512],['stack',1024],['code',80],['syscall',80],['path',256]]) {
+    for (const [key, max] of [['name',80],['message',512],['code',80],['syscall',80],['path',256]]) {
       const text = clip(data(value,key),max); if (text !== undefined) result[key] = text;
     }
+    // Node26's own native stack accessor is lazy. Do not call an arbitrary
+    // object's stack getter or replace Error.prepareStackTrace/stack itself.
+    let stack = data(value,'stack') ?? data(value,'stackStr');
+    if (typeof stack !== 'string' && types.isNativeError(value) && nativeStackGetter) {
+      try { stack = nativeStackGetter.call(value); }
+      catch { result.stackCaptureFailure = 'native stack getter failed'; }
+    }
+    const capturedStack=clip(stack,1024); if(capturedStack!==undefined)result.stack=capturedStack;
     for (const key of ['errno','signal','actual','expected']) {
       const v = data(value,key);
       if (typeof v === 'number' && Number.isFinite(v) || typeof v === 'boolean' || v === null) result[key] = v;

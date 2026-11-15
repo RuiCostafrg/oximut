@@ -1,0 +1,13 @@
+{
+  "reproducer_exit_code": 1,
+  "reproduced": "Node26 native Error.stack is an accessor; original safe formatter omitted it",
+  "correction": "Read supplied data stack/stackStr or invoke the captured native Error stack getter only for util.types.isNativeError values. Never rewrite Error.stack/prepareStackTrace or invoke arbitrary object stack getter.",
+  "final_tests": 8,
+  "final_exit_code": 0,
+  "scope": "Local Linux ARM64 Node26.3.1; real single-lane fault/drain/recovery cases plus pure formatter tests. No native replay after correction; native capture remains at a3254ef. Original lifecycle failure unresolved.",
+  "source_sha256": {
+    "benchmarks/experiments/vitest5-private-bootstrap/failure-diagnostics.mjs": "35678855a88f8794ad0d2e72609fe64ef91d1a732dab90c68812aba2ffd6207c",
+    "benchmarks/experiments/vitest5-private-bootstrap/test-failure-diagnostics.mjs": "a09ff905446c593016fd51454c6b65b919ba7a152a4dce947e33280f9ef114fd"
+  },
+  "before_formatter_sha256": "a43d578b5954fe459e5816b72bf38f41af0c3bf5949301d87dc180e76db3676c"
+}
