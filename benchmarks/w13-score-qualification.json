@@ -1,0 +1,15 @@
+{
+  "qualified_source": "e9a368face7d8e3fd657383c2c979e2866370a38",
+  "native_runs": [
+    43668016386,
+    43668016410
+  ],
+  "structural": "success; archive verified, all20 source files match source SHA, 11 focused tests, complete matrix,16 distinct PIDs/realms,10 empty groups",
+  "product": "success; archive verified, all128 source files match source SHA,2 hook-failure tests pass,4 stock/candidate/Stryker configs exact,432 distinct bundled PIDs",
+  "artifact_digests": {
+    "43668016386": "sha256:1d19eed24c0a91c77ed55f67aa442e1c7e3c12d3a52a3b7081cbd30d918c75af",
+    "43668016410": "sha256:417a17a3f369e88846658092c590e393dccb7d7d8ae77de5525c553586de51e4"
+  },
+  "verification_evidence": "benchmarks/results/2026-11-15-w13-scored",
+  "scoring_release": "Both required native gates and both forced hook tests verified before scoring dispatch; parent authorization permits release without further confirmation."
+}

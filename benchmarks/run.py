@@ -141,7 +141,8 @@ def signal_tree(root: int, tree: dict[int, dict], sig: int) -> None:
 
 def run_command(command: list[str], cwd: Path, log_path: Path,
                 timeout: float = 180, sample_interval: float = .02,
-                output_limit: int = 1_048_576, env: dict | None = None) -> dict:
+                output_limit: int = 1_048_576, env: dict | None = None,
+                *, record_sample_gaps: bool = False) -> dict:
     """Run one workload. The harness owns/reaps all its children while active."""
     enable_subreaper()
     started = time.monotonic()
@@ -160,6 +161,8 @@ def run_command(command: list[str], cwd: Path, log_path: Path,
         'log_file': str(log_path), 'spawn_error': None,
     }
     profile_memory = (os.environ if env is None else env).get('OXIMUT_PROFILE_MEMORY') == '1'
+    if record_sample_gaps:
+        result['sample_gaps_seconds'] = []
     if profile_memory:
         result['peak_rss_snapshot'] = None
     try:
@@ -185,6 +188,8 @@ def run_command(command: list[str], cwd: Path, log_path: Path,
             now = time.monotonic()
             if previous_sample is not None:
                 result['max_sample_gap_seconds'] = max(result['max_sample_gap_seconds'], now - previous_sample)
+                if record_sample_gaps:
+                    result['sample_gaps_seconds'].append(now - previous_sample)
             previous_sample = now
             tree = process_tree(process_snapshot(), proc.pid, known, os.getpid())
             live = {pid: stat for pid, stat in tree.items() if stat['state'] != 'Z'}
