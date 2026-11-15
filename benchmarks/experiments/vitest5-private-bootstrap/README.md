@@ -1,12 +1,16 @@
 # Private bootstrap with scoped map consumption
 
-**Local structural qualification passed; native Ubuntu qualification pending.**
+**Native structural and bounded product/colord correctness qualification passed.**
 The latest map-base adapter supplies absolute encoded URL pathnames to Vite's
 path-oriented decoder and retains the file URL as its protocol base. Full original
 URIs, including escaped filenames, now pass. See the new capture in
 `benchmarks/results/2026-11-14-w13-map-base/REPORT.md`. Earlier failed artifacts
 and their reports, including `2026-11-14-w13-map-registration`, remain unchanged.
-No performance qualification or product integration is established.
+The opt-in shared-controller integration is qualified only for colord 10-mutant
+and 206-mutant scopes at two and four workers. See
+`benchmarks/results/2026-11-14-w13-shared-controller/REPORT.md` for raw evidence
+and limits. No scored performance qualification or general product support is
+established.
 
 The revised candidate uses the same six audited inline modules and leaves all
 15 worker/public-API intersection modules native. `328917c` and `70ad922`, their
@@ -80,6 +84,19 @@ tree CPU/RSS, performance ratios or scores. Hashing/JSON/source validation and
 one additional registration-owner graph introduce real CPU/I/O/memory costs.
 No performance saving is assumed. No product defaults or dependencies change.
 
-Native Ubuntu structural qualification is a separate gate after local success;
-product/colord equivalence and an unprofiled paired performance campaign follow
-only after that. Main remains unsettled.
+The experimental hook requires persistent fresh-process shared-controller lanes
+at two or four workers in the qualified corpus. One-worker or disabled-shared-
+controller runs are unsupported and currently reject only when mutants reach
+the non-lane path; do not use them as scored configurations. Custom/browser
+environments and non-hoisted dependency layouts are not qualified.
+
+The prepared directory remains writable for diagnostics and is installation-
+bound. Retaining it alone does not create a self-contained replay artifact:
+native dependencies and the external map helper still come from the original
+checkout. Stock product rows did not trigger lazy map decoding; mapping fidelity
+is established by the dedicated structural/integration fixtures. Missing
+unregister events on process termination do not establish a leak; process birth
+identities and complete group termination are the cleanup evidence.
+
+The next gate is an unprofiled paired campaign with all preparation, validation,
+map and diagnostic costs retained or explicitly amortized. Main remains unsettled.

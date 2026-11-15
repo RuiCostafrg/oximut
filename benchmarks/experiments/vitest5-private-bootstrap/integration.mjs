@@ -79,7 +79,7 @@ export async function loadExperimentalBundle(manifestPath, pool) {
     },
     baseline(job,command) { event({type:command==='warm'?'transform-only-warm':'stock-baseline',command,jobId:job.jobId,runId:job.runId,kind:job.kind,coverage:!!job.collectCoverage}); },
     validateConfig(project) {
-      assert.ok(!project.config.runner && !project.config.globalSetup?.length && project.config.environment==='node', 'W13 custom runner/environment/setup unsupported');
+      assert.ok(!project.config.runner && !project.config.globalSetup?.length && project.config.environment==='node' && !project.config.browser?.enabled, 'W13 custom runner/environment/setup/browser unsupported');
       assert.ok(project.config.experimental?.viteModuleRunner!==false, 'W13 native/custom module loader unsupported');
       assert.ok(!project.config.execArgv.some(arg=>/^--(?:loader|experimental-loader|import)(?:=|$)/.test(arg)), 'W13 custom loader execArgv unsupported');
       const argv=project.config.execArgv;

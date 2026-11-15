@@ -142,20 +142,36 @@ export class SharedLanes {
                 const start = worker.start.bind(worker);
                 const stop = worker.stop.bind(worker);
                 const send = worker.send.bind(worker);
+                const off = worker.off.bind(worker);
                 const deserialize = worker.deserialize.bind(worker);
                 const name = options.project.name;
                 let timer: ReturnType<typeof setTimeout> | undefined;
                 let finished = false;
                 let stopping = false;
+                let failedStartCheck = false;
+                worker.off = (event, callback) => {
+                  // No pool listeners were installed if our start check failed.
+                  // The child was already drained; the pinned fork's off() getter
+                  // otherwise throws while Vitest finishes its own teardown.
+                  if (!failedStartCheck) off(event, callback);
+                };
                 worker.start = async () => {
                   await start();
-                  if (worker instanceof ForksPoolWorker) this.experiment?.started(worker);
                   if (worker instanceof ThreadsPoolWorker) this.threads.add(worker);
                   worker.on('exit', () => {
                     clearTimeout(timer);
                     if (!finished && !stopping && !this.failures.has(name))
                       this.failures.set(name, LANE_EXITED);
                   });
+                  try {
+                    if (worker instanceof ForksPoolWorker) this.experiment?.started(worker);
+                  } catch (error) {
+                    // Vitest attaches its listeners only after start() resolves.
+                    // A failed post-spawn check must reap the child itself.
+                    failedStartCheck = true;
+                    await worker.stop();
+                    throw error;
+                  }
                 };
                 worker.send = (message) => {
                   if (message.type === 'run') {
@@ -165,8 +181,6 @@ export class SharedLanes {
                       context: { files: { filepath: string }[] };
                     };
                     run.context.files = this.files.get(name)!.map((filepath) => ({ filepath }));
-                    if (worker instanceof ForksPoolWorker)
-                      this.experiment?.dispatched(worker, message);
                     timer = setTimeout(
                       () => {
                         this.failures.set(name, HARD_DEADLINE);
@@ -184,6 +198,27 @@ export class SharedLanes {
                       },
                       Math.max(1, this.deadline - performance.now()),
                     );
+                    if (worker instanceof ForksPoolWorker) {
+                      try {
+                        this.experiment?.dispatched(worker, message);
+                      } catch (error) {
+                        this.failures.set(name, 'Experimental worker dispatch failed');
+                        // A synchronous throw from send() skips Vitest's runner
+                        // teardown and can leave pool.close() waiting forever.
+                        // The pinned fork forwards child error events to the
+                        // pool, which rejects the task and force-drains it.
+                        const child = (
+                          worker as unknown as {
+                            fork: { emit(event: 'error', error: Error): boolean };
+                          }
+                        ).fork;
+                        child.emit(
+                          'error',
+                          error instanceof Error ? error : new Error(String(error)),
+                        );
+                        return;
+                      }
+                    }
                   }
                   return send(message);
                 };
@@ -199,9 +234,8 @@ export class SharedLanes {
                 worker.stop = () => {
                   stopping = true;
                   clearTimeout(timer);
-                  if (!(worker instanceof ThreadsPoolWorker)) return stop();
                   stopped ??= stop().then(() => {
-                    this.threads.delete(worker);
+                    if (worker instanceof ThreadsPoolWorker) this.threads.delete(worker);
                   });
                   return stopped;
                 };

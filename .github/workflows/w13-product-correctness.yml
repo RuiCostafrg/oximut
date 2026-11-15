@@ -38,6 +38,7 @@ jobs:
           npm run typecheck > "$RUNNER_TEMP/w13-product/typecheck.stdout.log" 2> "$RUNNER_TEMP/w13-product/typecheck.stderr.log"
       - name: Real adapter integration before any product run
         run: |
+          node --test benchmarks/experiments/vitest5-private-bootstrap/test-hook-failure.mjs > "$RUNNER_TEMP/w13-product/hook-failure.stdout.log" 2> "$RUNNER_TEMP/w13-product/hook-failure.stderr.log"
           python3 - <<'PY'
           import json,os,pathlib,subprocess
           root=pathlib.Path(os.environ['RUNNER_TEMP'])/'w13-product'
