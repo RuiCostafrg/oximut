@@ -1,0 +1,21 @@
+{
+  "runtime": {
+    "version": "v26.3.1",
+    "arch": "arm64",
+    "platform": "linux",
+    "execPath": "/tmp/oximut-v5-node/node-v26.3.1-linux-arm64/bin/node",
+    "sha256": "a76224241ff1ebcbf90adc2eb4600ddb048d19f883c6a9140b6c3ceab004e4f0"
+  },
+  "source_hashes": {
+    "packages/vitest-adapter/shared-lanes.ts": "e4e19501bf64078381a611ac3bc085d4c63f63adc5ac0d663d278cdf4e1e467a",
+    "benchmarks/experiments/vitest5-private-bootstrap/integration.mjs": "fa13ada2eff9592e2e80f8641e2d92e5c47e3dbe383ab22b072a1c256f3744ee",
+    "benchmarks/experiments/vitest5-private-bootstrap/failure-diagnostics.mjs": "a43d578b5954fe459e5816b72bf38f41af0c3bf5949301d87dc180e76db3676c",
+    "benchmarks/experiments/vitest5-private-bootstrap/test-failure-diagnostics.mjs": "8e3a23eb15aa7e534e766d70f04cc259867e7309dadd6221027ea4fd2e6ed867"
+  },
+  "initial_typecheck": 1,
+  "final_typecheck": 0,
+  "initial_focused_tests": 6,
+  "expanded_focused_tests": 7,
+  "parent_hook_tests": 2,
+  "policy": "Focused tests only; no local product build, product benchmark or native reproduction."
+}

@@ -7,6 +7,7 @@ import { createRequire } from 'node:module';
 import { dirname, isAbsolute, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { gzipSync } from 'node:zlib';
+import { diagnosticWriter } from './failure-diagnostics.mjs';
 
 const repo = fileURLToPath(new URL('../../../', import.meta.url));
 const require = createRequire(import.meta.url);
@@ -64,9 +65,11 @@ export async function loadExperimentalBundle(manifestPath, pool) {
   }
   const events=join(dir,'integration-events.jsonl');
   const event=(value)=>appendFileSync(events,JSON.stringify({controller:process.pid,owner:spec.owner,...value})+'\n');
+  const diagnostic=diagnosticWriter(join(dir,'failure-diagnostics.jsonl'),{controller:process.pid,owner:spec.owner});
   event({type:'validated-controller',manifestPath,entrypoint,wallMs:performance.now()-started,cpu:process.cpuUsage(cpu),policy:spec.policy});
   return {
     entrypoint,
+    diagnostic,
     configure(worker) {
       const started=performance.now(),cpu=process.cpuUsage();
       for(const [path,digest] of [[entrypoint,spec.bundle.sha256],[entrypoint+'.map',spec.bundle.mapSha256],[spec.bundle.registration.path,spec.bundle.registration.sha256],[fileURLToPath(spec.bundle.registration.helper),spec.bundle.registration.helperSha256]]) {
@@ -90,13 +93,22 @@ export async function loadExperimentalBundle(manifestPath, pool) {
       assert.equal(createRequire(join(project.config.root,'package.json')).resolve('vitest'),require.resolve('vitest'),'W13 project imports another Vitest/API instance');
     },
     started(worker) {
-      assert.equal(worker.entrypoint,entrypoint,'W13 stock worker cannot stand in for bundle');
-      const child=worker.fork, stat=readFileSync(`/proc/${child.pid}/stat`,'utf8');
-      const fields=stat.slice(stat.lastIndexOf(') ')+2).split(' ');
-      const command=readFileSync(`/proc/${child.pid}/cmdline`,'utf8').split('\0');
-      assert.equal(Number(fields[1]),process.pid,'W13 requires a new direct OS child');
-      assert.ok(command.includes(entrypoint),'W13 actual command line is not bundled');
-      event({type:'fork',pid:child.pid,startTime:fields[19],entrypoint,command});
+      const observed={};
+      try {
+        assert.equal(worker.entrypoint,entrypoint,'W13 stock worker cannot stand in for bundle');
+        const child=worker.fork; observed.pid=child.pid;
+        const stat=readFileSync(`/proc/${child.pid}/stat`,'utf8');
+        const fields=stat.slice(stat.lastIndexOf(') ')+2).split(' ');
+        observed.parentPid=Number(fields[1]); observed.startTime=fields[19];
+        const command=readFileSync(`/proc/${child.pid}/cmdline`,'utf8').split('\0');
+        observed.observedCommand=command;
+        assert.equal(Number(fields[1]),process.pid,'W13 requires a new direct OS child');
+        assert.ok(command.includes(entrypoint),'W13 actual command line is not bundled');
+        event({type:'fork',pid:child.pid,startTime:fields[19],entrypoint,command});
+      } catch(error) {
+        diagnostic('identity-check',{...observed,error});
+        throw error;
+      }
     },
     dispatched(worker, message) {
       assert.equal(worker.entrypoint,entrypoint);

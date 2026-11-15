@@ -1,0 +1,757 @@
+{
+  "original_run": 43669808238,
+  "original_source": "88b7d6712648979dc7438a4044abf0f63650d463",
+  "status": "Original cause not recoverable offline; generic aggregate batch outcome lost nested cause",
+  "controllers": [
+    {
+      "pid": 39207,
+      "event_range": [
+        0,
+        504
+      ],
+      "counts": {
+        "validated-controller": 1,
+        "stock-baseline": 2,
+        "validated-fork-artifact": 168,
+        "fork": 167,
+        "run": 167
+      },
+      "tail": [
+        [
+          493,
+          {
+            "controller": 39207,
+            "owner": "8aada8fc-4673-441c-bda3-bfeb14583a2a",
+            "type": "run",
+            "pid": 40404,
+            "entrypoint": "/home/runner/work/_temp/w13-score/colord-scale-4w/round-0/after/oximut/prepared/private-worker.mjs",
+            "selector": "85d490302a498031ddfc67653a6d429a31750346bc237e9f3e4704b4248ed23e",
+            "files": [
+              "/home/runner/work/_temp/w13-score/colord-scale-4w/round-0/after/oximut/project/tests/colord.test.ts"
+            ]
+          }
+        ],
+        [
+          494,
+          {
+            "controller": 39207,
+            "owner": "8aada8fc-4673-441c-bda3-bfeb14583a2a",
+            "type": "run",
+            "pid": 40416,
+            "entrypoint": "/home/runner/work/_temp/w13-score/colord-scale-4w/round-0/after/oximut/prepared/private-worker.mjs",
+            "selector": "ab2455a7ecce99e57488673aed917853c12dc167c626fa8fdc2030b0d6080ced",
+            "files": [
+              "/home/runner/work/_temp/w13-score/colord-scale-4w/round-0/after/oximut/project/tests/plugins.test.ts"
+            ]
+          }
+        ],
+        [
+          495,
+          {
+            "controller": 39207,
+            "owner": "8aada8fc-4673-441c-bda3-bfeb14583a2a",
+            "type": "validated-fork-artifact",
+            "wallMs": 0.3752870000007533,
+            "cpu": {
+              "user": 374,
+              "system": 0
+            }
+          }
+        ],
+        [
+          496,
+          {
+            "controller": 39207,
+            "owner": "8aada8fc-4673-441c-bda3-bfeb14583a2a",
+            "type": "validated-fork-artifact",
+            "wallMs": 0.3058049999999639,
+            "cpu": {
+              "user": 219,
+              "system": 87
+            }
+          }
+        ],
+        [
+          497,
+          {
+            "controller": 39207,
+            "owner": "8aada8fc-4673-441c-bda3-bfeb14583a2a",
+            "type": "validated-fork-artifact",
+            "wallMs": 0.34878500000013446,
+            "cpu": {
+              "user": 349,
+              "system": 0
+            }
+          }
+        ],
+        [
+          498,
+          {
+            "controller": 39207,
+            "owner": "8aada8fc-4673-441c-bda3-bfeb14583a2a",
+            "type": "validated-fork-artifact",
+            "wallMs": 0.8980659999997442,
+            "cpu": {
+              "user": 362,
+              "system": 0
+            }
+          }
+        ],
+        [
+          499,
+          {
+            "controller": 39207,
+            "owner": "8aada8fc-4673-441c-bda3-bfeb14583a2a",
+            "type": "fork",
+            "pid": 40431,
+            "startTime": "88090",
+            "entrypoint": "/home/runner/work/_temp/w13-score/colord-scale-4w/round-0/after/oximut/prepared/private-worker.mjs",
+            "command": [
+              "/opt/hostedtoolcache/node/26.3.1/x64/bin/node",
+              "--experimental-import-meta-resolve",
+              "--require",
+              "/home/runner/work/oximut/oximut/node_modules/vitest/suppress-warnings.cjs",
+              "--conditions",
+              "node",
+              "--conditions",
+              "development",
+              "--require",
+              "/home/runner/work/oximut/oximut/packages/vitest-adapter/compile-cache.cjs",
+              "/home/runner/work/_temp/w13-score/colord-scale-4w/round-0/after/oximut/prepared/private-worker.mjs",
+              ""
+            ]
+          }
+        ],
+        [
+          500,
+          {
+            "controller": 39207,
+            "owner": "8aada8fc-4673-441c-bda3-bfeb14583a2a",
+            "type": "fork",
+            "pid": 40432,
+            "startTime": "88091",
+            "entrypoint": "/home/runner/work/_temp/w13-score/colord-scale-4w/round-0/after/oximut/prepared/private-worker.mjs",
+            "command": [
+              "/opt/hostedtoolcache/node/26.3.1/x64/bin/node",
+              "--experimental-import-meta-resolve",
+              "--require",
+              "/home/runner/work/oximut/oximut/node_modules/vitest/suppress-warnings.cjs",
+              "--conditions",
+              "node",
+              "--conditions",
+              "development",
+              "--require",
+              "/home/runner/work/oximut/oximut/packages/vitest-adapter/compile-cache.cjs",
+              "/home/runner/work/_temp/w13-score/colord-scale-4w/round-0/after/oximut/prepared/private-worker.mjs",
+              ""
+            ]
+          }
+        ],
+        [
+          501,
+          {
+            "controller": 39207,
+            "owner": "8aada8fc-4673-441c-bda3-bfeb14583a2a",
+            "type": "fork",
+            "pid": 40438,
+            "startTime": "88091",
+            "entrypoint": "/home/runner/work/_temp/w13-score/colord-scale-4w/round-0/after/oximut/prepared/private-worker.mjs",
+            "command": [
+              "/opt/hostedtoolcache/node/26.3.1/x64/bin/node",
+              "--experimental-import-meta-resolve",
+              "--require",
+              "/home/runner/work/oximut/oximut/node_modules/vitest/suppress-warnings.cjs",
+              "--conditions",
+              "node",
+              "--conditions",
+              "development",
+              "--require",
+              "/home/runner/work/oximut/oximut/packages/vitest-adapter/compile-cache.cjs",
+              "/home/runner/work/_temp/w13-score/colord-scale-4w/round-0/after/oximut/prepared/private-worker.mjs",
+              ""
+            ]
+          }
+        ],
+        [
+          502,
+          {
+            "controller": 39207,
+            "owner": "8aada8fc-4673-441c-bda3-bfeb14583a2a",
+            "type": "run",
+            "pid": 40432,
+            "entrypoint": "/home/runner/work/_temp/w13-score/colord-scale-4w/round-0/after/oximut/prepared/private-worker.mjs",
+            "selector": "9ac8a011bc1502b93d38fb1ff9c1d9d64b3dfff020283c5ae41da91473b75fc8",
+            "files": [
+              "/home/runner/work/_temp/w13-score/colord-scale-4w/round-0/after/oximut/project/tests/plugins.test.ts"
+            ]
+          }
+        ],
+        [
+          503,
+          {
+            "controller": 39207,
+            "owner": "8aada8fc-4673-441c-bda3-bfeb14583a2a",
+            "type": "run",
+            "pid": 40431,
+            "entrypoint": "/home/runner/work/_temp/w13-score/colord-scale-4w/round-0/after/oximut/prepared/private-worker.mjs",
+            "selector": "08a202fd42efe7dcacc1c6b15c952582dd74901cf9baecca9eaa81a5c098a58d",
+            "files": [
+              "/home/runner/work/_temp/w13-score/colord-scale-4w/round-0/after/oximut/project/tests/plugins.test.ts"
+            ]
+          }
+        ],
+        [
+          504,
+          {
+            "controller": 39207,
+            "owner": "8aada8fc-4673-441c-bda3-bfeb14583a2a",
+            "type": "run",
+            "pid": 40438,
+            "entrypoint": "/home/runner/work/_temp/w13-score/colord-scale-4w/round-0/after/oximut/prepared/private-worker.mjs",
+            "selector": "c8fb72bec90d9a783caf7ef8479772865cadc5338cbace358a9a173db7fcf175",
+            "files": [
+              "/home/runner/work/_temp/w13-score/colord-scale-4w/round-0/after/oximut/project/tests/colord.test.ts"
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "pid": 40453,
+      "event_range": [
+        505,
+        619
+      ],
+      "counts": {
+        "validated-controller": 1,
+        "validated-fork-artifact": 38,
+        "fork": 38,
+        "run": 38
+      },
+      "tail": [
+        [
+          608,
+          {
+            "controller": 40453,
+            "owner": "8aada8fc-4673-441c-bda3-bfeb14583a2a",
+            "type": "fork",
+            "pid": 40701,
+            "startTime": "88517",
+            "entrypoint": "/home/runner/work/_temp/w13-score/colord-scale-4w/round-0/after/oximut/prepared/private-worker.mjs",
+            "command": [
+              "/opt/hostedtoolcache/node/26.3.1/x64/bin/node",
+              "--experimental-import-meta-resolve",
+              "--require",
+              "/home/runner/work/oximut/oximut/node_modules/vitest/suppress-warnings.cjs",
+              "--conditions",
+              "node",
+              "--conditions",
+              "development",
+              "--require",
+              "/home/runner/work/oximut/oximut/packages/vitest-adapter/compile-cache.cjs",
+              "/home/runner/work/_temp/w13-score/colord-scale-4w/round-0/after/oximut/prepared/private-worker.mjs",
+              ""
+            ]
+          }
+        ],
+        [
+          609,
+          {
+            "controller": 40453,
+            "owner": "8aada8fc-4673-441c-bda3-bfeb14583a2a",
+            "type": "fork",
+            "pid": 40707,
+            "startTime": "88517",
+            "entrypoint": "/home/runner/work/_temp/w13-score/colord-scale-4w/round-0/after/oximut/prepared/private-worker.mjs",
+            "command": [
+              "/opt/hostedtoolcache/node/26.3.1/x64/bin/node",
+              "--experimental-import-meta-resolve",
+              "--require",
+              "/home/runner/work/oximut/oximut/node_modules/vitest/suppress-warnings.cjs",
+              "--conditions",
+              "node",
+              "--conditions",
+              "development",
+              "--require",
+              "/home/runner/work/oximut/oximut/packages/vitest-adapter/compile-cache.cjs",
+              "/home/runner/work/_temp/w13-score/colord-scale-4w/round-0/after/oximut/prepared/private-worker.mjs",
+              ""
+            ]
+          }
+        ],
+        [
+          610,
+          {
+            "controller": 40453,
+            "owner": "8aada8fc-4673-441c-bda3-bfeb14583a2a",
+            "type": "run",
+            "pid": 40694,
+            "entrypoint": "/home/runner/work/_temp/w13-score/colord-scale-4w/round-0/after/oximut/prepared/private-worker.mjs",
+            "selector": "97f9c8faa6be7e865d41e98fee69a050ee0e8e0fd1fbaecb330547e5dee2232f",
+            "files": [
+              "/home/runner/work/_temp/w13-score/colord-scale-4w/round-0/after/oximut/project/tests/plugins.test.ts"
+            ]
+          }
+        ],
+        [
+          611,
+          {
+            "controller": 40453,
+            "owner": "8aada8fc-4673-441c-bda3-bfeb14583a2a",
+            "type": "run",
+            "pid": 40695,
+            "entrypoint": "/home/runner/work/_temp/w13-score/colord-scale-4w/round-0/after/oximut/prepared/private-worker.mjs",
+            "selector": "e623a45291947316bba94496367268277994abf8a2bd5d83e8ed89c12b1a914f",
+            "files": [
+              "/home/runner/work/_temp/w13-score/colord-scale-4w/round-0/after/oximut/project/tests/plugins.test.ts"
+            ]
+          }
+        ],
+        [
+          612,
+          {
+            "controller": 40453,
+            "owner": "8aada8fc-4673-441c-bda3-bfeb14583a2a",
+            "type": "run",
+            "pid": 40707,
+            "entrypoint": "/home/runner/work/_temp/w13-score/colord-scale-4w/round-0/after/oximut/prepared/private-worker.mjs",
+            "selector": "5935e44509b4f6d15d99c11bca98ce7f1e05db7c502ba55be9284504a76da0e6",
+            "files": [
+              "/home/runner/work/_temp/w13-score/colord-scale-4w/round-0/after/oximut/project/tests/plugins.test.ts"
+            ]
+          }
+        ],
+        [
+          613,
+          {
+            "controller": 40453,
+            "owner": "8aada8fc-4673-441c-bda3-bfeb14583a2a",
+            "type": "run",
+            "pid": 40701,
+            "entrypoint": "/home/runner/work/_temp/w13-score/colord-scale-4w/round-0/after/oximut/prepared/private-worker.mjs",
+            "selector": "358e718a330aa500b536470ea56ba9d68ac9b750746dde64275a9de34d1bb5d6",
+            "files": [
+              "/home/runner/work/_temp/w13-score/colord-scale-4w/round-0/after/oximut/project/tests/plugins.test.ts"
+            ]
+          }
+        ],
+        [
+          614,
+          {
+            "controller": 40453,
+            "owner": "8aada8fc-4673-441c-bda3-bfeb14583a2a",
+            "type": "validated-fork-artifact",
+            "wallMs": 0.29694199999994453,
+            "cpu": {
+              "user": 0,
+              "system": 295
+            }
+          }
+        ],
+        [
+          615,
+          {
+            "controller": 40453,
+            "owner": "8aada8fc-4673-441c-bda3-bfeb14583a2a",
+            "type": "validated-fork-artifact",
+            "wallMs": 0.2832959999996092,
+            "cpu": {
+              "user": 197,
+              "system": 85
+            }
+          }
+        ],
+        [
+          616,
+          {
+            "controller": 40453,
+            "owner": "8aada8fc-4673-441c-bda3-bfeb14583a2a",
+            "type": "fork",
+            "pid": 40722,
+            "startTime": "88541",
+            "entrypoint": "/home/runner/work/_temp/w13-score/colord-scale-4w/round-0/after/oximut/prepared/private-worker.mjs",
+            "command": [
+              "/opt/hostedtoolcache/node/26.3.1/x64/bin/node",
+              "--experimental-import-meta-resolve",
+              "--require",
+              "/home/runner/work/oximut/oximut/node_modules/vitest/suppress-warnings.cjs",
+              "--conditions",
+              "node",
+              "--conditions",
+              "development",
+              "--require",
+              "/home/runner/work/oximut/oximut/packages/vitest-adapter/compile-cache.cjs",
+              "/home/runner/work/_temp/w13-score/colord-scale-4w/round-0/after/oximut/prepared/private-worker.mjs",
+              ""
+            ]
+          }
+        ],
+        [
+          617,
+          {
+            "controller": 40453,
+            "owner": "8aada8fc-4673-441c-bda3-bfeb14583a2a",
+            "type": "fork",
+            "pid": 40723,
+            "startTime": "88541",
+            "entrypoint": "/home/runner/work/_temp/w13-score/colord-scale-4w/round-0/after/oximut/prepared/private-worker.mjs",
+            "command": [
+              "/opt/hostedtoolcache/node/26.3.1/x64/bin/node",
+              "--experimental-import-meta-resolve",
+              "--require",
+              "/home/runner/work/oximut/oximut/node_modules/vitest/suppress-warnings.cjs",
+              "--conditions",
+              "node",
+              "--conditions",
+              "development",
+              "--require",
+              "/home/runner/work/oximut/oximut/packages/vitest-adapter/compile-cache.cjs",
+              "/home/runner/work/_temp/w13-score/colord-scale-4w/round-0/after/oximut/prepared/private-worker.mjs",
+              ""
+            ]
+          }
+        ],
+        [
+          618,
+          {
+            "controller": 40453,
+            "owner": "8aada8fc-4673-441c-bda3-bfeb14583a2a",
+            "type": "run",
+            "pid": 40722,
+            "entrypoint": "/home/runner/work/_temp/w13-score/colord-scale-4w/round-0/after/oximut/prepared/private-worker.mjs",
+            "selector": "f96b26dca7cf3f0bca3a89b2e698816153227d342e8490cc03193c8e100a9dd0",
+            "files": [
+              "/home/runner/work/_temp/w13-score/colord-scale-4w/round-0/after/oximut/project/tests/plugins.test.ts"
+            ]
+          }
+        ],
+        [
+          619,
+          {
+            "controller": 40453,
+            "owner": "8aada8fc-4673-441c-bda3-bfeb14583a2a",
+            "type": "run",
+            "pid": 40723,
+            "entrypoint": "/home/runner/work/_temp/w13-score/colord-scale-4w/round-0/after/oximut/prepared/private-worker.mjs",
+            "selector": "44880a939f28556e9a9ec7b3bdcafbdecfd200ad18e9767070254a06ba0a05be",
+            "files": [
+              "/home/runner/work/_temp/w13-score/colord-scale-4w/round-0/after/oximut/project/tests/colord.test.ts"
+            ]
+          }
+        ]
+      ]
+    }
+  ],
+  "four_mutants": [
+    {
+      "report_index": 164,
+      "id": "08a202fd42efe7dcacc1c6b15c952582dd74901cf9baecca9eaa81a5c098a58d",
+      "source": "/home/runner/work/_temp/w13-score/colord-scale-4w/round-0/after/oximut/project/src/colorModels/cmyk.ts",
+      "location": {
+        "start": {
+          "offset": 1255,
+          "line": 45,
+          "column": 15
+        },
+        "end": {
+          "offset": 1256,
+          "line": 45,
+          "column": 16
+        }
+      },
+      "candidate_outcome": "infrastructure-error",
+      "stock_outcome": "killed",
+      "errors": [
+        "Unattributed batch error",
+        "expected { Object (c, m, ...) } to match object { c: +0, m: 100, y: 100, k: +0, a: 1 }"
+      ],
+      "tests": {
+        "passed": 5,
+        "failed": 1,
+        "skipped": 0
+      },
+      "trace": [
+        [
+          503,
+          {
+            "controller": 39207,
+            "owner": "8aada8fc-4673-441c-bda3-bfeb14583a2a",
+            "type": "run",
+            "pid": 40431,
+            "entrypoint": "/home/runner/work/_temp/w13-score/colord-scale-4w/round-0/after/oximut/prepared/private-worker.mjs",
+            "selector": "08a202fd42efe7dcacc1c6b15c952582dd74901cf9baecca9eaa81a5c098a58d",
+            "files": [
+              "/home/runner/work/_temp/w13-score/colord-scale-4w/round-0/after/oximut/project/tests/plugins.test.ts"
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "report_index": 165,
+      "id": "9ac8a011bc1502b93d38fb1ff9c1d9d64b3dfff020283c5ae41da91473b75fc8",
+      "source": "/home/runner/work/_temp/w13-score/colord-scale-4w/round-0/after/oximut/project/src/colorModels/cmyk.ts",
+      "location": {
+        "start": {
+          "offset": 1489,
+          "line": 51,
+          "column": 31
+        },
+        "end": {
+          "offset": 1490,
+          "line": 51,
+          "column": 32
+        }
+      },
+      "candidate_outcome": "infrastructure-error",
+      "stock_outcome": "killed",
+      "errors": [
+        "Unattributed batch error",
+        "expected { c: +0, m: +0, y: +0, k: +0, a: 1 } to match object { c: 100, m: +0, y: +0, k: +0, a: 1 }"
+      ],
+      "tests": {
+        "passed": 5,
+        "failed": 1,
+        "skipped": 0
+      },
+      "trace": [
+        [
+          502,
+          {
+            "controller": 39207,
+            "owner": "8aada8fc-4673-441c-bda3-bfeb14583a2a",
+            "type": "run",
+            "pid": 40432,
+            "entrypoint": "/home/runner/work/_temp/w13-score/colord-scale-4w/round-0/after/oximut/prepared/private-worker.mjs",
+            "selector": "9ac8a011bc1502b93d38fb1ff9c1d9d64b3dfff020283c5ae41da91473b75fc8",
+            "files": [
+              "/home/runner/work/_temp/w13-score/colord-scale-4w/round-0/after/oximut/project/tests/plugins.test.ts"
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "report_index": 166,
+      "id": "c8fb72bec90d9a783caf7ef8479772865cadc5338cbace358a9a173db7fcf175",
+      "source": "/home/runner/work/_temp/w13-score/colord-scale-4w/round-0/after/oximut/project/src/manipulate/invert.ts",
+      "location": {
+        "start": {
+          "offset": 143,
+          "line": 6,
+          "column": 10
+        },
+        "end": {
+          "offset": 144,
+          "line": 6,
+          "column": 11
+        }
+      },
+      "candidate_outcome": "infrastructure-error",
+      "stock_outcome": "killed",
+      "errors": [
+        "Unattributed batch error",
+        "expected '#0000ff' to be '#000000' // Object.is equality"
+      ],
+      "tests": {
+        "passed": 26,
+        "failed": 1,
+        "skipped": 0
+      },
+      "trace": [
+        [
+          504,
+          {
+            "controller": 39207,
+            "owner": "8aada8fc-4673-441c-bda3-bfeb14583a2a",
+            "type": "run",
+            "pid": 40438,
+            "entrypoint": "/home/runner/work/_temp/w13-score/colord-scale-4w/round-0/after/oximut/prepared/private-worker.mjs",
+            "selector": "c8fb72bec90d9a783caf7ef8479772865cadc5338cbace358a9a173db7fcf175",
+            "files": [
+              "/home/runner/work/_temp/w13-score/colord-scale-4w/round-0/after/oximut/project/tests/colord.test.ts"
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "report_index": 167,
+      "id": "4c4dd13e31689434138c647f612e775284ce81b1544891e102cfd99539e2a1d0",
+      "source": "/home/runner/work/_temp/w13-score/colord-scale-4w/round-0/after/oximut/project/src/colorModels/cmykString.ts",
+      "location": {
+        "start": {
+          "offset": 765,
+          "line": 19,
+          "column": 25
+        },
+        "end": {
+          "offset": 766,
+          "line": 19,
+          "column": 26
+        }
+      },
+      "candidate_outcome": "infrastructure-error",
+      "stock_outcome": "survived",
+      "errors": [
+        "Unattributed batch error"
+      ],
+      "tests": {
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0
+      },
+      "trace": []
+    }
+  ],
+  "inspected_sources": {
+    "packages/vitest-adapter/shared-lanes.ts": {
+      "revision": "88b7d6712648979dc7438a4044abf0f63650d463",
+      "sha256": "a04dd747b4f215b5c7b78566ffb50911ffab2a0114775be3f566ae4104436add",
+      "excerpt_start": 330,
+      "excerpt": [
+        "    }",
+        "    // Eight errors per lane, escaped, must stay well under the 1 MiB response limit.",
+        "    const messageLimit = Math.min(2048, Math.floor((128 * 1024) / (jobs.length * 8)));",
+        "    // Each lane exit we observed explains one such error. Anything else, or any",
+        "    // more of them, cannot be attributed and still taints the whole batch.",
+        "    const exits = [...this.failures.values()].filter(",
+        "      (failure) => failure === LANE_EXITED || failure === HARD_DEADLINE,",
+        "    ).length;",
+        "    const poolExits = result.unhandledErrors.filter((error) =>",
+        "      POOL_EXIT.test(String((error as Error).message)),",
+        "    ).length;",
+        "    const unattributed = result.unhandledErrors.length > poolExits || poolExits > exits;",
+        "    const lanes = jobs.map((job, index) => {",
+        "      const name = `oximut-lane-${index}`;",
+        "      const modules = result.testModules.filter(",
+        "        (module) => module.project.name === name && this.files.get(name)!.includes(module.moduleId),",
+        "      );",
+        "      const tests = { passed: 0, failed: 0, skipped: 0 };",
+        "      const moduleErrors = modules.flatMap((module) => [",
+        "        ...module.errors(),",
+        "        ...[...module.children.allSuites()].flatMap((suite) => suite.errors()),",
+        "      ]);",
+        "      const errors = [...moduleErrors];",
+        "      // After a local bail the remaining files may never report; a failure stands.",
+        "      let pending =",
+        "        modules.length !== this.files.get(name)!.length ||",
+        "        modules.some((module) => module.state() === 'pending' || module.state() === 'queued');",
+        "      for (const module of modules)",
+        "        for (const test of module.children.allTests()) {",
+        "          const state = test.result();",
+        "          if (state.state === 'passed' || state.state === 'failed' || state.state === 'skipped')",
+        "            tests[state.state]++;",
+        "          else pending = true;",
+        "          errors.push(...(state.errors ?? []));",
+        "        }",
+        "      const messages = errors.map((error) => String(error.message ?? error).slice(0, messageLimit));",
+        "      const failure =",
+        "        this.failures.get(name) ||",
+        "        (tests.failed && !errors.length ? 'Failed test without error evidence' : undefined);",
+        "      // Aggregate errors have lost project identity: conservatively taint all lanes.",
+        "      const untrusted = failure || (unattributed ? 'Unattributed batch error' : undefined);",
+        "      const timedOut = messages.some((error) => /(?:Test|Hook) timed out in \\d+ms/.test(error));",
+        "      const invalid = moduleErrors.some((error) =>",
+        "        /Transform failed|Parse failure|Failed to parse source|Unexpected token|Expected.*but found/.test(",
+        "          String(error.message),"
+      ]
+    },
+    "crates/cli/src/coordinator.rs": {
+      "revision": "5dfd17e53cd7b067586b3ad47363cb3ecee5873e",
+      "sha256": "470b464706bbe1938429a87c652e9b15254dd9c8be9247fe63f057b421067dd7",
+      "excerpt_start": 465,
+      "excerpt": [
+        "        })",
+        "    }",
+        "",
+        "    fn diagnostics(&self) -> String {",
+        "        let output = self.output.lock().expect(\"controller output\");",
+        "        let mut text = String::from_utf8_lossy(&output.text).into_owned();",
+        "        if output.truncated {",
+        "            text.push_str(\"\\n[controller output truncated]\");",
+        "        }",
+        "        text",
+        "    }",
+        "",
+        "    fn send("
+      ]
+    },
+    "node_modules/vitest/dist/chunks/index.Di8au7q4.js": {
+      "sha256": "30444e3faa04d61f6641ebbb1fa4604edf338c69c460d24d5dcb37dee712db01",
+      "matches_retained_installed_inventory": true,
+      "excerpts": {
+        "5253-5275": [
+          "\tasync start(options) {",
+          "\t\t// Wait for any ongoing operation to complete",
+          "\t\tif (this._operationLock) await this._operationLock;",
+          "\t\tif (this._state === RunnerState.STARTED || this._state === RunnerState.STARTING) return;",
+          "\t\tif (this._state === RunnerState.STOPPED) throw new Error(\"[vitest-pool-runner]: Cannot start a stopped runner\");",
+          "\t\t// Create operation lock to prevent concurrent start/stop",
+          "\t\tthis._operationLock = createDefer();",
+          "\t\tlet startSpan;",
+          "\t\tconst startedAt = performance.now();",
+          "\t\ttry {",
+          "\t\t\tthis._state = RunnerState.STARTING;",
+          "\t\t\tawait this._traces.$(`vitest.${this.worker.name}.start`, { context: this._otel?.workerContext }, () => this.worker.start());",
+          "\t\t\t// Attach event listeners AFTER starting worker to avoid issues",
+          "\t\t\t// if worker.start() fails",
+          "\t\t\tthis.worker.on(\"error\", this.emitWorkerError);",
+          "\t\t\tthis.worker.on(\"exit\", this.emitUnexpectedExit);",
+          "\t\t\tthis.worker.on(\"message\", this.emitWorkerMessage);",
+          "\t\t\tstartSpan = this.startTracesSpan(\"vitest.worker.start\");",
+          "\t\t\tconst startPromise = this.withTimeout(this.waitForStart(), START_TIMEOUT);",
+          "\t\t\tconst globalConfig = this.project.vitest.config.experimental.openTelemetry;",
+          "\t\t\tconst projectConfig = this.project.config.experimental.openTelemetry;",
+          "\t\t\tconst tracesEnabled = projectConfig?.enabled ?? globalConfig?.enabled === true;",
+          "\t\t\tconst tracesSdk = projectConfig?.sdkPath ?? globalConfig?.sdkPath;"
+        ],
+        "5489-5511": [
+          "\tasync start() {",
+          "\t\tthis._fork ||= fork(this.entrypoint, [], {",
+          "\t\t\tenv: this.env,",
+          "\t\t\texecArgv: this.execArgv,",
+          "\t\t\tstdio: \"pipe\",",
+          "\t\t\tserialization: \"advanced\"",
+          "\t\t});",
+          "\t\tthis._fork.on(\"error\", this.emitError);",
+          "\t\t// `end: false`: the logger streams are shared by every worker, so one",
+          "\t\t// ending worker stream must not end them for everyone else",
+          "\t\tif (this._fork.stdout) {",
+          "\t\t\tthis.stdout.setMaxListeners(1 + this.stdout.getMaxListeners());",
+          "\t\t\tthis._fork.stdout.pipe(this.stdout, { end: false });",
+          "\t\t}",
+          "\t\tif (this._fork.stderr) {",
+          "\t\t\tthis.stderr.setMaxListeners(1 + this.stderr.getMaxListeners());",
+          "\t\t\tthis._fork.stderr.pipe(this.stderr, { end: false });",
+          "\t\t}",
+          "\t}",
+          "\tasync stop() {",
+          "\t\tconst fork = this.fork;",
+          "\t\tconst waitForExit = new Promise((resolve) => {",
+          "\t\t\tif (fork.exitCode != null) resolve();"
+        ],
+        "5929-5940": [
+          "\t\t\trunner.on(\"error\", onTaskError);",
+          "\t\t\tif (!runner.isStarted) {",
+          "\t\t\t\tconst id = setTimeout(() => resolver.reject(/* @__PURE__ */ new Error(`[vitest-pool]: Timeout starting ${task.worker} runner.`)), WORKER_START_TIMEOUT);",
+          "\t\t\t\tawait runner.start({ workerId: task.context.workerId }).catch((error) => resolver.reject(new Error(`[vitest-pool]: Failed to start ${task.worker} worker for test files ${formatFiles(task)}.`, { cause: error }))).finally(() => clearTimeout(id));",
+          "\t\t\t}",
+          "\t\t\tlet span;",
+          "\t\t\tif (!resolver.isRejected) {",
+          "\t\t\t\tspan = runner.startTracesSpan(`vitest.worker.${method}`);",
+          "\t\t\t\t// Start running the test in the worker",
+          "\t\t\t\trunner.request(method, task.context);",
+          "\t\t\t}",
+          "\t\t\tawait resolver.promise.catch((error) => span?.recordException(error)).finally(() => span?.end());"
+        ]
+      }
+    }
+  },
+  "limits": [
+    "ForksPoolWorker.start creates child without awaiting readiness; PoolRunner later awaits start response. This does not prove a race in the original run.",
+    "Pool.schedule wraps start rejection with Error.cause. SharedLanes emits generic unattributed text instead of serializing result.unhandledErrors.",
+    "Controller stdout/stderr are buffered in memory. diagnostics() is returned for controller initialization errors, not ordinary Result replies; these batches were ordinary Result replies. Retained command output has no original aggregate error/stack.",
+    "Configured206/recorded205 does not prove whether a child was never created, exited, failed identity inspection, or failed elsewhere before the fork event."
+  ]
+}

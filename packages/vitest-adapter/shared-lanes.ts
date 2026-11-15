@@ -20,6 +20,16 @@ export interface WorkerBundleExperiment {
   configure(worker: ForksPoolWorker): void;
   started(worker: ForksPoolWorker): void;
   dispatched(worker: ForksPoolWorker, message: unknown): void;
+  diagnostic?(
+    stage: string,
+    details: {
+      lane?: string;
+      selector?: string;
+      pid?: number;
+      error?: unknown;
+      errors?: readonly unknown[];
+    },
+  ): void;
 }
 const runner = fileURLToPath(new URL('./lane-runner.mjs', import.meta.url));
 const HARD_DEADLINE = 'Job deadline exceeded';
@@ -138,7 +148,18 @@ export class SharedLanes {
                   pool === 'threads'
                     ? new ExitOnlyThreadsPoolWorker(options)
                     : new ForksPoolWorker(options);
-                if (worker instanceof ForksPoolWorker) this.experiment?.configure(worker);
+                if (worker instanceof ForksPoolWorker) {
+                  try {
+                    this.experiment?.configure(worker);
+                  } catch (error) {
+                    this.experiment?.diagnostic?.('artifact-configuration', {
+                      lane: options.project.name,
+                      selector: options.env.OXIMUT_ACTIVE_MUTANT,
+                      error,
+                    });
+                    throw error;
+                  }
+                }
                 const start = worker.start.bind(worker);
                 const stop = worker.stop.bind(worker);
                 const send = worker.send.bind(worker);
@@ -149,6 +170,14 @@ export class SharedLanes {
                 let finished = false;
                 let stopping = false;
                 let failedStartCheck = false;
+                const diagnostic = (stage: string, error: unknown) => {
+                  this.experiment?.diagnostic?.(stage, {
+                    lane: name,
+                    selector: options.env.OXIMUT_ACTIVE_MUTANT,
+                    pid: (worker as unknown as { _fork?: { pid?: number } })._fork?.pid,
+                    error,
+                  });
+                };
                 worker.off = (event, callback) => {
                   // No pool listeners were installed if our start check failed.
                   // The child was already drained; the pinned fork's off() getter
@@ -156,7 +185,12 @@ export class SharedLanes {
                   if (!failedStartCheck) off(event, callback);
                 };
                 worker.start = async () => {
-                  await start();
+                  try {
+                    await start();
+                  } catch (error) {
+                    diagnostic('fork-start', error);
+                    throw error;
+                  }
                   if (worker instanceof ThreadsPoolWorker) this.threads.add(worker);
                   worker.on('exit', () => {
                     clearTimeout(timer);
@@ -169,7 +203,11 @@ export class SharedLanes {
                     // Vitest attaches its listeners only after start() resolves.
                     // A failed post-spawn check must reap the child itself.
                     failedStartCheck = true;
-                    await worker.stop();
+                    try {
+                      diagnostic('started-check', error);
+                    } finally {
+                      await worker.stop();
+                    }
                     throw error;
                   }
                 };
@@ -203,6 +241,15 @@ export class SharedLanes {
                         this.experiment?.dispatched(worker, message);
                       } catch (error) {
                         this.failures.set(name, 'Experimental worker dispatch failed');
+                        let failure = error;
+                        try {
+                          diagnostic('dispatch', error);
+                        } catch (captureError) {
+                          failure = new AggregateError(
+                            [error, captureError],
+                            'Experimental diagnostic capture failed',
+                          );
+                        }
                         // A synchronous throw from send() skips Vitest's runner
                         // teardown and can leave pool.close() waiting forever.
                         // The pinned fork forwards child error events to the
@@ -214,7 +261,7 @@ export class SharedLanes {
                         ).fork;
                         child.emit(
                           'error',
-                          error instanceof Error ? error : new Error(String(error)),
+                          failure instanceof Error ? failure : new Error(String(failure)),
                         );
                         return;
                       }
@@ -325,9 +372,15 @@ export class SharedLanes {
       // Still drain thread stdio and termination before returning/reassigning.
       await this.drainThreads();
     } catch (error) {
-      await this.close();
+      try {
+        this.experiment?.diagnostic?.('batch-run', { error });
+      } finally {
+        await this.close();
+      }
       throw error;
     }
+    if (result.unhandledErrors.length)
+      this.experiment?.diagnostic?.('batch-unhandled', { errors: result.unhandledErrors });
     // Eight errors per lane, escaped, must stay well under the 1 MiB response limit.
     const messageLimit = Math.min(2048, Math.floor((128 * 1024) / (jobs.length * 8)));
     // Each lane exit we observed explains one such error. Anything else, or any
