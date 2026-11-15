@@ -1,5 +1,6 @@
 """Scoring accounting/order/failure tests; no product builds or benchmarks."""
 import copy
+import gzip
 import json
 from pathlib import Path
 import sys
@@ -138,6 +139,39 @@ class ScoreTests(unittest.TestCase):
             for config in failed['configs'].values():
                 for evaluation in config['evaluations'].values():
                     self.assertEqual(evaluation['comparisons'], {})
+
+    def test_accepted_native_recycling_validates_every_controller(self):
+        fixture = json.loads(gzip.decompress((Path(__file__).parent / 'data/w13-native-controller-recycling.json.gz').read_bytes()))
+        for case in fixture['cases']:
+            with tempfile.TemporaryDirectory() as temp:
+                root = Path(temp)
+                (root / 'integration-manifest.json').write_text(json.dumps(case['spec']))
+                (root / 'integration-events.jsonl').write_text(''.join(json.dumps(e)+'\n' for e in case['events']))
+                evidence = score.worker_evidence(root, case['report'])
+                self.assertEqual(evidence['fresh_forks'], 206)
+                self.assertEqual(len(evidence['validated_controllers']), 3 if case['workers'] == 2 else 2)
+
+    def test_native_recycling_never_excuses_unvalidated_or_reused_identities(self):
+        case = json.loads(gzip.decompress((Path(__file__).parent / 'data/w13-native-controller-recycling.json.gz').read_bytes()))['cases'][0]
+        for fault in ('missing-validation', 'duplicate-validation', 'unknown-controller', 'wrong-owner', 'reused-worker'):
+            events = copy.deepcopy(case['events'])
+            if fault == 'missing-validation':
+                events.remove(next(e for e in events if e['type'] == 'validated-controller'))
+            elif fault == 'duplicate-validation':
+                events.append(next(e for e in events if e['type'] == 'validated-controller'))
+            elif fault == 'unknown-controller':
+                next(e for e in events if e['type'] == 'run')['controller'] = -1
+            elif fault == 'wrong-owner':
+                events[-1]['owner'] = 'other-invocation'
+            else:
+                forks = [e for e in events if e['type'] == 'fork']
+                forks[-1]['pid'] = forks[0]['pid']
+            with self.subTest(fault=fault), tempfile.TemporaryDirectory() as temp:
+                root = Path(temp)
+                (root / 'integration-manifest.json').write_text(json.dumps(case['spec']))
+                (root / 'integration-events.jsonl').write_text(''.join(json.dumps(e)+'\n' for e in events))
+                with self.assertRaisesRegex(ValueError, 'evidence failed'):
+                    score.worker_evidence(root, case['report'])
 
 
 if __name__ == '__main__':

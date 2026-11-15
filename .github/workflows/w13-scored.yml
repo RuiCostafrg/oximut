@@ -2,7 +2,7 @@ name: W13 bounded paired native scoring
 on:
   workflow_dispatch:
   push:
-    branches: [perf/w13-score-native-1]
+    branches: [perf/w13-score-native-2]
 permissions:
   contents: read
   actions: read

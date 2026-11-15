@@ -117,16 +117,22 @@ def worker_evidence(prepared_dir, candidate_report):
     events = [json.loads(line) for line in (prepared_dir / 'integration-events.jsonl').read_text().splitlines()]
     runs = [e for e in events if e['type'] == 'run']
     forks = [e for e in events if e['type'] == 'fork']
+    validated = [e['controller'] for e in events if e['type'] == 'validated-controller']
+    controllers = {e['controller'] for e in events}
     executed = {m['id'] for m in candidate_report['mutants'] if m['outcome'] != 'no-coverage'}
     if ({e['selector'] for e in runs} != executed or len(runs) != len(executed)
             or len(forks) != len(runs) or len({e['pid'] for e in forks}) != len(forks)
             or {e['pid'] for e in forks} != {e['pid'] for e in runs}
             or not all(e['entrypoint'] == spec['bundle']['path'] and spec['bundle']['path'] in e['command'] for e in forks)
-            or len([e for e in events if e['type'] == 'validated-controller']) != 1
+            # Main retires controllers after 50 requests. Every actual controller
+            # still owes one full validation, including recycled controllers.
+            or set(validated) != controllers or len(validated) != len(controllers)
+            or not all(e['owner'] == spec['owner'] for e in events)
             or len([e for e in events if e['type'] == 'validated-fork-artifact']) != len(forks)
             or not any(e['type'] == 'stock-baseline' and e['command'] == 'run' for e in events)):
         raise ValueError('Actual bundled fresh-fork/selector/validation/baseline evidence failed')
-    return {'events': len(events), 'fresh_forks': len(forks), 'manifest_sha256': workload.measurement.file_hash(prepared_dir / 'integration-manifest.json'),
+    return {'events': len(events), 'fresh_forks': len(forks), 'validated_controllers': sorted(controllers),
+            'manifest_sha256': workload.measurement.file_hash(prepared_dir / 'integration-manifest.json'),
             'owner': spec['owner'], 'bundle': spec['bundle'], 'validationFiles': spec['validationFiles'],
             'internal_preparation_diagnostic': spec['preparation']}
 
