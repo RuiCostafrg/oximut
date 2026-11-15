@@ -1,0 +1,97 @@
+name: W13 ONE unscored failure diagnostic
+on:
+  workflow_dispatch:
+  push:
+    branches: [perf/vitest5-worker-bundle]
+    paths: [.github/workflows/w13-failure-diagnostic.yml]
+permissions:
+  contents: read
+concurrency:
+  group: w13-failure-diagnostic
+  cancel-in-progress: false
+jobs:
+  diagnostic:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version-file: .node-version
+      - name: Preserve new diagnostic sources before prerequisites
+        run: |
+          mkdir "$RUNNER_TEMP/w13-failure-diagnostic"
+          git rev-parse HEAD > "$RUNNER_TEMP/w13-failure-diagnostic/commit.txt"
+          git archive HEAD Cargo.toml Cargo.lock rust-toolchain.toml crates experiments/oxc-smoke packages/vitest-adapter benchmarks/experiments/vitest5-private-bootstrap benchmarks/real-project/colord benchmarks/real_project.py benchmarks/run.py benchmarks/m6.py benchmarks/compare_candidates.py benchmarks/targets.py benchmarks/w13_failure_replay.py benchmarks/results/2026-11-14-w13-map-base/native/runtime-provenance.json package.json package-lock.json .node-version .github/workflows/w13-failure-diagnostic.yml | gzip > "$RUNNER_TEMP/w13-failure-diagnostic/diagnostic-source.tar.gz"
+      - name: Install exact pins and check types
+        run: |
+          npm ci --ignore-scripts --no-audit --no-fund > "$RUNNER_TEMP/w13-failure-diagnostic/install.stdout.log" 2> "$RUNNER_TEMP/w13-failure-diagnostic/install.stderr.log"
+          npm run typecheck > "$RUNNER_TEMP/w13-failure-diagnostic/typecheck.stdout.log" 2> "$RUNNER_TEMP/w13-failure-diagnostic/typecheck.stderr.log"
+      - name: Deterministic FOUR-lane faults, original parent cleanup tests, strict outer cleanup
+        run: |
+          python3 - <<'PY'
+          import json,os,pathlib,sys
+          sys.dont_write_bytecode=True;sys.path.insert(0,'benchmarks')
+          import run as measurement
+          root=pathlib.Path(os.environ['RUNNER_TEMP'])/'w13-failure-diagnostic'
+          (root/'focused-details').mkdir()
+          env={**os.environ,'W13_FAILURE_TEST_WIDTH':'4','W13_FAILURE_TEST_CAPTURE':str(root/'focused-details')}
+          cmd=['node','--test','--test-concurrency=1','benchmarks/experiments/vitest5-private-bootstrap/test-failure-diagnostics.mjs','benchmarks/experiments/vitest5-private-bootstrap/test-hook-failure.mjs']
+          observed=measurement.run_command(cmd,pathlib.Path.cwd(),root/'focused.output.log',180,.02,16777216,env)
+          (root/'focused.observation.json').write_text(json.dumps(observed,indent=2)+'\n')
+          assert observed['success'],'Focused failure/cleanup invariant failed; do not replay product'
+          PY
+      - name: Recover exact original binaries and sources; no fresh Rust build
+        run: |
+          python3 - <<'PY'
+          import gzip,hashlib,io,json,os,pathlib,tarfile,zipfile,subprocess
+          root=pathlib.Path(os.environ['RUNNER_TEMP'])/'w13-failure-diagnostic'
+          original=pathlib.Path('benchmarks/results/2026-11-15-w13-scored/native-43669808238/artifact.zip')
+          expected='15c333d4c905139e5fb9ba558a80efdc319fb2840a349f5a3a497db9171425e9'
+          assert hashlib.sha256(original.read_bytes()).hexdigest()==expected
+          (root/'binaries').mkdir();stock=pathlib.Path(os.environ['RUNNER_TEMP'])/'w13-diagnostic-stock';stock.mkdir()
+          with zipfile.ZipFile(original) as z:
+              with tarfile.open(fileobj=io.BytesIO(z.read('w13-score-raw.tar.gz'))) as t:
+                  for member,destination in [('raw/binaries/stock',root/'binaries/stock'),('raw/binaries/candidate',root/'binaries/candidate'),('raw/build-metadata.json',root/'original-build-metadata.json'),('raw/source.tar.gz',root/'original-candidate-source.tar.gz'),('raw/stock-source.tar.gz',root/'original-stock-source.tar.gz')]:
+                      destination.write_bytes(t.extractfile(member).read())
+          meta=json.loads((root/'original-build-metadata.json').read_text())
+          for role,variant in [('stock','before'),('candidate','after')]:
+              binary=root/'binaries'/role;binary.chmod(0o755)
+              assert hashlib.sha256(binary.read_bytes()).hexdigest()==meta['binary_sha256'][variant]
+          with tarfile.open(root/'original-stock-source.tar.gz') as t:t.extractall(stock,filter='data')
+          (stock/'node_modules').symlink_to(pathlib.Path.cwd()/'node_modules',target_is_directory=True)
+          subprocess.run(['git','diff','--exit-code',meta['after_commit'],'HEAD','--','Cargo.toml','Cargo.lock','rust-toolchain.toml','crates','experiments/oxc-smoke'],check=True)
+          (root/'binary-reuse-provenance.json').write_text(json.dumps({'original_run':43669808238,'original_artifact_sha256':expected,'original_build_metadata':meta,'policy':'Exact original release binaries reused unchanged; new diagnostics are TS adapter source overrides. Rust workspace and pins verified unchanged. No local or native rebuild claimed.'},indent=2)+'\n')
+          PY
+      - name: ONE unscored workers4 scale206 stock and diagnostic candidate invocation
+        run: |
+          python3 benchmarks/w13_failure_replay.py "$RUNNER_TEMP/w13-failure-diagnostic/replay" \
+            --before-binary "$RUNNER_TEMP/w13-failure-diagnostic/binaries/stock" \
+            --after-binary "$RUNNER_TEMP/w13-failure-diagnostic/binaries/candidate" \
+            --stock-source "$RUNNER_TEMP/w13-diagnostic-stock" \
+            --original-build-metadata "$RUNNER_TEMP/w13-failure-diagnostic/original-build-metadata.json" \
+            > "$RUNNER_TEMP/w13-failure-diagnostic/replay.stdout.log" 2> "$RUNNER_TEMP/w13-failure-diagnostic/replay.stderr.log"
+      - name: Preserve every raw status, error, source and hash even on failure
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib,tarfile
+          temp=pathlib.Path(os.environ['RUNNER_TEMP']);root=temp/'w13-failure-diagnostic'
+          if root.exists():
+              with tarfile.open(temp/'w13-failure-diagnostic-raw.tar.gz','w:gz') as t:
+                  t.add(root,arcname='raw',filter=lambda m:None if m.issym() or 'node_modules' in pathlib.Path(m.name).parts else m)
+              files={str(p.relative_to(root)):hashlib.sha256(p.read_bytes()).hexdigest() for p in root.rglob('*') if p.is_file() and not p.is_symlink() and 'node_modules' not in p.relative_to(root).parts}
+              (temp/'w13-failure-diagnostic-files.json').write_text(json.dumps(files,indent=2)+'\n')
+          PY
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        if: always()
+        with:
+          name: w13-unscored-failure-diagnostic-${{ github.sha }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/w13-failure-diagnostic-raw.tar.gz
+            ${{ runner.temp }}/w13-failure-diagnostic-files.json
+          if-no-files-found: error
+          retention-days: 14
