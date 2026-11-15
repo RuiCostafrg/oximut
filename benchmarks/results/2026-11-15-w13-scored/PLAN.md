@@ -1,5 +1,7 @@
 # W13 bounded scoring evidence
 
+**Current status: completed failure, scored results INVALID/INCOMPLETE.** [Final report](REPORT.md) · [Recovered native failure](native-43669808238/failure-recovery.json). The material below records the original plan and chronological prior updates; their pending statements are historical. No subsequent scoring dispatch or retry occurred.
+
 Scoring follows native requalification of the lifecycle fix at `e9a368face7d8e3fd657383c2c979e2866370a38`. Both raw archives, workflow logs, exact Git-source comparisons and verification scripts are retained in `requalification-43668016386` and `requalification-43668016410`. Both forced started/dispatched hook failures passed native cleanup/recovery tests. All prior failure evidence remains unchanged.
 
 One serial native Ubuntu campaign is planned on owned ref `perf/w13-score-native-1`. Stock is main `5dfd17e53cd7b067586b3ad47363cb3ecee5873e`; candidate source must retain byte-identical executable adapter/probe inputs from the requalified source. No default/product/bundle/helper/diagnostic change is part of scoring. Node 26.3.1 has the previously upstream-verified Linux x64 executable SHA; Vitest 5.1.0, Vite 8.3.5 and Stryker 10.1.1 remain pinned. Both release binaries are built from exact source archives into isolated Cargo targets before timing, with every workspace member included.
@@ -29,3 +31,9 @@ The corrected harness requires exactly one full validation **per actual controll
 One replacement full campaign will run on owned ref `perf/w13-score-native-2`, with new source SHA recorded by its workflow. None of the invalid first attempt's rounds will be combined with its results. This replaces a failed harness attempt; it does not retry a real candidate failure or optimize away costs. Any substantive invariant failure in that campaign still stops scoring.
 
 The replacement was dispatched as run43669808238 at exact source `88b7d6712648979dc7438a4044abf0f63650d463`: https://github.com/RuiCostafrg/oximut/actions/runs/43669808238 . Its qualification receipts,11 harness tests,typecheck and both isolated release builds passed; timing is in progress. See `native-43669808238/PENDING.md` for exact recovery instructions and scope. Prepared and first-use wall/CPU/RSS mission outcomes remain pending; no scored ratios are published from the invalid first campaign.
+
+## Final recovery outcome
+
+Run43669808238 completed with failure at scale206/workers4 warmup, candidate exit2 with4 infrastructure-error outcomes. The prior3 configurations completed but all global ratios/acceptance are suppressed. Raw recovery verified113 tool observations,19 full preparation commands/unique artifacts,1561 distinct recorded bundled PIDs,6789 file hashes,202 candidate-source files and51 stock-source files. The expected full144/24/2592 gate was not reached. Complete archive/logs/API metadata and exact source/runtime/binary/artifact/helper hashes are retained in `native-43669808238`; the success-only verifier was not executed. See REPORT.md for exact failure IDs, missing fork/dispatch, actual resource/setup/sampling observations, limitations and next justified correctness gate. No scored chart or performance verdict was produced.
+
+Owned temporary refs `perf/w13-score-native-1` and `perf/w13-score-native-2` were deleted after raw/source recovery verification; their source commits remain in the experiment branch history. The deletion receipt is retained with the final native evidence.

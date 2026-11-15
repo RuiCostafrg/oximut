@@ -1,3 +1,11 @@
+# Status: completed failure; scoring invalid/incomplete
+
+Run43669808238 completed with **failure**. [Final report](../REPORT.md) · [Raw recovery verification](failure-recovery.json) · [Exact failure](failure-detail.json). All global ratios and wall/CPU/RSS mission acceptance are suppressed. No retry was dispatched. The success-only verifier below was not executed.
+
+The original pending handoff is preserved verbatim below as historical context, not current instructions or status.
+
+<details><summary>Archived pending handoff from33909fe</summary>
+
 # Native scored campaign pending
 
 Run: https://github.com/RuiCostafrg/oximut/actions/runs/43669808238
@@ -11,3 +19,5 @@ Each candidate invocation measures a fresh full external preparation command thr
 Recovery: use bounded `gh run watch 43669808238 --exit-status`, then download the complete artifact.zip and logs.zip plus run/artifact API metadata. Archive contains `w13-score-raw.tar.gz` and per-file hashes. Extract under `/tmp/oximut-w13-score-43669808238/{artifact,raw}` and run `verification-source.py` from repository cwd after source completion. This read-only verifier requires all144 tool rows,24 full preparation rows,24 unique artifacts,2592 distinct bundled PIDs, complete scope/inventory/phase/resource/cleanup gates, exact source/build/runtime/artifact/helper hashes, and exact reproduction of both prepared/first-use paired evaluations. It intentionally cannot certify a failed or incomplete campaign. Preserve a real failure and stop; no automatic retries or gate relaxation.
 
 When complete, retain full compressed artifact/logs and hashes in this directory, publish raw wall/treeCPU/sampled aggregateRSS plus prepared/first-use after/before and candidate/Stryker paired medians/CIs. Mission requires all upper bounds <=.50 wall, <=.80 CPU and <=.80 sampled RSS in all four configurations. Failure suppresses global comparisons/acceptance. A target miss is useful evidence. Five pairs remain exploratory and do not establish general noninferiority, product support, relocatability or speed outside this declared scope.
+
+</details>

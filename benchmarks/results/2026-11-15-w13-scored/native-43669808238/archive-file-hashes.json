@@ -1,0 +1,23 @@
+{
+  "artifact.zip": {
+    "w13-score-raw.tar.gz": "695f68ba7f2d6eab5b27906473c5f08a21cf59ed3b66285601f58b6cefa1c53d",
+    "w13-score-files.json": "20018df8d868a1015feb4789ceb84ac2a788d0f354da92d811fc730ef5704ad6"
+  },
+  "logs.zip": {
+    "0_score.txt": "adf0d037d6a9240be635874ef0adeac46d6958bd0d00a087b44325ec5bf5e010",
+    "score/system.txt": "f424a012e2a2faf91e92dca2d51a97d3913c244b775fd782b46446a8b289c5b9",
+    "score/1_Set up job.txt": "5829b355564cc15e45bb39299bde665abc5be1c1fa466a08a565a54c77b4ea2c",
+    "score/2_Run actions_checkout@3d3c42e5aac5ba805825da76410c181273ba90b1.txt": "19dcf9471592f12385a4386a092896cee72ad5cb802a0bbb9251f9e1a02fb64c",
+    "score/3_Run actions_setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1.txt": "b9a1cda9bd5d00e9a196ee0f0a7fa091c1633f32ae6a0f0f2131247fc7e76147",
+    "score/4_Run dtolnay_rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8.txt": "4102933f3667188d9c04752804a0a021704cc9b3fd0143b2dcaeee38311ad1dd",
+    "score/5_Preserve source before prerequisites.txt": "72313f21f951eabe275365f660ddaa49109a08a16ab0b09a4e51c0f80c904b9b",
+    "score/6_Require exact successful native lifecycle and structural requalification.txt": "a4abd188d0d03e720373294ff496d94230083b91bf788686939727b33ecaa4f6",
+    "score/7_Install and focused harness_type checks before timing.txt": "1584e6d5fb981f44c0f02156bbe35b846b34e0a8e9c2e8395a1b2c22843b991f",
+    "score/8_Build exact stock and experiment into isolated targets.txt": "8dc962eb403b4b6ed53912fe7c006346e91c8a8dff3d42e36bdfee9a95871aba",
+    "score/9_One warmup and five measured pairs per configuration, serial tools.txt": "69b678f529822aec05737969ded1f7914733d111e3d20550ddf016c4fb8cbc88",
+    "score/10_Preserve full raw evidence without dependency-directory symlinks.txt": "00bc756c05037a94b09ef3fe911ac12b9025f95218dfa34474348a33ca9b31cd",
+    "score/11_Run actions_upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9.txt": "237e62820b0e75a38aea48f03cb89d0389696b56c10047e90141bc021579da68",
+    "score/22_Post Run actions_checkout@3d3c42e5aac5ba805825da76410c181273ba90b1.txt": "7f8a59103e35693da4726351b5b49e208531c041f85aca9ff35b405bf2a5d168",
+    "score/23_Complete job.txt": "cb92f2ff77170fd1d00355f270c72b90fd60b44dab919b6edcdc10164cb833a3"
+  }
+}

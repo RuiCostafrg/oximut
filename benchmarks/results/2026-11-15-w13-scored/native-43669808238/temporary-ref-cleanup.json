@@ -1,0 +1,22 @@
+{
+  "utc": "2026-11-15T03:20:34.318286+00:00",
+  "authorization": "Owner requested deletion of only these owned temporary refs after complete raw/source recovery verification. Both source commits remain ancestors of the experiment branch.",
+  "before": {
+    "refs/heads/perf/w13-score-native-1": "dd0de59c4aaf57d00c572c046634d8aecf5566af",
+    "refs/heads/perf/w13-score-native-2": "88b7d6712648979dc7438a4044abf0f63650d463"
+  },
+  "command": [
+    "git",
+    "push",
+    "--force-with-lease=refs/heads/perf/w13-score-native-1:dd0de59c4aaf57d00c572c046634d8aecf5566af",
+    "--force-with-lease=refs/heads/perf/w13-score-native-2:88b7d6712648979dc7438a4044abf0f63650d463",
+    "origin",
+    ":refs/heads/perf/w13-score-native-1",
+    ":refs/heads/perf/w13-score-native-2"
+  ],
+  "exit_code": 0,
+  "stdout": "",
+  "stderr": "To https://github.com/RuiCostafrg/oximut\n - [deleted]         perf/w13-score-native-1\n - [deleted]         perf/w13-score-native-2\n",
+  "recovery_sha256": "5869fed1592702bf7031cdaae2333f361ef7d31d952ffcae81e2452fdbf3e930",
+  "after": "Both owned refs absent; branch history preserved"
+}

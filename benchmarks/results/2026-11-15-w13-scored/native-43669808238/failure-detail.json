@@ -1,0 +1,147 @@
+{
+  "relative_directory": "colord-scale-4w/round-0/after/oximut",
+  "summary": {
+    "total": 206,
+    "killed": 199,
+    "survived": 3,
+    "noCoverage": 0,
+    "invalid": 0,
+    "timeout": 0,
+    "infrastructureError": 4,
+    "resourceExhausted": 0,
+    "skipped": 0,
+    "scoreDenominator": 202,
+    "score": 98.51485148514851,
+    "complete": false
+  },
+  "mismatches": [
+    {
+      "id": "08a202fd42efe7dcacc1c6b15c952582dd74901cf9baecca9eaa81a5c098a58d",
+      "relative_file": "src/colorModels/cmyk.ts",
+      "location": {
+        "start": {
+          "offset": 1255,
+          "line": 45,
+          "column": 15
+        },
+        "end": {
+          "offset": 1256,
+          "line": 45,
+          "column": 16
+        }
+      },
+      "candidate_outcome": "infrastructure-error",
+      "stock_outcome": "killed",
+      "tests": {
+        "passed": 5,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "Unattributed batch error",
+        "expected { Object (c, m, ...) } to match object { c: +0, m: 100, y: 100, k: +0, a: 1 }"
+      ]
+    },
+    {
+      "id": "9ac8a011bc1502b93d38fb1ff9c1d9d64b3dfff020283c5ae41da91473b75fc8",
+      "relative_file": "src/colorModels/cmyk.ts",
+      "location": {
+        "start": {
+          "offset": 1489,
+          "line": 51,
+          "column": 31
+        },
+        "end": {
+          "offset": 1490,
+          "line": 51,
+          "column": 32
+        }
+      },
+      "candidate_outcome": "infrastructure-error",
+      "stock_outcome": "killed",
+      "tests": {
+        "passed": 5,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "Unattributed batch error",
+        "expected { c: +0, m: +0, y: +0, k: +0, a: 1 } to match object { c: 100, m: +0, y: +0, k: +0, a: 1 }"
+      ]
+    },
+    {
+      "id": "c8fb72bec90d9a783caf7ef8479772865cadc5338cbace358a9a173db7fcf175",
+      "relative_file": "src/manipulate/invert.ts",
+      "location": {
+        "start": {
+          "offset": 143,
+          "line": 6,
+          "column": 10
+        },
+        "end": {
+          "offset": 144,
+          "line": 6,
+          "column": 11
+        }
+      },
+      "candidate_outcome": "infrastructure-error",
+      "stock_outcome": "killed",
+      "tests": {
+        "passed": 26,
+        "failed": 1,
+        "skipped": 0
+      },
+      "errors": [
+        "Unattributed batch error",
+        "expected '#0000ff' to be '#000000' // Object.is equality"
+      ]
+    },
+    {
+      "id": "4c4dd13e31689434138c647f612e775284ce81b1544891e102cfd99539e2a1d0",
+      "relative_file": "src/colorModels/cmykString.ts",
+      "location": {
+        "start": {
+          "offset": 765,
+          "line": 19,
+          "column": 25
+        },
+        "end": {
+          "offset": 766,
+          "line": 19,
+          "column": 26
+        }
+      },
+      "candidate_outcome": "infrastructure-error",
+      "stock_outcome": "survived",
+      "tests": {
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0
+      },
+      "errors": [
+        "Unattributed batch error"
+      ]
+    }
+  ],
+  "trace_counts": {
+    "validated-controller": 2,
+    "stock-baseline": 2,
+    "validated-fork-artifact": 206,
+    "fork": 205,
+    "run": 205
+  },
+  "missing_dispatch_selectors": [
+    "4c4dd13e31689434138c647f612e775284ce81b1544891e102cfd99539e2a1d0"
+  ],
+  "observation": {
+    "exit_code": 2,
+    "wall_seconds": 19.637845349999907,
+    "cpu_seconds": 49.911787000000004,
+    "peak_aggregate_rss_bytes": 926523392,
+    "memory_method": "sum-live-smaps_rollup-rss",
+    "timed_out": false,
+    "descendant_cleanup_required": false,
+    "memory_errors": []
+  },
+  "cause": "Unattributed batch error; precise underlying start/aggregate error is not exposed. Trace gap lies between configured artifact validation and recorded fork/start dispatch. No root cause is proven."
+}

@@ -1,0 +1,547 @@
+Refreshing run status every 30 seconds. Press Ctrl+C to quit.
+
+* perf/w13-score-native-2 W13 bounded paired native scoring · 43669808238
+Triggered via push about 1 minute ago
+
+JOBS
+* score (ID 132677125839)
+  ✓ Set up job
+  ✓ Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+  ✓ Run actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+  ✓ Run dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8
+  ✓ Preserve source before prerequisites
+  ✓ Require exact successful native lifecycle and structural requalification
+  ✓ Install and focused harness/type checks before timing
+  * Build exact stock and experiment into isolated targets
+  * One warmup and five measured pairs per configuration, serial tools
+  * Preserve full raw evidence without dependency-directory symlinks
+  * Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+  * Post Run actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+  * Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+Refreshing run status every 30 seconds. Press Ctrl+C to quit.
+
+* perf/w13-score-native-2 W13 bounded paired native scoring · 43669808238
+Triggered via push about 1 minute ago
+
+JOBS
+* score (ID 132677125839)
+  ✓ Set up job
+  ✓ Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+  ✓ Run actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+  ✓ Run dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8
+  ✓ Preserve source before prerequisites
+  ✓ Require exact successful native lifecycle and structural requalification
+  ✓ Install and focused harness/type checks before timing
+  * Build exact stock and experiment into isolated targets
+  * One warmup and five measured pairs per configuration, serial tools
+  * Preserve full raw evidence without dependency-directory symlinks
+  * Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+  * Post Run actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+  * Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+Refreshing run status every 30 seconds. Press Ctrl+C to quit.
+
+* perf/w13-score-native-2 W13 bounded paired native scoring · 43669808238
+Triggered via push about 2 minutes ago
+
+JOBS
+* score (ID 132677125839)
+  ✓ Set up job
+  ✓ Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+  ✓ Run actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+  ✓ Run dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8
+  ✓ Preserve source before prerequisites
+  ✓ Require exact successful native lifecycle and structural requalification
+  ✓ Install and focused harness/type checks before timing
+  ✓ Build exact stock and experiment into isolated targets
+  * One warmup and five measured pairs per configuration, serial tools
+  * Preserve full raw evidence without dependency-directory symlinks
+  * Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+  * Post Run actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+  * Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+Refreshing run status every 30 seconds. Press Ctrl+C to quit.
+
+* perf/w13-score-native-2 W13 bounded paired native scoring · 43669808238
+Triggered via push about 2 minutes ago
+
+JOBS
+* score (ID 132677125839)
+  ✓ Set up job
+  ✓ Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+  ✓ Run actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+  ✓ Run dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8
+  ✓ Preserve source before prerequisites
+  ✓ Require exact successful native lifecycle and structural requalification
+  ✓ Install and focused harness/type checks before timing
+  ✓ Build exact stock and experiment into isolated targets
+  * One warmup and five measured pairs per configuration, serial tools
+  * Preserve full raw evidence without dependency-directory symlinks
+  * Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+  * Post Run actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+  * Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+Refreshing run status every 30 seconds. Press Ctrl+C to quit.
+
+* perf/w13-score-native-2 W13 bounded paired native scoring · 43669808238
+Triggered via push about 3 minutes ago
+
+JOBS
+* score (ID 132677125839)
+  ✓ Set up job
+  ✓ Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+  ✓ Run actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+  ✓ Run dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8
+  ✓ Preserve source before prerequisites
+  ✓ Require exact successful native lifecycle and structural requalification
+  ✓ Install and focused harness/type checks before timing
+  ✓ Build exact stock and experiment into isolated targets
+  * One warmup and five measured pairs per configuration, serial tools
+  * Preserve full raw evidence without dependency-directory symlinks
+  * Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+  * Post Run actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+  * Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+Refreshing run status every 30 seconds. Press Ctrl+C to quit.
+
+* perf/w13-score-native-2 W13 bounded paired native scoring · 43669808238
+Triggered via push about 3 minutes ago
+
+JOBS
+* score (ID 132677125839)
+  ✓ Set up job
+  ✓ Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+  ✓ Run actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+  ✓ Run dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8
+  ✓ Preserve source before prerequisites
+  ✓ Require exact successful native lifecycle and structural requalification
+  ✓ Install and focused harness/type checks before timing
+  ✓ Build exact stock and experiment into isolated targets
+  * One warmup and five measured pairs per configuration, serial tools
+  * Preserve full raw evidence without dependency-directory symlinks
+  * Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+  * Post Run actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+  * Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+Refreshing run status every 30 seconds. Press Ctrl+C to quit.
+
+* perf/w13-score-native-2 W13 bounded paired native scoring · 43669808238
+Triggered via push about 4 minutes ago
+
+JOBS
+* score (ID 132677125839)
+  ✓ Set up job
+  ✓ Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+  ✓ Run actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+  ✓ Run dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8
+  ✓ Preserve source before prerequisites
+  ✓ Require exact successful native lifecycle and structural requalification
+  ✓ Install and focused harness/type checks before timing
+  ✓ Build exact stock and experiment into isolated targets
+  * One warmup and five measured pairs per configuration, serial tools
+  * Preserve full raw evidence without dependency-directory symlinks
+  * Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+  * Post Run actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+  * Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+Refreshing run status every 30 seconds. Press Ctrl+C to quit.
+
+* perf/w13-score-native-2 W13 bounded paired native scoring · 43669808238
+Triggered via push about 4 minutes ago
+
+JOBS
+* score (ID 132677125839)
+  ✓ Set up job
+  ✓ Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+  ✓ Run actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+  ✓ Run dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8
+  ✓ Preserve source before prerequisites
+  ✓ Require exact successful native lifecycle and structural requalification
+  ✓ Install and focused harness/type checks before timing
+  ✓ Build exact stock and experiment into isolated targets
+  * One warmup and five measured pairs per configuration, serial tools
+  * Preserve full raw evidence without dependency-directory symlinks
+  * Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+  * Post Run actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+  * Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+Refreshing run status every 30 seconds. Press Ctrl+C to quit.
+
+* perf/w13-score-native-2 W13 bounded paired native scoring · 43669808238
+Triggered via push about 5 minutes ago
+
+JOBS
+* score (ID 132677125839)
+  ✓ Set up job
+  ✓ Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+  ✓ Run actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+  ✓ Run dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8
+  ✓ Preserve source before prerequisites
+  ✓ Require exact successful native lifecycle and structural requalification
+  ✓ Install and focused harness/type checks before timing
+  ✓ Build exact stock and experiment into isolated targets
+  * One warmup and five measured pairs per configuration, serial tools
+  * Preserve full raw evidence without dependency-directory symlinks
+  * Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+  * Post Run actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+  * Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+Refreshing run status every 30 seconds. Press Ctrl+C to quit.
+
+* perf/w13-score-native-2 W13 bounded paired native scoring · 43669808238
+Triggered via push about 5 minutes ago
+
+JOBS
+* score (ID 132677125839)
+  ✓ Set up job
+  ✓ Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+  ✓ Run actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+  ✓ Run dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8
+  ✓ Preserve source before prerequisites
+  ✓ Require exact successful native lifecycle and structural requalification
+  ✓ Install and focused harness/type checks before timing
+  ✓ Build exact stock and experiment into isolated targets
+  * One warmup and five measured pairs per configuration, serial tools
+  * Preserve full raw evidence without dependency-directory symlinks
+  * Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+  * Post Run actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+  * Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+Refreshing run status every 30 seconds. Press Ctrl+C to quit.
+
+* perf/w13-score-native-2 W13 bounded paired native scoring · 43669808238
+Triggered via push about 6 minutes ago
+
+JOBS
+* score (ID 132677125839)
+  ✓ Set up job
+  ✓ Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+  ✓ Run actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+  ✓ Run dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8
+  ✓ Preserve source before prerequisites
+  ✓ Require exact successful native lifecycle and structural requalification
+  ✓ Install and focused harness/type checks before timing
+  ✓ Build exact stock and experiment into isolated targets
+  * One warmup and five measured pairs per configuration, serial tools
+  * Preserve full raw evidence without dependency-directory symlinks
+  * Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+  * Post Run actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+  * Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+Refreshing run status every 30 seconds. Press Ctrl+C to quit.
+
+* perf/w13-score-native-2 W13 bounded paired native scoring · 43669808238
+Triggered via push about 6 minutes ago
+
+JOBS
+* score (ID 132677125839)
+  ✓ Set up job
+  ✓ Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+  ✓ Run actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+  ✓ Run dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8
+  ✓ Preserve source before prerequisites
+  ✓ Require exact successful native lifecycle and structural requalification
+  ✓ Install and focused harness/type checks before timing
+  ✓ Build exact stock and experiment into isolated targets
+  * One warmup and five measured pairs per configuration, serial tools
+  * Preserve full raw evidence without dependency-directory symlinks
+  * Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+  * Post Run actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+  * Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+Refreshing run status every 30 seconds. Press Ctrl+C to quit.
+
+* perf/w13-score-native-2 W13 bounded paired native scoring · 43669808238
+Triggered via push about 7 minutes ago
+
+JOBS
+* score (ID 132677125839)
+  ✓ Set up job
+  ✓ Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+  ✓ Run actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+  ✓ Run dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8
+  ✓ Preserve source before prerequisites
+  ✓ Require exact successful native lifecycle and structural requalification
+  ✓ Install and focused harness/type checks before timing
+  ✓ Build exact stock and experiment into isolated targets
+  * One warmup and five measured pairs per configuration, serial tools
+  * Preserve full raw evidence without dependency-directory symlinks
+  * Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+  * Post Run actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+  * Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+Refreshing run status every 30 seconds. Press Ctrl+C to quit.
+
+* perf/w13-score-native-2 W13 bounded paired native scoring · 43669808238
+Triggered via push about 7 minutes ago
+
+JOBS
+* score (ID 132677125839)
+  ✓ Set up job
+  ✓ Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+  ✓ Run actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+  ✓ Run dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8
+  ✓ Preserve source before prerequisites
+  ✓ Require exact successful native lifecycle and structural requalification
+  ✓ Install and focused harness/type checks before timing
+  ✓ Build exact stock and experiment into isolated targets
+  * One warmup and five measured pairs per configuration, serial tools
+  * Preserve full raw evidence without dependency-directory symlinks
+  * Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+  * Post Run actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+  * Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+Refreshing run status every 30 seconds. Press Ctrl+C to quit.
+
+* perf/w13-score-native-2 W13 bounded paired native scoring · 43669808238
+Triggered via push about 8 minutes ago
+
+JOBS
+* score (ID 132677125839)
+  ✓ Set up job
+  ✓ Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+  ✓ Run actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+  ✓ Run dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8
+  ✓ Preserve source before prerequisites
+  ✓ Require exact successful native lifecycle and structural requalification
+  ✓ Install and focused harness/type checks before timing
+  ✓ Build exact stock and experiment into isolated targets
+  * One warmup and five measured pairs per configuration, serial tools
+  * Preserve full raw evidence without dependency-directory symlinks
+  * Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+  * Post Run actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+  * Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+Refreshing run status every 30 seconds. Press Ctrl+C to quit.
+
+* perf/w13-score-native-2 W13 bounded paired native scoring · 43669808238
+Triggered via push about 8 minutes ago
+
+JOBS
+* score (ID 132677125839)
+  ✓ Set up job
+  ✓ Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+  ✓ Run actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+  ✓ Run dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8
+  ✓ Preserve source before prerequisites
+  ✓ Require exact successful native lifecycle and structural requalification
+  ✓ Install and focused harness/type checks before timing
+  ✓ Build exact stock and experiment into isolated targets
+  * One warmup and five measured pairs per configuration, serial tools
+  * Preserve full raw evidence without dependency-directory symlinks
+  * Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+  * Post Run actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+  * Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+Refreshing run status every 30 seconds. Press Ctrl+C to quit.
+
+* perf/w13-score-native-2 W13 bounded paired native scoring · 43669808238
+Triggered via push about 9 minutes ago
+
+JOBS
+* score (ID 132677125839)
+  ✓ Set up job
+  ✓ Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+  ✓ Run actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+  ✓ Run dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8
+  ✓ Preserve source before prerequisites
+  ✓ Require exact successful native lifecycle and structural requalification
+  ✓ Install and focused harness/type checks before timing
+  ✓ Build exact stock and experiment into isolated targets
+  * One warmup and five measured pairs per configuration, serial tools
+  * Preserve full raw evidence without dependency-directory symlinks
+  * Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+  * Post Run actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+  * Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+Refreshing run status every 30 seconds. Press Ctrl+C to quit.
+
+* perf/w13-score-native-2 W13 bounded paired native scoring · 43669808238
+Triggered via push about 10 minutes ago
+
+JOBS
+* score (ID 132677125839)
+  ✓ Set up job
+  ✓ Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+  ✓ Run actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+  ✓ Run dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8
+  ✓ Preserve source before prerequisites
+  ✓ Require exact successful native lifecycle and structural requalification
+  ✓ Install and focused harness/type checks before timing
+  ✓ Build exact stock and experiment into isolated targets
+  * One warmup and five measured pairs per configuration, serial tools
+  * Preserve full raw evidence without dependency-directory symlinks
+  * Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+  * Post Run actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+  * Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+Refreshing run status every 30 seconds. Press Ctrl+C to quit.
+
+* perf/w13-score-native-2 W13 bounded paired native scoring · 43669808238
+Triggered via push about 10 minutes ago
+
+JOBS
+* score (ID 132677125839)
+  ✓ Set up job
+  ✓ Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+  ✓ Run actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+  ✓ Run dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8
+  ✓ Preserve source before prerequisites
+  ✓ Require exact successful native lifecycle and structural requalification
+  ✓ Install and focused harness/type checks before timing
+  ✓ Build exact stock and experiment into isolated targets
+  * One warmup and five measured pairs per configuration, serial tools
+  * Preserve full raw evidence without dependency-directory symlinks
+  * Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+  * Post Run actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+  * Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+Refreshing run status every 30 seconds. Press Ctrl+C to quit.
+
+* perf/w13-score-native-2 W13 bounded paired native scoring · 43669808238
+Triggered via push about 11 minutes ago
+
+JOBS
+* score (ID 132677125839)
+  ✓ Set up job
+  ✓ Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+  ✓ Run actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+  ✓ Run dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8
+  ✓ Preserve source before prerequisites
+  ✓ Require exact successful native lifecycle and structural requalification
+  ✓ Install and focused harness/type checks before timing
+  ✓ Build exact stock and experiment into isolated targets
+  * One warmup and five measured pairs per configuration, serial tools
+  * Preserve full raw evidence without dependency-directory symlinks
+  * Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+  * Post Run actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+  * Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+Refreshing run status every 30 seconds. Press Ctrl+C to quit.
+
+* perf/w13-score-native-2 W13 bounded paired native scoring · 43669808238
+Triggered via push about 11 minutes ago
+
+JOBS
+* score (ID 132677125839)
+  ✓ Set up job
+  ✓ Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+  ✓ Run actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+  ✓ Run dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8
+  ✓ Preserve source before prerequisites
+  ✓ Require exact successful native lifecycle and structural requalification
+  ✓ Install and focused harness/type checks before timing
+  ✓ Build exact stock and experiment into isolated targets
+  * One warmup and five measured pairs per configuration, serial tools
+  * Preserve full raw evidence without dependency-directory symlinks
+  * Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+  * Post Run actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+  * Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+Refreshing run status every 30 seconds. Press Ctrl+C to quit.
+
+* perf/w13-score-native-2 W13 bounded paired native scoring · 43669808238
+Triggered via push about 12 minutes ago
+
+JOBS
+* score (ID 132677125839)
+  ✓ Set up job
+  ✓ Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+  ✓ Run actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+  ✓ Run dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8
+  ✓ Preserve source before prerequisites
+  ✓ Require exact successful native lifecycle and structural requalification
+  ✓ Install and focused harness/type checks before timing
+  ✓ Build exact stock and experiment into isolated targets
+  * One warmup and five measured pairs per configuration, serial tools
+  * Preserve full raw evidence without dependency-directory symlinks
+  * Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+  * Post Run actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+  * Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+Refreshing run status every 30 seconds. Press Ctrl+C to quit.
+
+* perf/w13-score-native-2 W13 bounded paired native scoring · 43669808238
+Triggered via push about 12 minutes ago
+
+JOBS
+* score (ID 132677125839)
+  ✓ Set up job
+  ✓ Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+  ✓ Run actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+  ✓ Run dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8
+  ✓ Preserve source before prerequisites
+  ✓ Require exact successful native lifecycle and structural requalification
+  ✓ Install and focused harness/type checks before timing
+  ✓ Build exact stock and experiment into isolated targets
+  * One warmup and five measured pairs per configuration, serial tools
+  * Preserve full raw evidence without dependency-directory symlinks
+  * Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+  * Post Run actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+  * Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+Refreshing run status every 30 seconds. Press Ctrl+C to quit.
+
+* perf/w13-score-native-2 W13 bounded paired native scoring · 43669808238
+Triggered via push about 13 minutes ago
+
+JOBS
+* score (ID 132677125839)
+  ✓ Set up job
+  ✓ Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+  ✓ Run actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+  ✓ Run dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8
+  ✓ Preserve source before prerequisites
+  ✓ Require exact successful native lifecycle and structural requalification
+  ✓ Install and focused harness/type checks before timing
+  ✓ Build exact stock and experiment into isolated targets
+  * One warmup and five measured pairs per configuration, serial tools
+  * Preserve full raw evidence without dependency-directory symlinks
+  * Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+  * Post Run actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+  * Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+Refreshing run status every 30 seconds. Press Ctrl+C to quit.
+
+* perf/w13-score-native-2 W13 bounded paired native scoring · 43669808238
+Triggered via push about 13 minutes ago
+
+JOBS
+* score (ID 132677125839)
+  ✓ Set up job
+  ✓ Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+  ✓ Run actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+  ✓ Run dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8
+  ✓ Preserve source before prerequisites
+  ✓ Require exact successful native lifecycle and structural requalification
+  ✓ Install and focused harness/type checks before timing
+  ✓ Build exact stock and experiment into isolated targets
+  * One warmup and five measured pairs per configuration, serial tools
+  * Preserve full raw evidence without dependency-directory symlinks
+  * Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+  * Post Run actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+  * Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+Refreshing run status every 30 seconds. Press Ctrl+C to quit.
+
+* perf/w13-score-native-2 W13 bounded paired native scoring · 43669808238
+Triggered via push about 14 minutes ago
+
+JOBS
+* score (ID 132677125839)
+  ✓ Set up job
+  ✓ Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+  ✓ Run actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+  ✓ Run dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8
+  ✓ Preserve source before prerequisites
+  ✓ Require exact successful native lifecycle and structural requalification
+  ✓ Install and focused harness/type checks before timing
+  ✓ Build exact stock and experiment into isolated targets
+  X One warmup and five measured pairs per configuration, serial tools
+  X Preserve full raw evidence without dependency-directory symlinks
+  * Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+  * Post Run actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+  * Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+X perf/w13-score-native-2 W13 bounded paired native scoring · 43669808238
+Triggered via push about 14 minutes ago
+
+JOBS
+X score in 14m9s (ID 132677125839)
+  ✓ Set up job
+  ✓ Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+  ✓ Run actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+  ✓ Run dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8
+  ✓ Preserve source before prerequisites
+  ✓ Require exact successful native lifecycle and structural requalification
+  ✓ Install and focused harness/type checks before timing
+  ✓ Build exact stock and experiment into isolated targets
+  X One warmup and five measured pairs per configuration, serial tools
+  X Preserve full raw evidence without dependency-directory symlinks
+  ✓ Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+  - Post Run actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+  ✓ Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+  ✓ Complete job
+
+ANNOTATIONS
+X Process completed with exit code 1.
+score: .github#21
+
+X Process completed with exit code 1.
+score: .github#22
+
