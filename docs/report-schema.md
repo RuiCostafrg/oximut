@@ -22,6 +22,10 @@ node scripts/validate-reports.mjs .oximut/ci-m6
 Explicit files are always checked. Directories recursively select `report.json`
 and `*-report.json`; other JSON files such as benchmark metadata are ignored.
 Every supplied path must exist, and each directory must contain a matching report.
+
+Beyond the schema, the validator checks that `sources` lists each file once,
+lists every mutant's file, and gives each file's exact mutant count, and that
+`mutators` agrees with itself and with every mutant's operator.
 Malformed JSON and schema violations fail the command with the offending path.
 CI validates all three emitted M6 smoke reports (fresh, persistent, and selection)
 against the published schema. The validator currently uses Ajv's draft-2020 module
