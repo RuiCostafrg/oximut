@@ -1685,22 +1685,50 @@ mod tests {
 
     #[test]
     fn source_counts_match_filtered_mutants_and_zero_files_are_listed() {
-        let path = Path::new(concat!(
+        let subject = Path::new(concat!(
             env!("CARGO_MANIFEST_DIR"),
             "/../../fixtures/m1/src/subject.ts"
         ));
-        let source = fs::read_to_string(path).unwrap();
-        let generated = oximut_instrument::generate("src/subject.ts", path, &source).unwrap();
-        let file = path.to_string_lossy().into_owned();
-        assert!(generated.mutants.iter().all(|m| m.file == file));
-        let count = generated.mutants.len();
-        assert!(count > 0);
-        let binding = source_binding(path, &source, count);
-        assert_eq!(binding.file, file);
-        // A filter that removes every mutant still yields an entry, with the hash.
-        let none = source_binding(path, &source, 0);
-        assert_eq!(none.sha256, binding.sha256);
-        assert_eq!(none.mutants, 0);
+        let directory = tempfile::tempdir().unwrap();
+        let empty = directory.path().join("empty.ts");
+        fs::write(&empty, "export const fixed = 1;\n").unwrap();
+        let paths = [subject.to_path_buf(), empty.clone()];
+        let mut bindings = vec![];
+        for path in &paths {
+            let source = fs::read_to_string(path).unwrap();
+            let generated = oximut_instrument::generate("src/subject.ts", path, &source).unwrap();
+            let file = path.to_string_lossy().into_owned();
+            assert!(generated.mutants.iter().all(|m| m.file == file));
+            let selected = generated
+                .mutants
+                .iter()
+                .filter(|mutant| mutant.operator == "boolean-literal")
+                .count();
+            bindings.push(source_binding(path, &source, selected));
+        }
+        // Entries stay in --source order, and a file no mutant survives the
+        // --mutators filter for is still listed with its hash.
+        assert_eq!(bindings.len(), 2);
+        assert_eq!(bindings[0].file, subject.to_string_lossy().into_owned());
+        assert!(bindings[0].mutants > 0);
+        assert_eq!(bindings[1].file, empty.to_string_lossy().into_owned());
+        assert_eq!(bindings[1].mutants, 0);
+        assert_eq!(
+            bindings[1].sha256,
+            source_binding(&empty, "export const fixed = 1;\n", 0).sha256
+        );
+        // A whole filter family can remove every mutant of a listed file.
+        let source = fs::read_to_string(subject).unwrap();
+        let generated = oximut_instrument::generate("src/subject.ts", subject, &source).unwrap();
+        let arithmetic = generated
+            .mutants
+            .iter()
+            .filter(|mutant| mutant.operator == "arithmetic")
+            .count();
+        assert_eq!(arithmetic, 0);
+        let filtered = source_binding(subject, &source, arithmetic);
+        assert_eq!(filtered.mutants, 0);
+        assert_eq!(filtered.sha256, bindings[0].sha256);
     }
 
     #[test]
