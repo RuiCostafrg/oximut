@@ -450,6 +450,28 @@ pub struct Report {
     pub summary: Summary,
     pub cache: CacheReport,
     pub resources: serde_json::Value,
+    pub sources: Vec<SourceBinding>,
+    pub mutators: MutatorSelection,
+}
+
+/// Every mutator family this version can generate, sorted.
+pub const MUTATOR_FAMILIES: [&str; 3] = ["arithmetic", "boolean-literal", "comparison-boundary"];
+
+/// Binds report evidence to the exact bytes of one `--source` file.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SourceBinding {
+    pub file: String,
+    pub sha256: String,
+    pub mutants: usize,
+}
+
+/// Machine-readable mutator selection (`all` or an explicit `subset`).
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct MutatorSelection {
+    pub selection: &'static str,
+    pub families: Vec<String>,
 }
 
 #[cfg(test)]

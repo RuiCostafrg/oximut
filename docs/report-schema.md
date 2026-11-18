@@ -63,9 +63,16 @@ The top-level object contains:
 | `baseline` | Adapter response for the original, unmutated project. Its `outcome`, `tests`, `errors`, and optional M3 `coverage` describe baseline evidence. |
 | `mutants` | One result per generated mutant, with stable identities; array order can vary with scheduling and execution order. Each result includes source location, operator and replacement, outcome, test counts, errors, optional selection, and provenance. |
 | `diagnostics` | Run-level selection, adapter-reuse, cleanup, or resource messages. |
+| `sources` | Optional (always emitted by current versions). One `{file, sha256, mutants}` per `--source` file in option order: `file` uses the same path string as mutant `file`, `sha256` is the lowercase hex SHA-256 of the exact bytes read for generation in the final attempt, and `mutants` counts that file's entries in `mutants` (0 for `--baseline-only`). |
+| `mutators` | Optional (always emitted). `{selection, families}`: `selection` is `all` or `subset`; `families` is the sorted list of families in scope (all three when `all`). |
 | `summary` | Counts by outcome, score denominator and score, and completeness. |
 | `cache` | Cache opt-in/eligibility, fingerprint and reason, hit/miss counts, and persistence state. |
 | `resources` | Configured/effective worker and memory policy plus sampled process-tree observations. Resource policy strings explain measurement/enforcement. |
+
+Consumers can compare each `sources[].sha256` with the current file to detect a
+stale report, including files that have zero mutants (they are still listed).
+`sources[].mutants` lets a consumer detect a truncated `mutants` list, and
+`mutators` replaces parsing the `mutator families=...` diagnostic.
 
 `baseline.coverage`, when present, has `complete`, `tests`, `hits`, and
 `reasons`. A test identity has `id`, `file`, and `name`. A hit has `mutantId`,
