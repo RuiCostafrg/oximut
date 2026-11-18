@@ -12,6 +12,27 @@
     "diagnostics": { "type": "array", "items": { "type": "string" } },
     "summary": { "$ref": "#/$defs/summary" },
     "cache": { "$ref": "#/$defs/cache" },
+    "sources": {
+      "type": "array",
+      "description": "One entry per --source file, in option order, binding the report to the exact bytes mutants were generated from.",
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["file", "sha256", "mutants"],
+        "properties": {
+          "file": { "type": "string" },
+          "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+          "mutants": { "type": "integer", "minimum": 0 }
+        }
+      }
+    },
+    "mutators": {
+      "type": "object", "additionalProperties": false,
+      "required": ["selection", "families"],
+      "properties": {
+        "selection": { "enum": ["all", "subset"] },
+        "families": { "type": "array", "items": { "enum": ["arithmetic", "boolean-literal", "comparison-boundary"] } }
+      }
+    },
     "resources": {
       "type": "object",
       "description": "Scheduler resource data; extra keys are allowed for forward-compatible accounting details.",

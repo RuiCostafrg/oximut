@@ -6,8 +6,8 @@ mod resources;
 mod scheduler;
 mod wait;
 use oximut_core::{
-    Coverage, Mutant, MutantResult, Mutation, Outcome, PROTOCOL, Provenance, Report, Request,
-    Response, Summary, TestOutcome, Tests,
+    Coverage, Mutant, MutantResult, Mutation, MutatorSelection, Outcome, PROTOCOL, Provenance,
+    Report, Request, Response, SourceBinding, Summary, TestOutcome, Tests,
 };
 use std::sync::Arc;
 use std::{
@@ -121,10 +121,7 @@ fn parse_options(mut args: impl Iterator<Item = String>) -> Result<Option<Option
                     .next()
                     .ok_or_else(|| "missing value for --mutators".to_string())?;
                 for family in value.split(',') {
-                    if family.is_empty()
-                        || !["arithmetic", "boolean-literal", "comparison-boundary"]
-                            .contains(&family)
-                    {
+                    if family.is_empty() || !oximut_core::MUTATOR_FAMILIES.contains(&family) {
                         return Err(format!(
                             "unknown or empty mutator family {family:?}; expected arithmetic, boolean-literal, comparison-boundary"
                         ));
@@ -920,6 +917,33 @@ fn run(options: Options) -> Result<u8, String> {
     }
 }
 
+/// Hash of the exact bytes generated from, in the same path form as mutant `file`.
+fn source_binding(path: &Path, source: &str, mutants: usize) -> SourceBinding {
+    use sha2::{Digest, Sha256};
+    SourceBinding {
+        file: path.to_string_lossy().into_owned(),
+        sha256: Sha256::digest(source.as_bytes())
+            .iter()
+            .map(|byte| format!("{byte:02x}"))
+            .collect(),
+        mutants,
+    }
+}
+
+fn mutator_selection(requested: &BTreeSet<String>) -> MutatorSelection {
+    if requested.is_empty() {
+        MutatorSelection {
+            selection: "all",
+            families: oximut_core::MUTATOR_FAMILIES.map(String::from).to_vec(),
+        }
+    } else {
+        MutatorSelection {
+            selection: "subset",
+            families: requested.iter().cloned().collect(),
+        }
+    }
+}
+
 fn run_attempt(options: &Options, previous: Option<RetryEvidence>) -> Result<Attempt, String> {
     let preparation_started = Instant::now();
     let mut phase_wall_ms = BTreeMap::new();
@@ -941,6 +965,7 @@ fn run_attempt(options: &Options, previous: Option<RetryEvidence>) -> Result<Att
     let mut probe_transforms = vec![];
     let mut probe_reasons = vec![];
     let mut inventory = vec![];
+    let mut sources = Vec::new();
     for path in &options.sources {
         let source = fs::read_to_string(path).map_err(|e| format!("{}: {e}", path.display()))?;
         let identity = path
@@ -970,9 +995,11 @@ fn run_attempt(options: &Options, previous: Option<RetryEvidence>) -> Result<Att
                 map: first.map.clone(),
             });
         }
+        let before = mutants.len();
         mutants.extend(generated.mutants.into_iter().filter(|mutant| {
             options.mutators.is_empty() || options.mutators.contains(&mutant.operator)
         }));
+        sources.push(source_binding(path, &source, mutants.len() - before));
         diagnostics.extend(
             generated
                 .diagnostics
@@ -1498,6 +1525,18 @@ fn run_attempt(options: &Options, previous: Option<RetryEvidence>) -> Result<Att
         summary,
         cache: cache.report.clone(),
         resources,
+        sources: if options.baseline_only {
+            sources
+                .into_iter()
+                .map(|source| SourceBinding {
+                    mutants: 0,
+                    ..source
+                })
+                .collect()
+        } else {
+            sources
+        },
+        mutators: mutator_selection(&options.mutators),
     };
     let json = serde_json::to_string_pretty(&report).map_err(|e| e.to_string())?;
     if let Some(path) = &options.report {
@@ -1628,6 +1667,85 @@ static PROCESS_TEST: std::sync::Mutex<()> = std::sync::Mutex::new(());
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn source_binding_hashes_exact_bytes_in_mutant_path_form() {
+        let path = Path::new("/p/src/a.ts");
+        let binding = source_binding(path, "abc", 0);
+        assert_eq!(
+            binding.sha256,
+            "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
+        );
+        assert_eq!(binding.file, "/p/src/a.ts");
+        assert_eq!(binding.mutants, 0);
+        let json = serde_json::to_value(&binding).unwrap();
+        assert_eq!(json["sha256"].as_str().unwrap().len(), 64);
+        assert_ne!(binding.sha256, source_binding(path, "abc\n", 0).sha256);
+    }
+
+    #[test]
+    fn source_counts_match_filtered_mutants_and_zero_files_are_listed() {
+        let subject = Path::new(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../fixtures/m1/src/subject.ts"
+        ));
+        let directory = tempfile::tempdir().unwrap();
+        let empty = directory.path().join("empty.ts");
+        fs::write(&empty, "export const fixed = 1;\n").unwrap();
+        let paths = [subject.to_path_buf(), empty.clone()];
+        let mut bindings = vec![];
+        for path in &paths {
+            let source = fs::read_to_string(path).unwrap();
+            let generated = oximut_instrument::generate("src/subject.ts", path, &source).unwrap();
+            let file = path.to_string_lossy().into_owned();
+            assert!(generated.mutants.iter().all(|m| m.file == file));
+            let selected = generated
+                .mutants
+                .iter()
+                .filter(|mutant| mutant.operator == "boolean-literal")
+                .count();
+            bindings.push(source_binding(path, &source, selected));
+        }
+        // Entries stay in --source order, and a file no mutant survives the
+        // --mutators filter for is still listed with its hash.
+        assert_eq!(bindings.len(), 2);
+        assert_eq!(bindings[0].file, subject.to_string_lossy().into_owned());
+        assert!(bindings[0].mutants > 0);
+        assert_eq!(bindings[1].file, empty.to_string_lossy().into_owned());
+        assert_eq!(bindings[1].mutants, 0);
+        assert_eq!(
+            bindings[1].sha256,
+            source_binding(&empty, "export const fixed = 1;\n", 0).sha256
+        );
+        // A whole filter family can remove every mutant of a listed file.
+        let source = fs::read_to_string(subject).unwrap();
+        let generated = oximut_instrument::generate("src/subject.ts", subject, &source).unwrap();
+        let arithmetic = generated
+            .mutants
+            .iter()
+            .filter(|mutant| mutant.operator == "arithmetic")
+            .count();
+        assert_eq!(arithmetic, 0);
+        let filtered = source_binding(subject, &source, arithmetic);
+        assert_eq!(filtered.mutants, 0);
+        assert_eq!(filtered.sha256, bindings[0].sha256);
+    }
+
+    #[test]
+    fn mutator_selection_all_and_sorted_subset() {
+        let all = serde_json::to_value(mutator_selection(&BTreeSet::new())).unwrap();
+        assert_eq!(
+            all,
+            serde_json::json!({"selection":"all","families":["arithmetic","boolean-literal","comparison-boundary"]})
+        );
+        let subset: BTreeSet<String> = ["comparison-boundary", "arithmetic"]
+            .map(String::from)
+            .into();
+        assert_eq!(
+            serde_json::to_value(mutator_selection(&subset)).unwrap(),
+            serde_json::json!({"selection":"subset","families":["arithmetic","comparison-boundary"]})
+        );
+    }
 
     #[test]
     fn isolation_options_and_legacy_serialization() {
