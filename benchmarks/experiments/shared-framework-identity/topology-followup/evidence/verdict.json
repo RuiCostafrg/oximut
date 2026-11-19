@@ -1,0 +1,237 @@
+{
+  "classification": "NO-GO before candidate: ordinary shared-body cohort cannot meet unchanged per-original facade evaluation-closure admission rule",
+  "base": "baa1920edbefc927392d8474f50d79e34d568225",
+  "candidateBuilt": false,
+  "candidateExecuted": false,
+  "candidateRuntimeCount": 0,
+  "oldW14ArtifactDigest": "cc232a3cd8d9fb5a4459d7a7c55bec8b90b259c227ab0f26badcee24c3bf7898",
+  "oldIdentityAndNegativeControl": "unchanged historical evidence only; not rerun",
+  "oldSourceFrameFailure": "unfixed; no new maps or stack consumption",
+  "proposedMechanism": "ordinary ESM shared implementation chunk plus exact re-export facades",
+  "admissionRule": "preserve original evaluation closure for each audited exact facade ingress; do not assume earlier side effects are harmless",
+  "closureCounts": {
+    "workerStaticVitestModules": 30,
+    "workerStaticSelected": 22,
+    "publicStaticSelected": 16,
+    "outsideWorkerStatic": [
+      "globals.ZKtKSkEf.js",
+      "constants.DLYM6cZY.js",
+      "node.B9mkVmLH.js",
+      "console.CQZ877Hi.js",
+      "acorn.C1kjbUFw.js",
+      "index.js"
+    ]
+  },
+  "allPublishedDistroJSInspected": 63,
+  "mutuallyStaticReachableGroupsWithMoreThanOneModule": 0,
+  "namedIngressRootsAudited": 31,
+  "coReachableStartupGroupsUnderNamedRoots": [
+    [
+      "run.CjdgFZiW.js",
+      "task-utils.js"
+    ]
+  ],
+  "exactFacadePairWitnesses": 231,
+  "admittedCohorts": [],
+  "missingKindsRecovered": [
+    {
+      "file": "index.Bi0NXYPf.js",
+      "kind": "ImportExpression",
+      "source": "@edge-runtime/vm",
+      "line": 1246,
+      "ancestors": [
+        {
+          "type": "VariableDeclarator",
+          "name": "edge",
+          "line": 1242
+        },
+        {
+          "type": "ObjectMethod",
+          "name": "setupVM",
+          "line": 1245
+        },
+        {
+          "type": "VariableDeclarator",
+          "line": 1246
+        }
+      ],
+      "error": "ERR_MODULE_NOT_FOUND"
+    },
+    {
+      "file": "index.Bi0NXYPf.js",
+      "kind": "ImportExpression",
+      "source": "@edge-runtime/vm",
+      "line": 1262,
+      "ancestors": [
+        {
+          "type": "VariableDeclarator",
+          "name": "edge",
+          "line": 1242
+        },
+        {
+          "type": "ObjectMethod",
+          "name": "setup",
+          "line": 1261
+        },
+        {
+          "type": "VariableDeclarator",
+          "line": 1262
+        }
+      ],
+      "error": "ERR_MODULE_NOT_FOUND"
+    },
+    {
+      "file": "index.Bi0NXYPf.js",
+      "kind": "ImportExpression",
+      "source": "happy-dom",
+      "line": 1289,
+      "ancestors": [
+        {
+          "type": "VariableDeclarator",
+          "name": "happy",
+          "line": 1285
+        },
+        {
+          "type": "ObjectMethod",
+          "name": "setupVM",
+          "line": 1288
+        },
+        {
+          "type": "VariableDeclarator",
+          "line": 1289
+        }
+      ],
+      "error": "ERR_MODULE_NOT_FOUND"
+    },
+    {
+      "file": "index.Bi0NXYPf.js",
+      "kind": "ImportExpression",
+      "source": "happy-dom",
+      "line": 1316,
+      "ancestors": [
+        {
+          "type": "VariableDeclarator",
+          "name": "happy",
+          "line": 1285
+        },
+        {
+          "type": "ObjectMethod",
+          "name": "setup",
+          "line": 1313
+        },
+        {
+          "type": "VariableDeclarator",
+          "line": 1316
+        }
+      ],
+      "error": "ERR_MODULE_NOT_FOUND"
+    },
+    {
+      "file": "index.Bi0NXYPf.js",
+      "kind": "ImportExpression",
+      "source": "jsdom",
+      "line": 1393,
+      "ancestors": [
+        {
+          "type": "VariableDeclarator",
+          "name": "jsdom",
+          "line": 1385
+        },
+        {
+          "type": "ObjectMethod",
+          "name": "setupVM",
+          "line": 1388
+        },
+        {
+          "type": "VariableDeclarator",
+          "name": "jsdomModule",
+          "line": 1393
+        }
+      ],
+      "error": "ERR_MODULE_NOT_FOUND"
+    },
+    {
+      "file": "index.Bi0NXYPf.js",
+      "kind": "ImportExpression",
+      "source": "jsdom",
+      "line": 1461,
+      "ancestors": [
+        {
+          "type": "VariableDeclarator",
+          "name": "jsdom",
+          "line": 1385
+        },
+        {
+          "type": "ObjectMethod",
+          "name": "setup",
+          "line": 1456
+        },
+        {
+          "type": "VariableDeclarator",
+          "name": "jsdomModule",
+          "line": 1461
+        }
+      ],
+      "error": "ERR_MODULE_NOT_FOUND"
+    },
+    {
+      "file": "traces.js",
+      "kind": "ImportExpression",
+      "source": "@opentelemetry/api",
+      "line": 15,
+      "ancestors": [
+        {
+          "type": "ClassMethod",
+          "name": "constructor",
+          "line": 13
+        },
+        {
+          "type": "VariableDeclarator",
+          "name": "apiInit",
+          "line": 15
+        }
+      ],
+      "error": "ERR_MODULE_NOT_FOUND"
+    }
+  ],
+  "workAccounting": {
+    "actualWorkerWorkRemoved": "none established; no candidate built or executed",
+    "addedRuntimeWork": "none introduced in this follow-up; no proposed artifact admitted",
+    "oldRuntimeCosts": "unchanged; old one-to-one replacement does not establish loading work removal",
+    "auditOnlyCosts": {
+      "sourceAndMetadataReads": 76,
+      "bytesRead": 150216187,
+      "originalResolverCalls": 784,
+      "newWorkerReads": 0,
+      "newWorkerLoads": 0,
+      "newFacadeLoads": 0,
+      "newSharedBodyLoads": 0,
+      "newLoaderRegistrations": 0,
+      "newRuntimeManifestValidations": 0,
+      "newMapReads": 0,
+      "workerRuntimeInvocations": 0,
+      "builds": 0,
+      "performanceMeasured": false
+    },
+    "auditCounterBoundary": "explicit audit reads and resolve calls only; not syscall totals or parser/tool dependency loading; bytes include executable hashing; not runtime resource measurements"
+  },
+  "artifactContract": {
+    "expectedDigest": "independently supplied literal argument checked before source audit",
+    "sourceOverrideInvalidation": "every old audited topology source compared to trusted old manifest; all 63 distro JS sources additionally hashed in new audit",
+    "runtimeArtifact": "none newly generated; no authoritative installed artifact declared",
+    "maps": "none new",
+    "actualNewRuntimeNativeClosure": [],
+    "historicalNativeClosure": "old observed trace inventory only; incomplete pre-execution attestation remains unresolved",
+    "conditions": "Node26.3.1 Linux arm64, --experimental-import-meta-resolve; default installed distro resolution audited; alternate conditions/loaders/source condition not admitted",
+    "relocationOrImmutability": "no claim or enforcement",
+    "buildTools": "no bundler called; Babel parser used only by audit; pinned tools metadata retained"
+  },
+  "limitations": [
+    "No actual candidate or stock runtime was executed; phase/order/load counts have not been remeasured",
+    "Symbolic order treats external packages as opaque barriers and is not complete native external closure provenance",
+    "Earlier evaluation could only be admitted with an explicit source/observable-state proof, not graph membership or package sideEffects metadata",
+    "Dynamic imports/computed imports/alternate conditions are not folded into static reachability",
+    "All old identity/negative assertions and failures remain unchanged; no new stack qualification",
+    "Selected source remains live and hashed for audit only; no authoritative installation artifact is declared"
+  ]
+}

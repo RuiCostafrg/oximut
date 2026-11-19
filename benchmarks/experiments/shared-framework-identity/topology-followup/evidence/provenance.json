@@ -1,0 +1,33 @@
+{
+  "kind": "read-only topology admission evidence, no runtime artifact",
+  "sourceBase": "baa1920edbefc927392d8474f50d79e34d568225",
+  "auditSourceSha256": "fb52dd0f9f42316dfde572416ab4f80b40708a71eff9d332bfd277f13e61ec2c",
+  "verifierSourceSha256": "041c2285440d9c4afe54f872e192ba38c074b558fd28d51565dc47e3c4deccda",
+  "readmeSha256": "32f2cc33fe40492f80cffda3f1e8b907ea8b3ec26fdee0723f684464b36de0e6",
+  "oldRawEvidenceSha256": "99028a2250783e4735f2c9882b8194fd0d8640749accce13d9e3f6803e3fbe5d",
+  "trustedOldBuildManifestSha256": "cc232a3cd8d9fb5a4459d7a7c55bec8b90b259c227ab0f26badcee24c3bf7898",
+  "sourceFilesArchived": 75,
+  "newCandidateBuilds": 0,
+  "newCandidateRuntimeInvocations": 0,
+  "oldArtifactsModified": false,
+  "conditionBoundary": "exact command flags, resolved installed URLs, package condition declarations and source bytes captured in audit; no alternate loader/source-condition admission; audit did not attest a worker native closure",
+  "environmentObservationAfterAudit": {
+    "NODE_OPTIONS": null,
+    "NODE_PATH": null
+  },
+  "toolEntry": {
+    "path": "/root/.t3/worktrees/oximut/t3-ca3d9bc2-fcbfe41eae6056ad/node_modules/@babel/parser/lib/index.js",
+    "sha256": "8672cdc1864bb4cb775aa66df9e619c3465b826ee91978a6bbb575c2c5d5055e"
+  },
+  "auditCounterBoundary": "Only explicit reads/resolves counted; tool dependency loader/verifier I/O not syscall-profiled; no timing or resource campaign",
+  "verification": {
+    "verification": "passed",
+    "kind": "offline independently recomputed graph and source hashes",
+    "runtimeCandidateExecutions": 0,
+    "workerStaticModules": 30,
+    "workerSelectedModules": 22,
+    "publicSelectedModules": 16,
+    "missingKindsRecoveredAsDynamic": 7,
+    "rejectedStartupPairs": 231
+  }
+}
