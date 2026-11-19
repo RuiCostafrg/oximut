@@ -706,11 +706,15 @@ def main(argv=None):
                        help='Trace controller IPC and cumulative fork CPU without inspector profiling')
     modes.add_argument('--accounting', action='store_true',
                        help='Measure Rust sampling-thread self CPU, without Node or Python profilers')
+    parser.add_argument('--startup-contract', action='store_true',
+                        help='Record the real fork launch contract for the standalone startup replay')
     parser.add_argument('--concurrency', type=workload.concurrency_arg, default=1,
                         help='Matched parallelism for Oximut --workers and Stryker concurrency (default 1)')
     parser.add_argument('--workload', type=workload.workload_name, default=workload.DEFAULT_WORKLOAD,
                         help='Mutation scope: ' + ', '.join(sorted(workload.WORKLOADS)))
     args = parser.parse_args(argv)
+    if args.startup_contract and not args.worker_phases:
+        parser.error('--startup-contract requires --worker-phases')
     workload.require_matched_concurrency(args.concurrency)
     output = args.output.resolve()
     output.mkdir(parents=True, exist_ok=False)
@@ -760,6 +764,8 @@ def main(argv=None):
             env['OXIMUT_PROFILE_CONTROLLER_DIR'] = str(profiles)
             env['OXIMUT_PROFILE_WORKER_PHASES'] = str(int(args.worker_phases))
             env['NODE_OPTIONS'] = f'--require="{SUPPORT / "controller-jobs.cjs"}"'
+        if args.startup_contract:
+            env['OXIMUT_PROFILE_STARTUP_CONTRACT'] = str(profiles / 'startup-contract')
         if args.accounting:
             # No shim/preload/profiling variables: isolate the accountant cost
             # from inspector startup and Node/Python CPU sampling overhead.

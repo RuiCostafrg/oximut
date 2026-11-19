@@ -122,6 +122,8 @@ if (dir && process.argv[1]?.endsWith('/m2-worker.ts')) {
   const methods = new Set(['fetch', 'fetchModule', 'resolveId', 'onCollected', 'onTaskUpdate',
     'onQueued', 'onFinished', 'onAfterSuiteRun', 'onUserConsoleLog']);
   const originalFork = cp.fork;
+  const startupContract = process.env.OXIMUT_PROFILE_STARTUP_CONTRACT;
+  let startupContractWritten = false;
   cp.fork = function (...args) {
     const child = Reflect.apply(originalFork, this, args);
     observe(() => {
@@ -140,8 +142,36 @@ if (dir && process.argv[1]?.endsWith('/m2-worker.ts')) {
       child.send = function (...messages) {
         observe(() => {
           const msg = messages[0];
-          if (msg?.__vitest_worker_request__ === true && controls.has(msg.type))
+          if (msg?.__vitest_worker_request__ === true && controls.has(msg.type)) {
             emit('child-send', { childPid: child.pid, messageType: msg.type });
+            if (startupContract && !startupContractWritten && msg.type === 'start'
+                && args[0].endsWith('/vitest/dist/workers/forks.js')
+                && args[2]?.env?.OXIMUT_ACTIVE_MUTANT) {
+              // Keep the fields consumed before "started"; avoid exporting
+              // the serialized project's environment or the inherited process env.
+              const {config, environment, pool} = msg.context;
+              const {root, name, environmentOptions, experimental, chaiConfig,
+                isAgent, serializedDefines} = config;
+              if (serializedDefines || environment.name !== 'node' || experimental.viteModuleRunner === false
+                  || msg.traces.enabled || msg.traces.sdkPath)
+                throw Error('Unsupported startup contract for isolated replay');
+              const {env, execArgv, stdio, serialization} = args[2];
+              const record = {
+                pid: child.pid, cwd: process.cwd(), entry: args[0], argv: args[1],
+                execArgv, stdio, serialization,
+                env: Object.fromEntries(['CI', 'NO_COLOR', 'TEST', 'VITEST', 'NODE_ENV',
+                  'VITEST_MODE', 'FORCE_TTY', 'OXIMUT_BUDGETED', 'OXIMUT_ACTIVE_MUTANT']
+                  .filter((key) => env[key] !== undefined).map((key) => [key, env[key]])),
+                start: {
+                  ...msg, context: {environment, pool, config: {
+                    root, name, environmentOptions, experimental, chaiConfig, isAgent,
+                  }},
+                },
+              };
+              fs.writeFileSync(startupContract + `-${process.pid}.json`, JSON.stringify(record), {flag: 'wx'});
+              startupContractWritten = true;
+            }
+          }
         });
         return Reflect.apply(send, this, messages);
       };

@@ -11,6 +11,7 @@ on:
           - accounting
           - controller-jobs
           - worker-phases
+          - fresh-worker-startup
           - segments
       workload:
         description: Mutation workload
@@ -111,15 +112,23 @@ jobs:
         run: |
           set -euo pipefail
           case "$CAPTURE_MODE" in
-            accounting) CAPTURE_ARG=--accounting ;;
-            controller-jobs) CAPTURE_ARG=--controller-jobs ;;
-            worker-phases) CAPTURE_ARG=--worker-phases ;;
-            segments) CAPTURE_ARG=--segments ;;
+            accounting) CAPTURE_ARGS=(--accounting) ;;
+            controller-jobs) CAPTURE_ARGS=(--controller-jobs) ;;
+            worker-phases) CAPTURE_ARGS=(--worker-phases) ;;
+            fresh-worker-startup)
+              test "$PROFILE_WORKLOAD" = colord-scale
+              test "$MATCHED_CONCURRENCY" = 4
+              CAPTURE_ARGS=(--worker-phases --startup-contract)
+              ;;
+            segments) CAPTURE_ARGS=(--segments) ;;
             *) echo 'Unsupported capture mode' >&2; exit 1 ;;
           esac
           python3 benchmarks/profile_native.py --binary "$PROFILE_ROOT/oximut" \
-            "$CAPTURE_ARG" --workload "$PROFILE_WORKLOAD" --concurrency "$MATCHED_CONCURRENCY" \
+            "${CAPTURE_ARGS[@]}" --workload "$PROFILE_WORKLOAD" --concurrency "$MATCHED_CONCURRENCY" \
             --output "$PROFILE_ROOT/capture" 2>&1 | tee "$PROFILE_ROOT/diagnostic.log"
+          if test "$CAPTURE_MODE" = fresh-worker-startup; then
+            node benchmarks/profiling/fresh-worker-startup.mjs "$PROFILE_ROOT/capture/profiles" "$PROFILE_ROOT"
+          fi
       - name: Publish diagnostic status and remove dependency symlinks
         if: always()
         shell: bash
