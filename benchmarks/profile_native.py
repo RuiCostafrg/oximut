@@ -708,13 +708,15 @@ def main(argv=None):
                        help='Measure Rust sampling-thread self CPU, without Node or Python profilers')
     parser.add_argument('--startup-contract', action='store_true',
                         help='Record the real fork launch contract for the standalone startup replay')
+    parser.add_argument('--first-collection', action='store_true',
+                        help='Record module RPC and evaluator timing through first collection')
     parser.add_argument('--concurrency', type=workload.concurrency_arg, default=1,
                         help='Matched parallelism for Oximut --workers and Stryker concurrency (default 1)')
     parser.add_argument('--workload', type=workload.workload_name, default=workload.DEFAULT_WORKLOAD,
                         help='Mutation scope: ' + ', '.join(sorted(workload.WORKLOADS)))
     args = parser.parse_args(argv)
-    if args.startup_contract and not args.worker_phases:
-        parser.error('--startup-contract requires --worker-phases')
+    if (args.startup_contract or args.first_collection) and not args.worker_phases:
+        parser.error('--startup-contract and --first-collection require --worker-phases')
     workload.require_matched_concurrency(args.concurrency)
     output = args.output.resolve()
     output.mkdir(parents=True, exist_ok=False)
@@ -766,6 +768,11 @@ def main(argv=None):
             env['NODE_OPTIONS'] = f'--require="{SUPPORT / "controller-jobs.cjs"}"'
         if args.startup_contract:
             env['OXIMUT_PROFILE_STARTUP_CONTRACT'] = str(profiles / 'startup-contract')
+        if args.first_collection:
+            collection = output / 'collection'
+            collection.mkdir()
+            env['OXIMUT_PROFILE_COLLECTION_DIR'] = str(collection)
+            env['NODE_OPTIONS'] += f' --require="{SUPPORT / "worker-fetch-timing.cjs"}"'
         if args.accounting:
             # No shim/preload/profiling variables: isolate the accountant cost
             # from inspector startup and Node/Python CPU sampling overhead.

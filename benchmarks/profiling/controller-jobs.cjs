@@ -123,11 +123,14 @@ if (dir && process.argv[1]?.endsWith('/m2-worker.ts')) {
     'onQueued', 'onFinished', 'onAfterSuiteRun', 'onUserConsoleLog']);
   const originalFork = cp.fork;
   const startupContract = process.env.OXIMUT_PROFILE_STARTUP_CONTRACT;
+  const validSelector = (id) => typeof id === 'string' && /^[a-f0-9]{64}$/.test(id) ? id : null;
   let startupContractWritten = false;
   cp.fork = function (...args) {
+    const selector = args[2]?.env?.OXIMUT_ACTIVE_MUTANT;
     const child = Reflect.apply(originalFork, this, args);
     observe(() => {
-      emit('fork', { childPid: child.pid });
+      emit('fork', { childPid: child.pid,
+        ...(startupContract ? {selector: validSelector(selector)} : {}) });
       const counts = Object.create(null);
       child.on('message', (msg) => observe(() => {
         if (!msg || typeof msg !== 'object') return;
@@ -143,7 +146,12 @@ if (dir && process.argv[1]?.endsWith('/m2-worker.ts')) {
         observe(() => {
           const msg = messages[0];
           if (msg?.__vitest_worker_request__ === true && controls.has(msg.type)) {
-            emit('child-send', { childPid: child.pid, messageType: msg.type });
+            const files = startupContract && msg.type === 'run' && selector
+              ? msg.context.files.map((file) => ({
+                filepath: file.filepath,
+                fields: Object.keys(file).sort(),
+              })) : null;
+            emit('child-send', { childPid: child.pid, messageType: msg.type, ...(files ? {files} : {}) });
             if (startupContract && !startupContractWritten && msg.type === 'start'
                 && args[0].endsWith('/vitest/dist/workers/forks.js')
                 && args[2]?.env?.OXIMUT_ACTIVE_MUTANT) {
@@ -151,9 +159,11 @@ if (dir && process.argv[1]?.endsWith('/m2-worker.ts')) {
               // the serialized project's environment or the inherited process env.
               const {config, environment, pool} = msg.context;
               const {root, name, environmentOptions, experimental, chaiConfig,
-                isAgent, serializedDefines} = config;
+                disableColors, serializedDefines, env: projectEnv} = config;
+              const fixtureEnv = ['BASE_URL', 'MODE', 'DEV', 'PROD', 'SSR', 'OXIMUT_ACTIVE_MUTANT'];
               if (serializedDefines || environment.name !== 'node' || experimental.viteModuleRunner === false
-                  || msg.traces.enabled || msg.traces.sdkPath)
+                  || msg.traces.enabled || msg.traces.sdkPath
+                  || Object.keys(projectEnv).some((key) => !fixtureEnv.includes(key)))
                 throw Error('Unsupported startup contract for isolated replay');
               const {env, execArgv, stdio, serialization} = args[2];
               const record = {
@@ -164,7 +174,7 @@ if (dir && process.argv[1]?.endsWith('/m2-worker.ts')) {
                   .filter((key) => env[key] !== undefined).map((key) => [key, env[key]])),
                 start: {
                   ...msg, context: {environment, pool, config: {
-                    root, name, environmentOptions, experimental, chaiConfig, isAgent,
+                    root, name, environmentOptions, experimental, chaiConfig, disableColors, env: projectEnv,
                   }},
                 },
               };
