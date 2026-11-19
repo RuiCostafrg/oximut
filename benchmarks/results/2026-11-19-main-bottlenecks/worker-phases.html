@@ -1,0 +1,29 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Colord-scale worker bottlenecks</title><style>
+body { font-family: var(--font-sans, system-ui); color:var(--foreground); margin:0; }
+section { margin:0 0 16px; }
+h3 { font-size:14px; margin:0 0 9px; font-weight:650; }
+h3 span,.value span,p { color:var(--muted-foreground); font-weight:400; }
+.rows { display:grid; grid-template-columns: minmax(115px, 1fr) minmax(38px, 1.1fr) max-content;
+        align-items:center; gap:6px 9px; }
+.label { font-size:12px; }
+.value { font-variant-numeric:tabular-nums; text-align:right; font-size:12px; }
+.track { height:8px; border-radius:6px; background:var(--secondary); overflow:hidden; }
+.track i { display:block; height:8px; border-radius:6px; }
+p { margin:0; font-size:12px; }
+</style></head><body><section><h3>Wall along last-finishing worker paths <span>· 13.34 s</span></h3><div class="rows"><div class="label">Fork startup</div><div class="track" aria-hidden="true"><i
+            style="width:71.704%;background:var(--chart-1)"></i></div>
+          <div class="value">4.78 s <span>(36%)</span></div><div class="label">Through first collection</div><div class="track" aria-hidden="true"><i
+            style="width:55.923%;background:var(--chart-2)"></i></div>
+          <div class="value">3.73 s <span>(28%)</span></div><div class="label">After first collection</div><div class="track" aria-hidden="true"><i
+            style="width:56.611%;background:var(--chart-3)"></i></div>
+          <div class="value">3.78 s <span>(28%)</span></div><div class="label">Other</div><div class="track" aria-hidden="true"><i
+            style="width:15.762%;background:var(--chart-4)"></i></div>
+          <div class="value">1.05 s <span>(8%)</span></div></div></section><section><h3>CPU across all mutant workers <span>· 36.52 s</span></h3><div class="rows"><div class="label">Fork startup</div><div class="track" aria-hidden="true"><i
+            style="width:87.711%;background:var(--chart-1)"></i></div>
+          <div class="value">16.02 s <span>(44%)</span></div><div class="label">Through first collection</div><div class="track" aria-hidden="true"><i
+            style="width:56.876%;background:var(--chart-2)"></i></div>
+          <div class="value">10.38 s <span>(28%)</span></div><div class="label">After first collection</div><div class="track" aria-hidden="true"><i
+            style="width:54.506%;background:var(--chart-3)"></i></div>
+          <div class="value">9.95 s <span>(27%)</span></div><div class="label">Other</div><div class="track" aria-hidden="true"><i
+            style="width:0.907%;background:var(--chart-4)"></i></div>
+          <div class="value">0.17 s <span>(0%)</span></div></div></section><p>206 mutants · four workers · Ubuntu x86-64 diagnostic. Each bar uses a 0–50% scale.</p></body></html>

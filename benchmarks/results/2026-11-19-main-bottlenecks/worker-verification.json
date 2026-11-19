@@ -1,0 +1,27 @@
+{
+  "commit": "206a9538fda24084e96e3e10c6540116932c2012",
+  "main": "b451b6563d44bb3e718c52104580031e00911bde",
+  "diagnostic_changes": [
+    ".github/workflows/native-diagnostic-profile.yml",
+    "benchmarks/profile_native.py",
+    "benchmarks/profiling/controller-jobs.cjs",
+    "benchmarks/profiling/test_controller_profile.py"
+  ],
+  "artifact_sha256": "5b8de7aa560de06cec51c032a42166063a20b40a703a91628b64d5be3aa132ea",
+  "log_sha256": "bb52224a919e4e6847c12b0ad0c570dc6151564b616280b05519fe501fe73ea2",
+  "artifact_files": 403,
+  "log_files": 18,
+  "archived_source_files": 2287,
+  "binary_sha256": "03bb307477640252eca6837415ec45be49dd407fa522b91b29e7f3328c0eea3f",
+  "host": "Linux ip-10-0-136-106 7.0.0-1014-aws #14~24.04.1-Ubuntu SMP PREEMPT Fri Sep 18 21:24:59 UTC 2026 x86_64 x86_64 x86_64 GNU/Linux",
+  "tool_versions": {
+    "rustc": "rustc 1.96.0 (ac68faa20 2026-05-25)",
+    "cargo": "cargo 1.96.0 (30a34c682 2026-05-25)",
+    "node": "v26.3.1",
+    "npm": "11.16.0",
+    "python3": "Python 3.13.18"
+  },
+  "diagnostic_passed": true,
+  "diagnostic_errors": [],
+  "qualification_errors": []
+}
