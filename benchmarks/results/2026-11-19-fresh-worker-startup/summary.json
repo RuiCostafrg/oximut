@@ -1,0 +1,1807 @@
+{
+  "scope": "Native diagnostic observations with instrumentation, kept separate from performance scores.",
+  "provenance": [
+    {
+      "run_url": "https://github.com/RuiCostafrg/oximut/actions/runs/44632424160",
+      "commit": "6043d55b3960b8c65b846690d47a5e9539be99dd",
+      "artifact_sha256": "cb2336e2f57b65bdad16577204cc117c24fe1ef0ee35a6aa494a9b740dba711d",
+      "log_sha256": "9f8e86cb96c06d506cbca4bb0a1faca424267dff5ed66734b2790fe7e676da17",
+      "source_files": 2296,
+      "binary_sha256": "03bb307477640252eca6837415ec45be49dd407fa522b91b29e7f3328c0eea3f",
+      "build": {
+        "commit": "6043d55b3960b8c65b846690d47a5e9539be99dd",
+        "build_flags": "--locked --release -p oximut-cli",
+        "cargo_target_dir": "/home/runner/work/_temp/native-profile-target.WTOfaI",
+        "rustflags": null,
+        "cargo_encoded_rustflags": null,
+        "host": "Linux runnervm8axu0 7.0.0-1017-azure #17~24.04.1-Ubuntu SMP PREEMPT Thu Sep 24 18:46:57 UTC 2026 x86_64 x86_64 x86_64 GNU/Linux",
+        "tool_versions": {
+          "rustc": "rustc 1.96.0 (ac68faa20 2026-05-25)",
+          "cargo": "cargo 1.96.0 (30a34c682 2026-05-25)",
+          "node": "v26.3.1",
+          "npm": "11.16.0",
+          "python3": "Python 3.13.18"
+        },
+        "binary_sha256": "03bb307477640252eca6837415ec45be49dd407fa522b91b29e7f3328c0eea3f",
+        "source_archive_sha256": "8273c3ddfce7fefbf671eeb98cec740f12a9ae6eee4dd2fd4caa65902b83b777"
+      }
+    },
+    {
+      "run_url": "https://github.com/RuiCostafrg/oximut/actions/runs/44632835828",
+      "commit": "b3c1cd94e3c8fb2433f9f001dd2887ab7a8d229e",
+      "artifact_sha256": "1506a301d34cb90f9dedbf337b9b9b0caf6d2f8b6ac0aa0cad24c7cc578db3e8",
+      "log_sha256": "66e994e9fbbee7a61b0a5363875a1f02014c69818c496a6323592355822e825a",
+      "source_files": 2298,
+      "binary_sha256": "03bb307477640252eca6837415ec45be49dd407fa522b91b29e7f3328c0eea3f",
+      "build": {
+        "commit": "b3c1cd94e3c8fb2433f9f001dd2887ab7a8d229e",
+        "build_flags": "--locked --release -p oximut-cli",
+        "cargo_target_dir": "/home/runner/work/_temp/native-profile-target.QdoNZQ",
+        "rustflags": null,
+        "cargo_encoded_rustflags": null,
+        "host": "Linux ip-10-0-141-221 7.0.0-1014-aws #14~24.04.1-Ubuntu SMP PREEMPT Fri Sep 18 21:24:59 UTC 2026 x86_64 x86_64 x86_64 GNU/Linux",
+        "os_release": "PRETTY_NAME=\"Ubuntu 24.04.5 LTS\"\nNAME=\"Ubuntu\"\nVERSION_ID=\"24.04\"\nVERSION=\"24.04.5 LTS (Noble Numbat)\"\nVERSION_CODENAME=noble\nID=ubuntu\nID_LIKE=debian\nHOME_URL=\"https://www.ubuntu.com/\"\nSUPPORT_URL=\"https://help.ubuntu.com/\"\nBUG_REPORT_URL=\"https://bugs.launchpad.net/ubuntu/\"\nPRIVACY_POLICY_URL=\"https://www.ubuntu.com/legal/terms-and-policies/privacy-policy\"\nUBUNTU_CODENAME=noble\nLOGO=ubuntu-logo\n",
+        "cpu": "Architecture:                            x86_64\nCPU op-mode(s):                          32-bit, 64-bit\nAddress sizes:                           48 bits physical, 48 bits virtual\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               GenuineIntel\nModel name:                              Intel(R) Xeon(R) 6975P-C\nCPU family:                              6\nModel:                                   173\nThread(s) per core:                      2\nCore(s) per socket:                      2\nSocket(s):                               1\nStepping:                                1\nBogoMIPS:                                5400.00\nFlags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ss ht syscall nx pdpe1gb rdtscp lm constant_tsc arch_perfmon rep_good nopl xtopology nonstop_tsc cpuid aperfmperf tsc_known_freq pni pclmulqdq monitor vmx ssse3 fma cx16 pdcm pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand hypervisor lahf_lm abm 3dnowprefetch cpuid_fault ssbd ibrs ibpb stibp ibrs_enhanced tpr_shadow flexpriority ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves avx_vnni avx512_bf16 wbnoinvd ida arat vnmi avx512vbmi umip pku ospke waitpkg avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg tme avx512_vpopcntdq rdpid bus_lock_detect cldemote movdiri movdir64b md_clear serialize amx_bf16 avx512_fp16 amx_tile amx_int8 flush_l1d arch_capabilities\nVirtualization:                          VT-x\nHypervisor vendor:                       KVM\nVirtualization type:                     full\nL1d cache:                               96 KiB (2 instances)\nL1i cache:                               128 KiB (2 instances)\nL2 cache:                                4 MiB (2 instances)\nL3 cache:                                480 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Not affected\nVulnerability Spec store bypass:         Mitigation; Speculative Store Bypass disabled via prctl\nVulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; Enhanced / Automatic IBRS; IBPB conditional; PBRSB-eIBRS Not affected; BHI BHI_DIS_S\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Not affected\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected",
+        "cpu_affinity": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "github_runner": {
+          "ImageOS": "ubuntu24",
+          "ImageVersion": "20261116.133.1",
+          "RUNNER_ARCH": "X64",
+          "GITHUB_RUN_ID": "44632835828",
+          "GITHUB_RUN_ATTEMPT": "1"
+        },
+        "tool_versions": {
+          "rustc": "rustc 1.96.0 (ac68faa20 2026-05-25)",
+          "cargo": "cargo 1.96.0 (30a34c682 2026-05-25)",
+          "node": "v26.3.1",
+          "npm": "11.16.0",
+          "python3": "Python 3.13.18"
+        },
+        "binary_sha256": "03bb307477640252eca6837415ec45be49dd407fa522b91b29e7f3328c0eea3f",
+        "source_archive_sha256": "1447e5ffaea034ae5afea9808de4e08dc179796b8ef405411a808ea51101d2e4"
+      }
+    }
+  ],
+  "qualification": [
+    {
+      "commit": "6043d55b3960b8c65b846690d47a5e9539be99dd",
+      "outcomes": {
+        "killed": 202,
+        "survived": 4
+      },
+      "whole_file_selection": {
+        "files": 204,
+        "full": 2
+      },
+      "tests": 102,
+      "mutant_forks": 206,
+      "baseline_forks": 8,
+      "batches": 52,
+      "launch_selectors_and_files_verified": false,
+      "outcome_sha256": "58bf365f43cbf79069ffc2259de3d70dd98cf75a68676bf54e9b6edef3c09837",
+      "declared_tests_sha256": "3fa4823cc6cd2edda5cb41e6fbe411e20a6857b0a3081ae59ae7d6b1ee05651b"
+    },
+    {
+      "commit": "b3c1cd94e3c8fb2433f9f001dd2887ab7a8d229e",
+      "outcomes": {
+        "killed": 202,
+        "survived": 4
+      },
+      "whole_file_selection": {
+        "files": 204,
+        "full": 2
+      },
+      "tests": 102,
+      "mutant_forks": 206,
+      "baseline_forks": 8,
+      "batches": 52,
+      "launch_selectors_and_files_verified": true,
+      "outcome_sha256": "58bf365f43cbf79069ffc2259de3d70dd98cf75a68676bf54e9b6edef3c09837",
+      "declared_tests_sha256": "3fa4823cc6cd2edda5cb41e6fbe411e20a6857b0a3081ae59ae7d6b1ee05651b"
+    }
+  ],
+  "startup_only_replay": {
+    "exec_argv": [
+      "--experimental-import-meta-resolve",
+      "--require",
+      "/home/runner/work/oximut/oximut/node_modules/vitest/suppress-warnings.cjs",
+      "--conditions",
+      "node",
+      "--conditions",
+      "development",
+      "--require",
+      "/home/runner/work/oximut/oximut/packages/vitest-adapter/compile-cache.cjs"
+    ],
+    "node_options": "--require=\"/home/runner/work/oximut/oximut/benchmarks/profiling/fresh-worker-probe.cjs\"",
+    "versions": {
+      "node": "v26.3.1",
+      "v8": "14.6.202.34-node.20",
+      "node_path": "/opt/hostedtoolcache/node/26.3.1/x64/bin/node"
+    },
+    "process_count": 296,
+    "priming_forks": 8,
+    "cells": {
+      "minimal_cold": {
+        "cpu_fork_to_preload_ms": {
+          "sum": 1305.859,
+          "median": 26.959,
+          "p90": 28.632500000000004
+        },
+        "cpu_preload_to_start_message_ms": {
+          "sum": 151.473,
+          "median": 3.205,
+          "p90": 3.4918
+        },
+        "cpu_start_message_to_ack_ms": {
+          "sum": 7.239,
+          "median": 0.067,
+          "p90": 0.2218
+        },
+        "cpu_started_to_stopped_ms": {
+          "sum": 29.087,
+          "median": 0.588,
+          "p90": 0.7202999999999999
+        },
+        "cpu_to_started_ms": {
+          "sum": 1464.571,
+          "median": 30.107,
+          "p90": 31.8279
+        },
+        "finished_cache_bytes": {
+          "sum": 236160.0,
+          "median": 4920.0,
+          "p90": 4920.0
+        },
+        "finished_cache_files": {
+          "sum": 192.0,
+          "median": 4.0,
+          "p90": 4.0
+        },
+        "system_to_started_ms": {
+          "sum": 448.147,
+          "median": 9.144,
+          "p90": 12.8105
+        },
+        "system_to_stopped_ms": {
+          "sum": 456.464,
+          "median": 9.3385,
+          "p90": 12.888200000000001
+        },
+        "user_to_started_ms": {
+          "sum": 1016.424,
+          "median": 20.8385,
+          "p90": 25.141199999999998
+        },
+        "user_to_stopped_ms": {
+          "sum": 1037.194,
+          "median": 21.3615,
+          "p90": 25.671
+        },
+        "wall_fork_to_exit_ms": {
+          "sum": 1663.099074,
+          "median": 34.5994215,
+          "p90": 36.1944526
+        },
+        "wall_fork_to_preload_ms": {
+          "sum": 1375.152047,
+          "median": 28.397767,
+          "p90": 30.935796800000002
+        },
+        "wall_fork_to_started_received_ms": {
+          "sum": 1541.380135,
+          "median": 32.025903,
+          "p90": 33.7211417
+        },
+        "wall_preload_to_start_message_ms": {
+          "sum": 139.697743,
+          "median": 2.9580979999999997,
+          "p90": 3.5403557
+        },
+        "wall_start_message_to_ack_ms": {
+          "sum": 7.358009,
+          "median": 0.0693125,
+          "p90": 0.2269161
+        },
+        "forks": 48
+      },
+      "vitest_cold": {
+        "cpu_fork_to_preload_ms": {
+          "sum": 1278.715,
+          "median": 26.506500000000003,
+          "p90": 28.261400000000002
+        },
+        "cpu_preload_to_start_message_ms": {
+          "sum": 3992.258,
+          "median": 83.315,
+          "p90": 84.79740000000001
+        },
+        "cpu_start_message_to_ack_ms": {
+          "sum": 47.216,
+          "median": 0.9995,
+          "p90": 1.0499
+        },
+        "cpu_started_to_stopped_ms": {
+          "sum": 166.174,
+          "median": 3.5244999999999997,
+          "p90": 3.842
+        },
+        "cpu_to_started_ms": {
+          "sum": 5318.189,
+          "median": 110.86,
+          "p90": 112.79729999999999
+        },
+        "finished_cache_bytes": {
+          "sum": 17915776.0,
+          "median": 373248.0,
+          "p90": 373282.4
+        },
+        "finished_cache_files": {
+          "sum": 2208.0,
+          "median": 46.0,
+          "p90": 46.0
+        },
+        "system_to_started_ms": {
+          "sum": 1006.064,
+          "median": 20.8785,
+          "p90": 25.7074
+        },
+        "system_to_stopped_ms": {
+          "sum": 1091.826,
+          "median": 22.4805,
+          "p90": 27.4844
+        },
+        "user_to_started_ms": {
+          "sum": 4312.125,
+          "median": 89.6985,
+          "p90": 95.1022
+        },
+        "user_to_stopped_ms": {
+          "sum": 4392.537,
+          "median": 91.765,
+          "p90": 96.8817
+        },
+        "wall_fork_to_exit_ms": {
+          "sum": 5807.650224,
+          "median": 120.81743349999999,
+          "p90": 123.94000120000001
+        },
+        "wall_fork_to_preload_ms": {
+          "sum": 1362.902623,
+          "median": 28.124701,
+          "p90": 31.4511454
+        },
+        "wall_fork_to_started_received_ms": {
+          "sum": 5472.880209,
+          "median": 113.726951,
+          "p90": 118.5575203
+        },
+        "wall_preload_to_start_message_ms": {
+          "sum": 4040.817434,
+          "median": 84.21066450000001,
+          "p90": 85.90063549999999
+        },
+        "wall_start_message_to_ack_ms": {
+          "sum": 47.35255,
+          "median": 1.0009655,
+          "p90": 1.0518740000000002
+        },
+        "forks": 48
+      },
+      "minimal_populated": {
+        "cpu_fork_to_preload_ms": {
+          "sum": 1272.491,
+          "median": 26.333,
+          "p90": 28.8298
+        },
+        "cpu_preload_to_start_message_ms": {
+          "sum": 148.839,
+          "median": 3.141,
+          "p90": 3.4242999999999997
+        },
+        "cpu_start_message_to_ack_ms": {
+          "sum": 3.973,
+          "median": 0.067,
+          "p90": 0.10030000000000001
+        },
+        "cpu_started_to_stopped_ms": {
+          "sum": 20.765,
+          "median": 0.4095,
+          "p90": 0.5461
+        },
+        "cpu_to_started_ms": {
+          "sum": 1425.303,
+          "median": 29.4685,
+          "p90": 32.057100000000005
+        },
+        "finished_cache_bytes": {
+          "sum": 236160.0,
+          "median": 4920.0,
+          "p90": 4920.0
+        },
+        "finished_cache_files": {
+          "sum": 192.0,
+          "median": 4.0,
+          "p90": 4.0
+        },
+        "system_to_started_ms": {
+          "sum": 451.027,
+          "median": 9.158999999999999,
+          "p90": 12.395499999999998
+        },
+        "system_to_stopped_ms": {
+          "sum": 455.018,
+          "median": 9.234,
+          "p90": 12.4523
+        },
+        "user_to_started_ms": {
+          "sum": 974.2760000000001,
+          "median": 20.312,
+          "p90": 23.8592
+        },
+        "user_to_stopped_ms": {
+          "sum": 991.05,
+          "median": 20.7725,
+          "p90": 24.0051
+        },
+        "wall_fork_to_exit_ms": {
+          "sum": 1634.924502,
+          "median": 33.811077,
+          "p90": 36.4650598
+        },
+        "wall_fork_to_preload_ms": {
+          "sum": 1355.62261,
+          "median": 28.1914565,
+          "p90": 29.9162506
+        },
+        "wall_fork_to_started_received_ms": {
+          "sum": 1520.261097,
+          "median": 31.497852,
+          "p90": 33.8965315
+        },
+        "wall_preload_to_start_message_ms": {
+          "sum": 138.182816,
+          "median": 2.8346289999999996,
+          "p90": 3.5389493
+        },
+        "wall_start_message_to_ack_ms": {
+          "sum": 4.259572,
+          "median": 0.0689115,
+          "p90": 0.1267278
+        },
+        "forks": 48
+      },
+      "vitest_populated": {
+        "cpu_fork_to_preload_ms": {
+          "sum": 1268.706,
+          "median": 26.397,
+          "p90": 28.057
+        },
+        "cpu_preload_to_start_message_ms": {
+          "sum": 2899.382,
+          "median": 60.571,
+          "p90": 61.772800000000004
+        },
+        "cpu_start_message_to_ack_ms": {
+          "sum": 45.563,
+          "median": 0.9775,
+          "p90": 1.0631
+        },
+        "cpu_started_to_stopped_ms": {
+          "sum": 72.167,
+          "median": 1.523,
+          "p90": 1.6605
+        },
+        "cpu_to_started_ms": {
+          "sum": 4213.651,
+          "median": 87.888,
+          "p90": 90.27450000000002
+        },
+        "finished_cache_bytes": {
+          "sum": 17916000.0,
+          "median": 373256.0,
+          "p90": 373264.0
+        },
+        "finished_cache_files": {
+          "sum": 2208.0,
+          "median": 46.0,
+          "p90": 46.0
+        },
+        "system_to_started_ms": {
+          "sum": 924.966,
+          "median": 18.953,
+          "p90": 24.348599999999998
+        },
+        "system_to_stopped_ms": {
+          "sum": 932.264,
+          "median": 19.12,
+          "p90": 24.5476
+        },
+        "user_to_started_ms": {
+          "sum": 3288.685,
+          "median": 68.131,
+          "p90": 74.11630000000001
+        },
+        "user_to_stopped_ms": {
+          "sum": 3353.554,
+          "median": 69.663,
+          "p90": 75.4117
+        },
+        "wall_fork_to_exit_ms": {
+          "sum": 4595.743484,
+          "median": 95.668151,
+          "p90": 98.7077578
+        },
+        "wall_fork_to_preload_ms": {
+          "sum": 1369.230784,
+          "median": 28.286229499999997,
+          "p90": 31.2170391
+        },
+        "wall_fork_to_started_received_ms": {
+          "sum": 4374.698274,
+          "median": 91.521123,
+          "p90": 94.88519729999999
+        },
+        "wall_preload_to_start_message_ms": {
+          "sum": 2932.773673,
+          "median": 61.2490305,
+          "p90": 63.951007700000005
+        },
+        "wall_start_message_to_ack_ms": {
+          "sum": 50.875496,
+          "median": 0.980039,
+          "p90": 1.2065926
+        },
+        "forks": 48
+      },
+      "minimal_disabled": {
+        "cpu_fork_to_preload_ms": {
+          "sum": 1276.742,
+          "median": 26.6275,
+          "p90": 28.339299999999998
+        },
+        "cpu_preload_to_start_message_ms": {
+          "sum": 144.115,
+          "median": 3.0810000000000004,
+          "p90": 3.2900000000000005
+        },
+        "cpu_start_message_to_ack_ms": {
+          "sum": 4.9510000000000005,
+          "median": 0.0665,
+          "p90": 0.08230000000000001
+        },
+        "cpu_started_to_stopped_ms": {
+          "sum": 18.75,
+          "median": 0.3855,
+          "p90": 0.4972
+        },
+        "cpu_to_started_ms": {
+          "sum": 1425.808,
+          "median": 29.7125,
+          "p90": 31.4851
+        },
+        "finished_cache_bytes": {
+          "sum": 0.0,
+          "median": 0.0,
+          "p90": 0.0
+        },
+        "finished_cache_files": {
+          "sum": 0.0,
+          "median": 0.0,
+          "p90": 0.0
+        },
+        "system_to_started_ms": {
+          "sum": 445.367,
+          "median": 9.184000000000001,
+          "p90": 12.7606
+        },
+        "system_to_stopped_ms": {
+          "sum": 448.207,
+          "median": 9.2165,
+          "p90": 12.9041
+        },
+        "user_to_started_ms": {
+          "sum": 980.441,
+          "median": 20.8705,
+          "p90": 24.3339
+        },
+        "user_to_stopped_ms": {
+          "sum": 996.351,
+          "median": 21.147,
+          "p90": 24.7188
+        },
+        "wall_fork_to_exit_ms": {
+          "sum": 1648.746464,
+          "median": 34.376288,
+          "p90": 36.8232289
+        },
+        "wall_fork_to_preload_ms": {
+          "sum": 1378.875372,
+          "median": 28.5243505,
+          "p90": 31.515008899999998
+        },
+        "wall_fork_to_started_received_ms": {
+          "sum": 1537.467397,
+          "median": 31.842750000000002,
+          "p90": 34.45088009999999
+        },
+        "wall_preload_to_start_message_ms": {
+          "sum": 132.243573,
+          "median": 2.60674,
+          "p90": 3.5912925
+        },
+        "wall_start_message_to_ack_ms": {
+          "sum": 5.334916,
+          "median": 0.067945,
+          "p90": 0.0862911
+        },
+        "forks": 48
+      },
+      "vitest_disabled": {
+        "cpu_fork_to_preload_ms": {
+          "sum": 1266.163,
+          "median": 26.383499999999998,
+          "p90": 27.866200000000003
+        },
+        "cpu_preload_to_start_message_ms": {
+          "sum": 3683.436,
+          "median": 76.6455,
+          "p90": 78.45160000000001
+        },
+        "cpu_start_message_to_ack_ms": {
+          "sum": 44.611,
+          "median": 0.962,
+          "p90": 1.0613
+        },
+        "cpu_started_to_stopped_ms": {
+          "sum": 72.134,
+          "median": 1.541,
+          "p90": 1.6522999999999999
+        },
+        "cpu_to_started_ms": {
+          "sum": 4994.21,
+          "median": 103.8905,
+          "p90": 106.47179999999999
+        },
+        "finished_cache_bytes": {
+          "sum": 0.0,
+          "median": 0.0,
+          "p90": 0.0
+        },
+        "finished_cache_files": {
+          "sum": 0.0,
+          "median": 0.0,
+          "p90": 0.0
+        },
+        "system_to_started_ms": {
+          "sum": 972.516,
+          "median": 20.259,
+          "p90": 26.058100000000003
+        },
+        "system_to_stopped_ms": {
+          "sum": 982.644,
+          "median": 20.4565,
+          "p90": 26.095299999999998
+        },
+        "user_to_started_ms": {
+          "sum": 4021.694,
+          "median": 83.452,
+          "p90": 89.0785
+        },
+        "user_to_stopped_ms": {
+          "sum": 4083.7,
+          "median": 84.7185,
+          "p90": 90.1571
+        },
+        "wall_fork_to_exit_ms": {
+          "sum": 5371.960504,
+          "median": 111.8689385,
+          "p90": 115.8073173
+        },
+        "wall_fork_to_preload_ms": {
+          "sum": 1365.377683,
+          "median": 27.986848000000002,
+          "p90": 30.644917299999996
+        },
+        "wall_fork_to_started_received_ms": {
+          "sum": 5147.093063,
+          "median": 107.66663600000001,
+          "p90": 111.8706823
+        },
+        "wall_preload_to_start_message_ms": {
+          "sum": 3716.987998,
+          "median": 77.1493925,
+          "p90": 80.6784357
+        },
+        "wall_start_message_to_ack_ms": {
+          "sum": 44.949291,
+          "median": 0.9640709999999999,
+          "p90": 1.0689078
+        },
+        "forks": 48
+      }
+    },
+    "wave_mean_deltas": {
+      "vitest_less_minimal_cold": {
+        "cpu_to_started_ms": {
+          "sum": 963.4045,
+          "median": 80.775,
+          "p90": 81.1663
+        },
+        "wall_fork_to_started_received_ms": {
+          "sum": 982.8750185,
+          "median": 81.81068825,
+          "p90": 82.81417640000001
+        },
+        "cpu_preload_to_start_message_ms": {
+          "sum": 960.19625,
+          "median": 80.140125,
+          "p90": 80.82062499999999
+        },
+        "cpu_started_to_stopped_ms": {
+          "sum": 34.27175,
+          "median": 2.832125,
+          "p90": 3.0535750000000004
+        }
+      },
+      "vitest_less_minimal_populated": {
+        "cpu_to_started_ms": {
+          "sum": 697.087,
+          "median": 57.9925,
+          "p90": 59.9744
+        },
+        "wall_fork_to_started_received_ms": {
+          "sum": 713.60929425,
+          "median": 59.24294325,
+          "p90": 61.035955075000004
+        },
+        "cpu_preload_to_start_message_ms": {
+          "sum": 687.63575,
+          "median": 57.2195,
+          "p90": 58.262225
+        },
+        "cpu_started_to_stopped_ms": {
+          "sum": 12.8505,
+          "median": 1.0605,
+          "p90": 1.13675
+        }
+      },
+      "vitest_less_minimal_disabled": {
+        "cpu_to_started_ms": {
+          "sum": 892.1005,
+          "median": 73.465375,
+          "p90": 77.58437500000001
+        },
+        "wall_fork_to_started_received_ms": {
+          "sum": 902.4064165000001,
+          "median": 74.796071125,
+          "p90": 78.180780125
+        },
+        "cpu_preload_to_start_message_ms": {
+          "sum": 884.83025,
+          "median": 73.341125,
+          "p90": 74.65167500000001
+        },
+        "cpu_started_to_stopped_ms": {
+          "sum": 13.346,
+          "median": 1.0975000000000001,
+          "p90": 1.18195
+        }
+      },
+      "vitest_disabled_less_populated": {
+        "cpu_to_started_ms": {
+          "sum": 195.13975,
+          "median": 16.270125,
+          "p90": 17.695474999999995
+        },
+        "wall_fork_to_started_received_ms": {
+          "sum": 193.09869725000004,
+          "median": 16.444227874999996,
+          "p90": 18.105626725
+        },
+        "cpu_preload_to_start_message_ms": {
+          "sum": 196.0135,
+          "median": 16.475500000000004,
+          "p90": 17.177524999999996
+        },
+        "cpu_started_to_stopped_ms": {
+          "sum": -0.008249999999999869,
+          "median": 0.006750000000000034,
+          "p90": 0.104925
+        }
+      },
+      "vitest_cold_less_populated": {
+        "cpu_to_started_ms": {
+          "sum": 276.1345,
+          "median": 23.221874999999997,
+          "p90": 24.23422500000001
+        },
+        "wall_fork_to_started_received_ms": {
+          "sum": 274.54548375,
+          "median": 22.905675624999994,
+          "p90": 23.861567550000007
+        },
+        "cpu_preload_to_start_message_ms": {
+          "sum": 273.219,
+          "median": 22.669624999999996,
+          "p90": 23.726699999999994
+        },
+        "cpu_started_to_stopped_ms": {
+          "sum": 23.50175,
+          "median": 1.94625,
+          "p90": 2.0484999999999998
+        }
+      }
+    }
+  },
+  "combined_replay": {
+    "exec_argv": [
+      "--experimental-import-meta-resolve",
+      "--require",
+      "/home/runner/work/oximut/oximut/node_modules/vitest/suppress-warnings.cjs",
+      "--conditions",
+      "node",
+      "--conditions",
+      "development",
+      "--require",
+      "/home/runner/work/oximut/oximut/packages/vitest-adapter/compile-cache.cjs"
+    ],
+    "node_options": "--require=\"/home/runner/work/oximut/oximut/benchmarks/profiling/fresh-worker-probe.cjs\"",
+    "versions": {
+      "node": "v26.3.1",
+      "v8": "14.6.202.34-node.20",
+      "node_path": "/opt/hostedtoolcache/node/26.3.1/x64/bin/node"
+    },
+    "process_count": 296,
+    "priming_forks": 8,
+    "cells": {
+      "minimal_cold": {
+        "cpu_fork_to_preload_ms": {
+          "sum": 1188.617,
+          "median": 24.4005,
+          "p90": 26.596899999999998
+        },
+        "cpu_preload_to_start_message_ms": {
+          "sum": 136.702,
+          "median": 2.943,
+          "p90": 3.293
+        },
+        "cpu_start_message_to_ack_ms": {
+          "sum": 5.201,
+          "median": 0.053,
+          "p90": 0.15059999999999998
+        },
+        "cpu_started_to_stopped_ms": {
+          "sum": 28.893,
+          "median": 0.526,
+          "p90": 0.8958
+        },
+        "cpu_to_started_ms": {
+          "sum": 1330.52,
+          "median": 27.328000000000003,
+          "p90": 29.3697
+        },
+        "finished_cache_bytes": {
+          "sum": 236160.0,
+          "median": 4920.0,
+          "p90": 4920.0
+        },
+        "finished_cache_files": {
+          "sum": 192.0,
+          "median": 4.0,
+          "p90": 4.0
+        },
+        "system_to_started_ms": {
+          "sum": 311.719,
+          "median": 6.574,
+          "p90": 8.6472
+        },
+        "system_to_stopped_ms": {
+          "sum": 316.735,
+          "median": 6.864000000000001,
+          "p90": 8.7483
+        },
+        "user_to_started_ms": {
+          "sum": 1018.801,
+          "median": 20.6625,
+          "p90": 24.4113
+        },
+        "user_to_stopped_ms": {
+          "sum": 1042.6779999999999,
+          "median": 21.0805,
+          "p90": 24.935399999999998
+        },
+        "wall_fork_to_exit_ms": {
+          "sum": 1487.474788,
+          "median": 30.8058165,
+          "p90": 32.5308867
+        },
+        "wall_fork_to_preload_ms": {
+          "sum": 1248.249352,
+          "median": 25.864091000000002,
+          "p90": 28.0349828
+        },
+        "wall_fork_to_started_received_ms": {
+          "sum": 1399.831395,
+          "median": 29.1017005,
+          "p90": 30.503639699999997
+        },
+        "wall_preload_to_start_message_ms": {
+          "sum": 125.294815,
+          "median": 2.5001405,
+          "p90": 3.4400252
+        },
+        "wall_start_message_to_ack_ms": {
+          "sum": 5.241088,
+          "median": 0.055775000000000005,
+          "p90": 0.1104877
+        },
+        "forks": 48
+      },
+      "vitest_cold": {
+        "cpu_fork_to_preload_ms": {
+          "sum": 1176.703,
+          "median": 24.5735,
+          "p90": 26.612299999999998
+        },
+        "cpu_preload_to_start_message_ms": {
+          "sum": 3590.464,
+          "median": 74.7285,
+          "p90": 75.98479999999999
+        },
+        "cpu_start_message_to_ack_ms": {
+          "sum": 41.006,
+          "median": 0.917,
+          "p90": 0.9663999999999999
+        },
+        "cpu_started_to_stopped_ms": {
+          "sum": 111.738,
+          "median": 2.4485,
+          "p90": 2.5867
+        },
+        "cpu_to_started_ms": {
+          "sum": 4808.173,
+          "median": 100.14099999999999,
+          "p90": 102.4212
+        },
+        "finished_cache_bytes": {
+          "sum": 17915704.0,
+          "median": 373248.0,
+          "p90": 373272.0
+        },
+        "finished_cache_files": {
+          "sum": 2208.0,
+          "median": 46.0,
+          "p90": 46.0
+        },
+        "system_to_started_ms": {
+          "sum": 606.154,
+          "median": 12.1965,
+          "p90": 16.1762
+        },
+        "system_to_stopped_ms": {
+          "sum": 643.544,
+          "median": 13.338000000000001,
+          "p90": 17.1673
+        },
+        "user_to_started_ms": {
+          "sum": 4202.019,
+          "median": 87.378,
+          "p90": 91.94640000000001
+        },
+        "user_to_stopped_ms": {
+          "sum": 4276.367,
+          "median": 88.661,
+          "p90": 93.4213
+        },
+        "wall_fork_to_exit_ms": {
+          "sum": 5167.270853,
+          "median": 107.1672575,
+          "p90": 111.90984269999998
+        },
+        "wall_fork_to_preload_ms": {
+          "sum": 1247.942664,
+          "median": 25.673382,
+          "p90": 29.4685098
+        },
+        "wall_fork_to_started_received_ms": {
+          "sum": 4948.097866,
+          "median": 102.54091,
+          "p90": 108.10235249999998
+        },
+        "wall_preload_to_start_message_ms": {
+          "sum": 3636.8347,
+          "median": 75.6771155,
+          "p90": 78.6694573
+        },
+        "wall_start_message_to_ack_ms": {
+          "sum": 41.178364,
+          "median": 0.9200415,
+          "p90": 0.968966
+        },
+        "forks": 48
+      },
+      "minimal_populated": {
+        "cpu_fork_to_preload_ms": {
+          "sum": 1149.415,
+          "median": 23.831,
+          "p90": 25.210299999999997
+        },
+        "cpu_preload_to_start_message_ms": {
+          "sum": 130.284,
+          "median": 2.7555,
+          "p90": 3.0876
+        },
+        "cpu_start_message_to_ack_ms": {
+          "sum": 3.619,
+          "median": 0.052,
+          "p90": 0.057300000000000004
+        },
+        "cpu_started_to_stopped_ms": {
+          "sum": 18.535,
+          "median": 0.372,
+          "p90": 0.4749
+        },
+        "cpu_to_started_ms": {
+          "sum": 1283.318,
+          "median": 26.655,
+          "p90": 28.041200000000003
+        },
+        "finished_cache_bytes": {
+          "sum": 236160.0,
+          "median": 4920.0,
+          "p90": 4920.0
+        },
+        "finished_cache_files": {
+          "sum": 192.0,
+          "median": 4.0,
+          "p90": 4.0
+        },
+        "system_to_started_ms": {
+          "sum": 276.155,
+          "median": 5.4955,
+          "p90": 8.0334
+        },
+        "system_to_stopped_ms": {
+          "sum": 279.08,
+          "median": 5.696,
+          "p90": 8.1244
+        },
+        "user_to_started_ms": {
+          "sum": 1007.163,
+          "median": 21.119999999999997,
+          "p90": 22.9768
+        },
+        "user_to_stopped_ms": {
+          "sum": 1022.773,
+          "median": 21.3465,
+          "p90": 23.291999999999998
+        },
+        "wall_fork_to_exit_ms": {
+          "sum": 1444.176134,
+          "median": 30.114351499999998,
+          "p90": 31.507438
+        },
+        "wall_fork_to_preload_ms": {
+          "sum": 1231.971725,
+          "median": 25.443354,
+          "p90": 27.8906974
+        },
+        "wall_fork_to_started_received_ms": {
+          "sum": 1368.412682,
+          "median": 28.587048,
+          "p90": 30.236105599999995
+        },
+        "wall_preload_to_start_message_ms": {
+          "sum": 114.392522,
+          "median": 2.1987965,
+          "p90": 3.1696029
+        },
+        "wall_start_message_to_ack_ms": {
+          "sum": 3.761605,
+          "median": 0.055035,
+          "p90": 0.0668389
+        },
+        "forks": 48
+      },
+      "vitest_populated": {
+        "cpu_fork_to_preload_ms": {
+          "sum": 1146.978,
+          "median": 23.4585,
+          "p90": 26.3861
+        },
+        "cpu_preload_to_start_message_ms": {
+          "sum": 2508.451,
+          "median": 52.266000000000005,
+          "p90": 53.4649
+        },
+        "cpu_start_message_to_ack_ms": {
+          "sum": 41.646,
+          "median": 0.9075,
+          "p90": 0.9804
+        },
+        "cpu_started_to_stopped_ms": {
+          "sum": 64.529,
+          "median": 1.4015,
+          "p90": 1.5345999999999997
+        },
+        "cpu_to_started_ms": {
+          "sum": 3697.075,
+          "median": 76.815,
+          "p90": 79.5155
+        },
+        "finished_cache_bytes": {
+          "sum": 17915616.0,
+          "median": 373240.0,
+          "p90": 373264.0
+        },
+        "finished_cache_files": {
+          "sum": 2208.0,
+          "median": 46.0,
+          "p90": 46.0
+        },
+        "system_to_started_ms": {
+          "sum": 638.945,
+          "median": 13.2995,
+          "p90": 16.212799999999998
+        },
+        "system_to_stopped_ms": {
+          "sum": 643.516,
+          "median": 13.2995,
+          "p90": 16.212799999999998
+        },
+        "user_to_started_ms": {
+          "sum": 3058.13,
+          "median": 64.64250000000001,
+          "p90": 66.97560000000001
+        },
+        "user_to_stopped_ms": {
+          "sum": 3118.0879999999997,
+          "median": 65.9425,
+          "p90": 68.1498
+        },
+        "wall_fork_to_exit_ms": {
+          "sum": 3992.107143,
+          "median": 83.105286,
+          "p90": 86.9426415
+        },
+        "wall_fork_to_preload_ms": {
+          "sum": 1221.7432,
+          "median": 24.8878695,
+          "p90": 27.977392499999997
+        },
+        "wall_fork_to_started_received_ms": {
+          "sum": 3823.300673,
+          "median": 79.17115849999999,
+          "p90": 83.9535049
+        },
+        "wall_preload_to_start_message_ms": {
+          "sum": 2538.432002,
+          "median": 52.780435,
+          "p90": 55.657793500000004
+        },
+        "wall_start_message_to_ack_ms": {
+          "sum": 42.761101,
+          "median": 0.9105270000000001,
+          "p90": 0.9852755
+        },
+        "forks": 48
+      },
+      "minimal_disabled": {
+        "cpu_fork_to_preload_ms": {
+          "sum": 1158.151,
+          "median": 24.1005,
+          "p90": 25.6663
+        },
+        "cpu_preload_to_start_message_ms": {
+          "sum": 133.67,
+          "median": 2.8475,
+          "p90": 3.0568999999999997
+        },
+        "cpu_start_message_to_ack_ms": {
+          "sum": 3.263,
+          "median": 0.053,
+          "p90": 0.0941
+        },
+        "cpu_started_to_stopped_ms": {
+          "sum": 20.312,
+          "median": 0.3845,
+          "p90": 0.531
+        },
+        "cpu_to_started_ms": {
+          "sum": 1295.084,
+          "median": 26.863500000000002,
+          "p90": 28.4447
+        },
+        "finished_cache_bytes": {
+          "sum": 0.0,
+          "median": 0.0,
+          "p90": 0.0
+        },
+        "finished_cache_files": {
+          "sum": 0.0,
+          "median": 0.0,
+          "p90": 0.0
+        },
+        "system_to_started_ms": {
+          "sum": 272.703,
+          "median": 6.071,
+          "p90": 7.5192
+        },
+        "system_to_stopped_ms": {
+          "sum": 276.009,
+          "median": 6.1175,
+          "p90": 7.5192
+        },
+        "user_to_started_ms": {
+          "sum": 1022.381,
+          "median": 21.463,
+          "p90": 24.0375
+        },
+        "user_to_stopped_ms": {
+          "sum": 1039.387,
+          "median": 21.7965,
+          "p90": 24.461900000000004
+        },
+        "wall_fork_to_exit_ms": {
+          "sum": 1456.828267,
+          "median": 30.2258265,
+          "p90": 32.3081683
+        },
+        "wall_fork_to_preload_ms": {
+          "sum": 1233.948872,
+          "median": 25.515439,
+          "p90": 27.983644700000003
+        },
+        "wall_fork_to_started_received_ms": {
+          "sum": 1384.667927,
+          "median": 28.749625,
+          "p90": 30.7267246
+        },
+        "wall_preload_to_start_message_ms": {
+          "sum": 126.517804,
+          "median": 2.682556,
+          "p90": 3.4306229000000004
+        },
+        "wall_start_message_to_ack_ms": {
+          "sum": 3.492171,
+          "median": 0.055751499999999996,
+          "p90": 0.0737498
+        },
+        "forks": 48
+      },
+      "vitest_disabled": {
+        "cpu_fork_to_preload_ms": {
+          "sum": 1141.869,
+          "median": 23.4435,
+          "p90": 26.016699999999997
+        },
+        "cpu_preload_to_start_message_ms": {
+          "sum": 3313.954,
+          "median": 69.05000000000001,
+          "p90": 69.94659999999999
+        },
+        "cpu_start_message_to_ack_ms": {
+          "sum": 40.878,
+          "median": 0.8975,
+          "p90": 0.9416
+        },
+        "cpu_started_to_stopped_ms": {
+          "sum": 65.957,
+          "median": 1.4205,
+          "p90": 1.5507000000000002
+        },
+        "cpu_to_started_ms": {
+          "sum": 4496.701,
+          "median": 93.34,
+          "p90": 95.6846
+        },
+        "finished_cache_bytes": {
+          "sum": 0.0,
+          "median": 0.0,
+          "p90": 0.0
+        },
+        "finished_cache_files": {
+          "sum": 0.0,
+          "median": 0.0,
+          "p90": 0.0
+        },
+        "system_to_started_ms": {
+          "sum": 577.304,
+          "median": 11.9805,
+          "p90": 16.5111
+        },
+        "system_to_stopped_ms": {
+          "sum": 580.413,
+          "median": 12.019,
+          "p90": 16.5195
+        },
+        "user_to_started_ms": {
+          "sum": 3919.397,
+          "median": 81.474,
+          "p90": 86.1496
+        },
+        "user_to_stopped_ms": {
+          "sum": 3982.245,
+          "median": 82.6985,
+          "p90": 87.6711
+        },
+        "wall_fork_to_exit_ms": {
+          "sum": 4776.807286,
+          "median": 99.79325349999999,
+          "p90": 101.5067608
+        },
+        "wall_fork_to_preload_ms": {
+          "sum": 1215.023373,
+          "median": 25.125935,
+          "p90": 27.620995800000003
+        },
+        "wall_fork_to_started_received_ms": {
+          "sum": 4605.138693,
+          "median": 96.5315775,
+          "p90": 98.0903485
+        },
+        "wall_preload_to_start_message_ms": {
+          "sum": 3323.895348,
+          "median": 69.217287,
+          "p90": 71.6413805
+        },
+        "wall_start_message_to_ack_ms": {
+          "sum": 43.635174,
+          "median": 0.906875,
+          "p90": 0.956987
+        },
+        "forks": 48
+      }
+    },
+    "wave_mean_deltas": {
+      "vitest_less_minimal_cold": {
+        "cpu_to_started_ms": {
+          "sum": 869.41325,
+          "median": 72.637625,
+          "p90": 73.13195
+        },
+        "wall_fork_to_started_received_ms": {
+          "sum": 887.06661775,
+          "median": 73.937698875,
+          "p90": 75.21287575
+        },
+        "cpu_preload_to_start_message_ms": {
+          "sum": 863.4405,
+          "median": 71.962625,
+          "p90": 72.22774999999999
+        },
+        "cpu_started_to_stopped_ms": {
+          "sum": 20.71125,
+          "median": 1.7374999999999998,
+          "p90": 1.94085
+        }
+      },
+      "vitest_less_minimal_populated": {
+        "cpu_to_started_ms": {
+          "sum": 603.43925,
+          "median": 50.47437500000001,
+          "p90": 51.256925
+        },
+        "wall_fork_to_started_received_ms": {
+          "sum": 613.72199775,
+          "median": 50.807785374999995,
+          "p90": 52.374113050000005
+        },
+        "cpu_preload_to_start_message_ms": {
+          "sum": 594.54175,
+          "median": 49.52612499999999,
+          "p90": 50.250775000000004
+        },
+        "cpu_started_to_stopped_ms": {
+          "sum": 11.4985,
+          "median": 0.967625,
+          "p90": 1.0196999999999998
+        }
+      },
+      "vitest_less_minimal_disabled": {
+        "cpu_to_started_ms": {
+          "sum": 800.40425,
+          "median": 66.672125,
+          "p90": 67.57985000000001
+        },
+        "wall_fork_to_started_received_ms": {
+          "sum": 805.1176915,
+          "median": 66.87685987500001,
+          "p90": 68.26810257499999
+        },
+        "cpu_preload_to_start_message_ms": {
+          "sum": 795.071,
+          "median": 66.268625,
+          "p90": 66.6975
+        },
+        "cpu_started_to_stopped_ms": {
+          "sum": 11.41125,
+          "median": 0.975125,
+          "p90": 1.0614249999999998
+        }
+      },
+      "vitest_disabled_less_populated": {
+        "cpu_to_started_ms": {
+          "sum": 199.9065,
+          "median": 16.729374999999997,
+          "p90": 17.633575
+        },
+        "wall_fork_to_started_received_ms": {
+          "sum": 195.459505,
+          "median": 16.23899075,
+          "p90": 17.637035974999993
+        },
+        "cpu_preload_to_start_message_ms": {
+          "sum": 201.37574999999998,
+          "median": 16.870250000000006,
+          "p90": 17.254624999999997
+        },
+        "cpu_started_to_stopped_ms": {
+          "sum": 0.3570000000000002,
+          "median": 0.018124999999999947,
+          "p90": 0.13680000000000006
+        }
+      },
+      "vitest_cold_less_populated": {
+        "cpu_to_started_ms": {
+          "sum": 277.7745,
+          "median": 23.186749999999996,
+          "p90": 24.42565
+        },
+        "wall_fork_to_started_received_ms": {
+          "sum": 281.19929825,
+          "median": 23.68658750000001,
+          "p90": 25.87685022500001
+        },
+        "cpu_preload_to_start_message_ms": {
+          "sum": 270.50325,
+          "median": 22.493875000000003,
+          "p90": 23.049124999999997
+        },
+        "cpu_started_to_stopped_ms": {
+          "sum": 11.802249999999999,
+          "median": 0.9268750000000002,
+          "p90": 1.1777749999999998
+        }
+      }
+    }
+  },
+  "qualified_worker_phase_totals": {
+    "worker_cpu_ms": {
+      "startup": 16051.637,
+      "through_first_collection": 10455.754,
+      "after_first_collection": 9978.559,
+      "stop": 156.13299999999973
+    },
+    "last_finish_path_ms": {
+      "request_to_fork": 892.1409059999925,
+      "startup": 4823.346693000002,
+      "dispatch_delay": 5.871894000001987,
+      "through_first_collection": 3887.7163420000015,
+      "after_first_collection": 3737.145582999997,
+      "finish_to_reply": 168.74137900000176
+    },
+    "worker_wall_median_ms": {
+      "request_to_fork": 12.885637999999972,
+      "startup": 86.38219400000003,
+      "dispatch_delay": 0.08626849999973274,
+      "through_first_collection": 68.09963349999975,
+      "after_first_collection": 45.84808649999968,
+      "stop": 3.79917099999966
+    },
+    "wire_commands": {
+      "run-shared-lane-resident-v1": 52
+    }
+  },
+  "first_collection": {
+    "all_mutants": {
+      "workers": 206,
+      "methods": {
+        "fetch": {
+          "calls": 7750,
+          "latency_ms": {
+            "sum": 5168.063576,
+            "median": 0.2410074999999985,
+            "p90": 1.7340897999999982
+          },
+          "response_kinds": {
+            "tmpFile": 7750
+          }
+        },
+        "fetchWarmModules": {
+          "calls": 206,
+          "latency_ms": {
+            "sum": 107.68640500000001,
+            "median": 0.2838030000000007,
+            "p90": 1.0810730000000035
+          },
+          "response_kinds": {
+            "other": 206
+          },
+          "snapshot_keys": {
+            "sum": 1372.0,
+            "median": 0.0,
+            "p90": 30.0
+          },
+          "empty_snapshots": 154
+        },
+        "resolve": {
+          "calls": 412,
+          "latency_ms": {
+            "sum": 710.325153,
+            "median": 1.6329079999999996,
+            "p90": 3.0995624999999993
+          },
+          "response_kinds": {
+            "other": 412
+          }
+        }
+      },
+      "stats": {
+        "elapsed_ms": {
+          "sum": 14766.713122,
+          "median": 67.07485750000001,
+          "p90": 80.188472
+        },
+        "fetch_union_ms": {
+          "sum": 5275.749981,
+          "median": 19.894735000000004,
+          "p90": 28.730394999999994
+        },
+        "outside_fetch_union_ms": {
+          "sum": 9490.963141,
+          "median": 46.59204599999999,
+          "p90": 52.426836000000016
+        },
+        "worker_cpu_ms": {
+          "sum": 10455.754,
+          "median": 52.6845,
+          "p90": 54.3215
+        },
+        "sync_compile_cpu_ms": {
+          "sum": 607.978,
+          "median": 2.9985,
+          "p90": 4.2935
+        },
+        "sync_compile_wall_ms": {
+          "sum": 1241.360641,
+          "median": 6.068354,
+          "p90": 7.123037500000001
+        },
+        "inline_evaluator_self_ms": {
+          "sum": 10014.173943,
+          "median": 45.49766750000002,
+          "p90": 54.91348850000001
+        },
+        "external_evaluator_self_ms": {
+          "sum": 384.1656289999999,
+          "median": 1.6525005000000021,
+          "p90": 2.4285534999999996
+        },
+        "evaluator_self_negative_entries": {
+          "sum": 0.0,
+          "median": 0.0,
+          "p90": 0.0
+        },
+        "compile_count": {
+          "sum": 8375.0,
+          "median": 43.0,
+          "p90": 43.0
+        },
+        "evaluator_entries": {
+          "sum": 8581.0,
+          "median": 44.0,
+          "p90": 44.0
+        }
+      }
+    },
+    "last_finishers": {
+      "workers": 52,
+      "methods": {
+        "fetch": {
+          "calls": 2025,
+          "latency_ms": {
+            "sum": 1398.7978739999999,
+            "median": 0.2372489999999985,
+            "p90": 1.8737541999999991
+          },
+          "response_kinds": {
+            "tmpFile": 2025
+          }
+        },
+        "fetchWarmModules": {
+          "calls": 52,
+          "latency_ms": {
+            "sum": 27.014048000000024,
+            "median": 0.2576850000000004,
+            "p90": 1.3550359000000012
+          },
+          "response_kinds": {
+            "other": 52
+          },
+          "snapshot_keys": {
+            "sum": 162.0,
+            "median": 0.0,
+            "p90": 9.2
+          },
+          "empty_snapshots": 44
+        },
+        "resolve": {
+          "calls": 104,
+          "latency_ms": {
+            "sum": 182.132947,
+            "median": 1.6299539999999988,
+            "p90": 3.0218836
+          },
+          "response_kinds": {
+            "other": 104
+          }
+        }
+      },
+      "stats": {
+        "elapsed_ms": {
+          "sum": 3810.768496,
+          "median": 72.0153275,
+          "p90": 82.7624512
+        },
+        "fetch_union_ms": {
+          "sum": 1425.8119219999999,
+          "median": 22.536376500000003,
+          "p90": 36.8808783
+        },
+        "outside_fetch_union_ms": {
+          "sum": 2384.956574,
+          "median": 47.267624500000025,
+          "p90": 51.762263299999994
+        },
+        "worker_cpu_ms": {
+          "sum": 2631.35,
+          "median": 52.9585,
+          "p90": 54.3325
+        },
+        "sync_compile_cpu_ms": {
+          "sum": 141.737,
+          "median": 2.683,
+          "p90": 3.9286000000000003
+        },
+        "sync_compile_wall_ms": {
+          "sum": 310.546494,
+          "median": 6.0746839999999995,
+          "p90": 6.9154585
+        },
+        "inline_evaluator_self_ms": {
+          "sum": 2602.571324,
+          "median": 47.54903449999999,
+          "p90": 61.36108110000002
+        },
+        "external_evaluator_self_ms": {
+          "sum": 100.04968500000004,
+          "median": 1.6508460000000085,
+          "p90": 2.945759600000011
+        },
+        "evaluator_self_negative_entries": {
+          "sum": 0.0,
+          "median": 0.0,
+          "p90": 0.0
+        },
+        "compile_count": {
+          "sum": 2089.0,
+          "median": 43.0,
+          "p90": 43.0
+        },
+        "evaluator_entries": {
+          "sum": 2141.0,
+          "median": 44.0,
+          "p90": 44.0
+        }
+      }
+    },
+    "first_batch_mutants": {
+      "workers": 8,
+      "methods": {
+        "fetch": {
+          "calls": 323,
+          "latency_ms": {
+            "sum": 1342.5080329999998,
+            "median": 2.5394830000000184,
+            "p90": 6.77890000000001
+          },
+          "response_kinds": {
+            "tmpFile": 323
+          }
+        },
+        "fetchWarmModules": {
+          "calls": 8,
+          "latency_ms": {
+            "sum": 3.6894350000000067,
+            "median": 0.341011500000004,
+            "p90": 1.0783829000000034
+          },
+          "response_kinds": {
+            "other": 8
+          },
+          "snapshot_keys": {
+            "sum": 6.0,
+            "median": 0.0,
+            "p90": 2.0
+          },
+          "empty_snapshots": 5
+        },
+        "resolve": {
+          "calls": 16,
+          "latency_ms": {
+            "sum": 41.51671600000001,
+            "median": 2.046042999999999,
+            "p90": 5.051538
+          },
+          "response_kinds": {
+            "other": 16
+          }
+        }
+      },
+      "stats": {
+        "elapsed_ms": {
+          "sum": 1719.676903,
+          "median": 202.95687900000001,
+          "p90": 269.8726433
+        },
+        "fetch_union_ms": {
+          "sum": 1346.1974679999998,
+          "median": 152.87904549999996,
+          "p90": 223.91080769999994
+        },
+        "outside_fetch_union_ms": {
+          "sum": 373.47943500000014,
+          "median": 47.08114450000002,
+          "p90": 52.52112200000003
+        },
+        "worker_cpu_ms": {
+          "sum": 416.599,
+          "median": 54.332499999999996,
+          "p90": 54.914199999999994
+        },
+        "sync_compile_cpu_ms": {
+          "sum": 17.688,
+          "median": 2.3739999999999997,
+          "p90": 3.2298999999999998
+        },
+        "sync_compile_wall_ms": {
+          "sum": 44.98164,
+          "median": 5.9515725,
+          "p90": 6.153461500000001
+        },
+        "inline_evaluator_self_ms": {
+          "sum": 1273.540478,
+          "median": 159.4132465,
+          "p90": 191.2706823
+        },
+        "external_evaluator_self_ms": {
+          "sum": 16.53120900000002,
+          "median": 1.6669894999999997,
+          "p90": 2.8006412000000096
+        },
+        "evaluator_self_negative_entries": {
+          "sum": 0.0,
+          "median": 0.0,
+          "p90": 0.0
+        },
+        "compile_count": {
+          "sum": 323.0,
+          "median": 43.0,
+          "p90": 43.0
+        },
+        "evaluator_entries": {
+          "sum": 331.0,
+          "median": 44.0,
+          "p90": 44.0
+        }
+      }
+    },
+    "steady_batch_mutants": {
+      "workers": 198,
+      "methods": {
+        "fetch": {
+          "calls": 7427,
+          "latency_ms": {
+            "sum": 3825.555543,
+            "median": 0.23432400000000086,
+            "p90": 1.2060738000000029
+          },
+          "response_kinds": {
+            "tmpFile": 7427
+          }
+        },
+        "fetchWarmModules": {
+          "calls": 198,
+          "latency_ms": {
+            "sum": 103.99697,
+            "median": 0.2838030000000007,
+            "p90": 1.0836374
+          },
+          "response_kinds": {
+            "other": 198
+          },
+          "snapshot_keys": {
+            "sum": 1366.0,
+            "median": 0.0,
+            "p90": 30.0
+          },
+          "empty_snapshots": 149
+        },
+        "resolve": {
+          "calls": 396,
+          "latency_ms": {
+            "sum": 668.808437,
+            "median": 1.628983999999999,
+            "p90": 2.857528499999999
+          },
+          "response_kinds": {
+            "other": 396
+          }
+        }
+      },
+      "stats": {
+        "elapsed_ms": {
+          "sum": 13047.036219,
+          "median": 66.8177445,
+          "p90": 77.2301014
+        },
+        "fetch_union_ms": {
+          "sum": 3929.552513,
+          "median": 19.65399099999999,
+          "p90": 27.08880899999999
+        },
+        "outside_fetch_union_ms": {
+          "sum": 9117.483705999999,
+          "median": 46.59204599999999,
+          "p90": 52.34910190000001
+        },
+        "worker_cpu_ms": {
+          "sum": 10039.155,
+          "median": 52.6165,
+          "p90": 54.1952
+        },
+        "sync_compile_cpu_ms": {
+          "sum": 590.29,
+          "median": 3.034,
+          "p90": 4.3054
+        },
+        "sync_compile_wall_ms": {
+          "sum": 1196.379001,
+          "median": 6.071462,
+          "p90": 7.153209599999999
+        },
+        "inline_evaluator_self_ms": {
+          "sum": 8740.633465,
+          "median": 45.368008,
+          "p90": 53.61713090000001
+        },
+        "external_evaluator_self_ms": {
+          "sum": 367.63441999999986,
+          "median": 1.6525005000000021,
+          "p90": 2.4242948999999996
+        },
+        "evaluator_self_negative_entries": {
+          "sum": 0.0,
+          "median": 0.0,
+          "p90": 0.0
+        },
+        "compile_count": {
+          "sum": 8052.0,
+          "median": 43.0,
+          "p90": 43.0
+        },
+        "evaluator_entries": {
+          "sum": 8250.0,
+          "median": 44.0,
+          "p90": 44.0
+        }
+      }
+    }
+  }
+}
