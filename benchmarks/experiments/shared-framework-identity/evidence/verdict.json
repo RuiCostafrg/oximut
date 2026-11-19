@@ -1,0 +1,148 @@
+{
+  "classification": "NO-GO: source-frame fidelity failure; work-removal requirement unestablished",
+  "positive": {
+    "pid": 15428,
+    "realm": "5085a2eb-5f3c-46c1-8d19-38d4a9eadb7a",
+    "testId": "-592137866_0",
+    "evaluations": {
+      "file:///root/.t3/worktrees/oximut/t3-ca3d9bc2-fcbfe41eae6056ad/node_modules/vitest/dist/chunks/tinyrainbow.Do8I1XRG.js": 1,
+      "file:///root/.t3/worktrees/oximut/t3-ca3d9bc2-fcbfe41eae6056ad/node_modules/vitest/dist/chunks/index.D0heQG4v.js": 1,
+      "file:///root/.t3/worktrees/oximut/t3-ca3d9bc2-fcbfe41eae6056ad/node_modules/vitest/dist/chunks/pathe.M-eThtNZ.zq3TM4NT.js": 1,
+      "file:///root/.t3/worktrees/oximut/t3-ca3d9bc2-fcbfe41eae6056ad/node_modules/vitest/dist/chunks/source-map.DakdQc29.js": 1,
+      "file:///root/.t3/worktrees/oximut/t3-ca3d9bc2-fcbfe41eae6056ad/node_modules/vitest/dist/chunks/utils.DYj33du9.js": 1,
+      "file:///root/.t3/worktrees/oximut/t3-ca3d9bc2-fcbfe41eae6056ad/node_modules/vitest/dist/chunks/coverage.9iqXE2gN.js": 1,
+      "file:///root/.t3/worktrees/oximut/t3-ca3d9bc2-fcbfe41eae6056ad/node_modules/vitest/dist/chunks/display.BlTmubjj.js": 1,
+      "file:///root/.t3/worktrees/oximut/t3-ca3d9bc2-fcbfe41eae6056ad/node_modules/vitest/dist/task-utils.js": 1,
+      "file:///root/.t3/worktrees/oximut/t3-ca3d9bc2-fcbfe41eae6056ad/node_modules/vitest/dist/chunks/run.CjdgFZiW.js": 1,
+      "file:///root/.t3/worktrees/oximut/t3-ca3d9bc2-fcbfe41eae6056ad/node_modules/vitest/dist/chunks/spy.DDMXghXv.js": 1,
+      "file:///root/.t3/worktrees/oximut/t3-ca3d9bc2-fcbfe41eae6056ad/node_modules/vitest/dist/chunks/plugins.DPQHVT0p.js": 1,
+      "file:///root/.t3/worktrees/oximut/t3-ca3d9bc2-fcbfe41eae6056ad/node_modules/vitest/dist/chunks/offset.Dy-5Fdfn.js": 1,
+      "file:///root/.t3/worktrees/oximut/t3-ca3d9bc2-fcbfe41eae6056ad/node_modules/vitest/dist/chunks/rawSnapshot.DqSiqIEx.js": 1,
+      "file:///root/.t3/worktrees/oximut/t3-ca3d9bc2-fcbfe41eae6056ad/node_modules/vitest/dist/chunks/index.DmDMHCg8.js": 1,
+      "file:///root/.t3/worktrees/oximut/t3-ca3d9bc2-fcbfe41eae6056ad/node_modules/vitest/dist/chunks/rpc.Uhkwr2NM.js": 1,
+      "file:///root/.t3/worktrees/oximut/t3-ca3d9bc2-fcbfe41eae6056ad/node_modules/vitest/dist/chunks/index.CZzC1gGg.js": 1,
+      "file:///root/.t3/worktrees/oximut/t3-ca3d9bc2-fcbfe41eae6056ad/node_modules/vitest/dist/chunks/setup-common.CqAQCXzx.js": 1,
+      "file:///root/.t3/worktrees/oximut/t3-ca3d9bc2-fcbfe41eae6056ad/node_modules/vitest/dist/chunks/index.w_oBZ9N8.js": 1,
+      "file:///root/.t3/worktrees/oximut/t3-ca3d9bc2-fcbfe41eae6056ad/node_modules/vitest/dist/chunks/modules.BJuCwlRJ.js": 1,
+      "file:///root/.t3/worktrees/oximut/t3-ca3d9bc2-fcbfe41eae6056ad/node_modules/vitest/dist/chunks/init-forks.BaDXQSD8.js": 1,
+      "file:///root/.t3/worktrees/oximut/t3-ca3d9bc2-fcbfe41eae6056ad/node_modules/vitest/dist/chunks/module-dependencies._2Eei3FO.js": 1,
+      "file:///root/.t3/worktrees/oximut/t3-ca3d9bc2-fcbfe41eae6056ad/node_modules/vitest/dist/workers/forks.js": 1,
+      "file:///root/.t3/worktrees/oximut/t3-ca3d9bc2-fcbfe41eae6056ad/node_modules/vitest/dist/index.js": 1,
+      "file:///root/.t3/worktrees/oximut/t3-ca3d9bc2-fcbfe41eae6056ad/node_modules/vitest/dist/chunks/node.B9mkVmLH.js": 1,
+      "file:///root/.t3/worktrees/oximut/t3-ca3d9bc2-fcbfe41eae6056ad/node_modules/vitest/dist/chunks/console.CQZ877Hi.js": 1
+    },
+    "oracle": "passed"
+  },
+  "negative": {
+    "expectedFailure": true,
+    "errorMessage": "native helper collector current-test identity",
+    "stack": "AssertionError [ERR_ASSERTION]: native helper collector current-test identity\n+ actual - expected\n\n+ undefined\n- <ref *1> {\n-   annotations: [],\n-   artifacts: [],\n-   benchmarks: [],\n-   each: undefined,\n-   fails: undefined,\n-   file: <ref *2> {\n-     collectDuration: 76.48005299999977,\n-     collectFetchDuration: 49.636927000000014,\n-     concurrencyId: 1,\n-     containsOnly: false,\n-     containsTest: true,\n-     environmentLoad: 0.3081250000000182,\n-     file: [Circular *2],\n-     filepath: '/tmp/shared-framework-identity-negative-2/fixture/identity.test.mjs',\n-     fullName: 'identity.test.mjs',\n-     id: '-592137866',\n-     importDurations: {},\n-     meta: [Object: null prototype] {\n-       __vitest_label__: undefined\n-     },\n-     mode: 'run',\n-     name: 'identity.test.mjs',\n-     pool: 'forks',\n-     prepareDuration: 150.152916,\n-     projectName: '',\n-     result: {\n-       startTime: 1795104009086,\n-       state: 'run'\n-     },\n-     setupDuration: 128.49531300000012,\n-     setupFetchDuration: 105.60364500000014,\n-     shuffle: undefined,\n-     tags: [],\n-     tasks: [\n-       [Circular *1]\n-     ],\n-     type: 'suite',\n-     viteEnvironment: 'ssr',\n-     workerId: 1\n-   },\n-   fullName: 'identity.test.mjs > one collector current-test class expect spy and native closure',\n-   fullTestName: 'one collector current-test class expect spy and native closure',\n-   id: '-592137866_0',\n-   meta: [Object: null prototype] {},\n-   mode: 'run',\n-   name: 'one collector current-test class expect spy and native closure',\n-   repeats: undefined,\n-   result: {\n-     attempts: [],\n-     repeatCount: 0,\n-     retryCount: 0,\n-     startTime: 1795104009089,\n-     state: 'run'\n-   },\n-   retry: undefined,\n-   shuffle: undefined,\n-   suite: undefined,\n-   tags: [],\n-   timeout: 5000,\n-   type: 'test'\n- }\n\n    at /tmp/shared-framework-identity-negative-2/fixture/identity.test.mjs:13:9\n    at file:///tmp/shared-framework-identity-build-2/bundle/owner-19.mjs:1397:35\n    at file:///tmp/shared-framework-identity-build-2/bundle/owner-19.mjs:2515:26\n    at file:///tmp/shared-framework-identity-build-2/bundle/owner-19.mjs:3003:20\n    at new Promise (<anonymous>)\n    at runWithCancel (file:///tmp/shared-framework-identity-build-2/bundle/owner-19.mjs:2998:10)\n    at file:///tmp/shared-framework-identity-build-2/bundle/owner-19.mjs:2987:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///tmp/shared-framework-identity-build-2/bundle/owner-19.mjs:2951:10)\n    at file:///tmp/shared-framework-identity-build-2/bundle/owner-19.mjs:3541:64"
+  },
+  "sourceFrameFailure": {
+    "observedEmittedFrame": "file:///tmp/shared-framework-identity-build-2/bundle/owner-19.mjs",
+    "requiredOriginal": "/root/.t3/worktrees/oximut/t3-ca3d9bc2-fcbfe41eae6056ad/node_modules/vitest/dist/chunks/run.CjdgFZiW.js"
+  },
+  "topology": {
+    "selectedOriginals": 28,
+    "frameworkOutputs": 28,
+    "modulesPerFrameworkOutput": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    "extraRuntimeOutputs": [
+      "/tmp/shared-framework-identity-build-2/bundle/shared-CPxUEhZH.mjs"
+    ]
+  },
+  "executed": {
+    "originalSelectedNativeLoads": [],
+    "facadeNativeLoads": [
+      "file:///tmp/shared-framework-identity-build-2/bundle/owner-1.mjs",
+      "file:///tmp/shared-framework-identity-build-2/bundle/owner-10.mjs",
+      "file:///tmp/shared-framework-identity-build-2/bundle/owner-11.mjs",
+      "file:///tmp/shared-framework-identity-build-2/bundle/owner-12.mjs",
+      "file:///tmp/shared-framework-identity-build-2/bundle/owner-13.mjs",
+      "file:///tmp/shared-framework-identity-build-2/bundle/owner-14.mjs",
+      "file:///tmp/shared-framework-identity-build-2/bundle/owner-15.mjs",
+      "file:///tmp/shared-framework-identity-build-2/bundle/owner-16.mjs",
+      "file:///tmp/shared-framework-identity-build-2/bundle/owner-17.mjs",
+      "file:///tmp/shared-framework-identity-build-2/bundle/owner-18.mjs",
+      "file:///tmp/shared-framework-identity-build-2/bundle/owner-19.mjs",
+      "file:///tmp/shared-framework-identity-build-2/bundle/owner-20.mjs",
+      "file:///tmp/shared-framework-identity-build-2/bundle/owner-21.mjs",
+      "file:///tmp/shared-framework-identity-build-2/bundle/owner-22.mjs",
+      "file:///tmp/shared-framework-identity-build-2/bundle/owner-23.mjs",
+      "file:///tmp/shared-framework-identity-build-2/bundle/owner-24.mjs",
+      "file:///tmp/shared-framework-identity-build-2/bundle/owner-25.mjs",
+      "file:///tmp/shared-framework-identity-build-2/bundle/owner-26.mjs",
+      "file:///tmp/shared-framework-identity-build-2/bundle/owner-27.mjs",
+      "file:///tmp/shared-framework-identity-build-2/bundle/owner-3.mjs",
+      "file:///tmp/shared-framework-identity-build-2/bundle/owner-4.mjs",
+      "file:///tmp/shared-framework-identity-build-2/bundle/owner-6.mjs",
+      "file:///tmp/shared-framework-identity-build-2/bundle/owner-7.mjs",
+      "file:///tmp/shared-framework-identity-build-2/bundle/owner-8.mjs",
+      "file:///tmp/shared-framework-identity-build-2/bundle/owner-9.mjs"
+    ],
+    "instrumentedEvaluations": 25,
+    "loadCount": 61
+  },
+  "resolverConditions": [
+    [
+      "node",
+      "import",
+      "module-sync",
+      "node-addons",
+      "node",
+      "development"
+    ],
+    [
+      "require",
+      "node",
+      "node-addons",
+      "node",
+      "development",
+      "module-sync"
+    ]
+  ],
+  "notProven": [
+    "source-frame fidelity",
+    "inactive/A/B/A outcomes and inventory",
+    "fresh realm across jobs",
+    "hooks coverage beyond actual test attribution",
+    "importActual and mock identities",
+    "fake clocks",
+    "live environment/cwd/argv/randomness",
+    "import-time throws",
+    "deadlines beyond harness and descendant matrix",
+    "no added eager evaluation per ingress",
+    "alternate installation/custom loader/evaluator rejection",
+    "complete runtime external closure attestation",
+    "structural loading work reduction",
+    "performance targets"
+  ]
+}

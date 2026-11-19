@@ -1,0 +1,39 @@
+{
+  "base": "5dfd17e53cd7b067586b3ad47363cb3ecee5873e",
+  "branch": "perf/shared-framework-identity",
+  "runtime": {
+    "execPath": "/tmp/oximut-v5-node/node-v26.3.1-linux-arm64/bin/node",
+    "sha256": "a76224241ff1ebcbf90adc2eb4600ddb048d19f883c6a9140b6c3ceab004e4f0",
+    "version": "v26.3.1",
+    "platform": "linux",
+    "arch": "arm64",
+    "host": "Android/PRoot",
+    "upstreamArchiveSha256": "c021380e64d1314d1218ab1f31e0f5b0f28f1f54ac779ef72a16c2bda0ca5c30",
+    "verificationBoundary": "Reused prior verified extracted executable; no new archive download"
+  },
+  "unscoredCosts": {
+    "validationFileReadsExcludingManifestAndLoader": 106,
+    "validationBytesWithRepeatedPaths": 3520005,
+    "validationMapReads": 28,
+    "resolveTraceEvents": 243,
+    "loadTraceEvents": 61,
+    "traceBytes": 86207,
+    "timingCPUAndRSS": "not measured",
+    "chargedOperations": [
+      "dependency installation",
+      "one shared build, output and maps",
+      "bootstrap manifest and loader read/hash",
+      "per-child original/output/map/package metadata read/hash",
+      "Node hook registration",
+      "original package resolution before redirect",
+      "synchronous append per resolve/load",
+      "framework evaluation counters",
+      "native external reads/linking/evaluation",
+      "test transformations and M3 setup",
+      "normal stock pool cleanup"
+    ],
+    "mapConsumption": "not correctly registered; failed source-frame invariant; future registration not free"
+  },
+  "mutableManifestTrust": "historical parent generates digest before fork; final CLI requires independent expected hash, not runtime requalified",
+  "constraints": "No native dispatch, product integration, scoring, snapshots or warm reuse"
+}
