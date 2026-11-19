@@ -21,7 +21,7 @@ CONTROLLER = r'''
 const assert = require('node:assert/strict');
 const { fork } = require('node:child_process');
 process.on('message', async msg => {
-  if (msg.command === 'run') {
+  if (msg.command === 'run' || msg.command === 'run-shared-lane-resident-v1') {
     if (process.env.FIXTURE_DEFER_PROFILE === '1') await new Promise(setImmediate);
     // A shared-lane batch forks one child per lane, all at once.
     const lanes = msg.args?.request?.lanes?.length ?? 1;
@@ -99,7 +99,9 @@ const { fork } = require('node:child_process');
     if (batch && sizes.length) job.lanes = batch.map(([lane, m]) => ({kind, jobId:lane, runId, mutation:{id:m}}));
     const args = command === 'run' ? {request:job} : command === 'initialize'
       ? {kind:'baseline',jobId:'baseline',runId,mutation:null} : {};
-    c.send({protocol:1,id,command,args});
+    const wireCommand = job.lanes && process.env.FIXTURE_WORKER_PHASES === '1'
+      ? 'run-shared-lane-resident-v1' : command;
+    c.send({protocol:1,id,command:wireCommand,args});
     replies.push(await response);
   }
   c.on('exit',(code) => console.log(JSON.stringify({replies,code})));
@@ -198,7 +200,8 @@ setImmediate(() => {
                 duplicate='', defer_profile=False, fail_append=False,
                 request_ids=None, qualification_ids=None, validation_runs=0,
                 baseline_ids=None, request_run_id=None, qualification_run_id=None,
-                mutant_job_ids=None, coverage_mode="none", controller_exit_code=0, batches=None):
+                mutant_job_ids=None, coverage_mode="none", controller_exit_code=0, batches=None,
+                worker_phases=False):
         """Run real fork IPC and verify replies, callbacks, return values and exit."""
         request_ids = request_ids if request_ids is not None else [secrets.token_hex(32) for _ in range(2)]
         qualification_ids = qualification_ids if qualification_ids is not None else list(request_ids)
@@ -219,7 +222,8 @@ setImmediate(() => {
                                                        for _ in range(validation_runs)]}}))
         worker = root / entry
         worker.write_text(CONTROLLER)
-        child = root / 'child.cjs'
+        child = root / 'vitest/dist/workers/forks.js' if worker_phases else root / 'child.cjs'
+        child.parent.mkdir(parents=True, exist_ok=True)
         child.write_text(CHILD)
         launch = root / 'launch.cjs'
         launch.write_text(LAUNCHER)
@@ -231,6 +235,9 @@ setImmediate(() => {
                'FIXTURE_CONTROLLER_EXIT': str(controller_exit_code),
                'FIXTURE_DUPLICATE': duplicate,
                'FIXTURE_BATCHES': json.dumps(batches or []),
+               'FIXTURE_WORKER_PHASES': str(int(worker_phases)),
+               'OXIMUT_PROFILE_WORKER_PHASES': str(int(worker_phases)),
+               'OXIMUT_BUDGETED': '1',
                'FIXTURE_DEFER_PROFILE': '1' if defer_profile else '0'}
         if defer_profile:
             sabotage = root / 'deferred-inspector.cjs'
@@ -274,7 +281,23 @@ fs.appendFileSync = function(file, data, ...args) {
         self.assertEqual(data['replies'], [dict(protocol=1,id=i,result=dict(ok=True)) for i in range(1,command_count + 1)])
         self.assertEqual(lines.count('callback'), command_count)
         self.assertEqual(lines.count('returned:true'), command_count)
-        return self.capture(root)
+        return diagnostic.controller_capture_inventory(root, root / 'qualification',
+                                                       worker_phases=worker_phases)
+
+    def test_worker_phases_reconcile_compact_lanes_and_multifile_collection(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            inventory = self.fixture(root, batches=[2], duplicate='onCollected', worker_phases=True)
+            self.assertEqual(inventory['errors'], [])
+            self.assertTrue(inventory['workload_reconciled'])
+            self.assertFalse(list(root.glob('*.cpuprofile')))
+            files = sorted(root.glob('worker-*.json'))
+            self.assertEqual(len(files), 3)
+            self.assertNotIn('DO NOT LOG PAYLOAD', files[0].read_text())
+            lost = files[0]
+            lost.unlink()
+            broken = diagnostic.controller_capture_inventory(root, root / 'qualification', worker_phases=True)
+            self.assertTrue(any(lost.name in error for error in broken['errors']))
 
     def test_complete_first_mutant_and_bounded_worker_boundaries(self):
         """Accept one complete capture and reject missing or malformed evidence."""

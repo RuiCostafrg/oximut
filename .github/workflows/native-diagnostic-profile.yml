@@ -10,7 +10,15 @@ on:
         options:
           - accounting
           - controller-jobs
+          - worker-phases
           - segments
+      workload:
+        description: Mutation workload
+        type: choice
+        default: colord
+        options:
+          - colord
+          - colord-scale
       concurrency:
         description: 'Matched parallelism: Oximut --workers and Stryker concurrency'
         type: string
@@ -98,17 +106,20 @@ jobs:
         shell: bash
         env:
           CAPTURE_MODE: ${{ inputs.capture_mode || 'accounting' }}
+          PROFILE_WORKLOAD: ${{ inputs.workload || 'colord' }}
           MATCHED_CONCURRENCY: ${{ inputs.concurrency || '1' }}
         run: |
           set -euo pipefail
           case "$CAPTURE_MODE" in
             accounting) CAPTURE_ARG=--accounting ;;
             controller-jobs) CAPTURE_ARG=--controller-jobs ;;
+            worker-phases) CAPTURE_ARG=--worker-phases ;;
             segments) CAPTURE_ARG=--segments ;;
             *) echo 'Unsupported capture mode' >&2; exit 1 ;;
           esac
           python3 benchmarks/profile_native.py --binary "$PROFILE_ROOT/oximut" \
-            "$CAPTURE_ARG" --concurrency "$MATCHED_CONCURRENCY" --output "$PROFILE_ROOT/capture" 2>&1 | tee "$PROFILE_ROOT/diagnostic.log"
+            "$CAPTURE_ARG" --workload "$PROFILE_WORKLOAD" --concurrency "$MATCHED_CONCURRENCY" \
+            --output "$PROFILE_ROOT/capture" 2>&1 | tee "$PROFILE_ROOT/diagnostic.log"
       - name: Publish diagnostic status and remove dependency symlinks
         if: always()
         shell: bash

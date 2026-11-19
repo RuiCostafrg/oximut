@@ -101,9 +101,10 @@ def valid_mutant_identity(value):
     return isinstance(value, str) and len(value) == 64 and all(c in '0123456789abcdef' for c in value)
 
 
-def controller_capture_inventory(directory, qualification=None):
+def controller_capture_inventory(directory, qualification=None, *, worker_phases=False):
     """Validate the deliberately narrow controller capture, never whole-tree coverage."""
     errors, observed, matched = [], [], set()
+    worker_files = set()
     if list(directory.glob('controller-*.timeline-error')):
         errors.append('timeline append failure marker present')
     timelines = sorted(directory.glob('controller-*.jsonl'))
@@ -187,7 +188,10 @@ def controller_capture_inventory(directory, qualification=None):
             starts = [e for e in events if e['type'] == 'profile-started']
             written = [e for e in events if e['type'] == 'profile-written']
             profile_window = None
-            if (not mutants or len(starts) != 1 or len(written) != 1
+            if worker_phases:
+                if starts or written:
+                    errors.append(f'inspector active during worker-phase capture: {timeline.name}')
+            elif (not mutants or len(starts) != 1 or len(written) != 1
                     or starts[0]['jobId'] != mutants[0]['id']
                     or written[0]['jobId'] != mutants[0]['id']):
                 errors.append(f'first mutant profile missing/duplicated: {timeline.name}')
@@ -249,8 +253,23 @@ def controller_capture_inventory(directory, qualification=None):
                 counts = worker_exit.get('counts')
                 critical = ('started', 'testfileFinished', 'stopped', 'onCollected')
                 if (not isinstance(counts, dict) or any(type(counts.get(k)) is not int
-                                                       or counts[k] != 1 for k in critical)):
+                        or counts[k] < 1 or (counts[k] != 1 and not (worker_phases and k == 'onCollected'))
+                        for k in critical)):
                     errors.append(f'invalid worker boundary counts: {timeline.name}/{pid}')
+                if worker_phases:
+                    file = directory / f'worker-{identities[0]["pid"]}-{pid}.json'
+                    worker_files.add(file)
+                    try:
+                        worker = json.loads(file.read_text())
+                        if worker['pid'] != pid or worker['ppid'] != identities[0]['pid']:
+                            raise ValueError('mismatched worker identity')
+                        checkpoints = worker['checkpoints']
+                        for metric in ('user', 'system'):
+                            values = [checkpoints[k][metric] for k in ('started', 'firstCollection', 'finished', 'stopped')]
+                            if any(type(v) is not int or v < 0 for v in values) or values != sorted(values):
+                                raise ValueError('invalid cumulative worker CPU')
+                    except (OSError, ValueError, KeyError, TypeError) as error:
+                        errors.append(f'invalid worker CPU evidence {file.name}: {error}')
             observed.append({'timeline': timeline.name, 'request_count': len(requests),
                              'mutant_count': sum(map(len, lane_ids)), 'observed_forks': len(forks),
                              'batch_sizes': [len(ids) for ids in lane_ids], 'mutant_request_count': len(mutants),
@@ -271,6 +290,8 @@ def controller_capture_inventory(directory, qualification=None):
     orphans = sorted(p.name for p in set(directory.glob('*.cpuprofile')) - matched)
     if orphans:
         errors.append('orphan controller profiles: ' + ', '.join(orphans))
+    if worker_phases and set(directory.glob('worker-*.json')) != worker_files:
+        errors.append('worker counter files differ from the controller fork inventory')
     if not observed:
         errors.append('no usable controller timelines')
     reconciled = False
@@ -335,9 +356,11 @@ def controller_capture_inventory(directory, qualification=None):
         errors.append(f'workload reconciliation failed: {error}')
     return {'observed': observed, 'errors': errors, 'orphan_profiles': orphans,
             'workload_reconciled': reconciled,
-            'scope': 'Request observation to local send return (not recipient delivery/callback completion); partial controller CPU sampling. '
+            'scope': ('Controller IPC boundaries and cumulative worker self CPU before selected IPC sends; '
+                      ' excludes post-stop work and does not partition whole-tree CPU.' if worker_phases else
+                     'Request observation to local send return (not recipient delivery/callback completion); partial controller CPU sampling. '
                      'Sampling starts during profiler activation, omitting some request prefix, '
-                     'and may include inspector overhead. Not full-request or process-tree CPU profiling.'}
+                     'and may include inspector overhead. Not full-request or process-tree CPU profiling.')}
 
 
 def compact_summary(result):
@@ -679,6 +702,8 @@ def main(argv=None):
                         help='Use one inspector startup checkpoint per isolate instead of exit-time Node profiles; always partial evidence')
     modes.add_argument('--controller-jobs', action='store_true',
                        help='Trace complete controller jobs with a partial first-mutant CPU sample window; no whole-tree CPU attribution')
+    modes.add_argument('--worker-phases', action='store_true',
+                       help='Trace controller IPC and cumulative fork CPU without inspector profiling')
     modes.add_argument('--accounting', action='store_true',
                        help='Measure Rust sampling-thread self CPU, without Node or Python profilers')
     parser.add_argument('--concurrency', type=workload.concurrency_arg, default=1,
@@ -693,7 +718,8 @@ def main(argv=None):
     profiles.mkdir()
     result = {'diagnostic_only': True, 'profiler_overhead': True, 'concurrency': args.concurrency,
               'workload': args.workload,
-              'node_capture_mode': ('rust-accounting-self' if args.accounting else 'controller-jobs' if args.controller_jobs else
+              'node_capture_mode': ('rust-accounting-self' if args.accounting else 'worker-phases' if args.worker_phases else
+                                    'controller-jobs' if args.controller_jobs else
                                     'partial-inspector-startup' if args.segments else 'exit-time-cpu-prof'),
               'qualification_errors': [], 'failure': None,
               'scope': ('Unchanged colord: 41 sources, 102 tests, five mutation sources, ten arithmetic edits.'
@@ -701,6 +727,7 @@ def main(argv=None):
                         'colord-scale: 41 sources, 102 tests, 20 mutation sources, 206 arithmetic edits.')
                        + ' One capture, no warmup campaign.',
               'limits': ('CLI sampling-thread self CPU, excluding worker CPU; clock overhead is included, no complete process-tree CPU partition.' if args.accounting else
+                         'Controller and fork self CPU at IPC boundaries, including trace overhead; no complete process-tree CPU partition.' if args.worker_phases else
                          'Node sampling and Python supervisor self CPU only; no complete process-tree CPU partition. Rust resource sampling remains unattributed.') +
                         ' External benchmark sampler CPU is outside wait4 product-tree CPU; it perturbs wall time.'}
     if args.accounting:
@@ -727,10 +754,11 @@ def main(argv=None):
                'OXIMUT_PROFILE_SEGMENTS': '1' if args.segments else '0',
                'NODE_OPTIONS': ('' if args.segments else f'--cpu-prof --cpu-prof-dir="{profiles}" ') +
                                f'--require="{SUPPORT / "node-identity.cjs"}"'}
-        if args.controller_jobs:
+        if args.controller_jobs or args.worker_phases:
             # Keep this capture separate from the startup/exit-time profilers:
             # two inspector sessions would otherwise stop each other's samples.
             env['OXIMUT_PROFILE_CONTROLLER_DIR'] = str(profiles)
+            env['OXIMUT_PROFILE_WORKER_PHASES'] = str(int(args.worker_phases))
             env['NODE_OPTIONS'] = f'--require="{SUPPORT / "controller-jobs.cjs"}"'
         if args.accounting:
             # No shim/preload/profiling variables: isolate the accountant cost
@@ -755,7 +783,9 @@ def main(argv=None):
         result['failure'] = f'{type(error).__name__}: {error}'
     finally:
         result['captures'] = (accounting_capture_inventory(output / 'qualification') if args.accounting else
-                              controller_capture_inventory(profiles, output / 'qualification') if args.controller_jobs else
+                              controller_capture_inventory(profiles, output / 'qualification',
+                                                           worker_phases=args.worker_phases)
+                              if args.controller_jobs or args.worker_phases else
                               capture_inventory(profiles, output / 'qualification'))
         result['passed'] = not (result['failure'] or result['qualification_errors'] or result['captures']['errors'])
         workload.m6.write_json(output / 'diagnostic.json', result)

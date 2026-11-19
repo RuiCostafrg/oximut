@@ -1,5 +1,37 @@
 // Diagnostic preload only. No signals, timers, deadline changes or user payloads.
 const dir = process.env.OXIMUT_PROFILE_CONTROLLER_DIR;
+const workerPhases = process.env.OXIMUT_PROFILE_WORKER_PHASES === '1';
+if (dir && workerPhases && process.env.OXIMUT_BUDGETED === '1'
+    && process.argv[1]?.endsWith('/vitest/dist/workers/forks.js')
+    && typeof process.send === 'function') {
+  const originalSend = process.send;
+  const cpuUsage = process.cpuUsage.bind(process);
+  const checkpoints = {};
+  const pid = process.pid;
+  const ppid = process.ppid;
+  process.send = function (...args) {
+    // Vitest can terminate the worker on receipt of 'stopped', so persist
+    // these counters before sending that final acknowledgement.
+    try {
+      const msg = args[0];
+      if (msg?.m === 'onCollected') {
+        checkpoints.firstCollection ??= cpuUsage();
+      } else if (msg?.__vitest_worker_response__ === true) {
+        if (msg.type === 'started') checkpoints.started ??= cpuUsage();
+        if (msg.type === 'testfileFinished') checkpoints.finished ??= cpuUsage();
+        if (msg.type === 'stopped' && !checkpoints.stopped) {
+          checkpoints.stopped = cpuUsage();
+          const fs = require('node:fs');
+          const path = require('node:path');
+          fs.writeFileSync(path.join(dir, `worker-${ppid}-${pid}.json`),
+            JSON.stringify({pid, ppid, checkpoints}), {flag: 'wx'});
+        }
+      }
+    } catch { /* The missing/malformed artifact fails capture validation. */ }
+    return Reflect.apply(originalSend, this, args);
+  };
+}
+
 if (dir && process.argv[1]?.endsWith('/m2-worker.ts')) {
   const fs = require('node:fs');
   const path = require('node:path');
@@ -135,7 +167,8 @@ if (dir && process.argv[1]?.endsWith('/m2-worker.ts')) {
   process.prependListener('message', (msg) => observe(() => {
     if (msg?.protocol !== 1 || !Number.isSafeInteger(msg.id)) return;
     // initialize takes direct arguments; run wraps the Request in args.request.
-    const job = msg.command === 'run' ? msg.args?.request : undefined;
+    const command = msg.command === 'run-shared-lane-resident-v1' ? 'run' : msg.command;
+    const job = command === 'run' ? msg.args?.request : undefined;
     const kind = job?.kind;
     const mutantId = kind === 'mutant' && typeof job.mutation?.id === 'string'
       && /^[a-f0-9]{64}$/.test(job.mutation.id) ? job.mutation.id : null;
@@ -144,7 +177,7 @@ if (dir && process.argv[1]?.endsWith('/m2-worker.ts')) {
     const runId = typeof job?.runId === 'string' && job.runId.length <= 128
       && /^[0-9]+-[0-9]+$/.test(job.runId) ? job.runId : null;
     // A shared-lane batch is its first lane's request carrying every lane's request.
-    const lanes = msg.command === 'run' && Array.isArray(job?.lanes) ? job.lanes : undefined;
+    const lanes = command === 'run' && Array.isArray(job?.lanes) ? job.lanes : undefined;
     const laneMutantIds = lanes && lanes.length <= 1024 && lanes.every((lane) => lane?.kind === 'mutant'
       && typeof lane.mutation?.id === 'string' && /^[a-f0-9]{64}$/.test(lane.mutation.id))
       ? lanes.map((lane) => lane.mutation.id) : null;
@@ -152,10 +185,10 @@ if (dir && process.argv[1]?.endsWith('/m2-worker.ts')) {
       && /^[a-f0-9]{64}$/.test(lane.jobId)) ? lanes.map((lane) => lane.jobId) : null;
     const laneRunIds = laneMutantIds && lanes.every((lane) => typeof lane.runId === 'string'
       && lane.runId.length <= 128 && /^[0-9]+-[0-9]+$/.test(lane.runId)) ? lanes.map((lane) => lane.runId) : null;
-    emit('controller-request', { id: msg.id, command: msg.command,
+    emit('controller-request', { id: msg.id, command, wireCommand: msg.command,
       kind: ['baseline', 'mutant'].includes(kind) ? kind : null, mutantId, jobId, runId,
       ...(lanes ? { laneCount: lanes.length, laneMutantIds, laneJobIds, laneRunIds } : {}) });
-    if (msg.command === 'run' && kind === 'mutant' && !attempted) startProfile(msg.id);
+    if (!workerPhases && command === 'run' && kind === 'mutant' && !attempted) startProfile(msg.id);
   }));
   process.on('exit', (code) => emit('controller-exit', { code }));
 }
