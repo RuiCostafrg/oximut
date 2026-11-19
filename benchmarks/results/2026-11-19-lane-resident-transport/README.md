@@ -72,11 +72,7 @@ namespace blocked the Rolldown addon. The Linux build ran all focused cases.
   The Node controller tests exercise expanded commands for old-client
   compatibility.
 
-## Promotion gate
+## Native campaign
 
-The next gate is parent review followed by native Linux x86_64 unprofiled paired
-runs against the exact PR #69 base, with the small and scale workloads at two and
-four workers. Use matched parallelism, the existing build-integrity and
-correctness gates, one warmup and five measured pairs. Compare wall, total CPU
-and peak aggregate RSS against the base and Stryker with uncertainty intervals.
-The project goals remain wall at most 0.50x and CPU/RSS at most 0.80x Stryker.
+The [native campaign report](native-campaign.md) records the four paired runs,
+the verified scope and provenance, and the promotion recommendation.

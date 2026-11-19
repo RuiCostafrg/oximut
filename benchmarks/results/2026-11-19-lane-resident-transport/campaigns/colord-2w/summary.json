@@ -1,0 +1,563 @@
+{
+  "after_oximut_args": [],
+  "build_integrity": {
+    "errors": [],
+    "passed": true,
+    "required": true
+  },
+  "comparisons": {
+    "after_vs_before": {
+      "denominator": "before/oximut",
+      "metrics": {
+        "cpu_seconds": {
+          "bootstrap_95_percent": [
+            0.9814189769217116,
+            1.0215499962622525
+          ],
+          "max": 1.0215499962622525,
+          "median": 1.002680230981731,
+          "median_cpu_reduction_percent": -0.2680230981731091,
+          "min": 0.9814189769217116,
+          "paired_ratios": [
+            0.9814189769217116,
+            1.002680230981731,
+            1.0069301814005376,
+            0.9964873201879185,
+            1.0215499962622525
+          ]
+        },
+        "peak_aggregate_rss_bytes": {
+          "bootstrap_95_percent": [
+            0.9865184361038194,
+            1.02394838848611
+          ],
+          "max": 1.02394838848611,
+          "median": 0.9988670595364605,
+          "min": 0.9865184361038194,
+          "paired_ratios": [
+            1.0019726319530833,
+            1.02394838848611,
+            0.9865184361038194,
+            0.9988670595364605,
+            0.9939989954265471
+          ]
+        },
+        "wall_seconds": {
+          "bootstrap_95_percent": [
+            0.9723388270509848,
+            1.013568106615569
+          ],
+          "max": 1.013568106615569,
+          "median": 1.00524628595545,
+          "min": 0.9723388270509848,
+          "paired_ratios": [
+            0.9723388270509848,
+            1.00618315627722,
+            1.00524628595545,
+            1.0025788040793064,
+            1.013568106615569
+          ]
+        }
+      },
+      "numerator": "after/oximut"
+    },
+    "after_vs_stryker": {
+      "denominator": "after/stryker",
+      "metrics": {
+        "cpu_seconds": {
+          "bootstrap_95_percent": [
+            0.8096934220651014,
+            0.8385666826830537
+          ],
+          "max": 0.8385666826830537,
+          "median": 0.8166395128367494,
+          "median_cpu_reduction_percent": 18.33604871632506,
+          "median_target_met": false,
+          "min": 0.8096934220651014,
+          "paired_ratios": [
+            0.8166395128367494,
+            0.8274241601271158,
+            0.8385666826830537,
+            0.812834128833861,
+            0.8096934220651014
+          ],
+          "status": "target missed",
+          "target_ratio": 0.8
+        },
+        "peak_aggregate_rss_bytes": {
+          "bootstrap_95_percent": [
+            0.62577068430662,
+            0.6340712824258102
+          ],
+          "max": 0.6340712824258102,
+          "median": 0.6300832190621062,
+          "median_target_met": true,
+          "min": 0.62577068430662,
+          "paired_ratios": [
+            0.62577068430662,
+            0.6295624062141407,
+            0.6300832190621062,
+            0.6340712824258102,
+            0.6323685228476765
+          ],
+          "status": "target met",
+          "target_ratio": 0.8
+        },
+        "wall_seconds": {
+          "bootstrap_95_percent": [
+            0.7074612250932408,
+            0.7306778858098429
+          ],
+          "max": 0.7306778858098429,
+          "median": 0.7150577570451498,
+          "median_target_met": false,
+          "min": 0.7074612250932408,
+          "paired_ratios": [
+            0.7150577570451498,
+            0.7240911702598012,
+            0.7306778858098429,
+            0.7134600751035645,
+            0.7074612250932408
+          ],
+          "status": "target missed",
+          "target_ratio": 0.5
+        }
+      },
+      "numerator": "after/oximut"
+    },
+    "before_vs_stryker": {
+      "denominator": "before/stryker",
+      "metrics": {
+        "cpu_seconds": {
+          "bootstrap_95_percent": [
+            0.8100335945357399,
+            0.8285245182352842
+          ],
+          "max": 0.8285245182352842,
+          "median": 0.8188341227204214,
+          "median_cpu_reduction_percent": 18.116587727957857,
+          "median_target_met": false,
+          "min": 0.8100335945357399,
+          "paired_ratios": [
+            0.8285245182352842,
+            0.8174055910980559,
+            0.8100335945357399,
+            0.8197786615712493,
+            0.8188341227204214
+          ],
+          "status": "target missed",
+          "target_ratio": 0.8
+        },
+        "peak_aggregate_rss_bytes": {
+          "bootstrap_95_percent": [
+            0.6175157082857744,
+            0.6390698862910438
+          ],
+          "max": 0.6390698862910438,
+          "median": 0.6307954816156714,
+          "median_target_met": true,
+          "min": 0.6175157082857744,
+          "paired_ratios": [
+            0.6262625138424383,
+            0.6175157082857744,
+            0.6390698862910438,
+            0.6307954816156714,
+            0.631527104561669
+          ],
+          "status": "target met",
+          "target_ratio": 0.8
+        },
+        "wall_seconds": {
+          "bootstrap_95_percent": [
+            0.7092689964881177,
+            0.7393246649400383
+          ],
+          "max": 0.7393246649400383,
+          "median": 0.7156701412223905,
+          "median_target_met": false,
+          "min": 0.7092689964881177,
+          "paired_ratios": [
+            0.7393246649400383,
+            0.7156701412223905,
+            0.711410214460567,
+            0.7197915919404815,
+            0.7092689964881177
+          ],
+          "status": "target missed",
+          "target_ratio": 0.5
+        }
+      },
+      "numerator": "before/oximut"
+    }
+  },
+  "concurrency": 2,
+  "confidence": "Deterministic paired median percentile bootstrap, 10000 draws; host/corpus-specific exploratory evidence.",
+  "correctness_gate": {
+    "errors": [],
+    "passed": true
+  },
+  "measured_pairs": 5,
+  "phase_evidence": {
+    "after": [
+      {
+        "disabledValidationRuns": [
+          {
+            "coverage": true,
+            "files": [
+              "/home/runner/work/_temp/real-project-comparison/00-after/00-oximut/project/src/extend.ts",
+              "/home/runner/work/_temp/real-project-comparison/00-after/00-oximut/project/src/manipulate/invert.ts",
+              "/home/runner/work/_temp/real-project-comparison/00-after/00-oximut/project/src/manipulate/lighten.ts",
+              "/home/runner/work/_temp/real-project-comparison/00-after/00-oximut/project/src/manipulate/mix.ts",
+              "/home/runner/work/_temp/real-project-comparison/00-after/00-oximut/project/src/manipulate/saturate.ts"
+            ],
+            "run": "instrumentedBaseline",
+            "wallMs": 369.32979700000004
+          }
+        ],
+        "phaseWallMs": {
+          "finalInputValidation": 0.00033099999999999997,
+          "inputAndSchedulerPreparation": 1.664045,
+          "instrumentedBaseline": 369.982064,
+          "mutationExecution": 938.237353,
+          "mutationPlanning": 0.114758,
+          "originalBaseline": 672.509617,
+          "postBaselineValidation": 0.000372,
+          "teardown": 20.209326
+        },
+        "report_file": "/home/runner/work/_temp/real-project-comparison/00-after/00-oximut/report.json",
+        "round": 0,
+        "warmup": true
+      },
+      {
+        "disabledValidationRuns": [
+          {
+            "coverage": true,
+            "files": [
+              "/home/runner/work/_temp/real-project-comparison/01-after/00-oximut/project/src/extend.ts",
+              "/home/runner/work/_temp/real-project-comparison/01-after/00-oximut/project/src/manipulate/invert.ts",
+              "/home/runner/work/_temp/real-project-comparison/01-after/00-oximut/project/src/manipulate/lighten.ts",
+              "/home/runner/work/_temp/real-project-comparison/01-after/00-oximut/project/src/manipulate/mix.ts",
+              "/home/runner/work/_temp/real-project-comparison/01-after/00-oximut/project/src/manipulate/saturate.ts"
+            ],
+            "run": "instrumentedBaseline",
+            "wallMs": 371.738682
+          }
+        ],
+        "phaseWallMs": {
+          "finalInputValidation": 0.000495,
+          "inputAndSchedulerPreparation": 1.632178,
+          "instrumentedBaseline": 372.204841,
+          "mutationExecution": 914.371253,
+          "mutationPlanning": 0.076345,
+          "originalBaseline": 668.323875,
+          "postBaselineValidation": 6.5e-05,
+          "teardown": 20.289233
+        },
+        "report_file": "/home/runner/work/_temp/real-project-comparison/01-after/00-oximut/report.json",
+        "round": 1,
+        "warmup": false
+      },
+      {
+        "disabledValidationRuns": [
+          {
+            "coverage": true,
+            "files": [
+              "/home/runner/work/_temp/real-project-comparison/02-after/00-oximut/project/src/extend.ts",
+              "/home/runner/work/_temp/real-project-comparison/02-after/00-oximut/project/src/manipulate/invert.ts",
+              "/home/runner/work/_temp/real-project-comparison/02-after/00-oximut/project/src/manipulate/lighten.ts",
+              "/home/runner/work/_temp/real-project-comparison/02-after/00-oximut/project/src/manipulate/mix.ts",
+              "/home/runner/work/_temp/real-project-comparison/02-after/00-oximut/project/src/manipulate/saturate.ts"
+            ],
+            "run": "instrumentedBaseline",
+            "wallMs": 370.19991699999997
+          }
+        ],
+        "phaseWallMs": {
+          "finalInputValidation": 0.00033,
+          "inputAndSchedulerPreparation": 1.543882,
+          "instrumentedBaseline": 370.666004,
+          "mutationExecution": 920.084436,
+          "mutationPlanning": 0.075673,
+          "originalBaseline": 680.0301460000001,
+          "postBaselineValidation": 0.000191,
+          "teardown": 22.172324
+        },
+        "report_file": "/home/runner/work/_temp/real-project-comparison/02-after/00-oximut/report.json",
+        "round": 2,
+        "warmup": false
+      },
+      {
+        "disabledValidationRuns": [
+          {
+            "coverage": true,
+            "files": [
+              "/home/runner/work/_temp/real-project-comparison/03-after/00-oximut/project/src/extend.ts",
+              "/home/runner/work/_temp/real-project-comparison/03-after/00-oximut/project/src/manipulate/invert.ts",
+              "/home/runner/work/_temp/real-project-comparison/03-after/00-oximut/project/src/manipulate/lighten.ts",
+              "/home/runner/work/_temp/real-project-comparison/03-after/00-oximut/project/src/manipulate/mix.ts",
+              "/home/runner/work/_temp/real-project-comparison/03-after/00-oximut/project/src/manipulate/saturate.ts"
+            ],
+            "run": "instrumentedBaseline",
+            "wallMs": 363.664499
+          }
+        ],
+        "phaseWallMs": {
+          "finalInputValidation": 0.000307,
+          "inputAndSchedulerPreparation": 1.644063,
+          "instrumentedBaseline": 364.207536,
+          "mutationExecution": 947.531369,
+          "mutationPlanning": 0.10144600000000001,
+          "originalBaseline": 663.264141,
+          "postBaselineValidation": 0.000457,
+          "teardown": 22.092859
+        },
+        "report_file": "/home/runner/work/_temp/real-project-comparison/03-after/00-oximut/report.json",
+        "round": 3,
+        "warmup": false
+      },
+      {
+        "disabledValidationRuns": [
+          {
+            "coverage": true,
+            "files": [
+              "/home/runner/work/_temp/real-project-comparison/04-after/00-oximut/project/src/extend.ts",
+              "/home/runner/work/_temp/real-project-comparison/04-after/00-oximut/project/src/manipulate/invert.ts",
+              "/home/runner/work/_temp/real-project-comparison/04-after/00-oximut/project/src/manipulate/lighten.ts",
+              "/home/runner/work/_temp/real-project-comparison/04-after/00-oximut/project/src/manipulate/mix.ts",
+              "/home/runner/work/_temp/real-project-comparison/04-after/00-oximut/project/src/manipulate/saturate.ts"
+            ],
+            "run": "instrumentedBaseline",
+            "wallMs": 375.161951
+          }
+        ],
+        "phaseWallMs": {
+          "finalInputValidation": 0.000368,
+          "inputAndSchedulerPreparation": 1.5953339999999998,
+          "instrumentedBaseline": 375.680814,
+          "mutationExecution": 910.3439880000001,
+          "mutationPlanning": 0.078703,
+          "originalBaseline": 666.106308,
+          "postBaselineValidation": 0.000207,
+          "teardown": 22.357723999999997
+        },
+        "report_file": "/home/runner/work/_temp/real-project-comparison/04-after/00-oximut/report.json",
+        "round": 4,
+        "warmup": false
+      },
+      {
+        "disabledValidationRuns": [
+          {
+            "coverage": true,
+            "files": [
+              "/home/runner/work/_temp/real-project-comparison/05-after/00-oximut/project/src/extend.ts",
+              "/home/runner/work/_temp/real-project-comparison/05-after/00-oximut/project/src/manipulate/invert.ts",
+              "/home/runner/work/_temp/real-project-comparison/05-after/00-oximut/project/src/manipulate/lighten.ts",
+              "/home/runner/work/_temp/real-project-comparison/05-after/00-oximut/project/src/manipulate/mix.ts",
+              "/home/runner/work/_temp/real-project-comparison/05-after/00-oximut/project/src/manipulate/saturate.ts"
+            ],
+            "run": "instrumentedBaseline",
+            "wallMs": 372.891752
+          }
+        ],
+        "phaseWallMs": {
+          "finalInputValidation": 0.000308,
+          "inputAndSchedulerPreparation": 1.598047,
+          "instrumentedBaseline": 373.34743399999996,
+          "mutationExecution": 926.836417,
+          "mutationPlanning": 0.09780799999999999,
+          "originalBaseline": 645.429244,
+          "postBaselineValidation": 6.7e-05,
+          "teardown": 19.801024
+        },
+        "report_file": "/home/runner/work/_temp/real-project-comparison/05-after/00-oximut/report.json",
+        "round": 5,
+        "warmup": false
+      }
+    ],
+    "before": [
+      {
+        "disabledValidationRuns": [
+          {
+            "coverage": true,
+            "files": [
+              "/home/runner/work/_temp/real-project-comparison/00-before/00-oximut/project/src/extend.ts",
+              "/home/runner/work/_temp/real-project-comparison/00-before/00-oximut/project/src/manipulate/invert.ts",
+              "/home/runner/work/_temp/real-project-comparison/00-before/00-oximut/project/src/manipulate/lighten.ts",
+              "/home/runner/work/_temp/real-project-comparison/00-before/00-oximut/project/src/manipulate/mix.ts",
+              "/home/runner/work/_temp/real-project-comparison/00-before/00-oximut/project/src/manipulate/saturate.ts"
+            ],
+            "run": "instrumentedBaseline",
+            "wallMs": 389.88167
+          }
+        ],
+        "phaseWallMs": {
+          "finalInputValidation": 0.00032300000000000004,
+          "inputAndSchedulerPreparation": 1.674512,
+          "instrumentedBaseline": 390.33146899999997,
+          "mutationExecution": 1012.593421,
+          "mutationPlanning": 0.09662799999999999,
+          "originalBaseline": 695.262893,
+          "postBaselineValidation": 0.000206,
+          "teardown": 23.675461
+        },
+        "report_file": "/home/runner/work/_temp/real-project-comparison/00-before/00-oximut/report.json",
+        "round": 0,
+        "warmup": true
+      },
+      {
+        "disabledValidationRuns": [
+          {
+            "coverage": true,
+            "files": [
+              "/home/runner/work/_temp/real-project-comparison/01-before/00-oximut/project/src/extend.ts",
+              "/home/runner/work/_temp/real-project-comparison/01-before/00-oximut/project/src/manipulate/invert.ts",
+              "/home/runner/work/_temp/real-project-comparison/01-before/00-oximut/project/src/manipulate/lighten.ts",
+              "/home/runner/work/_temp/real-project-comparison/01-before/00-oximut/project/src/manipulate/mix.ts",
+              "/home/runner/work/_temp/real-project-comparison/01-before/00-oximut/project/src/manipulate/saturate.ts"
+            ],
+            "run": "instrumentedBaseline",
+            "wallMs": 380.497501
+          }
+        ],
+        "phaseWallMs": {
+          "finalInputValidation": 0.000327,
+          "inputAndSchedulerPreparation": 1.647937,
+          "instrumentedBaseline": 380.965281,
+          "mutationExecution": 948.53753,
+          "mutationPlanning": 0.078392,
+          "originalBaseline": 681.820401,
+          "postBaselineValidation": 0.000327,
+          "teardown": 20.364436
+        },
+        "report_file": "/home/runner/work/_temp/real-project-comparison/01-before/00-oximut/report.json",
+        "round": 1,
+        "warmup": false
+      },
+      {
+        "disabledValidationRuns": [
+          {
+            "coverage": true,
+            "files": [
+              "/home/runner/work/_temp/real-project-comparison/02-before/00-oximut/project/src/extend.ts",
+              "/home/runner/work/_temp/real-project-comparison/02-before/00-oximut/project/src/manipulate/invert.ts",
+              "/home/runner/work/_temp/real-project-comparison/02-before/00-oximut/project/src/manipulate/lighten.ts",
+              "/home/runner/work/_temp/real-project-comparison/02-before/00-oximut/project/src/manipulate/mix.ts",
+              "/home/runner/work/_temp/real-project-comparison/02-before/00-oximut/project/src/manipulate/saturate.ts"
+            ],
+            "run": "instrumentedBaseline",
+            "wallMs": 365.324737
+          }
+        ],
+        "phaseWallMs": {
+          "finalInputValidation": 0.000312,
+          "inputAndSchedulerPreparation": 1.554787,
+          "instrumentedBaseline": 365.775201,
+          "mutationExecution": 909.5473400000001,
+          "mutationPlanning": 0.075181,
+          "originalBaseline": 685.893482,
+          "postBaselineValidation": 0.000241,
+          "teardown": 19.625857
+        },
+        "report_file": "/home/runner/work/_temp/real-project-comparison/02-before/00-oximut/report.json",
+        "round": 2,
+        "warmup": false
+      },
+      {
+        "disabledValidationRuns": [
+          {
+            "coverage": true,
+            "files": [
+              "/home/runner/work/_temp/real-project-comparison/03-before/00-oximut/project/src/extend.ts",
+              "/home/runner/work/_temp/real-project-comparison/03-before/00-oximut/project/src/manipulate/invert.ts",
+              "/home/runner/work/_temp/real-project-comparison/03-before/00-oximut/project/src/manipulate/lighten.ts",
+              "/home/runner/work/_temp/real-project-comparison/03-before/00-oximut/project/src/manipulate/mix.ts",
+              "/home/runner/work/_temp/real-project-comparison/03-before/00-oximut/project/src/manipulate/saturate.ts"
+            ],
+            "run": "instrumentedBaseline",
+            "wallMs": 365.79769899999997
+          }
+        ],
+        "phaseWallMs": {
+          "finalInputValidation": 0.000322,
+          "inputAndSchedulerPreparation": 1.657177,
+          "instrumentedBaseline": 366.250808,
+          "mutationExecution": 940.419986,
+          "mutationPlanning": 0.075254,
+          "originalBaseline": 659.169056,
+          "postBaselineValidation": 0.00033,
+          "teardown": 20.707041999999998
+        },
+        "report_file": "/home/runner/work/_temp/real-project-comparison/03-before/00-oximut/report.json",
+        "round": 3,
+        "warmup": false
+      },
+      {
+        "disabledValidationRuns": [
+          {
+            "coverage": true,
+            "files": [
+              "/home/runner/work/_temp/real-project-comparison/04-before/00-oximut/project/src/extend.ts",
+              "/home/runner/work/_temp/real-project-comparison/04-before/00-oximut/project/src/manipulate/invert.ts",
+              "/home/runner/work/_temp/real-project-comparison/04-before/00-oximut/project/src/manipulate/lighten.ts",
+              "/home/runner/work/_temp/real-project-comparison/04-before/00-oximut/project/src/manipulate/mix.ts",
+              "/home/runner/work/_temp/real-project-comparison/04-before/00-oximut/project/src/manipulate/saturate.ts"
+            ],
+            "run": "instrumentedBaseline",
+            "wallMs": 367.571093
+          }
+        ],
+        "phaseWallMs": {
+          "finalInputValidation": 0.000306,
+          "inputAndSchedulerPreparation": 1.593353,
+          "instrumentedBaseline": 368.02966,
+          "mutationExecution": 917.00581,
+          "mutationPlanning": 0.077764,
+          "originalBaseline": 662.366894,
+          "postBaselineValidation": 0.000185,
+          "teardown": 22.002677000000002
+        },
+        "report_file": "/home/runner/work/_temp/real-project-comparison/04-before/00-oximut/report.json",
+        "round": 4,
+        "warmup": false
+      },
+      {
+        "disabledValidationRuns": [
+          {
+            "coverage": true,
+            "files": [
+              "/home/runner/work/_temp/real-project-comparison/05-before/00-oximut/project/src/extend.ts",
+              "/home/runner/work/_temp/real-project-comparison/05-before/00-oximut/project/src/manipulate/invert.ts",
+              "/home/runner/work/_temp/real-project-comparison/05-before/00-oximut/project/src/manipulate/lighten.ts",
+              "/home/runner/work/_temp/real-project-comparison/05-before/00-oximut/project/src/manipulate/mix.ts",
+              "/home/runner/work/_temp/real-project-comparison/05-before/00-oximut/project/src/manipulate/saturate.ts"
+            ],
+            "run": "instrumentedBaseline",
+            "wallMs": 356.555752
+          }
+        ],
+        "phaseWallMs": {
+          "finalInputValidation": 0.00031800000000000003,
+          "inputAndSchedulerPreparation": 1.5600370000000001,
+          "instrumentedBaseline": 357.037076,
+          "mutationExecution": 908.1230780000001,
+          "mutationPlanning": 0.076356,
+          "originalBaseline": 655.02032,
+          "postBaselineValidation": 0.00033,
+          "teardown": 19.019654
+        },
+        "report_file": "/home/runner/work/_temp/real-project-comparison/05-before/00-oximut/report.json",
+        "round": 5,
+        "warmup": false
+      }
+    ]
+  },
+  "scope": "5 declared production mutation files (arithmetic, boolean-literal families), all 41 source files available, all 102 upstream tests; not the full colord mutation scope.",
+  "targets_met": false,
+  "thresholds": {
+    "cpu_seconds": 0.8,
+    "peak_aggregate_rss_bytes": 0.8,
+    "wall_seconds": 0.5
+  },
+  "warmup_pairs": 1,
+  "workload": "colord"
+}
