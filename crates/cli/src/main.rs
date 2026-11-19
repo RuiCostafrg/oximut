@@ -815,7 +815,8 @@ fn encoded_len<T: serde::Serialize + ?Sized>(value: &T) -> usize {
 fn without_duplicate_lane_residents(request: &Request) -> Option<Request> {
     let set = request.resident.as_ref()?;
     let lanes = request.lanes.as_ref()?;
-    if lanes.is_empty()
+    if set.is_empty()
+        || lanes.is_empty()
         || !lanes
             .iter()
             .all(|lane| lane.resident.as_ref().is_some_and(|r| Arc::ptr_eq(r, set)))

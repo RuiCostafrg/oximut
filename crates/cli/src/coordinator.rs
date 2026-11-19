@@ -1323,9 +1323,22 @@ mod tests {
         .map["mappings"] = json!("AACA");
         let mut missing = batch.clone();
         missing.lanes.as_mut().unwrap()[1].resident = None;
+        let mut empty_residents = batch.clone();
+        let empty_set = Arc::new(Vec::new());
+        empty_residents.resident = Some(empty_set.clone());
+        for lane in empty_residents.lanes.as_mut().unwrap() {
+            lane.resident = Some(empty_set.clone());
+        }
         let mut empty = batch;
         empty.lanes = Some(Vec::new());
-        for fallback in [first, equal_copy, changed_map, missing, empty] {
+        for fallback in [
+            first,
+            equal_copy,
+            changed_map,
+            missing,
+            empty_residents,
+            empty,
+        ] {
             assert_eq!(
                 encode_controller_run(&fallback, false, capable, None).unwrap(),
                 ("run", serde_json::to_value(fallback).unwrap()),

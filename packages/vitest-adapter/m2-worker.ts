@@ -3,10 +3,15 @@ import { getCompileCacheDir } from 'node:module';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { normalizePath } from 'vite';
-import { createVitest, version, type Reporter } from 'vitest/node';
-import { restoreLaneResidents, SHARED_LANE_RESIDENT } from './protocol.mjs';
-import { validateRequest, type Request, type Result } from './protocol.ts';
+import { createVitest, type Reporter, version } from 'vitest/node';
 import { SelectionSupport } from './m3-selection.ts';
+import {
+  type Request,
+  type Result,
+  restoreLaneResidents,
+  SHARED_LANE_RESIDENT,
+  validateRequest,
+} from './protocol.ts';
 
 const selectionSupport = new SelectionSupport();
 let sharedLanes: import('./shared-lanes.ts').SharedLanes | undefined;
