@@ -29,6 +29,7 @@ process.on('message', (message) => {
     return reply({ result: { controllerPid: process.pid,
       pool: args.pool === 'threads' ? 'threads' : 'forks',
       ...(mode === 'bad-pool' ? { pool: 'forks' } : {}),
+      ...(mode === 'lanes-compact' ? { laneResidentEncoding: 'run-shared-lane-resident-v1' } : {}),
       reuse: mode === 'fresh' ? 'fresh: test' : 'controller' } });
   }
   if (command === 'close') {
@@ -75,6 +76,25 @@ process.on('message', (message) => {
   const request = args.request;
   jobs++;
   log({ event: 'run', job: request.jobId, workers: request.workers });
+  if (mode.startsWith('lanes-') && request.lanes) {
+    const compact = mode === 'lanes-compact';
+    const expected = compact ? 'run-shared-lane-resident-v1' : 'run';
+    if (command !== expected || !request.resident?.length ||
+        !request.lanes.every(lane => compact ? !Object.hasOwn(lane, 'resident')
+          : JSON.stringify(lane.resident) === JSON.stringify(request.resident)))
+      return reply({ error: 'unexpected resident encoding' });
+    log({ event: 'lanes', command, ids: request.lanes.map(lane => lane.jobId),
+      deadline: request.deadlineMs, jobs: request.lanes.map(lane => lane.deadlineMs) });
+    const passed = { outcome: 'passed', tests: { passed: 1, failed: 0, skipped: 0 },
+      errors: [], resident: request.resident.length };
+    return reply({ result: { ...passed, outcome: 'skipped',
+      tests: { passed: 0, failed: 0, skipped: 0 }, lanes: request.lanes.map(lane => ({
+      ...passed, protocol: lane.protocol, jobId: lane.jobId, runId: lane.runId,
+      generation: lane.generation,
+    })) } });
+  }
+  if (mode.startsWith('lanes-') && command !== 'run')
+    return reply({ error: 'unexpected command for a non-lane job' });
   if (mode.startsWith('nonblocking') && request.jobId === 'instrumented-baseline') {
     log({ event: 'instrumented-start', workers: request.workers });
   }
@@ -168,7 +188,7 @@ class NativeCoordinator(unittest.TestCase):
             self.assertEqual(accepted.returncode, 0, accepted.stdout + accepted.stderr)
             self.assertEqual(json.loads(accepted.stdout)['baseline']['outcome'], 'passed')
 
-    def run_cli(self, mode, timeout_ms=5000, extra_args=(), full=False):
+    def run_cli(self, mode, timeout_ms=5000, extra_args=(), full=False, shared=False):
         with tempfile.TemporaryDirectory(prefix='oximut-native-') as directory:
             adapter = Path(directory) / 'm2-runner.mjs'
             adapter.write_text('throw new Error("the native coordinator must not run this");\n')
@@ -178,7 +198,8 @@ class NativeCoordinator(unittest.TestCase):
                 str(REPO / 'target/debug/oximut'), '--root', str(ROOT),
                 '--source', str(ROOT / 'src/subject.ts'), *([] if full else ['--baseline-only']),
                 '--execution', 'persistent', '--adapter', str(adapter), '--report', '-',
-                '--timeout-ms', str(timeout_ms), '--no-cache', '--no-shared-controller', *extra_args,
+                '--timeout-ms', str(timeout_ms), '--no-cache',
+                *([] if shared else ['--no-shared-controller']), *extra_args,
             ], env={**os.environ, 'OXIMUT_FAKE_MODE': mode, 'OXIMUT_FAKE_LOG': str(log)},
                 text=True, capture_output=True, timeout=120)
             events = [json.loads(line) for line in log.read_text().splitlines()]
@@ -215,6 +236,27 @@ class NativeCoordinator(unittest.TestCase):
         if report['resources']['cpuLimitWorkers'] < 2:
             self.skipTest('spare warming requires at least two usable CPUs')
         self.assertGreaterEqual(report['resources']['effectiveWorkers'], 2)
+
+    def test_native_lane_encoding_negotiates_with_the_controller(self):
+        self.require_two_workers()
+        for mode, command in (('lanes-legacy', 'run'),
+                              ('lanes-compact', 'run-shared-lane-resident-v1')):
+            with self.subTest(mode=mode):
+                result, report, events = self.run_cli(
+                    mode, extra_args=('--workers', '2'), full=True, shared=True)
+                self.require_spare_capacity(report)
+                self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+                self.assertTrue(report['summary']['complete'], result.stdout + result.stderr)
+                batches = [event for event in events if event['event'] == 'lanes']
+                self.assertTrue(batches, events)
+                self.assertEqual(
+                    [job for batch in batches for job in batch['ids']],
+                    [m['id'] for m in report['mutants']])
+                for batch in batches:
+                    self.assertEqual(batch['command'], command)
+                    self.assertEqual(batch['deadline'], 6000)
+                    self.assertTrue(all(1 <= ms <= 5000 for ms in batch['jobs']))
+                self.assert_reaped(events)
 
     def test_nonblocking_warm_preserves_baseline_capacity_and_reuses_slot(self):
         self.require_two_workers()

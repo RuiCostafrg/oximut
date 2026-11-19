@@ -810,6 +810,25 @@ fn encoded_len<T: serde::Serialize + ?Sized>(value: &T) -> usize {
     serde_json::to_vec(value).map_or(usize::MAX, |bytes| bytes.len())
 }
 
+/// Omit lane copies only when every lane retains the batch's resident Arc.
+/// The caller must use a wire encoding that restores these aliases.
+fn without_duplicate_lane_residents(request: &Request) -> Option<Request> {
+    let set = request.resident.as_ref()?;
+    let lanes = request.lanes.as_ref()?;
+    if lanes.is_empty()
+        || !lanes
+            .iter()
+            .all(|lane| lane.resident.as_ref().is_some_and(|r| Arc::ptr_eq(r, set)))
+    {
+        return None;
+    }
+    let mut wire = request.clone();
+    for lane in wire.lanes.iter_mut().flatten() {
+        lane.resident = None;
+    }
+    Some(wire)
+}
+
 /// Partition switched modules into groups validated and served together. A
 /// mutant request carries its group plus another copy of the active module, so
 /// a multi-module group must fit `group + largest member`. A lone module is

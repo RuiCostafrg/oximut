@@ -375,6 +375,7 @@ struct Controller {
     buffer: Vec<u8>,
     next_id: u64,
     reuse: String,
+    shared_lane_resident: bool,
     baseline: BTreeMap<u32, u64>,
     output: Arc<Mutex<Output>>,
     reaped: bool,
@@ -459,6 +460,7 @@ impl Controller {
             buffer: vec![],
             next_id: 0,
             reuse: String::new(),
+            shared_lane_resident: false,
             baseline: BTreeMap::new(),
             output,
             reaped: false,
@@ -481,11 +483,7 @@ impl Controller {
         args: &serde_json::Value,
         deadline: Instant,
     ) -> Result<(), Wait> {
-        let mut bytes = serde_json::to_vec(&serde_json::json!({
-            "protocol": 1, "id": id, "command": command, "args": args,
-        }))
-        .map_err(|e| Wait::Failed(e.to_string()))?;
-        bytes.push(b'\n');
+        let bytes = encode_message(id, command, args).map_err(|e| Wait::Failed(e.to_string()))?;
         let mut written = 0;
         while written < bytes.len() {
             match self.channel.write(&bytes[written..]) {
@@ -844,11 +842,13 @@ impl Coordinator {
         if Instant::now() >= deadline {
             return self.retire_with(request, timeout("Job deadline exceeded"));
         }
-        let mut args = match serde_json::to_value(request) {
-            Ok(args) => args,
-            Err(error) => return infrastructure(request, error.to_string()),
-        };
+        let mut initialize_args = None;
         if self.controller.is_none() {
+            // Initialization keeps the expanded request for every controller.
+            let args = match serde_json::to_value(request) {
+                Ok(args) => args,
+                Err(error) => return infrastructure(request, error.to_string()),
+            };
             let mut controller = match Controller::spawn(options, &self.worker) {
                 Ok(controller) => controller,
                 Err(error) => return infrastructure(request, error),
@@ -879,6 +879,8 @@ impl Coordinator {
                                 } else {
                                     reuse.into()
                                 };
+                                controller.shared_lane_resident =
+                                    supports_shared_lane_resident(&initialized);
                                 None
                             }
                             None => Some(infrastructure(
@@ -912,6 +914,7 @@ impl Coordinator {
             self.reuse_modes.insert(controller.reuse.clone());
             self.jobs = 0;
             self.controller = Some(controller);
+            initialize_args = Some(args);
         }
         let controller = self.controller.as_mut().expect("controller");
         if warm && controller.reuse != "controller" {
@@ -920,15 +923,20 @@ impl Coordinator {
                 infrastructure(request, "spare controller cannot be reused"),
             );
         }
+        let (command, mut args) = match encode_controller_run(
+            request,
+            warm,
+            controller.shared_lane_resident,
+            initialize_args,
+        ) {
+            Ok(encoded) => encoded,
+            Err(error) => return infrastructure(request, error.to_string()),
+        };
         charge_lane_startup(&mut args, started.elapsed());
         let reply = if Instant::now() >= deadline {
             Err(Wait::Deadline)
         } else {
-            controller.request(
-                if warm { "warm" } else { "run" },
-                &serde_json::json!({ "request": args }),
-                deadline,
-            )
+            controller.request(command, &serde_json::json!({ "request": args }), deadline)
         };
         if !warm {
             self.jobs += 1;
@@ -1056,6 +1064,45 @@ impl Drop for Coordinator {
     }
 }
 
+fn encode_message(id: u64, command: &str, args: &serde_json::Value) -> serde_json::Result<Vec<u8>> {
+    let mut bytes = serde_json::to_vec(&serde_json::json!({
+        "protocol": 1, "id": id, "command": command, "args": args,
+    }))?;
+    bytes.push(b'\n');
+    Ok(bytes)
+}
+
+// Private IPC command and exact initialize capability. Older controllers
+// continue to receive the original run command with the expanded request.
+const SHARED_LANE_RESIDENT: &str = "run-shared-lane-resident-v1";
+
+fn supports_shared_lane_resident(initialized: &serde_json::Value) -> bool {
+    initialized
+        .get("laneResidentEncoding")
+        .and_then(serde_json::Value::as_str)
+        == Some(SHARED_LANE_RESIDENT)
+}
+
+fn encode_controller_run(
+    request: &Request,
+    warm: bool,
+    shared_lane_resident: bool,
+    initialize_args: Option<serde_json::Value>,
+) -> serde_json::Result<(&'static str, serde_json::Value)> {
+    if !warm
+        && shared_lane_resident
+        && let Some(wire) = without_duplicate_lane_residents(request)
+    {
+        drop(initialize_args);
+        return Ok((SHARED_LANE_RESIDENT, serde_json::to_value(wire)?));
+    }
+    let args = match initialize_args {
+        Some(args) => args,
+        None => serde_json::to_value(request)?,
+    };
+    Ok((if warm { "warm" } else { "run" }, args))
+}
+
 /// Job deadlines include controller start-up. Lanes start counting when the
 /// adapter receives them, so they only get what is left of the job's budget.
 fn charge_lane_startup(args: &mut serde_json::Value, spent: Duration) {
@@ -1073,6 +1120,7 @@ fn charge_lane_startup(args: &mut serde_json::Value, spent: Duration) {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use serde_json::{Value, json};
 
     fn stat(parent: u32, start: u64) -> String {
         // Include spaces and ')' in comm to exercise the final-delimiter rule.
@@ -1180,6 +1228,216 @@ mod tests {
         assert_eq!(args["lanes"][1]["deadlineMs"], 3500);
         charge_lane_startup(&mut args, Duration::from_secs(60));
         assert_eq!(args["lanes"][1]["deadlineMs"], 1);
+    }
+
+    #[test]
+    fn controller_run_compacts_only_negotiated_identical_arcs() {
+        let mut first = request();
+        first.kind = "mutant".into();
+        first.mutation = Some(Mutation {
+            id: first.job_id.clone(),
+            file: "/p/module.ts".into(),
+            code: "export const n = 1; // é\n".into(),
+            map: json!({"version": 3, "sources": ["é\".ts"], "mappings": "AAAA"}),
+        });
+        first.resident = Some(Arc::new(vec![first.mutation.clone().unwrap()]));
+        first.selection = Some(
+            serde_json::from_value(json!({
+                "mode": "files", "files": ["/p/a.test.ts"], "selectedTests": 2,
+                "totalTests": 4, "expectedSkipped": 1, "reasons": [],
+            }))
+            .unwrap(),
+        );
+        let mut second = first.clone();
+        second.job_id = "j2".into();
+        second.generation += 1;
+        second.mutation.as_mut().unwrap().id = second.job_id.clone();
+        let mut batch = first.clone();
+        batch.deadline_ms += 1000;
+        batch.lanes = Some(vec![first.clone(), second]);
+        let expanded = serde_json::to_value(&batch).unwrap();
+        let capable = supports_shared_lane_resident(&json!({
+            "reuse": "controller", "laneResidentEncoding": SHARED_LANE_RESIDENT,
+        }));
+        assert!(capable);
+
+        // Reuse of the expanded initialization args is safe for fallback.
+        for reply in [
+            json!({"reuse": "controller"}),
+            json!({"laneResidentEncoding": true}),
+            json!({"laneResidentEncoding": "run-shared-lane-resident-v2"}),
+        ] {
+            assert!(!supports_shared_lane_resident(&reply));
+            for initialized in [None, Some(expanded.clone())] {
+                assert_eq!(
+                    encode_controller_run(
+                        &batch,
+                        false,
+                        supports_shared_lane_resident(&reply),
+                        initialized
+                    )
+                    .unwrap(),
+                    ("run", expanded.clone()),
+                );
+            }
+        }
+        assert_eq!(
+            encode_controller_run(&batch, true, capable, None).unwrap(),
+            ("warm", expanded.clone()),
+        );
+
+        for initialized in [None, Some(expanded.clone())] {
+            let (command, mut compact) =
+                encode_controller_run(&batch, false, capable, initialized).unwrap();
+            assert_eq!(command, SHARED_LANE_RESIDENT);
+            assert!(
+                compact["lanes"]
+                    .as_array()
+                    .unwrap()
+                    .iter()
+                    .all(|lane| lane.get("resident").is_none())
+            );
+            assert_eq!(compact["resident"], expanded["resident"]);
+            let resident = compact["resident"].clone();
+            for lane in compact["lanes"].as_array_mut().unwrap() {
+                lane["resident"] = resident.clone();
+            }
+            let mut expected = expanded.clone();
+            charge_lane_startup(&mut compact, Duration::from_millis(3));
+            charge_lane_startup(&mut expected, Duration::from_millis(3));
+            assert_eq!(compact, expected);
+            assert_eq!(compact["deadlineMs"], 1010);
+            assert_eq!(compact["lanes"][1]["deadlineMs"], 7);
+        }
+
+        let mut equal_copy = batch.clone();
+        let lane = &mut equal_copy.lanes.as_mut().unwrap()[1];
+        lane.resident = Some(Arc::new(lane.resident.as_deref().unwrap().clone()));
+        let mut changed_map = equal_copy.clone();
+        Arc::make_mut(
+            changed_map.lanes.as_mut().unwrap()[1]
+                .resident
+                .as_mut()
+                .unwrap(),
+        )[0]
+        .map["mappings"] = json!("AACA");
+        let mut missing = batch.clone();
+        missing.lanes.as_mut().unwrap()[1].resident = None;
+        let mut empty = batch;
+        empty.lanes = Some(Vec::new());
+        for fallback in [first, equal_copy, changed_map, missing, empty] {
+            assert_eq!(
+                encode_controller_run(&fallback, false, capable, None).unwrap(),
+                ("run", serde_json::to_value(fallback).unwrap()),
+            );
+        }
+    }
+
+    #[test]
+    fn colord_controller_wire_sizes() {
+        // The benchmark's instrumenter and declared source/family scopes.
+        // Fixed IPC metadata makes this a reproducible byte count.
+        let corpus =
+            Path::new(env!("CARGO_MANIFEST_DIR")).join("../../benchmarks/real-project/colord");
+        let root = Path::new("/work/colord");
+        for (manifest, count, widths) in [
+            ("workload.json", 10, &[4][..]),
+            ("workload-scale.json", 206, &[2, 4][..]),
+        ] {
+            let workload: Value =
+                serde_json::from_slice(&fs::read(corpus.join(manifest)).unwrap()).unwrap();
+            let families = workload["families"].as_array().unwrap();
+            let mut modules = Vec::new();
+            let mut mutants = Vec::new();
+            for file in workload["mutate"].as_array().unwrap() {
+                let file = file.as_str().unwrap();
+                let (generated, _) = oximut_instrument::generate_switched_probed(
+                    file,
+                    &root.join(file),
+                    &fs::read_to_string(corpus.join(file)).unwrap(),
+                )
+                .unwrap();
+                assert!(
+                    !generated
+                        .diagnostics
+                        .iter()
+                        .any(|d| d.contains("switching fallback"))
+                );
+                let first = &generated.mutants[0];
+                modules.push(Mutation {
+                    id: "__oximut_resident__".into(),
+                    file: first.file.clone(),
+                    code: first.code.clone(),
+                    map: first.map.clone(),
+                });
+                mutants.extend(
+                    generated
+                        .mutants
+                        .into_iter()
+                        .filter(|m| families.contains(&json!(m.operator))),
+                );
+            }
+            assert_eq!(mutants.len(), count);
+            let mut groups = plan_groups(modules, REQUEST_LIMIT - REQUEST_HEADROOM);
+            assert_eq!(groups.len(), 1);
+            let resident = Arc::new(groups.pop().unwrap());
+            let jobs: Vec<_> = mutants
+                .into_iter()
+                .take(4)
+                .enumerate()
+                .map(|(index, m)| {
+                    let mut job = request();
+                    job.run_id = "12345-1780000000000000000".into();
+                    job.job_id = m.id.clone();
+                    job.generation = index as u64 + 1;
+                    job.kind = "mutant".into();
+                    job.root = "/work/colord".into();
+                    job.config = "/work/colord/vitest.config.ts".into();
+                    job.deadline_ms = 30_000;
+                    job.mutation = Some(Mutation {
+                        id: m.id,
+                        file: m.file,
+                        code: m.code,
+                        map: m.map,
+                    });
+                    job.resident = Some(resident.clone());
+                    job.selection = Some(
+                        serde_json::from_value(json!({
+                            "mode": "files", "files": ["/work/colord/tests/colord.test.ts"],
+                            "selectedTests": 50, "totalTests": 102, "reasons": [],
+                        }))
+                        .unwrap(),
+                    );
+                    job
+                })
+                .collect();
+            for &width in widths {
+                let mut batch = jobs[0].clone();
+                batch.workers = Some(width);
+                batch.deadline_ms = 31_000;
+                batch.lanes = Some(jobs[..width].to_vec());
+                let bytes = |capable| {
+                    let (command, mut args) =
+                        encode_controller_run(&batch, false, capable, None).unwrap();
+                    charge_lane_startup(&mut args, Duration::from_millis(20));
+                    encode_message(3, command, &json!({ "request": args }))
+                        .unwrap()
+                        .len()
+                };
+                let (expanded, compact) = (bytes(false), bytes(true));
+                let resident_bytes = encoded_len(&*resident);
+                assert_eq!(
+                    expanded - compact,
+                    width * (resident_bytes + ",\"resident\":".len())
+                        - (SHARED_LANE_RESIDENT.len() - "run".len())
+                );
+                assert!(compact * 3 < expanded * 2);
+                println!(
+                    "{manifest} {width} lanes: {} modules, {resident_bytes} resident bytes, {expanded} -> {compact} IPC bytes",
+                    resident.len()
+                );
+            }
+        }
     }
 
     fn request() -> Request {
