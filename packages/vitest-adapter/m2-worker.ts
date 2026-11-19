@@ -3,9 +3,15 @@ import { getCompileCacheDir } from 'node:module';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { normalizePath } from 'vite';
-import { createVitest, version, type Reporter } from 'vitest/node';
-import { validateRequest, type Request, type Result } from './protocol.ts';
+import { createVitest, type Reporter, version } from 'vitest/node';
 import { SelectionSupport } from './m3-selection.ts';
+import {
+  type Request,
+  type Result,
+  restoreLaneResidents,
+  SHARED_LANE_RESIDENT,
+  validateRequest,
+} from './protocol.ts';
 
 const selectionSupport = new SelectionSupport();
 let sharedLanes: import('./shared-lanes.ts').SharedLanes | undefined;
@@ -191,6 +197,7 @@ async function command(name: string, args: Request): Promise<unknown> {
       versions: { node: process.version, vitest: version },
       controllerPid: process.pid,
       pool: vitest.projects[0].config.pool,
+      laneResidentEncoding: SHARED_LANE_RESIDENT,
       reuse: unsupported
         ? `fresh: custom plugins, global setup, projects, or isolation configuration (${vitest.projects.flatMap((project) => project.vite.config.plugins.map((plugin) => plugin.name)).join(',')})`
         : 'controller',
@@ -203,9 +210,11 @@ async function command(name: string, args: Request): Promise<unknown> {
     await vitest.close();
     return { closed: true };
   }
-  if (name !== 'run' && name !== 'warm') throw new Error(`Unknown command: ${name}`);
+  if (name !== 'run' && name !== 'warm' && name !== SHARED_LANE_RESIDENT)
+    throw new Error(`Unknown command: ${name}`);
   const started = performance.now();
   const job = (args as unknown as { request: Request }).request;
+  if (name === SHARED_LANE_RESIDENT) restoreLaneResidents(job);
   validateRequest(job);
   if ((job.pool === 'threads' ? 'threads' : 'forks') !== pool)
     throw new Error('Pool cannot change after initialization');

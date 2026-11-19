@@ -1,5 +1,12 @@
 // TypeScript consumers share the checked JavaScript implementation.
-export { envelope, MAX_REQUEST_BYTES, MAX_RESPONSE_BYTES, validateRequest } from './protocol.mjs';
+export {
+  envelope,
+  MAX_REQUEST_BYTES,
+  MAX_RESPONSE_BYTES,
+  restoreLaneResidents,
+  SHARED_LANE_RESIDENT,
+  validateRequest,
+} from './protocol.mjs';
 
 export interface Selection {
   mode: 'files' | 'full' | 'none';

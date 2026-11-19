@@ -5,6 +5,7 @@ import { join, resolve } from 'node:path';
 import test from 'node:test';
 import { ThreadsPoolWorker } from 'vitest/node';
 
+import { SHARED_LANE_RESIDENT } from '../protocol.mjs';
 import { SharedLanes } from '../shared-lanes.ts';
 
 const repository = resolve(import.meta.dirname, '../../..');
@@ -101,9 +102,16 @@ test('after', () => {
       child.kill('SIGKILL');
       await exited;
     });
-    await command('initialize', { ...job('init'), kind: 'baseline', mutation: null, pool });
+    const initialized = await command('initialize', {
+      ...job('init'),
+      kind: 'baseline',
+      mutation: null,
+      pool,
+    });
     return {
+      initialized,
       run: (request) => command('run', { request }),
+      runCompact: (request) => command(SHARED_LANE_RESIDENT, { request }),
       async close() {
         await command('close', {});
         child.disconnect();
@@ -112,6 +120,9 @@ test('after', () => {
     };
   }
   return { root, job, controller };
+}
+function compactBatch(jobs) {
+  return { ...jobs[0], lanes: jobs.map(({ resident, ...lane }) => lane) };
 }
 function evidence(result) {
   return { outcome: result.outcome, tests: result.tests };
@@ -174,11 +185,13 @@ test('a crashed shared fork fails closed and every fork exits', { timeout: 90000
   assert.equal(result.lanes[1].outcome, 'passed');
   await assertGone(s.root);
   const hung = ['hang', 'survived'].map((id) => ({ ...s.job(id), deadlineMs: 5000 }));
-  const stopped = await c.run({ ...hung[0], lanes: hung });
+  const started = performance.now();
+  const stopped = await c.runCompact(compactBatch(hung));
   // A hung lane is a timeout, as with one controller per worker, and its
   // finished neighbour keeps its result.
   assert.equal(stopped.lanes[0].outcome, 'timeout');
   assert.equal(stopped.lanes[1].outcome, 'passed');
+  assert.ok(performance.now() - started < 15000, 'hung compact lane exceeded its cleanup bound');
   await assertGone(s.root);
   await c.close();
 });
@@ -196,9 +209,48 @@ test(
     );
     jobs[1].mutation.code = 'export const active = "wrong";';
     await assert.rejects(c.run({ ...jobs[0], lanes: jobs }), /resident instrumented module/);
+    jobs[1].resident[0].map.mappings = 'AACA';
+    await assert.rejects(c.run({ ...jobs[0], lanes: jobs }), /identical resident modules/);
     await c.close();
   },
 );
+
+test('compact lane requests negotiate the encoding and bind maps to each message', async (t) => {
+  const s = await fixture(t);
+  const c = await s.controller();
+  assert.equal(c.initialized.laneResidentEncoding, SHARED_LANE_RESIDENT);
+  const jobs = ['survived', 'killed'].map(s.job);
+  const expanded = { ...jobs[0], lanes: jobs };
+  const compact = compactBatch(jobs);
+  await assert.rejects(c.runCompact(expanded), /Invalid shared lane resident encoding/);
+  await assert.rejects(c.run(compact), /identical resident modules/);
+  await assert.rejects(
+    c.runCompact({ ...compact, resident: undefined }),
+    /Invalid shared lane resident encoding/,
+  );
+  const before = await c.run(expanded);
+  assert.deepEqual(
+    before.lanes.map(({ jobId, outcome }) => [jobId, outcome]),
+    [
+      ['survived', 'passed'],
+      ['killed', 'failed'],
+    ],
+  );
+
+  const changed = structuredClone(compact);
+  changed.resident[0].map.mappings = 'AACA';
+  changed.mutation.map.mappings = 'AACA';
+  changed.lanes[0].mutation.map.mappings = 'AACA';
+  await assert.rejects(c.runCompact(changed), /resident instrumented module/);
+  changed.lanes[1].mutation.map.mappings = 'AACA';
+  const after = await c.runCompact(changed);
+  assert.deepEqual(after.lanes, before.lanes);
+
+  // The next compact message may carry the original map again.
+  assert.deepEqual((await c.runCompact(compact)).lanes, before.lanes);
+  await assertGone(s.root);
+  await c.close();
+});
 
 test(
   'multi-file selections use one fresh process per mutant and match the oracle',
@@ -231,7 +283,7 @@ test('other', () => expect(count()).toBe(0));
     }
     await writeFile(join(s.root, 'events'), '');
     const c = await s.controller();
-    const result = await c.run({ ...jobs[0], lanes: jobs });
+    const result = await c.runCompact(compactBatch(jobs));
     // A killed mutant stops at its first failure, so how many tests passed before
     // it depends on file order. Its outcome and failure count must still match.
     const comparable = (entry) =>
@@ -242,7 +294,12 @@ test('other', () => expect(count()).toBe(0));
     const events = await assertGone(s.root);
     for (const job of jobs) {
       const own = events.filter((e) => e.id === job.jobId);
-      if (job.jobId === 'survived' || job.jobId === 'selected')
+      if (job.jobId === 'selected')
+        assert.deepEqual(
+          own.map((e) => e.type),
+          ['other'],
+        );
+      if (job.jobId === 'survived')
         assert.equal(
           own.some((e) => e.type === 'other'),
           true,

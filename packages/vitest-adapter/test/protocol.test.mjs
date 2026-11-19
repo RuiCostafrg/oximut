@@ -91,6 +91,85 @@ test('validation accepts existing boundary, mutation, coverage and selection req
   }
 });
 
+function compactLaneRequest() {
+  return {
+    ...mutant,
+    deadlineMs: 1001,
+    resident: [mutation],
+    lanes: [
+      { ...mutant, selection },
+      { ...mutant, jobId: 'lane2', generation: 1, mutation: { ...mutation, id: 'mutant2' } },
+    ],
+  };
+}
+
+test('compact lane decoding restores exact values and aliases instead of stringifying repeats', () => {
+  const compact = JSON.parse(JSON.stringify(compactLaneRequest()));
+  const expanded = structuredClone(compact);
+  for (const lane of expanded.lanes) lane.resident = structuredClone(expanded.resident);
+  runtime.restoreLaneResidents(compact);
+  assert.deepEqual(compact, expanded);
+  for (const lane of compact.lanes) assert.equal(lane.resident, compact.resident);
+
+  let strings = 0;
+  for (const request of [expanded, compact]) {
+    for (const set of new Set([request.resident, ...request.lanes.map((lane) => lane.resident)])) {
+      Object.defineProperty(set, 'toJSON', {
+        value() {
+          strings++;
+          return [...this];
+        },
+      });
+    }
+  }
+  runtime.validateRequest(expanded);
+  assert.equal(strings, 4);
+  runtime.validateRequest(compact);
+  assert.equal(strings, 4);
+});
+
+test('compact lane messages still enforce shape and expanded request constraints', () => {
+  const batch = compactLaneRequest();
+  for (const bad of [
+    { lanes: undefined },
+    { lanes: [] },
+    { lanes: [null] },
+    { lanes: Array(1025).fill(mutant) },
+    { lanes: [{ ...mutant, resident: null }] },
+    { lanes: [{ ...mutant, resident: batch.resident }] },
+    { resident: undefined },
+    { resident: [] },
+    { resident: {} },
+  ]) {
+    assert.throws(
+      () => runtime.restoreLaneResidents({ ...batch, ...bad }),
+      /Invalid shared lane resident encoding/,
+    );
+  }
+  for (const [bad, message] of [
+    [{ lanes: [{ ...mutant, root: '/other' }] }, /Invalid lane assignment/],
+    [{ lanes: [{ ...mutant, deadlineMs: 1002 }] }, /Invalid lane assignment/],
+    [{ lanes: [{ ...mutant, deadlineMs: 2 }, mutant] }, /Invalid lane assignment/],
+    [{ lanes: [{ ...mutant, deadlineMs: 0 }] }, /Invalid deadlineMs/],
+    [{ lanes: [{ ...mutant, lanes: [] }] }, /Invalid lane assignment/],
+    [{ lanes: [mutant, mutant] }, /Invalid lane assignment/],
+    [
+      { lanes: [{ ...mutant, selection: { ...selection, files: ['/other.ts'] } }] },
+      /Invalid test selection/,
+    ],
+    [{ resident: [{ ...mutation, file: '/other.ts' }] }, /Mutation file must be inside root/],
+    [
+      { resident: [{ ...mutation, map: { ...mutation.map, version: 4 } }] },
+      /Invalid version 3 source map/,
+    ],
+    [{ resident: [mutation, mutation] }, /Duplicate resident transform file/],
+  ]) {
+    const request = structuredClone({ ...batch, ...bad });
+    runtime.restoreLaneResidents(request);
+    assert.throws(() => runtime.validateRequest(request), message);
+  }
+});
+
 test('validation preserves rejection order and exact diagnostic messages', () => {
   const cases = [];
   const add = (values, message) => {

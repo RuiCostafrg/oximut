@@ -50,19 +50,9 @@ fn encode_request(index: usize, request: &Request) -> Result<(u8, Vec<u8>), Stri
             serde_json::to_vec(request).map_err(|e| e.to_string())?,
         ));
     }
-    let shared = match (&request.resident, &request.lanes) {
-        (Some(set), Some(lanes)) => lanes
-            .iter()
-            .all(|lane| lane.resident.as_ref().is_some_and(|r| Arc::ptr_eq(r, set))),
-        _ => false,
-    };
-    if !shared {
+    let Some(wire) = without_duplicate_lane_residents(request) else {
         return Ok((RUN, serde_json::to_vec(request).map_err(|e| e.to_string())?));
-    }
-    let mut wire = request.clone();
-    for lane in wire.lanes.iter_mut().flatten() {
-        lane.resident = None;
-    }
+    };
     Ok((
         RUN_LANES,
         serde_json::to_vec(&wire).map_err(|e| e.to_string())?,
@@ -1386,10 +1376,18 @@ mod tests {
     fn oversized_requests_do_not_become_lane_batches() {
         let mut job = request();
         assert!(one_lane_len(&job) <= MAX_LANE_BATCH);
-        // Five MiB fits the ordinary limit, but the wrapper repeats the job.
-        job.root = "x".repeat(5 * 1024 * 1024);
-        assert!(encoded_len(&job) <= 8 * 1024 * 1024);
-        assert!(one_lane_len(&job) > MAX_LANE_BATCH);
+        // A compact frame could fit, but admission still prices the expanded job.
+        job.resident = Some(Arc::new(vec![Mutation {
+            id: "__oximut_resident__".into(),
+            file: "/p/module.ts".into(),
+            code: "x".repeat(5 * 1024 * 1024),
+            map: serde_json::json!({"version": 3, "sources": [], "mappings": ""}),
+        }]));
+        let mut sizes = RequestSizes::default();
+        assert!(sizes.request_len(&mut job) <= MAX_REQUEST);
+        assert!(sizes.one_lane_len(&mut job) > MAX_LANE_BATCH);
+        let batch = lane_batch(&[(0, job)], 1);
+        assert!(encoded_len(&without_duplicate_lane_residents(&batch).unwrap()) < MAX_LANE_BATCH);
     }
 
     #[test]
