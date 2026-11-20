@@ -740,7 +740,7 @@ test('bounded heap', { timeout: 15000 }, async () => {
   },
 );
 
-test('fork lanes reuse their native graph with aliased mocks and resolver conditions', async (t) => {
+test('fork lanes preserve aliased mocks and resolver conditions across batches', async (t) => {
   const s = await fixture(t);
   await writeFile(
     join(s.root, 'package.json'),
@@ -783,7 +783,10 @@ test('fork lanes reuse their native graph with aliased mocks and resolver condit
     });`,
   );
   const c = await s.controller();
-  for (const ids of [['one', 'two'], ['three', 'four']]) {
+  for (const ids of [
+    ['one', 'two'],
+    ['three', 'four'],
+  ]) {
     const out = await c.runCompact(compactBatch(ids.map(s.job)));
     assert.deepEqual(
       out.lanes.map(evidence),

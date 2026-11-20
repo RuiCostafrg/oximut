@@ -48,8 +48,7 @@ with zipfile.ZipFile(zip_file) as archive, zipfile.ZipFile(root / 'logs.zip') as
     archive.extractall(root / 'artifact')
 directory = root / 'artifact'
 build = data(directory / 'build-metadata.json')
-capture = data(directory / 'capture/diagnostic.json')
-require(run['head_sha'] == build['commit'] == capture['source_commit'], 'source revision mismatch')
+require(run['head_sha'] == build['commit'], 'source revision mismatch')
 require('x86_64' in build['host'] and ('Ubuntu' in build['host'] or 'Ubuntu' in build['os_release']),
         'expected native x86-64 Ubuntu')
 source = directory / 'source.tar.gz'
@@ -60,14 +59,35 @@ with subprocess.Popen(['git', 'archive', run['head_sha']], stdout=subprocess.PIP
     require(checkout.wait() == 0, 'git archive failed')
 require(files == build['source_sha256'] == local_files, 'source file inventory mismatch')
 adapter = 'packages/vitest-adapter/'
-require({p.removeprefix(adapter): h for p, h in files.items() if p.startswith(adapter)}
-        == capture['execution_inputs']['adapter_source_sha256'], 'adapter inventory mismatch')
-for name, checksum in capture['helper_sha256'].items():
-    require(files[name] == checksum, f'measured helper mismatch: {name}')
 binary_sha256 = digest(directory / 'oximut')
-require(binary_sha256 == build['binary_sha256'] == capture['execution_inputs']['binary_sha256'],
-        'binary mismatch')
-require(capture['passed'], 'qualification failed')
+require(binary_sha256 == build['binary_sha256'], 'binary mismatch')
+
+def adapter_inventory(source_files):
+    return {p.removeprefix(adapter): h for p, h in source_files.items() if p.startswith(adapter)}
+
+if (directory / 'score').is_dir():
+    score = data(directory / 'score/metadata.json')
+    require(run['head_sha'] == score['after_commit'], 'score source revision mismatch')
+    before = score['before_commit']
+    with subprocess.Popen(['git', 'archive', before, adapter], stdout=subprocess.PIPE) as checkout:
+        old_files = inventory(tarfile.open(fileobj=checkout.stdout, mode='r|'))
+        require(checkout.wait() == 0, 'baseline adapter archive failed')
+    for variant, adapter_files in [('before', old_files), ('after', files)]:
+        inputs = score['runtime_provenance'][variant]
+        require(adapter_inventory(adapter_files) == inputs['adapter_source_sha256'], 'score adapter mismatch')
+        require(binary_sha256 == inputs['binary_sha256'], 'score binary mismatch')
+    for name, checksum in score['harness_sha256'].items():
+        tracked = name if name in files else 'benchmarks/' + name
+        require(files[tracked] == checksum, f'score harness mismatch: {name}')
+    require(data(directory / 'score/summary.json')['correctness_gate']['passed'], 'score qualification failed')
+else:
+    capture = data(directory / 'capture/diagnostic.json')
+    require(run['head_sha'] == capture['source_commit'], 'diagnostic source revision mismatch')
+    require(adapter_inventory(files) == capture['execution_inputs']['adapter_source_sha256'], 'adapter inventory mismatch')
+    for name, checksum in capture['helper_sha256'].items():
+        require(files[name] == checksum, f'measured helper mismatch: {name}')
+    require(binary_sha256 == capture['execution_inputs']['binary_sha256'], 'diagnostic binary mismatch')
+    require(capture['passed'], 'diagnostic qualification failed')
 result = {
     'run_url': run['html_url'], 'commit': run['head_sha'],
     'artifact_sha256': zip_sha256, 'log_sha256': digest(root / 'logs.zip'),

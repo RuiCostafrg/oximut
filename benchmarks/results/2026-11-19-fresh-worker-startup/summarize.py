@@ -103,10 +103,10 @@ def replay(root):
             'process_count': len(pids), 'priming_forks': len(primes), 'cells': rolled_up, 'wave_mean_deltas': deltas}
 
 
-def selected_workload(root, prior, require_launch_mapping):
-    capture, _, rows, inventory = verify_capture(root / 'capture', 'worker-phases')
+def selected_workload(root, prior, require_launch_mapping, *, capture_name="capture"):
+    capture, _, rows, inventory = verify_capture(root / capture_name, 'worker-phases')
     _, _, old_rows, _ = verify_capture(prior, 'worker-phases')
-    report = read_json(root / 'capture/qualification/00-oximut/report.json')
+    report = read_json(root / capture_name / 'qualification/00-oximut/report.json')
     old_report = read_json(prior / 'qualification/00-oximut/report.json')
 
     def comparable(row):
@@ -150,7 +150,7 @@ def selected_workload(root, prior, require_launch_mapping):
     require(inventory['workload_reconciled'], 'incomplete fork identity reconciliation')
     normalized = mutants(rows, 'oximut')
     by_id = {m['id']: m for m in normalized.values()}
-    profiles = root / 'capture/profiles'
+    profiles = root / capture_name / 'profiles'
     mapped = {}
     baselines = set()
     batches = []
@@ -211,9 +211,9 @@ def union(intervals):
     return total
 
 
-def collection(root, mutant_forks, baseline_forks, batches):
+def collection(root, mutant_forks, baseline_forks, batches, *, capture_name="capture"):
     forks = {}
-    for file in sorted((root / 'capture/collection').glob('collection-*.json')):
+    for file in sorted((root / capture_name / 'collection').glob('collection-*.json')):
         row = read_json(file)
         key = row['ppid'], row['pid']
         require(file.name == f'collection-{key[0]}-{key[1]}.json' and key not in forks,
@@ -222,7 +222,7 @@ def collection(root, mutant_forks, baseline_forks, batches):
         require(math.isfinite(elapsed) and elapsed > 0 and row['outstanding'] == 0, 'incomplete fetch intervals')
         spans = row['spans']
         require(all(0 <= e['startMs'] <= e['endMs'] <= elapsed for e in spans), 'invalid RPC interval')
-        timing = root / f'capture/profiles/worker-{key[0]}-{key[1]}.json'
+        timing = root / capture_name / f'profiles/worker-{key[0]}-{key[1]}.json'
         cpu = read_json(timing)['checkpoints']
         full_cpu = (sum(cpu['firstCollection'].values()) - sum(cpu['started'].values())) / 1000
         compile_cpu = sum(sum(c['cpuUs'].values()) for c in row['compiles']) / 1000
