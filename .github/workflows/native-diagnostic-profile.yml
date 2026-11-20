@@ -17,6 +17,7 @@ on:
           - worker-snapshot-source-io
           - worker-snapshot-stack
           - worker-snapshot-collection-cpu
+          - worker-snapshot-execution-cpu
           - worker-snapshot-native-project
           - worker-snapshot-score
           - segments
@@ -162,7 +163,7 @@ jobs:
                 node --test packages/vitest-adapter/test/shared-lanes.test.mjs | tee "$PROFILE_ROOT/bundled-fixture.log"
               CAPTURE_ARGS=(--worker-phases --startup-contract --first-collection)
               ;;
-            worker-snapshot|worker-snapshot-source-io|worker-snapshot-stack|worker-snapshot-collection-cpu|worker-snapshot-native-project)
+            worker-snapshot|worker-snapshot-source-io|worker-snapshot-stack|worker-snapshot-collection-cpu|worker-snapshot-execution-cpu|worker-snapshot-native-project)
               test "$PROFILE_WORKLOAD" = colord-scale
               test "$MATCHED_CONCURRENCY" = 4
               snapshot_dir=$(mktemp -d "$GITHUB_WORKSPACE/node_modules/vitest/dist/.oximut-snapshot.XXXXXX")
@@ -218,12 +219,13 @@ jobs:
                 --output "$PROFILE_ROOT/stack-$mode-capture" 2>&1 | tee "$PROFILE_ROOT/stack-$mode-diagnostic.log"
             done
           fi
-          if test "$CAPTURE_MODE" = worker-snapshot-collection-cpu; then
+          if [[ "$CAPTURE_MODE" == worker-snapshot-collection-cpu || "$CAPTURE_MODE" == worker-snapshot-execution-cpu ]]; then
             mv "$snapshot_dir/seed.cjs" "$snapshot_dir/seed.offline.cjs"
+            phase=${CAPTURE_MODE#worker-snapshot-}
             python3 benchmarks/profile_native.py --binary "$PROFILE_ROOT/oximut" \
-              "${CAPTURE_ARGS[@]}" --fork-snapshot "$snapshot_dir/vitest.blob" --collection-cpu-sample \
+              "${CAPTURE_ARGS[@]}" --fork-snapshot "$snapshot_dir/vitest.blob" "--$phase-sample" \
               --workload "$PROFILE_WORKLOAD" --concurrency "$MATCHED_CONCURRENCY" \
-              --output "$PROFILE_ROOT/collection-cpu-capture" 2>&1 | tee "$PROFILE_ROOT/collection-cpu-diagnostic.log"
+              --output "$PROFILE_ROOT/$phase-capture" 2>&1 | tee "$PROFILE_ROOT/$phase-diagnostic.log"
           fi
           if test "$CAPTURE_MODE" = worker-snapshot-native-project; then
             mv "$snapshot_dir/seed.cjs" "$snapshot_dir/seed.offline.cjs"

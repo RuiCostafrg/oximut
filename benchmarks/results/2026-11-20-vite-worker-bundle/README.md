@@ -286,3 +286,46 @@ python3 benchmarks/results/2026-11-20-vite-worker-bundle/summarize.py --followup
   /root/oximut-evidence/vitest-fork-bundle/snapshot-native-collection-cpu \
   /root/oximut-evidence/scale-bottlenecks/workers/artifact/capture
 ```
+
+## Native project modules in fresh snapshot forks
+
+The Colord-only loader serves precompiled JavaScript and overlays the
+controller's current instrumented resident sources at their original
+file URLs. It resolves Colord's extensionless imports and scopes the
+project module cache to each selected test file. The baseline keeps
+the original Vite path. A local fixture verified different outcomes
+for two selectors, isolated module state across files, and worker exit
+with and without the framework snapshot.
+
+The native Linux experiment reached the intended path. The trace
+reconciles 206 mutant workers with the report, including each active
+source loaded under its exact selector. Test identities, whole-file
+selection, outcomes and cleanup all qualified. The controller saw
+**zero** fetch RPCs in native mutant workers, down from 8,117 in the
+offline-snapshot control.
+
+| Instrumented arm | Command wall | Command CPU | Mutant startup CPU | Mutant CPU through first collection |
+| --- | ---: | ---: | ---: | ---: |
+| Stock Vitest forks | 19.44 s | 52.76 s | 18.53 s | 11.19 s |
+| Offline snapshot, Vite modules | 17.55 s | 44.09 s | 10.83 s | 11.76 s |
+| Offline snapshot, native project modules | 21.02 s | 53.55 s | 15.62 s | 13.12 s |
+
+The native path increased CPU in both worker phases despite removing
+fetch RPCs. Its wider costs include the alternate Vitest runtime,
+Node's loader and fresh module linking, the module table, and
+controller-side emit. One fixed-order diagnostic cannot apportion the
+increase. Retain the Vite module runner and skip an unprofiled score
+for this candidate. The 0.901× snapshot wall ratio remains the best
+qualified score.
+
+- [Native diagnostic](https://github.com/RuiCostafrg/oximut/actions/runs/44789560220)
+- [Verified diagnostic data](snapshot-native-project.json)
+- Raw evidence at `/root/oximut-evidence/vitest-fork-bundle/snapshot-native-project`.
+
+```sh
+gh workflow run native-diagnostic-profile.yml --ref t3/fresh-worker-startup \
+  -f capture_mode=worker-snapshot-native-project -f workload=colord-scale -f concurrency=4
+python3 benchmarks/results/2026-11-20-vite-worker-bundle/summarize.py --followup native-project \
+  /root/oximut-evidence/vitest-fork-bundle/snapshot-native-project \
+  /root/oximut-evidence/scale-bottlenecks/workers/artifact/capture
+```

@@ -1,6 +1,7 @@
-// Sample one eighth of the mutation identities, from run to first collection.
+// Sample one eighth of the mutation identities for one worker phase.
 // The surrounding qualification verifies the selector and fork inventory.
-const directory = process.env.OXIMUT_COLLECTION_CPU_DIR;
+const directory = process.env.OXIMUT_WORKER_CPU_DIR;
+const collection = process.env.OXIMUT_WORKER_CPU_PHASE === 'collection';
 const selector = process.env.OXIMUT_ACTIVE_MUTANT;
 if (directory && /^[0-9a-f]{64}$/.test(selector) && selector.slice(0, 2) < '20'
     && process.argv[1]?.endsWith('/vitest/dist/workers/forks.js') && typeof process.send === 'function') {
@@ -19,8 +20,8 @@ if (directory && /^[0-9a-f]{64}$/.test(selector) && selector.slice(0, 2) < '20'
     return result;
   }
 
-  process.on('message', (message) => {
-    if (attempted || message?.__vitest_worker_request__ !== true || message.type !== 'run') return;
+  function start() {
+    if (attempted) return;
     attempted = true;
     try {
       session = new Session();
@@ -32,11 +33,17 @@ if (directory && /^[0-9a-f]{64}$/.test(selector) && selector.slice(0, 2) < '20'
       session?.disconnect();
       session = undefined;
     }
+  }
+  if (collection) process.on('message', (message) => {
+    if (message?.__vitest_worker_request__ === true && message.type === 'run') start();
   });
 
   const send = process.send;
   process.send = function (message, ...args) {
-    if (session && message?.t === 'q' && message.m === 'onCollected') {
+    const collected = message?.t === 'q' && message.m === 'onCollected';
+    const finished = message?.__vitest_worker_response__ === true && message.type === 'testfileFinished';
+    if (!collection && collected) start();
+    if (session && (collection ? collected : finished)) {
       try {
         completedProfile = command('Profiler.stop').profile;
       } catch { /* Qualification rejects a missing profile. */ }
@@ -45,9 +52,9 @@ if (directory && /^[0-9a-f]{64}$/.test(selector) && selector.slice(0, 2) < '20'
         session = undefined;
       }
     }
-    if (completedProfile && message?.__vitest_worker_response__ === true && message.type === 'testfileFinished') {
+    if (completedProfile && finished) {
       try {
-        writeFileSync(join(directory, 'collection-cpu-' + process.pid + '.cpuprofile'),
+        writeFileSync(join(directory, 'worker-cpu-' + process.pid + '.cpuprofile'),
           JSON.stringify(completedProfile), {flag: 'wx'});
       } catch { /* Qualification rejects a missing profile. */ }
       completedProfile = undefined;

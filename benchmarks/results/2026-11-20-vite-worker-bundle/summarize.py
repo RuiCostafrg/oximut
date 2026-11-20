@@ -11,8 +11,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / '2026-11-19-main-bo
 from summarize import read_json, require, verify_capture, worker_metrics
 
 
-def collection_samples(capture, profiles):
-    sample_dir = capture / 'collection-cpu'
+def phase_samples(capture, phase):
+    profiles = capture / 'profiles'
+    sample_dir = capture / f'{phase}-cpu'
     expected = set()
     for timeline in profiles.glob('controller-*.jsonl'):
         for event in map(json.loads, timeline.read_text().splitlines()):
@@ -22,7 +23,7 @@ def collection_samples(capture, profiles):
     seen = set()
     counts = Counter()
     for path in sample_dir.glob('*.cpuprofile'):
-        seen.add(int(path.stem.removeprefix('collection-cpu-')))
+        seen.add(int(path.stem.rsplit('-', 1)[1]))
         profile = read_json(path)
         require(profile['endTime'] > profile['startTime'] and
                 len(profile['timeDeltas']) == len(profile['samples']) > 0, 'invalid CPU profile')
@@ -39,7 +40,7 @@ def collection_samples(capture, profiles):
             elif url.startswith('/'):
                 url = Path(url).name
             counts[(url, frame['functionName'])] += 1
-    require(seen == expected and seen, 'collection profile inventory differs from sampled selectors')
+    require(seen == expected and seen, 'worker phase profile inventory differs from sampled selectors')
     return {'forks': len(seen), 'samples': counts.total(),
             'top_self_samples': [{'url': url, 'function': function, 'samples': count}
                                  for (url, function), count in counts.most_common(25)]}
@@ -51,22 +52,27 @@ def main():
     parser.add_argument('historical_capture', type=Path)
     mode = parser.add_mutually_exclusive_group()
     mode.add_argument('--snapshot', action='store_true')
-    mode.add_argument('--followup', choices=('stack', 'collection-cpu'))
+    mode.add_argument('--followup', choices=('stack', 'collection-cpu', 'execution-cpu', 'native-project'))
     args = parser.parse_args()
     root = args.run / 'artifact'
     verified = read_json(args.run / 'verification.json')
+    build_sources = read_json(root / 'build-metadata.json')['source_sha256']
     _, _, prior_rows, _ = verify_capture(args.historical_capture, 'worker-phases')
     arms = {}
     candidate = 'snapshot-capture' if args.snapshot else 'bundled-capture'
     names = ['capture', candidate]
     if args.followup == 'stack':
         names = ['capture', 'stack-measure-capture', 'stack-skip-capture']
-    if args.followup == 'collection-cpu':
-        names = ['capture', 'collection-cpu-capture']
+    if args.followup in ('collection-cpu', 'execution-cpu'):
+        names = ['capture', f'{args.followup}-capture']
+    if args.followup == 'native-project':
+        names = ['capture', 'native-project-capture']
     use_snapshot = args.snapshot or args.followup
     offline = root / 'snapshot-offline-capture'
     if args.snapshot and offline.is_dir():
         names.append(offline.name)
+    if args.followup == 'native-project':
+        names.insert(1, offline.name)
     for name in names:
         capture = root / name
         snapshot_arm = name != 'capture' and use_snapshot
@@ -74,6 +80,9 @@ def main():
         require(diagnostic['source_commit'] == verified['commit'], 'capture commit differs')
         require(diagnostic['execution_inputs']['binary_sha256'] == verified['binary_sha256'],
                 'different measured binary')
+        require(all(build_sources.get(helper) == checksum
+                    for helper, checksum in diagnostic['helper_sha256'].items()),
+                'capture helper differs from archived source')
         require(inventory['workload_reconciled'], 'forks could not be joined to the historical workload')
         for tool, row in rows.items():
             prior = prior_rows[tool]
@@ -134,8 +143,26 @@ def main():
                         for record in records), 'stack timing route mismatch')
             arms[name]['stack_timing'] = {key: sum(record[key] for record in records)
                                           for key in ('calls', 'errors', 'wallNs', 'userUs', 'systemUs')}
-        if name == 'collection-cpu-capture':
-            arms[name]['collection_cpu_samples'] = collection_samples(capture, capture / 'profiles')
+        if name in ('collection-cpu-capture', 'execution-cpu-capture'):
+            phase = name.split('-')[0]
+            arms[name][f'{phase}_cpu_samples'] = phase_samples(capture, phase)
+        if name == 'native-project-capture':
+            oximut = rows['oximut']
+            report_path = Path(oximut['report_file'])
+            report = read_json(capture / 'qualification' / report_path.parent.name / report_path.name)
+            mutants = {mutant['id']: mutant['file'] for mutant in report['mutants']}
+            observed = [read_json(p) for p in (capture / 'native-project').glob('native-*.json')]
+            forks = {}
+            for timeline in (capture / 'profiles').glob('controller-*.jsonl'):
+                for event in map(json.loads, timeline.read_text().splitlines()):
+                    if event['type'] == 'fork' and event.get('selector'):
+                        forks[event['childPid']] = (int(timeline.stem.split('-')[-1]), event['selector'])
+            require(len(observed) == len(forks) == len(mutants) == 206, 'native fork inventory mismatch')
+            require({row['pid']: (row['ppid'], row['selector']) for row in observed} == forks,
+                    'native fork identity or selector mismatch')
+            require(all(mutants[row['selector']] in row['residentsLoaded'] for row in observed),
+                    'a native fork never loaded the source under its selector')
+            arms[name]['native_forks_loaded_target'] = len(observed)
     extra = {}
     if use_snapshot:
         extra['snapshot_bytes'] = (root / 'snapshot/vitest.blob').stat().st_size
