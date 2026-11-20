@@ -842,7 +842,7 @@ def main(argv=None):
                 env['OXIMUT_SNAPSHOT_SPECIALIZE_SELECTOR'] = '1'
             if args.snapshot_bundle_project:
                 preload = ROOT / 'benchmarks/experiments/vitest-fork-bundle/project-bundle.cjs'
-                env['OXIMUT_PROJECT_BUNDLE_EVIDENCE'] = str(output)
+                env['OXIMUT_PROJECT_BUNDLE_DIR'] = str(output)
                 env['NODE_OPTIONS'] += f' --require="{preload}"'
                 result['helper_sha256'][str(preload.relative_to(ROOT))] = workload.measurement.file_hash(preload)
         if args.controller_stack_timing:

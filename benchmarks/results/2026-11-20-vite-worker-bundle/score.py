@@ -50,7 +50,8 @@ def verify(directory, reference):
     root = directory / 'artifact'
     mode_file = root / 'snapshot-score-mode.txt'
     mode = mode_file.read_text().strip() if mode_file.exists() else 'worker-snapshot-score'
-    assert mode in ('worker-snapshot-score', 'worker-snapshot-compact-score')
+    assert mode in ('worker-snapshot-score', 'worker-snapshot-compact-score',
+                    'worker-snapshot-composed-score')
     build = read_json(root / 'build-metadata.json')
     benchmark = root / 'snapshot-score'
     metadata = read_json(benchmark / 'metadata.json')

@@ -1,0 +1,261 @@
+{
+  "run": "https://github.com/RuiCostafrg/oximut/actions/runs/44831075244",
+  "commit": "fc24c842ccc60c98e45410702304165aa0e7a0b6",
+  "mode": "worker-snapshot-compact-score",
+  "artifact_sha256": "cd4f922ed694da67dcf64125363dc8725c263fdc7787e6082b856f749a1f7e2c",
+  "binary_sha256": "030628465045463030111aeadcd608bec5297db9e437aa85fc2fd15d56b5171a",
+  "wrapper_sha256": "917043680ad8626537fc650646402f31b8b503862985089019539bcc03a1daf0",
+  "cpu_model": "Intel(R) Xeon(R) 6975P-C",
+  "versions": {
+    "@stryker-mutator/core": "10.1.1",
+    "@stryker-mutator/vitest-runner": "10.1.1",
+    "@vitest/coverage-v8": "5.1.0",
+    "cargo": "cargo 1.96.0 (30a34c682 2026-05-25)",
+    "node": "v26.3.1",
+    "node_runtime": "{\"execPath\":\"/opt/hostedtoolcache/node/26.3.1/x64/bin/node\",\"platform\":\"linux\",\"arch\":\"x64\"}",
+    "npm": "11.16.0",
+    "python": "3.13.18 (main, Oct 26 2026, 14:20:56) [GCC 13.3.0]",
+    "python_executable": "/opt/hostedtoolcache/Python/3.13.18/x64/bin/python3",
+    "python_platform": "linux",
+    "rustc": "rustc 1.96.0 (ac68faa20 2026-05-25)",
+    "typescript": "7.0.2",
+    "vitest": "5.1.0"
+  },
+  "qualification_rows": 36,
+  "medians": {
+    "before": {
+      "oximut": {
+        "wall_seconds": 15.398082240999997,
+        "cpu_seconds": 44.716968,
+        "peak_aggregate_rss_bytes": 794804224
+      },
+      "stryker": {
+        "wall_seconds": 15.38773683699992,
+        "cpu_seconds": 50.027744000000006,
+        "peak_aggregate_rss_bytes": 1226096640
+      }
+    },
+    "after": {
+      "oximut": {
+        "wall_seconds": 13.085835748000022,
+        "cpu_seconds": 34.387687,
+        "peak_aggregate_rss_bytes": 766808064
+      },
+      "stryker": {
+        "wall_seconds": 15.523416101000066,
+        "cpu_seconds": 50.231109,
+        "peak_aggregate_rss_bytes": 1232175104
+      }
+    }
+  },
+  "comparisons": {
+    "after_vs_before": {
+      "denominator": "before/oximut",
+      "metrics": {
+        "cpu_seconds": {
+          "bootstrap_95_percent": [
+            0.756130768288363,
+            0.7803707455007032
+          ],
+          "max": 0.7803707455007032,
+          "median": 0.7716686066088071,
+          "median_cpu_reduction_percent": 22.833139339119292,
+          "min": 0.756130768288363,
+          "paired_ratios": [
+            0.756130768288363,
+            0.774765341872016,
+            0.7716686066088071,
+            0.7803707455007032,
+            0.7684203060467082
+          ]
+        },
+        "peak_aggregate_rss_bytes": {
+          "bootstrap_95_percent": [
+            0.8996463618594717,
+            1.0587209397088946
+          ],
+          "max": 1.0587209397088946,
+          "median": 0.9360356396436036,
+          "min": 0.8996463618594717,
+          "paired_ratios": [
+            0.8996463618594717,
+            0.9110150275195317,
+            1.0587209397088946,
+            0.9360356396436036,
+            0.9681359258398533
+          ]
+        },
+        "wall_seconds": {
+          "bootstrap_95_percent": [
+            0.8214261504057023,
+            0.8640616011781912
+          ],
+          "max": 0.8640616011781912,
+          "median": 0.8567522502269589,
+          "min": 0.8214261504057023,
+          "paired_ratios": [
+            0.8214261504057023,
+            0.8598834087773481,
+            0.8567522502269589,
+            0.8640616011781912,
+            0.8498354238657573
+          ]
+        }
+      },
+      "numerator": "after/oximut"
+    },
+    "after_vs_stryker": {
+      "denominator": "after/stryker",
+      "metrics": {
+        "cpu_seconds": {
+          "bootstrap_95_percent": [
+            0.6737308799246484,
+            0.6859331837997978
+          ],
+          "max": 0.6859331837997978,
+          "median": 0.6845894443620586,
+          "median_cpu_reduction_percent": 31.54105556379414,
+          "median_target_met": true,
+          "min": 0.6737308799246484,
+          "paired_ratios": [
+            0.6737308799246484,
+            0.6846856794128231,
+            0.6812892200902988,
+            0.6859331837997978,
+            0.6845894443620586
+          ],
+          "status": "target met",
+          "target_ratio": 0.8
+        },
+        "peak_aggregate_rss_bytes": {
+          "bootstrap_95_percent": [
+            0.587642608302529,
+            0.6599888232206059
+          ],
+          "max": 0.6599888232206059,
+          "median": 0.622281389296078,
+          "median_target_met": true,
+          "min": 0.587642608302529,
+          "paired_ratios": [
+            0.5897892324255775,
+            0.587642608302529,
+            0.6599888232206059,
+            0.622281389296078,
+            0.6286152123104162
+          ],
+          "status": "target met",
+          "target_ratio": 0.8
+        },
+        "wall_seconds": {
+          "bootstrap_95_percent": [
+            0.8277003565599509,
+            0.8532330504404437
+          ],
+          "max": 0.8532330504404437,
+          "median": 0.8475745922351882,
+          "median_target_met": false,
+          "min": 0.8277003565599509,
+          "paired_ratios": [
+            0.8277003565599509,
+            0.8510769502482246,
+            0.8532330504404437,
+            0.8475745922351882,
+            0.8429739731808769
+          ],
+          "status": "target missed",
+          "target_ratio": 0.5
+        }
+      },
+      "numerator": "after/oximut"
+    },
+    "before_vs_stryker": {
+      "denominator": "before/stryker",
+      "metrics": {
+        "cpu_seconds": {
+          "bootstrap_95_percent": [
+            0.8809233732386572,
+            0.8966052075931179
+          ],
+          "max": 0.8966052075931179,
+          "median": 0.8908304093147975,
+          "median_cpu_reduction_percent": 10.91695906852025,
+          "median_target_met": false,
+          "min": 0.8809233732386572,
+          "paired_ratios": [
+            0.8966052075931179,
+            0.8856705933662499,
+            0.8908304093147975,
+            0.8809233732386572,
+            0.8964277774699619
+          ],
+          "status": "target missed",
+          "target_ratio": 0.8
+        },
+        "peak_aggregate_rss_bytes": {
+          "bootstrap_95_percent": [
+            0.6106289521003776,
+            0.6681432484799893
+          ],
+          "max": 0.6681432484799893,
+          "median": 0.6487878109045194,
+          "median_target_met": true,
+          "min": 0.6106289521003776,
+          "paired_ratios": [
+            0.6664696995131778,
+            0.6487878109045194,
+            0.6106289521003776,
+            0.6681432484799893,
+            0.6450414737333022
+          ],
+          "status": "target met",
+          "target_ratio": 0.8
+        },
+        "wall_seconds": {
+          "bootstrap_95_percent": [
+            0.987801213525533,
+            1.0182250490960427
+          ],
+          "max": 1.0182250490960427,
+          "median": 1.004351820290802,
+          "median_target_met": false,
+          "min": 0.987801213525533,
+          "paired_ratios": [
+            1.0182250490960427,
+            0.99287211785796,
+            1.004351820290802,
+            0.987801213525533,
+            1.0083874205207706
+          ],
+          "status": "target missed",
+          "target_ratio": 0.5
+        }
+      },
+      "numerator": "before/oximut"
+    }
+  },
+  "targets_met": false,
+  "longest_sample_gaps_seconds": {
+    "before": {
+      "oximut": 0.06359274999999798,
+      "stryker": 0.09108408999998119
+    },
+    "after": {
+      "oximut": 0.058712802000002284,
+      "stryker": 0.10073877499996797
+    }
+  },
+  "reported_mutant_test_count_ranges": {
+    "before": [
+      3578,
+      3672
+    ],
+    "after": [
+      3578,
+      3672
+    ]
+  },
+  "necessary_cpu_seconds_saved_median_at_four_cpus": {
+    "before": 13.930289551999934,
+    "after": 3.3657293240000428
+  }
+}

@@ -63,7 +63,7 @@ startupSnapshot.setDeserializeMainFunction(async () => {
       };
     }
   }
-  if (evidence && process.env.OXIMUT_SNAPSHOT_SPECIALIZE_SELECTOR === '1') {
+  if (process.env.OXIMUT_SNAPSHOT_SPECIALIZE_SELECTOR === '1') {
     const selector = process.env.OXIMUT_ACTIVE_MUTANT;
     if (/^[0-9a-f]{64}$/.test(selector)) {
       let matches = 0;
@@ -77,16 +77,18 @@ startupSnapshot.setDeserializeMainFunction(async () => {
           return String(id === selector).padEnd(source.length);
         },
       );
-      const send = process.send;
-      process.send = function (message, ...args) {
-        if (message?.__vitest_worker_response__ === true && message.type === 'testfileFinished')
-          writeFileSync(evidence + '/' + process.pid + '.specialized',
-            JSON.stringify({selector, matches, active}), {flag: 'wx'});
-        return Reflect.apply(send, this, [message, ...args]);
-      };
+      if (evidence) {
+        const send = process.send;
+        process.send = function (message, ...args) {
+          if (message?.__vitest_worker_response__ === true && message.type === 'testfileFinished')
+            writeFileSync(evidence + '/' + process.pid + '.specialized',
+              JSON.stringify({selector, matches, active}), {flag: 'wx'});
+          return Reflect.apply(send, this, [message, ...args]);
+        };
+      }
     }
   }
-  if (evidence && process.env.OXIMUT_PROJECT_BUNDLE_EVIDENCE && process.env.OXIMUT_ACTIVE_MUTANT) {
+  if (evidence && process.env.OXIMUT_PROJECT_BUNDLE_DIR && process.env.OXIMUT_ACTIVE_MUTANT) {
     const entries = [];
     globalThis[Symbol.for('oximut.diagnostic.bundledEntry')] = (file, modules) => entries.push({file, modules});
     const send = process.send;

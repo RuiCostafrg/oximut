@@ -489,3 +489,78 @@ python3 benchmarks/results/2026-11-20-vite-worker-bundle/summarize.py --followup
   /root/oximut-evidence/vitest-fork-bundle/snapshot-native-specialize-selector \
   /root/oximut-evidence/scale-bottlenecks/workers/artifact/capture
 ```
+
+## Unprofiled compact assertion score
+
+One warmup pair and five alternating measured pairs compared stock
+Oximut to the offline snapshot with compact assertions. The timed
+candidate includes building and deleting the snapshot. Every row in
+the 36-measurement campaign passed the historical workload and cleanup
+checks on four native Ubuntu 24.04 x86-64 workers.
+
+| Paired median ratio | Wall | CPU | Sampled peak aggregate RSS |
+| --- | ---: | ---: | ---: |
+| Compact snapshot vs Stryker | 0.848× | 0.685× | 0.622× |
+| Compact snapshot vs stock Oximut | 0.857× | 0.772× | 0.936× |
+| Campaign target vs Stryker | ≤0.50× | ≤0.80× | ≤0.80× |
+
+The 95% bootstrap intervals against Stryker were 0.828–0.853 wall,
+0.674–0.686 CPU and 0.588–0.660 RSS. The command medians were 13.09 s
+wall and 34.39 s CPU for the compact snapshot, with 15.52 s wall and
+50.23 s CPU for paired Stryker. The remaining wall gap is about
+5.33 s against half the latter median. Across the five pairs, the
+additional CPU savings needed even at full four-core utilization had
+a median of 3.37 s. These comparisons use their own allocations.
+The previous 0.901× snapshot score is a separate campaign.
+
+- [Paired native run](https://github.com/RuiCostafrg/oximut/actions/runs/44831075244)
+- [Verified paired data](snapshot-compact-score.json)
+- Raw evidence at `/root/oximut-evidence/vitest-fork-bundle/snapshot-native-compact-score`.
+
+```sh
+gh workflow run native-diagnostic-profile.yml --ref t3/fresh-worker-startup \
+  -f capture_mode=worker-snapshot-compact-score -f workload=colord-scale -f concurrency=4
+python3 benchmarks/results/2026-11-20-vite-worker-bundle/score.py \
+  /root/oximut-evidence/vitest-fork-bundle/snapshot-native-compact-score \
+  /root/oximut-evidence/scale-bottlenecks/workers/artifact/capture/qualification/measurements.jsonl
+```
+
+## One project bundle per selected test file
+
+The controller bundles each Colord test file and its local imports
+while overlaying the current instrumented resident code. Vite serves
+the emitted module under the original test URL, and its normal
+evaluator runs it in each fresh snapshot process. Bundles remain
+separate across selected files, and the original baseline still uses
+the normal transform path.
+
+The native trace confirmed 218 bundled test evaluations, each within
+the assigned whole-file selection. For all 206 mutants, at least one
+evaluated bundle contained the source assigned to that selector. The
+historical mutant outcomes, 102 test identities, and fork teardown
+checks all passed.
+
+| Instrumented offline snapshots | Command wall | Command CPU | Worker CPU through first collection | Worker CPU after collection |
+| --- | ---: | ---: | ---: | ---: |
+| Stock module graph | 16.44 s | 45.31 s | 13.05 s | 11.01 s |
+| Per-test project bundle | 15.83 s | 42.69 s | 7.92 s | 13.46 s |
+
+Fetch RPCs fell from 8,357 to 424. The sum of first-collection
+intervals along last-finishing batch paths fell from 4.85 s to
+2.77 s. Later worker work and the finish path rose in the bundled
+arm. The fixed-order comparison leaves their causes open. The next
+unprofiled candidate combines the bundle, compact assertions, and
+constant switches to test the net effect with all setup and cleanup
+charged.
+
+- [Native run](https://github.com/RuiCostafrg/oximut/actions/runs/44831876222)
+- [Verified diagnostic data](snapshot-bundle-project.json)
+- Raw evidence at `/root/oximut-evidence/vitest-fork-bundle/snapshot-native-bundle-project`.
+
+```sh
+gh workflow run native-diagnostic-profile.yml --ref t3/fresh-worker-startup \
+  -f capture_mode=worker-snapshot-bundle-project -f workload=colord-scale -f concurrency=4
+python3 benchmarks/results/2026-11-20-vite-worker-bundle/summarize.py --followup bundle-project \
+  /root/oximut-evidence/vitest-fork-bundle/snapshot-native-bundle-project \
+  /root/oximut-evidence/scale-bottlenecks/workers/artifact/capture
+```

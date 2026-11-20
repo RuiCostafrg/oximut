@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       capture_mode:
-        description: Capture mode (the two score modes are unprofiled)
+        description: Capture mode (score modes are unprofiled)
         type: choice
         default: accounting
         options:
@@ -25,6 +25,7 @@ on:
           - worker-snapshot-native-project
           - worker-snapshot-score
           - worker-snapshot-compact-score
+          - worker-snapshot-composed-score
           - segments
       workload:
         description: Mutation workload
@@ -121,7 +122,7 @@ jobs:
           (root / 'build-metadata.json').write_text(json.dumps(record, indent=2) + '\n')
           PY
       - name: Score fresh worker snapshots including their generation cost
-        if: inputs.capture_mode == 'worker-snapshot-score' || inputs.capture_mode == 'worker-snapshot-compact-score'
+        if: contains(fromJSON('["worker-snapshot-score","worker-snapshot-compact-score","worker-snapshot-composed-score"]'), inputs.capture_mode)
         shell: bash
         env:
           PROFILE_WORKLOAD: ${{ inputs.workload }}
@@ -133,8 +134,11 @@ jobs:
           test "$MATCHED_CONCURRENCY" = 4
           test -z "${NODE_OPTIONS:-}"
           export OXIMUT_SNAPSHOT_SCORE_BINARY="$PROFILE_ROOT/oximut"
-          if test "$SCORE_MODE" = worker-snapshot-compact-score; then
+          if [[ "$SCORE_MODE" == worker-snapshot-compact-score || "$SCORE_MODE" == worker-snapshot-composed-score ]]; then
             export OXIMUT_SNAPSHOT_COMPACT_ERRORS=1
+          fi
+          if test "$SCORE_MODE" = worker-snapshot-composed-score; then
+            export OXIMUT_SNAPSHOT_SPECIALIZE_SELECTOR=1
           fi
           printf '%s\n' "$SCORE_MODE" > "$PROFILE_ROOT/snapshot-score-mode.txt"
           revision=$(git rev-parse HEAD)
@@ -145,7 +149,7 @@ jobs:
             --output "$PROFILE_ROOT/snapshot-score" --warmups 1 --repetitions 5 --timeout 1200 \
             2>&1 | tee "$PROFILE_ROOT/snapshot-score.log"
       - name: Capture unchanged workload with profiler overhead, no ratios or targets
-        if: inputs.capture_mode != 'worker-snapshot-score' && inputs.capture_mode != 'worker-snapshot-compact-score'
+        if: "!contains(fromJSON('[\"worker-snapshot-score\",\"worker-snapshot-compact-score\",\"worker-snapshot-composed-score\"]'), inputs.capture_mode)"
         shell: bash
         env:
           CAPTURE_MODE: ${{ inputs.capture_mode || 'accounting' }}

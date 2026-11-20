@@ -1,6 +1,6 @@
 // Colord-only probe: serve one bundled module per test file via the existing
 // Vite evaluator, retaining fresh workers, resident mutation code, and test URLs.
-const directory = process.env.OXIMUT_PROJECT_BUNDLE_EVIDENCE;
+const directory = process.env.OXIMUT_PROJECT_BUNDLE_DIR;
 if (directory && process.argv[1]?.endsWith('/m2-worker.ts')) {
   const assert = require('node:assert/strict');
   const { execFileSync } = require('node:child_process');

@@ -14,6 +14,12 @@ ulimit -c 0
 node "$experiment/snapshot.mjs" "$scratch"
 node --build-snapshot --snapshot-blob="$scratch/vitest.blob" "$scratch/seed.cjs"
 mv "$scratch/seed.cjs" "$scratch/seed.offline.cjs"
+options="--require=\"$experiment/snapshot-flags.cjs\""
+if [[ "${SCORE_MODE:-}" == worker-snapshot-composed-score ]]; then
+  export OXIMUT_PROJECT_BUNDLE_DIR="$scratch/project-bundle"
+  mkdir "$OXIMUT_PROJECT_BUNDLE_DIR"
+  options+=" --require=\"$experiment/project-bundle.cjs\""
+fi
 OXIMUT_SNAPSHOT_BLOB="$scratch/vitest.blob" \
-  NODE_OPTIONS="--require=\"$experiment/snapshot-flags.cjs\"" \
+  NODE_OPTIONS="$options" \
   "$OXIMUT_SNAPSHOT_SCORE_BINARY" "$@"
