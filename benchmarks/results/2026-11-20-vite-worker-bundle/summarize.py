@@ -52,7 +52,8 @@ def main():
     parser.add_argument('historical_capture', type=Path)
     mode = parser.add_mutually_exclusive_group()
     mode.add_argument('--snapshot', action='store_true')
-    mode.add_argument('--followup', choices=('stack', 'collection-cpu', 'execution-cpu', 'native-project'))
+    mode.add_argument('--followup', choices=('stack', 'collection-cpu', 'execution-cpu',
+                                            'native-project', 'baseline-tier'))
     args = parser.parse_args()
     root = args.run / 'artifact'
     verified = read_json(args.run / 'verification.json')
@@ -65,14 +66,12 @@ def main():
         names = ['capture', 'stack-measure-capture', 'stack-skip-capture']
     if args.followup in ('collection-cpu', 'execution-cpu'):
         names = ['capture', f'{args.followup}-capture']
-    if args.followup == 'native-project':
-        names = ['capture', 'native-project-capture']
+    if args.followup in ('native-project', 'baseline-tier'):
+        names = ['capture', 'snapshot-offline-capture', f'{args.followup}-capture']
     use_snapshot = args.snapshot or args.followup
     offline = root / 'snapshot-offline-capture'
     if args.snapshot and offline.is_dir():
         names.append(offline.name)
-    if args.followup == 'native-project':
-        names.insert(1, offline.name)
     for name in names:
         capture = root / name
         snapshot_arm = name != 'capture' and use_snapshot

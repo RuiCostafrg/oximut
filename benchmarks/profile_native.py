@@ -733,6 +733,8 @@ def main(argv=None):
                                 help='Sample selected mutant forks from first collection through finish')
     parser.add_argument('--native-project', action='store_true',
                         help='Serve colord-scale project modules to a native ESM runner in snapshot mutant forks')
+    parser.add_argument('--snapshot-baseline-tier', action='store_true',
+                        help='Limit snapshot mutant forks to the V8 baseline compiler')
     parser.add_argument('--concurrency', type=workload.concurrency_arg, default=1,
                         help='Matched parallelism for Oximut --workers and Stryker concurrency (default 1)')
     parser.add_argument('--workload', type=workload.workload_name, default=workload.DEFAULT_WORKLOAD,
@@ -747,6 +749,8 @@ def main(argv=None):
     if args.native_project and (not args.startup_contract or not args.fork_snapshot
                                 or args.workload != 'colord-scale'):
         parser.error('native project diagnostics require a fork snapshot and colord-scale selector trace')
+    if args.snapshot_baseline_tier and not (args.fork_snapshot and args.startup_contract):
+        parser.error('the snapshot baseline-tier diagnostic requires a snapshot and selector trace')
     workload.require_matched_concurrency(args.concurrency)
     output = args.output.resolve()
     output.mkdir(parents=True, exist_ok=False)
@@ -820,6 +824,9 @@ def main(argv=None):
             env['OXIMUT_SNAPSHOT_READS_DIR'] = str(output)
             env['NODE_OPTIONS'] += f' --require="{preload}"'
             result['snapshot_sha256'] = workload.measurement.file_hash(args.fork_snapshot)
+            if args.snapshot_baseline_tier:
+                env['OXIMUT_SNAPSHOT_BASELINE_TIER'] = '1'
+                result['snapshot_baseline_tier'] = True
         if args.controller_stack_timing:
             preload = ROOT / 'benchmarks/experiments/vitest-fork-bundle/controller-stack-timing.cjs'
             env['OXIMUT_STACK_TIMING_DIR'] = str(output)
@@ -862,6 +869,16 @@ def main(argv=None):
             expected = {p.name.split('-')[-1] for p in profiles.glob('worker-*-*.json')}
             if not expected or {p.name for p in observed.glob('*.json')} != expected:
                 result['qualification_errors'].append('experimental bootstrap observations differ from traced forks')
+        if args.snapshot_baseline_tier:
+            mutants = set()
+            for timeline in profiles.glob('controller-*.jsonl'):
+                with timeline.open() as stream:
+                    mutants.update(event['childPid'] for event in map(json.loads, stream)
+                                   if event['type'] == 'fork' and event.get('selector'))
+            limited = {row['pid'] for p in observed.glob('*.json')
+                       for row in [json.loads(p.read_text())] if row.get('baselineTier')}
+            if not mutants or limited != mutants:
+                result['qualification_errors'].append('baseline tier did not apply to exactly the mutant forks')
         if args.controller_stack_timing:
             expected = {p.stem.removeprefix('controller-') for p in profiles.glob('controller-*.jsonl')}
             files = list(output.glob('stack-timing-*.json'))

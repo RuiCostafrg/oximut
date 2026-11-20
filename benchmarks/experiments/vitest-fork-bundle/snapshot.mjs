@@ -37,7 +37,10 @@ startupSnapshot.setDeserializeMainFunction(async () => {
   const snapshotFlag = '--snapshot-blob=' + process.env.OXIMUT_SNAPSHOT_BLOB;
   const snapshotIndex = process.execArgv.indexOf(snapshotFlag);
   if (snapshotIndex < 0) throw new Error('Missing experimental snapshot launcher flag');
+  const baselineTier = process.env.OXIMUT_SNAPSHOT_BASELINE_TIER === '1'
+    && process.execArgv[snapshotIndex - 1] === '--max-opt=1';
   process.execArgv.splice(snapshotIndex, 1);
+  if (baselineTier) process.execArgv.splice(snapshotIndex - 1, 1);
   const bridge = createRequire(${JSON.stringify(resolveBridge)})(${JSON.stringify(resolveBridge)});
   globalThis.__oximutSnapshotResolve = bridge.resolve;
   globalThis.__oximutSnapshotImport = bridge.load;
@@ -50,7 +53,7 @@ startupSnapshot.setDeserializeMainFunction(async () => {
   const evidence = process.env.OXIMUT_SNAPSHOT_OBSERVED_DIR;
   if (evidence)
     writeFileSync(evidence + '/' + process.pid + '.json',
-      JSON.stringify({pid: process.pid, ppid: process.ppid}), {flag: 'wx'});
+      JSON.stringify({pid: process.pid, ppid: process.ppid, baselineTier}), {flag: 'wx'});
   startFork();
 });`;
 

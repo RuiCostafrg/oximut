@@ -4,9 +4,11 @@ if (process.env.OXIMUT_SNAPSHOT_BLOB && process.argv[1]?.endsWith('/m2-worker.ts
   const original = cp.fork;
   cp.fork = function (entry, args, options) {
     if (entry.endsWith('/vitest/dist/workers/forks.js')) {
+      const tier = process.env.OXIMUT_SNAPSHOT_BASELINE_TIER === '1' && options.env?.OXIMUT_ACTIVE_MUTANT
+        ? ['--max-opt=1'] : [];
       options = {
         ...options,
-        execArgv: [...options.execArgv, '--snapshot-blob=' + process.env.OXIMUT_SNAPSHOT_BLOB],
+        execArgv: [...options.execArgv, ...tier, '--snapshot-blob=' + process.env.OXIMUT_SNAPSHOT_BLOB],
       };
     }
     return Reflect.apply(original, this, [entry, args, options]);
