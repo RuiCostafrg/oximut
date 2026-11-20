@@ -1,0 +1,106 @@
+{
+  "diagnostic_only": true,
+  "run": "https://github.com/RuiCostafrg/oximut/actions/runs/44738285846",
+  "commit": "9e9f63348a3d32ce1f70a9972dc252446b2dea84",
+  "artifact_sha256": "54f1c8677a7bd2cd32c658ffff05c7b397d3d098fd05a8f07f53643507969610",
+  "arms": {
+    "capture": {
+      "resources": {
+        "vitest": {
+          "wall_seconds": 0.8706656730000191,
+          "cpu_seconds": 1.137319,
+          "peak_aggregate_rss_bytes": 280559616
+        },
+        "oximut": {
+          "wall_seconds": 15.911565992999982,
+          "cpu_seconds": 45.529315999999994,
+          "peak_aggregate_rss_bytes": 775008256
+        },
+        "stryker": {
+          "wall_seconds": 15.451343165999987,
+          "cpu_seconds": 49.981938,
+          "peak_aggregate_rss_bytes": 1219403776
+        }
+      },
+      "worker_cpu_ms": {
+        "startup": 16134.059,
+        "through_first_collection": 10490.939,
+        "after_first_collection": 9991.128,
+        "stop": 169.41099999999992
+      },
+      "worker_wall_median_ms": {
+        "request_to_fork": 12.669758999999885,
+        "startup": 87.17850949999979,
+        "dispatch_delay": 0.09053099999982805,
+        "through_first_collection": 68.29005550000011,
+        "after_first_collection": 44.94629449999991,
+        "stop": 3.7539624999994885
+      },
+      "last_finish_path_ms": {
+        "request_to_fork": 884.9915580000015,
+        "startup": 4895.395596999996,
+        "dispatch_delay": 4.951875000001394,
+        "through_first_collection": 3840.835169999995,
+        "after_first_collection": 3794.198169000005,
+        "finish_to_reply": 178.64089599999886
+      },
+      "controller_cpu_ms": 5096.898,
+      "controller_mutant_request_cpu_ms": 3707.718,
+      "worker_rpc_totals": {
+        "fetch": 8135,
+        "fetchModule": 0,
+        "resolveId": 0,
+        "onCollected": 218
+      }
+    },
+    "bundled-capture": {
+      "resources": {
+        "vitest": {
+          "wall_seconds": 0.8641908799999953,
+          "cpu_seconds": 1.109523,
+          "peak_aggregate_rss_bytes": 280440832
+        },
+        "oximut": {
+          "wall_seconds": 15.732834962999988,
+          "cpu_seconds": 43.698411,
+          "peak_aggregate_rss_bytes": 914485248
+        },
+        "stryker": {
+          "wall_seconds": 15.397285424000017,
+          "cpu_seconds": 50.122532,
+          "peak_aggregate_rss_bytes": 1213480960
+        }
+      },
+      "worker_cpu_ms": {
+        "startup": 13581.741,
+        "through_first_collection": 10003.254,
+        "after_first_collection": 10268.25,
+        "stop": 118.74000000000017
+      },
+      "worker_wall_median_ms": {
+        "request_to_fork": 12.120389500000101,
+        "startup": 73.17905150000001,
+        "dispatch_delay": 0.08047499999997854,
+        "through_first_collection": 64.97205300000041,
+        "after_first_collection": 72.0786035000001,
+        "stop": 4.427523999999721
+      },
+      "last_finish_path_ms": {
+        "request_to_fork": 847.0179059999984,
+        "startup": 3991.414632000002,
+        "dispatch_delay": 4.42388500000385,
+        "through_first_collection": 3549.327100999998,
+        "after_first_collection": 4919.374634999998,
+        "finish_to_reply": 185.64104800000268
+      },
+      "controller_cpu_ms": 6285.77,
+      "controller_mutant_request_cpu_ms": 4941.566000000001,
+      "worker_rpc_totals": {
+        "fetch": 8281,
+        "fetchModule": 0,
+        "resolveId": 0,
+        "onCollected": 218
+      }
+    }
+  }
+}
