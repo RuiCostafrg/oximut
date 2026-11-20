@@ -51,6 +51,16 @@ startupSnapshot.setDeserializeMainFunction(async () => {
     return {...result, url: ${JSON.stringify(apiBridge)}};
   }});
   const evidence = process.env.OXIMUT_SNAPSHOT_OBSERVED_DIR;
+  if (evidence && process.env.OXIMUT_SNAPSHOT_COMPACT_ERRORS === '1' && process.env.OXIMUT_ACTIVE_MUTANT) {
+    let count = 0;
+    globalThis[Symbol.for('oximut.diagnostic.compactAssertion')] = () => ++count;
+    const send = process.send;
+    process.send = function (message, ...args) {
+      if (message?.__vitest_worker_response__ === true && message.type === 'testfileFinished')
+        writeFileSync(evidence + '/' + process.pid + '.assertions', String(count), {flag: 'wx'});
+      return Reflect.apply(send, this, [message, ...args]);
+    };
+  }
   if (evidence)
     writeFileSync(evidence + '/' + process.pid + '.json',
       JSON.stringify({pid: process.pid, ppid: process.ppid, baselineTier}), {flag: 'wx'});
@@ -103,6 +113,18 @@ const bundle = await rolldown({
         return source.replace(access, JSON.stringify(builtinModules));
       }
       if (!id.startsWith(dist)) return;
+      if (id.endsWith('/run.CjdgFZiW.js')) {
+        const marker = '\tconst err = _err;\n';
+        assert.equal(source.split(marker).length, 2);
+        source = "import { AssertionError as OximutAssertionError } from 'chai';\n" + source.replace(marker, marker + `
+  const compactAssertion = globalThis[Symbol.for('oximut.diagnostic.compactAssertion')];
+  if (compactAssertion && Object.getPrototypeOf(err) === OximutAssertionError.prototype
+      && typeof err.message === 'string' && !('cause' in err) && !('__vitest_test_syntax_error__' in err)) {
+    compactAssertion();
+    return {name: 'AssertionError', message: err.message, ok: false};
+  }
+`);
+      }
       // The minimal mksnapshot loader omits node:module.builtinModules.
       // It is determined entirely by the exact runtime building the blob.
       if (id.endsWith('/modules.BJuCwlRJ.js')) {

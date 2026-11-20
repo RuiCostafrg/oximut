@@ -22,12 +22,14 @@ def phase_samples(capture, phase):
                 expected.add(event['childPid'])
     seen = set()
     counts = Counter()
+    execution_stacks = Counter()
     for path in sample_dir.glob('*.cpuprofile'):
         seen.add(int(path.stem.rsplit('-', 1)[1]))
         profile = read_json(path)
         require(profile['endTime'] > profile['startTime'] and
                 len(profile['timeDeltas']) == len(profile['samples']) > 0, 'invalid CPU profile')
         frames = {node['id']: node['callFrame'] for node in profile['nodes']}
+        parents = {child: node['id'] for node in profile['nodes'] for child in node.get('children', [])}
         for sample in profile['samples']:
             frame = frames[sample]
             url = frame['url']
@@ -40,10 +42,19 @@ def phase_samples(capture, phase):
             elif url.startswith('/'):
                 url = Path(url).name
             counts[(url, frame['functionName'])] += 1
+            if phase == 'execution':
+                functions = set()
+                cursor = sample
+                while cursor is not None:
+                    functions.add(frames[cursor]['functionName'])
+                    cursor = parents.get(cursor)
+                for function in ('processError', 'mapSourcePosition', '(idle)'):
+                    execution_stacks[function] += function in functions
     require(seen == expected and seen, 'worker phase profile inventory differs from sampled selectors')
     return {'forks': len(seen), 'samples': counts.total(),
             'top_self_samples': [{'url': url, 'function': function, 'samples': count}
-                                 for (url, function), count in counts.most_common(25)]}
+                                 for (url, function), count in counts.most_common(25)],
+            **({'inclusive_samples': execution_stacks} if phase == 'execution' else {})}
 
 
 def main():
@@ -53,7 +64,7 @@ def main():
     mode = parser.add_mutually_exclusive_group()
     mode.add_argument('--snapshot', action='store_true')
     mode.add_argument('--followup', choices=('stack', 'collection-cpu', 'execution-cpu',
-                                            'native-project', 'baseline-tier'))
+                                            'native-project', 'baseline-tier', 'compact-errors'))
     args = parser.parse_args()
     root = args.run / 'artifact'
     verified = read_json(args.run / 'verification.json')
@@ -66,7 +77,7 @@ def main():
         names = ['capture', 'stack-measure-capture', 'stack-skip-capture']
     if args.followup in ('collection-cpu', 'execution-cpu'):
         names = ['capture', f'{args.followup}-capture']
-    if args.followup in ('native-project', 'baseline-tier'):
+    if args.followup in ('native-project', 'baseline-tier', 'compact-errors'):
         names = ['capture', 'snapshot-offline-capture', f'{args.followup}-capture']
     use_snapshot = args.snapshot or args.followup
     offline = root / 'snapshot-offline-capture'
@@ -145,6 +156,8 @@ def main():
         if name in ('collection-cpu-capture', 'execution-cpu-capture'):
             phase = name.split('-')[0]
             arms[name][f'{phase}_cpu_samples'] = phase_samples(capture, phase)
+        if name == 'compact-errors-capture':
+            arms[name]['compacted_assertions'] = diagnostic['compacted_assertions']
         if name == 'native-project-capture':
             oximut = rows['oximut']
             report_path = Path(oximut['report_file'])

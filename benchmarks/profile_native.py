@@ -735,6 +735,8 @@ def main(argv=None):
                         help='Serve colord-scale project modules to a native ESM runner in snapshot mutant forks')
     parser.add_argument('--snapshot-baseline-tier', action='store_true',
                         help='Limit snapshot mutant forks to the V8 baseline compiler')
+    parser.add_argument('--snapshot-compact-errors', action='store_true',
+                        help='Measure message-only Chai assertion failures on the Colord fixture')
     parser.add_argument('--concurrency', type=workload.concurrency_arg, default=1,
                         help='Matched parallelism for Oximut --workers and Stryker concurrency (default 1)')
     parser.add_argument('--workload', type=workload.workload_name, default=workload.DEFAULT_WORKLOAD,
@@ -751,6 +753,9 @@ def main(argv=None):
         parser.error('native project diagnostics require a fork snapshot and colord-scale selector trace')
     if args.snapshot_baseline_tier and not (args.fork_snapshot and args.startup_contract):
         parser.error('the snapshot baseline-tier diagnostic requires a snapshot and selector trace')
+    if args.snapshot_compact_errors and not (args.fork_snapshot and args.startup_contract
+                                             and args.workload == 'colord-scale'):
+        parser.error('compact assertion diagnostics require a snapshot and colord-scale selector trace')
     workload.require_matched_concurrency(args.concurrency)
     output = args.output.resolve()
     output.mkdir(parents=True, exist_ok=False)
@@ -827,6 +832,8 @@ def main(argv=None):
             if args.snapshot_baseline_tier:
                 env['OXIMUT_SNAPSHOT_BASELINE_TIER'] = '1'
                 result['snapshot_baseline_tier'] = True
+            if args.snapshot_compact_errors:
+                env['OXIMUT_SNAPSHOT_COMPACT_ERRORS'] = '1'
         if args.controller_stack_timing:
             preload = ROOT / 'benchmarks/experiments/vitest-fork-bundle/controller-stack-timing.cjs'
             env['OXIMUT_STACK_TIMING_DIR'] = str(output)
@@ -869,16 +876,22 @@ def main(argv=None):
             expected = {p.name.split('-')[-1] for p in profiles.glob('worker-*-*.json')}
             if not expected or {p.name for p in observed.glob('*.json')} != expected:
                 result['qualification_errors'].append('experimental bootstrap observations differ from traced forks')
-        if args.snapshot_baseline_tier:
+        if args.snapshot_baseline_tier or args.snapshot_compact_errors:
             mutants = set()
             for timeline in profiles.glob('controller-*.jsonl'):
                 with timeline.open() as stream:
                     mutants.update(event['childPid'] for event in map(json.loads, stream)
                                    if event['type'] == 'fork' and event.get('selector'))
-            limited = {row['pid'] for p in observed.glob('*.json')
-                       for row in [json.loads(p.read_text())] if row.get('baselineTier')}
-            if not mutants or limited != mutants:
-                result['qualification_errors'].append('baseline tier did not apply to exactly the mutant forks')
+            if args.snapshot_baseline_tier:
+                limited = {row['pid'] for p in observed.glob('*.json')
+                           for row in [json.loads(p.read_text())] if row.get('baselineTier')}
+                if not mutants or limited != mutants:
+                    result['qualification_errors'].append('baseline tier did not apply to exactly the mutant forks')
+            if args.snapshot_compact_errors:
+                assertions = {int(p.stem): int(p.read_text()) for p in observed.glob('*.assertions')}
+                result['compacted_assertions'] = sum(assertions.values())
+                if not mutants or assertions.keys() != mutants or result['compacted_assertions'] <= 0:
+                    result['qualification_errors'].append('compact assertion observations do not match the mutant forks')
         if args.controller_stack_timing:
             expected = {p.stem.removeprefix('controller-') for p in profiles.glob('controller-*.jsonl')}
             files = list(output.glob('stack-timing-*.json'))

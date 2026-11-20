@@ -329,3 +329,38 @@ python3 benchmarks/results/2026-11-20-vite-worker-bundle/summarize.py --followup
   /root/oximut-evidence/vitest-fork-bundle/snapshot-native-project \
   /root/oximut-evidence/scale-bottlenecks/workers/artifact/capture
 ```
+
+## CPU after first collection
+
+On the qualified snapshot capture, the mutant forks used **9.37 CPU
+seconds** from first collection to finish. That interval occupied
+**3.22 seconds** of the last-finishing paths across 52 batches.
+
+The inspector sampled 25 forks from their first collected message to
+the finish message. Of 1,553 sample stacks, 39 were idle, 317 included
+Vitest's `processError`, and 167 included source-map position lookup
+within that error path. The tasks themselves also accounted for many
+samples, including Colord's color conversion and parsing functions.
+These are main-thread sample counts from a subset with inspector
+overhead. They give the stack overlap and relative concentration,
+without estimating process-tree CPU savings.
+
+The controller stack ablation does not cover this cost. A separate
+Colord-only worker ablation returns the ordinary Chai assertion's name
+and message without formatting the diff or materializing the stack.
+It keeps non-Chai and caused errors on the original path. The experiment
+checks every mutant fork's mode and counts assertions that reach the
+replacement path. It is a diagnostic of the error payload, which can
+be observed by Vitest retries, callbacks, and custom reporters.
+
+- [Native run](https://github.com/RuiCostafrg/oximut/actions/runs/44790961844)
+- [Verified diagnostic data](snapshot-execution-cpu.json)
+- Raw evidence at `/root/oximut-evidence/vitest-fork-bundle/snapshot-native-execution-cpu`.
+
+```sh
+gh workflow run native-diagnostic-profile.yml --ref t3/fresh-worker-startup \
+  -f capture_mode=worker-snapshot-execution-cpu -f workload=colord-scale -f concurrency=4
+python3 benchmarks/results/2026-11-20-vite-worker-bundle/summarize.py --followup execution-cpu \
+  /root/oximut-evidence/vitest-fork-bundle/snapshot-native-execution-cpu \
+  /root/oximut-evidence/scale-bottlenecks/workers/artifact/capture
+```
