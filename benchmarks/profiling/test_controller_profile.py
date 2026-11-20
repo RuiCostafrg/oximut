@@ -299,6 +299,30 @@ fs.appendFileSync = function(file, data, ...args) {
             broken = diagnostic.controller_capture_inventory(root, root / 'qualification', worker_phases=True)
             self.assertTrue(any(lost.name in error for error in broken['errors']))
 
+    def test_worker_phases_accept_late_stop_only_after_clean_exit(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self.assertEqual(self.fixture(root, worker_phases=True)['errors'], [])
+            timeline = next(root.glob('controller-*.jsonl'))
+            events = [json.loads(line) for line in timeline.read_text().splitlines()]
+            exit_index = next(i for i, e in enumerate(events) if e['type'] == 'child-exit')
+            pid = events[exit_index]['childPid']
+            ack_index = next(i for i, e in enumerate(events)
+                             if e.get('childPid') == pid and e.get('messageType') == 'stopped')
+            ack = events.pop(ack_index)
+            exited = events[exit_index - 1]
+            exited.update(code=0, signal=None)
+            exited['counts'].pop('stopped')
+            ack['monotonicMs'] = exited['monotonicMs']
+            events.insert(exit_index, ack)
+            self.write_events(timeline, events)
+            check = lambda: diagnostic.controller_capture_inventory(
+                root, root / 'qualification', worker_phases=True)
+            self.assertEqual(check()['errors'], [])
+            exited.update(code=None, signal='SIGKILL')
+            self.write_events(timeline, events)
+            self.assertTrue(check()['errors'])
+
     def test_complete_first_mutant_and_bounded_worker_boundaries(self):
         """Accept one complete capture and reject missing or malformed evidence."""
         with tempfile.TemporaryDirectory() as tmp:

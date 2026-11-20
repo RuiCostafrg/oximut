@@ -235,10 +235,6 @@ def controller_capture_inventory(directory, qualification=None, *, worker_phases
                             boundaries.append('receive:' + str(event['messageType']))
                         elif event.get('rpcMethod') == 'onCollected':
                             boundaries.append('collection')
-                if boundaries != ['fork', 'send:start', 'receive:started', 'send:run',
-                                   'collection', 'receive:testfileFinished', 'send:stop',
-                                   'receive:stopped', 'child-exit']:
-                    errors.append(f'incomplete worker boundaries: {timeline.name}/{pid}')
                 worker_exit = next(e for e in events if e['type'] == 'child-exit'
                                    and e.get('childPid') == pid)
                 # Vitest terminates isolated forks with SIGTERM after 'stopped'.
@@ -248,9 +244,22 @@ def controller_capture_inventory(directory, qualification=None, *, worker_phases
                 stopped_term = ('code' in worker_exit and worker_exit['code'] is None
                                 and worker_exit.get('signal') == 'SIGTERM'
                                 and 'receive:stopped' in boundaries)
+                expected = ['fork', 'send:start', 'receive:started', 'send:run',
+                            'collection', 'receive:testfileFinished', 'send:stop']
+                # Node can deliver buffered IPC after the process exit event.
+                # Accept only a clean exit followed by the observed stop reply.
+                late_stop = (worker_phases and clean_exit and
+                             boundaries == expected + ['child-exit', 'receive:stopped'])
+                if boundaries != expected + ['receive:stopped', 'child-exit'] and not late_stop:
+                    errors.append(f'incomplete worker boundaries: {timeline.name}/{pid}')
                 if not (clean_exit or stopped_term):
                     errors.append(f'abnormal observed worker exit: {timeline.name}/{pid}')
                 counts = worker_exit.get('counts')
+                if late_stop and isinstance(counts, dict):
+                    if 'stopped' in counts:
+                        errors.append(f'stop count precedes its observed reply: {timeline.name}/{pid}')
+                    else:
+                        counts = {**counts, 'stopped': 1}
                 critical = ('started', 'testfileFinished', 'stopped', 'onCollected')
                 if (not isinstance(counts, dict) or any(type(counts.get(k)) is not int
                         or counts[k] < 1 or (counts[k] != 1 and not (worker_phases and k == 'onCollected'))
@@ -792,6 +801,7 @@ def main(argv=None):
             observed.mkdir()
             env['OXIMUT_SNAPSHOT_BLOB'] = str(args.fork_snapshot.resolve(strict=True))
             env['OXIMUT_SNAPSHOT_OBSERVED_DIR'] = str(observed)
+            env['OXIMUT_SNAPSHOT_READS_DIR'] = str(output)
             env['NODE_OPTIONS'] += f' --require="{preload}"'
             result['snapshot_sha256'] = workload.measurement.file_hash(args.fork_snapshot)
         if args.accounting:

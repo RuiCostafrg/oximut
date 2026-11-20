@@ -14,6 +14,7 @@ on:
           - fresh-worker-startup
           - worker-bundle
           - worker-snapshot
+          - worker-snapshot-source-io
           - segments
       workload:
         description: Mutation workload
@@ -137,7 +138,7 @@ jobs:
                 node --test packages/vitest-adapter/test/shared-lanes.test.mjs | tee "$PROFILE_ROOT/bundled-fixture.log"
               CAPTURE_ARGS=(--worker-phases --startup-contract --first-collection)
               ;;
-            worker-snapshot)
+            worker-snapshot|worker-snapshot-source-io)
               test "$PROFILE_WORKLOAD" = colord-scale
               test "$MATCHED_CONCURRENCY" = 4
               snapshot_dir=$(mktemp -d "$GITHUB_WORKSPACE/node_modules/vitest/dist/.oximut-snapshot.XXXXXX")
@@ -168,11 +169,21 @@ jobs:
               --workload "$PROFILE_WORKLOAD" --concurrency "$MATCHED_CONCURRENCY" \
               --output "$PROFILE_ROOT/bundled-capture" 2>&1 | tee "$PROFILE_ROOT/bundled-diagnostic.log"
           fi
-          if test "$CAPTURE_MODE" = worker-snapshot; then
+          if [[ "$CAPTURE_MODE" == worker-snapshot* ]]; then
             python3 benchmarks/profile_native.py --binary "$PROFILE_ROOT/oximut" \
               "${CAPTURE_ARGS[@]}" --fork-snapshot "$snapshot_dir/vitest.blob" \
               --workload "$PROFILE_WORKLOAD" --concurrency "$MATCHED_CONCURRENCY" \
               --output "$PROFILE_ROOT/snapshot-capture" 2>&1 | tee "$PROFILE_ROOT/snapshot-diagnostic.log"
+          fi
+          if test "$CAPTURE_MODE" = worker-snapshot-source-io; then
+            # The archived seed is build provenance. Restoring the image and
+            # loading its bridges does not need the original builder source.
+            cmp "$snapshot_dir/seed.cjs" "$PROFILE_ROOT/snapshot/seed.cjs"
+            mv "$snapshot_dir/seed.cjs" "$snapshot_dir/seed.offline.cjs"
+            python3 benchmarks/profile_native.py --binary "$PROFILE_ROOT/oximut" \
+              "${CAPTURE_ARGS[@]}" --fork-snapshot "$snapshot_dir/vitest.blob" \
+              --workload "$PROFILE_WORKLOAD" --concurrency "$MATCHED_CONCURRENCY" \
+              --output "$PROFILE_ROOT/snapshot-offline-capture" 2>&1 | tee "$PROFILE_ROOT/snapshot-offline-diagnostic.log"
           fi
       - name: Publish diagnostic status and remove dependency symlinks
         if: always()
