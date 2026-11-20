@@ -51,15 +51,17 @@ startupSnapshot.setDeserializeMainFunction(async () => {
     return {...result, url: ${JSON.stringify(apiBridge)}};
   }});
   const evidence = process.env.OXIMUT_SNAPSHOT_OBSERVED_DIR;
-  if (evidence && process.env.OXIMUT_SNAPSHOT_COMPACT_ERRORS === '1' && process.env.OXIMUT_ACTIVE_MUTANT) {
+  if (process.env.OXIMUT_SNAPSHOT_COMPACT_ERRORS === '1' && process.env.OXIMUT_ACTIVE_MUTANT) {
     let count = 0;
     globalThis[Symbol.for('oximut.diagnostic.compactAssertion')] = () => ++count;
-    const send = process.send;
-    process.send = function (message, ...args) {
-      if (message?.__vitest_worker_response__ === true && message.type === 'testfileFinished')
-        writeFileSync(evidence + '/' + process.pid + '.assertions', String(count), {flag: 'wx'});
-      return Reflect.apply(send, this, [message, ...args]);
-    };
+    if (evidence) {
+      const send = process.send;
+      process.send = function (message, ...args) {
+        if (message?.__vitest_worker_response__ === true && message.type === 'testfileFinished')
+          writeFileSync(evidence + '/' + process.pid + '.assertions', String(count), {flag: 'wx'});
+        return Reflect.apply(send, this, [message, ...args]);
+      };
+    }
   }
   if (evidence && process.env.OXIMUT_SNAPSHOT_SPECIALIZE_SELECTOR === '1') {
     const selector = process.env.OXIMUT_ACTIVE_MUTANT;

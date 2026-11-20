@@ -48,6 +48,9 @@ def verify(directory, reference):
 
     run = read_json(directory / 'run.json')
     root = directory / 'artifact'
+    mode_file = root / 'snapshot-score-mode.txt'
+    mode = mode_file.read_text().strip() if mode_file.exists() else 'worker-snapshot-score'
+    assert mode in ('worker-snapshot-score', 'worker-snapshot-compact-score')
     build = read_json(root / 'build-metadata.json')
     benchmark = root / 'snapshot-score'
     metadata = read_json(benchmark / 'metadata.json')
@@ -126,6 +129,7 @@ def verify(directory, reference):
     return {
         'run': run['html_url'],
         'commit': build['commit'],
+        **({'mode': mode} if mode_file.exists() else {}),
         'artifact_sha256': checksum,
         'binary_sha256': build['binary_sha256'],
         'wrapper_sha256': provenance['after']['binary_sha256'],
