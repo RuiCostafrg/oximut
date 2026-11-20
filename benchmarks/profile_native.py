@@ -739,6 +739,8 @@ def main(argv=None):
                         help='Measure message-only Chai assertion failures on the Colord fixture')
     parser.add_argument('--snapshot-specialize-selector', action='store_true',
                         help='Resolve instrumented Colord switches once per module in each snapshot worker')
+    parser.add_argument('--snapshot-bundle-project', action='store_true',
+                        help='Bundle one module graph per Colord test file and use Vite to evaluate it')
     parser.add_argument('--concurrency', type=workload.concurrency_arg, default=1,
                         help='Matched parallelism for Oximut --workers and Stryker concurrency (default 1)')
     parser.add_argument('--workload', type=workload.workload_name, default=workload.DEFAULT_WORKLOAD,
@@ -755,7 +757,7 @@ def main(argv=None):
         parser.error('native project diagnostics require a fork snapshot and colord-scale selector trace')
     if args.snapshot_baseline_tier and not (args.fork_snapshot and args.startup_contract):
         parser.error('the snapshot baseline-tier diagnostic requires a snapshot and selector trace')
-    if (args.snapshot_compact_errors or args.snapshot_specialize_selector) and not (
+    if (args.snapshot_compact_errors or args.snapshot_specialize_selector or args.snapshot_bundle_project) and not (
             args.fork_snapshot and args.startup_contract and args.workload == 'colord-scale'):
         parser.error('fixture-specific snapshot diagnostics require a snapshot and colord-scale selector trace')
     workload.require_matched_concurrency(args.concurrency)
@@ -838,6 +840,11 @@ def main(argv=None):
                 env['OXIMUT_SNAPSHOT_COMPACT_ERRORS'] = '1'
             if args.snapshot_specialize_selector:
                 env['OXIMUT_SNAPSHOT_SPECIALIZE_SELECTOR'] = '1'
+            if args.snapshot_bundle_project:
+                preload = ROOT / 'benchmarks/experiments/vitest-fork-bundle/project-bundle.cjs'
+                env['OXIMUT_PROJECT_BUNDLE_EVIDENCE'] = str(output)
+                env['NODE_OPTIONS'] += f' --require="{preload}"'
+                result['helper_sha256'][str(preload.relative_to(ROOT))] = workload.measurement.file_hash(preload)
         if args.controller_stack_timing:
             preload = ROOT / 'benchmarks/experiments/vitest-fork-bundle/controller-stack-timing.cjs'
             env['OXIMUT_STACK_TIMING_DIR'] = str(output)
@@ -880,7 +887,8 @@ def main(argv=None):
             expected = {p.name.split('-')[-1] for p in profiles.glob('worker-*-*.json')}
             if not expected or {p.name for p in observed.glob('*.json')} != expected:
                 result['qualification_errors'].append('experimental bootstrap observations differ from traced forks')
-        if args.snapshot_baseline_tier or args.snapshot_compact_errors or args.snapshot_specialize_selector:
+        if (args.snapshot_baseline_tier or args.snapshot_compact_errors
+                or args.snapshot_specialize_selector or args.snapshot_bundle_project):
             mutants = {}
             for timeline in profiles.glob('controller-*.jsonl'):
                 with timeline.open() as stream:
@@ -902,6 +910,12 @@ def main(argv=None):
                         or any(not 0 < row['active'] <= row['matches'] for row in records.values())):
                     result['qualification_errors'].append('specialized switches do not match the traced selectors')
                 result['specialized_switches'] = sum(row['matches'] for row in records.values())
+            if args.snapshot_bundle_project:
+                bundles = {int(p.stem): json.loads(p.read_text()) for p in observed.glob('*.bundled')}
+                if (not mutants or mutants != {pid: row['selector'] for pid, row in bundles.items()}
+                        or any(not row['entries'] for row in bundles.values())):
+                    result['qualification_errors'].append('bundled test entries do not match the traced mutant forks')
+                result['bundled_test_entries'] = sum(len(row['entries']) for row in bundles.values())
         if args.controller_stack_timing:
             expected = {p.stem.removeprefix('controller-') for p in profiles.glob('controller-*.jsonl')}
             files = list(output.glob('stack-timing-*.json'))

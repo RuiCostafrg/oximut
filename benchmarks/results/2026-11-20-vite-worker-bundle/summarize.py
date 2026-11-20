@@ -65,7 +65,7 @@ def main():
     mode.add_argument('--snapshot', action='store_true')
     mode.add_argument('--followup', choices=('stack', 'collection-cpu', 'execution-cpu',
                                             'native-project', 'baseline-tier', 'compact-errors',
-                                            'specialize-selector'))
+                                            'specialize-selector', 'bundle-project'))
     args = parser.parse_args()
     root = args.run / 'artifact'
     verified = read_json(args.run / 'verification.json')
@@ -78,7 +78,8 @@ def main():
         names = ['capture', 'stack-measure-capture', 'stack-skip-capture']
     if args.followup in ('collection-cpu', 'execution-cpu'):
         names = ['capture', f'{args.followup}-capture']
-    if args.followup in ('native-project', 'baseline-tier', 'compact-errors', 'specialize-selector'):
+    if args.followup in ('native-project', 'baseline-tier', 'compact-errors', 'specialize-selector',
+                         'bundle-project'):
         names = ['capture', 'snapshot-offline-capture', f'{args.followup}-capture']
     use_snapshot = args.snapshot or args.followup
     offline = root / 'snapshot-offline-capture'
@@ -161,6 +162,22 @@ def main():
             arms[name]['compacted_assertions'] = diagnostic['compacted_assertions']
         if name == 'specialize-selector-capture':
             arms[name]['specialized_switches'] = diagnostic['specialized_switches']
+        if name == 'bundle-project-capture':
+            oximut = rows['oximut']
+            report_path = Path(oximut['report_file'])
+            report = read_json(capture / 'qualification' / report_path.parent.name / report_path.name)
+            sampled = [read_json(p) for p in (capture / 'snapshot-forks').glob('*.bundled')]
+            mutants = {row['id']: row for row in report['mutants']}
+            require(len(sampled) == 206 and {row['selector'] for row in sampled} == mutants.keys(),
+                    'bundled selectors differ from qualified mutant report')
+            for row in sampled:
+                mutant = mutants[row['selector']]
+                require(any(mutant['file'] in entry['modules'] for entry in row['entries']),
+                        'bundled test did not include the selected mutant source')
+                if mutant['selection']['mode'] == 'files':
+                    require({entry['file'] for entry in row['entries']} <= set(mutant['selection']['files']),
+                            'bundled evaluation escaped the selected test files')
+            arms[name]['bundled_test_entries'] = diagnostic['bundled_test_entries']
         if name == 'native-project-capture':
             oximut = rows['oximut']
             report_path = Path(oximut['report_file'])

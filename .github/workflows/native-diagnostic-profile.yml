@@ -21,6 +21,7 @@ on:
           - worker-snapshot-baseline-tier
           - worker-snapshot-compact-errors
           - worker-snapshot-specialize-selector
+          - worker-snapshot-bundle-project
           - worker-snapshot-native-project
           - worker-snapshot-score
           - worker-snapshot-compact-score
@@ -172,7 +173,7 @@ jobs:
                 node --test packages/vitest-adapter/test/shared-lanes.test.mjs | tee "$PROFILE_ROOT/bundled-fixture.log"
               CAPTURE_ARGS=(--worker-phases --startup-contract --first-collection)
               ;;
-            worker-snapshot|worker-snapshot-source-io|worker-snapshot-stack|worker-snapshot-collection-cpu|worker-snapshot-execution-cpu|worker-snapshot-native-project|worker-snapshot-baseline-tier|worker-snapshot-compact-errors|worker-snapshot-specialize-selector)
+            worker-snapshot|worker-snapshot-source-io|worker-snapshot-stack|worker-snapshot-collection-cpu|worker-snapshot-execution-cpu|worker-snapshot-native-project|worker-snapshot-baseline-tier|worker-snapshot-compact-errors|worker-snapshot-specialize-selector|worker-snapshot-bundle-project)
               test "$PROFILE_WORKLOAD" = colord-scale
               test "$MATCHED_CONCURRENCY" = 4
               snapshot_dir=$(mktemp -d "$GITHUB_WORKSPACE/node_modules/vitest/dist/.oximut-snapshot.XXXXXX")
@@ -247,7 +248,7 @@ jobs:
               --workload "$PROFILE_WORKLOAD" --concurrency "$MATCHED_CONCURRENCY" \
               --output "$PROFILE_ROOT/native-project-capture" 2>&1 | tee "$PROFILE_ROOT/native-project-diagnostic.log"
           fi
-          if [[ "$CAPTURE_MODE" == worker-snapshot-baseline-tier || "$CAPTURE_MODE" == worker-snapshot-compact-errors || "$CAPTURE_MODE" == worker-snapshot-specialize-selector ]]; then
+          if [[ "$CAPTURE_MODE" == worker-snapshot-baseline-tier || "$CAPTURE_MODE" == worker-snapshot-compact-errors || "$CAPTURE_MODE" == worker-snapshot-specialize-selector || "$CAPTURE_MODE" == worker-snapshot-bundle-project ]]; then
             mv "$snapshot_dir/seed.cjs" "$snapshot_dir/seed.offline.cjs"
             experiment=${CAPTURE_MODE#worker-snapshot-}
             for arm in snapshot-offline "$experiment"; do

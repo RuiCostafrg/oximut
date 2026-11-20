@@ -86,6 +86,17 @@ startupSnapshot.setDeserializeMainFunction(async () => {
       };
     }
   }
+  if (evidence && process.env.OXIMUT_PROJECT_BUNDLE_EVIDENCE && process.env.OXIMUT_ACTIVE_MUTANT) {
+    const entries = [];
+    globalThis[Symbol.for('oximut.diagnostic.bundledEntry')] = (file, modules) => entries.push({file, modules});
+    const send = process.send;
+    process.send = function (message, ...args) {
+      if (message?.__vitest_worker_response__ === true && message.type === 'testfileFinished')
+        writeFileSync(evidence + '/' + process.pid + '.bundled',
+          JSON.stringify({selector: process.env.OXIMUT_ACTIVE_MUTANT, entries}), {flag: 'wx'});
+      return Reflect.apply(send, this, [message, ...args]);
+    };
+  }
   if (evidence)
     writeFileSync(evidence + '/' + process.pid + '.json',
       JSON.stringify({pid: process.pid, ppid: process.ppid, baselineTier}), {flag: 'wx'});

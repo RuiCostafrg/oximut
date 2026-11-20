@@ -456,3 +456,36 @@ python3 benchmarks/results/2026-11-20-vite-worker-bundle/summarize.py --followup
   /root/oximut-evidence/vitest-fork-bundle/snapshot-native-compact-errors \
   /root/oximut-evidence/scale-bottlenecks/workers/artifact/capture
 ```
+
+## Constant mutation switches in the worker
+
+The diagnostic specialized 112,692 switch expressions while loading
+modules in the 206 fresh mutant forks. Each fork reported its traced
+selector and at least one matching switch. The worker replaced the
+comparison with a Boolean of the same source width and evaluated the
+modules in Vitest as usual. Both arms retained the exact 206 mutant
+outcomes, 102 test identities, and whole-file selections.
+
+| Instrumented offline snapshots | Command wall | Command CPU | Worker CPU after collection |
+| --- | ---: | ---: | ---: |
+| Environment lookup per switch | 12.77 s | 33.52 s | 7.70 s |
+| Constant switches | 12.29 s | 32.88 s | 6.68 s |
+
+In this fixed-order run, the pass incurred another 0.23 CPU seconds
+through first collection and saved 1.02 CPU seconds after collection.
+The observed 0.49 s wall reduction is worth testing alongside larger
+changes. This controlled fixture uses the selector as a launch input.
+The ablation does not support projects that deliberately write the
+reserved environment variable or observe the generated switch source.
+
+- [Native run](https://github.com/RuiCostafrg/oximut/actions/runs/44830954410)
+- [Verified diagnostic data](snapshot-specialize-selector.json)
+- Raw evidence at `/root/oximut-evidence/vitest-fork-bundle/snapshot-native-specialize-selector`.
+
+```sh
+gh workflow run native-diagnostic-profile.yml --ref t3/fresh-worker-startup \
+  -f capture_mode=worker-snapshot-specialize-selector -f workload=colord-scale -f concurrency=4
+python3 benchmarks/results/2026-11-20-vite-worker-bundle/summarize.py --followup specialize-selector \
+  /root/oximut-evidence/vitest-fork-bundle/snapshot-native-specialize-selector \
+  /root/oximut-evidence/scale-bottlenecks/workers/artifact/capture
+```
