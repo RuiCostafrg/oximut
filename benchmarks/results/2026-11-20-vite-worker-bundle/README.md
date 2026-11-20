@@ -47,3 +47,28 @@ python3 benchmarks/results/2026-11-20-vite-worker-bundle/summarize.py \
   /root/oximut-evidence/vitest-fork-bundle/hidden \
   /root/oximut-evidence/scale-bottlenecks/workers/artifact/capture
 ```
+
+## Snapshot feasibility checkpoint
+
+A separate Linux ARM64 probe bundled the eager framework code into a
+Node 26.3.1 user startup snapshot. It deferred Vitest IPC registration and
+the ESM bridge until restore, and restored the canonical Node Console
+constructor from a captured reference. Distinct fresh processes acknowledged
+start and stop, and most rolling-fixture outcomes matched. The asynchronous
+waiter timed out. The diagnostic logged the waiter entering, the other slot
+running the release job and completing, and **zero timer ticks** from the
+waiter. A minimal snapshot with no Vitest graph passed its timer check.
+The bundled snapshot therefore failed the functional gate and remains
+unscored. The retained log is at
+`/root/oximut-evidence/vitest-fork-bundle/snapshot-local/rolling-timer-fixture.log`.
+Node's snapshot builder emitted compatibility warnings for VM, async hooks,
+module, and performance hooks.
+
+```sh
+scratch=$(mktemp -d "$PWD/.oximut-snapshot.XXXXXX")
+node benchmarks/experiments/vitest-fork-bundle/snapshot.mjs "$scratch"
+node --build-snapshot --snapshot-blob="$scratch/vitest.blob" "$scratch/seed.cjs"
+OXIMUT_SNAPSHOT_BLOB="$scratch/vitest.blob" \
+  NODE_OPTIONS="--require=$PWD/benchmarks/experiments/vitest-fork-bundle/snapshot-flags.cjs" \
+  node --test --test-name-pattern='rolling forks' packages/vitest-adapter/test/shared-lanes.test.mjs
+```
