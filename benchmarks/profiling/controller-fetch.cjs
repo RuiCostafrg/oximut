@@ -48,17 +48,17 @@ if (dir && process.argv[1]?.endsWith('/m2-worker.ts')) {
   const hooks = [
     [/\/vitest\/dist\/chunks\/index\.Di8au7q4\.js$/, [
       ['else this._eventEmitter.emit("rpc", message);',
-        `else ${probe}.rpc(message, this.worker, this.project.name, () => this._eventEmitter.emit("rpc", message));`],
+        `else ${probe}.rpc(message, this.worker, this.project.name, () => this._eventEmitter.emit("rpc", message));`, true],
       ['const cached = !!moduleGraphModule.transformResult;',
-        add('graph', '{ id: moduleGraphModule.id, url, environment: environment.name, cached, tmp: moduleGraphModule.transformResult?.__vitestTmp }')],
+        add('graph', '{ id: moduleGraphModule.id, url, environment: environment.name, cached: !!moduleGraphModule.transformResult, tmp: moduleGraphModule.transformResult?.__vitestTmp }')],
       ['if (typeof tmpPath === "string") return getCachedResult(result, tmpPath);',
-        `if (typeof tmpPath === "string") { ${add('tmp-reuse', '{ path: tmpPath }')} return getCachedResult(result, tmpPath); }`],
+        `if (typeof tmpPath === "string") { ${add('tmp-reuse', '{ path: tmpPath }')} return getCachedResult(result, tmpPath); }`, true],
       ['if (saveCachePromises.has(cachePath)) return saveCachePromises.get(cachePath);',
-        `if (saveCachePromises.has(cachePath)) { ${add('write-join', '{ path: cachePath }')} return saveCachePromises.get(cachePath); }`],
+        `if (saveCachePromises.has(cachePath)) { ${add('write-join', '{ path: cachePath }')} return saveCachePromises.get(cachePath); }`, true],
       ['const savePromise = this.fsCache.saveCachedModule(cachePath, result, transformResult, imports, mappings, coverageData).then(() => returnResult).catch((error) => {',
         `const savePromise = this.fsCache.saveCachedModule(cachePath, result, transformResult, imports, mappings, coverageData).then(() => {
           ${add('write-done', '{ path: cachePath }')} return returnResult;
-        }).catch((error) => { ${add('write-failed', '{ path: cachePath }')}`],
+        }).catch((error) => { ${add('write-failed', '{ path: cachePath }')}`, true],
       ['const savePromise = this.fsCache.saveCachedModule',
         `${add('write-start', '{ path: cachePath, id: result.id, codeBytes: Buffer.byteLength(result.code ?? "") }')}\n`],
       ['if ("tmp" in result) metadata.tmps[url] = result.tmp;',
@@ -68,7 +68,7 @@ if (dir && process.argv[1]?.endsWith('/m2-worker.ts')) {
       ['if (!transformResult || node.id == null) continue;\n\t\t\t\t// the transformed code',
         'snapshot.nodes++;\nif (transformResult && node.id != null) snapshot.transformed++;\n'],
       ['const entry = {\n\t\t\t\t\tcached: true,\n\t\t\t\t\tfile: node.file,', 'snapshot.temporary++;\n'],
-      ['return warm;',''+add('snapshot', '{ ...snapshot, entries: Object.keys(warm).length }')+'\n'],
+      ['return warm;', 'const keys = Object.keys(warm);\n'+add('snapshot', '{ ...snapshot, entries: keys.length, keys }')+'\n'],
     ]],
     [/\/vitest-adapter\/shared-lanes\.ts$/, [
       ['this.width = width;', `${probe}.boundary('create', changed);\n`],
@@ -78,7 +78,9 @@ if (dir && process.argv[1]?.endsWith('/m2-worker.ts')) {
     [/\/vitest-adapter\/transform-share\.ts$/, [
       ['this.stats.hits++;', add('share-hit')+'\n'],
       ['this.stats.misses++;', add('share-miss')+'\n'],
-      ['this.stats.bypasses++;', add('share-bypass')+'\n'],
+      ['if (!shareable(call.environment, call.options)) {',
+        `if (!shareable(call.environment, call.options)) { ${add('share-bypass')}`, true],
+      ['if (entry) entries.delete(key);', add('share-bypass')+'\n'],
     ]],
   ];
   registerHooks({
@@ -87,11 +89,11 @@ if (dir && process.argv[1]?.endsWith('/m2-worker.ts')) {
       const match = hooks.find(([pattern]) => pattern.test(url));
       if (!match) return result;
       let source = Buffer.from(result.source).toString('utf8');
-      for (const [anchor, insertion] of match[1]) {
-        if (!source.includes(anchor)) throw Error(`Missing controller fetch anchor in ${url}: ${anchor}`);
-        source = source.replace(anchor, (original) =>
-          insertion.startsWith('else ') || insertion.startsWith('if ') || insertion.startsWith('const savePromise')
-            ? insertion : insertion + original);
+      for (const [anchor, insertion, replace] of match[1]) {
+        const first = source.indexOf(anchor);
+        if (first < 0 || first !== source.lastIndexOf(anchor))
+          throw Error(`Expected one controller fetch anchor in ${url}: ${anchor}`);
+        source = source.replace(anchor, () => replace ? insertion : insertion + anchor);
       }
       return {...result, source};
     },

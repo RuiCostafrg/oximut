@@ -782,6 +782,7 @@ def main(argv=None):
             fetch.mkdir()
             env['OXIMUT_PROFILE_FETCH_DIR'] = str(fetch)
             env['NODE_OPTIONS'] += f' --require="{SUPPORT / "controller-fetch.cjs"}"'
+            result['lane_local_fetch'] = os.environ.get('OXIMUT_EXPERIMENT_LANE_LOCAL_FETCH') == '1'
         if args.accounting:
             # No shim/preload/profiling variables: isolate the accountant cost
             # from inspector startup and Node/Python CPU sampling overhead.

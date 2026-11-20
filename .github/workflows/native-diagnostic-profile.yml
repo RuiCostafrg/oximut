@@ -73,11 +73,22 @@ jobs:
           fi
       - name: Dependencies and fixture checks
         shell: bash
+        env:
+          CAPTURE_MODE: ${{ inputs.capture_mode || 'accounting' }}
         run: |
           set -euo pipefail
           npm ci --ignore-scripts 2>&1 | tee "$PROFILE_ROOT/dependencies.log"
           python3 -m unittest discover -s benchmarks/tests -v 2>&1 | tee "$PROFILE_ROOT/fixture-tests.log"
           python3 -m unittest discover -s benchmarks/profiling -p 'test_*.py' -v 2>&1 | tee "$PROFILE_ROOT/controller-fixture-tests.log"
+          if test "$CAPTURE_MODE" = controller-fetch; then
+            mkdir "$PROFILE_ROOT/fetch-smoke"
+            export OXIMUT_PROFILE_FETCH_DIR="$PROFILE_ROOT/fetch-smoke"
+            export NODE_OPTIONS="--require=$PWD/benchmarks/profiling/controller-fetch.cjs"
+            for lane_local in 0 1; do
+              OXIMUT_EXPERIMENT_LANE_LOCAL_FETCH="$lane_local" node --test \
+                --test-name-pattern='compact lane requests' packages/vitest-adapter/test/shared-lanes.test.mjs
+            done
+          fi
       - name: Build one candidate before profiling
         shell: bash
         run: |
