@@ -128,7 +128,7 @@ jobs:
             worker-bundle)
               test "$PROFILE_WORKLOAD" = colord-scale
               test "$MATCHED_CONCURRENCY" = 4
-              bundle_dir=$(mktemp -d "$GITHUB_WORKSPACE/.oximut-bundle.XXXXXX")
+              bundle_dir=$(mktemp -d "$GITHUB_WORKSPACE/node_modules/vitest/dist/.oximut-bundle.XXXXXX")
               node benchmarks/experiments/vitest-fork-bundle/build.mjs "$bundle_dir"
               cp -R "$bundle_dir" "$PROFILE_ROOT/bundle"
               OXIMUT_BUNDLE_FIXTURE=1 OXIMUT_BUNDLE_ROUTES="$bundle_dir/routes.json" \
