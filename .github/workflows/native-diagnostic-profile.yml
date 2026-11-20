@@ -15,6 +15,7 @@ on:
           - worker-bundle
           - worker-snapshot
           - worker-snapshot-source-io
+          - worker-snapshot-score
           - segments
       workload:
         description: Mutation workload
@@ -110,7 +111,27 @@ jobs:
           }
           (root / 'build-metadata.json').write_text(json.dumps(record, indent=2) + '\n')
           PY
+      - name: Score fresh worker snapshots including their generation cost
+        if: inputs.capture_mode == 'worker-snapshot-score'
+        shell: bash
+        env:
+          PROFILE_WORKLOAD: ${{ inputs.workload }}
+          MATCHED_CONCURRENCY: ${{ inputs.concurrency }}
+        run: |
+          set -euo pipefail
+          test "$PROFILE_WORKLOAD" = colord-scale
+          test "$MATCHED_CONCURRENCY" = 4
+          test -z "${NODE_OPTIONS:-}"
+          export OXIMUT_SNAPSHOT_SCORE_BINARY="$PROFILE_ROOT/oximut"
+          revision=$(git rev-parse HEAD)
+          python3 benchmarks/compare_candidates.py --workload "$PROFILE_WORKLOAD" --concurrency "$MATCHED_CONCURRENCY" \
+            --before-binary "$PROFILE_ROOT/oximut" --before-adapter-dir packages/vitest-adapter --before-commit "$revision" \
+            --after-binary benchmarks/experiments/vitest-fork-bundle/score-wrapper.sh \
+            --after-adapter-dir packages/vitest-adapter --after-commit "$revision" \
+            --output "$PROFILE_ROOT/snapshot-score" --warmups 1 --repetitions 5 --timeout 1200 \
+            2>&1 | tee "$PROFILE_ROOT/snapshot-score.log"
       - name: Capture unchanged workload with profiler overhead, no ratios or targets
+        if: inputs.capture_mode != 'worker-snapshot-score'
         shell: bash
         env:
           CAPTURE_MODE: ${{ inputs.capture_mode || 'accounting' }}

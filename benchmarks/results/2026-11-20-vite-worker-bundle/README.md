@@ -107,3 +107,29 @@ at that checkpoint alone cannot establish the 0.50× wall target.
 The native follow-up records blob generation and loading as separate
 diagnostic scopes. Any scored configuration that builds its image per
 invocation must include that build inside the timed process tree.
+
+The first native capture with the globals fix passed workload
+qualification, including the 206 exact mutant identities and outcomes
+and the 102 tests. The capture's stricter trace check initially failed
+because two final stop messages arrived about 0.1–0.2 ms after their
+workers' clean exits. The raw trace shows both results, stop requests and
+acknowledgements. The updated verifier replays the unchanged archive and
+accepts that ordering only for a clean exit with one late acknowledgement
+and intact worker CPU checkpoints. Node documents that streams can
+remain open when the exit event arrives.
+[Node child process event semantics](https://nodejs.org/download/release/v26.3.1/docs/api/child_process.html#event-exit)
+
+In this one instrumented native pair, mutant startup CPU fell from
+**18.32 s to 10.35 s**, while controller CPU rose from **5.76 s to 8.98 s**.
+Whole-command CPU fell from **52.45 s to 47.71 s**, but wall increased
+from **19.09 s to 19.55 s** before counting **0.76 s** for image generation.
+The raw archive is at
+`/root/oximut-evidence/vitest-fork-bundle/snapshot-native-globals/artifact.zip`.
+It is a startup attribution result, separate from the unprofiled score.
+[Native diagnostic attempt](https://github.com/RuiCostafrg/oximut/actions/runs/44783788870)
+
+The next diagnostic tests whether failed-assertion stack processing
+repeatedly reads the large generated seed. It holds the blob and
+bridges fixed, records the controller's source reads and bytes, and moves
+the seed source offline for a second run. The full source is retained
+for provenance.
