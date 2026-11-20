@@ -171,3 +171,56 @@ python3 benchmarks/results/2026-11-20-vite-worker-bundle/summarize.py --snapshot
   /root/oximut-evidence/vitest-fork-bundle/snapshot-native-source-io \
   /root/oximut-evidence/scale-bottlenecks/workers/artifact/capture
 ```
+
+## Unprofiled snapshot score
+
+The offline-source snapshot improves Oximut's paired wall by **10.8%**
+and CPU by **16.2%**, with image generation and deletion charged to
+every invocation. It meets the CPU and RSS targets against Stryker.
+It needs a further **44.5% wall reduction** from its median ratio to
+reach the wall target.
+
+| Metric | Stock / Stryker | Snapshot / Stryker | Snapshot 95% bootstrap interval | Target |
+| --- | ---: | ---: | ---: | ---: |
+| Wall | 0.999× | 0.901× | 0.898–0.928× | ≤0.50× |
+| Process-tree CPU | 0.887× | 0.745× | 0.740–0.762× | ≤0.80× |
+| Sampled peak aggregate RSS | 0.635× | 0.629× | 0.618–0.637× | ≤0.80× |
+
+Five measured pairs and one warmup ran serially in alternating order with
+four workers on Ubuntu 24.04 x86-64 (Intel Xeon 6975P-C), using Node 26.3.1,
+Vitest 5.1.0 and Stryker 10.1.1. Both Oximut arms used the same release
+executable and adapter. The candidate added a per-command image builder and
+the fork-only snapshot loader. It had a median wall of 14.42 s and CPU of
+38.17 s. Stryker in its pairs had medians of 15.99 s and 51.47 s.
+
+All 36 warmup and measurement rows passed historical workload and cleanup
+checks. Both mutation engines matched all 206 exact edited-source outcomes.
+Each Oximut invocation used the same per-mutant file selection and planned
+tests and passed the 102-test baseline. Existing worker-local bail after
+failure makes the number of reported mutant tests vary between repeats.
+Measured stock and snapshot runs both reported between 3,617 and 3,672.
+Separate instrumented runs above verified fresh fork and selector
+lifecycle. The RSS sampler had zero read errors and observed maximum gaps
+of 70 ms for snapshot Oximut and 108 ms for paired Stryker.
+
+Keep the framework-only snapshot as an experimental candidate. With four
+CPUs fully utilized, the measured snapshot pairs still require a median
+**6.46 CPU-seconds** of additional savings before half Stryker's wall is
+possible. That lower bound excludes idle time, so the command may need a
+larger reduction. Controller stack remapping and repeated first collection
+are the next two measured paths to investigate. Stock Vitest's native ESM
+switch bypasses the transform hooks that deliver the instrumented mutant
+and baseline source and cannot serve as a direct ablation.
+
+- [Native score run](https://github.com/RuiCostafrg/oximut/actions/runs/44786058083)
+- [Verified score and paired intervals](snapshot-score.json)
+- Raw archive, logs and metadata at
+  `/root/oximut-evidence/vitest-fork-bundle/snapshot-native-score`.
+
+```sh
+gh workflow run native-diagnostic-profile.yml --ref t3/fresh-worker-startup \
+  -f capture_mode=worker-snapshot-score -f workload=colord-scale -f concurrency=4
+python3 benchmarks/results/2026-11-20-vite-worker-bundle/score.py \
+  /root/oximut-evidence/vitest-fork-bundle/snapshot-native-score \
+  /root/oximut-evidence/scale-bottlenecks/workers/artifact/capture/qualification/measurements.jsonl
+```

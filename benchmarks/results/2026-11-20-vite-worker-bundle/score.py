@@ -27,6 +27,15 @@ def outcomes(row):
     return {identity: mutant['outcome'] for identity, mutant in row['mutations'].items()}
 
 
+def test_selection(location, row):
+    report = Path(row['report_file'])
+    mutants = read_json(location / report.parent.name / report.name)['mutants']
+    return {mutant['id']: {**mutant['selection'],
+                           'files': [str(Path(file).relative_to(row['cwd']))
+                                     for file in mutant['selection']['files']]}
+            for mutant in mutants}
+
+
 def verify(directory, reference):
     artifact, = read_json(directory / 'artifacts.json')['artifacts']
     checksum = digest(directory / 'artifact.zip')
@@ -59,6 +68,8 @@ def verify(directory, reference):
                if name.startswith('packages/vitest-adapter/')}
 
     historical = rows(reference)
+    historical_selection = test_selection(reference.parent, historical['oximut'])
+    assert len(historical_selection) == 206
     measurements = {'before': [], 'after': []}
     attempts = read_json(benchmark / 'attempts.json')
     assert len(attempts) == 12
@@ -77,6 +88,7 @@ def verify(directory, reference):
             assert machine['machine'] == 'x86_64' and len(machine['cpu_affinity']) == 4
             for name, row in trial.items():
                 assert row['success'] and not row['descendant_cleanup_required']
+                assert not row['memory_errors']
                 for key in ('workload_sha256', 'declared_test_identity_sha256'):
                     assert row[key] == historical[name][key], (variant, index, name, key)
                 if name != 'vitest':
@@ -84,6 +96,7 @@ def verify(directory, reference):
                     assert len(outcomes(row)) == 206 and outcomes(row) == outcomes(historical[name])
             oximut = trial['oximut']
             assert oximut['selection_mode_counts'] == historical['oximut']['selection_mode_counts']
+            assert test_selection(location, oximut) == historical_selection
             assert oximut['baseline_test_counts'] == {'passed': 102, 'failed': 0, 'skipped': 0}
             resources = oximut['resources']
             assert resources['effectiveWorkers'] == resources['maxActiveJobs'] == 4
@@ -93,6 +106,8 @@ def verify(directory, reference):
     metrics = ('wall_seconds', 'cpu_seconds', 'peak_aggregate_rss_bytes')
     medians = {}
     cpu_deficits = {}
+    longest_sample_gaps = {}
+    reported_test_ranges = {}
     for variant, trials in measurements.items():
         medians[variant] = {tool: {metric: statistics.median(trial[tool][metric] for trial in trials)
                                   for metric in metrics} for tool in ('oximut', 'stryker')}
@@ -103,6 +118,10 @@ def verify(directory, reference):
             assert statistics.median(pairs) == ratios[metric]['median']
         cpu_deficits[variant] = statistics.median(
             trial['oximut']['cpu_seconds'] - 2 * trial['stryker']['wall_seconds'] for trial in trials)
+        longest_sample_gaps[variant] = {tool: max(trial[tool]['max_sample_gap_seconds'] for trial in trials)
+                                       for tool in ('oximut', 'stryker')}
+        test_counts = [trial['oximut']['reported_tests_sum_including_cached'] for trial in trials]
+        reported_test_ranges[variant] = [min(test_counts), max(test_counts)]
 
     return {
         'run': run['html_url'],
@@ -117,6 +136,8 @@ def verify(directory, reference):
         'medians': medians,
         'comparisons': summary['comparisons'],
         'targets_met': summary['targets_met'],
+        'longest_sample_gaps_seconds': longest_sample_gaps,
+        'reported_mutant_test_count_ranges': reported_test_ranges,
         'necessary_cpu_seconds_saved_median_at_four_cpus': cpu_deficits,
     }
 

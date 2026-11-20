@@ -726,6 +726,8 @@ def main(argv=None):
                         help='Record module RPC and evaluator timing through first collection')
     parser.add_argument('--controller-stack-timing', choices=('measure', 'skip'),
                         help='Measure or omit controller assertion stack remapping in a snapshot diagnostic')
+    parser.add_argument('--collection-cpu-sample', action='store_true',
+                        help='Sample the main JS thread of selected mutant forks from run to first collection')
     parser.add_argument('--concurrency', type=workload.concurrency_arg, default=1,
                         help='Matched parallelism for Oximut --workers and Stryker concurrency (default 1)')
     parser.add_argument('--workload', type=workload.workload_name, default=workload.DEFAULT_WORKLOAD,
@@ -735,6 +737,8 @@ def main(argv=None):
         parser.error('startup contract, first collection and fork bootstrap experiments require --worker-phases')
     if args.controller_stack_timing and not args.fork_snapshot:
         parser.error('controller stack timing requires --fork-snapshot')
+    if args.collection_cpu_sample and not args.startup_contract:
+        parser.error('collection CPU samples require --startup-contract to match the selector inventory')
     workload.require_matched_concurrency(args.concurrency)
     output = args.output.resolve()
     output.mkdir(parents=True, exist_ok=False)
@@ -815,6 +819,11 @@ def main(argv=None):
             env['NODE_OPTIONS'] += f' --require="{preload}"'
             result['controller_stack_timing'] = args.controller_stack_timing
             result['helper_sha256'][str(preload.relative_to(ROOT))] = workload.measurement.file_hash(preload)
+        if args.collection_cpu_sample:
+            samples = output / 'collection-cpu'
+            samples.mkdir()
+            env['OXIMUT_COLLECTION_CPU_DIR'] = str(samples)
+            env['NODE_OPTIONS'] += f' --require="{SUPPORT / "worker-collection-cpu.cjs"}"'
         if args.accounting:
             # No shim/preload/profiling variables: isolate the accountant cost
             # from inspector startup and Node/Python CPU sampling overhead.
@@ -846,6 +855,19 @@ def main(argv=None):
                     or any(record['loaded'] != 1 or record['mode'] != args.controller_stack_timing
                            for record in records)):
                 result['qualification_errors'].append('stack timing preload did not observe the expected controller work')
+        if args.collection_cpu_sample:
+            expected = set()
+            for timeline in profiles.glob('controller-*.jsonl'):
+                with timeline.open() as stream:
+                    for event in map(json.loads, stream):
+                        selector = event.get('selector')
+                        if event['type'] == 'fork' and selector and selector[:2] < '20':
+                            expected.add(f'collection-cpu-{event["childPid"]}.cpuprofile')
+            observed_samples = list(samples.glob('*.cpuprofile'))
+            if not expected or {p.name for p in observed_samples} != expected:
+                result['qualification_errors'].append('CPU profiles differ from the expected mutant-fork sample')
+            if any(not json.loads(p.read_text()).get('samples') for p in observed_samples):
+                result['qualification_errors'].append('collection CPU profile has no samples')
         if workload.execution_inputs(inputs) != result['execution_inputs']:
             result['qualification_errors'].append('binary/adapter changed during capture')
     except Exception as error:
