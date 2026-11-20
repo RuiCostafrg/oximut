@@ -1,0 +1,224 @@
+{
+  "run": "https://github.com/RuiCostafrg/oximut/actions/runs/44735321991",
+  "artifact_sha256": "9445993a9800cc42bc656059ba04ac1bff72049a3467fcafd3e99b3cbe0cf23b",
+  "build": {
+    "before_commit": "1059dd7a9ac3ce668c0ba2580130aa9f362bcdb0",
+    "after_commit": "9e5e787669b46e88f3699763b5e361a6f306bc61",
+    "build_flags": "--locked --release -p oximut-cli",
+    "rustflags": null,
+    "cargo_encoded_rustflags": null,
+    "cargo_target_dirs": {
+      "before": "/home/runner/work/_temp/real-project-before-target",
+      "after": "/home/runner/work/_temp/real-project-after-target"
+    },
+    "before_source": "/home/runner/work/_temp/real-project-before",
+    "after_source": "/home/runner/work/oximut/oximut",
+    "tool_versions": {
+      "rustc": "rustc 1.96.0 (ac68faa20 2026-05-25)",
+      "cargo": "cargo 1.96.0 (30a34c682 2026-05-25)",
+      "node": "v26.3.1",
+      "npm": "11.16.0",
+      "python3": "Python 3.13.18"
+    },
+    "binary_sha256": {
+      "before": "6b6f69132e36769b98ffc8b67a58e652fc73264d52ebe03f8dd738c74c98e63b",
+      "after": "030628465045463030111aeadcd608bec5297db9e437aa85fc2fd15d56b5171a"
+    },
+    "host": "Linux ip-10-0-128-180 7.0.0-1014-aws #14~24.04.1-Ubuntu SMP PREEMPT Fri Sep 18 21:24:59 UTC 2026 x86_64 x86_64 x86_64 GNU/Linux",
+    "timing_policy": "Both copied binaries built before timing; isolated compiled artifacts; registry downloads may be shared; no rebuilds during campaign"
+  },
+  "comparisons": {
+    "after_vs_before": {
+      "denominator": "before/oximut",
+      "metrics": {
+        "cpu_seconds": {
+          "bootstrap_95_percent": [
+            0.9532067365822188,
+            0.9617290264521859
+          ],
+          "max": 0.9617290264521859,
+          "median": 0.9572797038048156,
+          "median_cpu_reduction_percent": 4.272029619518436,
+          "min": 0.9532067365822188,
+          "paired_ratios": [
+            0.9553120866094784,
+            0.957883657624375,
+            0.9572797038048156,
+            0.9617290264521859,
+            0.9532067365822188
+          ]
+        },
+        "peak_aggregate_rss_bytes": {
+          "bootstrap_95_percent": [
+            1.0509347941697345,
+            1.0921809596469885
+          ],
+          "max": 1.0921809596469885,
+          "median": 1.0601341663252766,
+          "min": 1.0509347941697345,
+          "paired_ratios": [
+            1.076618947390412,
+            1.0509347941697345,
+            1.0573695624441892,
+            1.0601341663252766,
+            1.0921809596469885
+          ]
+        },
+        "wall_seconds": {
+          "bootstrap_95_percent": [
+            1.032992428528394,
+            1.0399631908689577
+          ],
+          "max": 1.0399631908689577,
+          "median": 1.039333056418279,
+          "min": 1.032992428528394,
+          "paired_ratios": [
+            1.0396607147378323,
+            1.0399631908689577,
+            1.039333056418279,
+            1.0384673754881402,
+            1.032992428528394
+          ]
+        }
+      },
+      "numerator": "after/oximut"
+    },
+    "after_vs_stryker": {
+      "denominator": "after/stryker",
+      "metrics": {
+        "cpu_seconds": {
+          "bootstrap_95_percent": [
+            0.8428279218512331,
+            0.8619993184147239
+          ],
+          "max": 0.8619993184147239,
+          "median": 0.858535138390621,
+          "median_cpu_reduction_percent": 14.146486160937899,
+          "median_target_met": false,
+          "min": 0.8428279218512331,
+          "paired_ratios": [
+            0.8619993184147239,
+            0.8428279218512331,
+            0.8535696901530921,
+            0.8608854172736096,
+            0.858535138390621
+          ],
+          "status": "target missed",
+          "target_ratio": 0.8
+        },
+        "peak_aggregate_rss_bytes": {
+          "bootstrap_95_percent": [
+            0.675572785114723,
+            0.7054949153219631
+          ],
+          "max": 0.7054949153219631,
+          "median": 0.6903274856531206,
+          "median_target_met": true,
+          "min": 0.675572785114723,
+          "paired_ratios": [
+            0.6853687892328971,
+            0.675572785114723,
+            0.6904619895706646,
+            0.6903274856531206,
+            0.7054949153219631
+          ],
+          "status": "target met",
+          "target_ratio": 0.8
+        },
+        "wall_seconds": {
+          "bootstrap_95_percent": [
+            1.0256752317470623,
+            1.0583436722863397
+          ],
+          "max": 1.0583436722863397,
+          "median": 1.0477291289466624,
+          "median_target_met": false,
+          "min": 1.0256752317470623,
+          "paired_ratios": [
+            1.0583436722863397,
+            1.0256752317470623,
+            1.042723530605544,
+            1.0550007072163003,
+            1.0477291289466624
+          ],
+          "status": "target missed",
+          "target_ratio": 0.5
+        }
+      },
+      "numerator": "after/oximut"
+    },
+    "before_vs_stryker": {
+      "denominator": "before/stryker",
+      "metrics": {
+        "cpu_seconds": {
+          "bootstrap_95_percent": [
+            0.8946059471927809,
+            0.9082315016009889
+          ],
+          "max": 0.9082315016009889,
+          "median": 0.8964606914994476,
+          "median_cpu_reduction_percent": 10.353930850055237,
+          "median_target_met": false,
+          "min": 0.8946059471927809,
+          "paired_ratios": [
+            0.8964606914994476,
+            0.8965823465066143,
+            0.9082315016009889,
+            0.8946059471927809,
+            0.8949325151231826
+          ],
+          "status": "target missed",
+          "target_ratio": 0.8
+        },
+        "peak_aggregate_rss_bytes": {
+          "bootstrap_95_percent": [
+            0.6296703116007564,
+            0.651854540078093
+          ],
+          "max": 0.651854540078093,
+          "median": 0.6472354613972172,
+          "median_target_met": true,
+          "min": 0.6296703116007564,
+          "paired_ratios": [
+            0.6296703116007564,
+            0.646804034197168,
+            0.6513480636541299,
+            0.6472354613972172,
+            0.651854540078093
+          ],
+          "status": "target met",
+          "target_ratio": 0.8
+        },
+        "wall_seconds": {
+          "bootstrap_95_percent": [
+            1.0006846432272765,
+            1.0265066574263473
+          ],
+          "max": 1.0265066574263473,
+          "median": 1.008893797194035,
+          "median_target_met": false,
+          "min": 1.0006846432272765,
+          "paired_ratios": [
+            1.0006846432272765,
+            1.008893797194035,
+            1.0265066574263473,
+            1.0195169936564314,
+            1.001848866367787
+          ],
+          "status": "target missed",
+          "target_ratio": 0.5
+        }
+      },
+      "numerator": "before/oximut"
+    }
+  },
+  "qualification_rows": 36,
+  "mutation_phase_wall_ms_median": {
+    "before": 14513.138051,
+    "after": 15033.369859
+  },
+  "necessary_cpu_seconds_saved_median_at_four_cpus": {
+    "before": 13.903322585999916,
+    "after": 12.071555830000158
+  }
+}

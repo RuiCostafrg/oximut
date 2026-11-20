@@ -15,3 +15,41 @@ dir=benchmarks/results/2026-11-20-rolling-dispatch
 python3 "$dir/replay.py" /root/oximut-evidence/scale-bottlenecks/workers/artifact/capture/profiles
 python3 "$dir/replay.py" /root/oximut-evidence/fresh-worker-startup/combined/artifact/capture/profiles
 ```
+
+## Native score and decision
+
+The five measured before/after pairs on Ubuntu 24.04 x86-64 with four
+matched workers show **3.93% slower wall**, **4.27% lower CPU**, and **6.01%
+higher sampled peak aggregate RSS** for the rolling prototype. The paired wall
+ratio's 95% bootstrap interval was **1.033–1.040**. Median mutation execution
+increased from **14.51 s to 15.03 s**. Keep batch dispatch as the default.
+
+On this runner the stock comparison with Stryker was **1.009× wall, 0.896×
+CPU, and 0.647× RSS**. Rolling scored **1.048×, 0.859×, and 0.690×**.
+These are host-specific pairs. The earlier **1.077× / 0.954× / 0.653×**
+campaign ran on a different runner allocation. Every row passed the
+historical cross-check, including exact outcomes for 206 mutants, 102
+baseline tests, four workers, and the same count of whole-file selections.
+The native fork fixture independently exercised rolling admission, crash
+attribution, fresh PIDs, and cleanup. Unprofiled measurements contain no
+per-fork trace, so the specific scheduler effects that offset the modeled
+gain remain unmeasured.
+
+The newer stock pairs require at least **13.90 CPU-seconds less work**
+at the median to reach half Stryker's wall with four logical CPUs, even
+at full utilization. The earlier scored machine required **23.69 CPU-seconds**.
+The estimate is Oximut CPU seconds minus twice the paired Stryker wall
+seconds. It shows why reducing idle time alone cannot close the gap.
+
+- [Native score run](https://github.com/RuiCostafrg/oximut/actions/runs/44735321991)
+- [Verified score and build provenance](score.json)
+- Raw score archive and GitHub metadata at
+  `/root/oximut-evidence/rolling-dispatch/score`.
+
+```sh
+gh workflow run real-project-benchmark.yml --ref t3/fresh-worker-startup \
+  -f rolling_lanes=true -f workload=colord-scale -f concurrency=4
+python3 benchmarks/results/2026-11-20-rolling-dispatch/score.py \
+  /root/oximut-evidence/rolling-dispatch/score \
+  /root/oximut-evidence/scale-bottlenecks/workers/artifact/capture/qualification/measurements.jsonl
+```
