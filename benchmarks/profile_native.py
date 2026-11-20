@@ -708,7 +708,10 @@ def main(argv=None):
                        help='Measure Rust sampling-thread self CPU, without Node or Python profilers')
     parser.add_argument('--startup-contract', action='store_true',
                         help='Record the real fork launch contract for the standalone startup replay')
-    parser.add_argument('--fork-bundle-routes', type=Path,
+    arm = parser.add_mutually_exclusive_group()
+    arm.add_argument('--fork-snapshot', type=Path,
+                     help='Measure a locally built worker snapshot in a diagnostic-only fork capture')
+    arm.add_argument('--fork-bundle-routes', type=Path,
                         help='Compare a locally built Vitest worker bundle in a diagnostic-only fork capture')
     parser.add_argument('--first-collection', action='store_true',
                         help='Record module RPC and evaluator timing through first collection')
@@ -717,8 +720,8 @@ def main(argv=None):
     parser.add_argument('--workload', type=workload.workload_name, default=workload.DEFAULT_WORKLOAD,
                         help='Mutation scope: ' + ', '.join(sorted(workload.WORKLOADS)))
     args = parser.parse_args(argv)
-    if (args.startup_contract or args.first_collection or args.fork_bundle_routes) and not args.worker_phases:
-        parser.error('startup contract, first collection and fork bundle routes require --worker-phases')
+    if (args.startup_contract or args.first_collection or args.fork_bundle_routes or args.fork_snapshot) and not args.worker_phases:
+        parser.error('startup contract, first collection and fork bootstrap experiments require --worker-phases')
     workload.require_matched_concurrency(args.concurrency)
     output = args.output.resolve()
     output.mkdir(parents=True, exist_ok=False)
@@ -783,6 +786,14 @@ def main(argv=None):
             env['OXIMUT_BUNDLE_OBSERVED_DIR'] = str(observed)
             env['NODE_OPTIONS'] += f' --require="{route_preload}"'
             result['bundle_routes_sha256'] = workload.measurement.file_hash(args.fork_bundle_routes)
+        if args.fork_snapshot:
+            preload = ROOT / 'benchmarks/experiments/vitest-fork-bundle/snapshot-flags.cjs'
+            observed = output / 'snapshot-forks'
+            observed.mkdir()
+            env['OXIMUT_SNAPSHOT_BLOB'] = str(args.fork_snapshot.resolve(strict=True))
+            env['OXIMUT_SNAPSHOT_OBSERVED_DIR'] = str(observed)
+            env['NODE_OPTIONS'] += f' --require="{preload}"'
+            result['snapshot_sha256'] = workload.measurement.file_hash(args.fork_snapshot)
         if args.accounting:
             # No shim/preload/profiling variables: isolate the accountant cost
             # from inspector startup and Node/Python CPU sampling overhead.
@@ -800,10 +811,10 @@ def main(argv=None):
         with (output / 'qualification.log').open('w') as log:
             code = subprocess.run(cmd, cwd=ROOT, env=env, stdout=log, stderr=subprocess.STDOUT).returncode
         result['qualification_errors'] = qualification_errors(output / 'qualification', code, args.workload)
-        if args.fork_bundle_routes:
+        if args.fork_bundle_routes or args.fork_snapshot:
             expected = {p.name.split('-')[-1] for p in profiles.glob('worker-*-*.json')}
             if not expected or {p.name for p in observed.glob('*.json')} != expected:
-                result['qualification_errors'].append('bundled entry observations differ from traced forks')
+                result['qualification_errors'].append('experimental bootstrap observations differ from traced forks')
         if workload.execution_inputs(inputs) != result['execution_inputs']:
             result['qualification_errors'].append('binary/adapter changed during capture')
     except Exception as error:

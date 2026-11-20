@@ -24,6 +24,7 @@ import * as api from ${JSON.stringify(api)};
 import { createRequire, registerHooks, syncBuiltinESMExports } from 'node:module';
 import { startupSnapshot } from 'node:v8';
 import nodeConsole from 'node:console';
+import { writeFileSync } from 'node:fs';
 const canonicalConsole = nodeConsole.Console;
 startupSnapshot.setDeserializeMainFunction(async () => {
   // Node restores the global console's streams but drops its legacy constructor
@@ -40,6 +41,10 @@ startupSnapshot.setDeserializeMainFunction(async () => {
     if (result.url !== ${JSON.stringify(pathToFileURL(api).href)}) return result;
     return {...result, url: ${JSON.stringify(apiBridge)}};
   }});
+  const evidence = process.env.OXIMUT_SNAPSHOT_OBSERVED_DIR;
+  if (evidence)
+    writeFileSync(evidence + '/' + process.pid + '.json',
+      JSON.stringify({pid: process.pid, ppid: process.ppid}), {flag: 'wx'});
   startFork();
 });`;
 
@@ -90,6 +95,20 @@ const bundle = await rolldown({
         const declaration = "import { builtinModules } from 'node:module';";
         assert(source.includes(declaration));
         source = source.replace(declaration, `const builtinModules = ${JSON.stringify(builtinModules)};`);
+      }
+      if (id.endsWith('/index.CZzC1gGg.js')) {
+        // withGlobal probes the active timer implementation by creating and
+        // cancelling a real timer. Its default instance belongs to each fork,
+        // after the new process owns the event loop.
+        const eager = /const defaultImplementation = withGlobal\(globalObject\);\s*fakeTimersSrc\.timers = defaultImplementation\.timers;\s*fakeTimersSrc\.createClock = defaultImplementation\.createClock;\s*fakeTimersSrc\.install = defaultImplementation\.install;/g;
+        assert.equal([...source.matchAll(eager)].length, 1);
+        source = source.replace(eager, `let defaultImplementation;
+          for (const name of ['timers', 'createClock', 'install'])
+            Object.defineProperty(fakeTimersSrc, name, {
+              enumerable: true,
+              configurable: true,
+              get() { return (defaultImplementation ??= withGlobal(globalObject))[name]; },
+            });`);
       }
       return preserveMetadata(deferForkStart(source, id), id, true);
     },
