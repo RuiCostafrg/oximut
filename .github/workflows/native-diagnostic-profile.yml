@@ -12,6 +12,7 @@ on:
           - controller-jobs
           - worker-phases
           - fresh-worker-startup
+          - worker-bundle
           - segments
       workload:
         description: Mutation workload
@@ -124,6 +125,17 @@ jobs:
               test "$MATCHED_CONCURRENCY" = 4
               CAPTURE_ARGS=(--worker-phases --startup-contract --first-collection)
               ;;
+            worker-bundle)
+              test "$PROFILE_WORKLOAD" = colord-scale
+              test "$MATCHED_CONCURRENCY" = 4
+              bundle_dir=$(mktemp -d "$GITHUB_WORKSPACE/.oximut-bundle.XXXXXX")
+              node benchmarks/experiments/vitest-fork-bundle/build.mjs "$bundle_dir"
+              cp -R "$bundle_dir" "$PROFILE_ROOT/bundle"
+              OXIMUT_BUNDLE_FIXTURE=1 OXIMUT_BUNDLE_ROUTES="$bundle_dir/routes.json" \
+                NODE_OPTIONS="--require=$GITHUB_WORKSPACE/benchmarks/experiments/vitest-fork-bundle/route.cjs" \
+                node --test packages/vitest-adapter/test/shared-lanes.test.mjs | tee "$PROFILE_ROOT/bundled-fixture.log"
+              CAPTURE_ARGS=(--worker-phases --startup-contract --first-collection)
+              ;;
             segments) CAPTURE_ARGS=(--segments) ;;
             *) echo 'Unsupported capture mode' >&2; exit 1 ;;
           esac
@@ -132,6 +144,12 @@ jobs:
             --output "$PROFILE_ROOT/capture" 2>&1 | tee "$PROFILE_ROOT/diagnostic.log"
           if test "$CAPTURE_MODE" = fresh-worker-startup; then
             node benchmarks/profiling/fresh-worker-startup.mjs "$PROFILE_ROOT/capture/profiles" "$PROFILE_ROOT"
+          fi
+          if test "$CAPTURE_MODE" = worker-bundle; then
+            python3 benchmarks/profile_native.py --binary "$PROFILE_ROOT/oximut" \
+              "${CAPTURE_ARGS[@]}" --fork-bundle-routes "$bundle_dir/routes.json" \
+              --workload "$PROFILE_WORKLOAD" --concurrency "$MATCHED_CONCURRENCY" \
+              --output "$PROFILE_ROOT/bundled-capture" 2>&1 | tee "$PROFILE_ROOT/bundled-diagnostic.log"
           fi
       - name: Publish diagnostic status and remove dependency symlinks
         if: always()
