@@ -2,6 +2,7 @@
 import argparse
 from collections import Counter
 import hashlib
+import importlib.util
 import json
 from pathlib import Path
 import sys
@@ -180,6 +181,15 @@ def main():
                     require({entry['file'] for entry in row['entries']} <= set(mutant['selection']['files']),
                             'bundled evaluation escaped the selected test files')
             arms[name]['bundled_test_entries'] = diagnostic['bundled_test_entries']
+        if name == 'composed-capture':
+            startup_summary = Path(__file__).resolve().parents[1] / '2026-11-19-fresh-worker-startup/summarize.py'
+            spec = importlib.util.spec_from_file_location('fresh_worker_startup_summary', startup_summary)
+            startup = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(startup)
+            _, forks, baselines, batches = startup.selected_workload(
+                root, args.historical_capture, require_launch_mapping=True, capture_name=name)
+            arms[name]['first_collection'] = startup.collection(
+                root, forks, baselines, batches, capture_name=name)
         if name == 'native-project-capture':
             oximut = rows['oximut']
             report_path = Path(oximut['report_file'])
