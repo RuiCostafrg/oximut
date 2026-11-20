@@ -26,6 +26,7 @@ on:
           - worker-snapshot-score
           - worker-snapshot-compact-score
           - worker-snapshot-composed-score
+          - worker-snapshot-composed-profile
           - segments
       workload:
         description: Mutation workload
@@ -177,7 +178,7 @@ jobs:
                 node --test packages/vitest-adapter/test/shared-lanes.test.mjs | tee "$PROFILE_ROOT/bundled-fixture.log"
               CAPTURE_ARGS=(--worker-phases --startup-contract --first-collection)
               ;;
-            worker-snapshot|worker-snapshot-source-io|worker-snapshot-stack|worker-snapshot-collection-cpu|worker-snapshot-execution-cpu|worker-snapshot-native-project|worker-snapshot-baseline-tier|worker-snapshot-compact-errors|worker-snapshot-specialize-selector|worker-snapshot-bundle-project)
+            worker-snapshot|worker-snapshot-source-io|worker-snapshot-stack|worker-snapshot-collection-cpu|worker-snapshot-execution-cpu|worker-snapshot-native-project|worker-snapshot-baseline-tier|worker-snapshot-compact-errors|worker-snapshot-specialize-selector|worker-snapshot-bundle-project|worker-snapshot-composed-profile)
               test "$PROFILE_WORKLOAD" = colord-scale
               test "$MATCHED_CONCURRENCY" = 4
               snapshot_dir=$(mktemp -d "$GITHUB_WORKSPACE/node_modules/vitest/dist/.oximut-snapshot.XXXXXX")
@@ -263,6 +264,14 @@ jobs:
                 --workload "$PROFILE_WORKLOAD" --concurrency "$MATCHED_CONCURRENCY" \
                 --output "$PROFILE_ROOT/$arm-capture" 2>&1 | tee "$PROFILE_ROOT/$arm-diagnostic.log"
             done
+          fi
+          if test "$CAPTURE_MODE" = worker-snapshot-composed-profile; then
+            mv "$snapshot_dir/seed.cjs" "$snapshot_dir/seed.offline.cjs"
+            python3 benchmarks/profile_native.py --binary "$PROFILE_ROOT/oximut" \
+              "${CAPTURE_ARGS[@]}" --first-collection --fork-snapshot "$snapshot_dir/vitest.blob" \
+              --snapshot-compact-errors --snapshot-specialize-selector --snapshot-bundle-project \
+              --workload "$PROFILE_WORKLOAD" --concurrency "$MATCHED_CONCURRENCY" \
+              --output "$PROFILE_ROOT/composed-capture" 2>&1 | tee "$PROFILE_ROOT/composed-diagnostic.log"
           fi
       - name: Publish diagnostic status and remove dependency symlinks
         if: always()

@@ -65,7 +65,7 @@ def main():
     mode.add_argument('--snapshot', action='store_true')
     mode.add_argument('--followup', choices=('stack', 'collection-cpu', 'execution-cpu',
                                             'native-project', 'baseline-tier', 'compact-errors',
-                                            'specialize-selector', 'bundle-project'))
+                                            'specialize-selector', 'bundle-project', 'composed'))
     args = parser.parse_args()
     root = args.run / 'artifact'
     verified = read_json(args.run / 'verification.json')
@@ -78,6 +78,8 @@ def main():
         names = ['capture', 'stack-measure-capture', 'stack-skip-capture']
     if args.followup in ('collection-cpu', 'execution-cpu'):
         names = ['capture', f'{args.followup}-capture']
+    if args.followup == 'composed':
+        names = ['capture', 'composed-capture']
     if args.followup in ('native-project', 'baseline-tier', 'compact-errors', 'specialize-selector',
                          'bundle-project'):
         names = ['capture', 'snapshot-offline-capture', f'{args.followup}-capture']
@@ -158,11 +160,11 @@ def main():
         if name in ('collection-cpu-capture', 'execution-cpu-capture'):
             phase = name.split('-')[0]
             arms[name][f'{phase}_cpu_samples'] = phase_samples(capture, phase)
-        if name == 'compact-errors-capture':
+        if name in ('compact-errors-capture', 'composed-capture'):
             arms[name]['compacted_assertions'] = diagnostic['compacted_assertions']
-        if name == 'specialize-selector-capture':
+        if name in ('specialize-selector-capture', 'composed-capture'):
             arms[name]['specialized_switches'] = diagnostic['specialized_switches']
-        if name == 'bundle-project-capture':
+        if name in ('bundle-project-capture', 'composed-capture'):
             oximut = rows['oximut']
             report_path = Path(oximut['report_file'])
             report = read_json(capture / 'qualification' / report_path.parent.name / report_path.name)
