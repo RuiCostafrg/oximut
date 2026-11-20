@@ -12,6 +12,7 @@ on:
           - controller-jobs
           - worker-phases
           - fresh-worker-startup
+          - tinybench-ablation
           - segments
       workload:
         description: Mutation workload
@@ -124,6 +125,12 @@ jobs:
               test "$MATCHED_CONCURRENCY" = 4
               CAPTURE_ARGS=(--worker-phases --startup-contract --first-collection)
               ;;
+            tinybench-ablation)
+              test "$PROFILE_WORKLOAD" = colord-scale
+              test "$MATCHED_CONCURRENCY" = 4
+              python3 benchmarks/profiling/tinybench-ablation.py "$PROFILE_ROOT/oximut" "$PROFILE_ROOT/ablation"
+              exit
+              ;;
             segments) CAPTURE_ARGS=(--segments) ;;
             *) echo 'Unsupported capture mode' >&2; exit 1 ;;
           esac
@@ -151,6 +158,8 @@ jobs:
           print(json.dumps(compact_summary(json.loads(source.read_text())), indent=2))
           PY
               echo '```'
+            elif test -f "$RUNNER_TEMP/native-diagnostic/ablation/experiment.json"; then
+              echo 'See the ablation artifact for the installed patch, benchmark-mode smoke logs, and four workload captures.'
             else
               echo 'FAILED/INCOMPLETE: capture summary absent; inspect setup/build/job logs.'
             fi
