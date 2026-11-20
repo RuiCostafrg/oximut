@@ -728,6 +728,8 @@ def main(argv=None):
                         help='Measure or omit controller assertion stack remapping in a snapshot diagnostic')
     parser.add_argument('--collection-cpu-sample', action='store_true',
                         help='Sample the main JS thread of selected mutant forks from run to first collection')
+    parser.add_argument('--native-project', action='store_true',
+                        help='Serve colord-scale project modules to a native ESM runner in snapshot mutant forks')
     parser.add_argument('--concurrency', type=workload.concurrency_arg, default=1,
                         help='Matched parallelism for Oximut --workers and Stryker concurrency (default 1)')
     parser.add_argument('--workload', type=workload.workload_name, default=workload.DEFAULT_WORKLOAD,
@@ -739,6 +741,9 @@ def main(argv=None):
         parser.error('controller stack timing requires --fork-snapshot')
     if args.collection_cpu_sample and not args.startup_contract:
         parser.error('collection CPU samples require --startup-contract to match the selector inventory')
+    if args.native_project and (not args.startup_contract or not args.fork_snapshot
+                                or args.workload != 'colord-scale'):
+        parser.error('native project diagnostics require a fork snapshot and colord-scale selector trace')
     workload.require_matched_concurrency(args.concurrency)
     output = args.output.resolve()
     output.mkdir(parents=True, exist_ok=False)
@@ -824,6 +829,14 @@ def main(argv=None):
             samples.mkdir()
             env['OXIMUT_COLLECTION_CPU_DIR'] = str(samples)
             env['NODE_OPTIONS'] += f' --require="{SUPPORT / "worker-collection-cpu.cjs"}"'
+        if args.native_project:
+            native = output / 'native-project'
+            native.mkdir()
+            preload = ROOT / 'benchmarks/experiments/vitest-fork-bundle/native-project.cjs'
+            env['OXIMUT_NATIVE_MODULE_EVIDENCE'] = str(native)
+            env['OXIMUT_PROFILE_STARTUP_REPLAY'] = '0'
+            env['NODE_OPTIONS'] += f' --require="{preload}"'
+            result['helper_sha256'][str(preload.relative_to(ROOT))] = workload.measurement.file_hash(preload)
         if args.accounting:
             # No shim/preload/profiling variables: isolate the accountant cost
             # from inspector startup and Node/Python CPU sampling overhead.
@@ -868,6 +881,20 @@ def main(argv=None):
                 result['qualification_errors'].append('CPU profiles differ from the expected mutant-fork sample')
             if any(not json.loads(p.read_text()).get('samples') for p in observed_samples):
                 result['qualification_errors'].append('collection CPU profile has no samples')
+        if args.native_project:
+            expected = {}
+            for timeline in profiles.glob('controller-*.jsonl'):
+                with timeline.open() as stream:
+                    for event in map(json.loads, stream):
+                        selector = event.get('selector')
+                        if event['type'] == 'fork' and selector:
+                            expected[event['childPid']] = selector
+            observed_modules = {row['pid']: row for p in native.glob('native-*.json')
+                                for row in [json.loads(p.read_text())]}
+            if not expected or expected != {pid: row['selector'] for pid, row in observed_modules.items()}:
+                result['qualification_errors'].append('native overlay fork/selector inventory differs from trace')
+            if any(not row['residentsLoaded'] for row in observed_modules.values()):
+                result['qualification_errors'].append('native fork loaded no instrumented resident modules')
         if workload.execution_inputs(inputs) != result['execution_inputs']:
             result['qualification_errors'].append('binary/adapter changed during capture')
     except Exception as error:

@@ -1,5 +1,6 @@
 """Compare native bootstrap captures while keeping profiled results outside scores."""
 import argparse
+from collections import Counter
 import hashlib
 import json
 from pathlib import Path
@@ -10,11 +11,47 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / '2026-11-19-main-bo
 from summarize import read_json, require, verify_capture, worker_metrics
 
 
+def collection_samples(capture, profiles):
+    sample_dir = capture / 'collection-cpu'
+    expected = set()
+    for timeline in profiles.glob('controller-*.jsonl'):
+        for event in map(json.loads, timeline.read_text().splitlines()):
+            selector = event.get('selector')
+            if event['type'] == 'fork' and selector and selector[:2] < '20':
+                expected.add(event['childPid'])
+    seen = set()
+    counts = Counter()
+    for path in sample_dir.glob('*.cpuprofile'):
+        seen.add(int(path.stem.removeprefix('collection-cpu-')))
+        profile = read_json(path)
+        require(profile['endTime'] > profile['startTime'] and
+                len(profile['timeDeltas']) == len(profile['samples']) > 0, 'invalid CPU profile')
+        frames = {node['id']: node['callFrame'] for node in profile['nodes']}
+        for sample in profile['samples']:
+            frame = frames[sample]
+            url = frame['url']
+            if url.startswith('file://'):
+                url = url.removeprefix('file://')
+            if '/node_modules/' in url:
+                url = url.split('/node_modules/', 1)[1]
+                if '/.oximut-snapshot.' in url:
+                    url = 'vitest/dist/(snapshot seed)'
+            elif url.startswith('/'):
+                url = Path(url).name
+            counts[(url, frame['functionName'])] += 1
+    require(seen == expected and seen, 'collection profile inventory differs from sampled selectors')
+    return {'forks': len(seen), 'samples': counts.total(),
+            'top_self_samples': [{'url': url, 'function': function, 'samples': count}
+                                 for (url, function), count in counts.most_common(25)]}
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('run', type=Path)
     parser.add_argument('historical_capture', type=Path)
-    parser.add_argument('--snapshot', action='store_true')
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument('--snapshot', action='store_true')
+    mode.add_argument('--followup', choices=('stack', 'collection-cpu'))
     args = parser.parse_args()
     root = args.run / 'artifact'
     verified = read_json(args.run / 'verification.json')
@@ -22,11 +59,17 @@ def main():
     arms = {}
     candidate = 'snapshot-capture' if args.snapshot else 'bundled-capture'
     names = ['capture', candidate]
+    if args.followup == 'stack':
+        names = ['capture', 'stack-measure-capture', 'stack-skip-capture']
+    if args.followup == 'collection-cpu':
+        names = ['capture', 'collection-cpu-capture']
+    use_snapshot = args.snapshot or args.followup
     offline = root / 'snapshot-offline-capture'
     if args.snapshot and offline.is_dir():
         names.append(offline.name)
     for name in names:
         capture = root / name
+        snapshot_arm = name != 'capture' and use_snapshot
         diagnostic, _, rows, inventory = verify_capture(capture, 'worker-phases')
         require(diagnostic['source_commit'] == verified['commit'], 'capture commit differs')
         require(diagnostic['execution_inputs']['binary_sha256'] == verified['binary_sha256'],
@@ -55,7 +98,7 @@ def main():
             pids = {int(p.stem) for p in entries if read_json(p)['entry'].endswith('/workers/forks.mjs')}
             expected = {int(p.stem.split('-')[-1]) for p in (capture / 'profiles').glob('worker-*-*.json')}
             require(len(pids) == 214 and pids == expected, 'did not route every measured fork')
-        if name.startswith('snapshot-'):
+        if snapshot_arm:
             with (root / 'snapshot/vitest.blob').open('rb') as blob:
                 require(hashlib.file_digest(blob, 'sha256').hexdigest() == diagnostic['snapshot_sha256'],
                         'snapshot hash differs')
@@ -71,8 +114,8 @@ def main():
                 require(seed_reads.keys() == controller_pids, 'controller source reads incomplete')
                 require(all(type(value[k]) is int and value[k] >= 0 for value in seed_reads.values()
                             for k in ('calls', 'bytes', 'readNs')), 'invalid source read counters')
-            else:
-                require(not offline.is_dir(), 'missing source-read instrumentation')
+            elif offline.is_dir() or args.followup:
+                require(False, 'missing source-read instrumentation')
         metrics = worker_metrics(capture / 'profiles')
         arms[name] = {'resources': {tool: {k: row[k] for k in ('wall_seconds', 'cpu_seconds',
                                                           'peak_aggregate_rss_bytes')}
@@ -80,11 +123,21 @@ def main():
                       **{k: metrics[k] for k in ('worker_cpu_ms', 'worker_wall_median_ms',
                                            'last_finish_path_ms', 'controller_cpu_ms',
                                            'controller_mutant_request_cpu_ms', 'worker_rpc_totals')}}
-        if name.startswith('snapshot-') and seed_reads:
+        if snapshot_arm and seed_reads:
             arms[name]['seed_reads'] = {k: sum(e[k] for e in seed_reads.values())
                                        for k in ('calls', 'bytes', 'readNs')}
+        if name.startswith('stack-'):
+            records = [read_json(p) for p in capture.glob('stack-timing-*.json')]
+            require({str(record['pid']) for record in records} == set(seed_reads),
+                    'stack timings missing for a traced controller')
+            require(all(record['mode'] == diagnostic['controller_stack_timing'] and record['loaded'] == 1
+                        for record in records), 'stack timing route mismatch')
+            arms[name]['stack_timing'] = {key: sum(record[key] for record in records)
+                                          for key in ('calls', 'errors', 'wallNs', 'userUs', 'systemUs')}
+        if name == 'collection-cpu-capture':
+            arms[name]['collection_cpu_samples'] = collection_samples(capture, capture / 'profiles')
     extra = {}
-    if args.snapshot:
+    if use_snapshot:
         extra['snapshot_bytes'] = (root / 'snapshot/vitest.blob').stat().st_size
         extra['setup_resources'] = {}
         for phase in ('snapshot-bundle', 'snapshot-build'):

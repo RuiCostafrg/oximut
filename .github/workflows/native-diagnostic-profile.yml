@@ -17,6 +17,7 @@ on:
           - worker-snapshot-source-io
           - worker-snapshot-stack
           - worker-snapshot-collection-cpu
+          - worker-snapshot-native-project
           - worker-snapshot-score
           - segments
       workload:
@@ -161,7 +162,7 @@ jobs:
                 node --test packages/vitest-adapter/test/shared-lanes.test.mjs | tee "$PROFILE_ROOT/bundled-fixture.log"
               CAPTURE_ARGS=(--worker-phases --startup-contract --first-collection)
               ;;
-            worker-snapshot|worker-snapshot-source-io|worker-snapshot-stack|worker-snapshot-collection-cpu)
+            worker-snapshot|worker-snapshot-source-io|worker-snapshot-stack|worker-snapshot-collection-cpu|worker-snapshot-native-project)
               test "$PROFILE_WORKLOAD" = colord-scale
               test "$MATCHED_CONCURRENCY" = 4
               snapshot_dir=$(mktemp -d "$GITHUB_WORKSPACE/node_modules/vitest/dist/.oximut-snapshot.XXXXXX")
@@ -223,6 +224,17 @@ jobs:
               "${CAPTURE_ARGS[@]}" --fork-snapshot "$snapshot_dir/vitest.blob" --collection-cpu-sample \
               --workload "$PROFILE_WORKLOAD" --concurrency "$MATCHED_CONCURRENCY" \
               --output "$PROFILE_ROOT/collection-cpu-capture" 2>&1 | tee "$PROFILE_ROOT/collection-cpu-diagnostic.log"
+          fi
+          if test "$CAPTURE_MODE" = worker-snapshot-native-project; then
+            mv "$snapshot_dir/seed.cjs" "$snapshot_dir/seed.offline.cjs"
+            python3 benchmarks/profile_native.py --binary "$PROFILE_ROOT/oximut" \
+              "${CAPTURE_ARGS[@]}" --fork-snapshot "$snapshot_dir/vitest.blob" \
+              --workload "$PROFILE_WORKLOAD" --concurrency "$MATCHED_CONCURRENCY" \
+              --output "$PROFILE_ROOT/snapshot-offline-capture" 2>&1 | tee "$PROFILE_ROOT/snapshot-offline-diagnostic.log"
+            python3 benchmarks/profile_native.py --binary "$PROFILE_ROOT/oximut" \
+              "${CAPTURE_ARGS[@]}" --fork-snapshot "$snapshot_dir/vitest.blob" --native-project \
+              --workload "$PROFILE_WORKLOAD" --concurrency "$MATCHED_CONCURRENCY" \
+              --output "$PROFILE_ROOT/native-project-capture" 2>&1 | tee "$PROFILE_ROOT/native-project-diagnostic.log"
           fi
       - name: Publish diagnostic status and remove dependency symlinks
         if: always()

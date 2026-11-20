@@ -152,7 +152,8 @@ if (dir && process.argv[1]?.endsWith('/m2-worker.ts')) {
                 fields: Object.keys(file).sort(),
               })) : null;
             emit('child-send', { childPid: child.pid, messageType: msg.type, ...(files ? {files} : {}) });
-            if (startupContract && !startupContractWritten && msg.type === 'start'
+            if (startupContract && process.env.OXIMUT_PROFILE_STARTUP_REPLAY !== '0'
+                && !startupContractWritten && msg.type === 'start'
                 && args[0].endsWith('/vitest/dist/workers/forks.js')
                 && args[2]?.env?.OXIMUT_ACTIVE_MUTANT) {
               // Keep the fields consumed before "started"; avoid exporting

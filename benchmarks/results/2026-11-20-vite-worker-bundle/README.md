@@ -207,10 +207,8 @@ Keep the framework-only snapshot as an experimental candidate. With four
 CPUs fully utilized, the measured snapshot pairs still require a median
 **6.46 CPU-seconds** of additional savings before half Stryker's wall is
 possible. That lower bound excludes idle time, so the command may need a
-larger reduction. Controller stack remapping and repeated first collection
-are the next two measured paths to investigate. Stock Vitest's native ESM
-switch bypasses the transform hooks that deliver the instrumented mutant
-and baseline source and cannot serve as a direct ablation.
+larger reduction. The next two diagnostics examine controller stack
+remapping and repeated first collection.
 
 - [Native score run](https://github.com/RuiCostafrg/oximut/actions/runs/44786058083)
 - [Verified score and paired intervals](snapshot-score.json)
@@ -223,4 +221,68 @@ gh workflow run native-diagnostic-profile.yml --ref t3/fresh-worker-startup \
 python3 benchmarks/results/2026-11-20-vite-worker-bundle/score.py \
   /root/oximut-evidence/vitest-fork-bundle/snapshot-native-score \
   /root/oximut-evidence/scale-bottlenecks/workers/artifact/capture/qualification/measurements.jsonl
+```
+
+## Controller stack remapping after taking the seed offline
+
+The offline snapshot control mapped 202 failure errors. The mapping
+calls used **22.8 ms controller-thread CPU** and **65.4 ms elapsed** in
+total. The skip arm bypassed only the mapping of these task errors and
+qualified against the same 206 mutant outcomes and 102 test identities.
+
+| Instrumented snapshot arm | Command wall | Command CPU | Controller CPU |
+| --- | ---: | ---: | ---: |
+| Time normal mapping | 13.29 s | 36.77 s | 4.37 s |
+| Skip task error mapping | 13.50 s | 36.88 s | 4.34 s |
+
+Both arms recorded zero successful reads of the offline seed. The
+measured mapping scope leaves too little CPU to close the wall gap,
+and the skip observation showed no command gain. Keep the normal
+mapping path. These captures are diagnostics.
+
+- [Native run](https://github.com/RuiCostafrg/oximut/actions/runs/44787320951)
+- [Verified diagnostic data](snapshot-stack.json)
+- Raw evidence at `/root/oximut-evidence/vitest-fork-bundle/snapshot-native-stack`.
+
+```sh
+gh workflow run native-diagnostic-profile.yml --ref t3/fresh-worker-startup \
+  -f capture_mode=worker-snapshot-stack -f workload=colord-scale -f concurrency=4
+python3 benchmarks/results/2026-11-20-vite-worker-bundle/summarize.py --followup stack \
+  /root/oximut-evidence/vitest-fork-bundle/snapshot-native-stack \
+  /root/oximut-evidence/scale-bottlenecks/workers/artifact/capture
+```
+
+## First-collection CPU samples in restored workers
+
+The inspector sampled the main thread of 25 restored mutant workers,
+selected by the first byte of their stable mutation ID. The window
+starts when the worker receives `run` and ends at the first
+`onCollected` IPC send. Among 2,747 leaf samples, 237 were in
+Vitest's `_runInlinedModule`, 217 in Node's `vm.Script`, 173 in
+garbage collection, 140 in `writeBuffer`, and 360 were idle.
+The first two frames together account for 19.0% of the non-idle
+samples. The sampling excludes other threads and can oversample code
+around inspector and IPC boundaries. It does not allocate whole-fork
+or process-tree CPU to those functions. The 25 selected workers are
+part of the otherwise complete, workload-qualified capture.
+
+The repeated inlined module path and its IPC traffic are the
+highest-priority candidates for a combined ablation. Native ESM could
+avoid both paths. Vitest's native flag alone bypasses the Vite hook that
+serves the instrumented sources. A useful test must add an equivalent
+worker-local source loader, preserve per-file isolation and run the full
+206-mutant workload before timing claims. A local compatibility probe
+passed the 102-test Colord baseline after a TypeScript emit pass removed
+type-only re-exports and a resolver hook restored extensionless imports.
+
+- [Native sampled run](https://github.com/RuiCostafrg/oximut/actions/runs/44787990210)
+- [Verified diagnostic data](snapshot-collection-cpu.json)
+- Raw evidence at `/root/oximut-evidence/vitest-fork-bundle/snapshot-native-collection-cpu`.
+
+```sh
+gh workflow run native-diagnostic-profile.yml --ref t3/fresh-worker-startup \
+  -f capture_mode=worker-snapshot-collection-cpu -f workload=colord-scale -f concurrency=4
+python3 benchmarks/results/2026-11-20-vite-worker-bundle/summarize.py --followup collection-cpu \
+  /root/oximut-evidence/vitest-fork-bundle/snapshot-native-collection-cpu \
+  /root/oximut-evidence/scale-bottlenecks/workers/artifact/capture
 ```

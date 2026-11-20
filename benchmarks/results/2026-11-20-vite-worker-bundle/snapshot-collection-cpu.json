@@ -1,0 +1,247 @@
+{
+  "diagnostic_only": true,
+  "run": "https://github.com/RuiCostafrg/oximut/actions/runs/44787990210",
+  "commit": "3a25130397b3353843a0e51f14cdebf10d03d105",
+  "artifact_sha256": "5dc41a5e1e45d7b84b2fedfc7ec70b5ce63a35466e40ffd3da2882c625a6587f",
+  "arms": {
+    "capture": {
+      "resources": {
+        "vitest": {
+          "wall_seconds": 0.8461687740000059,
+          "cpu_seconds": 1.094938,
+          "peak_aggregate_rss_bytes": 281935872
+        },
+        "oximut": {
+          "wall_seconds": 15.510287766000005,
+          "cpu_seconds": 44.759972,
+          "peak_aggregate_rss_bytes": 811143168
+        },
+        "stryker": {
+          "wall_seconds": 15.006299409999997,
+          "cpu_seconds": 49.320350000000005,
+          "peak_aggregate_rss_bytes": 1229606912
+        }
+      },
+      "worker_cpu_ms": {
+        "startup": 15885.419,
+        "through_first_collection": 10253.404,
+        "after_first_collection": 9935.633,
+        "stop": 180.20099999999994
+      },
+      "worker_wall_median_ms": {
+        "request_to_fork": 12.767767499999536,
+        "startup": 85.64326249999999,
+        "dispatch_delay": 0.07692650000080903,
+        "through_first_collection": 66.32103400000005,
+        "after_first_collection": 48.52409200000022,
+        "stop": 3.5983640000004016
+      },
+      "last_finish_path_ms": {
+        "request_to_fork": 853.1207890000024,
+        "startup": 4740.096489999991,
+        "dispatch_delay": 4.728865000003907,
+        "through_first_collection": 3596.6036,
+        "after_first_collection": 3897.451758000002,
+        "finish_to_reply": 162.1957880000043
+      },
+      "controller_cpu_ms": 5108.554,
+      "controller_mutant_request_cpu_ms": 3740.822999999999,
+      "worker_rpc_totals": {
+        "fetch": 8335,
+        "fetchModule": 0,
+        "resolveId": 0,
+        "onCollected": 218
+      }
+    },
+    "collection-cpu-capture": {
+      "resources": {
+        "vitest": {
+          "wall_seconds": 0.8698174790000053,
+          "cpu_seconds": 1.127765,
+          "peak_aggregate_rss_bytes": 292306944
+        },
+        "oximut": {
+          "wall_seconds": 13.268422317000017,
+          "cpu_seconds": 36.833811,
+          "peak_aggregate_rss_bytes": 822398976
+        },
+        "stryker": {
+          "wall_seconds": 15.33711378999999,
+          "cpu_seconds": 50.224979999999995,
+          "peak_aggregate_rss_bytes": 1226113024
+        }
+      },
+      "worker_cpu_ms": {
+        "startup": 8700.679,
+        "through_first_collection": 11753.804,
+        "after_first_collection": 8870.636,
+        "stop": 156.14800000000002
+      },
+      "worker_wall_median_ms": {
+        "request_to_fork": 12.321901999999682,
+        "startup": 46.55379299999993,
+        "dispatch_delay": 0.0758269999996628,
+        "through_first_collection": 72.50356049999937,
+        "after_first_collection": 39.252017499999965,
+        "stop": 3.2922575000002325
+      },
+      "last_finish_path_ms": {
+        "request_to_fork": 879.1969869999939,
+        "startup": 2588.0648000000037,
+        "dispatch_delay": 4.544510000001026,
+        "through_first_collection": 4475.795015999999,
+        "after_first_collection": 2971.7809720000027,
+        "finish_to_reply": 169.15749799999355
+      },
+      "controller_cpu_ms": 4285.186,
+      "controller_mutant_request_cpu_ms": 2855.999000000001,
+      "worker_rpc_totals": {
+        "fetch": 8418,
+        "fetchModule": 0,
+        "resolveId": 0,
+        "onCollected": 218
+      },
+      "seed_reads": {
+        "calls": 0,
+        "bytes": 0,
+        "readNs": 0
+      },
+      "collection_cpu_samples": {
+        "forks": 25,
+        "samples": 2747,
+        "top_self_samples": [
+          {
+            "url": "",
+            "function": "(idle)",
+            "samples": 360
+          },
+          {
+            "url": "vitest/dist/(snapshot seed)",
+            "function": "_runInlinedModule",
+            "samples": 237
+          },
+          {
+            "url": "node:vm",
+            "function": "Script",
+            "samples": 217
+          },
+          {
+            "url": "",
+            "function": "(garbage collector)",
+            "samples": 173
+          },
+          {
+            "url": "vitest/dist/(snapshot seed)",
+            "function": "",
+            "samples": 149
+          },
+          {
+            "url": "",
+            "function": "writeBuffer",
+            "samples": 140
+          },
+          {
+            "url": "vitest/dist/(snapshot seed)",
+            "function": "task",
+            "samples": 47
+          },
+          {
+            "url": "",
+            "function": "readFileUtf8",
+            "samples": 46
+          },
+          {
+            "url": "node:internal/modules/esm/utils",
+            "function": "compileSourceTextModule",
+            "samples": 41
+          },
+          {
+            "url": "node:internal/bootstrap/realm",
+            "function": "compileForInternalLoader",
+            "samples": 39
+          },
+          {
+            "url": "",
+            "function": "runMicrotasks",
+            "samples": 38
+          },
+          {
+            "url": "vitest/dist/(snapshot seed)",
+            "function": "fetchModule",
+            "samples": 36
+          },
+          {
+            "url": "vitest/dist/(snapshot seed)",
+            "function": "_call",
+            "samples": 28
+          },
+          {
+            "url": "vitest/dist/(snapshot seed)",
+            "function": "cachedRequest",
+            "samples": 28
+          },
+          {
+            "url": "vitest/dist/(snapshot seed)",
+            "function": "directRequest",
+            "samples": 28
+          },
+          {
+            "url": "node:inspector",
+            "function": "post",
+            "samples": 27
+          },
+          {
+            "url": "vitest/dist/(snapshot seed)",
+            "function": "invoke",
+            "samples": 25
+          },
+          {
+            "url": "",
+            "function": "(program)",
+            "samples": 22
+          },
+          {
+            "url": "extend.ts",
+            "function": "",
+            "samples": 21
+          },
+          {
+            "url": "node:internal/modules/cjs/loader",
+            "function": "createRequireFromPath",
+            "samples": 20
+          },
+          {
+            "url": "vitest/dist/(snapshot seed)",
+            "function": "$",
+            "samples": 18
+          },
+          {
+            "url": "vitest/dist/(snapshot seed)",
+            "function": "getCachedVitestImport",
+            "samples": 18
+          },
+          {
+            "url": "vitest/dist/(snapshot seed)",
+            "function": "resolve$3",
+            "samples": 17
+          },
+          {
+            "url": "vitest/dist/chunks/source-map.DakdQc29.js",
+            "function": "",
+            "samples": 17
+          },
+          {
+            "url": "",
+            "function": "parse",
+            "samples": 16
+          }
+        ]
+      }
+    }
+  },
+  "snapshot_bytes": 9637222,
+  "setup_resources": {
+    "snapshot-bundle": "\tCommand being timed: \"node benchmarks/experiments/vitest-fork-bundle/snapshot.mjs /home/runner/work/oximut/oximut/node_modules/vitest/dist/.oximut-snapshot.7rVHsY\"\n\tUser time (seconds): 0.48\n\tSystem time (seconds): 0.10\n\tPercent of CPU this job got: 143%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:00.41\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 404684\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 35879\n\tVoluntary context switches: 1102\n\tInvoluntary context switches: 905\n\tSwaps: 0\n\tFile system inputs: 0\n\tFile system outputs: 3768\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+    "snapshot-build": "\tCommand being timed: \"node --build-snapshot --snapshot-blob=/home/runner/work/oximut/oximut/node_modules/vitest/dist/.oximut-snapshot.7rVHsY/vitest.blob /home/runner/work/oximut/oximut/node_modules/vitest/dist/.oximut-snapshot.7rVHsY/seed.cjs\"\n\tUser time (seconds): 0.27\n\tSystem time (seconds): 0.02\n\tPercent of CPU this job got: 104%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:00.28\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 81784\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 18120\n\tVoluntary context switches: 93\n\tInvoluntary context switches: 12\n\tSwaps: 0\n\tFile system inputs: 0\n\tFile system outputs: 18824\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n"
+  }
+}
