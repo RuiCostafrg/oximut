@@ -1,4 +1,4 @@
-"""Compare native bundle captures while keeping profiled results outside scores."""
+"""Compare native bootstrap captures while keeping profiled results outside scores."""
 import argparse
 import hashlib
 import json
@@ -14,12 +14,14 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('run', type=Path)
     parser.add_argument('historical_capture', type=Path)
+    parser.add_argument('--snapshot', action='store_true')
     args = parser.parse_args()
     root = args.run / 'artifact'
     verified = read_json(args.run / 'verification.json')
     _, _, prior_rows, _ = verify_capture(args.historical_capture, 'worker-phases')
     arms = {}
-    for name in ('capture', 'bundled-capture'):
+    candidate = 'snapshot-capture' if args.snapshot else 'bundled-capture'
+    for name in ('capture', candidate):
         capture = root / name
         diagnostic, _, rows, inventory = verify_capture(capture, 'worker-phases')
         require(diagnostic['source_commit'] == verified['commit'], 'capture commit differs')
@@ -49,6 +51,14 @@ def main():
             pids = {int(p.stem) for p in entries if read_json(p)['entry'].endswith('/workers/forks.mjs')}
             expected = {int(p.stem.split('-')[-1]) for p in (capture / 'profiles').glob('worker-*-*.json')}
             require(len(pids) == 214 and pids == expected, 'did not route every measured fork')
+        if name == 'snapshot-capture':
+            with (root / 'snapshot/vitest.blob').open('rb') as blob:
+                require(hashlib.file_digest(blob, 'sha256').hexdigest() == diagnostic['snapshot_sha256'],
+                        'snapshot hash differs')
+            profiles = {tuple(map(int, p.stem.split('-')[1:])) for p in (capture / 'profiles').glob('worker-*-*.json')}
+            observed = {(entry['ppid'], entry['pid']) for p in (capture / 'snapshot-forks').glob('*.json')
+                        for entry in [read_json(p)] if p.stem == str(entry['pid'])}
+            require(len(profiles) == 214 and observed == profiles, 'did not restore every measured fork')
         metrics = worker_metrics(capture / 'profiles')
         arms[name] = {'resources': {tool: {k: row[k] for k in ('wall_seconds', 'cpu_seconds',
                                                           'peak_aggregate_rss_bytes')}
@@ -56,8 +66,16 @@ def main():
                       **{k: metrics[k] for k in ('worker_cpu_ms', 'worker_wall_median_ms',
                                            'last_finish_path_ms', 'controller_cpu_ms',
                                            'controller_mutant_request_cpu_ms', 'worker_rpc_totals')}}
+    extra = {}
+    if args.snapshot:
+        extra['snapshot_bytes'] = (root / 'snapshot/vitest.blob').stat().st_size
+        extra['setup_resources'] = {}
+        for phase in ('snapshot-bundle', 'snapshot-build'):
+            # Preserve build user/system/wall/RSS separately from the measured
+            # commands. A per-invocation build would count in a scored run.
+            extra['setup_resources'][phase] = (root / f'{phase}.time').read_text()
     print(json.dumps({'diagnostic_only': True, 'run': verified['run_url'], 'commit': verified['commit'],
-                      'artifact_sha256': verified['artifact_sha256'], 'arms': arms}, indent=2))
+                      'artifact_sha256': verified['artifact_sha256'], 'arms': arms, **extra}, indent=2))
 
 
 if __name__ == '__main__':

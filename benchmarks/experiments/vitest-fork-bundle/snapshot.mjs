@@ -85,6 +85,11 @@ const bundle = await rolldown({
     resolveDynamicImport(source, importer) {
       // Dynamic code is outside the pre-evaluation oracle.
       if (typeof source !== 'string') return;
+      // Global registration closes over the same collector as explicit
+      // imports from Vitest. Loading the stock chunk after restore would
+      // create a second collector, even with the public API URL redirected.
+      if (source === './globals.ZKtKSkEf.js' && importer.endsWith('/setup-common.CqAQCXzx.js'))
+        return;
       if (source.startsWith('.')) return {id: pathToFileURL(resolve(importer, '..', source)).href, external: true};
       if (source.startsWith('file:')) return {id: source, external: true};
     },

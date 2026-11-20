@@ -772,6 +772,8 @@ test('rolling forks refill a slot while another waits, attribute results and dra
 
 test('fresh forks keep real timers, fake timers and ordinary child fork behavior', { timeout: 30000 }, async (t) => {
   const s = await fixture(t);
+  await writeFile(join(s.root, 'vitest.config.mjs'),
+    "export default { test: { include: ['*.test.ts'], globals: true } };");
   await writeFile(
     join(s.root, 'child.cjs'),
     'process.send({ pid: process.pid, parent: process.ppid }); process.disconnect();',
@@ -784,7 +786,8 @@ import { fork } from 'node:child_process';
 import { once } from 'node:events';
 import { active } from './subject';
 
-test('timers and child fork', { timeout: 5000 }, async () => {
+globalThis.test('timers and child fork', { timeout: 5000 }, async () => {
+  expect(globalThis.test).toBe(test);
   let fired = false;
   vi.useFakeTimers();
   try {
