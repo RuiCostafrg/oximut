@@ -217,7 +217,9 @@ export class SharedLanes {
           ];
       // A new context owns new servers, module graphs and transform services.
       this.transforms.clear();
-      this.shareTransforms(context, batch.root);
+      // Benchmark ablation: let each fork lane warm its own native Vite graph.
+      if (pool !== 'forks' || process.env.OXIMUT_EXPERIMENT_LANE_LOCAL_FETCH !== '1')
+        this.shareTransforms(context, batch.root);
     } else if (changed) {
       // The resident code changed: no lane may serve a previous batch's result.
       this.transforms.clear();

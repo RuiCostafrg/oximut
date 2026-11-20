@@ -56,7 +56,8 @@ if (dir && process.env.OXIMUT_BUDGETED === '1'
   process.send = function (message, ...args) {
     if (runAt && !collectionAt && message?.t === 'q') {
       if (methods.has(message.m) && typeof message.i === 'string') {
-        calls.set(message.i, {method: message.m, start: now()});
+        calls.set(message.i, {method: message.m, start: now(),
+          ...(process.env.OXIMUT_PROFILE_FETCH_DIR ? {rpc: message.i} : {})});
       } else if (message.m === 'onCollected') {
         collectionAt = now();
       }

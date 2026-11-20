@@ -710,6 +710,8 @@ def main(argv=None):
                         help='Record the real fork launch contract for the standalone startup replay')
     parser.add_argument('--first-collection', action='store_true',
                         help='Record module RPC and evaluator timing through first collection')
+    parser.add_argument('--controller-fetch', action='store_true',
+                        help='Record controller-side lane, graph and temporary-artifact fetch decisions')
     parser.add_argument('--concurrency', type=workload.concurrency_arg, default=1,
                         help='Matched parallelism for Oximut --workers and Stryker concurrency (default 1)')
     parser.add_argument('--workload', type=workload.workload_name, default=workload.DEFAULT_WORKLOAD,
@@ -717,6 +719,8 @@ def main(argv=None):
     args = parser.parse_args(argv)
     if (args.startup_contract or args.first_collection) and not args.worker_phases:
         parser.error('--startup-contract and --first-collection require --worker-phases')
+    if args.controller_fetch and not args.first_collection:
+        parser.error('--controller-fetch requires --first-collection')
     workload.require_matched_concurrency(args.concurrency)
     output = args.output.resolve()
     output.mkdir(parents=True, exist_ok=False)
@@ -773,6 +777,11 @@ def main(argv=None):
             collection.mkdir()
             env['OXIMUT_PROFILE_COLLECTION_DIR'] = str(collection)
             env['NODE_OPTIONS'] += f' --require="{SUPPORT / "worker-fetch-timing.cjs"}"'
+        if args.controller_fetch:
+            fetch = output / 'controller-fetch'
+            fetch.mkdir()
+            env['OXIMUT_PROFILE_FETCH_DIR'] = str(fetch)
+            env['NODE_OPTIONS'] += f' --require="{SUPPORT / "controller-fetch.cjs"}"'
         if args.accounting:
             # No shim/preload/profiling variables: isolate the accountant cost
             # from inspector startup and Node/Python CPU sampling overhead.
