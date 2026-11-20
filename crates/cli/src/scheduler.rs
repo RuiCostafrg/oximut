@@ -346,12 +346,33 @@ pub struct Scheduler<'a> {
 const MAX_LANE_BATCH: usize = 8 * 1024 * 1024 - 64;
 /// Time a batch has to report once a lane is stopped at the job deadline.
 const LANE_REPORT_MS: u64 = 1000;
+const MAX_ROLLING_WAVES: usize = 8;
 
-fn lane_batch(batch: &[(usize, Request)], width: usize) -> Request {
+fn rolling_lanes_enabled() -> bool {
+    std::env::var_os("OXIMUT_EXPERIMENTAL_ROLLING_LANES").as_deref()
+        == Some(std::ffi::OsStr::new("1"))
+}
+
+fn lane_batch(batch: &[(usize, Request)], width: usize, rolling: bool) -> Request {
     let mut request = batch[0].1.clone();
-    // The adapter keeps this many lanes, so a smaller batch reuses its context.
-    request.workers = Some(width.max(batch.len()).min(1024));
-    request.deadline_ms = request.deadline_ms.saturating_add(LANE_REPORT_MS);
+    // `workers` is admitted fork concurrency, never the number of queued jobs.
+    request.workers = Some(
+        if rolling {
+            width
+        } else {
+            width.max(batch.len())
+        }
+        .min(1024),
+    );
+    // Rolling lanes may run serially in each slot, so allow the conservative
+    // sum of all per-job lifecycles plus reporting grace.
+    request.deadline_ms = if rolling {
+        batch.iter().fold(LANE_REPORT_MS, |sum, (_, lane)| {
+            sum.saturating_add(lane.deadline_ms)
+        })
+    } else {
+        request.deadline_ms.saturating_add(LANE_REPORT_MS)
+    };
     request.lanes = Some(batch.iter().map(|(_, r)| r.clone()).collect());
     request
 }
@@ -769,13 +790,16 @@ impl<'a> Scheduler<'a> {
                         if index != WARM_JOB {
                             self.budget.active += 1;
                         }
-                        self.budget.max_active_jobs = self.budget.max_active_jobs.max(
-                            self.budget.active
-                                + request
-                                    .lanes
-                                    .as_ref()
-                                    .map_or(0, |lanes| lanes.len().saturating_sub(1)),
-                        );
+                        let additional_lanes = request.lanes.as_ref().map_or(0, |lanes| {
+                            lanes
+                                .len()
+                                .min(request.workers.unwrap_or(1))
+                                .saturating_sub(1)
+                        });
+                        self.budget.max_active_jobs = self
+                            .budget
+                            .max_active_jobs
+                            .max(self.budget.active + additional_lanes);
                     }
                     Err(error) => {
                         if index == WARM_JOB {
@@ -885,6 +909,8 @@ impl<'a> Scheduler<'a> {
     }
     pub fn run_jobs(&mut self, jobs: Vec<(usize, Request)>, results: &mut [MutantResult]) {
         if self.options.shared_controller && self.slots.len() >= 2 {
+            let rolling =
+                rolling_lanes_enabled() && self.options.isolation == Isolation::FreshProcess;
             // Fixed at the first batch, so that later batches reuse the same lanes.
             let total = jobs.len();
             let mut width = None;
@@ -913,8 +939,25 @@ impl<'a> Scheduler<'a> {
                 let pids: Vec<_> = self.slots.iter().flatten().map(|w| w.child.id()).collect();
                 let capacity = self.budget.capacity(&pids);
                 let limit = self.budget.baseline_fork_limit(capacity, &pids);
-                let width = *width.get_or_insert(self.slots.len().min(total).min(limit));
-                while batch.len() < limit.min(width) {
+                let established = *width.get_or_insert(self.slots.len().min(total).min(limit));
+                if rolling && (established == 0 || limit < established) {
+                    self.retire_lane_controllers();
+                    let mut rest = vec![batch.pop().expect("first lane")];
+                    rest.extend(pending);
+                    for (index, response) in self.dispatch(rest.into(), false) {
+                        results[index].outcome = response.mutant_outcome();
+                        results[index].tests = response.tests;
+                        results[index].errors = response.errors;
+                    }
+                    return;
+                }
+                let width = established;
+                let max_lanes = if rolling {
+                    width.saturating_mul(MAX_ROLLING_WAVES).min(1024)
+                } else {
+                    width.min(limit)
+                };
+                while batch.len() < max_lanes {
                     let Some(next) = pending.front_mut() else {
                         break;
                     };
@@ -928,7 +971,7 @@ impl<'a> Scheduler<'a> {
                     encoded += lane;
                     batch.push(pending.pop_front().unwrap());
                 }
-                let response = self.execute(&lane_batch(&batch, width));
+                let response = self.execute(&lane_batch(&batch, width, rolling));
                 self.lanes_ran = true;
                 // Unsupported projects run with one controller per worker instead.
                 if response.lanes.is_none()
@@ -1386,7 +1429,7 @@ mod tests {
         let mut sizes = RequestSizes::default();
         assert!(sizes.request_len(&mut job) <= MAX_REQUEST);
         assert!(sizes.one_lane_len(&mut job) > MAX_LANE_BATCH);
-        let batch = lane_batch(&[(0, job)], 1);
+        let batch = lane_batch(&[(0, job)], 1, false);
         assert!(encoded_len(&without_duplicate_lane_residents(&batch).unwrap()) < MAX_LANE_BATCH);
     }
 
@@ -1394,10 +1437,10 @@ mod tests {
     fn a_lane_batch_can_report_after_its_lanes_reach_the_job_deadline() {
         let mut job = request();
         job.deadline_ms = 5000;
-        let batch = lane_batch(&[(0, job.clone()), (1, job)], 4);
+        let batch = lane_batch(&[(0, job.clone()), (1, job)], 4, false);
         assert_eq!(batch.workers, Some(4));
         let huge = vec![(0, request()); 1025];
-        assert_eq!(lane_batch(&huge, 2).workers, Some(1024));
+        assert_eq!(lane_batch(&huge, 2, false).workers, Some(1024));
         assert_eq!(batch.deadline_ms, 5000 + LANE_REPORT_MS);
         assert!(
             batch

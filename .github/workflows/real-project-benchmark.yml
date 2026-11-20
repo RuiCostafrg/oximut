@@ -3,6 +3,10 @@ name: Real project before-after benchmark
 on:
   workflow_dispatch:
     inputs:
+      rolling_lanes:
+        type: boolean
+        default: false
+        description: 'Score the experimental rolling fork dispatch candidate against the stock shared-lane control'
       after_oximut_args:
         type: string
         default: ''
@@ -62,7 +66,7 @@ jobs:
     timeout-minutes: 90
     env:
       # Main 7297840 (after #63, colord-scale workload); diagnostic clocks and peak attribution stay off here.
-      BEFORE_COMMIT: 7297840df3996c9e6098afbe6d37db41b294ee0b
+      BEFORE_COMMIT: ${{ inputs.rolling_lanes && '1059dd7a9ac3ce668c0ba2580130aa9f362bcdb0' || '7297840df3996c9e6098afbe6d37db41b294ee0b' }}
       BUILD_FLAGS: --locked --release -p oximut-cli
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -99,6 +103,11 @@ jobs:
           echo "CAMPAIGN_DIR=$RUNNER_TEMP/real-project-comparison" >> "$GITHUB_ENV"
           echo "AFTER_COMMIT=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
       - run: npm ci --ignore-scripts
+      - name: Qualify rolling process dispatch
+        if: inputs.rolling_lanes
+        run: |
+          npm run typecheck
+          node --test packages/vitest-adapter/test/shared-lanes.test.mjs
       - name: Check harness gates before building
         run: python3 -m unittest discover -s benchmarks/tests -v
       - name: Build both candidates before any timing
@@ -142,6 +151,7 @@ jobs:
           AFTER_OXIMUT_ARGS: ${{ inputs.after_oximut_args || '' }}
           MATCHED_CONCURRENCY: ${{ inputs.concurrency || '1' }}
           WORKLOAD: ${{ inputs.workload || 'colord' }}
+          OXIMUT_EXPERIMENTAL_ROLLING_LANES: ${{ inputs.rolling_lanes && '1' || '0' }}
         run: |
           # Per tool command; the larger workload runs 20x the mutants, so it gets twice the
           # headroom. A hang still ends well inside the 90 minute job limit.

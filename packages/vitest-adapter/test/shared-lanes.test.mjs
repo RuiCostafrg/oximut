@@ -41,6 +41,11 @@ test('fresh and overlap', { timeout: 10000 }, async () => {
   appendFileSync(root+'/events', JSON.stringify({type:'released', id:active, pid:process.pid})+'\\n');
 });
 test('mutation', async () => {
+  if (active === 'rolling-wait') {
+    while (!existsSync(root+'/rolling-release'))
+      await new Promise(r => setTimeout(r, 5));
+  }
+  if (active === 'rolling-release') writeFileSync(root+'/rolling-release', '');
   if (active === 'timeout') await new Promise(r => setTimeout(r, 10000));
   if (active === 'crash') process.kill(process.pid, 'SIGKILL');
   if (active === 'hang') while (true) {}
@@ -75,10 +80,11 @@ test('after', () => {
       map: { version: 3, sources: ['subject.ts'], names: [], mappings: 'AAAA' },
     },
   });
-  async function controller(pool, execArgv = []) {
+  async function controller(pool, execArgv = [], env = process.env) {
     const child = fork(join(repository, 'packages/vitest-adapter/m2-worker.ts'), [], {
       stdio: ['ignore', 'pipe', 'pipe', 'ipc'],
       execArgv,
+      env,
     });
     let diagnostics = '';
     child.stderr.on('data', (data) => {
@@ -578,6 +584,11 @@ test('fresh runtime and overlap', { timeout: 10000 }, async () => {
   }
 });
 test('mutation', async () => {
+  if (active === 'rolling-wait') {
+    while (!existsSync(root+'/rolling-release'))
+      await new Promise(r => setTimeout(r, 5));
+  }
+  if (active === 'rolling-release') writeFileSync(root+'/rolling-release', '');
   if (active === 'timeout') await new Promise(r => setTimeout(r, 10000));
   if (active === 'hang') while (true) {}
   expect(active).not.toBe('killed');
@@ -739,3 +750,22 @@ test('bounded heap', { timeout: 15000 }, async () => {
     await c.close();
   },
 );
+
+
+test('rolling forks refill a slot while another waits, attribute results and drain', {timeout: 90000}, async (t) => {
+  const s = await fixture(t);
+  await writeFile(join(s.root, 'vitest.config.mjs'), "export default { test: { include: ['*.test.ts'], testTimeout: 10000 } };");
+  const c = await s.controller(undefined, [], {...process.env, OXIMUT_EXPERIMENTAL_ROLLING_LANES: '1'});
+  const ids = ['rolling-wait', 'killed', 'rolling-release', 'survived', 'crash', 'another'];
+  const jobs = ids.map(s.job);
+  const result = await c.runCompact({...compactBatch(jobs), workers: 2});
+  assert.deepEqual(result.lanes.map((lane) => lane.jobId), ids);
+  assert.deepEqual(result.lanes.map((lane) => lane.outcome),
+    ['passed', 'failed', 'passed', 'passed', 'infrastructure-error', 'passed']);
+  const events = await assertGone(s.root);
+  assert.equal(new Set(events.map(({pid}) => pid)).size, ids.length);
+  const release = events.findIndex((e) => e.type === 'enter' && e.id === 'rolling-release');
+  const finish = events.findIndex((e) => e.type === 'after' && e.id === 'rolling-wait');
+  assert.ok(release >= 0 && finish > release);
+  await c.close();
+});

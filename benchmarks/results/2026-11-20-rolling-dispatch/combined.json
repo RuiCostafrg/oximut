@@ -1,0 +1,9 @@
+{
+  "controllers": 2,
+  "batches": 52,
+  "workers": 206,
+  "request_to_reply_ms": 13514.962796999996,
+  "exit_barrier_idle_slot_ms": 5743.840663000003,
+  "fork_to_exit_rolling_ms": 11389.754655999997,
+  "request_to_exit_rolling_ms": 12210.502906000005
+}
