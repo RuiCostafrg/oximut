@@ -17,6 +17,7 @@ def replay(directory):
             continue
         totals['controllers'] += 1
         models = {name: [0.0] * 4 for name in ('fork_to_exit', 'request_to_exit')}
+        request_durations = []
         for request in requests:
             begin = request['monotonicMs']
             end = replies[request['id']]
@@ -27,17 +28,23 @@ def replay(directory):
             totals['workers'] += len(forks)
             totals['request_to_reply_ms'] += end - begin
             last_exit = max(exits[e['childPid']] for e in forks)
+            totals['observed_request_to_last_exit_ms'] += last_exit - begin
             totals['exit_barrier_idle_slot_ms'] += sum(last_exit - exits[e['childPid']] for e in forks)
             totals['exit_barrier_idle_slot_ms'] += (4 - len(forks)) * (last_exit - begin)
             for fork in forks:
                 exit_at = exits[fork['childPid']]
                 if not begin <= fork['monotonicMs'] <= exit_at <= end:
                     raise ValueError('out-of-order lifecycle')
+                request_durations.append(exit_at - begin)
                 for name, origin in (('fork_to_exit', fork['monotonicMs']), ('request_to_exit', begin)):
                     slots = models[name]
                     heapq.heapreplace(slots, slots[0] + exit_at - origin)
         for name, slots in models.items():
             totals[name + '_rolling_ms'] += max(slots)
+        # With fixed per-fork durations, sorting within a controller and taking
+        # adjacent sets of four minimizes the sum of batch maxima.
+        totals['oracle_sorted_batches_ms'] += sum(sorted(request_durations, reverse=True)[::4])
+        totals['fractional_packing_floor_ms'] += sum(request_durations) / 4
     if (totals['controllers'], totals['batches'], totals['workers']) != (2, 52, 206):
         raise ValueError('expected the qualified four-worker colord-scale trace')
     return dict(totals)

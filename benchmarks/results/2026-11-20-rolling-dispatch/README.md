@@ -16,6 +16,27 @@ python3 "$dir/replay.py" /root/oximut-evidence/scale-bottlenecks/workers/artifac
 python3 "$dir/replay.py" /root/oximut-evidence/fresh-worker-startup/combined/artifact/capture/profiles
 ```
 
+## Oracle batch sorting with the offline snapshot
+
+Three qualified snapshot traces model **1.14–1.35 s** less mutant batch
+wall even with advance knowledge of each fork's observed request-to-exit
+duration. The oracle sorts these durations within each controller and
+minimizes the sum of four-worker batch maxima. Perfect fractional
+packing would save only another **0.16–0.25 s** under the same fixed
+duration assumption. The model omits gaps outside the mutant batches
+and cannot predict contention after reordering. This is a reason to
+prioritize removing worker CPU over spending the remaining wall gap on
+a batch ordering heuristic.
+
+```sh
+base=/root/oximut-evidence/vitest-fork-bundle
+for path in snapshot-native-source-io/artifact/snapshot-offline-capture \
+            snapshot-native-project/artifact/snapshot-offline-capture \
+            snapshot-native-execution-cpu/artifact/execution-cpu-capture; do
+  python3 benchmarks/results/2026-11-20-rolling-dispatch/replay.py "$base/$path/profiles"
+done
+```
+
 ## Native score and decision
 
 The five measured before/after pairs on Ubuntu 24.04 x86-64 with four

@@ -1,0 +1,171 @@
+{
+  "diagnostic_only": true,
+  "run": "https://github.com/RuiCostafrg/oximut/actions/runs/44829555378",
+  "commit": "97415e0d134db65ea710f97caaf3581b2268050e",
+  "artifact_sha256": "406032e4ebe41b537d054fa1e70f1e06fae8e89c049d5bbad324a7d55f1c48b1",
+  "arms": {
+    "capture": {
+      "resources": {
+        "vitest": {
+          "wall_seconds": 0.855196608,
+          "cpu_seconds": 1.1335449999999998,
+          "peak_aggregate_rss_bytes": 287612928
+        },
+        "oximut": {
+          "wall_seconds": 15.984187521000024,
+          "cpu_seconds": 45.394718,
+          "peak_aggregate_rss_bytes": 761335808
+        },
+        "stryker": {
+          "wall_seconds": 15.697194835000005,
+          "cpu_seconds": 50.686124,
+          "peak_aggregate_rss_bytes": 1215889408
+        }
+      },
+      "worker_cpu_ms": {
+        "startup": 16042.435,
+        "through_first_collection": 10333.94,
+        "after_first_collection": 9884.621,
+        "stop": 200.06400000000042
+      },
+      "worker_wall_median_ms": {
+        "request_to_fork": 13.554079499999716,
+        "startup": 88.44808050000029,
+        "dispatch_delay": 0.09185650000040368,
+        "through_first_collection": 68.97703999999976,
+        "after_first_collection": 44.29101750000001,
+        "stop": 4.250288000000182
+      },
+      "last_finish_path_ms": {
+        "request_to_fork": 905.1001430000042,
+        "startup": 4861.593462000001,
+        "dispatch_delay": 5.2064409999946974,
+        "through_first_collection": 3852.2607919999978,
+        "after_first_collection": 3819.9468639999977,
+        "finish_to_reply": 178.6334460000072
+      },
+      "controller_cpu_ms": 5143.933,
+      "controller_mutant_request_cpu_ms": 3774.589,
+      "worker_rpc_totals": {
+        "fetch": 8331,
+        "fetchModule": 0,
+        "resolveId": 0,
+        "onCollected": 218
+      }
+    },
+    "snapshot-offline-capture": {
+      "resources": {
+        "vitest": {
+          "wall_seconds": 0.8915746700000113,
+          "cpu_seconds": 1.155753,
+          "peak_aggregate_rss_bytes": 291663872
+        },
+        "oximut": {
+          "wall_seconds": 13.76935746800001,
+          "cpu_seconds": 37.528566,
+          "peak_aggregate_rss_bytes": 760750080
+        },
+        "stryker": {
+          "wall_seconds": 16.041387117,
+          "cpu_seconds": 51.545157,
+          "peak_aggregate_rss_bytes": 1209946112
+        }
+      },
+      "worker_cpu_ms": {
+        "startup": 9015.207,
+        "through_first_collection": 10953.985,
+        "after_first_collection": 9288.482,
+        "stop": 163.99200000000005
+      },
+      "worker_wall_median_ms": {
+        "request_to_fork": 13.868463000000247,
+        "startup": 49.52753699999994,
+        "dispatch_delay": 0.09496349999972153,
+        "through_first_collection": 73.24616649999984,
+        "after_first_collection": 40.258481500000016,
+        "stop": 4.03524200000038
+      },
+      "last_finish_path_ms": {
+        "request_to_fork": 966.9596149999969,
+        "startup": 2884.8350440000004,
+        "dispatch_delay": 5.260863999998776,
+        "through_first_collection": 4152.1476390000025,
+        "after_first_collection": 3304.114191999998,
+        "finish_to_reply": 189.15423600000634
+      },
+      "controller_cpu_ms": 4439.896,
+      "controller_mutant_request_cpu_ms": 3091.9200000000005,
+      "worker_rpc_totals": {
+        "fetch": 8495,
+        "fetchModule": 0,
+        "resolveId": 0,
+        "onCollected": 218
+      },
+      "seed_reads": {
+        "calls": 0,
+        "bytes": 0,
+        "readNs": 0
+      }
+    },
+    "compact-errors-capture": {
+      "resources": {
+        "vitest": {
+          "wall_seconds": 0.8879584229999864,
+          "cpu_seconds": 1.158919,
+          "peak_aggregate_rss_bytes": 283099136
+        },
+        "oximut": {
+          "wall_seconds": 13.158037645999997,
+          "cpu_seconds": 34.920716,
+          "peak_aggregate_rss_bytes": 756330496
+        },
+        "stryker": {
+          "wall_seconds": 15.797220568000029,
+          "cpu_seconds": 51.019135000000006,
+          "peak_aggregate_rss_bytes": 1220407296
+        }
+      },
+      "worker_cpu_ms": {
+        "startup": 9081.421,
+        "through_first_collection": 10928.529,
+        "after_first_collection": 6702.408,
+        "stop": 92.06700000000001
+      },
+      "worker_wall_median_ms": {
+        "request_to_fork": 15.665664499999934,
+        "startup": 50.3766370000003,
+        "dispatch_delay": 0.09499749999980622,
+        "through_first_collection": 71.93592850000005,
+        "after_first_collection": 26.399317500000052,
+        "stop": 3.725784499999463
+      },
+      "last_finish_path_ms": {
+        "request_to_fork": 1013.5972110000001,
+        "startup": 2899.1067219999977,
+        "dispatch_delay": 5.6680620000011,
+        "through_first_collection": 3929.4608460000018,
+        "after_first_collection": 2773.884626000001,
+        "finish_to_reply": 180.85619199999996
+      },
+      "controller_cpu_ms": 4478.797,
+      "controller_mutant_request_cpu_ms": 3049.740999999999,
+      "worker_rpc_totals": {
+        "fetch": 8413,
+        "fetchModule": 0,
+        "resolveId": 0,
+        "onCollected": 218
+      },
+      "seed_reads": {
+        "calls": 0,
+        "bytes": 0,
+        "readNs": 0
+      },
+      "compacted_assertions": 202
+    }
+  },
+  "snapshot_bytes": 9636566,
+  "setup_resources": {
+    "snapshot-bundle": "\tCommand being timed: \"node benchmarks/experiments/vitest-fork-bundle/snapshot.mjs /home/runner/work/oximut/oximut/node_modules/vitest/dist/.oximut-snapshot.qEUsvU\"\n\tUser time (seconds): 0.50\n\tSystem time (seconds): 0.10\n\tPercent of CPU this job got: 143%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:00.42\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 391508\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 33257\n\tVoluntary context switches: 1151\n\tInvoluntary context switches: 175\n\tSwaps: 0\n\tFile system inputs: 0\n\tFile system outputs: 3776\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+    "snapshot-build": "\tCommand being timed: \"node --build-snapshot --snapshot-blob=/home/runner/work/oximut/oximut/node_modules/vitest/dist/.oximut-snapshot.qEUsvU/vitest.blob /home/runner/work/oximut/oximut/node_modules/vitest/dist/.oximut-snapshot.qEUsvU/seed.cjs\"\n\tUser time (seconds): 0.27\n\tSystem time (seconds): 0.03\n\tPercent of CPU this job got: 106%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:00.28\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 82244\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 18205\n\tVoluntary context switches: 90\n\tInvoluntary context switches: 2\n\tSwaps: 0\n\tFile system inputs: 0\n\tFile system outputs: 18824\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n"
+  }
+}

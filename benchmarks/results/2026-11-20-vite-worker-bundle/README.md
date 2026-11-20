@@ -364,3 +364,95 @@ python3 benchmarks/results/2026-11-20-vite-worker-bundle/summarize.py --followup
   /root/oximut-evidence/vitest-fork-bundle/snapshot-native-execution-cpu \
   /root/oximut-evidence/scale-bottlenecks/workers/artifact/capture
 ```
+
+## V8 baseline compiler tier
+
+One native diagnostic used the same offline snapshot in both arms and
+set `--max-opt=1` in exactly the 206 mutant forks of the second arm.
+This caps V8 optimization at its baseline compiler for each short-lived
+mutant process. Both arms retained the exact mutant identities and
+outcomes, test identities, whole-file selections, and clean exits.
+
+| Instrumented offline snapshots | Command wall | Command CPU | Worker CPU after collection |
+| --- | ---: | ---: | ---: |
+| Default tier | 13.33 s | 36.78 s | 9.11 s |
+| Baseline tier only | 13.61 s | 36.34 s | 7.94 s |
+
+Post-collection worker CPU fell by 1.17 s. Startup and first collection
+used another 0.87 worker CPU seconds, leaving a small command CPU
+difference and slightly higher wall. This fixed-order comparison
+leaves the default tier as the scoring candidate.
+
+- [Native run](https://github.com/RuiCostafrg/oximut/actions/runs/44829000980)
+- [Verified diagnostic data](snapshot-baseline-tier.json)
+- Raw evidence at `/root/oximut-evidence/vitest-fork-bundle/snapshot-native-baseline-tier`.
+
+```sh
+gh workflow run native-diagnostic-profile.yml --ref t3/fresh-worker-startup \
+  -f capture_mode=worker-snapshot-baseline-tier -f workload=colord-scale -f concurrency=4
+python3 benchmarks/results/2026-11-20-vite-worker-bundle/summarize.py --followup baseline-tier \
+  /root/oximut-evidence/vitest-fork-bundle/snapshot-native-baseline-tier \
+  /root/oximut-evidence/scale-bottlenecks/workers/artifact/capture
+```
+
+## Disk-backed V8 wrapper cache feasibility
+
+A local Linux ARM64 replay captured 46 exact wrapper inputs from Vitest's
+successful 102-test baseline. Twenty alternating fresh Node processes
+per arm compiled those wrappers. No module body ran in the timed loop.
+The median CPU was 9.61 ms for compilation from source and 20.46 ms
+for hashing, reading, and consuming the prebuilt disk cache. All cached
+scripts were accepted. Cache generation had its own measurement.
+
+This rules out promoting the straightforward disk-backed design from
+the local replay. It gives no native mutation score. The earlier native
+stock probe also measured just 0.61 worker CPU seconds in synchronous
+wrapper compilation across all 206 mutants. Neither measurement bounds
+later lazy compilation. Obtaining cache data after representative
+module execution would need a separate experiment that charges the
+producing work and evaluates user code again in every fresh fork.
+
+Raw wrapper inputs, capture and replay scripts, the 102-test baseline
+report, and per-process timings are retained at
+`/root/oximut-evidence/vitest-fork-bundle/wrapper-cache-local`.
+
+```sh
+evidence=/root/oximut-evidence/vitest-fork-bundle/wrapper-cache-local
+node "$evidence/replay.cjs" build "$evidence/wrappers"
+node "$evidence/replay.cjs" control "$evidence/wrappers"
+node "$evidence/replay.cjs" disk "$evidence/wrappers"
+```
+
+## Worker assertion serialization
+
+The Colord-only compact error arm handled 202 ordinary Chai failures.
+Both arms retained all 206 exact mutant identities and outcomes, all
+102 test identities, the whole-file selections, and clean worker exits.
+
+| Instrumented offline snapshots | Command wall | Command CPU | Worker CPU after collection |
+| --- | ---: | ---: | ---: |
+| Full errors | 13.77 s | 37.53 s | 9.29 s |
+| Compact errors | 13.16 s | 34.92 s | 6.70 s |
+
+The mutant reports contained the same failure messages for 205 entries.
+One killed mutant stopped at a different assertion after seven versus
+eight passing tests. The 12 existing unprofiled stock and offline
+snapshot reports include both of those first failure messages, so the
+difference was already possible with the normal error path.
+
+The observed command change was 0.61 s less wall and 2.61 s less CPU.
+It warrants a paired unprofiled Colord score. Production Vitest
+customizations can observe the full error payload, so this diagnostic
+does not establish an automatic fast path for arbitrary projects.
+
+- [Native run](https://github.com/RuiCostafrg/oximut/actions/runs/44829555378)
+- [Verified diagnostic data](snapshot-compact-errors.json)
+- Raw evidence at `/root/oximut-evidence/vitest-fork-bundle/snapshot-native-compact-errors`.
+
+```sh
+gh workflow run native-diagnostic-profile.yml --ref t3/fresh-worker-startup \
+  -f capture_mode=worker-snapshot-compact-errors -f workload=colord-scale -f concurrency=4
+python3 benchmarks/results/2026-11-20-vite-worker-bundle/summarize.py --followup compact-errors \
+  /root/oximut-evidence/vitest-fork-bundle/snapshot-native-compact-errors \
+  /root/oximut-evidence/scale-bottlenecks/workers/artifact/capture
+```

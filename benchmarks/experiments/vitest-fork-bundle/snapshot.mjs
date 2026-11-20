@@ -61,6 +61,29 @@ startupSnapshot.setDeserializeMainFunction(async () => {
       return Reflect.apply(send, this, [message, ...args]);
     };
   }
+  if (evidence && process.env.OXIMUT_SNAPSHOT_SPECIALIZE_SELECTOR === '1') {
+    const selector = process.env.OXIMUT_ACTIVE_MUTANT;
+    if (/^[0-9a-f]{64}$/.test(selector)) {
+      let matches = 0;
+      let active = 0;
+      globalThis[Symbol.for('oximut.diagnostic.specializeSelector')] = (code) => code.replace(
+        /process[.]env[.]OXIMUT_ACTIVE_MUTANT *=== *["']([0-9a-f]{64})["']/g,
+        (source, id) => {
+          matches++;
+          if (id === selector) active++;
+          // Keep the source offsets used by the resident module's map.
+          return String(id === selector).padEnd(source.length);
+        },
+      );
+      const send = process.send;
+      process.send = function (message, ...args) {
+        if (message?.__vitest_worker_response__ === true && message.type === 'testfileFinished')
+          writeFileSync(evidence + '/' + process.pid + '.specialized',
+            JSON.stringify({selector, matches, active}), {flag: 'wx'});
+        return Reflect.apply(send, this, [message, ...args]);
+      };
+    }
+  }
   if (evidence)
     writeFileSync(evidence + '/' + process.pid + '.json',
       JSON.stringify({pid: process.pid, ppid: process.ppid, baselineTier}), {flag: 'wx'});
@@ -113,6 +136,14 @@ const bundle = await rolldown({
         return source.replace(access, JSON.stringify(builtinModules));
       }
       if (!id.startsWith(dist)) return;
+      if (id === join(dist, 'module-evaluator.js')) {
+        const marker = 'async _runInlinedModule(context, code, module, span) {';
+        assert.equal(source.split(marker).length, 2);
+        source = source.replace(marker, marker + `
+    const specialize = globalThis[Symbol.for('oximut.diagnostic.specializeSelector')];
+    if (specialize) code = specialize(code);
+`);
+      }
       if (id.endsWith('/run.CjdgFZiW.js')) {
         const marker = '\tconst err = _err;\n';
         assert.equal(source.split(marker).length, 2);

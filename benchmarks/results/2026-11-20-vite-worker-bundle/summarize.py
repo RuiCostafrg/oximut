@@ -64,7 +64,8 @@ def main():
     mode = parser.add_mutually_exclusive_group()
     mode.add_argument('--snapshot', action='store_true')
     mode.add_argument('--followup', choices=('stack', 'collection-cpu', 'execution-cpu',
-                                            'native-project', 'baseline-tier', 'compact-errors'))
+                                            'native-project', 'baseline-tier', 'compact-errors',
+                                            'specialize-selector'))
     args = parser.parse_args()
     root = args.run / 'artifact'
     verified = read_json(args.run / 'verification.json')
@@ -77,7 +78,7 @@ def main():
         names = ['capture', 'stack-measure-capture', 'stack-skip-capture']
     if args.followup in ('collection-cpu', 'execution-cpu'):
         names = ['capture', f'{args.followup}-capture']
-    if args.followup in ('native-project', 'baseline-tier', 'compact-errors'):
+    if args.followup in ('native-project', 'baseline-tier', 'compact-errors', 'specialize-selector'):
         names = ['capture', 'snapshot-offline-capture', f'{args.followup}-capture']
     use_snapshot = args.snapshot or args.followup
     offline = root / 'snapshot-offline-capture'
@@ -158,6 +159,8 @@ def main():
             arms[name][f'{phase}_cpu_samples'] = phase_samples(capture, phase)
         if name == 'compact-errors-capture':
             arms[name]['compacted_assertions'] = diagnostic['compacted_assertions']
+        if name == 'specialize-selector-capture':
+            arms[name]['specialized_switches'] = diagnostic['specialized_switches']
         if name == 'native-project-capture':
             oximut = rows['oximut']
             report_path = Path(oximut['report_file'])
