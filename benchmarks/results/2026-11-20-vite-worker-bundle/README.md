@@ -128,8 +128,46 @@ The raw archive is at
 It is a startup attribution result, separate from the unprofiled score.
 [Native diagnostic attempt](https://github.com/RuiCostafrg/oximut/actions/runs/44783788870)
 
-The next diagnostic tests whether failed-assertion stack processing
-repeatedly reads the large generated seed. It holds the blob and
-bridges fixed, records the controller's source reads and bytes, and moves
-the seed source offline for a second run. The full source is retained
-for provenance.
+## Offline framework source diagnostic
+
+Three instrumented runs on one Ubuntu x86-64 runner measured the effect
+of keeping the generated framework seed at its original path. The snapshot
+arms used the same 9.63 MB blob and bridges. The third arm moved the seed
+out of the runtime path and retained it in the archive. The change applies
+only to the generated framework source. Vite still supplies the project
+and mutant source maps.
+
+| Instrumented arm | Command wall | Command CPU | Peak RSS | Mutant startup CPU | Controller CPU |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Stock forks | 16.23 s | 45.44 s | 813 MB | 16.06 s | 5.08 s |
+| Snapshot, seed present | 16.65 s | 42.09 s | 981 MB | 8.82 s | 8.46 s |
+| Snapshot, seed offline | 13.15 s | 36.01 s | 756 MB | 8.74 s | 4.30 s |
+
+The controller made 1,490 synchronous reads of the generated seed
+when it was present, totaling 1.43 GB of returned bytes and 1.46 s
+inside the measured read calls. The offline arm recorded zero such
+reads. The observed controller CPU difference was 4.16 s. That
+difference includes work outside the timed read calls. There was one
+fixed-order observation per arm. Separate diagnostics billed 0.69 s wall
+and 0.86 s CPU to bundling and building the image, outside the table.
+
+The three arms reconciled the exact 206 mutant identities and outcomes,
+102 test identities, whole-file selection and cleanup, with 214 fresh
+workers per arm including the baseline. The offline arm still spent
+10.66 s worker CPU through first collection and 8.99 s thereafter.
+The diagnostic supports scoring the offline-source image with its build
+inside the timed command. The startup phase alone has limited remaining
+headroom under the fresh-process requirement.
+
+- [Native run](https://github.com/RuiCostafrg/oximut/actions/runs/44785071847)
+- [Verified diagnostic data](snapshot-source-io.json)
+- Raw archive, build inputs and worker evidence at
+  `/root/oximut-evidence/vitest-fork-bundle/snapshot-native-source-io`.
+
+```sh
+gh workflow run native-diagnostic-profile.yml --ref t3/fresh-worker-startup \
+  -f capture_mode=worker-snapshot-source-io -f workload=colord-scale -f concurrency=4
+python3 benchmarks/results/2026-11-20-vite-worker-bundle/summarize.py --snapshot \
+  /root/oximut-evidence/vitest-fork-bundle/snapshot-native-source-io \
+  /root/oximut-evidence/scale-bottlenecks/workers/artifact/capture
+```

@@ -724,6 +724,8 @@ def main(argv=None):
                         help='Compare a locally built Vitest worker bundle in a diagnostic-only fork capture')
     parser.add_argument('--first-collection', action='store_true',
                         help='Record module RPC and evaluator timing through first collection')
+    parser.add_argument('--controller-stack-timing', choices=('measure', 'skip'),
+                        help='Measure or omit controller assertion stack remapping in a snapshot diagnostic')
     parser.add_argument('--concurrency', type=workload.concurrency_arg, default=1,
                         help='Matched parallelism for Oximut --workers and Stryker concurrency (default 1)')
     parser.add_argument('--workload', type=workload.workload_name, default=workload.DEFAULT_WORKLOAD,
@@ -731,6 +733,8 @@ def main(argv=None):
     args = parser.parse_args(argv)
     if (args.startup_contract or args.first_collection or args.fork_bundle_routes or args.fork_snapshot) and not args.worker_phases:
         parser.error('startup contract, first collection and fork bootstrap experiments require --worker-phases')
+    if args.controller_stack_timing and not args.fork_snapshot:
+        parser.error('controller stack timing requires --fork-snapshot')
     workload.require_matched_concurrency(args.concurrency)
     output = args.output.resolve()
     output.mkdir(parents=True, exist_ok=False)
@@ -804,6 +808,13 @@ def main(argv=None):
             env['OXIMUT_SNAPSHOT_READS_DIR'] = str(output)
             env['NODE_OPTIONS'] += f' --require="{preload}"'
             result['snapshot_sha256'] = workload.measurement.file_hash(args.fork_snapshot)
+        if args.controller_stack_timing:
+            preload = ROOT / 'benchmarks/experiments/vitest-fork-bundle/controller-stack-timing.cjs'
+            env['OXIMUT_STACK_TIMING_DIR'] = str(output)
+            env['OXIMUT_STACK_TIMING_MODE'] = args.controller_stack_timing
+            env['NODE_OPTIONS'] += f' --require="{preload}"'
+            result['controller_stack_timing'] = args.controller_stack_timing
+            result['helper_sha256'][str(preload.relative_to(ROOT))] = workload.measurement.file_hash(preload)
         if args.accounting:
             # No shim/preload/profiling variables: isolate the accountant cost
             # from inspector startup and Node/Python CPU sampling overhead.
@@ -825,6 +836,16 @@ def main(argv=None):
             expected = {p.name.split('-')[-1] for p in profiles.glob('worker-*-*.json')}
             if not expected or {p.name for p in observed.glob('*.json')} != expected:
                 result['qualification_errors'].append('experimental bootstrap observations differ from traced forks')
+        if args.controller_stack_timing:
+            expected = {p.stem.removeprefix('controller-') for p in profiles.glob('controller-*.jsonl')}
+            files = list(output.glob('stack-timing-*.json'))
+            if not expected or {p.stem.removeprefix('stack-timing-') for p in files} != expected:
+                result['qualification_errors'].append('stack timing observations differ from traced controllers')
+            records = [json.loads(p.read_text()) for p in files]
+            if (not any(record['errors'] > 0 for record in records)
+                    or any(record['loaded'] != 1 or record['mode'] != args.controller_stack_timing
+                           for record in records)):
+                result['qualification_errors'].append('stack timing preload did not observe the expected controller work')
         if workload.execution_inputs(inputs) != result['execution_inputs']:
             result['qualification_errors'].append('binary/adapter changed during capture')
     except Exception as error:
