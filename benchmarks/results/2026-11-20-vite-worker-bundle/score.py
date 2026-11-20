@@ -51,7 +51,7 @@ def verify(directory, reference):
     mode_file = root / 'snapshot-score-mode.txt'
     mode = mode_file.read_text().strip() if mode_file.exists() else 'worker-snapshot-score'
     assert mode in ('worker-snapshot-score', 'worker-snapshot-compact-score',
-                    'worker-snapshot-composed-score')
+                    'worker-snapshot-composed-score', 'worker-snapshot-rolling-score')
     build = read_json(root / 'build-metadata.json')
     benchmark = root / 'snapshot-score'
     metadata = read_json(benchmark / 'metadata.json')
@@ -63,10 +63,20 @@ def verify(directory, reference):
     assert summary['build_integrity']['passed'] and summary['correctness_gate']['passed']
     assert summary['concurrency'] == 4 and summary['measured_pairs'] == 5 and summary['warmup_pairs'] == 1
     provenance = metadata['runtime_provenance']
-    wrapper = 'benchmarks/experiments/vitest-fork-bundle/score-wrapper.sh'
-    assert provenance['before']['binary_sha256'] == build['binary_sha256'] == digest(root / 'oximut')
-    assert provenance['after']['binary'].endswith('/' + wrapper)
-    assert provenance['after']['binary_sha256'] == build['source_sha256'][wrapper]
+    assert build['binary_sha256'] == digest(root / 'oximut')
+    wrapper_dir = 'benchmarks/experiments/vitest-fork-bundle/'
+
+    def check_wrapper(variant, name):
+        wrapper = wrapper_dir + name
+        assert provenance[variant]['binary'].endswith('/' + wrapper)
+        assert provenance[variant]['binary_sha256'] == build['source_sha256'][wrapper]
+
+    if mode == 'worker-snapshot-rolling-score':
+        check_wrapper('before', 'score-wrapper.sh')
+        check_wrapper('after', 'rolling-score-wrapper.sh')
+    else:
+        assert provenance['before']['binary_sha256'] == build['binary_sha256']
+        check_wrapper('after', 'score-wrapper.sh')
     adapter = {name.removeprefix('packages/vitest-adapter/'): checksum
                for name, checksum in build['source_sha256'].items()
                if name.startswith('packages/vitest-adapter/')}

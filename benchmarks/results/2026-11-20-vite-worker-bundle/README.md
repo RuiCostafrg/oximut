@@ -564,3 +564,40 @@ python3 benchmarks/results/2026-11-20-vite-worker-bundle/summarize.py --followup
   /root/oximut-evidence/vitest-fork-bundle/snapshot-native-bundle-project \
   /root/oximut-evidence/scale-bottlenecks/workers/artifact/capture
 ```
+
+## Unprofiled combined score
+
+The framework snapshot, bundled project graph, compact assertion
+payloads, and constant switches ran together in one warmup pair and five
+alternating measured pairs. Image generation, controller-side bundling,
+test execution, and cleanup were inside the timed command. All 36
+measurements passed the historical check for the exact 206 mutant
+identities and outcomes, 102 test identities, whole-file selections,
+four admitted workers, and cleanup.
+
+| Four-worker paired measurements | Wall | Process-tree CPU | Sampled peak aggregate RSS |
+| --- | ---: | ---: | ---: |
+| Combined Oximut medians | 11.44 s | 29.31 s | 845 MB |
+| Paired Stryker medians | 16.01 s | 51.52 s | 1,235 MB |
+| Combined Oximut / Stryker | 0.715× | 0.573× | 0.686× |
+| 95% bootstrap intervals | 0.710–0.726× | 0.569–0.576× | 0.684–0.693× |
+| Target | ≤0.50× | ≤0.80× | ≤0.80× |
+
+Wall is 29.4% lower than same-campaign stock Oximut across the five
+pairs, and 3.43 s over half the paired Stryker wall median. At perfect
+four-core utilization, Oximut's CPU fits within that wall budget with
+2.53 CPU seconds to spare at the median of the paired differences.
+This is a lower bound on elapsed time. Four admitted workers still
+spend time waiting for the controller, IPC, and other workers to finish.
+
+- [Native paired run](https://github.com/RuiCostafrg/oximut/actions/runs/44833476445)
+- [Verified paired data](snapshot-composed-score.json)
+- Raw evidence at `/root/oximut-evidence/vitest-fork-bundle/snapshot-native-composed-score`.
+
+```sh
+gh workflow run native-diagnostic-profile.yml --ref t3/fresh-worker-startup \
+  -f capture_mode=worker-snapshot-composed-score -f workload=colord-scale -f concurrency=4
+python3 benchmarks/results/2026-11-20-vite-worker-bundle/score.py \
+  /root/oximut-evidence/vitest-fork-bundle/snapshot-native-composed-score \
+  /root/oximut-evidence/scale-bottlenecks/workers/artifact/capture/qualification/measurements.jsonl
+```

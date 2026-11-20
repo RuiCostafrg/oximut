@@ -26,6 +26,7 @@ on:
           - worker-snapshot-score
           - worker-snapshot-compact-score
           - worker-snapshot-composed-score
+          - worker-snapshot-rolling-score
           - worker-snapshot-composed-profile
           - segments
       workload:
@@ -123,7 +124,7 @@ jobs:
           (root / 'build-metadata.json').write_text(json.dumps(record, indent=2) + '\n')
           PY
       - name: Score fresh worker snapshots including their generation cost
-        if: contains(fromJSON('["worker-snapshot-score","worker-snapshot-compact-score","worker-snapshot-composed-score"]'), inputs.capture_mode)
+        if: endsWith(inputs.capture_mode, '-score')
         shell: bash
         env:
           PROFILE_WORKLOAD: ${{ inputs.workload }}
@@ -135,22 +136,28 @@ jobs:
           test "$MATCHED_CONCURRENCY" = 4
           test -z "${NODE_OPTIONS:-}"
           export OXIMUT_SNAPSHOT_SCORE_BINARY="$PROFILE_ROOT/oximut"
-          if [[ "$SCORE_MODE" == worker-snapshot-compact-score || "$SCORE_MODE" == worker-snapshot-composed-score ]]; then
+          if [[ "$SCORE_MODE" != worker-snapshot-score ]]; then
             export OXIMUT_SNAPSHOT_COMPACT_ERRORS=1
           fi
-          if test "$SCORE_MODE" = worker-snapshot-composed-score; then
+          if [[ "$SCORE_MODE" == worker-snapshot-composed-score || "$SCORE_MODE" == worker-snapshot-rolling-score ]]; then
             export OXIMUT_SNAPSHOT_SPECIALIZE_SELECTOR=1
+          fi
+          before="$PROFILE_ROOT/oximut"
+          after=benchmarks/experiments/vitest-fork-bundle/score-wrapper.sh
+          if test "$SCORE_MODE" = worker-snapshot-rolling-score; then
+            before="$after"
+            after=benchmarks/experiments/vitest-fork-bundle/rolling-score-wrapper.sh
           fi
           printf '%s\n' "$SCORE_MODE" > "$PROFILE_ROOT/snapshot-score-mode.txt"
           revision=$(git rev-parse HEAD)
           python3 benchmarks/compare_candidates.py --workload "$PROFILE_WORKLOAD" --concurrency "$MATCHED_CONCURRENCY" \
-            --before-binary "$PROFILE_ROOT/oximut" --before-adapter-dir packages/vitest-adapter --before-commit "$revision" \
-            --after-binary benchmarks/experiments/vitest-fork-bundle/score-wrapper.sh \
+            --before-binary "$before" --before-adapter-dir packages/vitest-adapter --before-commit "$revision" \
+            --after-binary "$after" \
             --after-adapter-dir packages/vitest-adapter --after-commit "$revision" \
             --output "$PROFILE_ROOT/snapshot-score" --warmups 1 --repetitions 5 --timeout 1200 \
             2>&1 | tee "$PROFILE_ROOT/snapshot-score.log"
       - name: Capture unchanged workload with profiler overhead, no ratios or targets
-        if: "!contains(fromJSON('[\"worker-snapshot-score\",\"worker-snapshot-compact-score\",\"worker-snapshot-composed-score\"]'), inputs.capture_mode)"
+        if: ${{ !endsWith(inputs.capture_mode, '-score') }}
         shell: bash
         env:
           CAPTURE_MODE: ${{ inputs.capture_mode || 'accounting' }}
