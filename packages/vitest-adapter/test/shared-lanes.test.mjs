@@ -739,3 +739,57 @@ test('bounded heap', { timeout: 15000 }, async () => {
     await c.close();
   },
 );
+
+test('fork lanes reuse their native graph with aliased mocks and resolver conditions', async (t) => {
+  const s = await fixture(t);
+  await writeFile(
+    join(s.root, 'package.json'),
+    JSON.stringify({
+      type: 'module',
+      imports: { '#entry': { 'fixture-condition': './preferred.ts', default: './wrong.ts' } },
+    }),
+  );
+  await writeFile(join(s.root, 'preferred.ts'), "export default 'preferred';");
+  await writeFile(join(s.root, 'wrong.ts'), "export default 'wrong';");
+  await writeFile(
+    join(s.root, 'vitest.config.mjs'),
+    `export default {
+      resolve: { alias: { 'fixture-subject': ${JSON.stringify(join(s.root, 'subject.ts'))} } },
+      ssr: { resolve: { conditions: ['fixture-condition', 'node', 'development'] } },
+      test: { include: ['*.test.ts'] },
+    };`,
+  );
+  await writeFile(
+    join(s.root, 'shared.test.ts'),
+    `import { test, expect, vi } from 'vitest';
+    import { active } from 'fixture-subject';
+    import conditional from '#entry';
+    vi.mock('fixture-subject', () => ({ active: 'mocked' }));
+    test('mock and importActual', async () => {
+      expect(conditional).toBe('preferred');
+      expect(active).toBe('mocked');
+      const actual = await vi.importActual('fixture-subject');
+      expect(actual.active).toBe(process.env.OXIMUT_ACTIVE_MUTANT);
+    });`,
+  );
+  await writeFile(
+    join(s.root, 'plain.test.ts'),
+    `import { test, expect } from 'vitest';
+    import { active } from 'fixture-subject';
+    import conditional from '#entry';
+    test('unmocked file', () => {
+      expect(conditional).toBe('preferred');
+      expect(active).toBe(process.env.OXIMUT_ACTIVE_MUTANT);
+    });`,
+  );
+  const c = await s.controller();
+  for (const ids of [['one', 'two'], ['three', 'four']]) {
+    const out = await c.runCompact(compactBatch(ids.map(s.job)));
+    assert.deepEqual(
+      out.lanes.map(evidence),
+      ids.map(() => ({ outcome: 'passed', tests: { passed: 2, failed: 0, skipped: 0 } })),
+      JSON.stringify(out.lanes),
+    );
+  }
+  await c.close();
+});

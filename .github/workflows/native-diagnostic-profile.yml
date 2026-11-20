@@ -13,6 +13,7 @@ on:
           - worker-phases
           - fresh-worker-startup
           - controller-fetch
+          - controller-fetch-score
           - segments
       workload:
         description: Mutation workload
@@ -119,7 +120,21 @@ jobs:
           }
           (root / 'build-metadata.json').write_text(json.dumps(record, indent=2) + '\n')
           PY
+      - name: Score the qualified fetch ablation without diagnostic preloads
+        if: inputs.capture_mode == 'controller-fetch-score'
+        shell: bash
+        env:
+          PROFILE_WORKLOAD: ${{ inputs.workload }}
+          MATCHED_CONCURRENCY: ${{ inputs.concurrency }}
+        run: |
+          set -euo pipefail
+          test "$PROFILE_WORKLOAD" = colord-scale
+          test "$MATCHED_CONCURRENCY" = 4
+          git fetch --depth=1 origin 1059dd7a9ac3ce668c0ba2580130aa9f362bcdb0
+          bash benchmarks/results/2026-11-20-controller-fetch/score.sh "$PROFILE_ROOT/oximut" \
+            "$PROFILE_ROOT/score" "$RUNNER_TEMP/fetch-score-original" 2>&1 | tee "$PROFILE_ROOT/score.log"
       - name: Capture unchanged workload with profiler overhead, no ratios or targets
+        if: inputs.capture_mode != 'controller-fetch-score'
         shell: bash
         env:
           CAPTURE_MODE: ${{ inputs.capture_mode || 'accounting' }}
@@ -155,10 +170,18 @@ jobs:
               --binary "$PROFILE_ROOT/oximut" "${CAPTURE_ARGS[@]}" --workload "$PROFILE_WORKLOAD" \
               --concurrency "$MATCHED_CONCURRENCY" --output "$PROFILE_ROOT/local" 2>&1 | tee "$PROFILE_ROOT/local.log"
           fi
-      - name: Publish diagnostic status and remove dependency symlinks
+      - name: Publish capture status and remove dependency symlinks
         if: always()
         shell: bash
         run: |
+          if test -f "$RUNNER_TEMP/native-diagnostic/score/summary.json"; then
+            {
+              echo '### Unprofiled paired fetch comparison'
+              echo '```json'
+              jq '{correctness_gate, comparisons, targets_met}' "$RUNNER_TEMP/native-diagnostic/score/summary.json"
+              echo '```'
+            } >> "$GITHUB_STEP_SUMMARY"
+          elif test "${{ inputs.capture_mode }}" != controller-fetch-score; then
           {
             echo '### Diagnostic CPU capture (profiler overhead; no performance score)'
             echo 'Qualification failures and incomplete profiles are retained. No automatic retries.'
@@ -177,13 +200,14 @@ jobs:
               echo 'FAILED/INCOMPLETE: capture summary absent; inspect setup/build/job logs.'
             fi
           } >> "$GITHUB_STEP_SUMMARY"
+          fi
           if test -d "$RUNNER_TEMP/native-diagnostic"; then
             find "$RUNNER_TEMP/native-diagnostic" -type l -name node_modules -delete
           fi
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
-          name: native-diagnostic-${{ github.sha }}-${{ github.run_attempt }}
+          name: ${{ inputs.capture_mode == 'controller-fetch-score' && 'native-fetch-score' || 'native-diagnostic' }}-${{ github.sha }}-${{ github.run_attempt }}
           path: ${{ runner.temp }}/native-diagnostic/**
           include-hidden-files: true
           if-no-files-found: warn
