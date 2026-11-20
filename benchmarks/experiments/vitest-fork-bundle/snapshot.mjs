@@ -32,6 +32,12 @@ startupSnapshot.setDeserializeMainFunction(async () => {
   if (typeof canonicalConsole !== 'function') throw new Error('Snapshot did not capture Node Console');
   nodeConsole.Console = canonicalConsole;
   syncBuiltinESMExports();
+  // ChildProcess.fork and Worker default to process.execArgv. Only this
+  // worker uses the experimental image, so restore the stock visible args.
+  const snapshotFlag = '--snapshot-blob=' + process.env.OXIMUT_SNAPSHOT_BLOB;
+  const snapshotIndex = process.execArgv.indexOf(snapshotFlag);
+  if (snapshotIndex < 0) throw new Error('Missing experimental snapshot launcher flag');
+  process.execArgv.splice(snapshotIndex, 1);
   const bridge = createRequire(${JSON.stringify(resolveBridge)})(${JSON.stringify(resolveBridge)});
   globalThis.__oximutSnapshotResolve = bridge.resolve;
   globalThis.__oximutSnapshotImport = bridge.load;

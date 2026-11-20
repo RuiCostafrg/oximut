@@ -769,3 +769,56 @@ test('rolling forks refill a slot while another waits, attribute results and dra
   assert.ok(release >= 0 && finish > release);
   await c.close();
 });
+
+test('fresh forks keep real timers, fake timers and ordinary child fork behavior', { timeout: 30000 }, async (t) => {
+  const s = await fixture(t);
+  await writeFile(
+    join(s.root, 'child.cjs'),
+    'process.send({ pid: process.pid, parent: process.ppid }); process.disconnect();',
+  );
+  await writeFile(
+    join(s.root, 'shared.test.ts'),
+    `
+import { test, expect, vi } from 'vitest';
+import { fork } from 'node:child_process';
+import { once } from 'node:events';
+import { active } from './subject';
+
+test('timers and child fork', { timeout: 5000 }, async () => {
+  let fired = false;
+  vi.useFakeTimers();
+  try {
+    setTimeout(() => { fired = true; }, 25);
+    await vi.advanceTimersByTimeAsync(25);
+    expect(fired).toBe(true);
+  } finally {
+    vi.useRealTimers();
+  }
+  await new Promise(resolve => setTimeout(resolve, 5));
+  const child = fork(new URL('./child.cjs', import.meta.url), [], { silent: true });
+  const exit = once(child, 'exit');
+  try {
+    const [message] = await Promise.race([
+      once(child, 'message'),
+      exit.then(() => { throw new Error('child exited before sending its payload'); }),
+    ]);
+    expect(message.parent).toBe(process.pid);
+    expect(message.pid).not.toBe(process.pid);
+    expect(await exit).toEqual([0, null]);
+    expect(active).toMatch(/^timer-/);
+  } finally {
+    if (child.exitCode === null && child.signalCode === null) child.kill('SIGKILL');
+    await exit;
+  }
+});
+`,
+  );
+  const c = await s.controller();
+  const jobs = ['timer-one', 'timer-two'].map(s.job);
+  const result = await c.runCompact({ ...compactBatch(jobs), workers: 2 });
+  assert.deepEqual(result.lanes.map(evidence), jobs.map(() => ({
+    outcome: 'passed',
+    tests: { passed: 1, failed: 0, skipped: 0 },
+  })));
+  await c.close();
+});
