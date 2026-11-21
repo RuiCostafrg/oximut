@@ -12,10 +12,22 @@ if (directory && process.argv[1]?.endsWith('/m2-worker.ts')) {
   const shareProjectImage = process.env.OXIMUT_SHARE_PROJECT_IMAGE === '1';
   let barrel;
 
-  function buildProjectImage(factories) {
+  async function frameworkSeed(base) {
+    const filename = path.join(base, 'seed.offline.cjs');
+    if (process.env.OXIMUT_SNAPSHOT_MUTANTS_ONLY === '1') {
+      const {setTimeout} = require('node:timers/promises');
+      while (!fs.existsSync(filename)) {
+        if (fs.existsSync(path.join(base, 'seed.failed'))) throw new Error('Framework seed generation failed');
+        await setTimeout(5);
+      }
+    }
+    return fs.readFileSync(filename, 'utf8');
+  }
+
+  async function buildProjectImage(factories) {
     const base = path.dirname(process.env.OXIMUT_SNAPSHOT_BLOB);
     const seedPath = path.join(base, 'project-seed-' + process.pid + '.cjs');
-    const seed = fs.readFileSync(path.join(base, 'seed.offline.cjs'), 'utf8');
+    const seed = await frameworkSeed(base);
     const entries = `\nglobalThis[Symbol.for('oximut.diagnostic.projectFactories')] = new Map([
 ${factories.join(',\n')}
 ]);
@@ -113,7 +125,7 @@ ${observation(true)}
         await build.close();
       }
     }
-    if (projectFactories) buildProjectImage(factories);
+    if (projectFactories) await buildProjectImage(factories);
     return outputs;
   };
 

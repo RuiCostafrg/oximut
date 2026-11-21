@@ -31,6 +31,7 @@ on:
           - worker-snapshot-late-score
           - worker-snapshot-factory-score
           - worker-snapshot-shared-image-score
+          - worker-snapshot-single-image-score
           - worker-snapshot-composed-profile
           - worker-snapshot-composed-startup
           - worker-snapshot-late-runtime
@@ -170,6 +171,10 @@ jobs:
               before=benchmarks/experiments/vitest-fork-bundle/factory-score-wrapper.sh
               after=benchmarks/experiments/vitest-fork-bundle/shared-image-score-wrapper.sh
               ;;
+            worker-snapshot-single-image-score)
+              before=benchmarks/experiments/vitest-fork-bundle/shared-image-score-wrapper.sh
+              after=benchmarks/experiments/vitest-fork-bundle/single-image-score-wrapper.sh
+              ;;
           esac
           printf '%s\n' "$SCORE_MODE" > "$PROFILE_ROOT/snapshot-score-mode.txt"
           revision=$(git rev-parse HEAD)
@@ -180,12 +185,13 @@ jobs:
             --output "$PROFILE_ROOT/snapshot-score" --warmups 1 --repetitions 5 --timeout 1200 \
             2>&1 | tee "$PROFILE_ROOT/snapshot-score.log"
       - name: Confirm factory evaluation in every fresh mutant fork
-        if: inputs.capture_mode == 'worker-snapshot-factory-score' || inputs.capture_mode == 'worker-snapshot-shared-image-score'
+        if: contains(fromJSON('["worker-snapshot-factory-score","worker-snapshot-shared-image-score","worker-snapshot-single-image-score"]'), inputs.capture_mode)
         shell: bash
         env:
           OXIMUT_INLINE_LATE_RUNTIME: '1'
           OXIMUT_PROJECT_FACTORY_SNAPSHOT: '1'
-          OXIMUT_SHARE_PROJECT_IMAGE: ${{ inputs.capture_mode == 'worker-snapshot-shared-image-score' && '1' || '0' }}
+          OXIMUT_SHARE_PROJECT_IMAGE: ${{ inputs.capture_mode == 'worker-snapshot-factory-score' && '0' || '1' }}
+          FACTORY_SCORE_MODE: ${{ inputs.capture_mode }}
         run: |
           set -euo pipefail
           ulimit -c 0
@@ -195,8 +201,13 @@ jobs:
           node --build-snapshot --snapshot-blob="$image_dir/vitest.blob" "$image_dir/seed.cjs"
           mv "$image_dir/seed.cjs" "$image_dir/seed.offline.cjs"
           cp -R "$image_dir" "$PROFILE_ROOT/factory-image"
+          options=()
+          if test "$FACTORY_SCORE_MODE" = worker-snapshot-single-image-score; then
+            options+=(--snapshot-mutants-only)
+          fi
           python3 benchmarks/profile_native.py --binary "$PROFILE_ROOT/oximut" \
             --worker-phases --startup-contract --first-collection --fork-snapshot "$image_dir/vitest.blob" \
+            "${options[@]}" \
             --snapshot-compact-errors --snapshot-bundle-project --workload colord-scale --concurrency 4 \
             --output "$PROFILE_ROOT/factory-capture" 2>&1 | tee "$PROFILE_ROOT/factory-diagnostic.log"
       - name: Capture unchanged workload with profiler overhead, no ratios or targets

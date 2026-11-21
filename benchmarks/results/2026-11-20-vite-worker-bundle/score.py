@@ -50,7 +50,7 @@ def baseline_tests(location, row):
     return identities
 
 
-def verify_factory_capture(root, reference, build, *, shared):
+def verify_factory_capture(root, reference, build, *, shared, mutants_only):
     module_path = Path(__file__).resolve().parents[1] / '2026-11-19-fresh-worker-startup/summarize.py'
     spec = importlib.util.spec_from_file_location('fresh_worker_startup_summary', module_path)
     startup = importlib.util.module_from_spec(spec)
@@ -60,13 +60,16 @@ def verify_factory_capture(root, reference, build, *, shared):
     assert diagnostic['source_commit'] == build['commit']
     assert diagnostic['execution_inputs']['binary_sha256'] == build['binary_sha256']
     assert diagnostic['snapshot_sha256'] == digest(root / 'factory-image/vitest.blob')
+    assert diagnostic.get('snapshot_mutants_only', False) == mutants_only
     assert all(build['source_sha256'][name] == checksum
                for name, checksum in diagnostic['helper_sha256'].items())
     verified, forks, baselines, batches = startup.selected_workload(
         root, reference.parent.parent, require_launch_mapping=True, capture_name=capture.name)
     observed = capture / 'snapshot-forks'
-    assert {(row['ppid'], row['pid']) for p in observed.glob('*.json') for row in [read_json(p)]
-            if row['projectFactories']} == forks.keys()
+    restored = {(row['ppid'], row['pid']): row['projectFactories'] for p in observed.glob('*.json')
+                for row in [read_json(p)]}
+    assert restored.keys() == (forks.keys() if mutants_only else forks.keys() | baselines)
+    assert {fork for fork, entries in restored.items() if entries} == forks.keys()
     pid_to_selector = {pid: selector for (_, pid), selector in forks.items()}
     assert len(pid_to_selector) == 206
     report = read_json(capture / 'qualification/00-oximut/report.json')
@@ -83,6 +86,13 @@ def verify_factory_capture(root, reference, build, *, shared):
     project_images = {p.name: {'bytes': p.stat().st_size, 'sha256': digest(p)}
                       for p in capture.glob('project-*.blob')}
     assert len(project_images) == (1 if shared else 2)
+    launches = {}
+    for path in (capture / 'profiles').glob('startup-contract-*.json'):
+        image, = [arg.removeprefix('--snapshot-blob=') for arg in read_json(path)['execArgv']
+                  if arg.startswith('--snapshot-blob=')]
+        launches[int(path.stem.removeprefix('startup-contract-'))] = Path(image).name
+    assert launches.keys() == {controller for controller, _ in forks}
+    assert set(launches.values()) == project_images.keys()
     return {'qualification': verified, 'worker_cpu_ms': metrics['worker_cpu_ms'],
             'last_finish_path_ms': metrics['last_finish_path_ms'],
             'project_images': project_images,
@@ -107,7 +117,8 @@ def verify(directory, reference):
     assert mode in ('worker-snapshot-score', 'worker-snapshot-compact-score',
                     'worker-snapshot-composed-score', 'worker-snapshot-rolling-score',
                     'worker-snapshot-windowed-score', 'worker-snapshot-late-score',
-                    'worker-snapshot-factory-score', 'worker-snapshot-shared-image-score')
+                    'worker-snapshot-factory-score', 'worker-snapshot-shared-image-score',
+                    'worker-snapshot-single-image-score')
     build = read_json(root / 'build-metadata.json')
     benchmark = root / 'snapshot-score'
     metadata = read_json(benchmark / 'metadata.json')
@@ -137,6 +148,9 @@ def verify(directory, reference):
     elif mode == 'worker-snapshot-shared-image-score':
         check_wrapper('before', 'factory-score-wrapper.sh')
         check_wrapper('after', 'shared-image-score-wrapper.sh')
+    elif mode == 'worker-snapshot-single-image-score':
+        check_wrapper('before', 'shared-image-score-wrapper.sh')
+        check_wrapper('after', 'single-image-score-wrapper.sh')
     else:
         assert provenance['before']['binary_sha256'] == build['binary_sha256']
         check_wrapper('after', 'score-wrapper.sh')
@@ -221,8 +235,10 @@ def verify(directory, reference):
         'reported_mutant_test_count_ranges': reported_test_ranges,
         'necessary_cpu_seconds_saved_median_at_four_cpus': cpu_deficits,
         **({'factory_diagnostic': verify_factory_capture(
-            root, reference, build, shared=mode == 'worker-snapshot-shared-image-score')}
-           if mode in ('worker-snapshot-factory-score', 'worker-snapshot-shared-image-score') else {}),
+            root, reference, build, shared=mode != 'worker-snapshot-factory-score',
+            mutants_only=mode == 'worker-snapshot-single-image-score')}
+           if mode in ('worker-snapshot-factory-score', 'worker-snapshot-shared-image-score',
+                       'worker-snapshot-single-image-score') else {}),
     }
 
 

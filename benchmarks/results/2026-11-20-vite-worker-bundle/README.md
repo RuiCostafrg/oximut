@@ -907,3 +907,35 @@ python3 benchmarks/results/2026-11-20-vite-worker-bundle/score.py \
 gh workflow run native-diagnostic-profile.yml --ref t3/fresh-worker-startup \
   -f capture_mode=worker-snapshot-shared-image-score -f workload=colord-scale -f concurrency=4
 ```
+
+## Residual worker CPU and command setup
+
+The verified late-runtime execution profile found 883 samples
+across 25 workers after first collection. None included
+`processError` or source position lookup. The remaining samples
+span Vitest's task and fixture wrappers, Chai equality and
+assertion setup, Colord parsing, garbage collection, and IPC.
+Most samples under the test callback wrappers also include
+the work done by the tests. They do not measure wrapper overhead.
+The captured workload spent 5.39 worker CPU seconds after
+first collection and 1.81 s on the last-finishing paths.
+
+The separate factory score spent a median of 1.87 s outside the
+CLI mutation phase, with 0.77 s outside all named CLI phases.
+That interval includes wrapper setup and cleanup. Original and
+instrumented baselines took 0.55 s and 0.50 s. The next setup
+experiment starts both baselines on stock workers and generates
+the framework seed while the original baseline runs. It then
+builds the project image when the resident mutations arrive.
+This tests whether the extra base image and the serial setup
+interval can be removed while retaining both baseline checks.
+
+- [Native post-collection profile](https://github.com/RuiCostafrg/oximut/actions/runs/44864582822)
+- [Verified post-collection data](snapshot-late-execution.json)
+- Raw captures at `/root/oximut-evidence/vitest-fork-bundle/snapshot-native-late-execution`.
+
+```sh
+gh workflow run native-diagnostic-profile.yml --ref t3/fresh-worker-startup \
+  -f capture_mode=worker-snapshot-late-runtime -f workload=colord-scale -f concurrency=4 \
+  -f late_runtime_sample=execution
+```

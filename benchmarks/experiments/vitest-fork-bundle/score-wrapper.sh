@@ -6,17 +6,31 @@ test -z "${NODE_OPTIONS:-}"
 experiment=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 root=$(cd -- "$experiment/../../.." && pwd)
 scratch=$(mktemp -d "$root/node_modules/vitest/dist/.oximut-score.XXXXXX")
+seed_pid=
 cleanup() {
+  if test -n "$seed_pid"; then wait "$seed_pid" || true; fi
   python3 -c 'from pathlib import Path; import shutil, sys; shutil.rmtree(Path(sys.argv[1]))' "$scratch"
 }
 trap cleanup EXIT
 ulimit -c 0
-node "$experiment/snapshot.mjs" "$scratch"
-node --build-snapshot --snapshot-blob="$scratch/vitest.blob" "$scratch/seed.cjs"
-mv "$scratch/seed.cjs" "$scratch/seed.offline.cjs"
+if test "${OXIMUT_SNAPSHOT_MUTANTS_ONLY:-}" = 1; then
+  if test "${OXIMUT_PROJECT_FACTORY_SNAPSHOT:-}" != 1; then exit 2; fi
+  (
+    if ! node "$experiment/snapshot.mjs" "$scratch" ||
+       ! mv "$scratch/seed.cjs" "$scratch/seed.offline.cjs"; then
+      touch "$scratch/seed.failed"
+      exit 1
+    fi
+  ) &
+  seed_pid=$!
+else
+  node "$experiment/snapshot.mjs" "$scratch"
+  node --build-snapshot --snapshot-blob="$scratch/vitest.blob" "$scratch/seed.cjs"
+  mv "$scratch/seed.cjs" "$scratch/seed.offline.cjs"
+fi
 options="--require=\"$experiment/snapshot-flags.cjs\""
 case "${SCORE_MODE:-}" in
-  worker-snapshot-composed-score|worker-snapshot-rolling-score|worker-snapshot-windowed-score|worker-snapshot-late-score|worker-snapshot-factory-score|worker-snapshot-shared-image-score)
+  worker-snapshot-composed-score|worker-snapshot-rolling-score|worker-snapshot-windowed-score|worker-snapshot-late-score|worker-snapshot-factory-score|worker-snapshot-shared-image-score|worker-snapshot-single-image-score)
     export OXIMUT_PROJECT_BUNDLE_DIR="$scratch/project-bundle"
     mkdir "$OXIMUT_PROJECT_BUNDLE_DIR"
     options+=" --require=\"$experiment/project-bundle.cjs\""

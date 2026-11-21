@@ -743,6 +743,8 @@ def main(argv=None):
                         help='Resolve instrumented Colord switches once per module in each snapshot worker')
     parser.add_argument('--snapshot-bundle-project', action='store_true',
                         help='Bundle one module graph per Colord test file and use Vite to evaluate it')
+    parser.add_argument('--snapshot-mutants-only', action='store_true',
+                        help='Launch baseline forks without a snapshot and restore only the mutant project image')
     parser.add_argument('--concurrency', type=workload.concurrency_arg, default=1,
                         help='Matched parallelism for Oximut --workers and Stryker concurrency (default 1)')
     parser.add_argument('--workload', type=workload.workload_name, default=workload.DEFAULT_WORKLOAD,
@@ -752,6 +754,8 @@ def main(argv=None):
         parser.error('startup contract, first collection and fork bootstrap experiments require --worker-phases')
     if args.controller_stack_timing and not args.fork_snapshot:
         parser.error('controller stack timing requires --fork-snapshot')
+    if args.snapshot_mutants_only and not (args.fork_snapshot and args.startup_contract):
+        parser.error('mutant-only snapshots require --fork-snapshot and --startup-contract')
     if args.worker_cpu_sample and not args.startup_contract:
         parser.error('worker CPU samples require --startup-contract to match the selector inventory')
     if args.native_project and (not args.startup_contract or not args.fork_snapshot
@@ -835,6 +839,9 @@ def main(argv=None):
             env['OXIMUT_SNAPSHOT_READS_DIR'] = str(output)
             env['NODE_OPTIONS'] += f' --require="{preload}"'
             result['snapshot_sha256'] = workload.measurement.file_hash(args.fork_snapshot)
+            if args.snapshot_mutants_only:
+                env['OXIMUT_SNAPSHOT_MUTANTS_ONLY'] = '1'
+                result['snapshot_mutants_only'] = True
             if args.snapshot_baseline_tier:
                 env['OXIMUT_SNAPSHOT_BASELINE_TIER'] = '1'
                 result['snapshot_baseline_tier'] = True
@@ -887,6 +894,10 @@ def main(argv=None):
         result['qualification_errors'] = qualification_errors(output / 'qualification', code, args.workload)
         if args.fork_bundle_routes or args.fork_snapshot:
             expected = {p.name.split('-')[-1] for p in profiles.glob('worker-*-*.json')}
+            if args.snapshot_mutants_only:
+                expected = {f'{event["childPid"]}.json' for timeline in profiles.glob('controller-*.jsonl')
+                            for event in map(json.loads, timeline.read_text().splitlines())
+                            if event['type'] == 'fork' and event.get('selector')}
             if not expected or {p.name for p in observed.glob('*.json')} != expected:
                 result['qualification_errors'].append('experimental bootstrap observations differ from traced forks')
         if (args.snapshot_baseline_tier or args.snapshot_compact_errors

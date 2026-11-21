@@ -6,6 +6,10 @@ if (process.env.OXIMUT_SNAPSHOT_BLOB && process.argv[1]?.endsWith('/m2-worker.ts
     if (entry.endsWith('/vitest/dist/workers/forks.js')) {
       const image = options.env?.OXIMUT_ACTIVE_MUTANT
         ? globalThis[Symbol.for('oximut.diagnostic.projectImage')] : undefined;
+      if (process.env.OXIMUT_SNAPSHOT_MUTANTS_ONLY === '1' && !image) {
+        if (options.env?.OXIMUT_ACTIVE_MUTANT) throw new Error('Mutant worker image was not prepared');
+        return Reflect.apply(original, this, [entry, args, options]);
+      }
       const tier = process.env.OXIMUT_SNAPSHOT_BASELINE_TIER === '1' && options.env?.OXIMUT_ACTIVE_MUTANT
         ? ['--max-opt=1'] : [];
       options = {
