@@ -1114,7 +1114,8 @@ fn run_attempt(options: &Options, previous: Option<RetryEvidence>) -> Result<Att
         && !mutants.is_empty();
     let mut baseline = if skip_original {
         diagnostics.push(
-            "experimental: original baseline skipped; instrumented baseline is the only gate".into(),
+            "experimental: original baseline skipped; instrumented baseline is the only gate"
+                .into(),
         );
         let mut placeholder = infrastructure(&request, "");
         placeholder.outcome = TestOutcome::Passed;
