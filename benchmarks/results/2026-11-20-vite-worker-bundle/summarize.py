@@ -76,6 +76,7 @@ def main():
     parser.add_argument('historical_capture', type=Path)
     mode = parser.add_mutually_exclusive_group()
     mode.add_argument('--snapshot', action='store_true')
+    mode.add_argument('--snapshot-accounting', action='store_true')
     mode.add_argument('--followup', choices=('stack', 'collection-cpu', 'execution-cpu',
                                             'native-project', 'baseline-tier', 'compact-errors',
                                             'specialize-selector', 'bundle-project', 'composed',
@@ -85,6 +86,43 @@ def main():
     verified = read_json(args.run / 'verification.json')
     build_sources = read_json(root / 'build-metadata.json')['source_sha256']
     _, _, prior_rows, _ = verify_capture(args.historical_capture, 'worker-phases')
+    if args.snapshot_accounting:
+        arms = {}
+        wrapper = 'benchmarks/experiments/vitest-fork-bundle/shared-image-score-wrapper.sh'
+        for name, binary in (('capture', verified['binary_sha256']),
+                             ('snapshot-accounting-capture', build_sources[wrapper])):
+            capture = root / name
+            diagnostic, resources, rows, inventory = verify_capture(capture, 'rust-accounting-self')
+            require(diagnostic['source_commit'] == verified['commit'], 'accounting source revision differs')
+            require(diagnostic['execution_inputs']['binary_sha256'] == binary, 'accounting executable differs')
+            require(all(build_sources.get(helper) == checksum
+                        for helper, checksum in diagnostic['helper_sha256'].items()), 'accounting helper differs')
+            for tool, row in rows.items():
+                prior = prior_rows[tool]
+                require(row['declared_test_identity_sha256'] == prior['declared_test_identity_sha256']
+                        and row.get('test_identity_sha256') == prior.get('test_identity_sha256')
+                        and not row['descendant_cleanup_required'], 'accounting workload or cleanup differs')
+                if tool != 'vitest':
+                    require(row['mutation_identity_outcome_sha256'] == prior['mutation_identity_outcome_sha256']
+                            and len(row['mutations']) == 206, 'accounting mutant identities or outcomes differ')
+            oximut = rows['oximut']
+            require(oximut['selection_mode_counts'] == prior_rows['oximut']['selection_mode_counts'],
+                    'accounting file selections differ')
+            # The CLI report contains the identity map and original-relative
+            # paths independently of the process-tree profiler.
+            from score import baseline_tests, test_selection
+            previous = args.historical_capture / 'qualification'
+            current = capture / 'qualification'
+            require(baseline_tests(current, oximut) == baseline_tests(previous, prior_rows['oximut'])
+                    and test_selection(current, oximut) == test_selection(previous, prior_rows['oximut']),
+                    'accounting Oximut baseline identities or selected files differ')
+            arms[name] = {'phase_wall_ms': resources['phaseWallMs'],
+                          'resources': {key: oximut[key] for key in ('wall_seconds', 'cpu_seconds',
+                                                                   'peak_aggregate_rss_bytes')},
+                          'accounting': inventory['accounting_diagnostics']}
+        print(json.dumps({'diagnostic_only': True, 'run': verified['run_url'], 'commit': verified['commit'],
+                          'artifact_sha256': verified['artifact_sha256'], 'arms': arms}, indent=2))
+        return
     arms = {}
     candidate = 'snapshot-capture' if args.snapshot else 'bundled-capture'
     names = ['capture', candidate]

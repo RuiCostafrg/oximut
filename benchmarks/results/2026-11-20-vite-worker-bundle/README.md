@@ -939,3 +939,29 @@ gh workflow run native-diagnostic-profile.yml --ref t3/fresh-worker-startup \
   -f capture_mode=worker-snapshot-late-runtime -f workload=colord-scale -f concurrency=4 \
   -f late_runtime_sample=execution
 ```
+
+## Share the project image within one command
+
+Sharing the project image improved median paired Oximut wall
+by 4.1% and CPU by 1.8% across five native pairs. The RSS
+interval for the Oximut before/after comparison included no
+change. Both arms rebuilt their images each invocation.
+The separate diagnostic verified that both controllers launched
+their 206 fresh mutant forks from the same project image.
+
+| Four-worker shared-image campaign | Wall | Process-tree CPU | Sampled peak aggregate RSS |
+| --- | ---: | ---: | ---: |
+| Oximut sharing the project image | 9.88 s | 24.10 s | 784 MB |
+| Paired Stryker | 15.75 s | 50.80 s | 1,217 MB |
+| Median paired ratio | 0.627× | 0.472× | 0.643× |
+| 95% bootstrap interval | 0.609–0.633× | 0.468–0.479× | 0.634–0.655× |
+| Target | ≤0.50× | ≤0.80× | ≤0.80× |
+
+The separate trace recorded one 10.56 MB project image.
+All 36 timed rows matched the exact 206 mutant outcomes, all
+102 baseline identities and the whole-file selections. Wall
+needs another 2.01 s at the paired medians.
+
+- [Native paired image-sharing run](https://github.com/RuiCostafrg/oximut/actions/runs/44865297814)
+- [Verified shared-image score and trace](snapshot-shared-image-score.json)
+- Raw artifacts at `/root/oximut-evidence/vitest-fork-bundle/snapshot-native-shared-image-score`.

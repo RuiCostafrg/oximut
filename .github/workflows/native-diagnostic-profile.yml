@@ -9,6 +9,7 @@ on:
         default: accounting
         options:
           - accounting
+          - worker-snapshot-accounting
           - controller-jobs
           - worker-phases
           - fresh-worker-startup
@@ -221,7 +222,7 @@ jobs:
         run: |
           set -euo pipefail
           case "$CAPTURE_MODE" in
-            accounting) CAPTURE_ARGS=(--accounting) ;;
+            accounting|worker-snapshot-accounting) CAPTURE_ARGS=(--accounting) ;;
             controller-jobs) CAPTURE_ARGS=(--controller-jobs) ;;
             worker-phases) CAPTURE_ARGS=(--worker-phases) ;;
             fresh-worker-startup)
@@ -262,6 +263,17 @@ jobs:
           python3 benchmarks/profile_native.py --binary "$PROFILE_ROOT/oximut" \
             "${CAPTURE_ARGS[@]}" --workload "$PROFILE_WORKLOAD" --concurrency "$MATCHED_CONCURRENCY" \
             --output "$PROFILE_ROOT/capture" 2>&1 | tee "$PROFILE_ROOT/diagnostic.log"
+          if test "$CAPTURE_MODE" = worker-snapshot-accounting; then
+            test "$PROFILE_WORKLOAD" = colord-scale
+            test "$MATCHED_CONCURRENCY" = 4
+            OXIMUT_SNAPSHOT_SCORE_BINARY="$PROFILE_ROOT/oximut" \
+              OXIMUT_SNAPSHOT_COMPACT_ERRORS=1 OXIMUT_SNAPSHOT_SPECIALIZE_SELECTOR=1 \
+              SCORE_MODE=worker-snapshot-shared-image-score \
+              python3 benchmarks/profile_native.py \
+              --binary "$GITHUB_WORKSPACE/benchmarks/experiments/vitest-fork-bundle/shared-image-score-wrapper.sh" \
+              --accounting --workload "$PROFILE_WORKLOAD" --concurrency "$MATCHED_CONCURRENCY" \
+              --output "$PROFILE_ROOT/snapshot-accounting-capture" 2>&1 | tee "$PROFILE_ROOT/snapshot-accounting.log"
+          fi
           if test "$CAPTURE_MODE" = fresh-worker-startup; then
             node benchmarks/profiling/fresh-worker-startup.mjs "$PROFILE_ROOT/capture/profiles" "$PROFILE_ROOT"
           fi
