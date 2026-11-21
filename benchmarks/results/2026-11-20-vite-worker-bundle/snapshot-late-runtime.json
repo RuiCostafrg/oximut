@@ -1,0 +1,852 @@
+{
+  "diagnostic_only": true,
+  "run": "https://github.com/RuiCostafrg/oximut/actions/runs/44861171977",
+  "commit": "e4628205544513f07a94193eddb0e74c7fb7497b",
+  "artifact_sha256": "84788b7faa5b797b17f5ac061540327273545d0b5ef75b4b8914eb370f655ae5",
+  "arms": {
+    "capture": {
+      "resources": {
+        "vitest": {
+          "wall_seconds": 1.473547257000007,
+          "cpu_seconds": 1.825929,
+          "peak_aggregate_rss_bytes": 283467776
+        },
+        "oximut": {
+          "wall_seconds": 26.575410136000016,
+          "cpu_seconds": 72.878266,
+          "peak_aggregate_rss_bytes": 757403648
+        },
+        "stryker": {
+          "wall_seconds": 24.740364975000006,
+          "cpu_seconds": 77.085379,
+          "peak_aggregate_rss_bytes": 1235304448
+        }
+      },
+      "worker_cpu_ms": {
+        "startup": 25383.387,
+        "through_first_collection": 15951.729,
+        "after_first_collection": 15333.515,
+        "stop": 233.87500000000006
+      },
+      "worker_wall_median_ms": {
+        "request_to_fork": 22.490324499999588,
+        "startup": 150.0083339999992,
+        "dispatch_delay": 0.12814949999847158,
+        "through_first_collection": 108.08099349999884,
+        "after_first_collection": 72.65520699999888,
+        "stop": 7.3023959999995895
+      },
+      "last_finish_path_ms": {
+        "request_to_fork": 1596.2917200000168,
+        "startup": 8425.206706999998,
+        "dispatch_delay": 7.098807999983819,
+        "through_first_collection": 6082.69320000002,
+        "after_first_collection": 6068.555678999997,
+        "finish_to_reply": 335.2219980000086
+      },
+      "controller_cpu_ms": 7614.664,
+      "controller_mutant_request_cpu_ms": 5505.819,
+      "worker_rpc_totals": {
+        "fetch": 8136,
+        "fetchModule": 0,
+        "resolveId": 0,
+        "onCollected": 218
+      }
+    },
+    "composed-capture": {
+      "resources": {
+        "vitest": {
+          "wall_seconds": 1.3427811720000022,
+          "cpu_seconds": 1.737858,
+          "peak_aggregate_rss_bytes": 276832256
+        },
+        "oximut": {
+          "wall_seconds": 17.711087413,
+          "cpu_seconds": 46.766285,
+          "peak_aggregate_rss_bytes": 848891904
+        },
+        "stryker": {
+          "wall_seconds": 24.605722524000015,
+          "cpu_seconds": 76.356289,
+          "peak_aggregate_rss_bytes": 1226080256
+        }
+      },
+      "worker_cpu_ms": {
+        "startup": 14454.908,
+        "through_first_collection": 10846.659,
+        "after_first_collection": 8395.984,
+        "stop": 144.80200000000002
+      },
+      "worker_wall_median_ms": {
+        "request_to_fork": 23.627738000000136,
+        "startup": 85.36125099999936,
+        "dispatch_delay": 0.11682800000107818,
+        "through_first_collection": 66.80402150000009,
+        "after_first_collection": 39.53436099999999,
+        "stop": 6.947504999999637
+      },
+      "last_finish_path_ms": {
+        "request_to_fork": 2090.5109899999925,
+        "startup": 5035.236427000002,
+        "dispatch_delay": 6.021591999992552,
+        "through_first_collection": 3793.1238280000084,
+        "after_first_collection": 2724.9283819999964,
+        "finish_to_reply": 319.65637100000595
+      },
+      "controller_cpu_ms": 5686.062,
+      "controller_mutant_request_cpu_ms": 3618.707,
+      "worker_rpc_totals": {
+        "fetch": 424,
+        "fetchModule": 0,
+        "resolveId": 0,
+        "onCollected": 218
+      },
+      "seed_reads": {
+        "calls": 0,
+        "bytes": 0,
+        "readNs": 0
+      },
+      "compacted_assertions": 202,
+      "specialized_switches": 112292,
+      "bundled_test_entries": 218,
+      "first_collection": {
+        "all_mutants": {
+          "workers": 206,
+          "methods": {
+            "fetch": {
+              "calls": 412,
+              "latency_ms": {
+                "sum": 1606.317455,
+                "median": 1.3199664999999978,
+                "p90": 2.7027253
+              },
+              "response_kinds": {
+                "tmpFile": 412
+              }
+            },
+            "resolve": {
+              "calls": 412,
+              "latency_ms": {
+                "sum": 3068.9743590000003,
+                "median": 8.130308500000002,
+                "p90": 15.9235153
+              },
+              "response_kinds": {
+                "other": 412
+              }
+            }
+          },
+          "stats": {
+            "elapsed_ms": {
+              "sum": 14656.25937,
+              "median": 65.71419449999999,
+              "p90": 82.6972475
+            },
+            "fetch_union_ms": {
+              "sum": 1606.317455,
+              "median": 2.2046864999999976,
+              "p90": 4.855608
+            },
+            "outside_fetch_union_ms": {
+              "sum": 13049.941915,
+              "median": 62.38340350000001,
+              "p90": 76.7040875
+            },
+            "worker_cpu_ms": {
+              "sum": 10846.659,
+              "median": 53.825500000000005,
+              "p90": 55.8325
+            },
+            "sync_compile_cpu_ms": {
+              "sum": 707.67,
+              "median": 3.6665,
+              "p90": 4.404
+            },
+            "sync_compile_wall_ms": {
+              "sum": 938.9636390000001,
+              "median": 3.890011,
+              "p90": 6.979174
+            },
+            "inline_evaluator_self_ms": {
+              "sum": 3053.0429729999996,
+              "median": 13.30238099999999,
+              "p90": 21.506180000000022
+            },
+            "external_evaluator_self_ms": {
+              "sum": 321.42514200000016,
+              "median": 1.355373500000006,
+              "p90": 2.416556
+            },
+            "evaluator_self_negative_entries": {
+              "sum": 0.0,
+              "median": 0.0,
+              "p90": 0.0
+            },
+            "compile_count": {
+              "sum": 412.0,
+              "median": 2.0,
+              "p90": 2.0
+            },
+            "evaluator_entries": {
+              "sum": 824.0,
+              "median": 4.0,
+              "p90": 4.0
+            }
+          }
+        },
+        "last_finishers": {
+          "workers": 52,
+          "methods": {
+            "fetch": {
+              "calls": 104,
+              "latency_ms": {
+                "sum": 427.549868,
+                "median": 1.436003000000003,
+                "p90": 3.095402700000001
+              },
+              "response_kinds": {
+                "tmpFile": 104
+              }
+            },
+            "resolve": {
+              "calls": 104,
+              "latency_ms": {
+                "sum": 821.4364350000001,
+                "median": 7.9306874999999994,
+                "p90": 16.5082602
+              },
+              "response_kinds": {
+                "other": 104
+              }
+            }
+          },
+          "stats": {
+            "elapsed_ms": {
+              "sum": 3707.237985,
+              "median": 67.9507985,
+              "p90": 81.7450699
+            },
+            "fetch_union_ms": {
+              "sum": 427.549868,
+              "median": 2.1838475000000024,
+              "p90": 5.2338178
+            },
+            "outside_fetch_union_ms": {
+              "sum": 3279.688117,
+              "median": 63.66568099999999,
+              "p90": 77.4054064
+            },
+            "worker_cpu_ms": {
+              "sum": 2661.276,
+              "median": 53.3485,
+              "p90": 55.4061
+            },
+            "sync_compile_cpu_ms": {
+              "sum": 167.676,
+              "median": 3.7295,
+              "p90": 4.0036
+            },
+            "sync_compile_wall_ms": {
+              "sum": 226.407344,
+              "median": 3.843624,
+              "p90": 6.998510400000001
+            },
+            "inline_evaluator_self_ms": {
+              "sum": 733.412917,
+              "median": 12.891929000000005,
+              "p90": 20.756717400000024
+            },
+            "external_evaluator_self_ms": {
+              "sum": 79.899271,
+              "median": 1.350193499999989,
+              "p90": 1.8378096000000057
+            },
+            "evaluator_self_negative_entries": {
+              "sum": 0.0,
+              "median": 0.0,
+              "p90": 0.0
+            },
+            "compile_count": {
+              "sum": 104.0,
+              "median": 2.0,
+              "p90": 2.0
+            },
+            "evaluator_entries": {
+              "sum": 208.0,
+              "median": 4.0,
+              "p90": 4.0
+            }
+          }
+        },
+        "first_batch_mutants": {
+          "workers": 8,
+          "methods": {
+            "fetch": {
+              "calls": 16,
+              "latency_ms": {
+                "sum": 1048.794358,
+                "median": 45.8008775,
+                "p90": 169.6051995
+              },
+              "response_kinds": {
+                "tmpFile": 16
+              }
+            },
+            "resolve": {
+              "calls": 16,
+              "latency_ms": {
+                "sum": 157.041982,
+                "median": 12.6715265,
+                "p90": 17.389772999999998
+              },
+              "response_kinds": {
+                "other": 16
+              }
+            }
+          },
+          "stats": {
+            "elapsed_ms": {
+              "sum": 1599.415836,
+              "median": 204.255081,
+              "p90": 250.24279270000002
+            },
+            "fetch_union_ms": {
+              "sum": 1048.794358,
+              "median": 137.520621,
+              "p90": 181.23433290000003
+            },
+            "outside_fetch_union_ms": {
+              "sum": 550.6214779999999,
+              "median": 68.68743999999998,
+              "p90": 75.92755939999999
+            },
+            "worker_cpu_ms": {
+              "sum": 432.981,
+              "median": 53.2375,
+              "p90": 58.068200000000004
+            },
+            "sync_compile_cpu_ms": {
+              "sum": 25.628999999999998,
+              "median": 3.2110000000000003,
+              "p90": 3.9341999999999997
+            },
+            "sync_compile_wall_ms": {
+              "sum": 33.229451,
+              "median": 4.168949,
+              "p90": 6.0497749
+            },
+            "inline_evaluator_self_ms": {
+              "sum": 118.98078299999985,
+              "median": 15.211504999999967,
+              "p90": 19.2677913
+            },
+            "external_evaluator_self_ms": {
+              "sum": 11.924537000000015,
+              "median": 1.2605219999999804,
+              "p90": 2.0382208000000075
+            },
+            "evaluator_self_negative_entries": {
+              "sum": 0.0,
+              "median": 0.0,
+              "p90": 0.0
+            },
+            "compile_count": {
+              "sum": 16.0,
+              "median": 2.0,
+              "p90": 2.0
+            },
+            "evaluator_entries": {
+              "sum": 32.0,
+              "median": 4.0,
+              "p90": 4.0
+            }
+          }
+        },
+        "steady_batch_mutants": {
+          "workers": 198,
+          "methods": {
+            "fetch": {
+              "calls": 396,
+              "latency_ms": {
+                "sum": 557.523097,
+                "median": 1.2260165000000018,
+                "p90": 2.3591700000000007
+              },
+              "response_kinds": {
+                "tmpFile": 396
+              }
+            },
+            "resolve": {
+              "calls": 396,
+              "latency_ms": {
+                "sum": 2911.932377,
+                "median": 8.0217325,
+                "p90": 15.868444
+              },
+              "response_kinds": {
+                "other": 396
+              }
+            }
+          },
+          "stats": {
+            "elapsed_ms": {
+              "sum": 13056.843534,
+              "median": 64.74900450000001,
+              "p90": 80.03817280000001
+            },
+            "fetch_union_ms": {
+              "sum": 557.523097,
+              "median": 2.1804415000000006,
+              "p90": 4.263103599999998
+            },
+            "outside_fetch_union_ms": {
+              "sum": 12499.320437,
+              "median": 62.123287000000005,
+              "p90": 76.9091338
+            },
+            "worker_cpu_ms": {
+              "sum": 10413.678,
+              "median": 53.84,
+              "p90": 55.76469999999999
+            },
+            "sync_compile_cpu_ms": {
+              "sum": 682.041,
+              "median": 3.676,
+              "p90": 4.4149
+            },
+            "sync_compile_wall_ms": {
+              "sum": 905.734188,
+              "median": 3.8876939999999998,
+              "p90": 7.0735336
+            },
+            "inline_evaluator_self_ms": {
+              "sum": 2934.06219,
+              "median": 13.243672999999994,
+              "p90": 21.52666460000002
+            },
+            "external_evaluator_self_ms": {
+              "sum": 309.5006050000002,
+              "median": 1.3587599999999824,
+              "p90": 2.413553600000003
+            },
+            "evaluator_self_negative_entries": {
+              "sum": 0.0,
+              "median": 0.0,
+              "p90": 0.0
+            },
+            "compile_count": {
+              "sum": 396.0,
+              "median": 2.0,
+              "p90": 2.0
+            },
+            "evaluator_entries": {
+              "sum": 792.0,
+              "median": 4.0,
+              "p90": 4.0
+            }
+          }
+        }
+      }
+    },
+    "late-runtime-capture": {
+      "resources": {
+        "vitest": {
+          "wall_seconds": 1.3147177969999575,
+          "cpu_seconds": 1.700228,
+          "peak_aggregate_rss_bytes": 285872128
+        },
+        "oximut": {
+          "wall_seconds": 16.57645449900002,
+          "cpu_seconds": 42.665401,
+          "peak_aggregate_rss_bytes": 831815680
+        },
+        "stryker": {
+          "wall_seconds": 24.285436575999995,
+          "cpu_seconds": 75.178447,
+          "peak_aggregate_rss_bytes": 1209319424
+        }
+      },
+      "worker_cpu_ms": {
+        "startup": 14340.089,
+        "through_first_collection": 7442.609,
+        "after_first_collection": 8328.761,
+        "stop": 148.72600000000008
+      },
+      "worker_wall_median_ms": {
+        "request_to_fork": 23.0721824999996,
+        "startup": 85.66965700000037,
+        "dispatch_delay": 0.11989949999986038,
+        "through_first_collection": 46.71647949999988,
+        "after_first_collection": 40.37468900000067,
+        "stop": 6.654862000000435
+      },
+      "last_finish_path_ms": {
+        "request_to_fork": 2146.681840999993,
+        "startup": 5077.967072000006,
+        "dispatch_delay": 6.326306999996291,
+        "through_first_collection": 2893.900901000003,
+        "after_first_collection": 2576.6716839999976,
+        "finish_to_reply": 307.42619599999625
+      },
+      "controller_cpu_ms": 5478.884,
+      "controller_mutant_request_cpu_ms": 3508.4030000000002,
+      "worker_rpc_totals": {
+        "fetch": 218,
+        "fetchModule": 0,
+        "resolveId": 0,
+        "onCollected": 218
+      },
+      "seed_reads": {
+        "calls": 0,
+        "bytes": 0,
+        "readNs": 0
+      },
+      "compacted_assertions": 202,
+      "specialized_switches": 112292,
+      "bundled_test_entries": 218,
+      "first_collection": {
+        "all_mutants": {
+          "workers": 206,
+          "methods": {
+            "fetch": {
+              "calls": 206,
+              "latency_ms": {
+                "sum": 1067.618039,
+                "median": 0.4604405000000007,
+                "p90": 3.075936500000001
+              },
+              "response_kinds": {
+                "tmpFile": 206
+              }
+            },
+            "resolve": {
+              "calls": 206,
+              "latency_ms": {
+                "sum": 567.735743,
+                "median": 1.2952065,
+                "p90": 4.698660500000001
+              },
+              "response_kinds": {
+                "other": 206
+              }
+            }
+          },
+          "stats": {
+            "elapsed_ms": {
+              "sum": 10431.189809,
+              "median": 45.2006605,
+              "p90": 62.578447499999996
+            },
+            "fetch_union_ms": {
+              "sum": 1067.618039,
+              "median": 0.4604405000000007,
+              "p90": 3.075936500000001
+            },
+            "outside_fetch_union_ms": {
+              "sum": 9363.57177,
+              "median": 44.2995895,
+              "p90": 59.11518550000001
+            },
+            "worker_cpu_ms": {
+              "sum": 7442.609,
+              "median": 37.4895,
+              "p90": 39.3995
+            },
+            "sync_compile_cpu_ms": {
+              "sum": 694.361,
+              "median": 3.6079999999999997,
+              "p90": 4.1095
+            },
+            "sync_compile_wall_ms": {
+              "sum": 938.848742,
+              "median": 3.7119945,
+              "p90": 7.625458
+            },
+            "inline_evaluator_self_ms": {
+              "sum": 2723.957554,
+              "median": 11.520688999999997,
+              "p90": 19.497910000000005
+            },
+            "external_evaluator_self_ms": {
+              "sum": 140.50055499999993,
+              "median": 0.5490410000000026,
+              "p90": 0.6737099999999998
+            },
+            "evaluator_self_negative_entries": {
+              "sum": 0.0,
+              "median": 0.0,
+              "p90": 0.0
+            },
+            "compile_count": {
+              "sum": 206.0,
+              "median": 1.0,
+              "p90": 1.0
+            },
+            "evaluator_entries": {
+              "sum": 412.0,
+              "median": 2.0,
+              "p90": 2.0
+            }
+          }
+        },
+        "last_finishers": {
+          "workers": 52,
+          "methods": {
+            "fetch": {
+              "calls": 52,
+              "latency_ms": {
+                "sum": 409.260754,
+                "median": 0.5684174999999998,
+                "p90": 3.0772385000000013
+              },
+              "response_kinds": {
+                "tmpFile": 52
+              }
+            },
+            "resolve": {
+              "calls": 52,
+              "latency_ms": {
+                "sum": 124.234742,
+                "median": 1.5734764999999995,
+                "p90": 5.356277599999999
+              },
+              "response_kinds": {
+                "other": 52
+              }
+            }
+          },
+          "stats": {
+            "elapsed_ms": {
+              "sum": 2809.747765,
+              "median": 46.862255000000005,
+              "p90": 65.91107600000001
+            },
+            "fetch_union_ms": {
+              "sum": 409.260754,
+              "median": 0.5684174999999998,
+              "p90": 3.0772385000000013
+            },
+            "outside_fetch_union_ms": {
+              "sum": 2400.487011,
+              "median": 45.748143,
+              "p90": 59.192083100000005
+            },
+            "worker_cpu_ms": {
+              "sum": 1839.039,
+              "median": 37.538,
+              "p90": 39.879799999999996
+            },
+            "sync_compile_cpu_ms": {
+              "sum": 170.801,
+              "median": 3.541,
+              "p90": 4.1166
+            },
+            "sync_compile_wall_ms": {
+              "sum": 246.119239,
+              "median": 3.8004025,
+              "p90": 8.062735700000001
+            },
+            "inline_evaluator_self_ms": {
+              "sum": 691.026366,
+              "median": 11.517322999999998,
+              "p90": 18.902282499999995
+            },
+            "external_evaluator_self_ms": {
+              "sum": 40.46604800000003,
+              "median": 0.5585740000000072,
+              "p90": 0.6740236000000024
+            },
+            "evaluator_self_negative_entries": {
+              "sum": 0.0,
+              "median": 0.0,
+              "p90": 0.0
+            },
+            "compile_count": {
+              "sum": 52.0,
+              "median": 1.0,
+              "p90": 1.0
+            },
+            "evaluator_entries": {
+              "sum": 104.0,
+              "median": 2.0,
+              "p90": 2.0
+            }
+          }
+        },
+        "first_batch_mutants": {
+          "workers": 8,
+          "methods": {
+            "fetch": {
+              "calls": 8,
+              "latency_ms": {
+                "sum": 814.782124,
+                "median": 101.733048,
+                "p90": 150.68799359999997
+              },
+              "response_kinds": {
+                "tmpFile": 8
+              }
+            },
+            "resolve": {
+              "calls": 8,
+              "latency_ms": {
+                "sum": 158.19854899999999,
+                "median": 6.887036,
+                "p90": 42.6400636
+              },
+              "response_kinds": {
+                "other": 8
+              }
+            }
+          },
+          "stats": {
+            "elapsed_ms": {
+              "sum": 1369.372808,
+              "median": 163.57779299999999,
+              "p90": 204.7751857
+            },
+            "fetch_union_ms": {
+              "sum": 814.782124,
+              "median": 101.733048,
+              "p90": 150.68799359999997
+            },
+            "outside_fetch_union_ms": {
+              "sum": 554.590684,
+              "median": 56.16308550000001,
+              "p90": 92.6664494
+            },
+            "worker_cpu_ms": {
+              "sum": 287.85900000000004,
+              "median": 37.624,
+              "p90": 37.947900000000004
+            },
+            "sync_compile_cpu_ms": {
+              "sum": 30.038,
+              "median": 4.0024999999999995,
+              "p90": 4.3438
+            },
+            "sync_compile_wall_ms": {
+              "sum": 54.704932,
+              "median": 6.5484375,
+              "p90": 8.758420000000001
+            },
+            "inline_evaluator_self_ms": {
+              "sum": 143.35717199999996,
+              "median": 16.916785000000004,
+              "p90": 22.782630399999988
+            },
+            "external_evaluator_self_ms": {
+              "sum": 5.60092800000001,
+              "median": 0.5298000000000087,
+              "p90": 0.9903741000000025
+            },
+            "evaluator_self_negative_entries": {
+              "sum": 0.0,
+              "median": 0.0,
+              "p90": 0.0
+            },
+            "compile_count": {
+              "sum": 8.0,
+              "median": 1.0,
+              "p90": 1.0
+            },
+            "evaluator_entries": {
+              "sum": 16.0,
+              "median": 2.0,
+              "p90": 2.0
+            }
+          }
+        },
+        "steady_batch_mutants": {
+          "workers": 198,
+          "methods": {
+            "fetch": {
+              "calls": 198,
+              "latency_ms": {
+                "sum": 252.835915,
+                "median": 0.44382949999999965,
+                "p90": 2.6887626000000004
+              },
+              "response_kinds": {
+                "tmpFile": 198
+              }
+            },
+            "resolve": {
+              "calls": 198,
+              "latency_ms": {
+                "sum": 409.537194,
+                "median": 1.2664734999999991,
+                "p90": 4.4450429
+              },
+              "response_kinds": {
+                "other": 198
+              }
+            }
+          },
+          "stats": {
+            "elapsed_ms": {
+              "sum": 9061.817001,
+              "median": 44.7772115,
+              "p90": 60.76388420000001
+            },
+            "fetch_union_ms": {
+              "sum": 252.835915,
+              "median": 0.44382949999999965,
+              "p90": 2.6887626000000004
+            },
+            "outside_fetch_union_ms": {
+              "sum": 8808.981086,
+              "median": 43.9136175,
+              "p90": 58.60091050000001
+            },
+            "worker_cpu_ms": {
+              "sum": 7154.75,
+              "median": 37.4895,
+              "p90": 39.4688
+            },
+            "sync_compile_cpu_ms": {
+              "sum": 664.323,
+              "median": 3.583,
+              "p90": 4.0592
+            },
+            "sync_compile_wall_ms": {
+              "sum": 884.14381,
+              "median": 3.7010545,
+              "p90": 7.525699499999999
+            },
+            "inline_evaluator_self_ms": {
+              "sum": 2580.600382,
+              "median": 11.484713,
+              "p90": 19.19153100000002
+            },
+            "external_evaluator_self_ms": {
+              "sum": 134.89962699999992,
+              "median": 0.5497174999999999,
+              "p90": 0.6732891999999993
+            },
+            "evaluator_self_negative_entries": {
+              "sum": 0.0,
+              "median": 0.0,
+              "p90": 0.0
+            },
+            "compile_count": {
+              "sum": 198.0,
+              "median": 1.0,
+              "p90": 1.0
+            },
+            "evaluator_entries": {
+              "sum": 396.0,
+              "median": 2.0,
+              "p90": 2.0
+            }
+          }
+        }
+      }
+    }
+  },
+  "snapshot_bytes": 9644958,
+  "setup_resources": {
+    "snapshot-bundle": "\tCommand being timed: \"node benchmarks/experiments/vitest-fork-bundle/snapshot.mjs /home/runner/work/oximut/oximut/node_modules/vitest/dist/.oximut-snapshot.cSnQV7\"\n\tUser time (seconds): 0.69\n\tSystem time (seconds): 0.13\n\tPercent of CPU this job got: 136%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:00.61\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 412440\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 36449\n\tVoluntary context switches: 1288\n\tInvoluntary context switches: 160\n\tSwaps: 0\n\tFile system inputs: 0\n\tFile system outputs: 3776\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+    "snapshot-build": "\tCommand being timed: \"node --build-snapshot --snapshot-blob=/home/runner/work/oximut/oximut/node_modules/vitest/dist/.oximut-snapshot.cSnQV7/vitest.blob /home/runner/work/oximut/oximut/node_modules/vitest/dist/.oximut-snapshot.cSnQV7/seed.cjs\"\n\tUser time (seconds): 0.38\n\tSystem time (seconds): 0.04\n\tPercent of CPU this job got: 104%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:00.41\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 81544\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 18148\n\tVoluntary context switches: 90\n\tInvoluntary context switches: 8\n\tSwaps: 0\n\tFile system inputs: 0\n\tFile system outputs: 18840\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n"
+  }
+}

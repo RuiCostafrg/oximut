@@ -659,3 +659,33 @@ standard shared batch path. Each group drains before the next launch.
 The local smoke matched a killed mutant and two survivors through
 two windows at width two. The native paired run compares it with
 the same combined configuration using one request per batch.
+
+## Late worker imports in the snapshot
+
+The candidate bundles the lane runner, console interceptor, and default
+Vitest snapshot-environment module. It still constructs and configures
+these objects in each restored worker. The runner shortcut applies to
+the exact Oximut lane runner path. Other runners use Vitest's original
+loader.
+
+Both diagnostic arms qualified all 206 mutant outcomes, all 102 baseline
+test identities, and the whole-file dispatch map. Through first collection
+the candidate made 206 fetches and 206 resolver calls, down from 412 of
+each. Their summed resolver intervals fell from 3.07 s to 0.57 s across
+workers. Startup changed little. First-collection worker CPU fell from
+10.85 s to 7.44 s, and the last-finisher interval fell from 3.79 s to
+2.89 s. Command wall fell from 17.71 s to 16.58 s and CPU from 46.77 s to
+42.67 s in this fixed-order diagnostic. The paired score charges image
+generation in both arms.
+
+- [Native diagnostic](https://github.com/RuiCostafrg/oximut/actions/runs/44861171977)
+- [Verified diagnostic data](snapshot-late-runtime.json)
+- Raw evidence at `/root/oximut-evidence/vitest-fork-bundle/snapshot-native-late-runtime`.
+
+```sh
+gh workflow run native-diagnostic-profile.yml --ref t3/fresh-worker-startup \
+  -f capture_mode=worker-snapshot-late-runtime -f workload=colord-scale -f concurrency=4
+python3 benchmarks/results/2026-11-20-vite-worker-bundle/summarize.py --followup late-runtime \
+  /root/oximut-evidence/vitest-fork-bundle/snapshot-native-late-runtime \
+  /root/oximut-evidence/scale-bottlenecks/workers/artifact/capture
+```
