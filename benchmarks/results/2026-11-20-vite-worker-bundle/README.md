@@ -723,3 +723,47 @@ gh workflow run native-diagnostic-profile.yml --ref t3/fresh-worker-startup \
   -f capture_mode=worker-snapshot-composed-startup -f workload=colord-scale -f concurrency=4
 node benchmarks/profiling/fresh-worker-startup.mjs "$PROFILE_ROOT/composed-capture/profiles" "$PROFILE_ROOT"
 ```
+
+## Controller-side windows and selection order
+
+The windowed candidate used 7.5% less CPU and took 6.1% longer
+than standard batches across five alternating native pairs.
+The 36 rows matched the historical 206 mutant identities and
+outcomes, all 102 baseline test identities, and every whole-file
+selection. The mutation phase took 0.80–1.17 s longer in each
+pair. Process-tree CPU divided by elapsed time fell from a
+median of 2.55 to 2.22 CPU seconds per elapsed second. This
+measures average process-tree utilization across the command.
+It does not identify which worker or runtime was waiting.
+
+| Windowed compared with same-campaign standard batches | Median ratio | 95% bootstrap interval |
+| --- | ---: | ---: |
+| Wall | 1.061× | 1.044–1.069× |
+| CPU | 0.925× | 0.921–0.926× |
+| Sampled peak aggregate RSS | 1.028× | 0.984–1.047× |
+
+Both scheduling variants tested whether handing off fewer
+batches or filling an available slot sooner could recover the
+observed idle intervals in the standard batch trace. Both paid
+more wall time despite reducing CPU. The fixed-duration replay
+preserves the first wave in each controller and sorts the
+remaining work using the selected file names or file count.
+On the three retained combined and late-runtime traces, those
+sorts add 10–124 ms to the sum of request-to-last-exit intervals.
+That replay cannot predict how fork duration changes when
+neighbors change. It rules out a meaningful direct saving
+from these selection sort keys under the measured durations.
+Keep standard batches and prioritize eliminating runtime work
+that repeats in every fresh fork.
+
+- [Native paired windowed run](https://github.com/RuiCostafrg/oximut/actions/runs/44861781662)
+- [Verified windowed score](snapshot-windowed-score.json)
+- Raw artifacts at `/root/oximut-evidence/vitest-fork-bundle/snapshot-native-windowed-score`.
+
+```sh
+gh workflow run native-diagnostic-profile.yml --ref t3/fresh-worker-startup \
+  -f capture_mode=worker-snapshot-windowed-score -f workload=colord-scale -f concurrency=4
+base=/root/oximut-evidence/vitest-fork-bundle
+python3 benchmarks/results/2026-11-20-rolling-dispatch/replay.py --selected-files \
+  "$base/snapshot-native-late-runtime/artifact/late-runtime-capture/profiles"
+```

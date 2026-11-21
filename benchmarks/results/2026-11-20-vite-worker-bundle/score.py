@@ -27,13 +27,26 @@ def outcomes(row):
     return {identity: mutant['outcome'] for identity, mutant in row['mutations'].items()}
 
 
-def test_selection(location, row):
+def oximut_report(location, row):
     report = Path(row['report_file'])
-    mutants = read_json(location / report.parent.name / report.name)['mutants']
+    return read_json(location / report.parent.name / report.name)
+
+
+def test_selection(location, row):
+    mutants = oximut_report(location, row)['mutants']
     return {mutant['id']: {**mutant['selection'],
                            'files': [str(Path(file).relative_to(row['cwd']))
                                      for file in mutant['selection']['files']]}
             for mutant in mutants}
+
+
+def baseline_tests(location, row):
+    coverage = oximut_report(location, row)['baseline']['coverage']
+    assert coverage['complete']
+    identities = {(str(Path(test['file']).relative_to(row['cwd'])), test['name'])
+                  for test in coverage['tests']}
+    assert len(coverage['tests']) == len(identities) == 102
+    return identities
 
 
 def verify(directory, reference):
@@ -85,6 +98,7 @@ def verify(directory, reference):
 
     historical = rows(reference)
     historical_selection = test_selection(reference.parent, historical['oximut'])
+    historical_tests = baseline_tests(reference.parent, historical['oximut'])
     assert len(historical_selection) == 206
     measurements = {'before': [], 'after': []}
     attempts = read_json(benchmark / 'attempts.json')
@@ -107,12 +121,14 @@ def verify(directory, reference):
                 assert not row['memory_errors']
                 for key in ('workload_sha256', 'declared_test_identity_sha256'):
                     assert row[key] == historical[name][key], (variant, index, name, key)
+                assert row.get('test_identity_sha256') == historical[name].get('test_identity_sha256')
                 if name != 'vitest':
                     assert row['mutation_identity_outcome_sha256'] == historical[name]['mutation_identity_outcome_sha256']
                     assert len(outcomes(row)) == 206 and outcomes(row) == outcomes(historical[name])
             oximut = trial['oximut']
             assert oximut['selection_mode_counts'] == historical['oximut']['selection_mode_counts']
             assert test_selection(location, oximut) == historical_selection
+            assert baseline_tests(location, oximut) == historical_tests
             assert oximut['baseline_test_counts'] == {'passed': 102, 'failed': 0, 'skipped': 0}
             resources = oximut['resources']
             assert resources['effectiveWorkers'] == resources['maxActiveJobs'] == 4
