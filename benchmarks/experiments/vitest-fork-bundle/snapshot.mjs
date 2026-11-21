@@ -17,6 +17,8 @@ const forkInit = join(dist, 'chunks/init-forks.BaDXQSD8.js');
 const api = join(dist, 'index.js');
 const laneRunner = fileURLToPath(new URL('../../../packages/vitest-adapter/lane-runner.mjs', import.meta.url));
 const inlineLateRuntime = process.env.OXIMUT_INLINE_LATE_RUNTIME === '1';
+const projectFactories = process.env.OXIMUT_PROJECT_FACTORY_SNAPSHOT === '1';
+assert(!projectFactories || inlineLateRuntime, 'Project factories need the inlined lane runner');
 const resolveBridge = join(dir, 'resolve.mjs');
 const apiBridge = pathToFileURL(join(dir, 'api.mjs')).href;
 const seedId = '\0oximut-snapshot-seed';
@@ -94,7 +96,8 @@ startupSnapshot.setDeserializeMainFunction(async () => {
   }
   if (evidence && process.env.OXIMUT_PROJECT_BUNDLE_DIR && process.env.OXIMUT_ACTIVE_MUTANT) {
     const entries = [];
-    globalThis[Symbol.for('oximut.diagnostic.bundledEntry')] = (file, modules) => entries.push({file, modules});
+    globalThis[Symbol.for('oximut.diagnostic.bundledEntry')] = (file, modules, factory = false) =>
+      entries.push({file, modules, ...(factory ? {factory} : {})});
     const send = process.send;
     process.send = function (message, ...args) {
       if (message?.__vitest_worker_response__ === true && message.type === 'testfileFinished')
@@ -105,7 +108,8 @@ startupSnapshot.setDeserializeMainFunction(async () => {
   }
   if (evidence)
     writeFileSync(evidence + '/' + process.pid + '.json',
-      JSON.stringify({pid: process.pid, ppid: process.ppid, baselineTier}), {flag: 'wx'});
+      JSON.stringify({pid: process.pid, ppid: process.ppid, baselineTier,
+        ${projectFactories ? "projectFactories: [...(globalThis[Symbol.for('oximut.diagnostic.projectFactories')]?.keys() ?? [])]" : ''}}), {flag: 'wx'});
   startFork();
 });`;
 
@@ -153,6 +157,18 @@ const bundle = await rolldown({
       if (source.startsWith('file:')) return {id: source, external: true};
     },
     transform(source, id) {
+      if (projectFactories && id === laneRunner) {
+        const marker = '  onAfterRunTask(task) {';
+        assert.equal(source.split(marker).length, 2);
+        return source.replace(marker, `  importFile(filepath, source) {
+    const selector = process.env.OXIMUT_ACTIVE_MUTANT;
+    if (source !== 'collect' || !selector) return super.importFile(filepath, source);
+    const entry = globalThis[Symbol.for('oximut.diagnostic.projectFactories')]?.get(filepath);
+    if (!entry) throw new Error('Missing restored project factory for ' + filepath);
+    return entry(selector);
+  }
+  ${marker.trimStart()}`);
+      }
       if (id.endsWith('/@vitest/mocker/dist/redirect.js')) {
         const access = 'module$1.builtinModules';
         assert(source.includes(access));

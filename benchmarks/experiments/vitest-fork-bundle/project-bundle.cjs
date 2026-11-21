@@ -8,7 +8,28 @@ if (directory && process.argv[1]?.endsWith('/m2-worker.ts')) {
   const path = require('node:path');
   const { registerHooks } = require('node:module');
   const compiler = path.resolve(__dirname, '../../../node_modules/.bin/tsc');
+  const projectFactories = process.env.OXIMUT_PROJECT_FACTORY_SNAPSHOT === '1';
   let barrel;
+
+  function buildProjectImage(factories) {
+    const base = path.dirname(process.env.OXIMUT_SNAPSHOT_BLOB);
+    const seedPath = path.join(base, 'project-seed-' + process.pid + '.cjs');
+    const image = path.join(directory, 'project-' + process.pid + '.blob');
+    const seed = fs.readFileSync(path.join(base, 'seed.offline.cjs'), 'utf8');
+    const entries = `\nglobalThis[Symbol.for('oximut.diagnostic.projectFactories')] = new Map([
+${factories.join(',\n')}
+]);
+for (const factory of globalThis[Symbol.for('oximut.diagnostic.projectFactories')].values()) factory();
+`;
+    try {
+      fs.writeFileSync(seedPath, seed + entries, {flag: 'wx'});
+      execFileSync(process.execPath, ['--build-snapshot', `--snapshot-blob=${image}`, seedPath],
+        {env: {...process.env, NODE_OPTIONS: ''}, stdio: ['ignore', 'inherit', 'inherit']});
+      globalThis[Symbol.for('oximut.diagnostic.projectImage')] = image;
+    } finally {
+      fs.rmSync(seedPath, {force: true});
+    }
+  }
 
   globalThis[Symbol.for('oximut.diagnostic.projectBundle')] = async (root, residents) => {
     assert.equal(JSON.parse(fs.readFileSync(path.join(root, 'package.json'))).name,
@@ -26,12 +47,13 @@ if (directory && process.argv[1]?.endsWith('/m2-worker.ts')) {
     const files = fs.readdirSync(path.join(root, 'tests')).filter(name => name.endsWith('.test.ts')).sort();
     assert.equal(files.length, 4);
     const outputs = new Map();
+    const factories = [];
     for (const name of files) {
       const input = path.join(root, 'tests', name);
       const build = await rolldown({
         cwd: root,
         input,
-        platform: 'node',
+        platform: projectFactories ? 'neutral' : 'node',
         treeshake: false,
         resolve: {extensions: ['.ts', '.js']},
         external: id => !id.startsWith('.') && !path.isAbsolute(id),
@@ -47,7 +69,8 @@ if (directory && process.argv[1]?.endsWith('/m2-worker.ts')) {
       try {
         const {output} = await build.generate({
           file: input.replace(/\.ts$/, '.js'),
-          format: 'es',
+          format: projectFactories ? 'cjs' : 'es',
+          polyfillRequire: !projectFactories,
           sourcemap: 'hidden',
           sourcemapPathTransform: (source, mapPath) => path.resolve(path.dirname(mapPath), source),
           codeSplitting: false,
@@ -57,13 +80,29 @@ if (directory && process.argv[1]?.endsWith('/m2-worker.ts')) {
         const [chunk] = chunks;
         assert(chunk.isEntry && chunk.map);
         const members = Object.keys(chunk.modules);
-        const observe = `globalThis[Symbol.for('oximut.diagnostic.bundledEntry')]?.(${JSON.stringify(input)},${JSON.stringify(members)});\n`;
+        const observation = (factory = false) =>
+          `globalThis[Symbol.for('oximut.diagnostic.bundledEntry')]?.(${JSON.stringify(input)},${JSON.stringify(members)},${factory});\n`;
         // Appending the observation avoids shifting existing mappings.
-        outputs.set(input, {code: chunk.code + '\n' + observe, map: JSON.stringify(chunk.map)});
+        outputs.set(input, {code: chunk.code + '\n' + observation(), map: JSON.stringify(chunk.map)});
+        if (projectFactories) {
+          assert.deepEqual({imports: chunk.imports, dynamicImports: chunk.dynamicImports, exports: chunk.exports},
+            {imports: [], dynamicImports: [], exports: []}, `Project factories require a closed graph for ${name}`);
+          assert(!chunk.code.includes('import.meta'), 'Project factories require context-free module metadata');
+          const body = chunk.code.replace(
+            /process[.]env[.]OXIMUT_ACTIVE_MUTANT *=== *["']([0-9a-f]{64})["']/g,
+            (original, id) => `activeSelector === "${id}"`.padEnd(original.length));
+          factories.push(`[${JSON.stringify(input)}, function (activeSelector) {
+  "use strict";
+  if (activeSelector === undefined) return;
+${body}
+${observation(true)}
+}]`);
+        }
       } finally {
         await build.close();
       }
     }
+    if (projectFactories) buildProjectImage(factories);
     return outputs;
   };
 

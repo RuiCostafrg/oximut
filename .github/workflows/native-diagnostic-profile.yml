@@ -29,6 +29,7 @@ on:
           - worker-snapshot-rolling-score
           - worker-snapshot-windowed-score
           - worker-snapshot-late-score
+          - worker-snapshot-factory-score
           - worker-snapshot-composed-profile
           - worker-snapshot-composed-startup
           - worker-snapshot-late-runtime
@@ -153,6 +154,10 @@ jobs:
               before="$after"
               after="benchmarks/experiments/vitest-fork-bundle/${SCORE_MODE#worker-snapshot-}-wrapper.sh"
               ;;
+            worker-snapshot-factory-score)
+              before=benchmarks/experiments/vitest-fork-bundle/late-score-wrapper.sh
+              after=benchmarks/experiments/vitest-fork-bundle/factory-score-wrapper.sh
+              ;;
           esac
           printf '%s\n' "$SCORE_MODE" > "$PROFILE_ROOT/snapshot-score-mode.txt"
           revision=$(git rev-parse HEAD)
@@ -162,6 +167,25 @@ jobs:
             --after-adapter-dir packages/vitest-adapter --after-commit "$revision" \
             --output "$PROFILE_ROOT/snapshot-score" --warmups 1 --repetitions 5 --timeout 1200 \
             2>&1 | tee "$PROFILE_ROOT/snapshot-score.log"
+      - name: Confirm factory evaluation in every fresh mutant fork
+        if: inputs.capture_mode == 'worker-snapshot-factory-score'
+        shell: bash
+        env:
+          OXIMUT_INLINE_LATE_RUNTIME: '1'
+          OXIMUT_PROJECT_FACTORY_SNAPSHOT: '1'
+        run: |
+          set -euo pipefail
+          ulimit -c 0
+          image_dir=$(mktemp -d "$GITHUB_WORKSPACE/node_modules/vitest/dist/.oximut-factory.XXXXXX")
+          trap 'rm -r "$image_dir"' EXIT
+          node benchmarks/experiments/vitest-fork-bundle/snapshot.mjs "$image_dir"
+          node --build-snapshot --snapshot-blob="$image_dir/vitest.blob" "$image_dir/seed.cjs"
+          mv "$image_dir/seed.cjs" "$image_dir/seed.offline.cjs"
+          cp -R "$image_dir" "$PROFILE_ROOT/factory-image"
+          python3 benchmarks/profile_native.py --binary "$PROFILE_ROOT/oximut" \
+            --worker-phases --startup-contract --first-collection --fork-snapshot "$image_dir/vitest.blob" \
+            --snapshot-compact-errors --snapshot-bundle-project --workload colord-scale --concurrency 4 \
+            --output "$PROFILE_ROOT/factory-capture" 2>&1 | tee "$PROFILE_ROOT/factory-diagnostic.log"
       - name: Capture unchanged workload with profiler overhead, no ratios or targets
         if: ${{ !endsWith(inputs.capture_mode, '-score') }}
         shell: bash

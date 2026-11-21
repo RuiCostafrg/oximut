@@ -243,7 +243,7 @@ def union(intervals):
     return total
 
 
-def collection(root, mutant_forks, baseline_forks, batches, capture_name='capture'):
+def collection(root, mutant_forks, baseline_forks, batches, capture_name='capture', *, factory_forks=()):
     location = root / capture_name
     forks = {}
     for file in sorted((location / 'collection').glob('collection-*.json')):
@@ -260,11 +260,16 @@ def collection(root, mutant_forks, baseline_forks, batches, capture_name='captur
         full_cpu = (sum(cpu['firstCollection'].values()) - sum(cpu['started'].values())) / 1000
         compile_cpu = sum(sum(c['cpuUs'].values()) for c in row['compiles']) / 1000
         compile_wall = sum(c['wallMs'] for c in row['compiles'])
-        require(0 <= compile_cpu <= full_cpu and 0 < compile_wall <= elapsed, 'invalid synchronous module compile evidence')
         evaluation = row['evaluation']
-        require(evaluation and all(e.get('selfTime') is not None and math.isfinite(e['selfTime'])
-                                   and 0 <= e['duration'] <= elapsed for e in evaluation),
-                'incomplete evaluator timing')
+        if key in factory_forks:
+            require(not spans and not row['compiles'] and not evaluation,
+                    'factory fork went through the module evaluator')
+        else:
+            require(0 <= compile_cpu <= full_cpu and 0 < compile_wall <= elapsed,
+                    'invalid synchronous module compile evidence')
+            require(evaluation and all(e.get('selfTime') is not None and math.isfinite(e['selfTime'])
+                                       and 0 <= e['duration'] <= elapsed for e in evaluation),
+                    'incomplete evaluator timing')
         fetches = [e for e in spans if e['method'] != 'resolve']
         fetch_union = union([(e['startMs'], e['endMs']) for e in fetches])
         forks[key] = ({'elapsed_ms': elapsed, 'fetch_union_ms': fetch_union,

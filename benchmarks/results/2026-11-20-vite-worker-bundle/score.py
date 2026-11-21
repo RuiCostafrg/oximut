@@ -2,6 +2,7 @@
 
 import argparse
 import hashlib
+import importlib.util
 import json
 from pathlib import Path
 import statistics
@@ -49,6 +50,42 @@ def baseline_tests(location, row):
     return identities
 
 
+def verify_factory_capture(root, reference, build):
+    module_path = Path(__file__).resolve().parents[1] / '2026-11-19-fresh-worker-startup/summarize.py'
+    spec = importlib.util.spec_from_file_location('fresh_worker_startup_summary', module_path)
+    startup = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(startup)
+    capture = root / 'factory-capture'
+    diagnostic = read_json(capture / 'diagnostic.json')
+    assert diagnostic['source_commit'] == build['commit']
+    assert diagnostic['execution_inputs']['binary_sha256'] == build['binary_sha256']
+    assert diagnostic['snapshot_sha256'] == digest(root / 'factory-image/vitest.blob')
+    assert all(build['source_sha256'][name] == checksum
+               for name, checksum in diagnostic['helper_sha256'].items())
+    verified, forks, baselines, batches = startup.selected_workload(
+        root, reference.parent.parent, require_launch_mapping=True, capture_name=capture.name)
+    observed = capture / 'snapshot-forks'
+    assert {(row['ppid'], row['pid']) for p in observed.glob('*.json') for row in [read_json(p)]
+            if row['projectFactories']} == forks.keys()
+    pid_to_selector = {pid: selector for (_, pid), selector in forks.items()}
+    assert len(pid_to_selector) == 206
+    report = read_json(capture / 'qualification/00-oximut/report.json')
+    by_id = {row['id']: row for row in report['mutants']}
+    bundles = {int(p.stem): read_json(p) for p in observed.glob('*.bundled')}
+    assert {pid: row['selector'] for pid, row in bundles.items()} == pid_to_selector
+    for row in bundles.values():
+        selection = by_id[row['selector']]['selection']
+        assert row['entries'] and all(entry.get('factory') for entry in row['entries'])
+        assert any(by_id[row['selector']]['file'] in entry['modules'] for entry in row['entries'])
+        if selection['mode'] == 'files':
+            assert {entry['file'] for entry in row['entries']} <= set(selection['files'])
+    metrics = startup.worker_metrics(capture / 'profiles')
+    return {'qualification': verified, 'worker_cpu_ms': metrics['worker_cpu_ms'],
+            'last_finish_path_ms': metrics['last_finish_path_ms'],
+            'first_collection': startup.collection(root, forks, baselines, batches,
+                                                   capture_name=capture.name, factory_forks=forks.keys())}
+
+
 def verify(directory, reference):
     artifact, = read_json(directory / 'artifacts.json')['artifacts']
     checksum = digest(directory / 'artifact.zip')
@@ -65,7 +102,7 @@ def verify(directory, reference):
     mode = mode_file.read_text().strip() if mode_file.exists() else 'worker-snapshot-score'
     assert mode in ('worker-snapshot-score', 'worker-snapshot-compact-score',
                     'worker-snapshot-composed-score', 'worker-snapshot-rolling-score',
-                    'worker-snapshot-windowed-score', 'worker-snapshot-late-score')
+                    'worker-snapshot-windowed-score', 'worker-snapshot-late-score', 'worker-snapshot-factory-score')
     build = read_json(root / 'build-metadata.json')
     benchmark = root / 'snapshot-score'
     metadata = read_json(benchmark / 'metadata.json')
@@ -89,6 +126,9 @@ def verify(directory, reference):
                 'worker-snapshot-late-score'):
         check_wrapper('before', 'score-wrapper.sh')
         check_wrapper('after', mode.removeprefix('worker-snapshot-') + '-wrapper.sh')
+    elif mode == 'worker-snapshot-factory-score':
+        check_wrapper('before', 'late-score-wrapper.sh')
+        check_wrapper('after', 'factory-score-wrapper.sh')
     else:
         assert provenance['before']['binary_sha256'] == build['binary_sha256']
         check_wrapper('after', 'score-wrapper.sh')
@@ -172,6 +212,8 @@ def verify(directory, reference):
         'longest_sample_gaps_seconds': longest_sample_gaps,
         'reported_mutant_test_count_ranges': reported_test_ranges,
         'necessary_cpu_seconds_saved_median_at_four_cpus': cpu_deficits,
+        **({'factory_diagnostic': verify_factory_capture(root, reference, build)}
+           if mode == 'worker-snapshot-factory-score' else {}),
     }
 
 

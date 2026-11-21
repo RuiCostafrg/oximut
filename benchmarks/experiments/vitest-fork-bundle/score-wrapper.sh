@@ -16,7 +16,7 @@ node --build-snapshot --snapshot-blob="$scratch/vitest.blob" "$scratch/seed.cjs"
 mv "$scratch/seed.cjs" "$scratch/seed.offline.cjs"
 options="--require=\"$experiment/snapshot-flags.cjs\""
 case "${SCORE_MODE:-}" in
-  worker-snapshot-composed-score|worker-snapshot-rolling-score|worker-snapshot-windowed-score|worker-snapshot-late-score)
+  worker-snapshot-composed-score|worker-snapshot-rolling-score|worker-snapshot-windowed-score|worker-snapshot-late-score|worker-snapshot-factory-score)
     export OXIMUT_PROJECT_BUNDLE_DIR="$scratch/project-bundle"
     mkdir "$OXIMUT_PROJECT_BUNDLE_DIR"
     options+=" --require=\"$experiment/project-bundle.cjs\""

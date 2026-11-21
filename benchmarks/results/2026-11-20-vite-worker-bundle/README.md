@@ -799,3 +799,33 @@ base=/root/oximut-evidence/vitest-fork-bundle
 python3 benchmarks/results/2026-11-20-rolling-dispatch/replay.py --selected-files \
   "$base/snapshot-native-late-runtime/artifact/late-runtime-capture/profiles"
 ```
+
+## Project entries in the worker image
+
+The next opt-in experiment adds four Colord test entry functions to
+the runtime image. The controller builds them from its original
+resident mutation bundle. The image builder compiles the entry bodies
+without executing project code or registering tests. Each fresh mutant
+fork calls the functions for its selected files with its own selector.
+Vitest still collects and executes those files and reports their
+results. A missing factory fails the selected file.
+
+The pair uses the late-import scores as its control. The command pays
+to build and remove the common image and any controller-generated
+images. The profiled capture is a separate invocation. It must confirm
+the exact 206 mutant forks, 102 baseline identities, selected files,
+and clean lifecycle, as well as the factory evaluation in every mutant.
+Its module trace separately checks for requests that escaped the
+factory and went through the stock Vite evaluator.
+
+The local Linux arm64 smoke verified a killed switch and an inactive
+switch that passed all 102 tests in separate restored processes.
+Each of the four scheduled files in both processes took the factory
+path. This is a Colord-only diagnostic. It requires a closed import
+graph and does not validate general Vitest module behavior or
+production source maps.
+
+```sh
+gh workflow run native-diagnostic-profile.yml --ref t3/fresh-worker-startup \
+  -f capture_mode=worker-snapshot-factory-score -f workload=colord-scale -f concurrency=4
+```
