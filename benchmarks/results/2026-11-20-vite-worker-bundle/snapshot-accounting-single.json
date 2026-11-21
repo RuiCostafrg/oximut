@@ -1,0 +1,139 @@
+{
+  "diagnostic_only": true,
+  "run": "https://github.com/RuiCostafrg/oximut/actions/runs/44866929727",
+  "commit": "d4d437fd16d6b86bff4661ea0181cc110fcc62f3",
+  "wrapper": "benchmarks/experiments/vitest-fork-bundle/single-image-score-wrapper.sh",
+  "artifact_sha256": "3c9f745d7eb5b2471c44f318ae152a35d5bd83bdc60d8d368a6ea0080ab74f6f",
+  "arms": {
+    "capture": {
+      "phase_wall_ms": {
+        "finalInputValidation": 0.000341,
+        "inputAndSchedulerPreparation": 26.947909,
+        "instrumentedBaseline": 552.021828,
+        "mutationExecution": 14191.961975,
+        "mutationPlanning": 11.78294,
+        "originalBaseline": 627.872533,
+        "postBaselineValidation": 0.000268,
+        "teardown": 23.483825
+      },
+      "resources": {
+        "wall_seconds": 15.447062235000004,
+        "cpu_seconds": 44.46569,
+        "peak_aggregate_rss_bytes": 805793792
+      },
+      "accounting": {
+        "clockVersion": 2,
+        "discovery": {
+          "calls": 321,
+          "cpuFailures": 0,
+          "selfCpuFailures": 0,
+          "selfCpuNs": 150313964,
+          "selfSystemNs": 120385000,
+          "selfUserNs": 30233000,
+          "timingFailures": 0,
+          "wallNs": 156012481
+        },
+        "evidence": "review wallNs and CPU failure counters; null CPU totals mean incomplete evidence",
+        "identityReads": {
+          "calls": 3553,
+          "cpuFailures": 0,
+          "selfCpuFailures": 0,
+          "selfCpuNs": 25852731,
+          "selfSystemNs": 29378000,
+          "selfUserNs": 3908000,
+          "timingFailures": 0,
+          "wallNs": 33817912
+        },
+        "rssReads": {
+          "calls": 2620,
+          "cpuFailures": 0,
+          "selfCpuFailures": 0,
+          "selfCpuNs": 659098760,
+          "selfSystemNs": 638062000,
+          "selfUserNs": 23381000,
+          "timingFailures": 0,
+          "wallNs": 1102828454
+        },
+        "sampling": {
+          "calls": 321,
+          "cpuFailures": 0,
+          "selfCpuFailures": 0,
+          "selfCpuNs": 861670239,
+          "selfSystemNs": 806292000,
+          "selfUserNs": 61126000,
+          "timingFailures": 0,
+          "wallNs": 1314554372
+        },
+        "scope": "CLI sampling thread only; excludes Node/controllers/test forks and external benchmark sampler",
+        "threadCpuFailures": 0,
+        "threadCpuSinceBudgetStartNs": 1052583300,
+        "timingNote": "stage totals are nested within inclusive sampling totals; getrusage/clock/framework overhead is not separately measured, so categories are not a process-tree CPU partition"
+      }
+    },
+    "snapshot-accounting-capture": {
+      "phase_wall_ms": {
+        "finalInputValidation": 0.000548,
+        "inputAndSchedulerPreparation": 27.782504,
+        "instrumentedBaseline": 547.760861,
+        "mutationExecution": 7517.028278,
+        "mutationPlanning": 11.350878,
+        "originalBaseline": 766.786049,
+        "postBaselineValidation": 0.00017999999999999998,
+        "teardown": 19.377371
+      },
+      "resources": {
+        "wall_seconds": 8.934242482999991,
+        "cpu_seconds": 23.563957000000002,
+        "peak_aggregate_rss_bytes": 964534272
+      },
+      "accounting": {
+        "clockVersion": 2,
+        "discovery": {
+          "calls": 202,
+          "cpuFailures": 0,
+          "selfCpuFailures": 0,
+          "selfCpuNs": 113337704,
+          "selfSystemNs": 91937000,
+          "selfUserNs": 21602000,
+          "timingFailures": 0,
+          "wallNs": 117312874
+        },
+        "evidence": "review wallNs and CPU failure counters; null CPU totals mean incomplete evidence",
+        "identityReads": {
+          "calls": 2165,
+          "cpuFailures": 0,
+          "selfCpuFailures": 0,
+          "selfCpuNs": 15441818,
+          "selfSystemNs": 18180000,
+          "selfUserNs": 1996000,
+          "timingFailures": 0,
+          "wallNs": 17838880
+        },
+        "rssReads": {
+          "calls": 1510,
+          "cpuFailures": 0,
+          "selfCpuFailures": 0,
+          "selfCpuNs": 448530533,
+          "selfSystemNs": 431574000,
+          "selfUserNs": 18282000,
+          "timingFailures": 0,
+          "wallNs": 747973184
+        },
+        "sampling": {
+          "calls": 202,
+          "cpuFailures": 0,
+          "selfCpuFailures": 0,
+          "selfCpuNs": 593220578,
+          "selfSystemNs": 554371000,
+          "selfUserNs": 43434000,
+          "timingFailures": 0,
+          "wallNs": 896032191
+        },
+        "scope": "CLI sampling thread only; excludes Node/controllers/test forks and external benchmark sampler",
+        "threadCpuFailures": 0,
+        "threadCpuSinceBudgetStartNs": 775384029,
+        "timingNote": "stage totals are nested within inclusive sampling totals; getrusage/clock/framework overhead is not separately measured, so categories are not a process-tree CPU partition"
+      }
+    }
+  }
+}

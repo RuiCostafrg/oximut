@@ -1009,3 +1009,104 @@ gh workflow run native-diagnostic-profile.yml --ref t3/fresh-worker-startup \
 gh workflow run native-diagnostic-profile.yml --ref t3/fresh-worker-startup \
   -f capture_mode=worker-snapshot-reuse-build-score -f workload=colord-scale -f concurrency=4
 ```
+
+## Reuse project build artifacts across controllers
+
+Reusing the first controller's project build cut median paired
+Oximut wall by 0.9% (95% bootstrap 0.972–0.999×) and CPU by 1.2%
+(0.983–1.002×) against the single-image control in the same five
+alternating native pairs. The before/after RSS interval
+(0.951–1.039×) includes no change.
+
+| Four-worker build-reuse campaign | Wall | Process-tree CPU | Sampled peak aggregate RSS |
+| --- | ---: | ---: | ---: |
+| Oximut reusing the project build | 9.00 s | 23.72 s | 915 MB |
+| Paired Stryker | 15.28 s | 49.79 s | 1,218 MB |
+| Median paired ratio | 0.587× | 0.476× | 0.752× |
+| 95% bootstrap interval | 0.585–0.600× | 0.472–0.480× | 0.743–0.793× |
+| Target | ≤0.50× | ≤0.80× | ≤0.80× |
+
+All 36 rows passed the exact workload checks. The separate
+trace verified 206 fresh mutant forks with 202 kills and four
+survivors, 102 tests, eight stock baseline forks, whole-file
+selection for 204 forks, and one shared 10.56 MB project
+image. Wall needs another 1.36 s at the paired medians.
+
+- [Native paired build-reuse run](https://github.com/RuiCostafrg/oximut/actions/runs/44866854631)
+- [Verified build-reuse score and trace](snapshot-reuse-build-score.json)
+- Raw artifacts at `/root/oximut-evidence/vitest-fork-bundle/snapshot-native-reuse-build-score`.
+
+```sh
+python3 benchmarks/results/2026-11-20-vite-worker-bundle/score.py \
+  /root/oximut-evidence/vitest-fork-bundle/snapshot-native-reuse-build-score \
+  /root/oximut-evidence/scale-bottlenecks/workers/artifact/capture/qualification/measurements.jsonl
+```
+
+## Where the remaining wall goes
+
+These are diagnostic observations, kept separate from the scores.
+
+The single-image accounting capture took 8.93 s wall and 23.56 s
+CPU. That is close to the scored medians. Named CLI phases cover
+8.89 s of it: mutation execution 7.52 s, original baseline 0.77 s,
+and instrumented baseline 0.55 s. The CLI's own resource-sampling
+thread used 0.78 s CPU, 0.45 s of it reading `smaps_rollup` in
+1,510 exact RSS reads. That is 3.3% of process-tree CPU.
+
+In the build-reuse trace, the main controller runs 46 synchronous
+mutant batches of four forks each. The median batch has these
+per-batch costs:
+
+| Step in a mutant batch | Median |
+| --- | ---: |
+| Reply to next request | 15.3 ms |
+| Request to first fork | 8.0 ms |
+| Each later spawn | about 3 ms |
+| Request to reply | 118.7 ms |
+
+The first mutant batch waited 519 ms before its first fork while
+the project image was built. Over the controller's 8.19 s
+lifetime, four children were live for 3.85 s, one to three for
+1.98 s, and none for 1.73 s.
+
+The runner exposes four logical CPUs on two physical cores. The
+command averaged 2.64 CPU seconds per elapsed second, against 3.26
+for Stryker. With hyperthreaded siblings, filling idle slots raises
+contention more than throughput. That is consistent with rolling
+dispatch (1.009× wall), controller windows (1.061×) and overlapped
+baselines, none of which recovered wall. Removing CPU work is the
+remaining lever. Mutant worker startup is the largest repeated
+block: 9.37 s of 23.7 s CPU (45 ms per fork) and 2.86 s of summed
+last-finisher paths. The launch replay put stock Node bootstrap
+before the first preload at 22 ms CPU. The 10.5 MB image restore
+adds about 14 ms.
+
+Ranked next steps by expected wall saving:
+
+1. Fork mutant workers from a pre-initialized zygote instead of
+   booting Node and restoring the image per mutant. Each mutant
+   remains a fresh OS process with its own copy-on-write address
+   space. Worker startup is the upper bound: 2.86 s of summed
+   last-finisher paths. Feasibility first, because Node does not
+   support `fork()` and the risk is high.
+2. Build the project image during the instrumented baseline
+   instead of on the first mutant batch. Up to 0.5 s.
+3. Cheaper CLI RSS sampling, such as fewer `smaps_rollup`
+   escalations. Up to 0.78 s CPU, so about 0.2–0.3 s wall
+   on this runner.
+4. Dropping the original baseline when the instrumented baseline
+   passes would save about 0.6–0.77 s. That changes
+   correctness guarantees, so it needs an owner decision.
+
+- [Single-image accounting run](https://github.com/RuiCostafrg/oximut/actions/runs/44866929727)
+- [Verified accounting data](snapshot-accounting-single.json)
+- Raw artifacts at `/root/oximut-evidence/vitest-fork-bundle/snapshot-native-accounting-single`.
+
+```sh
+gh workflow run native-diagnostic-profile.yml --ref t3/fresh-worker-startup \
+  -f capture_mode=worker-snapshot-accounting -f workload=colord-scale -f concurrency=4 \
+  -f accounting_variant=single-image
+python3 benchmarks/results/2026-11-20-vite-worker-bundle/summarize.py --snapshot-accounting \
+  /root/oximut-evidence/vitest-fork-bundle/snapshot-native-accounting-single \
+  /root/oximut-evidence/scale-bottlenecks/workers/artifact/capture
+```
