@@ -45,6 +45,13 @@ on:
         description: 'Matched parallelism: Oximut --workers and Stryker concurrency'
         type: string
         default: '1'
+      late_runtime_sample:
+        description: Optional worker CPU sample for the late-runtime diagnostic
+        type: choice
+        default: none
+        options:
+          - none
+          - execution
   pull_request:
     types: [opened, reopened, synchronize, labeled]
 
@@ -193,6 +200,7 @@ jobs:
           CAPTURE_MODE: ${{ inputs.capture_mode || 'accounting' }}
           PROFILE_WORKLOAD: ${{ inputs.workload || 'colord' }}
           MATCHED_CONCURRENCY: ${{ inputs.concurrency || '1' }}
+          LATE_RUNTIME_SAMPLE: ${{ inputs.late_runtime_sample || 'none' }}
         run: |
           set -euo pipefail
           case "$CAPTURE_MODE" in
@@ -319,6 +327,8 @@ jobs:
               "$PROFILE_ROOT/composed-capture/profiles" "$PROFILE_ROOT"
           fi
           if test "$CAPTURE_MODE" = worker-snapshot-late-runtime; then
+            sampling=()
+            if test "$LATE_RUNTIME_SAMPLE" = execution; then sampling+=(--execution-cpu-sample); fi
             late_dir=$(mktemp -d "$GITHUB_WORKSPACE/node_modules/vitest/dist/.oximut-snapshot-late.XXXXXX")
             OXIMUT_INLINE_LATE_RUNTIME=1 /usr/bin/time -v -o "$PROFILE_ROOT/late-bundle.time" \
               node benchmarks/experiments/vitest-fork-bundle/snapshot.mjs "$late_dir"
@@ -329,6 +339,7 @@ jobs:
             mv "$late_dir/seed.cjs" "$late_dir/seed.offline.cjs"
             python3 benchmarks/profile_native.py --binary "$PROFILE_ROOT/oximut" \
               "${CAPTURE_ARGS[@]}" --first-collection --fork-snapshot "$late_dir/vitest.blob" \
+              "${sampling[@]}" \
               --snapshot-compact-errors --snapshot-specialize-selector --snapshot-bundle-project \
               --workload "$PROFILE_WORKLOAD" --concurrency "$MATCHED_CONCURRENCY" \
               --output "$PROFILE_ROOT/late-runtime-capture" 2>&1 | tee "$PROFILE_ROOT/late-runtime-diagnostic.log"
