@@ -50,7 +50,7 @@ def baseline_tests(location, row):
     return identities
 
 
-def verify_factory_capture(root, reference, build):
+def verify_factory_capture(root, reference, build, *, shared):
     module_path = Path(__file__).resolve().parents[1] / '2026-11-19-fresh-worker-startup/summarize.py'
     spec = importlib.util.spec_from_file_location('fresh_worker_startup_summary', module_path)
     startup = importlib.util.module_from_spec(spec)
@@ -80,8 +80,12 @@ def verify_factory_capture(root, reference, build):
         if selection['mode'] == 'files':
             assert {entry['file'] for entry in row['entries']} <= set(selection['files'])
     metrics = startup.worker_metrics(capture / 'profiles')
+    project_images = {p.name: {'bytes': p.stat().st_size, 'sha256': digest(p)}
+                      for p in capture.glob('project-*.blob')}
+    assert len(project_images) == (1 if shared else 2)
     return {'qualification': verified, 'worker_cpu_ms': metrics['worker_cpu_ms'],
             'last_finish_path_ms': metrics['last_finish_path_ms'],
+            'project_images': project_images,
             'first_collection': startup.collection(root, forks, baselines, batches,
                                                    capture_name=capture.name, factory_forks=forks.keys())}
 
@@ -102,7 +106,8 @@ def verify(directory, reference):
     mode = mode_file.read_text().strip() if mode_file.exists() else 'worker-snapshot-score'
     assert mode in ('worker-snapshot-score', 'worker-snapshot-compact-score',
                     'worker-snapshot-composed-score', 'worker-snapshot-rolling-score',
-                    'worker-snapshot-windowed-score', 'worker-snapshot-late-score', 'worker-snapshot-factory-score')
+                    'worker-snapshot-windowed-score', 'worker-snapshot-late-score',
+                    'worker-snapshot-factory-score', 'worker-snapshot-shared-image-score')
     build = read_json(root / 'build-metadata.json')
     benchmark = root / 'snapshot-score'
     metadata = read_json(benchmark / 'metadata.json')
@@ -129,6 +134,9 @@ def verify(directory, reference):
     elif mode == 'worker-snapshot-factory-score':
         check_wrapper('before', 'late-score-wrapper.sh')
         check_wrapper('after', 'factory-score-wrapper.sh')
+    elif mode == 'worker-snapshot-shared-image-score':
+        check_wrapper('before', 'factory-score-wrapper.sh')
+        check_wrapper('after', 'shared-image-score-wrapper.sh')
     else:
         assert provenance['before']['binary_sha256'] == build['binary_sha256']
         check_wrapper('after', 'score-wrapper.sh')
@@ -212,8 +220,9 @@ def verify(directory, reference):
         'longest_sample_gaps_seconds': longest_sample_gaps,
         'reported_mutant_test_count_ranges': reported_test_ranges,
         'necessary_cpu_seconds_saved_median_at_four_cpus': cpu_deficits,
-        **({'factory_diagnostic': verify_factory_capture(root, reference, build)}
-           if mode == 'worker-snapshot-factory-score' else {}),
+        **({'factory_diagnostic': verify_factory_capture(
+            root, reference, build, shared=mode == 'worker-snapshot-shared-image-score')}
+           if mode in ('worker-snapshot-factory-score', 'worker-snapshot-shared-image-score') else {}),
     }
 
 

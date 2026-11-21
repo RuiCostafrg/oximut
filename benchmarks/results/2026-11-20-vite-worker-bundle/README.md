@@ -864,3 +864,46 @@ production source maps.
 gh workflow run native-diagnostic-profile.yml --ref t3/fresh-worker-startup \
   -f capture_mode=worker-snapshot-factory-score -f workload=colord-scale -f concurrency=4
 ```
+
+The factory arm improved median paired wall by 2.8%, CPU by
+7.6%, and sampled peak RSS by 6.8% against the late-import
+control. The command paid for all images and cleanup.
+
+| Four-worker factory campaign | Wall | Process-tree CPU | Sampled peak aggregate RSS |
+| --- | ---: | ---: | ---: |
+| Oximut with project factories | 9.99 s | 24.19 s | 792 MB |
+| Paired Stryker | 15.36 s | 50.24 s | 1,231 MB |
+| Median paired ratio | 0.647× | 0.481× | 0.646× |
+| 95% bootstrap interval | 0.635–0.652× | 0.470–0.482× | 0.628–0.653× |
+| Target | ≤0.50× | ≤0.80× | ≤0.80× |
+
+All 36 rows match the exact workload and cleanup checks. The
+separate diagnostic verified that every selected mutant fork
+took the factory path, with 206 fresh processes, 202 kills and
+four survivors. No module fetch, resolver call, or stock Vite
+inline compile occurred through first collection in the mutant
+forks. Total worker CPU through that checkpoint was 2.35 s, and
+wall on the 52 last-finishing paths was 0.74 s. These measurements
+include test declaration and collection. They do not isolate
+factory execution or V8's internal compilation.
+
+Wall needs another 2.31 s at the paired medians. The trace built
+two project images of about 11 MB each, during the mutation
+phase. The next score tests sharing the image between controllers
+in the same invocation, keyed on the complete framework seed and
+generated project entry code. Both arms still build within the
+timed command. Separately sample residual worker CPU after
+first collection to identify any remaining large repeated cost.
+
+- [Native paired factory run](https://github.com/RuiCostafrg/oximut/actions/runs/44864259107)
+- [Verified factory score and trace](snapshot-factory-score.json)
+- Raw archive and logs at `/root/oximut-evidence/vitest-fork-bundle/snapshot-native-factory-score`.
+
+```sh
+base=/root/oximut-evidence/vitest-fork-bundle
+reference=/root/oximut-evidence/scale-bottlenecks/workers/artifact/capture/qualification/measurements.jsonl
+python3 benchmarks/results/2026-11-20-vite-worker-bundle/score.py \
+  "$base/snapshot-native-factory-score" "$reference"
+gh workflow run native-diagnostic-profile.yml --ref t3/fresh-worker-startup \
+  -f capture_mode=worker-snapshot-shared-image-score -f workload=colord-scale -f concurrency=4
+```

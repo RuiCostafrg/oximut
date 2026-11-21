@@ -9,25 +9,36 @@ if (directory && process.argv[1]?.endsWith('/m2-worker.ts')) {
   const { registerHooks } = require('node:module');
   const compiler = path.resolve(__dirname, '../../../node_modules/.bin/tsc');
   const projectFactories = process.env.OXIMUT_PROJECT_FACTORY_SNAPSHOT === '1';
+  const shareProjectImage = process.env.OXIMUT_SHARE_PROJECT_IMAGE === '1';
   let barrel;
 
   function buildProjectImage(factories) {
     const base = path.dirname(process.env.OXIMUT_SNAPSHOT_BLOB);
     const seedPath = path.join(base, 'project-seed-' + process.pid + '.cjs');
-    const image = path.join(directory, 'project-' + process.pid + '.blob');
     const seed = fs.readFileSync(path.join(base, 'seed.offline.cjs'), 'utf8');
     const entries = `\nglobalThis[Symbol.for('oximut.diagnostic.projectFactories')] = new Map([
 ${factories.join(',\n')}
 ]);
 for (const factory of globalThis[Symbol.for('oximut.diagnostic.projectFactories')].values()) factory();
 `;
+    const key = shareProjectImage
+      ? require('node:crypto').createHash('sha256').update(seed).update(entries).digest('hex')
+      : process.pid;
+    const image = path.join(directory, `project-${key}.blob`);
+    if (shareProjectImage && fs.existsSync(image)) {
+      globalThis[Symbol.for('oximut.diagnostic.projectImage')] = image;
+      return;
+    }
+    const temporaryImage = path.join(directory, `project-build-${process.pid}.blob`);
     try {
       fs.writeFileSync(seedPath, seed + entries, {flag: 'wx'});
-      execFileSync(process.execPath, ['--build-snapshot', `--snapshot-blob=${image}`, seedPath],
+      execFileSync(process.execPath, ['--build-snapshot', `--snapshot-blob=${temporaryImage}`, seedPath],
         {env: {...process.env, NODE_OPTIONS: ''}, stdio: ['ignore', 'inherit', 'inherit']});
+      fs.renameSync(temporaryImage, image);
       globalThis[Symbol.for('oximut.diagnostic.projectImage')] = image;
     } finally {
       fs.rmSync(seedPath, {force: true});
+      fs.rmSync(temporaryImage, {force: true});
     }
   }
 

@@ -30,6 +30,7 @@ on:
           - worker-snapshot-windowed-score
           - worker-snapshot-late-score
           - worker-snapshot-factory-score
+          - worker-snapshot-shared-image-score
           - worker-snapshot-composed-profile
           - worker-snapshot-composed-startup
           - worker-snapshot-late-runtime
@@ -165,6 +166,10 @@ jobs:
               before=benchmarks/experiments/vitest-fork-bundle/late-score-wrapper.sh
               after=benchmarks/experiments/vitest-fork-bundle/factory-score-wrapper.sh
               ;;
+            worker-snapshot-shared-image-score)
+              before=benchmarks/experiments/vitest-fork-bundle/factory-score-wrapper.sh
+              after=benchmarks/experiments/vitest-fork-bundle/shared-image-score-wrapper.sh
+              ;;
           esac
           printf '%s\n' "$SCORE_MODE" > "$PROFILE_ROOT/snapshot-score-mode.txt"
           revision=$(git rev-parse HEAD)
@@ -175,11 +180,12 @@ jobs:
             --output "$PROFILE_ROOT/snapshot-score" --warmups 1 --repetitions 5 --timeout 1200 \
             2>&1 | tee "$PROFILE_ROOT/snapshot-score.log"
       - name: Confirm factory evaluation in every fresh mutant fork
-        if: inputs.capture_mode == 'worker-snapshot-factory-score'
+        if: inputs.capture_mode == 'worker-snapshot-factory-score' || inputs.capture_mode == 'worker-snapshot-shared-image-score'
         shell: bash
         env:
           OXIMUT_INLINE_LATE_RUNTIME: '1'
           OXIMUT_PROJECT_FACTORY_SNAPSHOT: '1'
+          OXIMUT_SHARE_PROJECT_IMAGE: ${{ inputs.capture_mode == 'worker-snapshot-shared-image-score' && '1' || '0' }}
         run: |
           set -euo pipefail
           ulimit -c 0
