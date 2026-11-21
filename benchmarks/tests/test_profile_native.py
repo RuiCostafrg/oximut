@@ -420,15 +420,29 @@ class NodeFixtureTests(unittest.TestCase):
             child = root / 'child.cjs'
             child.write_text("setTimeout(() => { process.send('ok'); process.disconnect(); }, 220);")
             parent = root / 'parent.cjs'
-            parent.write_text("const {fork} = require('node:child_process'); const {Worker} = require('node:worker_threads');\n"
-                              "const w = new Worker('setInterval(() => {}, 10)', {eval:true});\n"
-                              "let ok = false; const c = fork(process.argv[2]);\n"
-                              "c.on('message', m => { ok = m === 'ok'; });\n"
-                              "c.on('exit', () => { if (!ok) process.exitCode = 1; });\n"
-                              "setTimeout(() => w.terminate(), 300);\n")
+            parent.write_text("""
+const { fork } = require('node:child_process');
+const { readdirSync } = require('node:fs');
+const { Worker } = require('node:worker_threads');
+const w = new Worker('setInterval(() => {}, 10)', { eval: true });
+let ok = false;
+const c = fork(process.argv[2]);
+c.on('message', m => { ok = m === 'ok'; });
+c.on('exit', () => { if (!ok) process.exitCode = 1; });
+const prefix = `Segment.${process.pid}.${w.threadId}.`;
+const deadline = performance.now() + 5000;
+const timer = setInterval(() => {
+  const finalized = readdirSync(process.env.OXIMUT_PROFILE_DIR)
+    .some(name => name.startsWith(prefix) && name.endsWith('.segment-events.jsonl'));
+  if (!finalized && performance.now() < deadline) return;
+  clearInterval(timer);
+  if (!finalized) process.exitCode = 1;
+  void w.terminate();
+}, 10);
+""")
             env = {**os.environ, 'OXIMUT_PROFILE_DIR': str(root), 'OXIMUT_PROFILE_SEGMENTS': '1',
                    'NODE_OPTIONS': f'--require="{diagnostic.SUPPORT / "node-identity.cjs"}"'}
-            result = subprocess.run([node, str(parent), str(child)], env=env, capture_output=True, timeout=5)
+            result = subprocess.run([node, str(parent), str(child)], env=env, capture_output=True, timeout=10)
             self.assertEqual(result.returncode, 0, result.stderr)
             inventory = diagnostic.capture_inventory(root)
             nodes = inventory['observed']
