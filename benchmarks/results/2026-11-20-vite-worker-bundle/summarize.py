@@ -88,7 +88,12 @@ def main():
     _, _, prior_rows, _ = verify_capture(args.historical_capture, 'worker-phases')
     if args.snapshot_accounting:
         arms = {}
-        wrapper = 'benchmarks/experiments/vitest-fork-bundle/shared-image-score-wrapper.sh'
+        wrapper_record = root / 'accounting-wrapper.txt'
+        wrapper = (wrapper_record.read_text().strip() if wrapper_record.is_file()
+                   else 'benchmarks/experiments/vitest-fork-bundle/shared-image-score-wrapper.sh')
+        require(wrapper in {f'benchmarks/experiments/vitest-fork-bundle/{variant}-score-wrapper.sh'
+                            for variant in ('shared-image', 'single-image', 'reuse-build')},
+                'unexpected accounting wrapper')
         for name, binary in (('capture', verified['binary_sha256']),
                              ('snapshot-accounting-capture', build_sources[wrapper])):
             capture = root / name
@@ -121,6 +126,7 @@ def main():
                                                                    'peak_aggregate_rss_bytes')},
                           'accounting': inventory['accounting_diagnostics']}
         print(json.dumps({'diagnostic_only': True, 'run': verified['run_url'], 'commit': verified['commit'],
+                          'wrapper': wrapper,
                           'artifact_sha256': verified['artifact_sha256'], 'arms': arms}, indent=2))
         return
     arms = {}

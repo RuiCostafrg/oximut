@@ -56,6 +56,14 @@ on:
         options:
           - none
           - execution
+      accounting_variant:
+        description: Snapshot wrapper used by the accounting diagnostic
+        type: choice
+        default: shared-image
+        options:
+          - shared-image
+          - single-image
+          - reuse-build
   pull_request:
     types: [opened, reopened, synchronize, labeled]
 
@@ -225,6 +233,7 @@ jobs:
           PROFILE_WORKLOAD: ${{ inputs.workload || 'colord' }}
           MATCHED_CONCURRENCY: ${{ inputs.concurrency || '1' }}
           LATE_RUNTIME_SAMPLE: ${{ inputs.late_runtime_sample || 'none' }}
+          ACCOUNTING_VARIANT: ${{ inputs.accounting_variant || 'shared-image' }}
         run: |
           set -euo pipefail
           case "$CAPTURE_MODE" in
@@ -272,11 +281,17 @@ jobs:
           if test "$CAPTURE_MODE" = worker-snapshot-accounting; then
             test "$PROFILE_WORKLOAD" = colord-scale
             test "$MATCHED_CONCURRENCY" = 4
+            case "$ACCOUNTING_VARIANT" in
+              shared-image|single-image|reuse-build) ;;
+              *) exit 2 ;;
+            esac
+            wrapper="benchmarks/experiments/vitest-fork-bundle/$ACCOUNTING_VARIANT-score-wrapper.sh"
+            printf '%s\n' "$wrapper" > "$PROFILE_ROOT/accounting-wrapper.txt"
             OXIMUT_SNAPSHOT_SCORE_BINARY="$PROFILE_ROOT/oximut" \
               OXIMUT_SNAPSHOT_COMPACT_ERRORS=1 OXIMUT_SNAPSHOT_SPECIALIZE_SELECTOR=1 \
-              SCORE_MODE=worker-snapshot-shared-image-score \
+              SCORE_MODE="worker-snapshot-$ACCOUNTING_VARIANT-score" \
               python3 benchmarks/profile_native.py \
-              --binary "$GITHUB_WORKSPACE/benchmarks/experiments/vitest-fork-bundle/shared-image-score-wrapper.sh" \
+              --binary "$GITHUB_WORKSPACE/$wrapper" \
               --accounting --workload "$PROFILE_WORKLOAD" --concurrency "$MATCHED_CONCURRENCY" \
               --output "$PROFILE_ROOT/snapshot-accounting-capture" 2>&1 | tee "$PROFILE_ROOT/snapshot-accounting.log"
           fi
