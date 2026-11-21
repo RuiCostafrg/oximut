@@ -99,9 +99,11 @@ def verify_factory_capture(root, reference, build, *, shared, mutants_only, reus
         assert (emitted / 'src/index.js').is_file()
         assert Path(read_json(cached)['image']).name in project_images
     if early_build:
-        early, = list(capture.glob('early-build-*.json'))
-        record = read_json(early)
-        assert record['awaited'] is True and record['fellBack'] is False
+        # The baseline controller awaits its prebuild; others reuse the build.
+        records = [read_json(path) for path in capture.glob('early-build-*.json')]
+        assert sum(record['awaited'] for record in records) == 1
+        assert not any(record['fellBack'] for record in records)
+        assert all(record['mutantKey'] == record['prebuildKey'] for record in records if record['awaited'])
     return {'qualification': verified, 'worker_cpu_ms': metrics['worker_cpu_ms'],
             'last_finish_path_ms': metrics['last_finish_path_ms'],
             'project_images': project_images,

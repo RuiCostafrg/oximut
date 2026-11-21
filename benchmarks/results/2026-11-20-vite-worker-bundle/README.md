@@ -1110,3 +1110,47 @@ python3 benchmarks/results/2026-11-20-vite-worker-bundle/summarize.py --snapshot
   /root/oximut-evidence/vitest-fork-bundle/snapshot-native-accounting-single \
   /root/oximut-evidence/scale-bottlenecks/workers/artifact/capture
 ```
+
+## Build the project image during the instrumented baseline
+
+The instrumented baseline carries the same resident modules as the
+first mutant batch. In a combined baseline, residents that equal a probe
+transform travel only as coverage transforms. The candidate rebuilds the
+resident group from both, starts the project build when the baseline
+arrives, and lets the first mutant batch await it. The image build and
+TypeScript emit run asynchronously in both arms, so the controller's
+event loop keeps serving the baseline.
+
+Across five alternating native pairs, this cut median paired Oximut
+wall by 3.8% against the build-reuse control (95% bootstrap
+0.939–0.994×). CPU (0.978–1.024×) and sampled peak RSS
+(0.936–1.053×) intervals include no change.
+
+| Four-worker early-build campaign | Wall | Process-tree CPU | Sampled peak aggregate RSS |
+| --- | ---: | ---: | ---: |
+| Oximut building during the baseline | 9.28 s | 25.00 s | 921 MB |
+| Paired Stryker | 15.99 s | 51.48 s | 1,233 MB |
+| Median paired ratio | 0.578× | 0.484× | 0.750× |
+| 95% bootstrap interval | 0.572–0.588× | 0.482–0.494× | 0.721–0.802× |
+| Target | ≤0.50× | ≤0.80× | ≤0.80× |
+
+All 36 rows passed the exact workload checks. The trace verified 206
+fresh mutant forks with 202 kills and four survivors, 102 tests, and
+whole-file selection. The baseline controller awaited its prebuild with
+an identical build key. The second controller reused the build without
+a fallback. The summed request-to-fork time on last-finishing paths fell
+from 1.36 s to 0.96 s. Stryker ran slower in this campaign than in the
+previous one, so compare paired ratios rather than raw seconds. Wall
+needs another 1.28 s at these medians.
+
+- [Native paired early-build run](https://github.com/RuiCostafrg/oximut/actions/runs/44952091095)
+- [Verified early-build score and trace](snapshot-early-build-score.json)
+- Raw artifacts at `/root/oximut-evidence/vitest-fork-bundle/snapshot-native-early-build-score`.
+
+```sh
+gh workflow run native-diagnostic-profile.yml --ref t3/fresh-worker-startup \
+  -f capture_mode=worker-snapshot-early-build-score -f workload=colord-scale -f concurrency=4
+python3 benchmarks/results/2026-11-20-vite-worker-bundle/score.py \
+  /root/oximut-evidence/vitest-fork-bundle/snapshot-native-early-build-score \
+  /root/oximut-evidence/scale-bottlenecks/workers/artifact/capture/qualification/measurements.jsonl
+```
