@@ -16,6 +16,7 @@ const sources = (await readdir(capture)).filter((name) => /^startup-contract-\d+
 assert(sources.length > 0, 'missing runtime launch contract');
 const contracts = await Promise.all(sources.map(async (name) => JSON.parse(await readFile(resolve(capture, name)))));
 const launch = contracts[0];
+const snapshotFlag = launch.execArgv.find((arg) => arg.startsWith('--snapshot-blob='));
 const launchKeys = ['entry', 'argv', 'execArgv', 'stdio', 'serialization'];
 for (const contract of contracts) {
   for (const key of launchKeys) assert.deepEqual(contract[key], launch[key], key);
@@ -26,8 +27,10 @@ assert.match(launch.entry, /\/vitest\/dist\/workers\/forks\.js$/);
 assert(launch.execArgv.some((arg) => arg.endsWith('/compile-cache.cjs')));
 const probe = resolve(import.meta.dirname, 'fresh-worker-probe.cjs');
 const cacheRoot = await mkdtemp(resolve(output, 'cache-'));
-const kinds = ['minimal', 'vitest'];
-const modes = ['cold', 'populated', 'disabled'];
+const cells = snapshotFlag
+  ? [['vitest', 'populated'], ['snapshot', 'populated'], ['snapshot', 'disabled'],
+    ['snapshot-small-pool', 'populated'], ['snapshot-small-pool', 'disabled']]
+  : ['cold', 'populated', 'disabled'].flatMap(mode => [['minimal', mode], ['vitest', mode]]);
 const cacheState = async (dir) => {
   const files = (await readdir(dir, {recursive: true, withFileTypes: true})).filter((entry) => entry.isFile());
   const sizes = await Promise.all(files.map((entry) => stat(resolve(entry.parentPath, entry.name))));
@@ -35,15 +38,22 @@ const cacheState = async (dir) => {
 };
 
 async function sample(kind, mode, round, lane, cacheDir, phase, beforeCache) {
-  const entry = kind === 'vitest' ? launch.entry : resolve(import.meta.dirname, 'minimal-ipc-worker.mjs');
+  const usesSnapshot = kind.startsWith('snapshot');
+  const entry = kind === 'minimal' ? resolve(import.meta.dirname, 'minimal-ipc-worker.mjs') : launch.entry;
   const env = {...process.env, ...launch.env, NODE_OPTIONS: '--require=' + JSON.stringify(probe),
     NODE_COMPILE_CACHE: cacheDir};
   if (mode === 'disabled') env.NODE_DISABLE_COMPILE_CACHE = '1';
+  const execArgv = launch.execArgv.filter(arg => arg !== snapshotFlag);
+  if (kind === 'snapshot-small-pool') execArgv.push('--v8-pool-size=1');
+  if (usesSnapshot) {
+    execArgv.push(snapshotFlag);
+    env.OXIMUT_SNAPSHOT_BLOB = snapshotFlag.slice('--snapshot-blob='.length);
+  }
 
   const time = () => String(process.hrtime.bigint());
   const forkNs = time();
   const child = fork(entry, launch.argv, {
-    env, execArgv: launch.execArgv, cwd: launch.cwd, stdio: launch.stdio, serialization: launch.serialization,
+    env, execArgv, cwd: launch.cwd, stdio: launch.stdio, serialization: launch.serialization,
   });
   let stderr = '';
   child.stdout.resume();
@@ -73,7 +83,7 @@ async function sample(kind, mode, round, lane, cacheDir, phase, beforeCache) {
     const exitNs = time();
     assert.deepEqual([code, signal], [null, 'SIGTERM']);
     return {kind, mode, round, lane, phase, pid: child.pid, beforeCache,
-      forkNs, start, stop, exitNs, code, signal, stderr};
+      forkNs, start, stop, exitNs, code, signal, stderr, ...(snapshotFlag ? {execArgv} : {})};
   } finally {
     clearTimeout(timeout);
     if (child.exitCode === null && child.signalCode === null) child.kill('SIGKILL');
@@ -103,8 +113,9 @@ async function wave(kind, mode, round, phase) {
 }
 
 try {
-  for (const kind of kinds) await wave(kind, 'populated', -1, 'prime');
-  const cells = modes.flatMap((mode) => kinds.map((kind) => [kind, mode]));
+  for (const [kind, mode] of cells) {
+    if (mode === 'populated') await wave(kind, mode, -1, 'prime');
+  }
   for (let round = 0; round < rounds; round++) {
     // Rotate cell order, keeping real contenders in groups of four fresh forks.
     for (let offset = 0; offset < cells.length; offset++) {
@@ -114,7 +125,7 @@ try {
   }
 } finally {
   await rm(cacheRoot, {recursive: true, force: true});
-  await writeFile(resolve(output, 'startup-replay.json'), JSON.stringify({
+  await writeFile(resolve(output, snapshotFlag ? 'snapshot-launch-replay.json' : 'startup-replay.json'), JSON.stringify({
     node: process.version, v8: process.versions.v8, arch: process.arch, execPath: process.execPath,
     nodeOptions: '--require=' + JSON.stringify(probe), contracts: sources, width, rounds, records,
   }, null, 2) + '\n', {flag: 'wx'});

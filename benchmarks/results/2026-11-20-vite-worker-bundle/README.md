@@ -689,3 +689,37 @@ python3 benchmarks/results/2026-11-20-vite-worker-bundle/summarize.py --followup
   /root/oximut-evidence/vitest-fork-bundle/snapshot-native-late-runtime \
   /root/oximut-evidence/scale-bottlenecks/workers/artifact/capture
 ```
+
+## Where snapshot startup CPU is spent
+
+On the composed workload, startup consumed 9.23 worker CPU seconds
+and 2.90 s on the 52 last-finishing paths. The inspector sampled 25
+mutant forks, whose first preload arrived after a median 37.48 ms of
+process CPU. The next checkpoint, immediately before the worker sent
+its `started` response, was another 24.34 ms of median CPU later.
+That interval includes inspector startup and the sampling overhead.
+The 164 samples include IPC setup, message deserialization, the
+Vitest start handler, and the profiler itself. The first interval
+includes Node bootstrap and restoring the 9.64 MB snapshot. The
+profile does not partition those costs.
+
+The follow-up startup-only replay uses the recorded Vitest launch
+contract in rotating four-fork waves. It compares stock and restored
+workers with populated caches, then isolates compile-cache disable
+and a single-thread V8 platform pool in restored workers. Each arm
+has 48 fresh forks. Check the preload CPU and complete start/stop
+wall boundaries before choosing a workload trial. Advance a launch
+setting when the native wave comparison consistently saves at least
+2 ms CPU through `started` without increasing start-to-exit wall.
+The replay sends no test requests. A measured startup gain would
+still need a paired workload score including image generation.
+
+- [Native startup sample](https://github.com/RuiCostafrg/oximut/actions/runs/44861243227)
+- [Verified startup data](snapshot-composed-startup.json)
+- Raw samples at `/root/oximut-evidence/vitest-fork-bundle/snapshot-native-composed-startup`.
+
+```sh
+gh workflow run native-diagnostic-profile.yml --ref t3/fresh-worker-startup \
+  -f capture_mode=worker-snapshot-composed-startup -f workload=colord-scale -f concurrency=4
+node benchmarks/profiling/fresh-worker-startup.mjs "$PROFILE_ROOT/composed-capture/profiles" "$PROFILE_ROOT"
+```

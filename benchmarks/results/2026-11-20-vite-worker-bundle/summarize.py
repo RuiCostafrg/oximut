@@ -209,6 +209,8 @@ def main():
                 root, forks, baselines, batches, capture_name=name)
             if (capture / 'startup-cpu').exists():
                 arms[name]['startup_cpu_samples'] = phase_samples(capture, 'startup')
+            if name == 'composed-capture' and (root / 'snapshot-launch-replay.json').is_file():
+                arms[name]['startup_replay'] = startup.replay(root, snapshot=True)
         if name == 'native-project-capture':
             oximut = rows['oximut']
             report_path = Path(oximut['report_file'])

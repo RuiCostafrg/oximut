@@ -22,19 +22,29 @@ def stats(values):
             'p90': statistics.quantiles(values, n=10, method='inclusive')[-1] if len(values) > 1 else values[0]}
 
 
-def replay(root):
-    data = read_json(root / 'startup-replay.json')
+def replay(root, *, snapshot=False):
+    filename = 'snapshot-launch-replay.json' if snapshot else 'startup-replay.json'
+    data = read_json(root / filename)
     require((data['arch'], data['node'], data['width'], data['rounds']) == ('x64', 'v26.3.1', 4, 12),
             'unexpected startup replay dimensions')
-    profiles = root / 'capture/profiles'
+    profiles = root / ('composed-capture' if snapshot else 'capture') / 'profiles'
     contracts = [read_json(profiles / name) for name in data['contracts']]
     require(contracts and all(c['execArgv'] == contracts[0]['execArgv'] for c in contracts),
             'missing or different launch flags')
+    stock_flags = contracts[0]['execArgv']
+    if snapshot:
+        blob_flags = [arg for arg in stock_flags if arg.startswith('--snapshot-blob=')]
+        require(len(blob_flags) == 1, 'missing or duplicate snapshot flag')
+        base_flags = [arg for arg in stock_flags if arg not in blob_flags]
+        expected_flags = {'vitest': base_flags, 'snapshot': base_flags + blob_flags,
+                          'snapshot-small-pool': base_flags + ['--v8-pool-size=1'] + blob_flags}
     cells = defaultdict(list)
     pids = set()
     primes = set()
     for record in data['records']:
         mode, kind, pid = record['mode'], record['kind'], record['pid']
+        if snapshot:
+            require(record['execArgv'] == expected_flags[kind], 'launch comparison changed flags')
         start, stop = record['start'], record['stop']
         require(pid not in pids and record['code'] is None and record['signal'] == 'SIGTERM', 'freshness/exit failed')
         pids.add(pid)
@@ -77,9 +87,15 @@ def replay(root):
             'finished_cache_files': record['afterCache']['files'],
             'finished_cache_bytes': record['afterCache']['bytes'],
         })
-    kinds, modes = ('minimal', 'vitest'), ('cold', 'populated', 'disabled')
-    require(set(cells) == {(kind, mode) for kind in kinds for mode in modes}
-            and primes == {(kind, lane) for kind in kinds for lane in range(4)}, 'missing replay group')
+    modes = ('cold', 'populated', 'disabled')
+    if snapshot:
+        expected_cells = {('vitest', 'populated')} | {
+            (kind, mode) for kind in ('snapshot', 'snapshot-small-pool') for mode in ('populated', 'disabled')}
+    else:
+        expected_cells = {(kind, mode) for kind in ('minimal', 'vitest') for mode in modes}
+    require(set(cells) == expected_cells and primes == {
+        (kind, lane) for kind, mode in expected_cells if mode == 'populated' for lane in range(4)},
+        'missing replay group')
     rolled_up = {}
     wave_means = {}
     for (kind, mode), rows in cells.items():
@@ -91,13 +107,24 @@ def replay(root):
         wave_means[kind, mode] = [{key: statistics.mean(r[key] for r in rows if r['round'] == round_no)
                                   for key in keys} for round_no in range(data['rounds'])]
     deltas = {}
-    pairs = [(f'vitest_less_minimal_{mode}', ('vitest', mode), ('minimal', mode)) for mode in modes]
-    pairs.extend((f'vitest_{mode}_less_populated', ('vitest', mode), ('vitest', 'populated'))
-                 for mode in ('disabled', 'cold'))
+    if snapshot:
+        pairs = [
+            ('snapshot_less_stock', ('snapshot', 'populated'), ('vitest', 'populated')),
+            ('snapshot_disabled_less_populated', ('snapshot', 'disabled'), ('snapshot', 'populated')),
+            ('snapshot_small_pool_less_default', ('snapshot-small-pool', 'populated'), ('snapshot', 'populated')),
+            ('snapshot_both_less_default', ('snapshot-small-pool', 'disabled'), ('snapshot', 'populated')),
+        ]
+    else:
+        pairs = [(f'vitest_less_minimal_{mode}', ('vitest', mode), ('minimal', mode)) for mode in modes]
+        pairs.extend((f'vitest_{mode}_less_populated', ('vitest', mode), ('vitest', 'populated'))
+                     for mode in ('disabled', 'cold'))
+    delta_keys = ('cpu_to_started_ms', 'wall_fork_to_started_received_ms',
+                  'cpu_preload_to_start_message_ms', 'cpu_started_to_stopped_ms')
+    if snapshot:
+        delta_keys += ('cpu_fork_to_preload_ms', 'wall_fork_to_exit_ms')
     for name, a, b in pairs:
         deltas[name] = {key: stats(x[key] - y[key] for x, y in zip(wave_means[a], wave_means[b], strict=True))
-                        for key in ('cpu_to_started_ms', 'wall_fork_to_started_received_ms',
-                                    'cpu_preload_to_start_message_ms', 'cpu_started_to_stopped_ms')}
+                        for key in delta_keys}
     return {'exec_argv': contracts[0]['execArgv'], 'node_options': data['nodeOptions'], 'versions': {
                 'node': data['node'], 'v8': data['v8'], 'node_path': data['execPath']},
             'process_count': len(pids), 'priming_forks': len(primes), 'cells': rolled_up, 'wave_mean_deltas': deltas}
