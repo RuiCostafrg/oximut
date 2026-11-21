@@ -601,3 +601,50 @@ python3 benchmarks/results/2026-11-20-vite-worker-bundle/score.py \
   /root/oximut-evidence/vitest-fork-bundle/snapshot-native-composed-score \
   /root/oximut-evidence/scale-bottlenecks/workers/artifact/capture/qualification/measurements.jsonl
 ```
+
+## Combined phase trace and rolling dispatch retest
+
+The combined diagnostic kept all 206 exact mutant outcomes, 102 test
+identities, and whole-file selections. Across the 52 last-finishing
+paths, startup occupied 5.04 s, dispatch to first collection 3.83 s,
+and later execution 2.70 s. Inside first collection, fetch IPC was in
+flight for 0.40 s of these paths and synchronous compilation occupied
+0.21 s. Across all mutant workers there were 412 fetches and 412
+resolver calls through collection. The resolver calls totaled 3.26 s
+across workers, whose waits can overlap. The instrumentation and
+runner differ from the unprofiled campaign.
+
+A fixed-duration replay on the combined trace saves 1.10 s with
+oracle-sorted batches, or 1.24 s with rolling admission and the
+recorded request-to-exit durations. The unprofiled retest isolated
+rolling dispatch by enabling it only for the after arm of the
+combined candidate. Batch dispatch remains the preferred variant.
+
+| Rolling compared with same-campaign batch | Median ratio | 95% bootstrap interval |
+| --- | ---: | ---: |
+| Wall | 1.009× | 1.003–1.020× |
+| CPU | 0.941× | 0.935–0.948× |
+| Sampled peak aggregate RSS | 1.082× | 1.037–1.103× |
+
+The combined score spent a median 1.96 s outside mutation execution.
+The two baseline phases account for 1.08–1.12 s per measured run.
+Another 0.75–0.81 s falls outside all named CLI phases and includes
+the timed wrapper. The per-tool corpus copy happens before timing.
+Setup and scheduling each have limited headroom. The next comparison
+tests loading the known lane runner and two default Vitest imports
+from the image while retaining their runtime setup.
+
+- [Combined phase capture](https://github.com/RuiCostafrg/oximut/actions/runs/44833675908)
+- [Verified phase data](snapshot-composed-profile.json)
+- [Rolling score](https://github.com/RuiCostafrg/oximut/actions/runs/44835057731)
+- [Verified rolling data](snapshot-rolling-score.json)
+- Raw archives at `/root/oximut-evidence/vitest-fork-bundle/snapshot-native-composed-profile`
+  and `/root/oximut-evidence/vitest-fork-bundle/snapshot-native-rolling-score`.
+
+```sh
+base=/root/oximut-evidence/vitest-fork-bundle
+result=benchmarks/results/2026-11-20-vite-worker-bundle
+history=/root/oximut-evidence/scale-bottlenecks/workers/artifact/capture
+python3 "$result/summarize.py" --followup composed "$base/snapshot-native-composed-profile" "$history"
+python3 "$result/score.py" "$base/snapshot-native-rolling-score" "$history/qualification/measurements.jsonl"
+```

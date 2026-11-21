@@ -28,6 +28,7 @@ on:
           - worker-snapshot-composed-score
           - worker-snapshot-rolling-score
           - worker-snapshot-composed-profile
+          - worker-snapshot-late-runtime
           - segments
       workload:
         description: Mutation workload
@@ -185,7 +186,7 @@ jobs:
                 node --test packages/vitest-adapter/test/shared-lanes.test.mjs | tee "$PROFILE_ROOT/bundled-fixture.log"
               CAPTURE_ARGS=(--worker-phases --startup-contract --first-collection)
               ;;
-            worker-snapshot|worker-snapshot-source-io|worker-snapshot-stack|worker-snapshot-collection-cpu|worker-snapshot-execution-cpu|worker-snapshot-native-project|worker-snapshot-baseline-tier|worker-snapshot-compact-errors|worker-snapshot-specialize-selector|worker-snapshot-bundle-project|worker-snapshot-composed-profile)
+            worker-snapshot|worker-snapshot-source-io|worker-snapshot-stack|worker-snapshot-collection-cpu|worker-snapshot-execution-cpu|worker-snapshot-native-project|worker-snapshot-baseline-tier|worker-snapshot-compact-errors|worker-snapshot-specialize-selector|worker-snapshot-bundle-project|worker-snapshot-composed-profile|worker-snapshot-late-runtime)
               test "$PROFILE_WORKLOAD" = colord-scale
               test "$MATCHED_CONCURRENCY" = 4
               snapshot_dir=$(mktemp -d "$GITHUB_WORKSPACE/node_modules/vitest/dist/.oximut-snapshot.XXXXXX")
@@ -272,13 +273,28 @@ jobs:
                 --output "$PROFILE_ROOT/$arm-capture" 2>&1 | tee "$PROFILE_ROOT/$arm-diagnostic.log"
             done
           fi
-          if test "$CAPTURE_MODE" = worker-snapshot-composed-profile; then
+          if [[ "$CAPTURE_MODE" == worker-snapshot-composed-profile || "$CAPTURE_MODE" == worker-snapshot-late-runtime ]]; then
             mv "$snapshot_dir/seed.cjs" "$snapshot_dir/seed.offline.cjs"
             python3 benchmarks/profile_native.py --binary "$PROFILE_ROOT/oximut" \
               "${CAPTURE_ARGS[@]}" --first-collection --fork-snapshot "$snapshot_dir/vitest.blob" \
               --snapshot-compact-errors --snapshot-specialize-selector --snapshot-bundle-project \
               --workload "$PROFILE_WORKLOAD" --concurrency "$MATCHED_CONCURRENCY" \
               --output "$PROFILE_ROOT/composed-capture" 2>&1 | tee "$PROFILE_ROOT/composed-diagnostic.log"
+          fi
+          if test "$CAPTURE_MODE" = worker-snapshot-late-runtime; then
+            late_dir=$(mktemp -d "$GITHUB_WORKSPACE/node_modules/vitest/dist/.oximut-snapshot-late.XXXXXX")
+            OXIMUT_INLINE_LATE_RUNTIME=1 /usr/bin/time -v -o "$PROFILE_ROOT/late-bundle.time" \
+              node benchmarks/experiments/vitest-fork-bundle/snapshot.mjs "$late_dir"
+            /usr/bin/time -v -o "$PROFILE_ROOT/late-build.time" \
+              node --build-snapshot --snapshot-blob="$late_dir/vitest.blob" "$late_dir/seed.cjs" \
+              2>&1 | tee "$PROFILE_ROOT/late-build.log"
+            cp -R "$late_dir" "$PROFILE_ROOT/snapshot-late-runtime"
+            mv "$late_dir/seed.cjs" "$late_dir/seed.offline.cjs"
+            python3 benchmarks/profile_native.py --binary "$PROFILE_ROOT/oximut" \
+              "${CAPTURE_ARGS[@]}" --first-collection --fork-snapshot "$late_dir/vitest.blob" \
+              --snapshot-compact-errors --snapshot-specialize-selector --snapshot-bundle-project \
+              --workload "$PROFILE_WORKLOAD" --concurrency "$MATCHED_CONCURRENCY" \
+              --output "$PROFILE_ROOT/late-runtime-capture" 2>&1 | tee "$PROFILE_ROOT/late-runtime-diagnostic.log"
           fi
       - name: Publish diagnostic status and remove dependency symlinks
         if: always()

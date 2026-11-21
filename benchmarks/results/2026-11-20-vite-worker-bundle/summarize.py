@@ -66,7 +66,8 @@ def main():
     mode.add_argument('--snapshot', action='store_true')
     mode.add_argument('--followup', choices=('stack', 'collection-cpu', 'execution-cpu',
                                             'native-project', 'baseline-tier', 'compact-errors',
-                                            'specialize-selector', 'bundle-project', 'composed'))
+                                            'specialize-selector', 'bundle-project', 'composed',
+                                            'late-runtime'))
     args = parser.parse_args()
     root = args.run / 'artifact'
     verified = read_json(args.run / 'verification.json')
@@ -79,8 +80,10 @@ def main():
         names = ['capture', 'stack-measure-capture', 'stack-skip-capture']
     if args.followup in ('collection-cpu', 'execution-cpu'):
         names = ['capture', f'{args.followup}-capture']
-    if args.followup == 'composed':
+    if args.followup in ('composed', 'late-runtime'):
         names = ['capture', 'composed-capture']
+    if args.followup == 'late-runtime':
+        names.append('late-runtime-capture')
     if args.followup in ('native-project', 'baseline-tier', 'compact-errors', 'specialize-selector',
                          'bundle-project'):
         names = ['capture', 'snapshot-offline-capture', f'{args.followup}-capture']
@@ -123,7 +126,8 @@ def main():
             expected = {int(p.stem.split('-')[-1]) for p in (capture / 'profiles').glob('worker-*-*.json')}
             require(len(pids) == 214 and pids == expected, 'did not route every measured fork')
         if snapshot_arm:
-            with (root / 'snapshot/vitest.blob').open('rb') as blob:
+            snapshot = 'snapshot-late-runtime' if name == 'late-runtime-capture' else 'snapshot'
+            with (root / snapshot / 'vitest.blob').open('rb') as blob:
                 require(hashlib.file_digest(blob, 'sha256').hexdigest() == diagnostic['snapshot_sha256'],
                         'snapshot hash differs')
             profiles = {tuple(map(int, p.stem.split('-')[1:])) for p in (capture / 'profiles').glob('worker-*-*.json')}
@@ -161,11 +165,12 @@ def main():
         if name in ('collection-cpu-capture', 'execution-cpu-capture'):
             phase = name.split('-')[0]
             arms[name][f'{phase}_cpu_samples'] = phase_samples(capture, phase)
-        if name in ('compact-errors-capture', 'composed-capture'):
+        composed = name in ('composed-capture', 'late-runtime-capture')
+        if name == 'compact-errors-capture' or composed:
             arms[name]['compacted_assertions'] = diagnostic['compacted_assertions']
-        if name in ('specialize-selector-capture', 'composed-capture'):
+        if name == 'specialize-selector-capture' or composed:
             arms[name]['specialized_switches'] = diagnostic['specialized_switches']
-        if name in ('bundle-project-capture', 'composed-capture'):
+        if name == 'bundle-project-capture' or composed:
             oximut = rows['oximut']
             report_path = Path(oximut['report_file'])
             report = read_json(capture / 'qualification' / report_path.parent.name / report_path.name)
@@ -181,7 +186,7 @@ def main():
                     require({entry['file'] for entry in row['entries']} <= set(mutant['selection']['files']),
                             'bundled evaluation escaped the selected test files')
             arms[name]['bundled_test_entries'] = diagnostic['bundled_test_entries']
-        if name == 'composed-capture':
+        if composed:
             startup_summary = Path(__file__).resolve().parents[1] / '2026-11-19-fresh-worker-startup/summarize.py'
             spec = importlib.util.spec_from_file_location('fresh_worker_startup_summary', startup_summary)
             startup = importlib.util.module_from_spec(spec)

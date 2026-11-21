@@ -15,12 +15,15 @@ await mkdir(dir, {recursive: true});
 const entry = join(dist, 'workers/forks.js');
 const forkInit = join(dist, 'chunks/init-forks.BaDXQSD8.js');
 const api = join(dist, 'index.js');
+const laneRunner = fileURLToPath(new URL('../../../packages/vitest-adapter/lane-runner.mjs', import.meta.url));
+const inlineLateRuntime = process.env.OXIMUT_INLINE_LATE_RUNTIME === '1';
 const resolveBridge = join(dir, 'resolve.mjs');
 const apiBridge = pathToFileURL(join(dir, 'api.mjs')).href;
 const seedId = '\0oximut-snapshot-seed';
 const seed = `
 import { startFork } from ${JSON.stringify(entry)};
 import * as api from ${JSON.stringify(api)};
+${inlineLateRuntime ? `import LaneRunner from ${JSON.stringify(laneRunner)};` : ''}
 import { createRequire, registerHooks, syncBuiltinESMExports } from 'node:module';
 import { startupSnapshot } from 'node:v8';
 import nodeConsole from 'node:console';
@@ -45,6 +48,7 @@ startupSnapshot.setDeserializeMainFunction(async () => {
   globalThis.__oximutSnapshotResolve = bridge.resolve;
   globalThis.__oximutSnapshotImport = bridge.load;
   globalThis.__oximutSnapshotApi = api;
+  ${inlineLateRuntime ? "globalThis[Symbol.for('oximut.diagnostic.laneRunner')] = LaneRunner;" : ''}
   registerHooks({resolve(specifier, context, next) {
     const result = next(specifier, context);
     if (result.url !== ${JSON.stringify(pathToFileURL(api).href)}) return result;
@@ -141,6 +145,10 @@ const bundle = await rolldown({
       // create a second collector, even with the public API URL redirected.
       if (source === './globals.ZKtKSkEf.js' && importer.endsWith('/setup-common.CqAQCXzx.js'))
         return;
+      if (inlineLateRuntime &&
+          ((source === './console.CQZ877Hi.js' && importer.endsWith('/base.Cof-UHJf.js')) ||
+           (source === './node.B9mkVmLH.js' && importer.endsWith('/index.w_oBZ9N8.js'))))
+        return;
       if (source.startsWith('.')) return {id: pathToFileURL(resolve(importer, '..', source)).href, external: true};
       if (source.startsWith('file:')) return {id: source, external: true};
     },
@@ -151,6 +159,14 @@ const bundle = await rolldown({
         return source.replace(access, JSON.stringify(builtinModules));
       }
       if (!id.startsWith(dist)) return;
+      if (inlineLateRuntime && id.endsWith('/index.w_oBZ9N8.js')) {
+        const marker = 'if (!config.runner) return TestRunner;';
+        assert.equal(source.split(marker).length, 2);
+        source = source.replace(marker, marker + `
+    if (config.runner === ${JSON.stringify(laneRunner)})
+      return globalThis[Symbol.for('oximut.diagnostic.laneRunner')];
+`);
+      }
       if (id === join(dist, 'module-evaluator.js')) {
         const marker = 'async _runInlinedModule(context, code, module, span) {';
         assert.equal(source.split(marker).length, 2);
