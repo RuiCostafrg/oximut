@@ -76,6 +76,31 @@ if (directory && process.argv[1]?.endsWith('/m2-worker.ts')) {
       const result = nextLoad(url, context);
       if (!url.endsWith('/packages/vitest-adapter/shared-lanes.ts')) return result;
       let source = String(result.source);
+      if (process.env.OXIMUT_WINDOWED_LANES === '1') {
+        const run = 'async run(batch: Request): Promise<Result> {';
+        source = replaceOnce(source, run, run + `
+    const windowWidth = batch.workers;
+    if (windowWidth && batch.lanes && batch.lanes.length > windowWidth) {
+      const results: NonNullable<Result['lanes']> = [];
+      const messageLimit = Math.min(2048, Math.floor((128 * 1024) / (batch.lanes.length * 8)));
+      for (let index = 0; index < batch.lanes.length; index += windowWidth) {
+        const lanes = batch.lanes.slice(index, index + windowWidth);
+        const result = await this.run({...batch, lanes});
+        if (!result.lanes || result.lanes.length !== lanes.length)
+          throw new Error('Incomplete controller-side window');
+        for (const lane of result.lanes)
+          results.push({...lane, errors: lane.errors.map(error => error.slice(0, messageLimit))});
+      }
+      return {
+        outcome: 'skipped',
+        tests: {passed: 0, failed: 0, skipped: 0},
+        errors: [],
+        ...(batch.resident ? {resident: batch.resident.length} : {}),
+        lanes: results,
+      };
+    }
+`);
+      }
       const klass = 'export class SharedLanes {';
       source = replaceOnce(source, klass, klass + '\n  private bundledEntries = new Map();');
       const publish = 'this.modules = modules;';

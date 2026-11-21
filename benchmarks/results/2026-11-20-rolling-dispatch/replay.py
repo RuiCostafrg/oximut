@@ -18,12 +18,21 @@ def replay(directory):
         totals['controllers'] += 1
         models = {name: [0.0] * 4 for name in ('fork_to_exit', 'request_to_exit')}
         request_durations = []
+        previous_reply = None
         for request in requests:
             begin = request['monotonicMs']
             end = replies[request['id']]
             forks = [e for e in events if e['type'] == 'fork' and begin <= e['monotonicMs'] <= end]
             if not 1 <= len(forks) <= 4 or len(forks) != len(request['laneMutantIds']):
                 raise ValueError('trace does not match recorded mutant batch')
+            first_fork = forks[0]['monotonicMs']
+            totals['request_to_first_fork_ms'] += first_fork - begin
+            totals['first_to_last_fork_ms'] += forks[-1]['monotonicMs'] - first_fork
+            if previous_reply is not None:
+                if begin < previous_reply:
+                    raise ValueError('mutant batch requests overlap')
+                totals['reply_to_next_request_ms'] += begin - previous_reply
+            previous_reply = end
             totals['batches'] += 1
             totals['workers'] += len(forks)
             totals['request_to_reply_ms'] += end - begin

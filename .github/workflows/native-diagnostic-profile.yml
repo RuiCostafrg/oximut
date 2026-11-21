@@ -27,6 +27,7 @@ on:
           - worker-snapshot-compact-score
           - worker-snapshot-composed-score
           - worker-snapshot-rolling-score
+          - worker-snapshot-windowed-score
           - worker-snapshot-composed-profile
           - worker-snapshot-composed-startup
           - worker-snapshot-late-runtime
@@ -141,7 +142,7 @@ jobs:
           if [[ "$SCORE_MODE" != worker-snapshot-score ]]; then
             export OXIMUT_SNAPSHOT_COMPACT_ERRORS=1
           fi
-          if [[ "$SCORE_MODE" == worker-snapshot-composed-score || "$SCORE_MODE" == worker-snapshot-rolling-score ]]; then
+          if [[ "$SCORE_MODE" == worker-snapshot-composed-score || "$SCORE_MODE" == worker-snapshot-rolling-score || "$SCORE_MODE" == worker-snapshot-windowed-score ]]; then
             export OXIMUT_SNAPSHOT_SPECIALIZE_SELECTOR=1
           fi
           before="$PROFILE_ROOT/oximut"
@@ -149,6 +150,10 @@ jobs:
           if test "$SCORE_MODE" = worker-snapshot-rolling-score; then
             before="$after"
             after=benchmarks/experiments/vitest-fork-bundle/rolling-score-wrapper.sh
+          fi
+          if test "$SCORE_MODE" = worker-snapshot-windowed-score; then
+            before="$after"
+            after=benchmarks/experiments/vitest-fork-bundle/windowed-score-wrapper.sh
           fi
           printf '%s\n' "$SCORE_MODE" > "$PROFILE_ROOT/snapshot-score-mode.txt"
           revision=$(git rev-parse HEAD)

@@ -51,7 +51,8 @@ def verify(directory, reference):
     mode_file = root / 'snapshot-score-mode.txt'
     mode = mode_file.read_text().strip() if mode_file.exists() else 'worker-snapshot-score'
     assert mode in ('worker-snapshot-score', 'worker-snapshot-compact-score',
-                    'worker-snapshot-composed-score', 'worker-snapshot-rolling-score')
+                    'worker-snapshot-composed-score', 'worker-snapshot-rolling-score',
+                    'worker-snapshot-windowed-score')
     build = read_json(root / 'build-metadata.json')
     benchmark = root / 'snapshot-score'
     metadata = read_json(benchmark / 'metadata.json')
@@ -74,6 +75,9 @@ def verify(directory, reference):
     if mode == 'worker-snapshot-rolling-score':
         check_wrapper('before', 'score-wrapper.sh')
         check_wrapper('after', 'rolling-score-wrapper.sh')
+    elif mode == 'worker-snapshot-windowed-score':
+        check_wrapper('before', 'score-wrapper.sh')
+        check_wrapper('after', 'windowed-score-wrapper.sh')
     else:
         assert provenance['before']['binary_sha256'] == build['binary_sha256']
         check_wrapper('after', 'score-wrapper.sh')

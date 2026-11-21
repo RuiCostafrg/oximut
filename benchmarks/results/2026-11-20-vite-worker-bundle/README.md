@@ -648,3 +648,14 @@ history=/root/oximut-evidence/scale-bottlenecks/workers/artifact/capture
 python3 "$result/summarize.py" --followup composed "$base/snapshot-native-composed-profile" "$history"
 python3 "$result/score.py" "$base/snapshot-native-rolling-score" "$history/qualification/measurements.jsonl"
 ```
+
+The combined trace contains 1.25 s from each controller reply to its
+next batch request, 1.31 s from requests to first forks including
+cold setup, and 1.08 s from first to last fork launches. Launches can
+overlap active workers. The controller-side windowing experiment
+targets the reply-to-request gaps. It uses the existing multi-lane
+envelope and executes successive four-worker groups through the
+standard shared batch path. Each group drains before the next launch.
+The local smoke matched a killed mutant and two survivors through
+two windows at width two. The native paired run compares it with
+the same combined configuration using one request per batch.
