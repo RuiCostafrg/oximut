@@ -756,6 +756,41 @@ gh workflow run native-diagnostic-profile.yml --ref t3/fresh-worker-startup \
 node benchmarks/profiling/fresh-worker-startup.mjs "$PROFILE_ROOT/composed-capture/profiles" "$PROFILE_ROOT"
 ```
 
+The completed native replay used Ubuntu 24.04 x86-64, Node 26.3.1
+and Vitest 5.1.0 on four Intel Xeon 6975P-C logical CPUs. It verified
+240 fresh measured forks and 12 cache primes. Values below are
+per-fork medians in milliseconds. Each CPU column uses its own
+median.
+
+| Replay arm | CPU before preload | User CPU through started | System CPU through started | Total CPU through started | Wall through started | Wall through exit |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Stock Vitest, populated | 22.06 | 61.03 | 12.01 | 72.79 | 75.55 | 78.31 |
+| Restored, populated | 35.86 | 25.43 | 14.26 | 39.70 | 41.74 | 44.35 |
+| Restored, cache disabled | 34.90 | 24.35 | 14.40 | 38.72 | 40.68 | 42.80 |
+| Restored, smaller V8 pool, populated | 35.54 | 24.84 | 14.94 | 39.13 | 40.79 | 43.06 |
+| Restored, smaller V8 pool, cache disabled | 36.26 | 25.45 | 14.04 | 39.84 | 40.65 | 43.11 |
+
+For the wave-average comparisons, taking the median paired
+differences, the snapshot adds 13.14 ms CPU before the first
+preload and saves 33.72 ms CPU by the `started` response.
+The early comparison combines snapshot loading, deserialization,
+and any other Node bootstrap work that changes with the image.
+Cache disable saves 0.88 ms CPU through `started`. Using a
+smaller V8 pool adds 0.56 ms, and using both settings saves
+0.12 ms. None passes the replay's 2 ms threshold. Retain the
+default platform pool and populated cache. This replay isolates
+bootstrap and performs no mutation tests.
+
+In the first replay, one worker acknowledged stop and exited
+cleanly with code 0 before SIGTERM took effect. The replay originally
+required SIGTERM. The retry accepts clean spontaneous exit only
+after the stop acknowledgement, and records the exit mode.
+All measured forks in the retry exited by SIGTERM.
+
+- [Native launch replay](https://github.com/RuiCostafrg/oximut/actions/runs/44863769104)
+- [Verified launch replay](snapshot-launch-replay.json)
+- Raw rows, build provenance and logs at `/root/oximut-evidence/vitest-fork-bundle/snapshot-native-launch-replay`.
+
 ## Controller-side windows and selection order
 
 The windowed candidate used 7.5% less CPU and took 6.1% longer
