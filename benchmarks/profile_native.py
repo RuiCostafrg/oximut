@@ -727,6 +727,8 @@ def main(argv=None):
     parser.add_argument('--controller-stack-timing', choices=('measure', 'skip'),
                         help='Measure or omit controller assertion stack remapping in a snapshot diagnostic')
     worker_samples = parser.add_mutually_exclusive_group()
+    worker_samples.add_argument('--startup-cpu-sample', action='store_const', const='startup', dest='worker_cpu_sample',
+                                help='Sample selected mutant forks from their preload to the started acknowledgement')
     worker_samples.add_argument('--collection-cpu-sample', action='store_const', const='collection', dest='worker_cpu_sample',
                                 help='Sample selected mutant forks from run to first collection')
     worker_samples.add_argument('--execution-cpu-sample', action='store_const', const='execution', dest='worker_cpu_sample',

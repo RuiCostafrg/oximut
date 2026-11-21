@@ -1,10 +1,11 @@
 // Sample one eighth of the mutation identities for one worker phase.
 // The surrounding qualification verifies the selector and fork inventory.
 const directory = process.env.OXIMUT_WORKER_CPU_DIR;
-const collection = process.env.OXIMUT_WORKER_CPU_PHASE === 'collection';
+const phase = process.env.OXIMUT_WORKER_CPU_PHASE;
 const selector = process.env.OXIMUT_ACTIVE_MUTANT;
 if (directory && /^[0-9a-f]{64}$/.test(selector) && selector.slice(0, 2) < '20'
     && process.argv[1]?.endsWith('/vitest/dist/workers/forks.js') && typeof process.send === 'function') {
+  const preloadCpu = phase === 'startup' ? process.cpuUsage() : null;
   const { Session } = require('node:inspector');
   const { writeFileSync } = require('node:fs');
   const { join } = require('node:path');
@@ -34,18 +35,23 @@ if (directory && /^[0-9a-f]{64}$/.test(selector) && selector.slice(0, 2) < '20'
       session = undefined;
     }
   }
-  if (collection) process.on('message', (message) => {
+  if (phase === 'startup') start();
+  if (phase === 'collection') process.on('message', (message) => {
     if (message?.__vitest_worker_request__ === true && message.type === 'run') start();
   });
 
   const send = process.send;
   process.send = function (message, ...args) {
+    const started = message?.__vitest_worker_response__ === true && message.type === 'started';
     const collected = message?.t === 'q' && message.m === 'onCollected';
     const finished = message?.__vitest_worker_response__ === true && message.type === 'testfileFinished';
-    if (!collection && collected) start();
-    if (session && (collection ? collected : finished)) {
+    if (phase === 'execution' && collected) start();
+    if (session && ((phase === 'startup' && started) ||
+        (phase === 'collection' && collected) || (phase === 'execution' && finished))) {
+      const startedCpu = phase === 'startup' ? process.cpuUsage() : null;
       try {
         completedProfile = command('Profiler.stop').profile;
+        if (preloadCpu) completedProfile.oximut = {preloadCpu, startedCpu};
       } catch { /* Qualification rejects a missing profile. */ }
       finally {
         session.disconnect();

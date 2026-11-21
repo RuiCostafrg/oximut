@@ -5,6 +5,7 @@ import hashlib
 import importlib.util
 import json
 from pathlib import Path
+import statistics
 import sys
 
 
@@ -24,11 +25,20 @@ def phase_samples(capture, phase):
     seen = set()
     counts = Counter()
     execution_stacks = Counter()
+    before_preload = []
+    after_preload = []
     for path in sample_dir.glob('*.cpuprofile'):
         seen.add(int(path.stem.rsplit('-', 1)[1]))
         profile = read_json(path)
         require(profile['endTime'] > profile['startTime'] and
                 len(profile['timeDeltas']) == len(profile['samples']) > 0, 'invalid CPU profile')
+        if phase == 'startup':
+            checkpoints = profile['oximut']
+            preload = sum(checkpoints['preloadCpu'].values()) / 1000
+            started = sum(checkpoints['startedCpu'].values()) / 1000
+            require(0 < preload < started, 'invalid startup CPU checkpoints')
+            before_preload.append(preload)
+            after_preload.append(started - preload)
         frames = {node['id']: node['callFrame'] for node in profile['nodes']}
         parents = {child: node['id'] for node in profile['nodes'] for child in node.get('children', [])}
         for sample in profile['samples']:
@@ -55,7 +65,9 @@ def phase_samples(capture, phase):
     return {'forks': len(seen), 'samples': counts.total(),
             'top_self_samples': [{'url': url, 'function': function, 'samples': count}
                                  for (url, function), count in counts.most_common(25)],
-            **({'inclusive_samples': execution_stacks} if phase == 'execution' else {})}
+            **({'inclusive_samples': execution_stacks} if phase == 'execution' else {}),
+            **({'median_cpu_ms_before_preload': statistics.median(before_preload),
+                'median_cpu_ms_preload_to_started': statistics.median(after_preload)} if phase == 'startup' else {})}
 
 
 def main():
@@ -195,6 +207,8 @@ def main():
                 root, args.historical_capture, require_launch_mapping=True, capture_name=name)
             arms[name]['first_collection'] = startup.collection(
                 root, forks, baselines, batches, capture_name=name)
+            if (capture / 'startup-cpu').exists():
+                arms[name]['startup_cpu_samples'] = phase_samples(capture, 'startup')
         if name == 'native-project-capture':
             oximut = rows['oximut']
             report_path = Path(oximut['report_file'])
