@@ -3,17 +3,26 @@
 const directory = process.env.OXIMUT_PROJECT_BUNDLE_DIR;
 if (directory && process.argv[1]?.endsWith('/m2-worker.ts')) {
   const assert = require('node:assert/strict');
-  const { execFileSync } = require('node:child_process');
+  const { execFile } = require('node:child_process');
   const fs = require('node:fs');
   const path = require('node:path');
   const { registerHooks } = require('node:module');
+  const { promisify } = require('node:util');
   const compiler = path.resolve(__dirname, '../../../node_modules/.bin/tsc');
   const projectFactories = process.env.OXIMUT_PROJECT_FACTORY_SNAPSHOT === '1';
   const shareProjectImage = process.env.OXIMUT_SHARE_PROJECT_IMAGE === '1';
   const reuseProjectBuild = process.env.OXIMUT_REUSE_PROJECT_BUILD === '1';
+  const earlyProjectBuild = process.env.OXIMUT_EARLY_PROJECT_BUILD === '1';
   assert(!reuseProjectBuild || (projectFactories && shareProjectImage),
     'Project build reuse requires shared project images');
+  assert(!earlyProjectBuild || reuseProjectBuild,
+    'Early project build requires project build reuse');
+  const execFileAsync = promisify(execFile);
   let barrel;
+  let buildTail = Promise.resolve();
+  const prebuilds = new Map();
+  let prebuildStarted = false;
+  let prebuildKey;
 
   function projectBuildCache(root, residents) {
     const contents = [root, [...residents].sort(([left], [right]) => left.localeCompare(right))];
@@ -64,7 +73,7 @@ for (const factory of globalThis[Symbol.for('oximut.diagnostic.projectFactories'
     const temporaryImage = path.join(directory, `project-build-${process.pid}.blob`);
     try {
       fs.writeFileSync(seedPath, seed + entries, {flag: 'wx'});
-      execFileSync(process.execPath, ['--build-snapshot', `--snapshot-blob=${temporaryImage}`, seedPath],
+      await execFileAsync(process.execPath, ['--build-snapshot', `--snapshot-blob=${temporaryImage}`, seedPath],
         {env: {...process.env, NODE_OPTIONS: ''}, stdio: ['ignore', 'inherit', 'inherit']});
       fs.renameSync(temporaryImage, image);
       globalThis[Symbol.for('oximut.diagnostic.projectImage')] = image;
@@ -75,10 +84,7 @@ for (const factory of globalThis[Symbol.for('oximut.diagnostic.projectFactories'
     return image;
   }
 
-  globalThis[Symbol.for('oximut.diagnostic.projectBundle')] = async (root, residents) => {
-    assert.equal(JSON.parse(fs.readFileSync(path.join(root, 'package.json'))).name,
-      'oximut-benchmark-colord');
-    const cachedBuild = reuseProjectBuild ? projectBuildCache(root, residents) : undefined;
+  async function buildProjectNow(root, residents, cachedBuild) {
     if (cachedBuild && fs.existsSync(cachedBuild)) {
       const {image, entries} = JSON.parse(fs.readFileSync(cachedBuild, 'utf8'));
       globalThis[Symbol.for('oximut.diagnostic.projectImage')] = image;
@@ -89,7 +95,7 @@ for (const factory of globalThis[Symbol.for('oximut.diagnostic.projectFactories'
     if (!barrel) {
       // TypeScript resolves the fixture's type-only re-exports in this file.
       const emitted = path.join(directory, 'emit-' + process.pid);
-      execFileSync(compiler, ['--noCheck', '--target', 'esnext', '--module', 'esnext',
+      await execFileAsync(compiler, ['--noCheck', '--target', 'esnext', '--module', 'esnext',
         '--moduleResolution', 'bundler', '--rootDir', root, '--outDir', emitted, entry], {cwd: root});
       barrel = fs.readFileSync(path.join(emitted, 'src/index.js'), 'utf8');
     }
@@ -168,6 +174,59 @@ ${observation(true)}
       }
     }
     return outputs;
+  }
+
+  // The prebuild and a later fallback share the barrel and the emit directory.
+  function buildProject(root, residents, cachedBuild) {
+    const build = buildTail.then(() => buildProjectNow(root, residents, cachedBuild));
+    buildTail = build.then(() => {}, () => {});
+    return build;
+  }
+
+  function recordEarlyBuild(outcome) {
+    if (!earlyProjectBuild) return;
+    fs.writeFileSync(path.join(directory, `early-build-${process.pid}.json`),
+      JSON.stringify({prebuildStarted, prebuildKey: prebuildKey ?? null, ...outcome}));
+  }
+
+  if (earlyProjectBuild) {
+    globalThis[Symbol.for('oximut.diagnostic.prebuildProject')] = (root, residents) => {
+      assert.equal(JSON.parse(fs.readFileSync(path.join(root, 'package.json'))).name,
+        'oximut-benchmark-colord');
+      const modules = new Map();
+      // Later residual residents override a probe for the same file.
+      for (const module of residents) modules.set(path.resolve(module.file), module);
+      const key = projectBuildCache(root, modules);
+      if (prebuilds.has(key)) return prebuilds.get(key);
+      prebuildStarted = true;
+      prebuildKey ??= key;
+      const build = buildProject(root, modules, key);
+      prebuilds.set(key, build);
+      build.catch(() => {});
+      return build;
+    };
+  }
+
+  globalThis[Symbol.for('oximut.diagnostic.projectBundle')] = async (root, residents) => {
+    assert.equal(JSON.parse(fs.readFileSync(path.join(root, 'package.json'))).name,
+      'oximut-benchmark-colord');
+    const mutantKey = reuseProjectBuild ? projectBuildCache(root, residents) : undefined;
+    const prebuild = mutantKey && prebuilds.get(mutantKey);
+    if (prebuild) {
+      try {
+        const built = await prebuild;
+        recordEarlyBuild({mutantKey: mutantKey ?? null, awaited: true, fellBack: false});
+        return built;
+      } catch (error) {
+        const outputs = await buildProject(root, residents, mutantKey);
+        recordEarlyBuild({mutantKey: mutantKey ?? null, awaited: false, fellBack: true,
+          error: String(error?.stack ?? error)});
+        return outputs;
+      }
+    }
+    const outputs = await buildProject(root, residents, mutantKey);
+    recordEarlyBuild({mutantKey: mutantKey ?? null, awaited: false, fellBack: prebuildStarted});
+    return outputs;
   };
 
   function replaceOnce(source, marker, replacement) {
@@ -177,6 +236,18 @@ ${observation(true)}
   registerHooks({
     load(url, context, nextLoad) {
       const result = nextLoad(url, context);
+      if (earlyProjectBuild && url.endsWith('/packages/vitest-adapter/m2-worker.ts')) {
+        let source = String(result.source);
+        const accepted = '  validateRequest(job);';
+        source = replaceOnce(source, accepted, accepted + `
+  if (job.kind === 'baseline' && (job.resident?.length || job.collectCoverage?.length)) {
+    // A combined instrumented baseline omits residents that equal a probe
+    // transform (same file, code and map), so rebuild the group from both.
+    const probes = (job.collectCoverage ?? []).map(probe => ({...probe, id: '__oximut_resident__'}));
+    globalThis[Symbol.for('oximut.diagnostic.prebuildProject')]?.(job.root, [...probes, ...(job.resident ?? [])]);
+  }`);
+        return {...result, source};
+      }
       if (!url.endsWith('/packages/vitest-adapter/shared-lanes.ts')) return result;
       let source = String(result.source);
       if (process.env.OXIMUT_WINDOWED_LANES === '1') {

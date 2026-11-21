@@ -50,7 +50,7 @@ def baseline_tests(location, row):
     return identities
 
 
-def verify_factory_capture(root, reference, build, *, shared, mutants_only, reused_build):
+def verify_factory_capture(root, reference, build, *, shared, mutants_only, reused_build, early_build):
     module_path = Path(__file__).resolve().parents[1] / '2026-11-19-fresh-worker-startup/summarize.py'
     spec = importlib.util.spec_from_file_location('fresh_worker_startup_summary', module_path)
     startup = importlib.util.module_from_spec(spec)
@@ -98,6 +98,10 @@ def verify_factory_capture(root, reference, build, *, shared, mutants_only, reus
         emitted, = list(capture.glob('emit-*'))
         assert (emitted / 'src/index.js').is_file()
         assert Path(read_json(cached)['image']).name in project_images
+    if early_build:
+        early, = list(capture.glob('early-build-*.json'))
+        record = read_json(early)
+        assert record['awaited'] is True and record['fellBack'] is False
     return {'qualification': verified, 'worker_cpu_ms': metrics['worker_cpu_ms'],
             'last_finish_path_ms': metrics['last_finish_path_ms'],
             'project_images': project_images,
@@ -123,7 +127,8 @@ def verify(directory, reference):
                     'worker-snapshot-composed-score', 'worker-snapshot-rolling-score',
                     'worker-snapshot-windowed-score', 'worker-snapshot-late-score',
                     'worker-snapshot-factory-score', 'worker-snapshot-shared-image-score',
-                    'worker-snapshot-single-image-score', 'worker-snapshot-reuse-build-score')
+                    'worker-snapshot-single-image-score', 'worker-snapshot-reuse-build-score',
+                    'worker-snapshot-early-build-score')
     build = read_json(root / 'build-metadata.json')
     benchmark = root / 'snapshot-score'
     metadata = read_json(benchmark / 'metadata.json')
@@ -159,6 +164,9 @@ def verify(directory, reference):
     elif mode == 'worker-snapshot-reuse-build-score':
         check_wrapper('before', 'single-image-score-wrapper.sh')
         check_wrapper('after', 'reuse-build-score-wrapper.sh')
+    elif mode == 'worker-snapshot-early-build-score':
+        check_wrapper('before', 'reuse-build-score-wrapper.sh')
+        check_wrapper('after', 'early-build-score-wrapper.sh')
     else:
         assert provenance['before']['binary_sha256'] == build['binary_sha256']
         check_wrapper('after', 'score-wrapper.sh')
@@ -244,10 +252,13 @@ def verify(directory, reference):
         'necessary_cpu_seconds_saved_median_at_four_cpus': cpu_deficits,
         **({'factory_diagnostic': verify_factory_capture(
             root, reference, build, shared=mode != 'worker-snapshot-factory-score',
-            mutants_only=mode in ('worker-snapshot-single-image-score', 'worker-snapshot-reuse-build-score'),
-            reused_build=mode == 'worker-snapshot-reuse-build-score')}
+            mutants_only=mode in ('worker-snapshot-single-image-score', 'worker-snapshot-reuse-build-score',
+                                  'worker-snapshot-early-build-score'),
+            reused_build=mode in ('worker-snapshot-reuse-build-score', 'worker-snapshot-early-build-score'),
+            early_build=mode == 'worker-snapshot-early-build-score')}
            if mode in ('worker-snapshot-factory-score', 'worker-snapshot-shared-image-score',
-                       'worker-snapshot-single-image-score', 'worker-snapshot-reuse-build-score') else {}),
+                       'worker-snapshot-single-image-score', 'worker-snapshot-reuse-build-score',
+                       'worker-snapshot-early-build-score') else {}),
     }
 
 
