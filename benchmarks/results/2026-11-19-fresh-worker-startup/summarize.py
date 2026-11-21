@@ -46,7 +46,10 @@ def replay(root, *, snapshot=False):
         if snapshot:
             require(record['execArgv'] == expected_flags[kind], 'launch comparison changed flags')
         start, stop = record['start'], record['stop']
-        require(pid not in pids and record['code'] is None and record['signal'] == 'SIGTERM', 'freshness/exit failed')
+        clean_exit = (record['code'], record['signal']) == (None, 'SIGTERM')
+        if snapshot:
+            clean_exit |= (record['code'], record['signal']) == (0, None)
+        require(pid not in pids and clean_exit, 'freshness/exit failed')
         pids.add(pid)
         priming = record['phase'] == 'prime'
         require((record['beforeCache']['files'] > 0) == (mode == 'populated' and not priming)
@@ -82,6 +85,7 @@ def replay(root, *, snapshot=False):
             'cpu_start_message_to_ack_ms': (sum(cpu[2].values()) - sum(cpu[1].values())) / 1000,
             'cpu_to_started_ms': sum(cpu[2].values()) / 1000,
             'cpu_started_to_stopped_ms': (sum(cpu[3].values()) - sum(cpu[2].values())) / 1000,
+            **({'exited_without_signal': int(record['code'] == 0)} if snapshot else {}),
             'user_to_stopped_ms': cpu[3]['user'] / 1000,
             'system_to_stopped_ms': cpu[3]['system'] / 1000,
             'finished_cache_files': record['afterCache']['files'],

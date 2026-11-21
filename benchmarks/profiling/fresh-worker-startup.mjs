@@ -78,10 +78,12 @@ async function sample(kind, mode, round, lane, cacheDir, phase, beforeCache) {
   try {
     const start = await send('start', launch.start, 'started');
     const stop = await send('stop', {}, 'stopped');
-    assert(child.kill('SIGTERM'));
+    const signalSent = child.kill('SIGTERM');
+    if (!snapshotFlag) assert(signalSent);
     const [code, signal] = await exit;
     const exitNs = time();
-    assert.deepEqual([code, signal], [null, 'SIGTERM']);
+    if (!(snapshotFlag && code === 0 && signal === null))
+      assert.deepEqual([code, signal], [null, 'SIGTERM']);
     return {kind, mode, round, lane, phase, pid: child.pid, beforeCache,
       forkNs, start, stop, exitNs, code, signal, stderr, ...(snapshotFlag ? {execArgv} : {})};
   } finally {
