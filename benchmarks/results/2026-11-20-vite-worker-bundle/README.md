@@ -690,6 +690,38 @@ python3 benchmarks/results/2026-11-20-vite-worker-bundle/summarize.py --followup
   /root/oximut-evidence/scale-bottlenecks/workers/artifact/capture
 ```
 
+The unprofiled late-import score budgets both image generation and
+cleanup. It improved median paired wall by 6.3% and CPU by 8.2%
+against the composed control. The five alternating native pairs
+and one warmup passed all 36 workload and cleanup checks.
+
+| Four-worker late-import campaign | Wall | Process-tree CPU | Sampled peak aggregate RSS |
+| --- | ---: | ---: | ---: |
+| Oximut with late imports in the image | 10.38 s | 26.29 s | 839 MB |
+| Paired Stryker | 15.63 s | 50.45 s | 1,228 MB |
+| Median paired ratio | 0.662× | 0.520× | 0.684× |
+| 95% bootstrap interval | 0.653–0.671× | 0.515–0.522× | 0.656–0.717× |
+| Target | ≤0.50× | ≤0.80× | ≤0.80× |
+
+RSS was within the target, and its same-campaign Oximut before/after
+interval straddled no change. Wall needs another 2.56 s at these
+medians. These results retain the late-import image and the standard
+batch path as the scoring control. All 206 mutant outcomes, 102
+actual baseline test identities and exact selected files matched.
+The worker-local bail still makes reported mutant test counts vary.
+
+- [Native paired late-import run](https://github.com/RuiCostafrg/oximut/actions/runs/44861970514)
+- [Verified late-import score](snapshot-late-score.json)
+- Raw archive and logs at `/root/oximut-evidence/vitest-fork-bundle/snapshot-native-late-score`.
+
+```sh
+gh workflow run native-diagnostic-profile.yml --ref t3/fresh-worker-startup \
+  -f capture_mode=worker-snapshot-late-score -f workload=colord-scale -f concurrency=4
+python3 benchmarks/results/2026-11-20-vite-worker-bundle/score.py \
+  /root/oximut-evidence/vitest-fork-bundle/snapshot-native-late-score \
+  /root/oximut-evidence/scale-bottlenecks/workers/artifact/capture/qualification/measurements.jsonl
+```
+
 ## Where snapshot startup CPU is spent
 
 On the composed workload, startup consumed 9.23 worker CPU seconds
