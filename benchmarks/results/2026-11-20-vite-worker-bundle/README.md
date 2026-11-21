@@ -965,3 +965,47 @@ needs another 2.01 s at the paired medians.
 - [Native paired image-sharing run](https://github.com/RuiCostafrg/oximut/actions/runs/44865297814)
 - [Verified shared-image score and trace](snapshot-shared-image-score.json)
 - Raw artifacts at `/root/oximut-evidence/vitest-fork-bundle/snapshot-native-shared-image-score`.
+
+## Run stock baselines during seed generation
+
+The candidate builds the framework seed while the CLI runs its
+original baseline. Both baselines use fresh stock workers.
+Only the mutant workers restore the shared project image.
+The score includes the seed build, the project image build and
+cleanup. This cut median paired Oximut wall by 5.7% with a
+1.6% CPU increase and a 19.3% sampled peak RSS increase.
+
+| Four-worker single-image campaign | Wall | Process-tree CPU | Sampled peak aggregate RSS |
+| --- | ---: | ---: | ---: |
+| Oximut running stock baselines | 9.04 s | 23.73 s | 937 MB |
+| Paired Stryker | 15.11 s | 49.40 s | 1,218 MB |
+| Median paired ratio | 0.597× | 0.482× | 0.761× |
+| 95% bootstrap interval | 0.581–0.610× | 0.471–0.489× | 0.728–0.803× |
+| Target | ≤0.50× | ≤0.80× | ≤0.80× |
+
+Wall needs another 1.48 s at the paired medians. The RSS
+interval crosses the memory target, so its status is
+inconclusive. The score does not attribute the sampled peak to
+individual processes. All 36 rows passed the exact workload
+checks. The separate trace verified eight stock baseline
+forks, 206 mutant forks using the shared image, and factory
+execution through first collection.
+
+Both controllers still compiled the type-only barrel and
+bundled the same sources. Reuse of project build artifacts is
+the next timed ablation. It checks the complete resident
+modules and the closed fixture's source and test bytes before
+using artifacts from the first controller. The local check
+required one generation across two controllers. Changing the
+copied fixture's source forced a second generation.
+
+- [Native paired single-image run](https://github.com/RuiCostafrg/oximut/actions/runs/44865763857)
+- [Verified single-image score and trace](snapshot-single-image-score.json)
+- Raw artifacts at `/root/oximut-evidence/vitest-fork-bundle/snapshot-native-single-image-score`.
+
+```sh
+gh workflow run native-diagnostic-profile.yml --ref t3/fresh-worker-startup \
+  -f capture_mode=worker-snapshot-single-image-score -f workload=colord-scale -f concurrency=4
+gh workflow run native-diagnostic-profile.yml --ref t3/fresh-worker-startup \
+  -f capture_mode=worker-snapshot-reuse-build-score -f workload=colord-scale -f concurrency=4
+```

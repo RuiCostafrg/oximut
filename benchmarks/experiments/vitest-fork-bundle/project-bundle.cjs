@@ -10,7 +10,27 @@ if (directory && process.argv[1]?.endsWith('/m2-worker.ts')) {
   const compiler = path.resolve(__dirname, '../../../node_modules/.bin/tsc');
   const projectFactories = process.env.OXIMUT_PROJECT_FACTORY_SNAPSHOT === '1';
   const shareProjectImage = process.env.OXIMUT_SHARE_PROJECT_IMAGE === '1';
+  const reuseProjectBuild = process.env.OXIMUT_REUSE_PROJECT_BUILD === '1';
+  assert(!reuseProjectBuild || (projectFactories && shareProjectImage),
+    'Project build reuse requires shared project images');
   let barrel;
+
+  function projectBuildCache(root, residents) {
+    const contents = [root, [...residents].sort(([left], [right]) => left.localeCompare(right))];
+    for (const part of ['src', 'tests']) {
+      const input = path.join(root, part);
+      const files = fs.readdirSync(input, {recursive: true, withFileTypes: true});
+      assert(files.every(entry => entry.isDirectory() || entry.isFile()),
+        'Project build reuse requires ordinary project source files');
+      for (const file of files.filter(entry => entry.isFile())
+                              .map(entry => path.join(entry.parentPath, entry.name)).sort()) {
+        const checksum = require('node:crypto').createHash('sha256').update(fs.readFileSync(file)).digest('hex');
+        contents.push([file, checksum]);
+      }
+    }
+    const key = require('node:crypto').createHash('sha256').update(JSON.stringify(contents)).digest('hex');
+    return path.join(directory, `project-build-${key}.json`);
+  }
 
   async function frameworkSeed(base) {
     const filename = path.join(base, 'seed.offline.cjs');
@@ -39,7 +59,7 @@ for (const factory of globalThis[Symbol.for('oximut.diagnostic.projectFactories'
     const image = path.join(directory, `project-${key}.blob`);
     if (shareProjectImage && fs.existsSync(image)) {
       globalThis[Symbol.for('oximut.diagnostic.projectImage')] = image;
-      return;
+      return image;
     }
     const temporaryImage = path.join(directory, `project-build-${process.pid}.blob`);
     try {
@@ -52,11 +72,18 @@ for (const factory of globalThis[Symbol.for('oximut.diagnostic.projectFactories'
       fs.rmSync(seedPath, {force: true});
       fs.rmSync(temporaryImage, {force: true});
     }
+    return image;
   }
 
   globalThis[Symbol.for('oximut.diagnostic.projectBundle')] = async (root, residents) => {
     assert.equal(JSON.parse(fs.readFileSync(path.join(root, 'package.json'))).name,
       'oximut-benchmark-colord');
+    const cachedBuild = reuseProjectBuild ? projectBuildCache(root, residents) : undefined;
+    if (cachedBuild && fs.existsSync(cachedBuild)) {
+      const {image, entries} = JSON.parse(fs.readFileSync(cachedBuild, 'utf8'));
+      globalThis[Symbol.for('oximut.diagnostic.projectImage')] = image;
+      return new Map(entries);
+    }
     const entry = path.join(root, 'src/index.ts');
     assert(!residents.has(entry), 'the type-only barrel must not carry a mutant');
     if (!barrel) {
@@ -103,6 +130,9 @@ for (const factory of globalThis[Symbol.for('oximut.diagnostic.projectFactories'
         const [chunk] = chunks;
         assert(chunk.isEntry && chunk.map);
         const members = Object.keys(chunk.modules);
+        if (cachedBuild) assert(members.every(file =>
+          file.startsWith(path.join(root, 'src') + path.sep) || file.startsWith(path.join(root, 'tests') + path.sep)),
+          'Project build reuse requires source files inside src or tests');
         const observation = (factory = false) =>
           `globalThis[Symbol.for('oximut.diagnostic.bundledEntry')]?.(${JSON.stringify(input)},${JSON.stringify(members)},${factory});\n`;
         // Appending the observation avoids shifting existing mappings.
@@ -125,7 +155,18 @@ ${observation(true)}
         await build.close();
       }
     }
-    if (projectFactories) await buildProjectImage(factories);
+    if (projectFactories) {
+      const image = await buildProjectImage(factories);
+      if (cachedBuild) {
+        const temporary = `${cachedBuild}.${process.pid}.tmp`;
+        try {
+          fs.writeFileSync(temporary, JSON.stringify({image, entries: [...outputs]}), {flag: 'wx'});
+          fs.renameSync(temporary, cachedBuild);
+        } finally {
+          fs.rmSync(temporary, {force: true});
+        }
+      }
+    }
     return outputs;
   };
 
