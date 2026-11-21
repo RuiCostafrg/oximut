@@ -1106,7 +1106,23 @@ fn run_attempt(options: &Options, previous: Option<RetryEvidence>) -> Result<Att
         preparation_started.elapsed().as_secs_f64() * 1000.0,
     );
     let baseline_started = Instant::now();
-    let mut baseline = scheduler.execute(&request);
+    // Benchmark-only ablation: rely on the instrumented baseline alone. It
+    // drops the check that instrumentation preserves the original counts.
+    let skip_original = std::env::var_os("OXIMUT_EXPERIMENTAL_SKIP_ORIGINAL_BASELINE")
+        .is_some_and(|value| value == "1")
+        && !options.baseline_only
+        && !mutants.is_empty();
+    let mut baseline = if skip_original {
+        diagnostics.push(
+            "experimental: original baseline skipped; instrumented baseline is the only gate".into(),
+        );
+        let mut placeholder = infrastructure(&request, "");
+        placeholder.outcome = TestOutcome::Passed;
+        placeholder.errors.clear();
+        placeholder
+    } else {
+        scheduler.execute(&request)
+    };
     phase_wall_ms.insert(
         "originalBaseline",
         baseline_started.elapsed().as_secs_f64() * 1000.0,
@@ -1198,7 +1214,11 @@ fn run_attempt(options: &Options, previous: Option<RetryEvidence>) -> Result<Att
         } else {
             scheduler.execute(&request)
         };
-        if collected.outcome == TestOutcome::Passed
+        if skip_original && collected.outcome == TestOutcome::Passed {
+            baseline.tests = collected.tests.clone();
+        }
+        if !skip_original
+            && collected.outcome == TestOutcome::Passed
             && (collected.tests.passed != baseline.tests.passed
                 || collected.tests.failed != baseline.tests.failed
                 || collected.tests.skipped != baseline.tests.skipped)

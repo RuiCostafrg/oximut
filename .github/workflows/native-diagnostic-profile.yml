@@ -35,6 +35,7 @@ on:
           - worker-snapshot-single-image-score
           - worker-snapshot-reuse-build-score
           - worker-snapshot-early-build-score
+          - worker-snapshot-skip-original-score
           - worker-snapshot-composed-profile
           - worker-snapshot-composed-startup
           - worker-snapshot-zygote-startup
@@ -195,6 +196,10 @@ jobs:
               before=benchmarks/experiments/vitest-fork-bundle/reuse-build-score-wrapper.sh
               after=benchmarks/experiments/vitest-fork-bundle/early-build-score-wrapper.sh
               ;;
+            worker-snapshot-skip-original-score)
+              before=benchmarks/experiments/vitest-fork-bundle/early-build-score-wrapper.sh
+              after=benchmarks/experiments/vitest-fork-bundle/skip-original-score-wrapper.sh
+              ;;
           esac
           printf '%s\n' "$SCORE_MODE" > "$PROFILE_ROOT/snapshot-score-mode.txt"
           revision=$(git rev-parse HEAD)
@@ -205,14 +210,14 @@ jobs:
             --output "$PROFILE_ROOT/snapshot-score" --warmups 1 --repetitions 5 --timeout 1200 \
             2>&1 | tee "$PROFILE_ROOT/snapshot-score.log"
       - name: Confirm factory evaluation in every fresh mutant fork
-        if: contains(fromJSON('["worker-snapshot-factory-score","worker-snapshot-shared-image-score","worker-snapshot-single-image-score","worker-snapshot-reuse-build-score","worker-snapshot-early-build-score"]'), inputs.capture_mode)
+        if: contains(fromJSON('["worker-snapshot-factory-score","worker-snapshot-shared-image-score","worker-snapshot-single-image-score","worker-snapshot-reuse-build-score","worker-snapshot-early-build-score","worker-snapshot-skip-original-score"]'), inputs.capture_mode)
         shell: bash
         env:
           OXIMUT_INLINE_LATE_RUNTIME: '1'
           OXIMUT_PROJECT_FACTORY_SNAPSHOT: '1'
           OXIMUT_SHARE_PROJECT_IMAGE: ${{ inputs.capture_mode == 'worker-snapshot-factory-score' && '0' || '1' }}
-          OXIMUT_REUSE_PROJECT_BUILD: ${{ (inputs.capture_mode == 'worker-snapshot-reuse-build-score' || inputs.capture_mode == 'worker-snapshot-early-build-score') && '1' || '0' }}
-          OXIMUT_EARLY_PROJECT_BUILD: ${{ inputs.capture_mode == 'worker-snapshot-early-build-score' && '1' || '0' }}
+          OXIMUT_REUSE_PROJECT_BUILD: ${{ contains(fromJSON('["worker-snapshot-reuse-build-score","worker-snapshot-early-build-score","worker-snapshot-skip-original-score"]'), inputs.capture_mode) && '1' || '0' }}
+          OXIMUT_EARLY_PROJECT_BUILD: ${{ contains(fromJSON('["worker-snapshot-early-build-score","worker-snapshot-skip-original-score"]'), inputs.capture_mode) && '1' || '0' }}
           FACTORY_SCORE_MODE: ${{ inputs.capture_mode }}
         run: |
           set -euo pipefail
@@ -224,7 +229,7 @@ jobs:
           mv "$image_dir/seed.cjs" "$image_dir/seed.offline.cjs"
           cp -R "$image_dir" "$PROFILE_ROOT/factory-image"
           options=()
-          if [[ "$FACTORY_SCORE_MODE" == worker-snapshot-single-image-score || "$FACTORY_SCORE_MODE" == worker-snapshot-reuse-build-score || "$FACTORY_SCORE_MODE" == worker-snapshot-early-build-score ]]; then
+          if [[ "$FACTORY_SCORE_MODE" == worker-snapshot-single-image-score || "$FACTORY_SCORE_MODE" == worker-snapshot-reuse-build-score || "$FACTORY_SCORE_MODE" == worker-snapshot-early-build-score || "$FACTORY_SCORE_MODE" == worker-snapshot-skip-original-score ]]; then
             options+=(--snapshot-mutants-only)
           fi
           python3 benchmarks/profile_native.py --binary "$PROFILE_ROOT/oximut" \

@@ -130,7 +130,7 @@ def verify(directory, reference):
                     'worker-snapshot-windowed-score', 'worker-snapshot-late-score',
                     'worker-snapshot-factory-score', 'worker-snapshot-shared-image-score',
                     'worker-snapshot-single-image-score', 'worker-snapshot-reuse-build-score',
-                    'worker-snapshot-early-build-score')
+                    'worker-snapshot-early-build-score', 'worker-snapshot-skip-original-score')
     build = read_json(root / 'build-metadata.json')
     benchmark = root / 'snapshot-score'
     metadata = read_json(benchmark / 'metadata.json')
@@ -169,6 +169,9 @@ def verify(directory, reference):
     elif mode == 'worker-snapshot-early-build-score':
         check_wrapper('before', 'reuse-build-score-wrapper.sh')
         check_wrapper('after', 'early-build-score-wrapper.sh')
+    elif mode == 'worker-snapshot-skip-original-score':
+        check_wrapper('before', 'early-build-score-wrapper.sh')
+        check_wrapper('after', 'skip-original-score-wrapper.sh')
     else:
         assert provenance['before']['binary_sha256'] == build['binary_sha256']
         check_wrapper('after', 'score-wrapper.sh')
@@ -210,6 +213,10 @@ def verify(directory, reference):
             assert test_selection(location, oximut) == historical_selection
             assert baseline_tests(location, oximut) == historical_tests
             assert oximut['baseline_test_counts'] == {'passed': 102, 'failed': 0, 'skipped': 0}
+            # Only the ablation's after arm may skip the original baseline.
+            skipped = any(diagnostic.startswith('experimental: original baseline skipped')
+                          for diagnostic in oximut_report(location, oximut)['diagnostics'])
+            assert skipped == (mode == 'worker-snapshot-skip-original-score' and variant == 'after')
             resources = oximut['resources']
             assert resources['effectiveWorkers'] == resources['maxActiveJobs'] == 4
             if index:
@@ -255,12 +262,13 @@ def verify(directory, reference):
         **({'factory_diagnostic': verify_factory_capture(
             root, reference, build, shared=mode != 'worker-snapshot-factory-score',
             mutants_only=mode in ('worker-snapshot-single-image-score', 'worker-snapshot-reuse-build-score',
-                                  'worker-snapshot-early-build-score'),
-            reused_build=mode in ('worker-snapshot-reuse-build-score', 'worker-snapshot-early-build-score'),
-            early_build=mode == 'worker-snapshot-early-build-score')}
+                                  'worker-snapshot-early-build-score', 'worker-snapshot-skip-original-score'),
+            reused_build=mode in ('worker-snapshot-reuse-build-score', 'worker-snapshot-early-build-score',
+                                  'worker-snapshot-skip-original-score'),
+            early_build=mode in ('worker-snapshot-early-build-score', 'worker-snapshot-skip-original-score'))}
            if mode in ('worker-snapshot-factory-score', 'worker-snapshot-shared-image-score',
                        'worker-snapshot-single-image-score', 'worker-snapshot-reuse-build-score',
-                       'worker-snapshot-early-build-score') else {}),
+                       'worker-snapshot-early-build-score', 'worker-snapshot-skip-original-score') else {}),
     }
 
 

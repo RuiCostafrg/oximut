@@ -30,7 +30,7 @@ else
 fi
 options="--require=\"$experiment/snapshot-flags.cjs\""
 case "${SCORE_MODE:-}" in
-  worker-snapshot-composed-score|worker-snapshot-rolling-score|worker-snapshot-windowed-score|worker-snapshot-late-score|worker-snapshot-factory-score|worker-snapshot-shared-image-score|worker-snapshot-single-image-score|worker-snapshot-reuse-build-score|worker-snapshot-early-build-score)
+  worker-snapshot-composed-score|worker-snapshot-rolling-score|worker-snapshot-windowed-score|worker-snapshot-late-score|worker-snapshot-factory-score|worker-snapshot-shared-image-score|worker-snapshot-single-image-score|worker-snapshot-reuse-build-score|worker-snapshot-early-build-score|worker-snapshot-skip-original-score)
     export OXIMUT_PROJECT_BUNDLE_DIR="$scratch/project-bundle"
     mkdir "$OXIMUT_PROJECT_BUNDLE_DIR"
     options+=" --require=\"$experiment/project-bundle.cjs\""
