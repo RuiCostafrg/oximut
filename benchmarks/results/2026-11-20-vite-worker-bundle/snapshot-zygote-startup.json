@@ -1,0 +1,42 @@
+{
+  "node": "v26.3.1",
+  "v8": "14.6.202.34-node.20",
+  "arch": "x64",
+  "rounds": 24,
+  "exec_argv": [
+    "--experimental-import-meta-resolve",
+    "--require",
+    "/home/runner/work/oximut/oximut/node_modules/vitest/suppress-warnings.cjs",
+    "--conditions",
+    "node",
+    "--conditions",
+    "development",
+    "--require",
+    "/home/runner/work/oximut/oximut/packages/vitest-adapter/compile-cache.cjs",
+    "--snapshot-blob=/home/runner/work/oximut/oximut/node_modules/vitest/dist/.oximut-snapshot.KQEj1T/vitest.blob",
+    "--single-threaded"
+  ],
+  "arms": {
+    "fresh": {
+      "forks": 96,
+      "wall_fork_to_started_ms": 69.818978,
+      "wall_fork_to_exit_ms": 75.331155,
+      "child_cpu_at_started_ms": 66.5095,
+      "child_user_cpu_at_started_ms": 37.129,
+      "child_system_cpu_at_started_ms": 29.563000000000002,
+      "start_request_to_started_ms": 65.386004
+    },
+    "zygote": {
+      "forks": 96,
+      "wall_fork_to_started_ms": 9.232878,
+      "wall_fork_to_exit_ms": 13.19875,
+      "child_cpu_at_started_ms": 3.675,
+      "child_user_cpu_at_started_ms": 2.0755,
+      "child_system_cpu_at_started_ms": 1.7625,
+      "start_request_to_started_ms": 2.6840615,
+      "zygote_cpu_per_fork_ms": 2.8125,
+      "total_cpu_per_fork_ms": 6.4875
+    }
+  },
+  "zygote_boot_wall_ms": 44.918807
+}

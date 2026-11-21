@@ -1154,3 +1154,57 @@ python3 benchmarks/results/2026-11-20-vite-worker-bundle/score.py \
   /root/oximut-evidence/vitest-fork-bundle/snapshot-native-early-build-score \
   /root/oximut-evidence/scale-bottlenecks/workers/artifact/capture/qualification/measurements.jsonl
 ```
+
+## Restored Vitest workers forked from a zygote
+
+This diagnostic tests removing per-mutant Node boot while keeping a fresh
+OS process per worker. A restored-image Vitest worker becomes a zygote once
+Vitest has registered its worker listener. For each request it calls
+`fork()`, gives the child its own IPC channel, and the child then answers
+the recorded `start` request with the unmodified Vitest worker. The
+mechanics and their caveats are in
+[`benchmarks/experiments/zygote-fork`](../../experiments/zygote-fork/README.md).
+
+The native replay used the composed capture's launch contract on Ubuntu
+24.04 x86-64 with Node 26.3.1 and four logical CPUs. It ran 24 alternating
+rounds of four-fork waves per arm, 96 measured forks each, and every fork
+was a distinct process. Both arms ran with `--single-threaded`. No tests
+ran. Values are per-fork medians.
+
+| Replay arm | Wall to `started` | Child CPU to `started` | Zygote CPU per fork | Wall to exit |
+| --- | ---: | ---: | ---: | ---: |
+| Fresh restored worker | 69.82 ms | 66.51 ms | — | 75.33 ms |
+| Zygote fork | 9.23 ms | 3.68 ms | 2.81 ms | 13.20 ms |
+
+In the same run, the default-flag launch replay put restored workers at
+63.95 ms CPU and 66.92 ms wall through `started`, so `--single-threaded`
+did not inflate the fresh arm. This runner was slower than the one behind
+the earlier 39.70 ms replay. The zygote booted in 45 ms, once per
+controller. Zygote CPU comes from `/proc` clock ticks summed over the
+measured waves. It includes copying page tables in `fork()`.
+
+In the scored workload, mutant startup took 9.37 s CPU across 206 forks
+(45 ms each) and 2.86 s of summed last-finisher paths. A tenfold
+per-fork reduction would remove most of both. That makes the zygote the
+only identified change large enough for the 1.28 s wall gap.
+
+The replay does not measure:
+
+- work after `started`. Copy-on-write page faults move into test
+  execution, so after-collection CPU may rise;
+- sampled aggregate RSS, which counts shared pages in each process;
+- Oximut's controller integration;
+- per-mutant environment changes.
+
+A paired workload score must charge all of these.
+
+- [Native zygote replay](https://github.com/RuiCostafrg/oximut/actions/runs/44953437463)
+- [Verified replay summary](snapshot-zygote-startup.json)
+- Raw replay, addon build provenance and logs at `/root/oximut-evidence/vitest-fork-bundle/snapshot-native-zygote-startup`.
+
+```sh
+gh workflow run native-diagnostic-profile.yml --ref t3/fresh-worker-startup \
+  -f capture_mode=worker-snapshot-zygote-startup -f workload=colord-scale -f concurrency=4
+python3 benchmarks/results/2026-11-20-vite-worker-bundle/zygote_replay.py \
+  /root/oximut-evidence/vitest-fork-bundle/snapshot-native-zygote-startup/artifact/zygote-launch-replay.json
+```
