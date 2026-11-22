@@ -63,22 +63,18 @@ process.send('ready'); setInterval(() => {}, 1000);`,
   return entries.filter((entry) => entry.isFile()).length;
 }
 
-test(
-  'Vitest fork workers flush the compile cache on the stop request',
-  { timeout: 30000 },
-  async (t) => {
-    assert.ok((await run(t, 'node_modules/vitest/dist/workers/forks.js', true)) > 0);
-  },
-);
+test('Vitest fork workers flush the compile cache on the stop request', {
+  timeout: 30000,
+}, async (t) => {
+  assert.ok((await run(t, 'node_modules/vitest/dist/workers/forks.js', true)) > 0);
+});
 
 test('without the stop request a signalled fork writes no cache', { timeout: 30000 }, async (t) => {
   assert.equal(await run(t, 'node_modules/vitest/dist/workers/forks.js', false), 0);
 });
 
-test(
-  'other processes inheriting the preload never listen or flush',
-  { timeout: 30000 },
-  async (t) => {
-    assert.equal(await run(t, 'user/child.js', true), 0);
-  },
-);
+test('other processes inheriting the preload never listen or flush', {
+  timeout: 30000,
+}, async (t) => {
+  assert.equal(await run(t, 'user/child.js', true), 0);
+});

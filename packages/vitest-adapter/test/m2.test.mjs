@@ -112,271 +112,252 @@ let state = 0; test('enabled', () => { expect(state++).toBe(0); expect(enabled).
   };
 }
 
-test(
-  'M2 reuses controller with fresh test forks, switches import-time selector and clears baseline',
-  { timeout: 120000 },
-  async (t) => {
-    const s = await session(t);
-    for (const [id, code, expected] of [
-      ['disabled', switched, 'passed'],
-      ['kill', switched, 'failed'],
-      ['disabled', switched, 'passed'],
-      ['', null, 'passed'],
-      ['kill', switched, 'failed'],
-      ['disabled', 'export const enabled = false;', 'failed'],
-      ['disabled', switched, 'passed'],
-    ])
-      assert.equal((await s.run(id, code)).outcome, expected);
-    const observations = (await readFile(join(s.root, 'session/observations'), 'utf8'))
-      .trim()
-      .split('\n')
-      .map(JSON.parse);
-    assert.equal(
-      new Set(observations.map((item) => item.parent)).size,
-      1,
-      await readFile(join(s.root, 'session/events.jsonl'), 'utf8'),
-    );
-    assert.equal(new Set(observations.map((item) => item.pid)).size, observations.length);
-    assert.deepEqual(
-      observations.map((item) => item.active),
-      ['disabled', 'kill', 'disabled', undefined, 'kill', 'disabled', 'disabled'],
-    );
-  },
-);
+test('M2 reuses controller with fresh test forks, switches import-time selector and clears baseline', {
+  timeout: 120000,
+}, async (t) => {
+  const s = await session(t);
+  for (const [id, code, expected] of [
+    ['disabled', switched, 'passed'],
+    ['kill', switched, 'failed'],
+    ['disabled', switched, 'passed'],
+    ['', null, 'passed'],
+    ['kill', switched, 'failed'],
+    ['disabled', 'export const enabled = false;', 'failed'],
+    ['disabled', switched, 'passed'],
+  ])
+    assert.equal((await s.run(id, code)).outcome, expected);
+  const observations = (await readFile(join(s.root, 'session/observations'), 'utf8'))
+    .trim()
+    .split('\n')
+    .map(JSON.parse);
+  assert.equal(
+    new Set(observations.map((item) => item.parent)).size,
+    1,
+    await readFile(join(s.root, 'session/events.jsonl'), 'utf8'),
+  );
+  assert.equal(new Set(observations.map((item) => item.pid)).size, observations.length);
+  assert.deepEqual(
+    observations.map((item) => item.active),
+    ['disabled', 'kill', 'disabled', undefined, 'kill', 'disabled', 'disabled'],
+  );
+});
 
-test(
-  'M2 serves validated resident modules in every job and restores changed files exactly',
-  { timeout: 120000 },
-  async (t) => {
-    const s = await session(t);
-    const observed = join(s.root, 'session/resident-observations');
-    await writeFile(join(s.root, 'other.ts'), 'export const other = 1;');
-    await writeFile(
-      join(s.root, 'sample.test.ts'),
-      `import { test, expect } from 'vitest';
+test('M2 serves validated resident modules in every job and restores changed files exactly', {
+  timeout: 120000,
+}, async (t) => {
+  const s = await session(t);
+  const observed = join(s.root, 'session/resident-observations');
+  await writeFile(join(s.root, 'other.ts'), 'export const other = 1;');
+  await writeFile(
+    join(s.root, 'sample.test.ts'),
+    `import { test, expect } from 'vitest';
 import { enabled } from './source'; import { other } from './other';
 test('enabled', () => { expect(enabled).toBe(true); expect(other).toBe(1); });`,
-    );
-    const map = { version: 3, sources: ['other.ts'], mappings: 'AAAA', names: [] };
-    const resident = [
-      {
-        id: '__oximut_resident__',
-        file: join(s.root, 'other.ts'),
-        code: `import { appendFileSync } from 'node:fs';
+  );
+  const map = { version: 3, sources: ['other.ts'], mappings: 'AAAA', names: [] };
+  const resident = [
+    {
+      id: '__oximut_resident__',
+      file: join(s.root, 'other.ts'),
+      code: `import { appendFileSync } from 'node:fs';
 appendFileSync(${JSON.stringify(observed)}, 'resident\\n');
 export const other = process.env.OXIMUT_ACTIVE_MUTANT === 'other' ? 2 : 1;`,
-        map,
-      },
-    ];
-    const count = async () => {
-      try {
-        return (await readFile(observed, 'utf8')).split('\n').filter(Boolean).length;
-      } catch (error) {
-        if (error.code === 'ENOENT') return 0;
-        throw error;
-      }
-    };
-    const steps = [
-      // [id, mutation code, resident, expected outcome, resident evaluations]
-      ['', null, undefined, 'passed', 0],
-      ['', null, resident, 'passed', 1],
-      ['other', switched, resident, 'failed', 2],
-      ['kill', switched, resident, 'failed', 3],
-      ['disabled', switched, resident, 'passed', 4],
-      ['static', 'export const other = 3;', resident, 'failed', 4, 'other.ts'],
-      ['disabled', switched, resident, 'passed', 5],
-      ['', null, undefined, 'passed', 5],
-    ];
-    for (const [id, code, shared, expected, evaluations, filename = 'source.ts'] of steps) {
-      const response = await s.run(
-        id,
-        code,
-        30000,
-        filename,
-        undefined,
-        shared ? { resident: shared } : {},
-      );
-      assert.equal(response.outcome, expected, JSON.stringify([id, response]));
-      // Executed results acknowledge exactly the resident modules served.
-      assert.equal(response.resident, shared?.length, id);
-      assert.equal(await count(), evaluations, id);
+      map,
+    },
+  ];
+  const count = async () => {
+    try {
+      return (await readFile(observed, 'utf8')).split('\n').filter(Boolean).length;
+    } catch (error) {
+      if (error.code === 'ENOENT') return 0;
+      throw error;
     }
-  },
-);
-
-test(
-  'M2 test forks populate the provided compile cache while the controller persists',
-  { timeout: 120000 },
-  async (t) => {
-    await mkdir(join(repository, '.oximut'), { recursive: true });
-    const cache = await mkdtemp(join(repository, '.oximut/m2-compile-cache-'));
-    const s = await session(t, { NODE_COMPILE_CACHE: cache });
-    // after() hooks run in registration order: remove the cache only once the
-    // session hook has stopped the runner, so its stop-time flush cannot
-    // recreate the directory under .oximut/.
-    t.after(() => rm(cache, { recursive: true, force: true }));
-    assert.equal((await s.run('disabled')).outcome, 'passed');
-    // The controller only flushes at exit; entries now come from test forks.
-    const entries = await readdir(cache, { recursive: true, withFileTypes: true });
-    assert.ok(
-      entries.some((entry) => entry.isFile()),
-      'fork compile cache was not flushed',
+  };
+  const steps = [
+    // [id, mutation code, resident, expected outcome, resident evaluations]
+    ['', null, undefined, 'passed', 0],
+    ['', null, resident, 'passed', 1],
+    ['other', switched, resident, 'failed', 2],
+    ['kill', switched, resident, 'failed', 3],
+    ['disabled', switched, resident, 'passed', 4],
+    ['static', 'export const other = 3;', resident, 'failed', 4, 'other.ts'],
+    ['disabled', switched, resident, 'passed', 5],
+    ['', null, undefined, 'passed', 5],
+  ];
+  for (const [id, code, shared, expected, evaluations, filename = 'source.ts'] of steps) {
+    const response = await s.run(
+      id,
+      code,
+      30000,
+      filename,
+      undefined,
+      shared ? { resident: shared } : {},
     );
-    assert.equal((await s.run('kill')).outcome, 'failed');
-  },
-);
+    assert.equal(response.outcome, expected, JSON.stringify([id, response]));
+    // Executed results acknowledge exactly the resident modules served.
+    assert.equal(response.resident, shared?.length, id);
+    assert.equal(await count(), evaluations, id);
+  }
+});
 
-test(
-  'M2 accepts the request byte limit and rejects one byte over it',
-  { timeout: 120000 },
-  async (t) => {
-    const s = await session(t);
-    const limit = 8 * 1024 * 1024;
-    const atLimit = await s.run('kill', switched, 30000, 'source.ts', limit);
-    assert.equal(atLimit.outcome, 'failed', JSON.stringify(atLimit));
-    assert.equal(atLimit.tests.failed, 1);
-    assert.equal((await s.run('original', null)).outcome, 'passed');
-    const oversized = await s.run('kill', switched, 30000, 'source.ts', limit + 1);
-    assert.equal(oversized.outcome, 'infrastructure-error', JSON.stringify(oversized));
-    assert.match(oversized.errors.join('\n'), /at most 8 MiB|exceeds 8 MiB/);
-    assert.equal((await s.run('original', null)).outcome, 'passed');
-  },
-);
+test('M2 test forks populate the provided compile cache while the controller persists', {
+  timeout: 120000,
+}, async (t) => {
+  await mkdir(join(repository, '.oximut'), { recursive: true });
+  const cache = await mkdtemp(join(repository, '.oximut/m2-compile-cache-'));
+  const s = await session(t, { NODE_COMPILE_CACHE: cache });
+  // after() hooks run in registration order: remove the cache only once the
+  // session hook has stopped the runner, so its stop-time flush cannot
+  // recreate the directory under .oximut/.
+  t.after(() => rm(cache, { recursive: true, force: true }));
+  assert.equal((await s.run('disabled')).outcome, 'passed');
+  // The controller only flushes at exit; entries now come from test forks.
+  const entries = await readdir(cache, { recursive: true, withFileTypes: true });
+  assert.ok(
+    entries.some((entry) => entry.isFile()),
+    'fork compile cache was not flushed',
+  );
+  assert.equal((await s.run('kill')).outcome, 'failed');
+});
 
-test(
-  'M2 replaces controller after timeout and crash and preserves total deadline',
-  { timeout: 120000 },
-  async (t) => {
-    const s = await session(t);
-    assert.equal((await s.run('disabled')).outcome, 'passed');
-    assert.equal(
-      (await s.run('hang', 'while(true) {}; export const enabled = true;', 1000)).outcome,
-      'timeout',
-    );
-    assert.equal((await s.run('disabled')).outcome, 'passed');
-    assert.equal(
-      (await s.run('crash', "process.kill(process.pid, 'SIGKILL'); export const enabled = true;"))
-        .outcome,
-      'infrastructure-error',
-    );
-    assert.equal((await s.run('disabled')).outcome, 'passed');
-  },
-);
+test('M2 accepts the request byte limit and rejects one byte over it', {
+  timeout: 120000,
+}, async (t) => {
+  const s = await session(t);
+  const limit = 8 * 1024 * 1024;
+  const atLimit = await s.run('kill', switched, 30000, 'source.ts', limit);
+  assert.equal(atLimit.outcome, 'failed', JSON.stringify(atLimit));
+  assert.equal(atLimit.tests.failed, 1);
+  assert.equal((await s.run('original', null)).outcome, 'passed');
+  const oversized = await s.run('kill', switched, 30000, 'source.ts', limit + 1);
+  assert.equal(oversized.outcome, 'infrastructure-error', JSON.stringify(oversized));
+  assert.match(oversized.errors.join('\n'), /at most 8 MiB|exceeds 8 MiB/);
+  assert.equal((await s.run('original', null)).outcome, 'passed');
+});
 
-test(
-  'M2 reaps detached descendants of passing jobs before publishing results',
-  { timeout: 60000 },
-  async (t) => {
-    const s = await session(t);
-    const marker = join(s.root, 'session/detached.pid');
-    const code = `import { spawn } from 'node:child_process'; import { writeFileSync } from 'node:fs';
+test('M2 replaces controller after timeout and crash and preserves total deadline', {
+  timeout: 120000,
+}, async (t) => {
+  const s = await session(t);
+  assert.equal((await s.run('disabled')).outcome, 'passed');
+  assert.equal(
+    (await s.run('hang', 'while(true) {}; export const enabled = true;', 1000)).outcome,
+    'timeout',
+  );
+  assert.equal((await s.run('disabled')).outcome, 'passed');
+  assert.equal(
+    (await s.run('crash', "process.kill(process.pid, 'SIGKILL'); export const enabled = true;"))
+      .outcome,
+    'infrastructure-error',
+  );
+  assert.equal((await s.run('disabled')).outcome, 'passed');
+});
+
+test('M2 reaps detached descendants of passing jobs before publishing results', {
+  timeout: 60000,
+}, async (t) => {
+  const s = await session(t);
+  const marker = join(s.root, 'session/detached.pid');
+  const code = `import { spawn } from 'node:child_process'; import { writeFileSync } from 'node:fs';
 const child = spawn(process.execPath, ['-e', 'setInterval(() => {}, 1000)'], { detached: true, stdio: 'ignore' });
 child.unref(); writeFileSync(${JSON.stringify(marker)}, String(child.pid)); export const enabled = true;`;
-    assert.equal((await s.run('leak', code)).outcome, 'passed');
-    const pid = Number(await readFile(marker, 'utf8'));
-    assert.throws(() => process.kill(pid, 0), { code: 'ESRCH' });
-    assert.equal((await s.run('disabled')).outcome, 'passed');
-  },
-);
+  assert.equal((await s.run('leak', code)).outcome, 'passed');
+  const pid = Number(await readFile(marker, 'utf8'));
+  assert.throws(() => process.kill(pid, 0), { code: 'ESRCH' });
+  assert.equal((await s.run('disabled')).outcome, 'passed');
+});
 
-test(
-  'M2 exposes fresh fallback for global setup and evaluates active setup imports',
-  { timeout: 60000 },
-  async (t) => {
-    const s = await session(t);
-    await writeFile(
-      join(s.root, 'vitest.config.mjs'),
-      "export default { test: { include: ['sample.test.ts'], globalSetup: ['./setup.ts'] } };",
-    );
-    await writeFile(
-      join(s.root, 'setup.ts'),
-      `import { enabled } from './source';
+test('M2 exposes fresh fallback for global setup and evaluates active setup imports', {
+  timeout: 60000,
+}, async (t) => {
+  const s = await session(t);
+  await writeFile(
+    join(s.root, 'vitest.config.mjs'),
+    "export default { test: { include: ['sample.test.ts'], globalSetup: ['./setup.ts'] } };",
+  );
+  await writeFile(
+    join(s.root, 'setup.ts'),
+    `import { enabled } from './source';
 import { appendFileSync } from 'node:fs'; export default () => {
 appendFileSync(${JSON.stringify(join(s.root, 'session/setup-observations'))}, JSON.stringify({enabled, active: process.env.OXIMUT_ACTIVE_MUTANT})+'\\n'); };`,
-    );
-    assert.equal((await s.run('kill')).outcome, 'failed');
-    assert.equal((await s.run('disabled')).outcome, 'passed');
-    const observations = (await readFile(join(s.root, 'session/setup-observations'), 'utf8'))
-      .trim()
-      .split('\n')
-      .map(JSON.parse);
-    assert.deepEqual(observations, [
-      { enabled: false, active: 'kill' },
-      { enabled: true, active: 'disabled' },
-    ]);
-    const events = (await readFile(join(s.root, 'session/events.jsonl'), 'utf8'))
-      .trim()
-      .split('\n')
-      .map(JSON.parse);
-    assert.equal(events.length, 2);
-    assert.ok(events.every((event) => event.reuse.startsWith('fresh:')));
-    assert.notEqual(events[0].controllerPid, events[1].controllerPid);
-  },
-);
+  );
+  assert.equal((await s.run('kill')).outcome, 'failed');
+  assert.equal((await s.run('disabled')).outcome, 'passed');
+  const observations = (await readFile(join(s.root, 'session/setup-observations'), 'utf8'))
+    .trim()
+    .split('\n')
+    .map(JSON.parse);
+  assert.deepEqual(observations, [
+    { enabled: false, active: 'kill' },
+    { enabled: true, active: 'disabled' },
+  ]);
+  const events = (await readFile(join(s.root, 'session/events.jsonl'), 'utf8'))
+    .trim()
+    .split('\n')
+    .map(JSON.parse);
+  assert.equal(events.length, 2);
+  assert.ok(events.every((event) => event.reuse.startsWith('fresh:')));
+  assert.notEqual(events[0].controllerPid, events[1].controllerPid);
+});
 
-test(
-  'M2 invalidates raw imported assets when their contents change',
-  { timeout: 60000 },
-  async (t) => {
-    const s = await session(t);
-    await writeFile(join(s.root, 'flag.txt'), 'enabled');
-    const code = "import flag from './flag.txt?raw'; export const enabled = flag === 'enabled';";
-    assert.equal((await s.run('disabled', code)).outcome, 'passed');
-    await writeFile(join(s.root, 'flag.txt'), 'disabled');
-    assert.equal((await s.run('disabled', code)).outcome, 'failed');
-    const events = (await readFile(join(s.root, 'session/events.jsonl'), 'utf8'))
-      .trim()
-      .split('\n')
-      .map(JSON.parse);
-    assert.equal(events.length, 2);
-    assert.notEqual(events[0].controllerPid, events[1].controllerPid);
-  },
-);
+test('M2 invalidates raw imported assets when their contents change', {
+  timeout: 60000,
+}, async (t) => {
+  const s = await session(t);
+  await writeFile(join(s.root, 'flag.txt'), 'enabled');
+  const code = "import flag from './flag.txt?raw'; export const enabled = flag === 'enabled';";
+  assert.equal((await s.run('disabled', code)).outcome, 'passed');
+  await writeFile(join(s.root, 'flag.txt'), 'disabled');
+  assert.equal((await s.run('disabled', code)).outcome, 'failed');
+  const events = (await readFile(join(s.root, 'session/events.jsonl'), 'utf8'))
+    .trim()
+    .split('\n')
+    .map(JSON.parse);
+  assert.equal(events.length, 2);
+  assert.notEqual(events[0].controllerPid, events[1].controllerPid);
+});
 
-test(
-  'M2 uses fresh controllers for custom plugins and symlinked project inputs',
-  { timeout: 90000 },
-  async (t) => {
-    for (const feature of ['plugin', 'symlink']) {
-      await t.test(feature, async (t) => {
-        const s = await session(t);
-        if (feature === 'plugin') {
-          await writeFile(
-            join(s.root, 'vitest.config.mjs'),
-            "export default { plugins: [{ name: 'custom-contract-plugin' }], test: { include: ['sample.test.ts'] } };",
-          );
-        } else {
-          await symlink('source.ts', join(s.root, 'linked-source.ts'));
-        }
-        assert.equal((await s.run('kill')).outcome, 'failed');
-        assert.equal((await s.run('disabled')).outcome, 'passed');
-        const events = (await readFile(join(s.root, 'session/events.jsonl'), 'utf8'))
-          .trim()
-          .split('\n')
-          .map(JSON.parse);
-        assert.equal(events.length, 2);
-        assert.ok(events.every((event) => event.reuse.startsWith('fresh:')));
-        assert.match(events[0].reuse, feature === 'plugin' ? /custom plugins/ : /symlink/);
-        assert.notEqual(events[0].controllerPid, events[1].controllerPid);
-      });
-    }
-  },
-);
+test('M2 uses fresh controllers for custom plugins and symlinked project inputs', {
+  timeout: 90000,
+}, async (t) => {
+  for (const feature of ['plugin', 'symlink']) {
+    await t.test(feature, async (t) => {
+      const s = await session(t);
+      if (feature === 'plugin') {
+        await writeFile(
+          join(s.root, 'vitest.config.mjs'),
+          "export default { plugins: [{ name: 'custom-contract-plugin' }], test: { include: ['sample.test.ts'] } };",
+        );
+      } else {
+        await symlink('source.ts', join(s.root, 'linked-source.ts'));
+      }
+      assert.equal((await s.run('kill')).outcome, 'failed');
+      assert.equal((await s.run('disabled')).outcome, 'passed');
+      const events = (await readFile(join(s.root, 'session/events.jsonl'), 'utf8'))
+        .trim()
+        .split('\n')
+        .map(JSON.parse);
+      assert.equal(events.length, 2);
+      assert.ok(events.every((event) => event.reuse.startsWith('fresh:')));
+      assert.match(events[0].reuse, feature === 'plugin' ? /custom plugins/ : /symlink/);
+      assert.notEqual(events[0].controllerPid, events[1].controllerPid);
+    });
+  }
+});
 
-test(
-  'M2 restores alternating source transforms through re-exports and dynamic query imports',
-  { timeout: 120000 },
-  async (t) => {
-    const s = await session(t);
-    await writeFile(join(s.root, 'other.ts'), 'export const extra = true;');
-    await writeFile(join(s.root, 'barrel.ts'), "export { enabled } from './source';");
-    await writeFile(
-      join(s.root, 'consumer.ts'),
-      "import { enabled } from './barrel'; export function observe() { return enabled; }",
-    );
-    await writeFile(
-      join(s.root, 'sample.test.ts'),
-      `
+test('M2 restores alternating source transforms through re-exports and dynamic query imports', {
+  timeout: 120000,
+}, async (t) => {
+  const s = await session(t);
+  await writeFile(join(s.root, 'other.ts'), 'export const extra = true;');
+  await writeFile(join(s.root, 'barrel.ts'), "export { enabled } from './source';");
+  await writeFile(
+    join(s.root, 'consumer.ts'),
+    "import { enabled } from './barrel'; export function observe() { return enabled; }",
+  );
+  await writeFile(
+    join(s.root, 'sample.test.ts'),
+    `
 import { test, expect } from 'vitest';
 import { observe } from './consumer';
 let state = 0;
@@ -386,27 +367,25 @@ test('all dependencies', async () => {
   expect((await import('./source.ts?variant')).enabled).toBe(true);
   expect((await import('./other.ts?variant')).extra).toBe(true);
 });`,
-    );
-    const other =
-      "export const extra = process.env.OXIMUT_ACTIVE_MUTANT === 'kill' ? false : true;";
-    // Long → short → long requests catch stale suffixes in the shared buffer.
-    const padded = `${switched}\n/*${'x'.repeat(65536)}*/`;
-    for (const [id, code, file, outcome] of [
-      ['original', null, 'source.ts', 'passed'],
-      ['kill', padded, 'source.ts', 'failed'],
-      ['kill', other, 'other.ts', 'failed'],
-      ['pass', switched, 'source.ts', 'passed'],
-      ['kill', padded, 'source.ts', 'failed'],
-      ['original', null, 'source.ts', 'passed'],
-      ['kill', other, 'other.ts', 'failed'],
-      ['original', null, 'source.ts', 'passed'],
-    ]) {
-      const result = await s.run(id, code, 30000, file);
-      assert.equal(result.outcome, outcome, JSON.stringify(result));
-      assert.equal(result.tests.passed + result.tests.failed, 1);
-    }
-  },
-);
+  );
+  const other = "export const extra = process.env.OXIMUT_ACTIVE_MUTANT === 'kill' ? false : true;";
+  // Long → short → long requests catch stale suffixes in the shared buffer.
+  const padded = `${switched}\n/*${'x'.repeat(65536)}*/`;
+  for (const [id, code, file, outcome] of [
+    ['original', null, 'source.ts', 'passed'],
+    ['kill', padded, 'source.ts', 'failed'],
+    ['kill', other, 'other.ts', 'failed'],
+    ['pass', switched, 'source.ts', 'passed'],
+    ['kill', padded, 'source.ts', 'failed'],
+    ['original', null, 'source.ts', 'passed'],
+    ['kill', other, 'other.ts', 'failed'],
+    ['original', null, 'source.ts', 'passed'],
+  ]) {
+    const result = await s.run(id, code, 30000, file);
+    assert.equal(result.outcome, outcome, JSON.stringify(result));
+    assert.equal(result.tests.passed + result.tests.failed, 1);
+  }
+});
 
 test('M2 fresh-thread switching, coverage and worker isolation', { timeout: 120000 }, async (t) => {
   const s = await session(t);
@@ -663,52 +642,50 @@ test('file ${i}', async () => {
   return { s, observations, mode, read };
 }
 
-test(
-  'M2 parallel baseline overlaps fresh forks, preserves coverage and restores serial mutants',
-  { timeout: 120000 },
-  async (t) => {
-    const { s, observations, read } = await parallelFixture(t);
-    const probe = {
-      id: 'probe',
-      file: join(s.root, 'source.ts'),
-      code: `export const enabled = true; export function hit() { globalThis.__oximut_m3_hit__?.("${'b'.repeat(64)}"); }`,
-      map: { version: 3, sources: ['source.ts'], mappings: 'AAAA', names: [] },
-    };
-    const baseline = (workers) =>
-      s.run('', null, 30000, 'source.ts', undefined, { workers, collectCoverage: [probe] });
-    const serial = await baseline(1);
-    const parallel = await baseline(2);
-    assert.equal(parallel.coverage.complete, true);
-    assert.deepEqual(parallel.tests, serial.tests);
-    assert.equal(parallel.outcome, serial.outcome);
-    assert.deepEqual(parallel.coverage, serial.coverage);
-    await writeFile(observations, '');
-    const selection = {
-      mode: 'files',
-      files: parallel.coverage.tests.map((t) => t.file),
-      selectedTests: 4,
-      totalTests: 4,
-      reasons: [],
-    };
-    const mutant = await s.run('disabled', switched, 30000, 'source.ts', undefined, {
-      workers: 2,
-      selection,
-    });
-    assert.equal(mutant.outcome, 'passed', JSON.stringify(mutant));
-    assert.deepEqual(mutant.tests, parallel.tests);
-    const records = await read();
-    assert.deepEqual(
-      records.map((r) => r.event),
-      ['start', 'end', 'start', 'end', 'start', 'end', 'start', 'end'],
-    );
-    assert.equal(new Set(records.map((r) => r.pid)).size, 4);
-    const events = (await readFile(join(s.root, 'session/events.jsonl'), 'utf8'))
-      .trim()
-      .split('\n')
-      .map(JSON.parse);
-    assert.equal(events.length, 1, 'same controller handles parallel baseline then serial mutant');
-  },
-);
+test('M2 parallel baseline overlaps fresh forks, preserves coverage and restores serial mutants', {
+  timeout: 120000,
+}, async (t) => {
+  const { s, observations, read } = await parallelFixture(t);
+  const probe = {
+    id: 'probe',
+    file: join(s.root, 'source.ts'),
+    code: `export const enabled = true; export function hit() { globalThis.__oximut_m3_hit__?.("${'b'.repeat(64)}"); }`,
+    map: { version: 3, sources: ['source.ts'], mappings: 'AAAA', names: [] },
+  };
+  const baseline = (workers) =>
+    s.run('', null, 30000, 'source.ts', undefined, { workers, collectCoverage: [probe] });
+  const serial = await baseline(1);
+  const parallel = await baseline(2);
+  assert.equal(parallel.coverage.complete, true);
+  assert.deepEqual(parallel.tests, serial.tests);
+  assert.equal(parallel.outcome, serial.outcome);
+  assert.deepEqual(parallel.coverage, serial.coverage);
+  await writeFile(observations, '');
+  const selection = {
+    mode: 'files',
+    files: parallel.coverage.tests.map((t) => t.file),
+    selectedTests: 4,
+    totalTests: 4,
+    reasons: [],
+  };
+  const mutant = await s.run('disabled', switched, 30000, 'source.ts', undefined, {
+    workers: 2,
+    selection,
+  });
+  assert.equal(mutant.outcome, 'passed', JSON.stringify(mutant));
+  assert.deepEqual(mutant.tests, parallel.tests);
+  const records = await read();
+  assert.deepEqual(
+    records.map((r) => r.event),
+    ['start', 'end', 'start', 'end', 'start', 'end', 'start', 'end'],
+  );
+  assert.equal(new Set(records.map((r) => r.pid)).size, 4);
+  const events = (await readFile(join(s.root, 'session/events.jsonl'), 'utf8'))
+    .trim()
+    .split('\n')
+    .map(JSON.parse);
+  assert.equal(events.length, 1, 'same controller handles parallel baseline then serial mutant');
+});
 
 for (const [mode, expected] of [
   ['fail', 'failed'],
@@ -716,34 +693,32 @@ for (const [mode, expected] of [
   ['timeout', 'timeout'],
   ['hang', 'timeout'],
 ]) {
-  test(
-    `M2 parallel baseline classifies ${mode} and reaps every fork`,
-    { timeout: 120000 },
-    async (t) => {
-      const { s, observations, read, mode: marker } = await parallelFixture(t);
-      await writeFile(observations, '');
-      await writeFile(marker, mode);
-      const result = await s.run('', null, mode === 'hang' ? 5000 : 30000, 'source.ts', undefined, {
-        workers: 2,
+  test(`M2 parallel baseline classifies ${mode} and reaps every fork`, {
+    timeout: 120000,
+  }, async (t) => {
+    const { s, observations, read, mode: marker } = await parallelFixture(t);
+    await writeFile(observations, '');
+    await writeFile(marker, mode);
+    const result = await s.run('', null, mode === 'hang' ? 5000 : 30000, 'source.ts', undefined, {
+      workers: 2,
+    });
+    assert.equal(result.outcome, expected, JSON.stringify(result));
+    const records = await read();
+    assert.ok(records.length > 0);
+    if (mode !== 'hang') {
+      assert.equal(new Set(records.map((r) => r.pid)).size, 4);
+      assert.deepEqual(result.tests, {
+        passed: mode === 'unhandled' ? 4 : 3,
+        failed: mode === 'unhandled' ? 0 : 1,
+        skipped: 0,
       });
-      assert.equal(result.outcome, expected, JSON.stringify(result));
-      const records = await read();
-      assert.ok(records.length > 0);
-      if (mode !== 'hang') {
-        assert.equal(new Set(records.map((r) => r.pid)).size, 4);
-        assert.deepEqual(result.tests, {
-          passed: mode === 'unhandled' ? 4 : 3,
-          failed: mode === 'unhandled' ? 0 : 1,
-          skipped: 0,
-        });
-      }
-      for (const pid of new Set(records.map((r) => r.pid)))
-        assert.throws(() => process.kill(pid, 0), { code: 'ESRCH' });
-      await writeFile(marker, 'pass');
-      assert.equal(
-        (await s.run('', null, 30000, 'source.ts', undefined, { workers: 2 })).outcome,
-        'passed',
-      );
-    },
-  );
+    }
+    for (const pid of new Set(records.map((r) => r.pid)))
+      assert.throws(() => process.kill(pid, 0), { code: 'ESRCH' });
+    await writeFile(marker, 'pass');
+    assert.equal(
+      (await s.run('', null, 30000, 'source.ts', undefined, { workers: 2 })).outcome,
+      'passed',
+    );
+  });
 }
