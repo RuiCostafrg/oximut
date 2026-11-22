@@ -156,6 +156,12 @@ class ZygoteChild extends EventEmitter {
         'syscall', read(`/proc/${this.pid}/task/${tid}/syscall`), 'comm', read(`/proc/${this.pid}/task/${tid}/comm`));
     }
     trace('stalled-recent', this.traceId, ...this.#recent);
+    // A symbolized native stack (the controller is an ancestor, so YAMA allows it).
+    const result = require('node:child_process').spawnSync('gdb', ['-p', String(this.pid), '-batch', '-nx',
+      '-ex', 'set pagination off', '-ex', 'info threads', '-ex', 'thread apply all bt 40',
+      '-ex', 'info symbol $rdi', '-ex', 'x/8gx $rdi'], {encoding: 'utf8', timeout: 20_000});
+    fs.writeFileSync(path.join(traceDir, `stack-${this.pid}.txt`),
+      `${result.error ?? ''}\n${result.stdout ?? ''}\n${result.stderr ?? ''}`);
   }
 
   kill(signal = 'SIGTERM') {

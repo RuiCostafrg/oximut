@@ -217,6 +217,12 @@ jobs:
                 | tee "$PROFILE_ROOT/zygote-provenance.txt"
               export OXIMUT_ZYGOTE_SCORE_ADDON="$PROFILE_ROOT/zygote-fork.node"
               export OXIMUT_ZYGOTE_EVIDENCE_DIR="$PROFILE_ROOT/zygote-evidence"
+              if test "$OXIMUT_ZYGOTE_TRACE" = 1 && ! command -v gdb; then
+                sudo apt-get install -y -qq gdb > /dev/null
+              fi
+              if test "$OXIMUT_ZYGOTE_TRACE" = 1; then
+                gdb --version | head -1; cat /proc/sys/kernel/yama/ptrace_scope
+              fi
               mkdir "$OXIMUT_ZYGOTE_EVIDENCE_DIR"
               ;;
           esac
