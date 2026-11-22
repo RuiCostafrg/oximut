@@ -6,6 +6,9 @@
 #   scripts/local-ci.sh tests         selected stages only
 #   scripts/local-ci.sh --list        list stages
 #   scripts/local-ci.sh --no-signoff  run checks, don't post signoff statuses
+#   scripts/local-ci.sh --provision-sandbox
+#                                     let the tests stage install the bwrap
+#                                     AppArmor profile (persistent host change)
 #   scripts/local-ci.sh --help        this text
 set -euo pipefail
 
@@ -23,12 +26,14 @@ case "$(uname -s)" in
 esac
 
 NO_SIGNOFF=0
+PROVISION_SANDBOX=0
 SELECTED=()
 while [ $# -gt 0 ]; do
   case "$1" in
     --no-signoff) NO_SIGNOFF=1 ;;
+    --provision-sandbox) PROVISION_SANDBOX=1 ;;
     --list) printf '%s\n' "stages: ${AVAILABLE_STAGES[*]}"; exit 0 ;;
-    -h|--help) sed -n '2,9p' "$0"; exit 0 ;;
+    -h|--help) sed -n '2,12p' "$0"; exit 0 ;;
     -*) _fail "unknown option: $1 (try --help)" ;;
     *) SELECTED+=("$1") ;;
   esac
@@ -49,7 +54,19 @@ stage_tests() {
   require cargo ""
   require python3 ""
   require node ""
-  bash scripts/setup-candidate-sandbox.sh
+  require npm ""
+  # The candidate sandbox (and ci.yml) targets Ubuntu 24.04 only.
+  # shellcheck source=/dev/null
+  . /etc/os-release
+  [ "${ID:-}" = ubuntu ] && [ "${VERSION_ID:-}" = 24.04 ] \
+    || _fail "the tests stage needs Ubuntu 24.04 (found ${PRETTY_NAME:-unknown}); lint and security run anywhere on Linux"
+  # Provisioning installs a persistent AppArmor exception for /usr/bin/bwrap,
+  # so it only happens on request; otherwise the sandbox must already work.
+  if [ "$PROVISION_SANDBOX" = 1 ]; then
+    bash scripts/setup-candidate-sandbox.sh
+  else
+    _log "skipping sandbox provisioning (pass --provision-sandbox to install the bwrap AppArmor profile)"
+  fi
   OXIMUT_REQUIRE_SANDBOX=1 python3 -m unittest discover -s tests -p test_candidate_sandbox.py -v
   npm ci
   npm run typecheck
@@ -64,17 +81,22 @@ stage_tests() {
     python3 -m unittest discover -s tests -p test_candidate_sandbox.py -v
   python3 -m unittest discover -s tests -v
   cargo run --locked -p oximut-oxc-smoke -- fixtures/pure/src/logic.ts fixtures/stateful/src/service.ts
-  python3 benchmarks/run.py --repetitions 1 --warmups 0 --timeout 180 --output .oximut/ci-baselines
-  python3 benchmarks/m6.py --fixtures m1 --tools oximut --scenarios clean --repetitions 1 --warmups 0 --output .oximut/ci-m6
+  # Both harnesses refuse an existing output directory, so use a fresh one.
+  mkdir -p .oximut
+  local ci_dir
+  ci_dir="$(mktemp -d .oximut/local-ci.XXXXXX)"
+  python3 benchmarks/run.py --repetitions 1 --warmups 0 --timeout 180 --output "$ci_dir/baselines"
+  python3 benchmarks/m6.py --fixtures m1 --tools oximut --scenarios clean --repetitions 1 --warmups 0 --output "$ci_dir/m6"
   node scripts/validate-reports.mjs \
-    .oximut/ci-m6/measured-01-m1-oximut-clean-fresh/run/report.json \
-    .oximut/ci-m6/measured-01-m1-oximut-clean-persistent/run/report.json \
-    .oximut/ci-m6/measured-01-m1-oximut-clean-selection/run/report.json
+    "$ci_dir/m6/measured-01-m1-oximut-clean-fresh/run/report.json" \
+    "$ci_dir/m6/measured-01-m1-oximut-clean-persistent/run/report.json" \
+    "$ci_dir/m6/measured-01-m1-oximut-clean-selection/run/report.json"
 }
 
 stage_lint() {
   require cargo ""
   require npm ""
+  npm ci
   npm run format:check
   npm run lint
   cargo fmt --all -- --check
@@ -96,6 +118,13 @@ CDPATH= cd -- "$(dirname -- "$repo_script")/.." \
   || _fail "cannot find repository root"
 
 signoff_failed=0
+
+# Post a red status, and say so if it could not be posted.
+post_failure() {
+  [ "$NO_SIGNOFF" = 0 ] || return 0
+  gh signoff fail --commit "$1" "$2" --description "$3" >/dev/null \
+    || printf '⚠ could not post failure status for %s\n' "$2" >&2
+}
 
 # Validate all selected stage names before running anything.
 for s in "${SELECTED[@]}"; do
@@ -128,7 +157,7 @@ for s in "${SELECTED[@]}"; do
   rc=$?
   set -e
   if [ "$rc" -ne 0 ]; then
-    [ "$NO_SIGNOFF" = 0 ] && gh signoff fail --commit "$head_sha" "$s" --description "$s failed locally" >/dev/null 2>&1 || true
+    post_failure "$head_sha" "$s" "$s failed locally"
     _fail "stage '$s' failed"
   fi
   # A concurrent commit or uncommitted edit during the stage changes what was
@@ -141,7 +170,7 @@ for s in "${SELECTED[@]}"; do
     || _fail "git status failed — cannot verify tree cleanliness"
   if [ "$(git rev-parse HEAD)" != "$head_sha" ] \
      || { [ "$NO_SIGNOFF" = 0 ] && [ -n "$post_status" ]; }; then
-    [ "$NO_SIGNOFF" = 0 ] && gh signoff fail --commit "$head_sha" "$s" --description "$s ran while HEAD moved or tree changed" >/dev/null 2>&1 || true
+    post_failure "$head_sha" "$s" "$s ran while HEAD moved or tree changed"
     _fail "HEAD moved or working tree changed during stage '$s' — aborting instead of attesting untested code"
   fi
   _ok "$s passed"

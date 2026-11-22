@@ -13,8 +13,14 @@ gh auth login
 gh extension install basecamp/gh-signoff
 ```
 
-Toolchains: Node (`.node-version` pins 26.x), Python 3.13, Rust 1.96.0 (pinned via
-`rust-toolchain.toml`; rustup selects it automatically).
+Toolchains: Node 26.3.1 (pinned in `.node-version`, with its bundled npm), Python
+3.13, Rust 1.96.0 (pinned via `rust-toolchain.toml`; rustup selects it automatically).
+
+The `tests` stage needs Ubuntu 24.04, like `ci.yml`, because the candidate sandbox
+does; `lint` and `security` run on any Linux. The sandbox needs an AppArmor profile
+for `/usr/bin/bwrap`. The runner installs it only when you pass
+`--provision-sandbox`, because it stays on the host after the run. Prefer a
+disposable VM or container for that.
 
 ## Usage
 
@@ -22,6 +28,7 @@ Toolchains: Node (`.node-version` pins 26.x), Python 3.13, Rust 1.96.0 (pinned v
 scripts/local-ci.sh                # stages: tests lint security
 scripts/local-ci.sh lint           # run selected stages only
 scripts/local-ci.sh --no-signoff   # checks only, no statuses posted
+scripts/local-ci.sh --provision-sandbox tests  # also install the bwrap profile
 ```
 
 Push your commits first: `gh signoff` only attests pushed work. Failing stages post
