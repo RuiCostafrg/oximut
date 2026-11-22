@@ -68,14 +68,26 @@ if (addonPath) {
     process.disconnect();
   };
 
+  let busyRetries = 0;
   const spawnNext = () => {
     if (inflight || queue.length === 0) return;
     inflight = true;
-    const { id, env } = queue.shift();
+    // fork() returns -2 while a V8 worker thread is busy (see fork.c).
     const [parentEnd, childEnd] = addon.socketpair();
     const pid = addon.fork();
+    if (pid === -2) {
+      addon.closeFd(parentEnd);
+      addon.closeFd(childEnd);
+      inflight = false;
+      busyRetries++;
+      setTimeout(spawnNext, 1);
+      return;
+    }
+    const { id, env } = queue.shift();
     if (pid === 0) return becomeChild(parentEnd, childEnd, env);
-    trace('forked', id, pid, 'queue', queue.length);
+    const condvar = addon.lastCondvar();
+    trace('forked', id, pid, 'queue', queue.length, 'condvar', condvar.condvar.toString(16),
+      'workers', condvar.workers, 'offset', condvar.futexOffset, 'busyRetries', busyRetries);
     addon.closeFd(childEnd);
     children.set(pid, id);
     // Never read here: the child's first messages belong to the controller.

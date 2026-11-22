@@ -86,7 +86,9 @@ function drainSpawnQueue() {
   }
   const [parentEnd, childEnd] = fds;
   trace('fork', msg.id);
-  const pid = addon.fork();
+  // -2: a V8 worker thread is busy; fork only once they all sleep.
+  let pid;
+  while ((pid = addon.fork()) === -2);
   trace('forked', pid);
 
   if (pid === 0) {

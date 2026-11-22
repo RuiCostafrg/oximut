@@ -61,14 +61,140 @@ static int ReenableForkCopy(void) {
   return marked;
 }
 
-// fork(): returns the pid (0 in the child). In the child the libuv loop must
-// be reinitialized before any further loop use.
+// Node's V8 worker threads sleep in pthread_cond_wait on the platform task
+// queue's condition variable. fork() copies that condvar with its sleeping
+// waiters counted but not the threads, so the child's first signal that
+// switches waiter groups waits forever for them (glibc's
+// __condvar_quiesce_and_switch_g1). Before each fork, find the condvar every
+// idle worker sleeps on from /proc; the child re-initializes it while it is
+// still single-threaded. The task queue's mutex is free while they all sleep.
+#include <dirent.h>
+#include <pthread.h>
+#include <stdint.h>
+#include <sys/syscall.h>
+#include <time.h>
+
+static long futex_offset = -1;  // offset of __g_signals[0] in pthread_cond_t
+static uintptr_t last_condvar = 0;
+static int last_workers = 0;
+
+static int ReadSyscall(pid_t tid, long* nr, uintptr_t* arg0) {
+  char path[64], buf[256];
+  snprintf(path, sizeof(path), "/proc/self/task/%d/syscall", (int)tid);
+  FILE* f = fopen(path, "re");
+  if (!f) return -1;
+  int ok = fgets(buf, sizeof(buf), f) != NULL;
+  fclose(f);
+  if (!ok) return -1;
+  unsigned long a0 = 0;
+  if (sscanf(buf, "%ld 0x%lx", nr, &a0) < 1) return -1;
+  *arg0 = (uintptr_t)a0;
+  return 0;
+}
+
+static pthread_cond_t probe_cond = PTHREAD_COND_INITIALIZER;
+static pthread_mutex_t probe_mutex = PTHREAD_MUTEX_INITIALIZER;
+static volatile pid_t probe_tid = 0;
+static volatile int probe_done = 0;
+static void* ProbeWaiter(void* unused) {
+  (void)unused;
+  pthread_mutex_lock(&probe_mutex);
+  probe_tid = (pid_t)syscall(SYS_gettid);
+  while (!probe_done) pthread_cond_wait(&probe_cond, &probe_mutex);
+  pthread_mutex_unlock(&probe_mutex);
+  return NULL;
+}
+
+// Measure where a waiter on a fresh condvar (group index 0) sleeps.
+static long CalibrateFutexOffset(void) {
+  pthread_t thread;
+  probe_done = 0;
+  probe_tid = 0;
+  if (pthread_create(&thread, NULL, ProbeWaiter, NULL) != 0) return -1;
+  long offset = -1;
+  for (int attempt = 0; attempt < 2000 && offset < 0; attempt++) {
+    struct timespec pause = {0, 500000};
+    nanosleep(&pause, NULL);
+    long nr;
+    uintptr_t addr;
+    if (probe_tid && ReadSyscall(probe_tid, &nr, &addr) == 0 && nr == SYS_futex) {
+      long delta = (long)(addr - (uintptr_t)&probe_cond);
+      if (delta >= 0 && delta < (long)sizeof(pthread_cond_t)) offset = delta;
+    }
+  }
+  pthread_mutex_lock(&probe_mutex);
+  probe_done = 1;
+  pthread_cond_broadcast(&probe_cond);
+  pthread_mutex_unlock(&probe_mutex);
+  pthread_join(thread, NULL);
+  return offset;
+}
+
+// 1: every V8 worker sleeps on one condvar (stored in *condvar); 0: some
+// worker is busy, try again shortly; -1: the layout is not understood.
+static int FindWorkerCondvar(uintptr_t* condvar, int* workers) {
+  DIR* dir = opendir("/proc/self/task");
+  if (!dir) return -1;
+  struct dirent* entry;
+  uintptr_t found = 0;
+  int count = 0, result = 1;
+  while ((entry = readdir(dir)) != NULL) {
+    pid_t tid = (pid_t)atoi(entry->d_name);
+    if (tid <= 0) continue;
+    char path[64], comm[32] = {0};
+    snprintf(path, sizeof(path), "/proc/self/task/%d/comm", (int)tid);
+    FILE* f = fopen(path, "re");
+    if (!f) continue;
+    int ok = fgets(comm, sizeof(comm), f) != NULL;
+    fclose(f);
+    if (!ok || strncmp(comm, "node-V8Worker", 13) != 0) continue;
+    count++;
+    long nr;
+    uintptr_t addr;
+    if (ReadSyscall(tid, &nr, &addr) != 0 || nr != SYS_futex) { result = 0; continue; }
+    // A waiter sleeps on __g_signals[0] or __g_signals[1].
+    uintptr_t base = addr - (uintptr_t)futex_offset;
+    if (base % 8) base -= 4;
+    if (base % 8) { result = -1; continue; }
+    if (found && found != base) result = -1;
+    found = base;
+  }
+  closedir(dir);
+  *workers = count;
+  if (count == 0) return -1;
+  *condvar = found;
+  return result;
+}
+
+// fork(): returns the pid (0 in the child), or -2 while a V8 worker is busy.
+// In the child the libuv loop must be reinitialized before any further loop use.
 static napi_value Fork(napi_env env, napi_callback_info info) {
   (void)info;
+  if (futex_offset < 0) futex_offset = CalibrateFutexOffset();
+  if (futex_offset < 0) {
+    napi_throw_error(env, NULL, "fork: could not calibrate the condvar layout");
+    return NULL;
+  }
+  uintptr_t condvar = 0;
+  int workers = 0;
+  int found = FindWorkerCondvar(&condvar, &workers);
+  if (found == 0) return GetInt(env, -2);
+  if (found < 0) {
+    napi_throw_error(env, NULL, "fork: V8 workers are not waiting on one condvar");
+    return NULL;
+  }
+  last_condvar = condvar;
+  last_workers = workers;
   if (ReenableForkCopy() < 0) return ThrowErrno(env, "maps", errno);
   pid_t pid = fork();
   if (pid < 0) return ThrowErrno(env, "fork", errno);
   if (pid == 0) {
+    // As uv_cond_init does: a fresh condvar on the monotonic clock.
+    pthread_condattr_t attr;
+    pthread_condattr_init(&attr);
+    pthread_condattr_setclock(&attr, CLOCK_MONOTONIC);
+    pthread_cond_init((pthread_cond_t*)condvar, &attr);
+    pthread_condattr_destroy(&attr);
     signal(SIGUSR2, DumpStack);  // diagnostic: kill -USR2 <pid> prints a stack
     int rc = uv_loop_fork(uv_default_loop());
     if (rc != 0) {
@@ -79,6 +205,21 @@ static napi_value Fork(napi_env env, napi_callback_info info) {
     }
   }
   return GetInt(env, (int64_t)pid);
+}
+
+// Diagnostic: the condvar re-initialized in the last child, and how many
+// V8 workers slept on it.
+static napi_value LastCondvar(napi_env env, napi_callback_info info) {
+  (void)info;
+  napi_value out, base, workers, offset;
+  napi_create_object(env, &out);
+  napi_create_bigint_uint64(env, (uint64_t)last_condvar, &base);
+  napi_create_int32(env, last_workers, &workers);
+  napi_create_int64(env, futex_offset, &offset);
+  napi_set_named_property(env, out, "condvar", base);
+  napi_set_named_property(env, out, "workers", workers);
+  napi_set_named_property(env, out, "futexOffset", offset);
+  return out;
 }
 
 // socketpair(): -> [fd0, fd1]
@@ -206,6 +347,7 @@ static napi_value GetPpid(napi_env env, napi_callback_info info) {
 NAPI_MODULE_INIT() {
   napi_property_descriptor props[] = {
       {"fork", NULL, Fork, NULL, NULL, NULL, napi_default_jsproperty, NULL},
+      {"lastCondvar", NULL, LastCondvar, NULL, NULL, NULL, napi_default_jsproperty, NULL},
       {"socketpair", NULL, Socketpair, NULL, NULL, NULL,
        napi_default_jsproperty, NULL},
       {"closeFd", NULL, CloseFd, NULL, NULL, NULL, napi_default_jsproperty,
