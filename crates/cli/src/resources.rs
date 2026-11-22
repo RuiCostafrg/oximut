@@ -1,7 +1,7 @@
 //! Linux sampled admission control. Never claims to install an OS hard limit.
 use super::{
     Options,
-    processes::{ProcessTable, identity},
+    processes::{ProcessTable, identity, read_proc},
 };
 use serde::Serialize;
 use std::{
@@ -193,6 +193,8 @@ pub fn merge_retry_resources(current: &mut serde_json::Value, previous: &serde_j
     }
     for field in [
         "samples",
+        "exactSamples",
+        "counterSamples",
         "treeDiscoveries",
         "broadDiscoveries",
         "admissionPauses",
@@ -282,6 +284,8 @@ fn timespec_ns(ts: libc::timespec) -> Option<u64> {
 }
 
 pub const MIB: u64 = 1024 * 1024;
+/// Conservative RSS assumed per baseline fork before any has been measured.
+const UNMEASURED_FORK_BYTES: u64 = 256 * MIB;
 pub const SAMPLE_MS: u64 = 50;
 
 #[derive(Clone, Debug, Serialize)]
@@ -294,7 +298,7 @@ pub struct Cgroup {
     pub initial_oom_events: Option<u64>,
 }
 fn number(path: &Path) -> Option<u64> {
-    fs::read_to_string(path).ok()?.trim().parse().ok()
+    read_proc(path).ok()?.trim().parse().ok()
 }
 fn unescape(value: &str) -> String {
     value
@@ -367,7 +371,7 @@ fn parse_hierarchy_paths(
     result
 }
 fn oom_events(path: &Path) -> Option<u64> {
-    let value = fs::read_to_string(path).ok()?;
+    let value = read_proc(path).ok()?;
     if let Ok(number) = value.trim().parse() {
         return Some(number);
     }
@@ -379,8 +383,8 @@ fn oom_events(path: &Path) -> Option<u64> {
     })
 }
 fn memory_limit(path: &Path) -> Result<Option<u64>, String> {
-    let value = fs::read_to_string(path)
-        .map_err(|e| format!("cgroup memory limit {}: {e}", path.display()))?;
+    let value =
+        read_proc(path).map_err(|e| format!("cgroup memory limit {}: {e}", path.display()))?;
     if value.trim() == "max" {
         return Ok(None);
     }
@@ -464,34 +468,31 @@ pub fn cpu_limit() -> usize {
     limit.max(1)
 }
 fn meminfo(key: &str) -> Option<u64> {
-    fs::read_to_string("/proc/meminfo")
-        .ok()?
-        .lines()
-        .find_map(|line| {
-            let (name, rest) = line.split_once(':')?;
-            (name == key)
-                .then(|| {
-                    rest.split_whitespace()
-                        .next()?
-                        .parse::<u64>()
-                        .ok()?
-                        .checked_mul(1024)
-                })
-                .flatten()
-        })
+    read_proc("/proc/meminfo").ok()?.lines().find_map(|line| {
+        let (name, rest) = line.split_once(':')?;
+        (name == key)
+            .then(|| {
+                rest.split_whitespace()
+                    .next()?
+                    .parse::<u64>()
+                    .ok()?
+                    .checked_mul(1024)
+            })
+            .flatten()
+    })
 }
 fn rss(pid: u32) -> Result<Option<u64>, String> {
     // stat's RSS counter can lag resident allocations by tens of MiB. A rollup
     // walks the mappings and gives admission a current resident working set.
     // Older/restricted kernels retain the documented approximate fallback.
-    match fs::read_to_string(format!("/proc/{pid}/smaps_rollup")) {
+    match read_proc(format!("/proc/{pid}/smaps_rollup")) {
         Ok(rollup) => {
             return match rollup_rss(&rollup) {
                 Ok(bytes) => Ok(Some(bytes)),
                 Err(error) => {
                     // A task can lose its memory map between open and read.
                     // An empty rollup is safe only after confirming its exit.
-                    let stat = fs::read_to_string(format!("/proc/{pid}/stat"));
+                    let stat = read_proc(format!("/proc/{pid}/stat"));
                     let exited = match &stat {
                         Ok(stat) => stat
                             .rsplit_once(')')
@@ -518,7 +519,7 @@ fn rss(pid: u32) -> Result<Option<u64>, String> {
             ) => {}
         Err(error) => return Err(format!("RSS rollup unavailable for PID {pid}: {error}")),
     }
-    let stat = match fs::read_to_string(format!("/proc/{pid}/stat")) {
+    let stat = match read_proc(format!("/proc/{pid}/stat")) {
         Ok(stat) => stat,
         Err(error)
             if error.kind() == std::io::ErrorKind::NotFound
@@ -538,6 +539,32 @@ fn rss(pid: u32) -> Result<Option<u64>, String> {
         return Err("could not determine RSS page size".into());
     }
     Ok(Some(pages.saturating_mul(page_size as u64)))
+}
+// Kernel counters are an escalation hint, never admission or peak evidence.
+fn rss_counter(pid: u32) -> Result<Option<u64>, String> {
+    let statm = match read_proc(format!("/proc/{pid}/statm")) {
+        Ok(statm) => statm,
+        Err(error)
+            if error.kind() == std::io::ErrorKind::NotFound
+                || error.raw_os_error() == Some(libc::ESRCH) =>
+        {
+            return Ok(None);
+        }
+        Err(error) => return Err(format!("RSS counter unavailable for PID {pid}: {error}")),
+    };
+    let pages: u64 = statm
+        .split_whitespace()
+        .nth(1)
+        .and_then(|n| n.parse().ok())
+        .ok_or_else(|| format!("invalid RSS statm for PID {pid}"))?;
+    let page_size = unsafe { libc::sysconf(libc::_SC_PAGESIZE) };
+    if page_size <= 0 {
+        return Err("could not determine RSS page size".into());
+    }
+    pages
+        .checked_mul(page_size as u64)
+        .map(Some)
+        .ok_or_else(|| format!("RSS statm overflow for PID {pid}"))
 }
 fn rollup_rss(rollup: &str) -> Result<u64, String> {
     let mut fields = rollup
@@ -611,6 +638,21 @@ pub struct Budget {
     pub admission_pauses: u64,
     pub recycled_idle_workers: u64,
     pub samples: u64,
+    pub exact_samples: u64,
+    pub counter_samples: u64,
+    #[serde(skip)]
+    last_exact_current: u64,
+    #[serde(skip)]
+    last_exact_counter_total: Option<u64>,
+    #[serde(skip)]
+    last_exact_at: Instant,
+    /// Host MemAvailable source; injectable so tests don't depend on host memory.
+    #[serde(skip)]
+    available_reader: fn() -> Option<u64>,
+    /// The latest sample was a counter hint: slot costs may be stale, so admission
+    /// must first take an exact sample.
+    #[serde(skip)]
+    pub last_sample_was_counter: bool,
     /// Samples discovered by walking the owned tree's `children` links, and
     /// by broad `/proc` enumeration (kernels without those links).
     pub tree_discoveries: u64,
@@ -663,7 +705,7 @@ impl Budget {
             budget_bytes: budget,
             reserve_bytes: reserve,
             cgroups,
-            measurement: "Linux /proc smaps_rollup Rss sum, approximate stat RSS fallback on older/restricted kernels: main CLI and all worker/adapter/controller/test descendants; shared pages counted per process",
+            measurement: "Peaks and decisions use exact Linux /proc smaps_rollup Rss samples (forced and periodic escalations at least once per second), approximate stat RSS fallback on older/restricted kernels; other periodic samples use kernel counters only to decide escalation; main CLI and all descendants, shared pages counted per process",
             enforcement: "best-effort sampled admission and process-tree cancellation; existing cgroup limits are OS-enforced; no new hard cap installed",
             sample_interval_ms: SAMPLE_MS,
             peak_aggregate_rss_bytes: 0,
@@ -673,6 +715,13 @@ impl Budget {
             admission_pauses: 0,
             recycled_idle_workers: 0,
             samples: 0,
+            exact_samples: 0,
+            counter_samples: 0,
+            last_exact_current: 0,
+            last_exact_counter_total: None,
+            last_exact_at: Instant::now(),
+            available_reader: || meminfo("MemAvailable"),
+            last_sample_was_counter: false,
             tree_discoveries: 0,
             broad_discoveries: 0,
             exhaustion: None,
@@ -700,6 +749,11 @@ impl Budget {
         state.sample(&[], true);
         Ok(state)
     }
+    /// When the next periodic sample falls due: the scheduler's longest wait
+    /// for a job event, so sampling keeps its cadence without gating dispatch.
+    pub fn next_sample_at(&self) -> Instant {
+        self.last_sample + Duration::from_millis(SAMPLE_MS)
+    }
     /// Admission under memory pressure: a broad sample at most once per
     /// sampling interval, so waiting never rescans the host on every poll.
     pub fn sample_admission(&mut self, workers: &[u32]) {
@@ -710,7 +764,7 @@ impl Budget {
 
     pub fn sample(&mut self, workers: &[u32], force: bool) {
         let (mut tree, mut broad) = (0, 0);
-        self.sample_with_readers(
+        self.sample_with_counter_readers(
             workers,
             force,
             || {
@@ -728,6 +782,7 @@ impl Budget {
             },
             identity,
             rss,
+            rss_counter,
         );
         self.tree_discoveries += tree;
         self.broad_discoveries += broad;
@@ -736,13 +791,32 @@ impl Budget {
             self.last_broad = Instant::now();
         }
     }
+    #[cfg(test)]
     fn sample_with_readers(
+        &mut self,
+        workers: &[u32],
+        force: bool,
+        discover: impl FnOnce() -> Result<ProcessTable, String>,
+        read_identity: impl FnMut(u32) -> Result<Option<(u32, u64)>, String>,
+        read_rss: impl FnMut(u32) -> Result<Option<u64>, String>,
+    ) {
+        self.sample_with_counter_readers(
+            workers,
+            force,
+            discover,
+            read_identity,
+            read_rss,
+            rss_counter,
+        );
+    }
+    fn sample_with_counter_readers(
         &mut self,
         workers: &[u32],
         force: bool,
         discover: impl FnOnce() -> Result<ProcessTable, String>,
         mut read_identity: impl FnMut(u32) -> Result<Option<(u32, u64)>, String>,
         mut read_rss: impl FnMut(u32) -> Result<Option<u64>, String>,
+        mut read_counter: impl FnMut(u32) -> Result<Option<u64>, String>,
     ) {
         if !force && self.last_sample.elapsed() < Duration::from_millis(SAMPLE_MS) {
             return;
@@ -808,10 +882,95 @@ impl Budget {
             rss_snapshot.insert(pid, bytes);
             Ok(bytes)
         };
+        // Counter reads share rssReads timing to retain the diagnostics schema.
+        let mut profiled_counter = |pid| {
+            if !profiling {
+                return read_counter(pid);
+            }
+            let mut profile = profile.borrow_mut();
+            let d = profile.as_mut().unwrap();
+            let wall = Instant::now();
+            let cpu = d.rss_reads.start();
+            let result = read_counter(pid);
+            d.rss_reads.end(cpu, wall);
+            result
+        };
         let observed = (|| -> Result<(), String> {
             // Exactly one fresh broad discovery per admitted sample. This also
             // includes adopted descendants outside any live worker branch.
             let table = profiled_discover()?;
+            // Counters are only a hint: any counter or identity error falls through to
+            // the exact path, which repeats every check strictly.
+            let cheap_total = if force {
+                None
+            } else {
+                tree_rss(
+                    std::process::id(),
+                    &table,
+                    &mut profiled_identity,
+                    &mut profiled_counter,
+                )
+                .ok()
+            };
+            if let Some(cheap) = cheap_total
+                && let Some(baseline) = self.last_exact_counter_total
+                && self.exact_samples > 0
+                && self.last_exact_at.elapsed() <= Duration::from_secs(1)
+                && cheap <= baseline.saturating_add((32 * MIB).max(self.last_exact_current / 8))
+            {
+                let projected = self
+                    .last_exact_current
+                    .saturating_add(cheap.saturating_sub(baseline));
+                let margin = (256 * MIB).max(self.budget_bytes / 4);
+                // Re-read external availability/limits: pressure or uncertain
+                // accounting must never be hidden by accepting a counter hint.
+                let mut limit = self.base_budget_bytes;
+                let mut uncertain = false;
+                let available = (self.available_reader)();
+                match available {
+                    Some(available) => limit = limit.min(available),
+                    None => uncertain = true,
+                }
+                let mut group_limits = Vec::with_capacity(self.cgroups.len());
+                for group in &self.cgroups {
+                    match (memory_limit(&group.limit_path), number(&group.usage_path)) {
+                        (Ok(group_limit), Some(usage)) => {
+                            if let Some(cap) = group_limit {
+                                limit = limit.min(cap).min(cap.saturating_sub(usage));
+                            }
+                            group_limits.push(group_limit);
+                        }
+                        _ => uncertain = true,
+                    }
+                    if let Some(initial) = group.initial_oom_events
+                        && oom_events(&group.oom_events_path) != Some(initial)
+                    {
+                        uncertain = true;
+                    }
+                }
+                if !uncertain
+                    && self.exhaustion.is_none()
+                    && self.memory_capacity(workers) > 0
+                    && projected.saturating_add(margin) < limit
+                {
+                    // Admission between exact samples must see fresh headroom, exactly
+                    // as the exact path stores it.
+                    self.host_available = available.unwrap_or(0);
+                    self.budget_bytes = self.base_budget_bytes;
+                    for (group, group_limit) in self.cgroups.iter_mut().zip(group_limits) {
+                        group.limit_bytes = group_limit;
+                        if let Some(cap) = group_limit {
+                            self.budget_bytes = self.budget_bytes.min(cap);
+                        }
+                    }
+                    self.counter_samples += 1;
+                    self.last_sample_was_counter = true;
+                    self.table = Some(table);
+                    return Ok(());
+                }
+            }
+            self.exact_samples += 1;
+            self.last_sample_was_counter = false;
             self.current = tree_rss(
                 std::process::id(),
                 &table,
@@ -843,7 +1002,7 @@ impl Budget {
             self.current = self.current.max(accounted_slots);
             self.peak_aggregate_rss_bytes = self.peak_aggregate_rss_bytes.max(self.current);
             self.host_available =
-                meminfo("MemAvailable").ok_or("host available memory accounting unavailable")?;
+                (self.available_reader)().ok_or("host available memory accounting unavailable")?;
             self.budget_bytes = self.base_budget_bytes;
             for cgroup in &mut self.cgroups {
                 cgroup.limit_bytes = memory_limit(&cgroup.limit_path)?;
@@ -868,6 +1027,9 @@ impl Budget {
                     self.current, self.budget_bytes
                 ));
             }
+            self.last_exact_current = self.current;
+            self.last_exact_counter_total = cheap_total;
+            self.last_exact_at = Instant::now();
             self.table = Some(table);
             Ok(())
         })();
@@ -878,6 +1040,13 @@ impl Budget {
                 "review wallNs and CPU failure counters; null CPU totals mean incomplete evidence";
         }
         self.accounting_diagnostics = profile.into_inner();
+        if force {
+            // A forced sample is as fresh as a periodic one when it finishes.
+            // Timing the next periodic sample from its start would make a slow
+            // forced sample (job completion) trigger an immediate, redundant
+            // exact periodic sample in front of the next dispatch.
+            self.last_sample = Instant::now();
+        }
         if let Err(error) = observed
             && self.exhaustion.is_none()
         {
@@ -908,6 +1077,27 @@ impl Budget {
         if self.exhaustion.is_some() {
             return 0;
         }
+        self.effective_workers
+            .saturating_sub(self.active)
+            .min(self.memory_capacity(active_pids))
+    }
+    /// How many forks one baseline may run at once. Until a worker cost has been
+    /// measured, memory admission has no per-fork figure and would allow the full
+    /// CPU limit, so assume a conservative cost and keep at least one fork.
+    pub fn baseline_fork_limit(&self, capacity: usize, active_pids: &[u32]) -> usize {
+        if self.admission_worker_cost_bytes > 0 {
+            return capacity;
+        }
+        let affordable = self.memory_headroom(active_pids) / UNMEASURED_FORK_BYTES;
+        capacity
+            .min(affordable.min(usize::MAX as u64) as usize)
+            .max(1)
+    }
+    fn memory_capacity(&self, active_pids: &[u32]) -> usize {
+        let cost = self.admission_worker_cost_bytes.max(1);
+        (self.memory_headroom(active_pids) / cost).min(usize::MAX as u64) as usize
+    }
+    fn memory_headroom(&self, active_pids: &[u32]) -> u64 {
         let mut available = self
             .budget_bytes
             .saturating_sub(self.current)
@@ -926,13 +1116,9 @@ impl Budget {
                     .saturating_sub(self.observed_workers.get(pid).copied().unwrap_or(0)),
             )
         });
-        let headroom = available
+        available
             .saturating_sub(self.reserve_bytes)
-            .saturating_sub(growth);
-        let cost = self.admission_worker_cost_bytes.max(1);
-        self.effective_workers
-            .saturating_sub(self.active)
-            .min((headroom / cost).min(usize::MAX as u64) as usize)
+            .saturating_sub(growth)
     }
     pub fn exhausted(&mut self, reason: impl Into<String>) {
         if self.exhaustion.is_none() {
@@ -965,6 +1151,13 @@ mod tests {
             admission_pauses: 0,
             recycled_idle_workers: 0,
             samples: 0,
+            exact_samples: 0,
+            counter_samples: 0,
+            last_exact_current: 0,
+            last_exact_counter_total: None,
+            last_exact_at: Instant::now(),
+            available_reader: || meminfo("MemAvailable"),
+            last_sample_was_counter: false,
             tree_discoveries: 0,
             broad_discoveries: 0,
             exhaustion: None,
@@ -981,6 +1174,299 @@ mod tests {
             observed_workers: BTreeMap::new(),
             base_budget_bytes: u64::MAX,
         }
+    }
+
+    fn counter_sample(state: &mut Budget, force: bool, exact: u64, counter: u64) -> (usize, usize) {
+        let cli = std::process::id();
+        let worker = cli + 1;
+        let mut exact_calls = 0;
+        let mut counter_calls = 0;
+        state.last_sample = Instant::now() - Duration::from_millis(SAMPLE_MS);
+        state.sample_with_counter_readers(
+            &[worker],
+            force,
+            || {
+                ProcessTable::collect([Ok(Some(cli)), Ok(Some(worker))], |pid| {
+                    Ok(Some((if pid == cli { 0 } else { cli }, u64::from(pid))))
+                })
+            },
+            |pid| Ok(Some((if pid == cli { 0 } else { cli }, u64::from(pid)))),
+            |_| {
+                exact_calls += 1;
+                Ok(Some(exact))
+            },
+            |_| {
+                counter_calls += 1;
+                Ok(Some(counter))
+            },
+        );
+        (exact_calls, counter_calls)
+    }
+
+    fn seeded_counter_budget() -> Budget {
+        let mut state = budget();
+        // Deterministic thresholds, independent of the host's free memory.
+        state.available_reader = || Some(64 * 1024 * MIB);
+        state.base_budget_bytes = 4 * 1024 * MIB;
+        state.budget_bytes = state.base_budget_bytes;
+        assert_eq!(counter_sample(&mut state, false, 10 * MIB, 8 * MIB), (2, 2));
+        assert_eq!(state.exact_samples, 1);
+        state
+    }
+
+    #[test]
+    fn admission_reuses_a_recent_completion_sample_and_preserves_exhaustion() {
+        let mut state = seeded_counter_budget();
+        state.last_broad = Instant::now();
+        let before = (
+            state.samples,
+            state.exact_samples,
+            state.current,
+            state.admission_worker_cost_bytes,
+            state.observed_workers.clone(),
+        );
+        // Even if a periodic sample is due, the broad completion observation is
+        // still fresh. Batch assembly must not walk the same idle tree twice.
+        state.last_sample = Instant::now() - Duration::from_secs(1);
+        state.sample_admission(&[]);
+        assert_eq!(
+            (
+                state.samples,
+                state.exact_samples,
+                state.current,
+                state.admission_worker_cost_bytes,
+                state.observed_workers.clone()
+            ),
+            before
+        );
+        state.exhausted("completion exceeded budget");
+        state.sample_admission(&[]);
+        assert_eq!(state.capacity(&[]), 0);
+        assert_eq!(
+            state.exhaustion.as_deref(),
+            Some("completion exceeded budget")
+        );
+    }
+
+    #[test]
+    fn admission_refreshes_an_expired_broad_sample_and_rejects_uncertain_memory() {
+        let mut state = seeded_counter_budget();
+        state.last_broad = Instant::now() - Duration::from_millis(SAMPLE_MS);
+        // Force must bypass the periodic rate limiter and counter shortcuts.
+        state.last_sample = Instant::now();
+        state.available_reader = || None;
+        let before = state.samples;
+        state.sample_admission(&[]);
+        assert_eq!(state.samples, before + 1);
+        assert_eq!(state.broad_discoveries, 1);
+        assert_eq!(state.capacity(&[]), 0);
+        assert!(state.exhaustion.is_some());
+    }
+
+    #[test]
+    fn a_slow_forced_sample_defers_the_next_periodic_sample_from_its_end() {
+        let cli = std::process::id();
+        let identity = move |pid: u32| Ok(Some((if pid == cli { 0 } else { cli }, u64::from(pid))));
+        let mut state = budget();
+        // The forced sample outlasts the whole sampling interval.
+        state.sample_with_readers(
+            &[],
+            true,
+            || {
+                std::thread::sleep(Duration::from_millis(SAMPLE_MS + 20));
+                ProcessTable::collect([Ok(Some(cli))], identity)
+            },
+            identity,
+            |_| Ok(Some(MIB)),
+        );
+        assert_eq!(state.samples, 1);
+        assert!(state.exhaustion.is_none());
+        // Timed from its start, a periodic sample would be due again at once.
+        assert!(state.next_sample_at() > Instant::now() + Duration::from_millis(SAMPLE_MS / 2));
+        state.sample_with_readers(
+            &[],
+            false,
+            || panic!("a periodic sample right after a forced one must not discover"),
+            identity,
+            |_| Ok(Some(MIB)),
+        );
+        assert_eq!(state.samples, 1);
+        // The interval still elapses: a later periodic sample is taken.
+        state.last_sample = Instant::now() - Duration::from_millis(SAMPLE_MS);
+        state.sample_with_readers(
+            &[],
+            false,
+            || ProcessTable::collect([Ok(Some(cli))], identity),
+            identity,
+            |_| Ok(Some(MIB)),
+        );
+        assert_eq!(state.samples, 2);
+    }
+
+    #[test]
+    fn forced_samples_read_every_pid_exactly_without_counters() {
+        let mut state = seeded_counter_budget();
+        assert_eq!(counter_sample(&mut state, true, 20 * MIB, 0), (2, 0));
+        assert_eq!(state.exact_samples, 2);
+        assert_eq!(state.counter_samples, 0);
+        assert_eq!(state.last_exact_counter_total, None);
+        assert_eq!(state.peak_aggregate_rss_bytes, 40 * MIB);
+    }
+
+    #[test]
+    fn periodic_counters_preserve_all_exact_decision_values_and_refresh_table() {
+        let mut state = seeded_counter_budget();
+        let workers = state.observed_workers.clone();
+        let cost = state.admission_worker_cost_bytes;
+        state.table = None;
+        state.active = state.effective_workers; // Busy slots alone are not memory pressure.
+        state.last_exact_at = Instant::now(); // Independent of scheduling delays.
+        state.available_reader = || Some(48 * 1024 * MIB);
+        assert_eq!(
+            counter_sample(&mut state, false, 999 * MIB, 9 * MIB),
+            (0, 2)
+        );
+        let cli = std::process::id();
+        let table = state.table.as_ref().expect("refreshed ownership table");
+        assert!(table.start(cli).is_some() && table.start(cli + 1).is_some());
+        // Admission sees fresh host headroom from the accepted counter sample,
+        // and must take an exact sample before trusting slot costs.
+        assert_eq!(state.host_available, 48 * 1024 * MIB);
+        assert!(state.last_sample_was_counter);
+        assert_eq!(state.current, 20 * MIB);
+        assert_eq!(state.peak_aggregate_rss_bytes, 20 * MIB);
+        assert_eq!(state.measured_worker_peak_bytes, 10 * MIB);
+        assert_eq!(state.admission_worker_cost_bytes, cost);
+        assert_eq!(state.observed_workers, workers);
+        assert_eq!(
+            (state.samples, state.exact_samples, state.counter_samples),
+            (2, 1, 1)
+        );
+        let report = state.report_snapshot();
+        assert_eq!(report["exactSamples"], 1);
+        assert_eq!(report["counterSamples"], 1);
+        assert_eq!(counter_sample(&mut state, true, 10 * MIB, 0), (2, 0));
+        assert!(
+            !state.last_sample_was_counter,
+            "a forced exact sample clears the flag"
+        );
+    }
+
+    #[test]
+    fn first_baseline_forks_are_capped_by_conservative_memory_estimate() {
+        let mut state = budget();
+        state.budget_bytes = 1024 * MIB;
+        state.host_available = 1024 * MIB;
+        state.reserve_bytes = 0;
+        state.current = 0;
+        state.admission_worker_cost_bytes = 0;
+        // 1 GiB of headroom affords four 256 MiB forks, even if CPUs allow eight.
+        assert_eq!(state.baseline_fork_limit(8, &[]), 4);
+        assert_eq!(state.baseline_fork_limit(2, &[]), 2);
+        // Too little headroom still runs one fork, as serial baselines always did.
+        state.budget_bytes = 100 * MIB;
+        assert_eq!(state.baseline_fork_limit(8, &[]), 1);
+        // Once a cost is measured, normal admission capacity applies unchanged.
+        state.admission_worker_cost_bytes = 10 * MIB;
+        assert_eq!(state.baseline_fork_limit(8, &[]), 8);
+    }
+
+    #[test]
+    fn counter_errors_fall_back_to_an_exact_sample() {
+        let mut state = seeded_counter_budget();
+        state.last_exact_at = Instant::now();
+        let cli = std::process::id();
+        let worker = cli + 1;
+        let (mut exact_calls, mut counter_calls) = (0, 0);
+        state.last_sample = Instant::now() - Duration::from_millis(SAMPLE_MS);
+        state.sample_with_counter_readers(
+            &[worker],
+            false,
+            || {
+                ProcessTable::collect([Ok(Some(cli)), Ok(Some(worker))], |pid| {
+                    Ok(Some((if pid == cli { 0 } else { cli }, u64::from(pid))))
+                })
+            },
+            |pid| Ok(Some((if pid == cli { 0 } else { cli }, u64::from(pid)))),
+            |_| {
+                exact_calls += 1;
+                Ok(Some(10 * MIB))
+            },
+            |_| {
+                counter_calls += 1;
+                Err("statm unreadable".into())
+            },
+        );
+        assert_eq!(
+            state.exhaustion, None,
+            "a counter error is only a missing hint"
+        );
+        assert_eq!((exact_calls, counter_calls), (2, 1));
+        assert_eq!((state.exact_samples, state.counter_samples), (2, 0));
+    }
+
+    fn check_periodic_escalation(reason: &str) {
+        let mut state = seeded_counter_budget();
+        state.last_exact_at = Instant::now();
+        assert_eq!(
+            counter_sample(&mut state, false, 999 * MIB, 8 * MIB),
+            (0, 2)
+        );
+        let mut counter = 8 * MIB;
+        match reason {
+            "elapsed" => state.last_exact_at = Instant::now() - Duration::from_millis(1001),
+            "growth" => counter = 25 * MIB,
+            "limit" | "exhaustion" => {
+                state.base_budget_bytes = 280 * MIB;
+                state.budget_bytes = 280 * MIB;
+                counter = 11 * MIB;
+            }
+            "pressure" => state.reserve_bytes = state.budget_bytes,
+            _ => unreachable!(),
+        }
+        let exact = if reason == "exhaustion" {
+            200 * MIB
+        } else {
+            30 * MIB
+        };
+        assert_eq!(counter_sample(&mut state, false, exact, counter), (2, 2));
+        assert_eq!(state.exact_samples, 2);
+        assert_eq!(state.counter_samples, 1);
+        assert_eq!(state.peak_aggregate_rss_bytes, 2 * exact);
+        assert_eq!(state.measured_worker_peak_bytes, exact);
+        if reason == "exhaustion" {
+            assert!(
+                state
+                    .exhaustion
+                    .as_deref()
+                    .unwrap()
+                    .contains("exceeded budget")
+            );
+            assert_eq!(state.capacity(&[]), 0);
+        } else {
+            assert_eq!(state.exhaustion, None);
+        }
+    }
+
+    #[test]
+    fn periodic_elapsed_escalates_to_exact() {
+        check_periodic_escalation("elapsed");
+    }
+    #[test]
+    fn periodic_growth_escalates_to_exact() {
+        check_periodic_escalation("growth");
+    }
+    #[test]
+    fn periodic_limit_proximity_escalates_to_exact() {
+        check_periodic_escalation("limit");
+    }
+    #[test]
+    fn periodic_pressure_escalates_to_exact() {
+        check_periodic_escalation("pressure");
+    }
+    #[test]
+    fn periodic_escalation_detects_exhaustion() {
+        check_periodic_escalation("exhaustion");
     }
 
     #[test]
@@ -1581,7 +2067,9 @@ mod tests {
             },
         );
         let prof = state.accounting_diagnostics.as_ref().unwrap();
-        assert_eq!((discovers, identities, rss_reads), (1, 1, 0));
+        // The periodic counter pass and then the strict exact pass each check the
+        // identity once; the exact pass still fails closed.
+        assert_eq!((discovers, identities, rss_reads), (1, 2, 0));
         assert_eq!(
             (
                 prof.sampling.calls,
@@ -1589,7 +2077,7 @@ mod tests {
                 prof.identity_reads.calls,
                 prof.rss_reads.calls
             ),
-            (1, 1, 1, 0)
+            (1, 1, 2, 0)
         );
         assert!(
             state
@@ -1601,7 +2089,7 @@ mod tests {
         let encoded = serde_json::to_value(&state).unwrap();
         assert_eq!(
             encoded["accountingDiagnostics"]["identityReads"]["calls"],
-            1
+            2
         );
         assert!(
             encoded["accountingDiagnostics"]["identityReads"]["wallNs"]

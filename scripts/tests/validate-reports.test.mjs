@@ -106,3 +106,29 @@ test('directory traversal does not skip malformed matching reports', async t => 
   await writeFile(join(directory, 'nested', 'incomplete-report.json'), '{');
   assert.equal(run(directory).status, 1);
 });
+
+test('checks that sources and mutators agree with the mutant list', async () => {
+  const { validateReport } = await import(validator.href);
+  const hash = 'a'.repeat(64);
+  const bound = (sources, mutators) => ({ ...structuredClone(sample), sources, mutators });
+  const all = { selection: 'all', families: ['arithmetic', 'boolean-literal', 'comparison-boundary'] };
+  const subject = '/fixture/src/subject.ts';
+
+  // A file that kept no mutants is still listed, with a zero count.
+  validateReport(bound([{ file: subject, sha256: hash, mutants: 3 }, { file: '/fixture/src/empty.ts', sha256: hash, mutants: 0 }], all));
+  validateReport(bound([{ file: subject, sha256: hash, mutants: 3 }], { selection: 'subset', families: ['boolean-literal', 'comparison-boundary'] }));
+  // Reports from before these fields keep validating.
+  validateReport(structuredClone(sample));
+
+  for (const [sources, mutators, message] of [
+    [[{ file: subject, sha256: hash, mutants: 2 }], all, /has 2 mutant\(s\); the report has 3/],
+    [[], all, /which sources does not list/],
+    [[{ file: subject, sha256: hash, mutants: 3 }, { file: subject, sha256: hash, mutants: 0 }], all, /twice/],
+    [[{ file: subject, sha256: hash, mutants: 3 }], { selection: 'all', families: ['arithmetic'] }, /not every family/],
+    [[{ file: subject, sha256: hash, mutants: 3 }], { selection: 'subset', families: [] }, /families is empty/],
+    [[{ file: subject, sha256: hash, mutants: 3 }], { selection: 'subset', families: ['boolean-literal'] }, /uses comparison-boundary/],
+    [[{ file: subject, sha256: hash, mutants: 3 }], { selection: 'subset', families: ['boolean-literal', 'boolean-literal', 'comparison-boundary'] }, /repeats/],
+  ]) {
+    assert.throws(() => validateReport(bound(sources, mutators), 'case'), message);
+  }
+});

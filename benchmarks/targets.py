@@ -13,7 +13,9 @@ import m6
 
 PRIMARY_MODE = 'clean-selection'
 FIXTURES = ('matched-small', 'matched-scale')
-THRESHOLDS = {'wall_seconds': .80, 'peak_aggregate_rss_bytes': .50}
+# The project goal against Stryker at matched concurrency. Reported as met / missed /
+# inconclusive; nothing in CI passes --require-targets, so a miss never fails a job.
+THRESHOLDS = {'wall_seconds': .50, 'cpu_seconds': .80, 'peak_aggregate_rss_bytes': .80}
 
 
 def paired_interval(pairs, seed=20261027):
@@ -31,7 +33,7 @@ def evaluate(rows):
         relevant = [r for r in rows if r['fixture'] == fixture]
         indexed = {(r['round_index'], r['scenario']): r for r in relevant}
         rounds = sorted({r['round_index'] for r in relevant})
-        errors, pairs = [], {metric: [] for metric in (*THRESHOLDS, 'cpu_seconds')}
+        errors, pairs = [], {metric: [] for metric in THRESHOLDS}
         if len(indexed) != len(relevant):
             errors.append('duplicate round/scenario evidence')
         warmups = 0
@@ -88,17 +90,16 @@ def evaluate(rows):
                 if not values:
                     continue
                 result = paired_interval(values)
-                if metric in THRESHOLDS:
-                    threshold = THRESHOLDS[metric]
-                    lo, hi = result['bootstrap_95_percent']
-                    result.update(target_ratio=threshold, median_target_met=result['median'] <= threshold,
-                                  status=('inconclusive' if not sufficient else 'target met' if hi <= threshold
-                                          else 'target missed' if lo > threshold else 'inconclusive'))
-                else:
+                threshold = THRESHOLDS[metric]
+                lo, hi = result['bootstrap_95_percent']
+                result.update(target_ratio=threshold, median_target_met=result['median'] <= threshold,
+                              status=('inconclusive' if not sufficient else 'target met' if hi <= threshold
+                                      else 'target missed' if lo > threshold else 'inconclusive'))
+                if metric == 'cpu_seconds':
                     result['median_cpu_reduction_percent'] = 100 * (1 - result['median'])
                 item['metrics'][metric] = result
-            statuses = [v['status'] for k, v in item['metrics'].items() if k in THRESHOLDS]
-            if sufficient and len(statuses) == 2:
+            statuses = [v['status'] for v in item['metrics'].values()]
+            if sufficient and len(statuses) == len(THRESHOLDS):
                 item['status'] = ('target met' if all(s == 'target met' for s in statuses)
                                   else 'target missed' if 'target missed' in statuses else 'inconclusive')
         results.append(item)

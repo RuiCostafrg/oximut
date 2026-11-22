@@ -7,6 +7,17 @@ on:
         type: string
         default: ''
         description: 'Extra Oximut args for the after candidate only, space-separated, e.g. --isolation fresh-thread'
+      concurrency:
+        type: string
+        default: '1'
+        description: 'Matched parallelism: Stryker concurrency and Oximut --workers'
+      workload:
+        type: choice
+        default: colord
+        options:
+          - colord
+          - colord-scale
+        description: 'Mutation scope on the vendored colord corpus: colord (10 mutants, start-up cost) or colord-scale (206 mutants, per-mutant cost)'
   pull_request:
 
 permissions:
@@ -50,8 +61,8 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 90
     env:
-      # Main 2c6952b (after #31); diagnostic clocks and profilers stay off in scored runs.
-      BEFORE_COMMIT: 2c6952b5b2970340c88b2d0185e954d213995b7f
+      # Main 7297840 (after #63, colord-scale workload); diagnostic clocks and peak attribution stay off here.
+      BEFORE_COMMIT: 7297840df3996c9e6098afbe6d37db41b294ee0b
       BUILD_FLAGS: --locked --release -p oximut-cli
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -68,6 +79,16 @@ jobs:
       - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # stable
         with:
           toolchain: '1.96.0'
+      - name: Validate the matched concurrency before building
+        env:
+          MATCHED_CONCURRENCY: ${{ inputs.concurrency || '1' }}
+        run: |
+          cpus=$(nproc)
+          if ! [[ "$MATCHED_CONCURRENCY" =~ ^[0-9]{1,4}$ ]] ||
+            (( 10#$MATCHED_CONCURRENCY < 1 || 10#$MATCHED_CONCURRENCY > 1024 || 10#$MATCHED_CONCURRENCY > cpus )); then
+            echo "::error::concurrency '$MATCHED_CONCURRENCY' must be an integer from 1 to 1024 and at most the $cpus usable CPUs"
+            exit 1
+          fi
       - name: Set native campaign paths
         run: |
           test "$(uname -m)" = x86_64
@@ -119,11 +140,21 @@ jobs:
         shell: bash
         env:
           AFTER_OXIMUT_ARGS: ${{ inputs.after_oximut_args || '' }}
+          MATCHED_CONCURRENCY: ${{ inputs.concurrency || '1' }}
+          WORKLOAD: ${{ inputs.workload || 'colord' }}
         run: |
+          # Per tool command; the larger workload runs 20x the mutants, so it gets twice the
+          # headroom. A hang still ends well inside the 90 minute job limit.
+          case "$WORKLOAD" in
+            colord) run_timeout=600 ;;
+            colord-scale) run_timeout=1200 ;;
+            *) echo "::error::unknown workload '$WORKLOAD'"; exit 1 ;;
+          esac
           read -r -a words <<< "$AFTER_OXIMUT_ARGS"
           extra_args=()
           for word in "${words[@]}"; do extra_args+=("--after-oximut-arg=$word"); done
-          python3 benchmarks/compare_candidates.py "${extra_args[@]}" \
+          python3 benchmarks/compare_candidates.py "${extra_args[@]}" --concurrency "$MATCHED_CONCURRENCY" \
+            --workload "$WORKLOAD" \
             --before-binary "$BINARY_DIR/before-oximut" \
             --before-adapter-dir "$BEFORE_WORKTREE/packages/vitest-adapter" \
             --before-commit "$BEFORE_COMMIT" \
@@ -131,14 +162,19 @@ jobs:
             --after-adapter-dir "$GITHUB_WORKSPACE/packages/vitest-adapter" \
             --after-commit "$AFTER_COMMIT" \
             --build-flags="$BUILD_FLAGS" --build-metadata "$BINARY_DIR/build-metadata.json" \
-            --require-build-integrity --warmups 1 --repetitions 5 --timeout 600 --output "$CAMPAIGN_DIR"
+            --require-build-integrity --warmups 1 --repetitions 5 --timeout "$run_timeout" --output "$CAMPAIGN_DIR"
       - name: Publish results, including missed targets and invalid campaigns
         if: ${{ !cancelled() }}
         run: |
           if ! test -f "$CAMPAIGN_DIR/summary.json"; then exit 0; fi
           {
             echo '### Real project comparison'
-            echo 'Five mutation source files; all 41 production files and 102 upstream tests available. Host/corpus-specific evidence; no full-colord performance claim.'
+            python3 - <<'PY'
+          import json, os, pathlib
+          summary = json.loads((pathlib.Path(os.environ['CAMPAIGN_DIR']) / 'summary.json').read_text())
+          print(f"Workload {summary.get('workload', 'unknown')}: {summary.get('scope', 'scope not recorded')} "
+                'Host/corpus-specific evidence; no full-colord performance claim.')
+          PY
             echo 'Target misses are evidence, not correctness failures. Invalid workload gates fail the job.'
             echo '```json'
             cat "$CAMPAIGN_DIR/summary.json"

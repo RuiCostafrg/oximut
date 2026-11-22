@@ -1,0 +1,271 @@
+{
+  "runs": [
+    {
+      "config": "scale-2w-threads",
+      "id": 43593395274,
+      "workers": 2,
+      "workload": "colord-scale",
+      "after_args": [
+        "--isolation",
+        "fresh-thread"
+      ],
+      "url": "https://github.com/RuiCostafrg/oximut/actions/runs/43593395274",
+      "correctness_gate": true,
+      "build_integrity": true,
+      "comparisons": {
+        "after_vs_before": {
+          "wall_seconds": {
+            "median": 0.9473182628528592,
+            "ci95": [
+              0.9002065025898873,
+              1.001052530489862
+            ]
+          },
+          "cpu_seconds": {
+            "median": 0.9372920765348688,
+            "ci95": [
+              0.9334450919289178,
+              0.9416824193276173
+            ]
+          },
+          "peak_aggregate_rss_bytes": {
+            "median": 0.7554557343492352,
+            "ci95": [
+              0.7146152549956131,
+              0.7997818313259234
+            ]
+          }
+        },
+        "after_vs_stryker": {
+          "wall_seconds": {
+            "median": 1.6623053854628171,
+            "ci95": [
+              1.5510324745842925,
+              1.6986851017819915
+            ]
+          },
+          "cpu_seconds": {
+            "median": 1.1029349948061271,
+            "ci95": [
+              1.1005763423335149,
+              1.1102336401289297
+            ]
+          },
+          "peak_aggregate_rss_bytes": {
+            "median": 0.6098482212967289,
+            "ci95": [
+              0.6039679811422678,
+              0.6680678818353237
+            ]
+          }
+        }
+      }
+    },
+    {
+      "config": "scale-4w-threads",
+      "id": 43593398752,
+      "workers": 4,
+      "workload": "colord-scale",
+      "after_args": [
+        "--isolation",
+        "fresh-thread"
+      ],
+      "url": "https://github.com/RuiCostafrg/oximut/actions/runs/43593398752",
+      "correctness_gate": true,
+      "build_integrity": true,
+      "comparisons": {
+        "after_vs_before": {
+          "wall_seconds": {
+            "median": 0.9732567881790307,
+            "ci95": [
+              0.943844534844136,
+              0.9840636433014263
+            ]
+          },
+          "cpu_seconds": {
+            "median": 0.9471235903393795,
+            "ci95": [
+              0.9245322920852073,
+              0.9509183965382862
+            ]
+          },
+          "peak_aggregate_rss_bytes": {
+            "median": 0.7208427023194571,
+            "ci95": [
+              0.6749930273244364,
+              0.7786231740975248
+            ]
+          }
+        },
+        "after_vs_stryker": {
+          "wall_seconds": {
+            "median": 1.231943646393789,
+            "ci95": [
+              1.204324458589989,
+              1.245278882665365
+            ]
+          },
+          "cpu_seconds": {
+            "median": 0.9217172640876253,
+            "ci95": [
+              0.9000697211923125,
+              0.9263147948021756
+            ]
+          },
+          "peak_aggregate_rss_bytes": {
+            "median": 0.5748032022239151,
+            "ci95": [
+              0.5312930329095735,
+              0.5919959007938884
+            ]
+          }
+        }
+      }
+    },
+    {
+      "config": "colord-4w-threads",
+      "id": 43593401959,
+      "workers": 4,
+      "workload": "colord",
+      "after_args": [
+        "--isolation",
+        "fresh-thread"
+      ],
+      "url": "https://github.com/RuiCostafrg/oximut/actions/runs/43593401959",
+      "correctness_gate": true,
+      "build_integrity": true,
+      "comparisons": {
+        "after_vs_before": {
+          "wall_seconds": {
+            "median": 0.959685608321657,
+            "ci95": [
+              0.9455804215113176,
+              0.9691861563642914
+            ]
+          },
+          "cpu_seconds": {
+            "median": 0.9476225038730376,
+            "ci95": [
+              0.9379154341997179,
+              0.9570398150365289
+            ]
+          },
+          "peak_aggregate_rss_bytes": {
+            "median": 0.6738358326756116,
+            "ci95": [
+              0.6666755854632535,
+              0.7376666958672228
+            ]
+          }
+        },
+        "after_vs_stryker": {
+          "wall_seconds": {
+            "median": 0.5970157244453673,
+            "ci95": [
+              0.5897486972541691,
+              0.6058617888808644
+            ]
+          },
+          "cpu_seconds": {
+            "median": 0.637543564245313,
+            "ci95": [
+              0.6302567308451523,
+              0.6439383228360515
+            ]
+          },
+          "peak_aggregate_rss_bytes": {
+            "median": 0.40135038193814887,
+            "ci95": [
+              0.39029605263157896,
+              0.4299224349533628
+            ]
+          }
+        }
+      }
+    },
+    {
+      "config": "colord-4w-default",
+      "id": 43593404492,
+      "workers": 4,
+      "workload": "colord",
+      "after_args": [],
+      "url": "https://github.com/RuiCostafrg/oximut/actions/runs/43593404492",
+      "correctness_gate": true,
+      "build_integrity": true,
+      "comparisons": {
+        "after_vs_before": {
+          "wall_seconds": {
+            "median": 1.000133508821006,
+            "ci95": [
+              0.9787226382662683,
+              1.1881325329550654
+            ]
+          },
+          "cpu_seconds": {
+            "median": 1.0006117201878146,
+            "ci95": [
+              0.983060116116142,
+              1.024082819568996
+            ]
+          },
+          "peak_aggregate_rss_bytes": {
+            "median": 1.0231538256464943,
+            "ci95": [
+              0.9952294236836031,
+              1.0380475039978956
+            ]
+          }
+        },
+        "after_vs_stryker": {
+          "wall_seconds": {
+            "median": 0.6352402353898382,
+            "ci95": [
+              0.6225629815390804,
+              0.6729370274200941
+            ]
+          },
+          "cpu_seconds": {
+            "median": 0.6857316216613363,
+            "ci95": [
+              0.6754083654790572,
+              0.7006781645189489
+            ]
+          },
+          "peak_aggregate_rss_bytes": {
+            "median": 0.5954384384972298,
+            "ci95": [
+              0.5879951688926882,
+              0.6126797535259915
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "acceptance": {
+    "scale-2w-threads": {
+      "wall_ci_below_one": false,
+      "significant_wall_regression": false,
+      "significant_cpu_regression": false,
+      "significant_rss_regression": false
+    },
+    "scale-4w-threads": {
+      "wall_ci_below_one": true,
+      "significant_wall_regression": false,
+      "significant_cpu_regression": false,
+      "significant_rss_regression": false
+    },
+    "colord-4w-threads": {
+      "wall_ci_below_one": true,
+      "significant_wall_regression": false,
+      "significant_cpu_regression": false,
+      "significant_rss_regression": false
+    },
+    "colord-4w-default": {
+      "wall_ci_below_one": false,
+      "significant_wall_regression": false,
+      "significant_cpu_regression": false,
+      "significant_rss_regression": false
+    }
+  }
+}

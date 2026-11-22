@@ -3,6 +3,12 @@
   "commit": "1404cfe80cf8fe6df1a876ea3b12aa8eccc7feff",
   "packageVersion": "2.10.0",
   "license": "MIT",
+  "name": "colord",
+  "sentinel": {
+    "file": "src/manipulate/invert.ts",
+    "original": "255 - rgba.r",
+    "replacement": "255 + rgba.r"
+  },
   "upstreamSha256": {
     "src/colorModels/cmyk.ts": "3285e84020bbcacf7de2c58a3ff7821368cd0446f2f10e8549bae78abe73071b",
     "src/colorModels/cmykString.ts": "3b6445d6dd6b4931239217b75c230a9943537a1851ee417013eb3d3fbfa61086",

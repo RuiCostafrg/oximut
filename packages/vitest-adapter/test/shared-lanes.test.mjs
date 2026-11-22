@@ -1,0 +1,741 @@
+import assert from 'node:assert/strict';
+import { fork } from 'node:child_process';
+import { mkdir, mkdtemp, readFile, rm, symlink, writeFile } from 'node:fs/promises';
+import { join, resolve } from 'node:path';
+import test from 'node:test';
+import { ThreadsPoolWorker } from 'vitest/node';
+
+import { SHARED_LANE_RESIDENT } from '../protocol.mjs';
+import { SharedLanes } from '../shared-lanes.ts';
+
+const repository = resolve(import.meta.dirname, '../../..');
+async function fixture(t) {
+  await mkdir(join(repository, '.oximut'), { recursive: true });
+  const root = await mkdtemp(join(repository, '.oximut/lanes-'));
+  await symlink(join(repository, 'node_modules'), join(root, 'node_modules'));
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const code = `export const active = process.env.OXIMUT_ACTIVE_MUTANT; let n = 0; export function count() { return n++; }`;
+  await writeFile(
+    join(root, 'subject.ts'),
+    'export const active = "uninstrumented"; export function count() { return -1; }',
+  );
+  await writeFile(
+    join(root, 'vitest.config.mjs'),
+    "export default { test: { include: ['*.test.ts'], testTimeout: 300 } };",
+  );
+  await writeFile(
+    join(root, 'shared.test.ts'),
+    `
+import { test, expect } from 'vitest';
+import { appendFileSync, existsSync, readdirSync, writeFileSync } from 'node:fs';
+import { active, count } from './subject';
+const root = ${JSON.stringify(root)};
+appendFileSync(root+'/events', JSON.stringify({type:'enter', id:active, pid:process.pid})+'\\n');
+test('fresh and overlap', { timeout: 10000 }, async () => {
+  expect(count()).toBe(0);
+  if (existsSync(root+'/barrier')) {
+    writeFileSync(root+'/ready-'+active, '');
+    while (readdirSync(root).filter(n => n.startsWith('ready-')).length < 3)
+      await new Promise(r => setTimeout(r, 5));
+  }
+  appendFileSync(root+'/events', JSON.stringify({type:'released', id:active, pid:process.pid})+'\\n');
+});
+test('mutation', async () => {
+  if (active === 'timeout') await new Promise(r => setTimeout(r, 10000));
+  if (active === 'crash') process.kill(process.pid, 'SIGKILL');
+  if (active === 'hang') while (true) {}
+  expect(active).not.toBe('killed');
+});
+test('after', () => {
+ appendFileSync(root+'/events', JSON.stringify({type:'after', id:active, pid:process.pid})+'\\n');
+ expect(count()).toBe(1);
+});`,
+  );
+  const job = (id) => ({
+    resident: [
+      {
+        id: '__resident__',
+        file: join(root, 'subject.ts'),
+        code,
+        map: { version: 3, sources: ['subject.ts'], names: [], mappings: 'AAAA' },
+      },
+    ],
+    protocol: 1,
+    runId: 'lanes',
+    jobId: id,
+    generation: 1,
+    kind: 'mutant',
+    root,
+    config: join(root, 'vitest.config.mjs'),
+    deadlineMs: 30000,
+    mutation: {
+      id,
+      file: join(root, 'subject.ts'),
+      code,
+      map: { version: 3, sources: ['subject.ts'], names: [], mappings: 'AAAA' },
+    },
+  });
+  async function controller(pool, execArgv = []) {
+    const child = fork(join(repository, 'packages/vitest-adapter/m2-worker.ts'), [], {
+      stdio: ['ignore', 'pipe', 'pipe', 'ipc'],
+      execArgv,
+    });
+    let diagnostics = '';
+    child.stderr.on('data', (data) => {
+      diagnostics += data;
+    });
+    let sequence = 0;
+    const exited = new Promise((resolve) => child.once('exit', resolve));
+    const command = (command, args) =>
+      new Promise((resolve, reject) => {
+        const id = ++sequence;
+        const timer = setTimeout(() => reject(new Error('IPC deadline: ' + diagnostics)), 45000);
+        child.once('message', (reply) => {
+          clearTimeout(timer);
+          if (reply.id !== id || reply.error)
+            reject(new Error(JSON.stringify(reply) + diagnostics));
+          else resolve(reply.result);
+        });
+        child.send({ protocol: 1, id, command, args });
+      });
+    t.after(async () => {
+      child.kill('SIGKILL');
+      await exited;
+    });
+    const initialized = await command('initialize', {
+      ...job('init'),
+      kind: 'baseline',
+      mutation: null,
+      pool,
+    });
+    return {
+      initialized,
+      run: (request) => command('run', { request }),
+      runCompact: (request) => command(SHARED_LANE_RESIDENT, { request }),
+      async close() {
+        await command('close', {});
+        child.disconnect();
+        await exited;
+      },
+    };
+  }
+  return { root, job, controller };
+}
+function compactBatch(jobs) {
+  return { ...jobs[0], lanes: jobs.map(({ resident, ...lane }) => lane) };
+}
+function evidence(result) {
+  return { outcome: result.outcome, tests: result.tests };
+}
+async function assertGone(root) {
+  const events = (await readFile(join(root, 'events'), 'utf8')).trim().split('\n').map(JSON.parse);
+  for (const pid of new Set(events.map((e) => e.pid)))
+    assert.throws(() => process.kill(pid, 0), { code: 'ESRCH' });
+  return events;
+}
+
+test(
+  'shared lanes match fresh-process oracle, overlap, local bail, isolation, reuse and cleanup',
+  { timeout: 120000 },
+  async (t) => {
+    const s = await fixture(t);
+    const ids = ['killed', 'survived', 'timeout'];
+    const oracle = [];
+    for (const id of ids) {
+      const c = await s.controller();
+      oracle.push(evidence(await c.run(s.job(id))));
+      await c.close();
+    }
+    assert.deepEqual(
+      oracle.map((r) => r.outcome),
+      ['failed', 'passed', 'timeout'],
+    );
+    await writeFile(join(s.root, 'events'), '');
+    await writeFile(join(s.root, 'barrier'), '');
+    const c = await s.controller();
+    const jobs = ids.map(s.job);
+    const result = await c.run({ ...jobs[0], lanes: jobs });
+    assert.deepEqual(result.lanes.map(evidence), oracle);
+    const events = await assertGone(s.root);
+    const enters = events.filter((e) => e.type === 'enter');
+    assert.equal(new Set(enters.map((e) => e.pid)).size, 3);
+    assert.equal(
+      events.slice(0, 3).every((e) => e.type === 'enter'),
+      true,
+    );
+    assert.deepEqual(
+      events.filter((e) => e.type === 'after').map((e) => e.id),
+      ['survived'],
+    );
+    // Reassign the same bounded lane projects after all prior forks have exited.
+    const again = await c.run({ ...jobs[0], lanes: jobs });
+    assert.deepEqual(again.lanes.map(evidence), oracle);
+    const all = await assertGone(s.root);
+    assert.equal(new Set(all.filter((e) => e.type === 'enter').map((e) => e.pid)).size, 6);
+    await c.close();
+  },
+);
+
+test('a crashed shared fork fails closed and every fork exits', { timeout: 90000 }, async (t) => {
+  const s = await fixture(t);
+  const c = await s.controller();
+  const jobs = ['crash', 'survived'].map(s.job);
+  const result = await c.run({ ...jobs[0], lanes: jobs });
+  assert.equal(result.lanes[0].outcome, 'infrastructure-error');
+  assert.equal(result.lanes[1].outcome, 'passed');
+  await assertGone(s.root);
+  const hung = ['hang', 'survived'].map((id) => ({ ...s.job(id), deadlineMs: 5000 }));
+  const started = performance.now();
+  const stopped = await c.runCompact(compactBatch(hung));
+  // A hung lane is a timeout, as with one controller per worker, and its
+  // finished neighbour keeps its result.
+  assert.equal(stopped.lanes[0].outcome, 'timeout');
+  assert.equal(stopped.lanes[1].outcome, 'passed');
+  assert.ok(performance.now() - started < 15000, 'hung compact lane exceeded its cleanup bound');
+  await assertGone(s.root);
+  await c.close();
+});
+
+test(
+  'batch assignments reject conflicting modules and duplicate identities',
+  { timeout: 90000 },
+  async (t) => {
+    const s = await fixture(t);
+    const c = await s.controller();
+    const jobs = ['killed', 'survived'].map(s.job);
+    await assert.rejects(
+      c.run({ ...jobs[0], lanes: [jobs[0], jobs[0]] }),
+      /Invalid lane assignment/,
+    );
+    jobs[1].mutation.code = 'export const active = "wrong";';
+    await assert.rejects(c.run({ ...jobs[0], lanes: jobs }), /resident instrumented module/);
+    jobs[1].resident[0].map.mappings = 'AACA';
+    await assert.rejects(c.run({ ...jobs[0], lanes: jobs }), /identical resident modules/);
+    await c.close();
+  },
+);
+
+test('compact lane requests negotiate the encoding and bind maps to each message', async (t) => {
+  const s = await fixture(t);
+  const c = await s.controller();
+  assert.equal(c.initialized.laneResidentEncoding, SHARED_LANE_RESIDENT);
+  const jobs = ['survived', 'killed'].map(s.job);
+  const expanded = { ...jobs[0], lanes: jobs };
+  const compact = compactBatch(jobs);
+  await assert.rejects(c.runCompact(expanded), /Invalid shared lane resident encoding/);
+  await assert.rejects(c.run(compact), /identical resident modules/);
+  await assert.rejects(
+    c.runCompact({ ...compact, resident: undefined }),
+    /Invalid shared lane resident encoding/,
+  );
+  const before = await c.run(expanded);
+  assert.deepEqual(
+    before.lanes.map(({ jobId, outcome }) => [jobId, outcome]),
+    [
+      ['survived', 'passed'],
+      ['killed', 'failed'],
+    ],
+  );
+
+  const changed = structuredClone(compact);
+  changed.resident[0].map.mappings = 'AACA';
+  changed.mutation.map.mappings = 'AACA';
+  changed.lanes[0].mutation.map.mappings = 'AACA';
+  await assert.rejects(c.runCompact(changed), /resident instrumented module/);
+  changed.lanes[1].mutation.map.mappings = 'AACA';
+  const after = await c.runCompact(changed);
+  assert.deepEqual(after.lanes, before.lanes);
+
+  // The next compact message may carry the original map again.
+  assert.deepEqual((await c.runCompact(compact)).lanes, before.lanes);
+  await assertGone(s.root);
+  await c.close();
+});
+
+test(
+  'multi-file selections use one fresh process per mutant and match the oracle',
+  { timeout: 90000 },
+  async (t) => {
+    const s = await fixture(t);
+    await writeFile(
+      join(s.root, 'other.test.ts'),
+      `
+import { test, expect } from 'vitest';
+import { appendFileSync } from 'node:fs';
+import { active, count } from './subject';
+appendFileSync(${JSON.stringify(join(s.root, 'events'))}, JSON.stringify({type:'other', id:active, pid:process.pid})+'\\n');
+test('other', () => expect(count()).toBe(0));
+`,
+    );
+    const jobs = ['survived', 'killed', 'timeout', 'selected'].map(s.job);
+    jobs[3].selection = {
+      mode: 'files',
+      files: [join(s.root, 'other.test.ts')],
+      selectedTests: 1,
+      totalTests: 4,
+      reasons: [],
+    };
+    const oracle = [];
+    for (const job of jobs) {
+      const c = await s.controller();
+      oracle.push(evidence(await c.run(job)));
+      await c.close();
+    }
+    await writeFile(join(s.root, 'events'), '');
+    const c = await s.controller();
+    const result = await c.runCompact(compactBatch(jobs));
+    // A killed mutant stops at its first failure, so how many tests passed before
+    // it depends on file order. Its outcome and failure count must still match.
+    const comparable = (entry) =>
+      entry.outcome === 'failed'
+        ? { outcome: entry.outcome, failed: entry.tests.failed, skipped: entry.tests.skipped }
+        : entry;
+    assert.deepEqual(result.lanes.map(evidence).map(comparable), oracle.map(comparable));
+    const events = await assertGone(s.root);
+    for (const job of jobs) {
+      const own = events.filter((e) => e.id === job.jobId);
+      if (job.jobId === 'selected')
+        assert.deepEqual(
+          own.map((e) => e.type),
+          ['other'],
+        );
+      if (job.jobId === 'survived')
+        assert.equal(
+          own.some((e) => e.type === 'other'),
+          true,
+        );
+      assert.equal(
+        own.some((e) => e.type === 'after'),
+        job.jobId === 'survived',
+      );
+      assert.equal(new Set(own.map((e) => e.pid)).size, 1);
+    }
+    await c.close();
+  },
+);
+
+test(
+  'a file the current run did not report never reuses earlier results',
+  { timeout: 90000 },
+  async (t) => {
+    const s = await fixture(t);
+    const lanes = new SharedLanes();
+    t.after(() => lanes.close());
+    const jobs = ['survived', 'selected'].map(s.job);
+    const first = await lanes.run({ ...jobs[0], lanes: jobs });
+    assert.deepEqual(
+      first.lanes.map((lane) => lane.outcome),
+      ['passed', 'passed'],
+    );
+    // A run that delivers nothing: only earlier state could still report a result.
+    lanes.context.runTestSpecifications = async () => ({
+      testModules: lanes.context.state.getTestModules(),
+      unhandledErrors: [],
+    });
+    const second = await lanes.run({ ...jobs[0], lanes: jobs });
+    assert.deepEqual(
+      second.lanes.map((lane) => lane.outcome),
+      ['infrastructure-error', 'infrastructure-error'],
+    );
+  },
+);
+
+test('a run that throws drops the context', { timeout: 90000 }, async (t) => {
+  const s = await fixture(t);
+  const lanes = new SharedLanes();
+  t.after(() => lanes.close());
+  const jobs = ['survived', 'selected'].map(s.job);
+  await lanes.run({ ...jobs[0], lanes: jobs });
+  lanes.context.runTestSpecifications = async () => {
+    throw new Error('run failed');
+  };
+  await assert.rejects(lanes.run({ ...jobs[0], lanes: jobs }), /run failed/);
+  assert.equal(lanes.context, undefined);
+});
+
+test('lane errors are bounded', { timeout: 90000 }, async (t) => {
+  const s = await fixture(t);
+  await writeFile(
+    join(s.root, 'long.test.ts'),
+    "import { test } from 'vitest'; test('long', () => { throw new Error('x'.repeat(100000)); });",
+  );
+  const jobs = ['long-a', 'long-b'].map(s.job);
+  for (const job of jobs)
+    job.selection = {
+      mode: 'files',
+      files: [join(s.root, 'long.test.ts')],
+      selectedTests: 1,
+      totalTests: 1,
+      reasons: [],
+    };
+  const c = await s.controller();
+  const result = await c.run({ ...jobs[0], lanes: jobs });
+  await c.close();
+  for (const lane of result.lanes) {
+    assert.equal(lane.outcome, 'failed');
+    assert.ok(lane.errors.length && lane.errors.every((error) => error.length <= 2048));
+  }
+});
+
+test('a custom runner falls back to one controller per worker', { timeout: 90000 }, async (t) => {
+  const s = await fixture(t);
+  await writeFile(
+    join(s.root, 'custom-runner.mjs'),
+    "export { TestRunner as default } from 'vitest';",
+  );
+  await writeFile(
+    join(s.root, 'vitest.config.mjs'),
+    "export default { test: { include: ['*.test.ts'], testTimeout: 300, runner: './custom-runner.mjs' } };",
+  );
+  const c = await s.controller();
+  const jobs = ['survived', 'selected'].map(s.job);
+  const result = await c
+    .run({ ...jobs[0], lanes: jobs })
+    .catch((error) => ({ errors: [error.message] }));
+  await c.close();
+  assert.equal(result.lanes, undefined);
+  assert.match(result.errors.join(';'), /Shared lanes require/);
+});
+
+for (const pool of ['forks', 'threads'])
+  test(
+    `an unexplained ${pool} batch error outranks a lane timeout`,
+    { timeout: 90000 },
+    async (t) => {
+      const s = await fixture(t);
+      const lanes = new SharedLanes();
+      t.after(() => lanes.close());
+      const jobs = ['survived', 'selected'].map((id) => ({ ...s.job(id), pool }));
+      await lanes.run({ ...jobs[0], lanes: jobs });
+      const run = lanes.context.runTestSpecifications.bind(lanes.context);
+      lanes.context.runTestSpecifications = async (...args) => {
+        const result = await run(...args);
+        return { ...result, unhandledErrors: [...result.unhandledErrors, new Error('unrelated')] };
+      };
+      const hung = ['hang', 'survived'].map((id) => ({ ...s.job(id), pool, deadlineMs: 3000 }));
+      const result = await lanes.run({ ...hung[0], lanes: hung });
+      process.exitCode = undefined;
+      assert.deepEqual(
+        result.lanes.map((lane) => lane.outcome),
+        ['infrastructure-error', 'infrastructure-error'],
+      );
+    },
+  );
+
+test('a smaller batch reuses the lanes of a stable width', { timeout: 90000 }, async (t) => {
+  const s = await fixture(t);
+  const lanes = new SharedLanes();
+  t.after(() => lanes.close());
+  const jobs = ['survived', 'selected'].map(s.job);
+  const full = await lanes.run({ ...jobs[0], workers: 2, lanes: jobs });
+  assert.deepEqual(
+    full.lanes.map((lane) => lane.outcome),
+    ['passed', 'passed'],
+  );
+  const context = lanes.context;
+  await writeFile(join(s.root, 'events'), '');
+  const small = await lanes.run({ ...jobs[1], workers: 2, lanes: [jobs[1]] });
+  assert.deepEqual(
+    small.lanes.map((lane) => lane.outcome),
+    ['passed'],
+  );
+  assert.equal(lanes.context, context);
+  // Only the requested mutant ran; the idle lane did nothing.
+  const events = (await readFile(join(s.root, 'events'), 'utf8'))
+    .split('\n')
+    .filter(Boolean)
+    .map(JSON.parse);
+  assert.ok(events.length);
+  // The idle lane last ran 'selected' too, so count processes as well.
+  assert.deepEqual([...new Set(events.map((event) => event.id))], ['selected']);
+  assert.equal(new Set(events.map((event) => event.pid)).size, 1);
+  await lanes.run({ ...jobs[1], lanes: [jobs[1]] });
+  assert.notEqual(lanes.context, context);
+});
+
+test(
+  'lanes share one transform per file and a changed resident module invalidates it',
+  { timeout: 90000 },
+  async (t) => {
+    const s = await fixture(t);
+    const transforms = join(s.root, 'transforms');
+    await writeFile(transforms, '');
+    await writeFile(
+      join(s.root, 'vitest.config.mjs'),
+      `import { appendFileSync } from 'node:fs';
+export default {
+  plugins: [{ name: 'count', enforce: 'post', transform(code, id) {
+    if (!id.includes('node_modules')) appendFileSync(${JSON.stringify(transforms)}, id + '\\n');
+  } }],
+  test: { include: ['probe.test.ts'], testTimeout: 300 },
+};`,
+    );
+    await writeFile(
+      join(s.root, 'probe.test.ts'),
+      `import { test, expect } from 'vitest';
+import { appendFileSync } from 'node:fs';
+import * as subject from './subject';
+test('probe', () => {
+  appendFileSync(${JSON.stringify(join(s.root, 'events'))},
+    JSON.stringify({ id: subject.active, marker: subject.marker }) + '\\n');
+  expect(subject.active).toMatch(/^survived/);
+});`,
+    );
+    await writeFile(join(s.root, 'events'), '');
+    const resident = (marker) => {
+      const code = `export const active = process.env.OXIMUT_ACTIVE_MUTANT; export const marker = '${marker}';`;
+      return {
+        id: '__resident__',
+        file: join(s.root, 'subject.ts'),
+        code,
+        map: { version: 3, sources: ['subject.ts'], names: [], mappings: 'AAAA' },
+      };
+    };
+    const batch = (marker) => {
+      const module = resident(marker);
+      const jobs = ['survived', 'survived2', 'survived3'].map((id) => ({
+        ...s.job(id),
+        resident: [module],
+        mutation: { ...module, id },
+      }));
+      return { ...jobs[0], workers: 3, lanes: jobs };
+    };
+    const seen = async () => (await readFile(transforms, 'utf8')).split('\n').filter(Boolean);
+    const events = async () =>
+      (await readFile(join(s.root, 'events'), 'utf8')).split('\n').filter(Boolean).map(JSON.parse);
+    const lanes = new SharedLanes();
+    t.after(() => lanes.close());
+
+    const first = await lanes.run(batch('a'));
+    assert.deepEqual(
+      first.lanes.map((lane) => lane.outcome),
+      ['passed', 'passed', 'passed'],
+    );
+    const firstSeen = await seen();
+    // Three lanes, one transform per file.
+    assert.equal(new Set(firstSeen).size, firstSeen.length);
+    assert.ok(firstSeen.some((id) => id.endsWith('probe.test.ts')));
+    assert.ok(firstSeen.some((id) => id.endsWith('subject.ts')));
+    assert.ok(lanes.transforms.stats.hits > 0);
+    assert.deepEqual(
+      (await events()).map((event) => event.marker),
+      ['a', 'a', 'a'],
+    );
+
+    // An unchanged resident module keeps the shared results, and its lanes still ran.
+    await writeFile(join(s.root, 'events'), '');
+    const again = await lanes.run(batch('a'));
+    assert.deepEqual(
+      again.lanes.map((lane) => lane.outcome),
+      ['passed', 'passed', 'passed'],
+    );
+    assert.deepEqual(
+      (await events()).map((event) => event.marker),
+      ['a', 'a', 'a'],
+    );
+    assert.deepEqual(await seen(), firstSeen);
+
+    // A changed resident module must never be served from the earlier cache.
+    await writeFile(join(s.root, 'events'), '');
+    const generation = lanes.transforms.generation;
+    await lanes.run(batch('b'));
+    assert.ok(lanes.transforms.generation > generation);
+    assert.deepEqual(
+      (await events()).map((event) => event.marker),
+      ['b', 'b', 'b'],
+    );
+    const after = await seen();
+    // Invalidation dropped every lane's graph: each file was transformed once more
+    // for all lanes together, not once per lane.
+    for (const id of new Set(after)) assert.equal(after.filter((seen) => seen === id).length, 2);
+  },
+);
+
+test(
+  'shared fresh threads overlap, isolate mutants, drain deadlines and reuse lanes',
+  { timeout: 120000 },
+  async (t) => {
+    const s = await fixture(t);
+    // Record actual thread identities and make reuse of a test runtime observable.
+    await writeFile(
+      join(s.root, 'shared.test.ts'),
+      `
+import { test, expect } from 'vitest';
+import { appendFileSync, existsSync, readdirSync, writeFileSync } from 'node:fs';
+import { threadId } from 'node:worker_threads';
+import { active, count } from './subject';
+const root = ${JSON.stringify(s.root)};
+appendFileSync(root+'/events', JSON.stringify({id:active, pid:process.pid, threadId})+'\\n');
+test('fresh runtime and overlap', { timeout: 10000 }, async () => {
+  expect(threadId).toBeGreaterThan(0);
+  expect(count()).toBe(0);
+  expect(globalThis.__laneLeak).toBeUndefined();
+  globalThis.__laneLeak = active;
+  if (existsSync(root+'/barrier')) {
+    writeFileSync(root+'/ready-'+active, '');
+    while (readdirSync(root).filter(n => n.startsWith('ready-')).length < 3)
+      await new Promise(r => setTimeout(r, 5));
+  }
+});
+test('mutation', async () => {
+  if (active === 'timeout') await new Promise(r => setTimeout(r, 10000));
+  if (active === 'hang') while (true) {}
+  expect(active).not.toBe('killed');
+});
+test('local bail', () => expect(active).not.toBe('killed'));
+`,
+    );
+    await writeFile(
+      join(s.root, 'other.test.ts'),
+      `
+import { test, expect } from 'vitest';
+import { count } from './subject';
+// Selected files share a worker, but Vitest still resets evaluated modules.
+test('fresh modules in a second file', () => expect(count()).toBe(0));
+`,
+    );
+    const threads = [];
+    const originalStart = ThreadsPoolWorker.prototype.start;
+    ThreadsPoolWorker.prototype.start = async function () {
+      await originalStart.call(this);
+      threads.push(this.thread);
+    };
+    t.after(() => {
+      ThreadsPoolWorker.prototype.start = originalStart;
+      process.exitCode = undefined; // expected mutant failures in this process
+    });
+    const jobs = ['killed', 'survived', 'timeout'].map((id) => ({ ...s.job(id), pool: 'threads' }));
+    const lanes = new SharedLanes();
+    t.after(() => lanes.close());
+    await writeFile(join(s.root, 'barrier'), '');
+    const run = (jobs) => lanes.run({ ...jobs[0], workers: 3, lanes: jobs });
+    for (let i = 0; i < 2; i++) {
+      const result = await run(jobs);
+      assert.deepEqual(
+        result.lanes.map((l) => l.outcome),
+        ['failed', 'passed', 'timeout'],
+      );
+      assert.equal(result.lanes[0].tests.failed, 1); // local bail
+      assert.ok(threads.every((thread) => thread.threadId === -1));
+    }
+    const events = (await readFile(join(s.root, 'events'), 'utf8'))
+      .trim()
+      .split('\n')
+      .map(JSON.parse);
+    assert.equal(new Set(events.map((e) => e.pid)).size, 1);
+    assert.equal(events[0].pid, process.pid);
+    assert.equal(new Set(events.map((e) => e.threadId)).size, 6);
+    await rm(join(s.root, 'barrier'));
+    const hung = ['hang', 'survived'].map((id) => ({
+      ...s.job(id),
+      pool: 'threads',
+      deadlineMs: 5000,
+    }));
+    const stopped = await run(hung);
+    assert.deepEqual(
+      stopped.lanes.map((l) => l.outcome),
+      ['timeout', 'passed'],
+    );
+    assert.ok(threads.every((thread) => thread.threadId === -1));
+    const context = lanes.context;
+    const again = await run([jobs[1]]);
+    assert.equal(again.lanes[0].outcome, 'passed');
+    assert.equal(lanes.context, context);
+    // Switching pool at a stable width must create a new context.
+    const forked = { ...jobs[1], pool: undefined };
+    assert.equal((await run([forked])).lanes[0].outcome, 'failed'); // threadId assertion
+    assert.notEqual(lanes.context, context);
+  },
+);
+
+test(
+  'thread lane requests pass through the persistent controller',
+  { timeout: 90000 },
+  async (t) => {
+    const s = await fixture(t);
+    // Do not send process-killing fixtures into the controller's process.
+    const c = await s.controller('threads');
+    const jobs = ['killed', 'survived', 'timeout'].map((id) => ({ ...s.job(id), pool: 'threads' }));
+    const result = await c.run({ ...jobs[0], lanes: jobs });
+    assert.deepEqual(
+      result.lanes.map((l) => l.outcome),
+      ['failed', 'passed', 'timeout'],
+    );
+    await c.close();
+  },
+);
+
+test(
+  'thread OOM preserves its healthy neighbour and the following batch',
+  { timeout: 90000 },
+  async (t) => {
+    const s = await fixture(t);
+    const lifecycle = join(s.root, 'threads.jsonl');
+    const preload = join(s.root, 'limit-threads.cjs');
+    // Bound only test workers, leaving the controller enough heap for Vite.
+    await writeFile(
+      preload,
+      `
+const threads = require('node:worker_threads');
+const { appendFileSync } = require('node:fs');
+const OriginalWorker = threads.Worker;
+threads.Worker = class extends OriginalWorker {
+  constructor(file, options) {
+    super(file, { ...options, resourceLimits: { maxOldGenerationSizeMb: 96 } });
+    const id = this.threadId;
+    const record = (event) => appendFileSync(${JSON.stringify(lifecycle)}, JSON.stringify({ id, ...event })+'\\n');
+    this.on('error', error => record({ error: error.code }));
+    this.on('exit', code => record({ exit: code, threadId: this.threadId }));
+  }
+};
+require('node:module').syncBuiltinESMExports();
+`,
+    );
+    await writeFile(
+      join(s.root, 'shared.test.ts'),
+      `
+import { test, expect } from 'vitest';
+import { existsSync, writeFileSync } from 'node:fs';
+import { resourceLimits } from 'node:worker_threads';
+import { active } from './subject';
+test('bounded heap', { timeout: 15000 }, async () => {
+  expect(resourceLimits.maxOldGenerationSizeMb).toBe(96);
+  if (active === 'oom') {
+    while (!existsSync(${JSON.stringify(join(s.root, 'healthy-ready'))}))
+      await new Promise(r => setTimeout(r, 5));
+    const retained = [];
+    while (true) retained.push(new Array(128 * 1024).fill(retained.length));
+  }
+  writeFileSync(${JSON.stringify(join(s.root, 'healthy-ready'))}, '');
+  await new Promise(r => setTimeout(r, 500));
+  expect(active).toBe('survived');
+});
+`,
+    );
+    const c = await s.controller('threads', ['--require', preload]);
+    const jobs = ['oom', 'survived'].map((id) => ({ ...s.job(id), pool: 'threads' }));
+    const result = await c.run({ ...jobs[0], workers: 2, lanes: jobs });
+    assert.deepEqual(
+      result.lanes.map((lane) => lane.jobId),
+      ['oom', 'survived'],
+    );
+    assert.equal(result.lanes[0].outcome, 'infrastructure-error');
+    assert.deepEqual(result.lanes[0].errors, ['Lane worker exited before completion']);
+    assert.deepEqual(evidence(result.lanes[1]), {
+      outcome: 'passed',
+      tests: { passed: 1, failed: 0, skipped: 0 },
+    });
+    const events = (await readFile(lifecycle, 'utf8')).trim().split('\n').map(JSON.parse);
+    const oom = events.find((event) => event.error === 'ERR_WORKER_OUT_OF_MEMORY');
+    assert.ok(oom, 'a real worker heap exhaustion occurred');
+    assert.equal(events.filter((event) => event.exit !== undefined).length, 2);
+    assert.ok(
+      events.filter((event) => event.exit !== undefined).every((event) => event.threadId === -1),
+    );
+    assert.equal(events.find((event) => event.id === oom.id && event.exit !== undefined).exit, 1);
+    const again = await c.run({ ...jobs[1], workers: 2, lanes: [jobs[1]] });
+    assert.equal(again.lanes[0].jobId, 'survived');
+    assert.equal(again.lanes[0].outcome, 'passed');
+    await c.close();
+  },
+);

@@ -1,0 +1,10 @@
+{
+  "source_commit": "7297840df3996c9e6098afbe6d37db41b294ee0b",
+  "instrumentation": "attribution.patch",
+  "binary_sha256": "fd8b51059d3561444cca7204323fb6f3a15a37c535a7a63bca60050670a5c5f4",
+  "host": "Linux localhost 6.17.0-PRoot-Distro #1 SMP PREEMPT_DYNAMIC Fri, 10 Oct 2025 00:00:00 +0000 aarch64 GNU/Linux",
+  "node": "v26.3.1",
+  "cargo": "cargo 1.96.0 (30a34c682 2026-05-25) (built from a source tarball)",
+  "command": "OXIMUT_BATCH_GAP_TRACE=/tmp/oximut-gap-trace-main python3 benchmarks/real_project.py --workload colord-scale --binary target/release/oximut --adapter-source-dir packages/vitest-adapter --concurrency 2 --tools oximut --warmups 0 --repetitions 1 --output /tmp/oximut-gap-capture-main --timeout 1200 --defer-ratios",
+  "scope": "One overhead-bearing ARM capture, Oximut only; not a paired/scored comparison."
+}

@@ -1,0 +1,1724 @@
+{
+  "captures": {
+    "errors": [
+      "invalid worker boundary counts: controller-23995.jsonl/24543",
+      "invalid worker boundary counts: controller-23995.jsonl/24776",
+      "invalid worker boundary counts: controller-25218.jsonl/25403",
+      "invalid worker boundary counts: controller-25218.jsonl/25442",
+      "invalid worker boundary counts: controller-25218.jsonl/25873",
+      "invalid worker boundary counts: controller-25218.jsonl/26097",
+      "invalid worker boundary counts: controller-25218.jsonl/27676",
+      "invalid worker boundary counts: controller-25218.jsonl/27855",
+      "invalid CPU profile: controller-mutant-27984-2.cpuprofile"
+    ],
+    "observed": [
+      {
+        "baseline_count": 2,
+        "batch_sizes": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "first_mutant_window": {
+          "profileAckToSendReturnMs": 3009.325467999999,
+          "requestToProfileAckMs": 85.39395800000057,
+          "requestToSendReturnMs": 3094.7194259999997
+        },
+        "jobs": [
+          {
+            "job_id": "baseline",
+            "kind": "baseline",
+            "mutant_id": null,
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "instrumented-baseline",
+            "kind": "baseline",
+            "mutant_id": null,
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "cd1f699a62d4e77d0fbbf16fc682f6b2073d008617b9c2781ed69dc211b1d129",
+            "kind": "mutant",
+            "mutant_id": "cd1f699a62d4e77d0fbbf16fc682f6b2073d008617b9c2781ed69dc211b1d129",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "44f68010b95a84c04ae357cfa4b007fb6d2d462ed1ee9ecbd8ce93df21832109",
+            "kind": "mutant",
+            "mutant_id": "44f68010b95a84c04ae357cfa4b007fb6d2d462ed1ee9ecbd8ce93df21832109",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "961406bff63b9a94d5fbe54027a06ae9f1d3bac6994c1b41b956162835a5a458",
+            "kind": "mutant",
+            "mutant_id": "961406bff63b9a94d5fbe54027a06ae9f1d3bac6994c1b41b956162835a5a458",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "a76b10a0464b8e563cf76221602cf5e046fca1a8b2de720d2f04cc0582184a84",
+            "kind": "mutant",
+            "mutant_id": "a76b10a0464b8e563cf76221602cf5e046fca1a8b2de720d2f04cc0582184a84",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "bdd077beb2086ed90f695aaf5696580502c5baa001d12354d0f31a6e557eabdc",
+            "kind": "mutant",
+            "mutant_id": "bdd077beb2086ed90f695aaf5696580502c5baa001d12354d0f31a6e557eabdc",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "82b44c30bb77459ea1aa962c8f328ae2ee1aedcdd0ef3982cef07e398229385e",
+            "kind": "mutant",
+            "mutant_id": "82b44c30bb77459ea1aa962c8f328ae2ee1aedcdd0ef3982cef07e398229385e",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "19d6263da1eb47bf696095bad40f4de9b367318180c4d8f792d7e9b6f478f74b",
+            "kind": "mutant",
+            "mutant_id": "19d6263da1eb47bf696095bad40f4de9b367318180c4d8f792d7e9b6f478f74b",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "cea4051675c3af9ae140d34d4093bf11b1e2d7aaa2e3524a1fe71ca3ea5706b7",
+            "kind": "mutant",
+            "mutant_id": "cea4051675c3af9ae140d34d4093bf11b1e2d7aaa2e3524a1fe71ca3ea5706b7",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "7bd6825d15cc7c27b2be422dca652b5eee01cc456ee8582ac4181049c0a5883b",
+            "kind": "mutant",
+            "mutant_id": "7bd6825d15cc7c27b2be422dca652b5eee01cc456ee8582ac4181049c0a5883b",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "643424f9ca0aee71f8a5636d065c5c129dd5424052d7430d158d68a5593f6ee0",
+            "kind": "mutant",
+            "mutant_id": "643424f9ca0aee71f8a5636d065c5c129dd5424052d7430d158d68a5593f6ee0",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "284096b4edb0fd5a458956c0a9cd188a32e42413ee964ef25f42c53a1cc9d1b0",
+            "kind": "mutant",
+            "mutant_id": "284096b4edb0fd5a458956c0a9cd188a32e42413ee964ef25f42c53a1cc9d1b0",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "211c64945c6ed85c7fe4073b36288ffc39e3697f07c009e14edcf98b8d0f84b0",
+            "kind": "mutant",
+            "mutant_id": "211c64945c6ed85c7fe4073b36288ffc39e3697f07c009e14edcf98b8d0f84b0",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "173265fdcc69deec29c0275ce682d4771bd2b632c31288898adc6a5a6ae22e7c",
+            "kind": "mutant",
+            "mutant_id": "173265fdcc69deec29c0275ce682d4771bd2b632c31288898adc6a5a6ae22e7c",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "1e677c8b33453ed22dd93fd1e2dc191c074e20b2715376525cae4768d575f81a",
+            "kind": "mutant",
+            "mutant_id": "1e677c8b33453ed22dd93fd1e2dc191c074e20b2715376525cae4768d575f81a",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "0fc354a3e6768270d901a06905a3bd74fa6b9e4b6174fbbdd96cd8e20f1ad3ff",
+            "kind": "mutant",
+            "mutant_id": "0fc354a3e6768270d901a06905a3bd74fa6b9e4b6174fbbdd96cd8e20f1ad3ff",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "1fadb7c366db10e72cc6784756a032b07e60398b387abbc534a377428d8a036d",
+            "kind": "mutant",
+            "mutant_id": "1fadb7c366db10e72cc6784756a032b07e60398b387abbc534a377428d8a036d",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "5b9c546f1613ee6303883794cc54771759f1ffaacbfc283d2b5cb2ee7e1f92b0",
+            "kind": "mutant",
+            "mutant_id": "5b9c546f1613ee6303883794cc54771759f1ffaacbfc283d2b5cb2ee7e1f92b0",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "611850ff5e003797b4bb60046a1f093dcf5bfd4fd75d0e832c289c6e4b7f11de",
+            "kind": "mutant",
+            "mutant_id": "611850ff5e003797b4bb60046a1f093dcf5bfd4fd75d0e832c289c6e4b7f11de",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "370ef5698bc5e7196adcceaa6f235e0757256674b5b66b9cd7a43a5cd0db50af",
+            "kind": "mutant",
+            "mutant_id": "370ef5698bc5e7196adcceaa6f235e0757256674b5b66b9cd7a43a5cd0db50af",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "7b917a30808cb53c1f30b2811560f79447c85d1e8ba687593bd767d22069f905",
+            "kind": "mutant",
+            "mutant_id": "7b917a30808cb53c1f30b2811560f79447c85d1e8ba687593bd767d22069f905",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "d9eea5b4083d655b66b688c43a04c26f1dc64d69b174b9d77d9a4ee982064c7c",
+            "kind": "mutant",
+            "mutant_id": "d9eea5b4083d655b66b688c43a04c26f1dc64d69b174b9d77d9a4ee982064c7c",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "0877312ca95987b92c14a0cdce82ae7baa9da0ffa270631251eaa5ab9ca3bb92",
+            "kind": "mutant",
+            "mutant_id": "0877312ca95987b92c14a0cdce82ae7baa9da0ffa270631251eaa5ab9ca3bb92",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "cc509bae78e0d6714504e2a86bcab113c87a7458be6d5d02848397678f834cb5",
+            "kind": "mutant",
+            "mutant_id": "cc509bae78e0d6714504e2a86bcab113c87a7458be6d5d02848397678f834cb5",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "13f219f183defac3f3a1ca976c5c8e6cec24305b50bf4b2c632c5e771a778421",
+            "kind": "mutant",
+            "mutant_id": "13f219f183defac3f3a1ca976c5c8e6cec24305b50bf4b2c632c5e771a778421",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "0f9c466fd1fc5f41c7ef005aad9d7d4256b278d5411d74d0c945f1ad9fc398d1",
+            "kind": "mutant",
+            "mutant_id": "0f9c466fd1fc5f41c7ef005aad9d7d4256b278d5411d74d0c945f1ad9fc398d1",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "0a814f489eb3b38d36cb8ba249aa56af6effbd285468d36dc21e671ab31e8c2e",
+            "kind": "mutant",
+            "mutant_id": "0a814f489eb3b38d36cb8ba249aa56af6effbd285468d36dc21e671ab31e8c2e",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "b4856f2cf0e9d2ea3a87def68557eeb926e44d25ea85d0f8ecfe17693e837a51",
+            "kind": "mutant",
+            "mutant_id": "b4856f2cf0e9d2ea3a87def68557eeb926e44d25ea85d0f8ecfe17693e837a51",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "da1ce2e919983c9495b377cad42da3bfe65b541dfe3ef439b937e0b022b640d9",
+            "kind": "mutant",
+            "mutant_id": "da1ce2e919983c9495b377cad42da3bfe65b541dfe3ef439b937e0b022b640d9",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "ebcacc94988120f4919c6c0d4968216185762c254af43536d63760a01d67721d",
+            "kind": "mutant",
+            "mutant_id": "ebcacc94988120f4919c6c0d4968216185762c254af43536d63760a01d67721d",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "9f3f3edd1ba7856e6731f1b8cc2ed10ebb114ddf5cd498d2ce76d9714cb5b36c",
+            "kind": "mutant",
+            "mutant_id": "9f3f3edd1ba7856e6731f1b8cc2ed10ebb114ddf5cd498d2ce76d9714cb5b36c",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "9fd7cd8a8c7b265bb46410e0ca0429f59067d4a2e458cd743941c88ea05ee378",
+            "kind": "mutant",
+            "mutant_id": "9fd7cd8a8c7b265bb46410e0ca0429f59067d4a2e458cd743941c88ea05ee378",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "109043e42d601e136b81e668a0864b467d69db0b3e3ec64a897f6a9d4bbce463",
+            "kind": "mutant",
+            "mutant_id": "109043e42d601e136b81e668a0864b467d69db0b3e3ec64a897f6a9d4bbce463",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "fe2eb100268c002d82ae13909bb8847dc05a579ae426922ae90cacd77304f882",
+            "kind": "mutant",
+            "mutant_id": "fe2eb100268c002d82ae13909bb8847dc05a579ae426922ae90cacd77304f882",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "5bbdc193fd3b695edbd270257ffb189df5698bf7af8c36374464f6fedb7a3edf",
+            "kind": "mutant",
+            "mutant_id": "5bbdc193fd3b695edbd270257ffb189df5698bf7af8c36374464f6fedb7a3edf",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "7e79cf79a4c897d8d83ee2d5a7d0d6ed0b6b5772a9af8dc4a3bba54fae0fba20",
+            "kind": "mutant",
+            "mutant_id": "7e79cf79a4c897d8d83ee2d5a7d0d6ed0b6b5772a9af8dc4a3bba54fae0fba20",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "0ceb01a7de04d59446c33395d81e751af913c5a1323587e8cf7c87a5176c1b2b",
+            "kind": "mutant",
+            "mutant_id": "0ceb01a7de04d59446c33395d81e751af913c5a1323587e8cf7c87a5176c1b2b",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "8a761ccd78b6fcc0cf24d036793507016bb5dd95ac04ef969ac11456e6b7a114",
+            "kind": "mutant",
+            "mutant_id": "8a761ccd78b6fcc0cf24d036793507016bb5dd95ac04ef969ac11456e6b7a114",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "7a00eccaf073ed8a4018d80a668a57187a4b5f4820e8e68695c1474d73be2c85",
+            "kind": "mutant",
+            "mutant_id": "7a00eccaf073ed8a4018d80a668a57187a4b5f4820e8e68695c1474d73be2c85",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "d6f533e7b0075ab660d7c14adf90894485bcc77fe48f2075153fbb3491e4ae6e",
+            "kind": "mutant",
+            "mutant_id": "d6f533e7b0075ab660d7c14adf90894485bcc77fe48f2075153fbb3491e4ae6e",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "4fe1c9ca7c142122559d7c261c629a4edfe85ded7d06f54f90dedd6802326140",
+            "kind": "mutant",
+            "mutant_id": "4fe1c9ca7c142122559d7c261c629a4edfe85ded7d06f54f90dedd6802326140",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "d3ddd3ad87e19ace5686fd9760bf82f36e220317f2439d131140e2f2c580485f",
+            "kind": "mutant",
+            "mutant_id": "d3ddd3ad87e19ace5686fd9760bf82f36e220317f2439d131140e2f2c580485f",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "4c8412746aaadebc50bd90273859b669424bc6c0fe85a9c834d6e44004583fc4",
+            "kind": "mutant",
+            "mutant_id": "4c8412746aaadebc50bd90273859b669424bc6c0fe85a9c834d6e44004583fc4",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "2c4c2aefb689f17ec9817fbc58cec9dd2826993062414486ad456d2f8ee5244f",
+            "kind": "mutant",
+            "mutant_id": "2c4c2aefb689f17ec9817fbc58cec9dd2826993062414486ad456d2f8ee5244f",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "ae267de28856191ebbaa25734b8679dcfca1116aeeaa2a16fcf858d964b90c2b",
+            "kind": "mutant",
+            "mutant_id": "ae267de28856191ebbaa25734b8679dcfca1116aeeaa2a16fcf858d964b90c2b",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "f348c458ac25dbc8497a7c565164c63cdd19e22c4a4e12565ab73a6191d517a8",
+            "kind": "mutant",
+            "mutant_id": "f348c458ac25dbc8497a7c565164c63cdd19e22c4a4e12565ab73a6191d517a8",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "6d7504954521f554d429cddf9a5699ba5f3a4c1bb25e415c456f8af1ce902dc8",
+            "kind": "mutant",
+            "mutant_id": "6d7504954521f554d429cddf9a5699ba5f3a4c1bb25e415c456f8af1ce902dc8",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "8e6c37a082cfc0aac858f6354a0f338e4391f7b5299eee88c7be9fb3ce3d817a",
+            "kind": "mutant",
+            "mutant_id": "8e6c37a082cfc0aac858f6354a0f338e4391f7b5299eee88c7be9fb3ce3d817a",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "319120bdc96a48720d135ae770188e3cfd675784944aae556fa3221636ac3e3d",
+            "kind": "mutant",
+            "mutant_id": "319120bdc96a48720d135ae770188e3cfd675784944aae556fa3221636ac3e3d",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "c88a30c6f5f3ccc6db4c6c87bf61459c5b328fc5b7df59aa03dde1ca099aa3db",
+            "kind": "mutant",
+            "mutant_id": "c88a30c6f5f3ccc6db4c6c87bf61459c5b328fc5b7df59aa03dde1ca099aa3db",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "5638181144e2f7ad5f657854d4990b2a8c5da437a870207c820f197a418abc37",
+            "kind": "mutant",
+            "mutant_id": "5638181144e2f7ad5f657854d4990b2a8c5da437a870207c820f197a418abc37",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "aea0d8372a60278dd59d3216bdceab2c1668454ab6250cd6d879b0600b38303e",
+            "kind": "mutant",
+            "mutant_id": "aea0d8372a60278dd59d3216bdceab2c1668454ab6250cd6d879b0600b38303e",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "a5c3ce7c31fb298b19b88f365a6f7785f6c302b63bfc8194421d047eb96a2190",
+            "kind": "mutant",
+            "mutant_id": "a5c3ce7c31fb298b19b88f365a6f7785f6c302b63bfc8194421d047eb96a2190",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "cf4748d0c363684160adae8ce709b2c871449b782017d3e7ad704525d7b51154",
+            "kind": "mutant",
+            "mutant_id": "cf4748d0c363684160adae8ce709b2c871449b782017d3e7ad704525d7b51154",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "3b1b9864347b6e5de5c07b58467ded5d756f4ba1ccc2afedcddfce8ca9d5ee8b",
+            "kind": "mutant",
+            "mutant_id": "3b1b9864347b6e5de5c07b58467ded5d756f4ba1ccc2afedcddfce8ca9d5ee8b",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "7d054a8b4f9b3956dfad4b28561570544b4cd709a99713d2489c9d6b8da4b692",
+            "kind": "mutant",
+            "mutant_id": "7d054a8b4f9b3956dfad4b28561570544b4cd709a99713d2489c9d6b8da4b692",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "ae6fd2ded8d5e2c5546af09f5c76c114a69eec69545aa525aab3612874c31aa8",
+            "kind": "mutant",
+            "mutant_id": "ae6fd2ded8d5e2c5546af09f5c76c114a69eec69545aa525aab3612874c31aa8",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "3c1267b4d1b43fec012f6c6d39a1e32c3b69d607e26501f0fa08f3d44ab08591",
+            "kind": "mutant",
+            "mutant_id": "3c1267b4d1b43fec012f6c6d39a1e32c3b69d607e26501f0fa08f3d44ab08591",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "6c032c7f6a16f32a1a91ed6998155e65a817c7d4c21daaa0cd6ae1a3e66a883d",
+            "kind": "mutant",
+            "mutant_id": "6c032c7f6a16f32a1a91ed6998155e65a817c7d4c21daaa0cd6ae1a3e66a883d",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "ba87efe4b9bd3d373fa3fc01e60c56dd248cb9bf28d0a6c974eb0f12742c1452",
+            "kind": "mutant",
+            "mutant_id": "ba87efe4b9bd3d373fa3fc01e60c56dd248cb9bf28d0a6c974eb0f12742c1452",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "f5e8a0d998c789da39590974be919db559b42a700aacd67cff1389c70531865a",
+            "kind": "mutant",
+            "mutant_id": "f5e8a0d998c789da39590974be919db559b42a700aacd67cff1389c70531865a",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "c59a734f77d74a37da696a4904f169a3a119a78a22d2732ca87f3c08b0a3cebd",
+            "kind": "mutant",
+            "mutant_id": "c59a734f77d74a37da696a4904f169a3a119a78a22d2732ca87f3c08b0a3cebd",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "74cea7bf811a2296421fc147b8f1f18d43179044fb2dd4ae68546996da32750d",
+            "kind": "mutant",
+            "mutant_id": "74cea7bf811a2296421fc147b8f1f18d43179044fb2dd4ae68546996da32750d",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "70e4050f3408ba010f6b1bb2a186acfbfcf906f2bb9b7b6fd2dbc5f0776f670d",
+            "kind": "mutant",
+            "mutant_id": "70e4050f3408ba010f6b1bb2a186acfbfcf906f2bb9b7b6fd2dbc5f0776f670d",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "997ffc722f2424f682a9729449cbcb6cc9bd7f0de5931cb7fe69cdb38a1fb81b",
+            "kind": "mutant",
+            "mutant_id": "997ffc722f2424f682a9729449cbcb6cc9bd7f0de5931cb7fe69cdb38a1fb81b",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "00a21e68fd132cda41b7708d6ce19d87e94714c95202dbb8e70233666a8d60e3",
+            "kind": "mutant",
+            "mutant_id": "00a21e68fd132cda41b7708d6ce19d87e94714c95202dbb8e70233666a8d60e3",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "29fb85b30c59860279e6cb22b5d3c32fc85c2931d23bc14e3189cd45b9dcb5c0",
+            "kind": "mutant",
+            "mutant_id": "29fb85b30c59860279e6cb22b5d3c32fc85c2931d23bc14e3189cd45b9dcb5c0",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "fbe1eace816469eccf495376a761e1cc845bdbce76a2037f9a9422f94f2b6fb7",
+            "kind": "mutant",
+            "mutant_id": "fbe1eace816469eccf495376a761e1cc845bdbce76a2037f9a9422f94f2b6fb7",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "d4a604447af508e57bc5ac71034b5033fa0d3a0790af6343cbdd5085e17112ac",
+            "kind": "mutant",
+            "mutant_id": "d4a604447af508e57bc5ac71034b5033fa0d3a0790af6343cbdd5085e17112ac",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "cdfd949544653bd5c41451d840323cf68e1408bbf5d60fdd6cc41040e5cad958",
+            "kind": "mutant",
+            "mutant_id": "cdfd949544653bd5c41451d840323cf68e1408bbf5d60fdd6cc41040e5cad958",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "399f5241a5e40c797d1d8b7eb6a88ad62eac37e9c28fda5da5214672a4d3a500",
+            "kind": "mutant",
+            "mutant_id": "399f5241a5e40c797d1d8b7eb6a88ad62eac37e9c28fda5da5214672a4d3a500",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "c7f4785bbde1c651d48188bac37b0a72d26907a8d9f923de75b5ce3d6682bc98",
+            "kind": "mutant",
+            "mutant_id": "c7f4785bbde1c651d48188bac37b0a72d26907a8d9f923de75b5ce3d6682bc98",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "609cd555ca7adf0ba90eaf29a79a2064338fb24a40b8bcbcff9fc06f8c06beb7",
+            "kind": "mutant",
+            "mutant_id": "609cd555ca7adf0ba90eaf29a79a2064338fb24a40b8bcbcff9fc06f8c06beb7",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "65d78429251b963efc8a3a59c66e12fd27e23cca4a330ca75fed6323c0e54f83",
+            "kind": "mutant",
+            "mutant_id": "65d78429251b963efc8a3a59c66e12fd27e23cca4a330ca75fed6323c0e54f83",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "440ad60df5ac3a0ae02d38d80538bcf52f0fc4e2a02c906d323c16bf031c35b2",
+            "kind": "mutant",
+            "mutant_id": "440ad60df5ac3a0ae02d38d80538bcf52f0fc4e2a02c906d323c16bf031c35b2",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "76e71518779228bfa54395c13044b34082dd6ed9f18e4fafe5f9261180446f00",
+            "kind": "mutant",
+            "mutant_id": "76e71518779228bfa54395c13044b34082dd6ed9f18e4fafe5f9261180446f00",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "69cb57d8f6458498dda03ea13b3b429995a10a74574e66d707d2113cd821f73a",
+            "kind": "mutant",
+            "mutant_id": "69cb57d8f6458498dda03ea13b3b429995a10a74574e66d707d2113cd821f73a",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "24679a9788f3356eba28be34b765e60c65c8854b4d2a086344c8831ecc9a6b43",
+            "kind": "mutant",
+            "mutant_id": "24679a9788f3356eba28be34b765e60c65c8854b4d2a086344c8831ecc9a6b43",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "61916b2d00ef13e585b3ef6091a0008858a4101e0f50b1a96f480cb17594d1d8",
+            "kind": "mutant",
+            "mutant_id": "61916b2d00ef13e585b3ef6091a0008858a4101e0f50b1a96f480cb17594d1d8",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "7f7f506d97d5b422a5b538939ad5835ee7315795d7612752a0352326db550a35",
+            "kind": "mutant",
+            "mutant_id": "7f7f506d97d5b422a5b538939ad5835ee7315795d7612752a0352326db550a35",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "c29ae359cc5111243e80ef7483527aa69c99f3077be9e0d9e09c95a7ded14858",
+            "kind": "mutant",
+            "mutant_id": "c29ae359cc5111243e80ef7483527aa69c99f3077be9e0d9e09c95a7ded14858",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "73cd07b63e673d08fd03a3c39f74ff23546e8c6710b6e1dd9cb00c52ab355a54",
+            "kind": "mutant",
+            "mutant_id": "73cd07b63e673d08fd03a3c39f74ff23546e8c6710b6e1dd9cb00c52ab355a54",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "3da7290416c28c059c49596ab51403237513ea5ec7e8507c4c78022c0c034233",
+            "kind": "mutant",
+            "mutant_id": "3da7290416c28c059c49596ab51403237513ea5ec7e8507c4c78022c0c034233",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "f55609c797caa88de0536a76c390cd947016cb9f3e8c6013c1e61e9c6b4811f4",
+            "kind": "mutant",
+            "mutant_id": "f55609c797caa88de0536a76c390cd947016cb9f3e8c6013c1e61e9c6b4811f4",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "308adb13ae7e8f5c537a72512fef322ca3b06b9d93cb064c055f14dff5e29e0b",
+            "kind": "mutant",
+            "mutant_id": "308adb13ae7e8f5c537a72512fef322ca3b06b9d93cb064c055f14dff5e29e0b",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "f2df5c707b506d02a9819724d2600a046ab3aacd823492b8a705b234f0369c90",
+            "kind": "mutant",
+            "mutant_id": "f2df5c707b506d02a9819724d2600a046ab3aacd823492b8a705b234f0369c90",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "dfa18dba5095461b92589250f5d5ffc3d598893e16e23d677889f0867f351226",
+            "kind": "mutant",
+            "mutant_id": "dfa18dba5095461b92589250f5d5ffc3d598893e16e23d677889f0867f351226",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "8906a2264c20dc4d01bf09a0e9f90d128ab599da781e410f4f022af1df26037e",
+            "kind": "mutant",
+            "mutant_id": "8906a2264c20dc4d01bf09a0e9f90d128ab599da781e410f4f022af1df26037e",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "b349b7fb968c675eddebee8b7fbbd3099399328b6971b26b2afceb2bae0bd916",
+            "kind": "mutant",
+            "mutant_id": "b349b7fb968c675eddebee8b7fbbd3099399328b6971b26b2afceb2bae0bd916",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "86b1fd0b236971cb124cdc00d71f364e4782fcb695d763860df10e631f08c9fe",
+            "kind": "mutant",
+            "mutant_id": "86b1fd0b236971cb124cdc00d71f364e4782fcb695d763860df10e631f08c9fe",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "f89c992d8b0c8f4634dff6635a4d3816169f2d9241b45cb4164e7754ed19a28e",
+            "kind": "mutant",
+            "mutant_id": "f89c992d8b0c8f4634dff6635a4d3816169f2d9241b45cb4164e7754ed19a28e",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "4a35f13c7ae1f063ca3000b0b780005f9af983ce54c9b86b63c4412a0b2d6bab",
+            "kind": "mutant",
+            "mutant_id": "4a35f13c7ae1f063ca3000b0b780005f9af983ce54c9b86b63c4412a0b2d6bab",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "2f5d2f1c56d8809414d630f4444dbcafe07a0d0895feadf8919c3232897437b9",
+            "kind": "mutant",
+            "mutant_id": "2f5d2f1c56d8809414d630f4444dbcafe07a0d0895feadf8919c3232897437b9",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "e465910f420e6520bb749e38c61feb0cccec732f55cbc9b29c43fe9a171e9587",
+            "kind": "mutant",
+            "mutant_id": "e465910f420e6520bb749e38c61feb0cccec732f55cbc9b29c43fe9a171e9587",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "4cff1be70a0a957d70d8b680f322ca6cf527724bbce133baec0f20155ecfce3f",
+            "kind": "mutant",
+            "mutant_id": "4cff1be70a0a957d70d8b680f322ca6cf527724bbce133baec0f20155ecfce3f",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "fc6a144a02c44477ed8f715d3bfd107063894dcf4f5467dbeec947befe3410ce",
+            "kind": "mutant",
+            "mutant_id": "fc6a144a02c44477ed8f715d3bfd107063894dcf4f5467dbeec947befe3410ce",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "a6555b99420d961199174ecf748e116503fcec259c7967a560b61ae48ab79807",
+            "kind": "mutant",
+            "mutant_id": "a6555b99420d961199174ecf748e116503fcec259c7967a560b61ae48ab79807",
+            "run_id": "23992-1794657410910176433"
+          }
+        ],
+        "mutant_count": 96,
+        "mutant_ids": [
+          "cd1f699a62d4e77d0fbbf16fc682f6b2073d008617b9c2781ed69dc211b1d129",
+          "44f68010b95a84c04ae357cfa4b007fb6d2d462ed1ee9ecbd8ce93df21832109",
+          "961406bff63b9a94d5fbe54027a06ae9f1d3bac6994c1b41b956162835a5a458",
+          "a76b10a0464b8e563cf76221602cf5e046fca1a8b2de720d2f04cc0582184a84",
+          "bdd077beb2086ed90f695aaf5696580502c5baa001d12354d0f31a6e557eabdc",
+          "82b44c30bb77459ea1aa962c8f328ae2ee1aedcdd0ef3982cef07e398229385e",
+          "19d6263da1eb47bf696095bad40f4de9b367318180c4d8f792d7e9b6f478f74b",
+          "cea4051675c3af9ae140d34d4093bf11b1e2d7aaa2e3524a1fe71ca3ea5706b7",
+          "7bd6825d15cc7c27b2be422dca652b5eee01cc456ee8582ac4181049c0a5883b",
+          "643424f9ca0aee71f8a5636d065c5c129dd5424052d7430d158d68a5593f6ee0",
+          "284096b4edb0fd5a458956c0a9cd188a32e42413ee964ef25f42c53a1cc9d1b0",
+          "211c64945c6ed85c7fe4073b36288ffc39e3697f07c009e14edcf98b8d0f84b0",
+          "173265fdcc69deec29c0275ce682d4771bd2b632c31288898adc6a5a6ae22e7c",
+          "1e677c8b33453ed22dd93fd1e2dc191c074e20b2715376525cae4768d575f81a",
+          "0fc354a3e6768270d901a06905a3bd74fa6b9e4b6174fbbdd96cd8e20f1ad3ff",
+          "1fadb7c366db10e72cc6784756a032b07e60398b387abbc534a377428d8a036d",
+          "5b9c546f1613ee6303883794cc54771759f1ffaacbfc283d2b5cb2ee7e1f92b0",
+          "611850ff5e003797b4bb60046a1f093dcf5bfd4fd75d0e832c289c6e4b7f11de",
+          "370ef5698bc5e7196adcceaa6f235e0757256674b5b66b9cd7a43a5cd0db50af",
+          "7b917a30808cb53c1f30b2811560f79447c85d1e8ba687593bd767d22069f905",
+          "d9eea5b4083d655b66b688c43a04c26f1dc64d69b174b9d77d9a4ee982064c7c",
+          "0877312ca95987b92c14a0cdce82ae7baa9da0ffa270631251eaa5ab9ca3bb92",
+          "cc509bae78e0d6714504e2a86bcab113c87a7458be6d5d02848397678f834cb5",
+          "13f219f183defac3f3a1ca976c5c8e6cec24305b50bf4b2c632c5e771a778421",
+          "0f9c466fd1fc5f41c7ef005aad9d7d4256b278d5411d74d0c945f1ad9fc398d1",
+          "0a814f489eb3b38d36cb8ba249aa56af6effbd285468d36dc21e671ab31e8c2e",
+          "b4856f2cf0e9d2ea3a87def68557eeb926e44d25ea85d0f8ecfe17693e837a51",
+          "da1ce2e919983c9495b377cad42da3bfe65b541dfe3ef439b937e0b022b640d9",
+          "ebcacc94988120f4919c6c0d4968216185762c254af43536d63760a01d67721d",
+          "9f3f3edd1ba7856e6731f1b8cc2ed10ebb114ddf5cd498d2ce76d9714cb5b36c",
+          "9fd7cd8a8c7b265bb46410e0ca0429f59067d4a2e458cd743941c88ea05ee378",
+          "109043e42d601e136b81e668a0864b467d69db0b3e3ec64a897f6a9d4bbce463",
+          "fe2eb100268c002d82ae13909bb8847dc05a579ae426922ae90cacd77304f882",
+          "5bbdc193fd3b695edbd270257ffb189df5698bf7af8c36374464f6fedb7a3edf",
+          "7e79cf79a4c897d8d83ee2d5a7d0d6ed0b6b5772a9af8dc4a3bba54fae0fba20",
+          "0ceb01a7de04d59446c33395d81e751af913c5a1323587e8cf7c87a5176c1b2b",
+          "8a761ccd78b6fcc0cf24d036793507016bb5dd95ac04ef969ac11456e6b7a114",
+          "7a00eccaf073ed8a4018d80a668a57187a4b5f4820e8e68695c1474d73be2c85",
+          "d6f533e7b0075ab660d7c14adf90894485bcc77fe48f2075153fbb3491e4ae6e",
+          "4fe1c9ca7c142122559d7c261c629a4edfe85ded7d06f54f90dedd6802326140",
+          "d3ddd3ad87e19ace5686fd9760bf82f36e220317f2439d131140e2f2c580485f",
+          "4c8412746aaadebc50bd90273859b669424bc6c0fe85a9c834d6e44004583fc4",
+          "2c4c2aefb689f17ec9817fbc58cec9dd2826993062414486ad456d2f8ee5244f",
+          "ae267de28856191ebbaa25734b8679dcfca1116aeeaa2a16fcf858d964b90c2b",
+          "f348c458ac25dbc8497a7c565164c63cdd19e22c4a4e12565ab73a6191d517a8",
+          "6d7504954521f554d429cddf9a5699ba5f3a4c1bb25e415c456f8af1ce902dc8",
+          "8e6c37a082cfc0aac858f6354a0f338e4391f7b5299eee88c7be9fb3ce3d817a",
+          "319120bdc96a48720d135ae770188e3cfd675784944aae556fa3221636ac3e3d",
+          "c88a30c6f5f3ccc6db4c6c87bf61459c5b328fc5b7df59aa03dde1ca099aa3db",
+          "5638181144e2f7ad5f657854d4990b2a8c5da437a870207c820f197a418abc37",
+          "aea0d8372a60278dd59d3216bdceab2c1668454ab6250cd6d879b0600b38303e",
+          "a5c3ce7c31fb298b19b88f365a6f7785f6c302b63bfc8194421d047eb96a2190",
+          "cf4748d0c363684160adae8ce709b2c871449b782017d3e7ad704525d7b51154",
+          "3b1b9864347b6e5de5c07b58467ded5d756f4ba1ccc2afedcddfce8ca9d5ee8b",
+          "7d054a8b4f9b3956dfad4b28561570544b4cd709a99713d2489c9d6b8da4b692",
+          "ae6fd2ded8d5e2c5546af09f5c76c114a69eec69545aa525aab3612874c31aa8",
+          "3c1267b4d1b43fec012f6c6d39a1e32c3b69d607e26501f0fa08f3d44ab08591",
+          "6c032c7f6a16f32a1a91ed6998155e65a817c7d4c21daaa0cd6ae1a3e66a883d",
+          "ba87efe4b9bd3d373fa3fc01e60c56dd248cb9bf28d0a6c974eb0f12742c1452",
+          "f5e8a0d998c789da39590974be919db559b42a700aacd67cff1389c70531865a",
+          "c59a734f77d74a37da696a4904f169a3a119a78a22d2732ca87f3c08b0a3cebd",
+          "74cea7bf811a2296421fc147b8f1f18d43179044fb2dd4ae68546996da32750d",
+          "70e4050f3408ba010f6b1bb2a186acfbfcf906f2bb9b7b6fd2dbc5f0776f670d",
+          "997ffc722f2424f682a9729449cbcb6cc9bd7f0de5931cb7fe69cdb38a1fb81b",
+          "00a21e68fd132cda41b7708d6ce19d87e94714c95202dbb8e70233666a8d60e3",
+          "29fb85b30c59860279e6cb22b5d3c32fc85c2931d23bc14e3189cd45b9dcb5c0",
+          "fbe1eace816469eccf495376a761e1cc845bdbce76a2037f9a9422f94f2b6fb7",
+          "d4a604447af508e57bc5ac71034b5033fa0d3a0790af6343cbdd5085e17112ac",
+          "cdfd949544653bd5c41451d840323cf68e1408bbf5d60fdd6cc41040e5cad958",
+          "399f5241a5e40c797d1d8b7eb6a88ad62eac37e9c28fda5da5214672a4d3a500",
+          "c7f4785bbde1c651d48188bac37b0a72d26907a8d9f923de75b5ce3d6682bc98",
+          "609cd555ca7adf0ba90eaf29a79a2064338fb24a40b8bcbcff9fc06f8c06beb7",
+          "65d78429251b963efc8a3a59c66e12fd27e23cca4a330ca75fed6323c0e54f83",
+          "440ad60df5ac3a0ae02d38d80538bcf52f0fc4e2a02c906d323c16bf031c35b2",
+          "76e71518779228bfa54395c13044b34082dd6ed9f18e4fafe5f9261180446f00",
+          "69cb57d8f6458498dda03ea13b3b429995a10a74574e66d707d2113cd821f73a",
+          "24679a9788f3356eba28be34b765e60c65c8854b4d2a086344c8831ecc9a6b43",
+          "61916b2d00ef13e585b3ef6091a0008858a4101e0f50b1a96f480cb17594d1d8",
+          "7f7f506d97d5b422a5b538939ad5835ee7315795d7612752a0352326db550a35",
+          "c29ae359cc5111243e80ef7483527aa69c99f3077be9e0d9e09c95a7ded14858",
+          "73cd07b63e673d08fd03a3c39f74ff23546e8c6710b6e1dd9cb00c52ab355a54",
+          "3da7290416c28c059c49596ab51403237513ea5ec7e8507c4c78022c0c034233",
+          "f55609c797caa88de0536a76c390cd947016cb9f3e8c6013c1e61e9c6b4811f4",
+          "308adb13ae7e8f5c537a72512fef322ca3b06b9d93cb064c055f14dff5e29e0b",
+          "f2df5c707b506d02a9819724d2600a046ab3aacd823492b8a705b234f0369c90",
+          "dfa18dba5095461b92589250f5d5ffc3d598893e16e23d677889f0867f351226",
+          "8906a2264c20dc4d01bf09a0e9f90d128ab599da781e410f4f022af1df26037e",
+          "b349b7fb968c675eddebee8b7fbbd3099399328b6971b26b2afceb2bae0bd916",
+          "86b1fd0b236971cb124cdc00d71f364e4782fcb695d763860df10e631f08c9fe",
+          "f89c992d8b0c8f4634dff6635a4d3816169f2d9241b45cb4164e7754ed19a28e",
+          "4a35f13c7ae1f063ca3000b0b780005f9af983ce54c9b86b63c4412a0b2d6bab",
+          "2f5d2f1c56d8809414d630f4444dbcafe07a0d0895feadf8919c3232897437b9",
+          "e465910f420e6520bb749e38c61feb0cccec732f55cbc9b29c43fe9a171e9587",
+          "4cff1be70a0a957d70d8b680f322ca6cf527724bbce133baec0f20155ecfce3f",
+          "fc6a144a02c44477ed8f715d3bfd107063894dcf4f5467dbeec947befe3410ce",
+          "a6555b99420d961199174ecf748e116503fcec259c7967a560b61ae48ab79807"
+        ],
+        "mutant_request_count": 48,
+        "observed_forks": 104,
+        "request_count": 52,
+        "timeline": "controller-23995.jsonl"
+      },
+      {
+        "baseline_count": 0,
+        "batch_sizes": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "first_mutant_window": {
+          "profileAckToSendReturnMs": 2454.957395,
+          "requestToProfileAckMs": 70.39109300000018,
+          "requestToSendReturnMs": 2525.348488
+        },
+        "jobs": [
+          {
+            "job_id": "846185dfea0a9ae85689f2edc8978c4ace3cd4d9196ad5863596a2d0628c0a07",
+            "kind": "mutant",
+            "mutant_id": "846185dfea0a9ae85689f2edc8978c4ace3cd4d9196ad5863596a2d0628c0a07",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "65e0aa058ae9da52ee9d971a08880f4250cb64f21d9b2cc6cc463e39a28ba1f2",
+            "kind": "mutant",
+            "mutant_id": "65e0aa058ae9da52ee9d971a08880f4250cb64f21d9b2cc6cc463e39a28ba1f2",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "7572d66b87b67aa42f96706bfac35437a581230bf2c9ed72460c3ef44f78b9a4",
+            "kind": "mutant",
+            "mutant_id": "7572d66b87b67aa42f96706bfac35437a581230bf2c9ed72460c3ef44f78b9a4",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "00538a626ffc873b3b996141651d6aec7929daa56ea7d6fb6aada2637d554502",
+            "kind": "mutant",
+            "mutant_id": "00538a626ffc873b3b996141651d6aec7929daa56ea7d6fb6aada2637d554502",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "d1e1e8f971ec4397427cf1d6f9ec5b91ba8a53ebb886edef4ad4292791542e80",
+            "kind": "mutant",
+            "mutant_id": "d1e1e8f971ec4397427cf1d6f9ec5b91ba8a53ebb886edef4ad4292791542e80",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "5a887a79a334eb0236d3b578dc48e8543b3fd03e5d12db3dba4a2707f2de3ae8",
+            "kind": "mutant",
+            "mutant_id": "5a887a79a334eb0236d3b578dc48e8543b3fd03e5d12db3dba4a2707f2de3ae8",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "af32eb41104dda5dc247754a62f833a2123a916fd9e29d8313e3ed55b8432311",
+            "kind": "mutant",
+            "mutant_id": "af32eb41104dda5dc247754a62f833a2123a916fd9e29d8313e3ed55b8432311",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "6e3aa340492bdadc94905ad555359719cab69fcfe98018f5d379afd4062743f0",
+            "kind": "mutant",
+            "mutant_id": "6e3aa340492bdadc94905ad555359719cab69fcfe98018f5d379afd4062743f0",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "b9dbeaa09ef35ea09968e0707308b5eb53147d9e4dab5db000c73faeec211ad9",
+            "kind": "mutant",
+            "mutant_id": "b9dbeaa09ef35ea09968e0707308b5eb53147d9e4dab5db000c73faeec211ad9",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "e92964a8ac0e559a1fa426f4b648df5f557790004ced42843263756d3f7c4922",
+            "kind": "mutant",
+            "mutant_id": "e92964a8ac0e559a1fa426f4b648df5f557790004ced42843263756d3f7c4922",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "7296b1d0a9f5ff3859881f847b19fe27d9899fe5192186a97b22c3aaee28b79e",
+            "kind": "mutant",
+            "mutant_id": "7296b1d0a9f5ff3859881f847b19fe27d9899fe5192186a97b22c3aaee28b79e",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "2c8d68df77c2d37a078ca8f75145e57577ea4a13d83cf77ba0e71102b5b5015a",
+            "kind": "mutant",
+            "mutant_id": "2c8d68df77c2d37a078ca8f75145e57577ea4a13d83cf77ba0e71102b5b5015a",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "cf4f3a4539e5d7e2dcec5983daf0b4a6d4aa113c4ad5591cb123d0f629a3e7d6",
+            "kind": "mutant",
+            "mutant_id": "cf4f3a4539e5d7e2dcec5983daf0b4a6d4aa113c4ad5591cb123d0f629a3e7d6",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "c04cc5c625a26b601c9bab4b49d3854eccd65eda1970adeacedeba8210949e8c",
+            "kind": "mutant",
+            "mutant_id": "c04cc5c625a26b601c9bab4b49d3854eccd65eda1970adeacedeba8210949e8c",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "5a974b27420685880b7de803da525c716aab3f70f710c249611e45ddff5990a3",
+            "kind": "mutant",
+            "mutant_id": "5a974b27420685880b7de803da525c716aab3f70f710c249611e45ddff5990a3",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "aa7b1e7576635c448b12caa7b9c15288aedbac59d3b7cb665e1f6234f9ddaa71",
+            "kind": "mutant",
+            "mutant_id": "aa7b1e7576635c448b12caa7b9c15288aedbac59d3b7cb665e1f6234f9ddaa71",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "a71806a5eb6d557e2f5061c96a709eea67db1e5a830f4b62cc8f11fe2341b0cd",
+            "kind": "mutant",
+            "mutant_id": "a71806a5eb6d557e2f5061c96a709eea67db1e5a830f4b62cc8f11fe2341b0cd",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "77cb1da9ca9ca39a17ab32c3044537eaad344e8ffb44ac18f47e4e1f89b04644",
+            "kind": "mutant",
+            "mutant_id": "77cb1da9ca9ca39a17ab32c3044537eaad344e8ffb44ac18f47e4e1f89b04644",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "f2243e18ff743b3c340e14beb11537f1aca6ef25cfdf43f26596bc24a6321b8c",
+            "kind": "mutant",
+            "mutant_id": "f2243e18ff743b3c340e14beb11537f1aca6ef25cfdf43f26596bc24a6321b8c",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "db0e7d82fad274a1fd79deefed611ec0afa1a1cc365f49e08d898d5d2eec0134",
+            "kind": "mutant",
+            "mutant_id": "db0e7d82fad274a1fd79deefed611ec0afa1a1cc365f49e08d898d5d2eec0134",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "8064c9dab3206b44edcf947fb28106000709e00baab88846474dd9484eb08d67",
+            "kind": "mutant",
+            "mutant_id": "8064c9dab3206b44edcf947fb28106000709e00baab88846474dd9484eb08d67",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "ec5abca79a3e6d2c6dfc7be9a2d39ea5fd585621bd287b054e6ebf5db201fad7",
+            "kind": "mutant",
+            "mutant_id": "ec5abca79a3e6d2c6dfc7be9a2d39ea5fd585621bd287b054e6ebf5db201fad7",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "9c803fff3dca001471bf27801faba3677e91163486a6b9aad18f2c34cdd47e2e",
+            "kind": "mutant",
+            "mutant_id": "9c803fff3dca001471bf27801faba3677e91163486a6b9aad18f2c34cdd47e2e",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "5fd0c8259b392433db03f0453c440bbe176267f75b7f111f769e95dc0523e9aa",
+            "kind": "mutant",
+            "mutant_id": "5fd0c8259b392433db03f0453c440bbe176267f75b7f111f769e95dc0523e9aa",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "4baa21254df8311b0b7b48988a6f6e38a2e1b8d505a038cd5f15cb1d412e8b4d",
+            "kind": "mutant",
+            "mutant_id": "4baa21254df8311b0b7b48988a6f6e38a2e1b8d505a038cd5f15cb1d412e8b4d",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "4d950ae69af1e1c530a6fc527acbc410cd30a2eba7c8ed006831968752a7b651",
+            "kind": "mutant",
+            "mutant_id": "4d950ae69af1e1c530a6fc527acbc410cd30a2eba7c8ed006831968752a7b651",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "7ca2b7f0300237358db186ea92cbea3f5413199fbbc564545c932be30a4ddb1b",
+            "kind": "mutant",
+            "mutant_id": "7ca2b7f0300237358db186ea92cbea3f5413199fbbc564545c932be30a4ddb1b",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "bbc440dde99b30e5b521ae4e069afedfbbfb792e2d843d89f80e53e003dabc97",
+            "kind": "mutant",
+            "mutant_id": "bbc440dde99b30e5b521ae4e069afedfbbfb792e2d843d89f80e53e003dabc97",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "f57c2296a076ac66bbcee69f81aea55f6e1478da13fe4f5659559cafe579098b",
+            "kind": "mutant",
+            "mutant_id": "f57c2296a076ac66bbcee69f81aea55f6e1478da13fe4f5659559cafe579098b",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "6f26c4f914381b604a13f89717a140f1ace15b66718584d2b2b26da49a28bda7",
+            "kind": "mutant",
+            "mutant_id": "6f26c4f914381b604a13f89717a140f1ace15b66718584d2b2b26da49a28bda7",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "c44dba766a6307b90b1e8bbfe2013d991ad325ffca02dee24e5843713827356d",
+            "kind": "mutant",
+            "mutant_id": "c44dba766a6307b90b1e8bbfe2013d991ad325ffca02dee24e5843713827356d",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "49e3afe31c48d414873bba4b6ae28f43aaf52257314bece0cbaffd2c86362bc5",
+            "kind": "mutant",
+            "mutant_id": "49e3afe31c48d414873bba4b6ae28f43aaf52257314bece0cbaffd2c86362bc5",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "d608232f1dad0bf6337abb58c011a8da27269951d412bc352dacf25828e209d3",
+            "kind": "mutant",
+            "mutant_id": "d608232f1dad0bf6337abb58c011a8da27269951d412bc352dacf25828e209d3",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "02e1a6257f1098b7bec9b210ae531e71e76bcbebac4a440705c7fd9834e5893b",
+            "kind": "mutant",
+            "mutant_id": "02e1a6257f1098b7bec9b210ae531e71e76bcbebac4a440705c7fd9834e5893b",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "691a275066f695eba117c22a1f78a2d077bdb24c3f96ab019b2b0b4b465574c2",
+            "kind": "mutant",
+            "mutant_id": "691a275066f695eba117c22a1f78a2d077bdb24c3f96ab019b2b0b4b465574c2",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "9d4c683f4090e1eed303421268d091b0ca145ce99372bb5ce1bc7d473581a477",
+            "kind": "mutant",
+            "mutant_id": "9d4c683f4090e1eed303421268d091b0ca145ce99372bb5ce1bc7d473581a477",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "9e9b47c8bfca6b31c17322800816943da49b0e2f05d789621564ad3b5c976829",
+            "kind": "mutant",
+            "mutant_id": "9e9b47c8bfca6b31c17322800816943da49b0e2f05d789621564ad3b5c976829",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "4095dd739ed64ad11d36dea688d8f7f227373f41698349f25494c641960df0e5",
+            "kind": "mutant",
+            "mutant_id": "4095dd739ed64ad11d36dea688d8f7f227373f41698349f25494c641960df0e5",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "f1c55a6887fc74f9d07e7ec8bee89d82e556341c5b569584a4893010e5b1843b",
+            "kind": "mutant",
+            "mutant_id": "f1c55a6887fc74f9d07e7ec8bee89d82e556341c5b569584a4893010e5b1843b",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "a9771d099dfedc743eda26fe179ced0a64936a3c2ed0fcca0c8406627962d3c3",
+            "kind": "mutant",
+            "mutant_id": "a9771d099dfedc743eda26fe179ced0a64936a3c2ed0fcca0c8406627962d3c3",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "5c8657d875cfcedd78677451922855f49b745171e218556a6538e6b3e0db214d",
+            "kind": "mutant",
+            "mutant_id": "5c8657d875cfcedd78677451922855f49b745171e218556a6538e6b3e0db214d",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "97997eb3def017689337b62e0ab81b0e5c44db43496c7f1958bc2ec7eb4c3eda",
+            "kind": "mutant",
+            "mutant_id": "97997eb3def017689337b62e0ab81b0e5c44db43496c7f1958bc2ec7eb4c3eda",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "ed876c11146e6dfac930357742560adee8afaa82e344cda2151ab704da4c40fa",
+            "kind": "mutant",
+            "mutant_id": "ed876c11146e6dfac930357742560adee8afaa82e344cda2151ab704da4c40fa",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "4f812c9e3f0d141f1d1c02630b49d5a5576426354cb61f9c1f22b5d380ce1791",
+            "kind": "mutant",
+            "mutant_id": "4f812c9e3f0d141f1d1c02630b49d5a5576426354cb61f9c1f22b5d380ce1791",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "e849e59e247007eed70bacba19fbcaa8a14551c25f3700b775664df942a80996",
+            "kind": "mutant",
+            "mutant_id": "e849e59e247007eed70bacba19fbcaa8a14551c25f3700b775664df942a80996",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "725910dd9a3d23583d40a41d76ff9bd4a24069c02e274c0a898e35406708f7c3",
+            "kind": "mutant",
+            "mutant_id": "725910dd9a3d23583d40a41d76ff9bd4a24069c02e274c0a898e35406708f7c3",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "8916bdc3021243a5f767ffd7a1174508c37bf86db25507316dd5ac0080a2ff6e",
+            "kind": "mutant",
+            "mutant_id": "8916bdc3021243a5f767ffd7a1174508c37bf86db25507316dd5ac0080a2ff6e",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "c62d2e20cf906b5ed442c35b081e8a44bffe00431688c8679315840f247db4ca",
+            "kind": "mutant",
+            "mutant_id": "c62d2e20cf906b5ed442c35b081e8a44bffe00431688c8679315840f247db4ca",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "ed64d7a8919933da3a13f14c4117cb6d20d9d195509b7b94acb10a6dc6013fbf",
+            "kind": "mutant",
+            "mutant_id": "ed64d7a8919933da3a13f14c4117cb6d20d9d195509b7b94acb10a6dc6013fbf",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "b115f5372f2edf03e51a8f712460addaed3513a89703cc1fe8500eee367aba65",
+            "kind": "mutant",
+            "mutant_id": "b115f5372f2edf03e51a8f712460addaed3513a89703cc1fe8500eee367aba65",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "636ed2151b2556c4624252d79810c86bb268a3587f26ae0459a561785114f246",
+            "kind": "mutant",
+            "mutant_id": "636ed2151b2556c4624252d79810c86bb268a3587f26ae0459a561785114f246",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "8a49a888d6e614ce683525b9bd586b4271285324ddac088829d4a8beec90c2a5",
+            "kind": "mutant",
+            "mutant_id": "8a49a888d6e614ce683525b9bd586b4271285324ddac088829d4a8beec90c2a5",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "c12a93f81eb63806ca37a574fb5b505dc219d9e78f642ac468a6d1f377e96839",
+            "kind": "mutant",
+            "mutant_id": "c12a93f81eb63806ca37a574fb5b505dc219d9e78f642ac468a6d1f377e96839",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "618b84c4ab64dbb1a2f0ba6ace9753dbc11e0b4c44db2f8bf3cd443481a8c038",
+            "kind": "mutant",
+            "mutant_id": "618b84c4ab64dbb1a2f0ba6ace9753dbc11e0b4c44db2f8bf3cd443481a8c038",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "5f3e79ab110bab0a1af4c2a19f3440af5b7e53f525fe394d85afd98a1447071c",
+            "kind": "mutant",
+            "mutant_id": "5f3e79ab110bab0a1af4c2a19f3440af5b7e53f525fe394d85afd98a1447071c",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "ae8fb6b2c957b6af34f1d86f77755938a05f88807549624c6d11d79cffd549be",
+            "kind": "mutant",
+            "mutant_id": "ae8fb6b2c957b6af34f1d86f77755938a05f88807549624c6d11d79cffd549be",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "0672f7d12940e638db7263434d843980553c3d413cebf387481db9b4e9c73402",
+            "kind": "mutant",
+            "mutant_id": "0672f7d12940e638db7263434d843980553c3d413cebf387481db9b4e9c73402",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "10bbb77e22e415555ebddad70fdf813118164a60b056c651373124e9dc017868",
+            "kind": "mutant",
+            "mutant_id": "10bbb77e22e415555ebddad70fdf813118164a60b056c651373124e9dc017868",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "1c41ddd081ceeaa36da4dc048b7e3a76f8cda4c2b2a3ce31449d778e738c5a9d",
+            "kind": "mutant",
+            "mutant_id": "1c41ddd081ceeaa36da4dc048b7e3a76f8cda4c2b2a3ce31449d778e738c5a9d",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "1e02fe4dc3641db388e6f79fcc79b1157151cd6e6f04d33acc3920f26a6a1554",
+            "kind": "mutant",
+            "mutant_id": "1e02fe4dc3641db388e6f79fcc79b1157151cd6e6f04d33acc3920f26a6a1554",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "70afa92269fc92e901fd515f856811e142e948ab934d7974e9146a99ea355f23",
+            "kind": "mutant",
+            "mutant_id": "70afa92269fc92e901fd515f856811e142e948ab934d7974e9146a99ea355f23",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "5e0dae53ec02e33bfd66f1b1e65a7fc5a6288631ae374a9b6157642ca45fda5b",
+            "kind": "mutant",
+            "mutant_id": "5e0dae53ec02e33bfd66f1b1e65a7fc5a6288631ae374a9b6157642ca45fda5b",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "169d16d6b04082277975b6047bad8c8a86b8372a1b703fb9d6021092e46fc11c",
+            "kind": "mutant",
+            "mutant_id": "169d16d6b04082277975b6047bad8c8a86b8372a1b703fb9d6021092e46fc11c",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "0d188cd4893deff68a37574c3a22cf2a58154a251b995f06fbc982481587e8f0",
+            "kind": "mutant",
+            "mutant_id": "0d188cd4893deff68a37574c3a22cf2a58154a251b995f06fbc982481587e8f0",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "0d26dde822d13093998b29287428b5dac490750f9200fab24fa26dc2c74074c4",
+            "kind": "mutant",
+            "mutant_id": "0d26dde822d13093998b29287428b5dac490750f9200fab24fa26dc2c74074c4",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "85d490302a498031ddfc67653a6d429a31750346bc237e9f3e4704b4248ed23e",
+            "kind": "mutant",
+            "mutant_id": "85d490302a498031ddfc67653a6d429a31750346bc237e9f3e4704b4248ed23e",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "8ed74396d34e7b1ffc1a0bfe0c5b4ccbbe872f2dd9d0430d310b0960be6b6d9b",
+            "kind": "mutant",
+            "mutant_id": "8ed74396d34e7b1ffc1a0bfe0c5b4ccbbe872f2dd9d0430d310b0960be6b6d9b",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "ab2455a7ecce99e57488673aed917853c12dc167c626fa8fdc2030b0d6080ced",
+            "kind": "mutant",
+            "mutant_id": "ab2455a7ecce99e57488673aed917853c12dc167c626fa8fdc2030b0d6080ced",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "08a202fd42efe7dcacc1c6b15c952582dd74901cf9baecca9eaa81a5c098a58d",
+            "kind": "mutant",
+            "mutant_id": "08a202fd42efe7dcacc1c6b15c952582dd74901cf9baecca9eaa81a5c098a58d",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "9ac8a011bc1502b93d38fb1ff9c1d9d64b3dfff020283c5ae41da91473b75fc8",
+            "kind": "mutant",
+            "mutant_id": "9ac8a011bc1502b93d38fb1ff9c1d9d64b3dfff020283c5ae41da91473b75fc8",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "c8fb72bec90d9a783caf7ef8479772865cadc5338cbace358a9a173db7fcf175",
+            "kind": "mutant",
+            "mutant_id": "c8fb72bec90d9a783caf7ef8479772865cadc5338cbace358a9a173db7fcf175",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "4c4dd13e31689434138c647f612e775284ce81b1544891e102cfd99539e2a1d0",
+            "kind": "mutant",
+            "mutant_id": "4c4dd13e31689434138c647f612e775284ce81b1544891e102cfd99539e2a1d0",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "e389a8bda2b917a519a426ecc16c173cd331847f74522a0bbe47ea2e3b7845b9",
+            "kind": "mutant",
+            "mutant_id": "e389a8bda2b917a519a426ecc16c173cd331847f74522a0bbe47ea2e3b7845b9",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "5f8b9b5509377688a74b092013d0b9bac593c73cac4ab790db8f1bf4db9f6661",
+            "kind": "mutant",
+            "mutant_id": "5f8b9b5509377688a74b092013d0b9bac593c73cac4ab790db8f1bf4db9f6661",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "f7d22d282d75d84bd46131d9ff4d3bff0a7bbccc408bd528aabf133280711795",
+            "kind": "mutant",
+            "mutant_id": "f7d22d282d75d84bd46131d9ff4d3bff0a7bbccc408bd528aabf133280711795",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "4a584e7a1959307490035f15c052192721fd3ae1e9726758caea4e5edba0636b",
+            "kind": "mutant",
+            "mutant_id": "4a584e7a1959307490035f15c052192721fd3ae1e9726758caea4e5edba0636b",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "ea2d92685caef5373ee9636033ba65a383892a1b65e7e04aab51ea758ca3c236",
+            "kind": "mutant",
+            "mutant_id": "ea2d92685caef5373ee9636033ba65a383892a1b65e7e04aab51ea758ca3c236",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "82caaf023d5919fea3a31d832d7a09d5c81341d2ed40070d298dd0e1bea1d464",
+            "kind": "mutant",
+            "mutant_id": "82caaf023d5919fea3a31d832d7a09d5c81341d2ed40070d298dd0e1bea1d464",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "5e86b8241b3b502bb2b63cf14726e6ce1eb05de8bf0763c051099b18d275259d",
+            "kind": "mutant",
+            "mutant_id": "5e86b8241b3b502bb2b63cf14726e6ce1eb05de8bf0763c051099b18d275259d",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "73dcdecb3a46598694ee828a1675264bce15a48b09dfe82d9637b48781af912e",
+            "kind": "mutant",
+            "mutant_id": "73dcdecb3a46598694ee828a1675264bce15a48b09dfe82d9637b48781af912e",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "4fba6b2279fc87d711d5b41069f66f4a7a098c66c388c87a96bb06ffec173aac",
+            "kind": "mutant",
+            "mutant_id": "4fba6b2279fc87d711d5b41069f66f4a7a098c66c388c87a96bb06ffec173aac",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "e1d72467ceeb0111d458201cb29208d7c6a3feccf7656b210ef8b1cfaf14f9ff",
+            "kind": "mutant",
+            "mutant_id": "e1d72467ceeb0111d458201cb29208d7c6a3feccf7656b210ef8b1cfaf14f9ff",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "1e1fc0fbcf5a1fb396e1dcea9a206bfaf0aca9462b55fdb43986e2a95dfe33bc",
+            "kind": "mutant",
+            "mutant_id": "1e1fc0fbcf5a1fb396e1dcea9a206bfaf0aca9462b55fdb43986e2a95dfe33bc",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "4f56cd59a68d3753610a38d35e90ef8c19e01e8366decc94cbb2d29f38e79742",
+            "kind": "mutant",
+            "mutant_id": "4f56cd59a68d3753610a38d35e90ef8c19e01e8366decc94cbb2d29f38e79742",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "a9b244c5e12170bb8b2cd8cd3cea44759da95bcb8d3456959e2b776266b36435",
+            "kind": "mutant",
+            "mutant_id": "a9b244c5e12170bb8b2cd8cd3cea44759da95bcb8d3456959e2b776266b36435",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "404053740cc3b377dbde235a9c60ff65837447d8c05759574b4db283fc0c002e",
+            "kind": "mutant",
+            "mutant_id": "404053740cc3b377dbde235a9c60ff65837447d8c05759574b4db283fc0c002e",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "a750a7588ecb3cebb9358a581fa34e35cbd60c775cdcb971ccae83023af2ef62",
+            "kind": "mutant",
+            "mutant_id": "a750a7588ecb3cebb9358a581fa34e35cbd60c775cdcb971ccae83023af2ef62",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "8e4b77860b63e210f23a2a06b0059a62f5f37f61bb6cf36548b092a7f2d5310a",
+            "kind": "mutant",
+            "mutant_id": "8e4b77860b63e210f23a2a06b0059a62f5f37f61bb6cf36548b092a7f2d5310a",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "7370a68c865d3ff4825f494b07d8fd08e863adb5d5dddb7e71597ecbafa912a6",
+            "kind": "mutant",
+            "mutant_id": "7370a68c865d3ff4825f494b07d8fd08e863adb5d5dddb7e71597ecbafa912a6",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "1b1afc89b04227ac78f2a8ff3915cf1c79604c338ef5367ef9da2e54c3a14a79",
+            "kind": "mutant",
+            "mutant_id": "1b1afc89b04227ac78f2a8ff3915cf1c79604c338ef5367ef9da2e54c3a14a79",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "92d77dcfb8fab24acaf165cf65d87ebaa3f471b7912826529e1305ba8cb1c944",
+            "kind": "mutant",
+            "mutant_id": "92d77dcfb8fab24acaf165cf65d87ebaa3f471b7912826529e1305ba8cb1c944",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "8d911beff1d75aa2e82c2b7c2d9a99aab5a7765273be72cb8adf56b9adcf314d",
+            "kind": "mutant",
+            "mutant_id": "8d911beff1d75aa2e82c2b7c2d9a99aab5a7765273be72cb8adf56b9adcf314d",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "857ae103e6f5ac2cf0048a3cafdb1901deec2dfac3a4a37ba05f8672b29456c6",
+            "kind": "mutant",
+            "mutant_id": "857ae103e6f5ac2cf0048a3cafdb1901deec2dfac3a4a37ba05f8672b29456c6",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "74b2fea48cf5baf9303b606ba00a72c7d250a1e1de74ce3f4b2178c29ee21c57",
+            "kind": "mutant",
+            "mutant_id": "74b2fea48cf5baf9303b606ba00a72c7d250a1e1de74ce3f4b2178c29ee21c57",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "cdb27873fea8645e06789e2a728c978530832dfca5f63d402f7e02f7f5aac3f2",
+            "kind": "mutant",
+            "mutant_id": "cdb27873fea8645e06789e2a728c978530832dfca5f63d402f7e02f7f5aac3f2",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "467770dbcde701771cd7a26d758df34c4dcf79f2c94d190780225a80724b3b40",
+            "kind": "mutant",
+            "mutant_id": "467770dbcde701771cd7a26d758df34c4dcf79f2c94d190780225a80724b3b40",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "8c4e368301254d13749973213da6e459363b3e4dd03c14a98145822d7a2faf3c",
+            "kind": "mutant",
+            "mutant_id": "8c4e368301254d13749973213da6e459363b3e4dd03c14a98145822d7a2faf3c",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "4442f0fb59e7706e813c00f17c6dc54639819751eb13a3a8a962ffe7c443ffc9",
+            "kind": "mutant",
+            "mutant_id": "4442f0fb59e7706e813c00f17c6dc54639819751eb13a3a8a962ffe7c443ffc9",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "8eb3eb84f6000f1d2d33357e2b5dd55a148f814849d42350a4cb220208023d0a",
+            "kind": "mutant",
+            "mutant_id": "8eb3eb84f6000f1d2d33357e2b5dd55a148f814849d42350a4cb220208023d0a",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "6fb39ca350b486baf7bb26a0dbb0402c80492b02525d5429300906a8836f1388",
+            "kind": "mutant",
+            "mutant_id": "6fb39ca350b486baf7bb26a0dbb0402c80492b02525d5429300906a8836f1388",
+            "run_id": "23992-1794657410910176433"
+          }
+        ],
+        "mutant_count": 100,
+        "mutant_ids": [
+          "846185dfea0a9ae85689f2edc8978c4ace3cd4d9196ad5863596a2d0628c0a07",
+          "65e0aa058ae9da52ee9d971a08880f4250cb64f21d9b2cc6cc463e39a28ba1f2",
+          "7572d66b87b67aa42f96706bfac35437a581230bf2c9ed72460c3ef44f78b9a4",
+          "00538a626ffc873b3b996141651d6aec7929daa56ea7d6fb6aada2637d554502",
+          "d1e1e8f971ec4397427cf1d6f9ec5b91ba8a53ebb886edef4ad4292791542e80",
+          "5a887a79a334eb0236d3b578dc48e8543b3fd03e5d12db3dba4a2707f2de3ae8",
+          "af32eb41104dda5dc247754a62f833a2123a916fd9e29d8313e3ed55b8432311",
+          "6e3aa340492bdadc94905ad555359719cab69fcfe98018f5d379afd4062743f0",
+          "b9dbeaa09ef35ea09968e0707308b5eb53147d9e4dab5db000c73faeec211ad9",
+          "e92964a8ac0e559a1fa426f4b648df5f557790004ced42843263756d3f7c4922",
+          "7296b1d0a9f5ff3859881f847b19fe27d9899fe5192186a97b22c3aaee28b79e",
+          "2c8d68df77c2d37a078ca8f75145e57577ea4a13d83cf77ba0e71102b5b5015a",
+          "cf4f3a4539e5d7e2dcec5983daf0b4a6d4aa113c4ad5591cb123d0f629a3e7d6",
+          "c04cc5c625a26b601c9bab4b49d3854eccd65eda1970adeacedeba8210949e8c",
+          "5a974b27420685880b7de803da525c716aab3f70f710c249611e45ddff5990a3",
+          "aa7b1e7576635c448b12caa7b9c15288aedbac59d3b7cb665e1f6234f9ddaa71",
+          "a71806a5eb6d557e2f5061c96a709eea67db1e5a830f4b62cc8f11fe2341b0cd",
+          "77cb1da9ca9ca39a17ab32c3044537eaad344e8ffb44ac18f47e4e1f89b04644",
+          "f2243e18ff743b3c340e14beb11537f1aca6ef25cfdf43f26596bc24a6321b8c",
+          "db0e7d82fad274a1fd79deefed611ec0afa1a1cc365f49e08d898d5d2eec0134",
+          "8064c9dab3206b44edcf947fb28106000709e00baab88846474dd9484eb08d67",
+          "ec5abca79a3e6d2c6dfc7be9a2d39ea5fd585621bd287b054e6ebf5db201fad7",
+          "9c803fff3dca001471bf27801faba3677e91163486a6b9aad18f2c34cdd47e2e",
+          "5fd0c8259b392433db03f0453c440bbe176267f75b7f111f769e95dc0523e9aa",
+          "4baa21254df8311b0b7b48988a6f6e38a2e1b8d505a038cd5f15cb1d412e8b4d",
+          "4d950ae69af1e1c530a6fc527acbc410cd30a2eba7c8ed006831968752a7b651",
+          "7ca2b7f0300237358db186ea92cbea3f5413199fbbc564545c932be30a4ddb1b",
+          "bbc440dde99b30e5b521ae4e069afedfbbfb792e2d843d89f80e53e003dabc97",
+          "f57c2296a076ac66bbcee69f81aea55f6e1478da13fe4f5659559cafe579098b",
+          "6f26c4f914381b604a13f89717a140f1ace15b66718584d2b2b26da49a28bda7",
+          "c44dba766a6307b90b1e8bbfe2013d991ad325ffca02dee24e5843713827356d",
+          "49e3afe31c48d414873bba4b6ae28f43aaf52257314bece0cbaffd2c86362bc5",
+          "d608232f1dad0bf6337abb58c011a8da27269951d412bc352dacf25828e209d3",
+          "02e1a6257f1098b7bec9b210ae531e71e76bcbebac4a440705c7fd9834e5893b",
+          "691a275066f695eba117c22a1f78a2d077bdb24c3f96ab019b2b0b4b465574c2",
+          "9d4c683f4090e1eed303421268d091b0ca145ce99372bb5ce1bc7d473581a477",
+          "9e9b47c8bfca6b31c17322800816943da49b0e2f05d789621564ad3b5c976829",
+          "4095dd739ed64ad11d36dea688d8f7f227373f41698349f25494c641960df0e5",
+          "f1c55a6887fc74f9d07e7ec8bee89d82e556341c5b569584a4893010e5b1843b",
+          "a9771d099dfedc743eda26fe179ced0a64936a3c2ed0fcca0c8406627962d3c3",
+          "5c8657d875cfcedd78677451922855f49b745171e218556a6538e6b3e0db214d",
+          "97997eb3def017689337b62e0ab81b0e5c44db43496c7f1958bc2ec7eb4c3eda",
+          "ed876c11146e6dfac930357742560adee8afaa82e344cda2151ab704da4c40fa",
+          "4f812c9e3f0d141f1d1c02630b49d5a5576426354cb61f9c1f22b5d380ce1791",
+          "e849e59e247007eed70bacba19fbcaa8a14551c25f3700b775664df942a80996",
+          "725910dd9a3d23583d40a41d76ff9bd4a24069c02e274c0a898e35406708f7c3",
+          "8916bdc3021243a5f767ffd7a1174508c37bf86db25507316dd5ac0080a2ff6e",
+          "c62d2e20cf906b5ed442c35b081e8a44bffe00431688c8679315840f247db4ca",
+          "ed64d7a8919933da3a13f14c4117cb6d20d9d195509b7b94acb10a6dc6013fbf",
+          "b115f5372f2edf03e51a8f712460addaed3513a89703cc1fe8500eee367aba65",
+          "636ed2151b2556c4624252d79810c86bb268a3587f26ae0459a561785114f246",
+          "8a49a888d6e614ce683525b9bd586b4271285324ddac088829d4a8beec90c2a5",
+          "c12a93f81eb63806ca37a574fb5b505dc219d9e78f642ac468a6d1f377e96839",
+          "618b84c4ab64dbb1a2f0ba6ace9753dbc11e0b4c44db2f8bf3cd443481a8c038",
+          "5f3e79ab110bab0a1af4c2a19f3440af5b7e53f525fe394d85afd98a1447071c",
+          "ae8fb6b2c957b6af34f1d86f77755938a05f88807549624c6d11d79cffd549be",
+          "0672f7d12940e638db7263434d843980553c3d413cebf387481db9b4e9c73402",
+          "10bbb77e22e415555ebddad70fdf813118164a60b056c651373124e9dc017868",
+          "1c41ddd081ceeaa36da4dc048b7e3a76f8cda4c2b2a3ce31449d778e738c5a9d",
+          "1e02fe4dc3641db388e6f79fcc79b1157151cd6e6f04d33acc3920f26a6a1554",
+          "70afa92269fc92e901fd515f856811e142e948ab934d7974e9146a99ea355f23",
+          "5e0dae53ec02e33bfd66f1b1e65a7fc5a6288631ae374a9b6157642ca45fda5b",
+          "169d16d6b04082277975b6047bad8c8a86b8372a1b703fb9d6021092e46fc11c",
+          "0d188cd4893deff68a37574c3a22cf2a58154a251b995f06fbc982481587e8f0",
+          "0d26dde822d13093998b29287428b5dac490750f9200fab24fa26dc2c74074c4",
+          "85d490302a498031ddfc67653a6d429a31750346bc237e9f3e4704b4248ed23e",
+          "8ed74396d34e7b1ffc1a0bfe0c5b4ccbbe872f2dd9d0430d310b0960be6b6d9b",
+          "ab2455a7ecce99e57488673aed917853c12dc167c626fa8fdc2030b0d6080ced",
+          "08a202fd42efe7dcacc1c6b15c952582dd74901cf9baecca9eaa81a5c098a58d",
+          "9ac8a011bc1502b93d38fb1ff9c1d9d64b3dfff020283c5ae41da91473b75fc8",
+          "c8fb72bec90d9a783caf7ef8479772865cadc5338cbace358a9a173db7fcf175",
+          "4c4dd13e31689434138c647f612e775284ce81b1544891e102cfd99539e2a1d0",
+          "e389a8bda2b917a519a426ecc16c173cd331847f74522a0bbe47ea2e3b7845b9",
+          "5f8b9b5509377688a74b092013d0b9bac593c73cac4ab790db8f1bf4db9f6661",
+          "f7d22d282d75d84bd46131d9ff4d3bff0a7bbccc408bd528aabf133280711795",
+          "4a584e7a1959307490035f15c052192721fd3ae1e9726758caea4e5edba0636b",
+          "ea2d92685caef5373ee9636033ba65a383892a1b65e7e04aab51ea758ca3c236",
+          "82caaf023d5919fea3a31d832d7a09d5c81341d2ed40070d298dd0e1bea1d464",
+          "5e86b8241b3b502bb2b63cf14726e6ce1eb05de8bf0763c051099b18d275259d",
+          "73dcdecb3a46598694ee828a1675264bce15a48b09dfe82d9637b48781af912e",
+          "4fba6b2279fc87d711d5b41069f66f4a7a098c66c388c87a96bb06ffec173aac",
+          "e1d72467ceeb0111d458201cb29208d7c6a3feccf7656b210ef8b1cfaf14f9ff",
+          "1e1fc0fbcf5a1fb396e1dcea9a206bfaf0aca9462b55fdb43986e2a95dfe33bc",
+          "4f56cd59a68d3753610a38d35e90ef8c19e01e8366decc94cbb2d29f38e79742",
+          "a9b244c5e12170bb8b2cd8cd3cea44759da95bcb8d3456959e2b776266b36435",
+          "404053740cc3b377dbde235a9c60ff65837447d8c05759574b4db283fc0c002e",
+          "a750a7588ecb3cebb9358a581fa34e35cbd60c775cdcb971ccae83023af2ef62",
+          "8e4b77860b63e210f23a2a06b0059a62f5f37f61bb6cf36548b092a7f2d5310a",
+          "7370a68c865d3ff4825f494b07d8fd08e863adb5d5dddb7e71597ecbafa912a6",
+          "1b1afc89b04227ac78f2a8ff3915cf1c79604c338ef5367ef9da2e54c3a14a79",
+          "92d77dcfb8fab24acaf165cf65d87ebaa3f471b7912826529e1305ba8cb1c944",
+          "8d911beff1d75aa2e82c2b7c2d9a99aab5a7765273be72cb8adf56b9adcf314d",
+          "857ae103e6f5ac2cf0048a3cafdb1901deec2dfac3a4a37ba05f8672b29456c6",
+          "74b2fea48cf5baf9303b606ba00a72c7d250a1e1de74ce3f4b2178c29ee21c57",
+          "cdb27873fea8645e06789e2a728c978530832dfca5f63d402f7e02f7f5aac3f2",
+          "467770dbcde701771cd7a26d758df34c4dcf79f2c94d190780225a80724b3b40",
+          "8c4e368301254d13749973213da6e459363b3e4dd03c14a98145822d7a2faf3c",
+          "4442f0fb59e7706e813c00f17c6dc54639819751eb13a3a8a962ffe7c443ffc9",
+          "8eb3eb84f6000f1d2d33357e2b5dd55a148f814849d42350a4cb220208023d0a",
+          "6fb39ca350b486baf7bb26a0dbb0402c80492b02525d5429300906a8836f1388"
+        ],
+        "mutant_request_count": 50,
+        "observed_forks": 100,
+        "request_count": 52,
+        "timeline": "controller-25218.jsonl"
+      },
+      {
+        "baseline_count": 0,
+        "batch_sizes": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "first_mutant_window": {
+          "profileAckToSendReturnMs": 6891.823904000001,
+          "requestToProfileAckMs": 63.15494799999988,
+          "requestToSendReturnMs": 6954.978852
+        },
+        "jobs": [
+          {
+            "job_id": "661fb296e45cffa52d1a1bbd712c2c84c3036af40215aad0091f9172fdbd15e2",
+            "kind": "mutant",
+            "mutant_id": "661fb296e45cffa52d1a1bbd712c2c84c3036af40215aad0091f9172fdbd15e2",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "1d71fcefd50c107907751165fa9dda43f0d7f9036042c45a68cd590a58910dc3",
+            "kind": "mutant",
+            "mutant_id": "1d71fcefd50c107907751165fa9dda43f0d7f9036042c45a68cd590a58910dc3",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "225afaff45112ca81ce4f6789e9060e38a7721f432aaee8f31a4bac963722e9c",
+            "kind": "mutant",
+            "mutant_id": "225afaff45112ca81ce4f6789e9060e38a7721f432aaee8f31a4bac963722e9c",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "9512ed24b52fa370c0f4da4c10d8994b8e68c35ac3c0b1dc2c67baf1da2eb294",
+            "kind": "mutant",
+            "mutant_id": "9512ed24b52fa370c0f4da4c10d8994b8e68c35ac3c0b1dc2c67baf1da2eb294",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "97f9c8faa6be7e865d41e98fee69a050ee0e8e0fd1fbaecb330547e5dee2232f",
+            "kind": "mutant",
+            "mutant_id": "97f9c8faa6be7e865d41e98fee69a050ee0e8e0fd1fbaecb330547e5dee2232f",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "e623a45291947316bba94496367268277994abf8a2bd5d83e8ed89c12b1a914f",
+            "kind": "mutant",
+            "mutant_id": "e623a45291947316bba94496367268277994abf8a2bd5d83e8ed89c12b1a914f",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "358e718a330aa500b536470ea56ba9d68ac9b750746dde64275a9de34d1bb5d6",
+            "kind": "mutant",
+            "mutant_id": "358e718a330aa500b536470ea56ba9d68ac9b750746dde64275a9de34d1bb5d6",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "5935e44509b4f6d15d99c11bca98ce7f1e05db7c502ba55be9284504a76da0e6",
+            "kind": "mutant",
+            "mutant_id": "5935e44509b4f6d15d99c11bca98ce7f1e05db7c502ba55be9284504a76da0e6",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "f96b26dca7cf3f0bca3a89b2e698816153227d342e8490cc03193c8e100a9dd0",
+            "kind": "mutant",
+            "mutant_id": "f96b26dca7cf3f0bca3a89b2e698816153227d342e8490cc03193c8e100a9dd0",
+            "run_id": "23992-1794657410910176433"
+          },
+          {
+            "job_id": "44880a939f28556e9a9ec7b3bdcafbdecfd200ad18e9767070254a06ba0a05be",
+            "kind": "mutant",
+            "mutant_id": "44880a939f28556e9a9ec7b3bdcafbdecfd200ad18e9767070254a06ba0a05be",
+            "run_id": "23992-1794657410910176433"
+          }
+        ],
+        "mutant_count": 10,
+        "mutant_ids": [
+          "661fb296e45cffa52d1a1bbd712c2c84c3036af40215aad0091f9172fdbd15e2",
+          "1d71fcefd50c107907751165fa9dda43f0d7f9036042c45a68cd590a58910dc3",
+          "225afaff45112ca81ce4f6789e9060e38a7721f432aaee8f31a4bac963722e9c",
+          "9512ed24b52fa370c0f4da4c10d8994b8e68c35ac3c0b1dc2c67baf1da2eb294",
+          "97f9c8faa6be7e865d41e98fee69a050ee0e8e0fd1fbaecb330547e5dee2232f",
+          "e623a45291947316bba94496367268277994abf8a2bd5d83e8ed89c12b1a914f",
+          "358e718a330aa500b536470ea56ba9d68ac9b750746dde64275a9de34d1bb5d6",
+          "5935e44509b4f6d15d99c11bca98ce7f1e05db7c502ba55be9284504a76da0e6",
+          "f96b26dca7cf3f0bca3a89b2e698816153227d342e8490cc03193c8e100a9dd0",
+          "44880a939f28556e9a9ec7b3bdcafbdecfd200ad18e9767070254a06ba0a05be"
+        ],
+        "mutant_request_count": 5,
+        "observed_forks": 10,
+        "request_count": 7,
+        "timeline": "controller-27984.jsonl"
+      }
+    ],
+    "orphan_profiles": [],
+    "scope": "Request observation to local send return (not recipient delivery/callback completion); partial controller CPU sampling. Sampling starts during profiler activation, omitting some request prefix, and may include inspector overhead. Not full-request or process-tree CPU profiling.",
+    "workload_reconciled": true
+  },
+  "command": [
+    "/data/data/com.termux/files/usr/bin/python3",
+    "/root/.t3/worktrees/oximut/t3-544d1681-abd665480087a540/benchmarks/real_project.py",
+    "--binary",
+    "/root/.t3/worktrees/oximut/t3-544d1681-abd665480087a540/target/release/oximut",
+    "--adapter",
+    "/root/.t3/worktrees/oximut/t3-544d1681-abd665480087a540/packages/vitest-adapter/m2-runner.mjs",
+    "--adapter-source-dir",
+    "/root/.t3/worktrees/oximut/t3-544d1681-abd665480087a540/packages/vitest-adapter",
+    "--defer-ratios",
+    "--concurrency",
+    "2",
+    "--workload",
+    "colord-scale",
+    "--tools",
+    "vitest",
+    "oximut",
+    "stryker",
+    "--warmups",
+    "0",
+    "--repetitions",
+    "1",
+    "--timeout",
+    "1200",
+    "--output",
+    "/tmp/oximut-w9-profile-controller-2/qualification"
+  ],
+  "concurrency": 2,
+  "diagnostic_only": true,
+  "execution_inputs": {
+    "adapter_override": "/root/.t3/worktrees/oximut/t3-544d1681-abd665480087a540/packages/vitest-adapter/m2-runner.mjs",
+    "adapter_pairing": "explicit override",
+    "adapter_source_dir": "/root/.t3/worktrees/oximut/t3-544d1681-abd665480087a540/packages/vitest-adapter",
+    "adapter_source_sha256": {
+      "biome.json": "c8c43e7b8c04d66cda7797a550a4ae80af77febac5430537cd0cc07d8996b3da",
+      "compile-cache.cjs": "495a23c825f859869f7d01f0cf001f06792225ee495daba5b2e72d9413b6cca6",
+      "experiment.mjs": "8aef7cae2ef734311a1998ec6928f389a8887b59e32979c27c0ebe87d77468fe",
+      "index.mjs": "2e973f5cfc91fddb39b2dadac8a0b65d1a23bbf5912d028eb8b2e12e84e40031",
+      "lane-runner.mjs": "dc861895a0cce201647bac3165b92da9149f2aeccac003f04d129e6e2ec3a74b",
+      "m1-runner.mjs": "7971936fa754d55ce2d0e364469d3973dc1e5b615ca71692fe623c66c4ab9fb9",
+      "m1-worker.ts": "7a66d7f160943b5530af60dd4571a37c30f70bd3aa1c67257cd9aa67b2e34401",
+      "m2-runner.mjs": "c513d90785daeb737df03b64d74b80fb18be4baa09a6ff498cde8b009430ad9b",
+      "m2-worker.ts": "5803ed11bf26bb6bead078210398f796fbddc0644fc5e8a699fafc8d903fdfee",
+      "m3-selection.ts": "ec23f8b7efbab6676a03cb21b1359096bc1579c70243b95486c9a29e78cb7398",
+      "m3-setup.ts": "b828de6afe591d45d36a2b2bb7cb95e2689c4148fa68055f023c85b57df33db4",
+      "package.json": "5cd6bd7d4af022c372c0d305b2a6d1826818c35929e2984b2fee526168552056",
+      "protocol.mjs": "0c6baacacd208f431fca4815cc988c6e12bca6e0c4de8dfcfab68d173845a930",
+      "protocol.ts": "ebadc79f2c7fd3cab42a3143fc8dfae08b8fd04e45e05e1929a7892fdf0936e6",
+      "shared-lanes.ts": "c8b459a52973f343ce49dcc63deafbd88d157fe37858b3eec04e6c13c995e93c",
+      "supervisor.py": "0cb9de6e2aa1084a987e62d51725ad810dd995524948f886aacab6a394e4c1cd",
+      "test/compile-cache.test.mjs": "eee59fa566fd179a1edd656e5a16805801dd0f9d7567ac0a79c0a391f6b5c311",
+      "test/contract.test.mjs": "4eb005fba4987f3ff2a934f9c1f9636e5db7feec0af04988f86dc844407b22ae",
+      "test/descendants.test.mjs": "528a74c9e29128a1221bd15b9f41148aeea9dcc40e5e63d03cff1b51d66ff789",
+      "test/lifecycle.test.mjs": "7ec6fe62792f4564b8af74d331297317bce8f64abf002456738a3fcd5b9c7d07",
+      "test/m1.test.mjs": "b8b81a52f22532f5fd39cadf2aa13e2b5d8df9707ffee52f633eb9e665be69cb",
+      "test/m2.test.mjs": "75f5cacaa2b7ba56174a57c3bec52e96f9a319c2efa8e35e360a842adcbf7667",
+      "test/m3.test.mjs": "dc08829807dcfcdad5e64001fdf3f6893833c6fa86c5a938a1f244a3a8f898fa",
+      "test/protocol-types.ts": "9905afca7fb4274a0dcc5350fa8601e4e8dd76b963e6ccc9f6f6da7692830265",
+      "test/protocol.test.mjs": "95f230510a7bd83ee2457de46cf13768da00e50097c8f0c685852d69440fab5a",
+      "test/shared-lanes.test.mjs": "e7c907c3f17746fa9adfb393cce08157a332fd15b7e1e9f868784737f999102c",
+      "test/transform-share.test.mjs": "98ff2452bb9f7cf079b71515437960657242e7f33b7352a9107c973d5386c9c8",
+      "test/warm.test.mjs": "28842af89adb2f88a7ea593039c374aedf5f6166709117d6d88639bfdb758ec3",
+      "transform-share.ts": "c8fd14eb9e534e49a5d993f09666a7ac6426331a7752ff1fa882fa7c83a9e787",
+      "tsconfig.json": "6d53a48c0a6f2181c3a65c999e9288aa74ce9470c732ea86b157ae584cf91b77",
+      "worker.mjs": "bb93be0dbd43dca5463b0e76a0c09131f1248e0d4da2422512256a73400561f5"
+    },
+    "binary": "/root/.t3/worktrees/oximut/t3-544d1681-abd665480087a540/target/release/oximut",
+    "binary_sha256": "88152adbe564da1380eb4712775a7eb595d74d6547e7ae029c89f9d1d9e87b08",
+    "oximut_args": []
+  },
+  "failure": null,
+  "helper_sha256": {
+    "benchmarks/profile_native.py": "73f2ce7f7d0f6d5cbd9dc364b5aa95dfda40e8b66d653e263d56d4e7049ae513",
+    "benchmarks/profiling/controller-jobs.cjs": "f70ef5fd9af5677bb52e85444d76e7847125885be0ce0b76aeb50b83c7449bb5",
+    "benchmarks/profiling/node-identity.cjs": "2046d70bac7db57bc53f7a31f43a63c2a36190c570e23662ac1183a5371a600f",
+    "benchmarks/profiling/node-segments.cjs": "ad5ca48917af6d77e06c14c07f117f104d5f5199f0776b1c7ea530c25764fa83",
+    "benchmarks/profiling/python-shim.py": "6c54882a40842cc233713a84cdf905cea7e46c553914e4459be53d05e140e806",
+    "benchmarks/profiling/test_accounting_profile.py": "669878cf9631a9ed392cfaf36fafa6f9ae84ed1b45ae962100be595b8a258fb4",
+    "benchmarks/profiling/test_controller_profile.py": "936242a68f542aeb0302a4e784a4cd6c402da92a7bdbdd6c9a40e4a773421dad",
+    "benchmarks/profiling/test_performance_report.py": "71b12413ea4f29c814ac907f24c20519c0a732f07a37ddc11e660e2483a5fac6"
+  },
+  "limits": "Node sampling and Python supervisor self CPU only; no complete process-tree CPU partition. Rust resource sampling remains unattributed. External benchmark sampler CPU is outside wait4 product-tree CPU; it perturbs wall time.",
+  "node_capture_mode": "controller-jobs",
+  "node_options": "--require=\"/root/.t3/worktrees/oximut/t3-544d1681-abd665480087a540/benchmarks/profiling/controller-jobs.cjs\"",
+  "passed": false,
+  "profiler_overhead": true,
+  "qualification_errors": [],
+  "scope": "colord-scale: 41 sources, 102 tests, 20 mutation sources, 206 arithmetic edits. One capture, no warmup campaign.",
+  "source_commit": "7297840df3996c9e6098afbe6d37db41b294ee0b",
+  "workload": "colord-scale"
+}

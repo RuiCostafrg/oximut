@@ -2,7 +2,7 @@
 
 This audit maps the narrow contract to executable checks. It does not widen the
 support matrix: Linux process controls and `/proc`, Linux Node **26.3.1**, and
-Vitest **4.1.12** remain the boundary in [compatibility.md](compatibility.md).
+Vitest **5.1.0** remain the boundary in [compatibility.md](compatibility.md).
 Tests on another runtime would not establish support for it. The report/list
 versioning rules remain in [report-schema.md](report-schema.md).
 
@@ -26,7 +26,7 @@ versioning rules remain in [report-schema.md](report-schema.md).
 | --- | --- |
 | Invalid worker counts, memory units/budget/reserve, timeout, execution/cache mode, seed, environment-name syntax, conflicting list/baseline options, or missing option value | Exit 2 with a diagnostic before execution: `test_m5.ResourceBudget.test_invalid_units_and_worker_counts_are_rejected` and `test_contract.CliContract.test_invalid_options_have_diagnostics_and_no_report` |
 | Resolved project pool, isolation, worker count, concurrency, environment or project count violates the runner contract | Fail initialization in both execution modes, emit an incomplete report and execute no tests: `test_contract.CliContract.test_unsupported_resolved_projects_fail_before_tests_in_both_modes`. The runner sets root `fileParallelism: false`; project settings are validated after resolution. A custom environment is rejected rather than loaded. Browser projects have no support claim. |
-| Vitest other than exactly 4.1.12 | Fail before creating Vitest: `packages/vitest-adapter/test/contract.test.mjs` exercises both worker entrypoint guards with a stub version 4.1.11. This tests rejection, not operation on that dependency. |
+| Vitest other than exactly 5.1.0 | Fail before creating Vitest: `packages/vitest-adapter/test/contract.test.mjs` exercises both worker entrypoint guards with a stub version 4.1.11. This tests rejection, not operation on that dependency. |
 | Custom plugins, global setup, or symlinked project inputs in persistent mode | Fresh controller for each job, with a reuse diagnostic: adapter tests `M2 exposes fresh fallback for global setup and evaluates active setup imports` and `M2 uses fresh controllers for custom plugins and symlinked project inputs`. Multiple projects are rejected before this fallback can authorize execution. |
 | Concurrent tests, global setup, import-time hits, suite/hooks, source reflection, native loading or incomplete attribution | Broader execution, never invented no-coverage: `tests/test_m3.py`, `test_m3_failures.AttributionFailurePaths.test_incomplete_or_invalid_inventory_never_establishes_no_coverage`, adapter `test/m3.test.mjs`, and core tests `uncertain_attribution_always_selects_full_suite`, `selection_keeps_sequential_observers_and_requires_explicit_empty_hit` |
 | Unsupported JS/TS contexts, parse errors, shadowed selectors or excessive shared-transform expansion | Instrumenter tests `excludes_types_ambient_enum_namespace_and_decorators`, `excludes_computed_keys_in_erased_types_and_abstract_members`, `rejects_parse_errors_without_generating_mutants`, `switching_falls_back_for_shadowed_process_and_large_expansion`; diagnostics/exclusions or static-transform fallback, not additional language support |
@@ -49,7 +49,7 @@ changes are part of this audit. Sampled resource accounting remains best-effort
 admission/cancellation; no hard memory or CPU-time limit is promised.
 
 Selected test files are checked before execution for both `@vitest-environment`
-and `@jest-environment` overrides, using the pinned Vitest 4.1.12 precedence
+and `@jest-environment` overrides, using the pinned Vitest 5.1.0 precedence
 and syntax. Non-Node overrides fail explicitly in both workers; files outside
 a file selection do not block it. The adapter contract test verifies rejection
 before a test-module execution marker is written.

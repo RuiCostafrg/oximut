@@ -1,0 +1,74 @@
+{
+  "adapter_member_count": {
+    "after": 31,
+    "before": 31
+  },
+  "archives_verified": {
+    "artifact-14551929545.zip": {
+      "bytes": 3051178,
+      "file_count": 2129,
+      "server_digest": "sha256:909f95b44616eb7923eb5eeb3084f1e822a77860b7c5f1ea12bbb5ffbf68b2f0",
+      "sha256": "909f95b44616eb7923eb5eeb3084f1e822a77860b7c5f1ea12bbb5ffbf68b2f0"
+    },
+    "logs.zip": {
+      "bytes": 98762,
+      "file_count": 25,
+      "server_digest": null,
+      "sha256": "0d1684d9916c0e15b55109c7d0d2c866b36156cd23688b1b9b45a64870591ada"
+    }
+  },
+  "base_commit": "62c08df8fc83c16e9430f48a230e5895776c40ec",
+  "binaries": {
+    "after": "47eb671c98a504eeb19e8fbd39c03f0bd64a08df45c5e457c2f7379dc2aa9df0",
+    "before": "d69c91db2f87892d339319294d10f73a0bbaac211341cdfac69b1b0419435bbb"
+  },
+  "build_integrity": true,
+  "correctness_gate": true,
+  "declared_mutation_files": 5,
+  "families": [
+    "arithmetic",
+    "boolean-literal"
+  ],
+  "max_observed_sample_gap_seconds": 0.14549121900006412,
+  "mutants": 10,
+  "native_host": "Linux runnervmeozm8 7.0.0-1017-azure #17~24.04.1-Ubuntu SMP PREEMPT Thu Sep 24 18:46:57 UTC 2026 x86_64 x86_64 x86_64 GNU/Linux",
+  "native_job_counts": {
+    "after": [
+      5
+    ],
+    "before": [
+      5
+    ]
+  },
+  "outcome_identity_sha256": "73c26ba6f052d2c7fc3dc1cc48d4da8dbe84b3139aaf1ee8e627081e4d34403f",
+  "outcomes": {
+    "killed": 10
+  },
+  "oximut_source_bindings_verified": true,
+  "product_commit": "2f94feb3b1c08560fadebf31d740759958c66273",
+  "raw_ratios_and_intervals_recomputed": true,
+  "rows_validated_against_reports": 36,
+  "run_conclusion": "success",
+  "run_id": 44567404875,
+  "runtime_versions": {
+    "@stryker-mutator/core": "10.1.1",
+    "@stryker-mutator/vitest-runner": "10.1.1",
+    "@vitest/coverage-v8": "5.1.0",
+    "cargo": "cargo 1.96.0 (30a34c682 2026-05-25)",
+    "node": "v26.3.1",
+    "node_runtime": "{\"execPath\":\"/opt/hostedtoolcache/node/26.3.1/x64/bin/node\",\"platform\":\"linux\",\"arch\":\"x64\"}",
+    "npm": "11.16.0",
+    "python": "3.13.18 (main, Oct 26 2026, 14:20:56) [GCC 13.3.0]",
+    "python_executable": "/opt/hostedtoolcache/Python/3.13.18/x64/bin/python3",
+    "python_platform": "linux",
+    "rustc": "rustc 1.96.0 (ac68faa20 2026-05-25)",
+    "typescript": "7.0.2",
+    "vitest": "5.1.0"
+  },
+  "shared_controller_fallback_subcampaigns": [],
+  "tests": 102,
+  "valid": true,
+  "workers": 4,
+  "workflow_commit": "c712736a7e317896c27f53428cca7c54f3b82a57",
+  "workload": "colord"
+}
