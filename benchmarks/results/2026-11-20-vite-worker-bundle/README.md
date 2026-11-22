@@ -1208,3 +1208,60 @@ gh workflow run native-diagnostic-profile.yml --ref t3/fresh-worker-startup \
 python3 benchmarks/results/2026-11-20-vite-worker-bundle/zygote_replay.py \
   /root/oximut-evidence/vitest-fork-bundle/snapshot-native-zygote-startup/artifact/zygote-launch-replay.json
 ```
+
+## Skip the original baseline (ablation, rejected)
+
+`OXIMUT_EXPERIMENTAL_SKIP_ORIGINAL_BASELINE=1` makes the instrumented
+baseline the only gate. Five alternating native pairs compared it with
+the early-build control.
+
+| Skip original compared with same-campaign early build | Median ratio | 95% bootstrap interval |
+| --- | ---: | ---: |
+| Wall | 0.985× | 0.949–1.024× |
+| CPU | 0.976× | 0.950–1.017× |
+| Sampled peak aggregate RSS | 1.072× | 0.985–1.134× |
+
+The wall difference is within run-to-run variation. Against Stryker, the
+skip arm scored 0.552× wall, 0.466× CPU and 0.801× sampled peak RSS. The
+RSS figure is at the target. All 36 rows passed the exact workload checks.
+Only the ablation's after arm reported skipping the original baseline.
+
+The phase times explain the result. Medians across the five measured
+rows per arm:
+
+| Phase | Both baselines | Instrumented only |
+| --- | ---: | ---: |
+| Original baseline | 784 ms | 0 ms |
+| Instrumented baseline | 714 ms | 1,199 ms |
+| Mutation execution | 7,268 ms | 7,425 ms |
+| Command wall | 8.86 s | 8.73 s |
+
+Without the original run, the instrumented baseline is the controller's
+first Vitest run. It absorbs the cold Vite and transform startup, and it
+overlaps the framework seed and project image builds that the original
+run used to hide. The original baseline's marginal cost on this workload
+is about 0.13 s, not 0.78 s.
+
+The correctness check was quantified separately with fault injection in
+[`benchmarks/experiments/baseline-check`](../../experiments/baseline-check/README.md).
+Of seven instrumentation-sensitive cases, five changed observable
+behaviour. Both baselines refused all five. The instrumented baseline alone
+refused two. Two of its three complete reports were wrong: one reported
+a 0% mutation score instead of 50%, and one hid a genuinely failing test.
+In 226 recorded Colord runs, the check never fired.
+
+Decision: keep the original baseline. It costs about 1.5% of wall here and
+is the only defence against instrumentation that changes test counts or
+masks a real failure.
+
+- [Native paired skip-original run](https://github.com/RuiCostafrg/oximut/actions/runs/44955930535)
+- [Verified skip-original score](snapshot-skip-original-score.json)
+- Raw artifacts at `/root/oximut-evidence/vitest-fork-bundle/snapshot-native-skip-original-score`.
+
+```sh
+gh workflow run native-diagnostic-profile.yml --ref t3/fresh-worker-startup \
+  -f capture_mode=worker-snapshot-skip-original-score -f workload=colord-scale -f concurrency=4
+python3 benchmarks/results/2026-11-20-vite-worker-bundle/score.py \
+  /root/oximut-evidence/vitest-fork-bundle/snapshot-native-skip-original-score \
+  /root/oximut-evidence/scale-bottlenecks/workers/artifact/capture/qualification/measurements.jsonl
+```

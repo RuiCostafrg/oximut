@@ -1,0 +1,398 @@
+{
+  "binary": "oximut built from cc89e8a (aarch64 Android target, local)",
+  "node": "v26.3.1",
+  "vitest": "5.1.0",
+  "oximut": "oximut 1.0.0-rc.1",
+  "totals": {
+    "cases": 7,
+    "detectedWithOriginal": 5,
+    "detectedWithoutOriginal": 2,
+    "missedWithoutOriginal": 3,
+    "controlConsistent": true
+  },
+  "rows": [
+    {
+      "case": "control",
+      "simulates": "no sensitivity",
+      "realism": "baseline",
+      "original": {
+        "exit": 1,
+        "detected": false,
+        "baseline": "passed",
+        "tests": {
+          "passed": 2,
+          "failed": 0,
+          "skipped": 0
+        },
+        "complete": true,
+        "score": 50,
+        "killed": 2,
+        "survived": 2,
+        "total": 4,
+        "diagnostics": [
+          "disabled switching validation"
+        ],
+        "errors": []
+      },
+      "skip": {
+        "exit": 1,
+        "detected": false,
+        "baseline": "passed",
+        "tests": {
+          "passed": 2,
+          "failed": 0,
+          "skipped": 0
+        },
+        "complete": true,
+        "score": 50,
+        "killed": 2,
+        "survived": 2,
+        "total": 4,
+        "diagnostics": [
+          "experimental: original baseline skipped; instrumented baseline is the only gate",
+          "disabled switching validation"
+        ],
+        "errors": []
+      },
+      "silentScoreChange": false,
+      "missedBySkip": false
+    },
+    {
+      "case": "source-text-fails",
+      "simulates": "a test inspects function source (purity or serialisation checks) and fails under instrumentation",
+      "realism": "plausible",
+      "original": {
+        "exit": 2,
+        "detected": true,
+        "baseline": "failed",
+        "tests": {
+          "passed": 2,
+          "failed": 1,
+          "skipped": 0
+        },
+        "complete": false,
+        "score": null,
+        "killed": 0,
+        "survived": 0,
+        "total": 4,
+        "diagnostics": [
+          "disabled switching validation",
+          "instrumented baseline failed; mutation execution blocked"
+        ],
+        "errors": [
+          "expected 'function clamp(value, low, high) {\\n\\\u2026' not to contain 'process.env'"
+        ]
+      },
+      "skip": {
+        "exit": 2,
+        "detected": true,
+        "baseline": "failed",
+        "tests": {
+          "passed": 2,
+          "failed": 1,
+          "skipped": 0
+        },
+        "complete": false,
+        "score": null,
+        "killed": 0,
+        "survived": 0,
+        "total": 4,
+        "diagnostics": [
+          "experimental: original baseline skipped; instrumented baseline is the only gate",
+          "disabled switching validation",
+          "instrumented baseline failed; mutation execution blocked"
+        ],
+        "errors": [
+          "expected 'function clamp(value, low, high) {\\n\\\u2026' not to contain 'process.env'"
+        ]
+      },
+      "silentScoreChange": false,
+      "missedBySkip": false
+    },
+    {
+      "case": "test-skipped-under-instrumentation",
+      "simulates": "a test that only exists on original code (skipIf on code shape); suite still passes",
+      "realism": "contrived trigger, real hazard",
+      "original": {
+        "exit": 2,
+        "detected": true,
+        "baseline": "infrastructure-error",
+        "tests": {
+          "passed": 0,
+          "failed": 0,
+          "skipped": 0
+        },
+        "complete": false,
+        "score": null,
+        "killed": 0,
+        "survived": 0,
+        "total": 4,
+        "diagnostics": [
+          "disabled switching validation",
+          "instrumented baseline failed; mutation execution blocked"
+        ],
+        "errors": [
+          "instrumented baseline (inactive switching and probes) changed baseline test counts"
+        ]
+      },
+      "skip": {
+        "exit": 1,
+        "detected": false,
+        "baseline": "passed",
+        "tests": {
+          "passed": 1,
+          "failed": 0,
+          "skipped": 1
+        },
+        "complete": true,
+        "score": 0,
+        "killed": 0,
+        "survived": 4,
+        "total": 4,
+        "diagnostics": [
+          "experimental: original baseline skipped; instrumented baseline is the only gate",
+          "disabled switching validation"
+        ],
+        "errors": []
+      },
+      "silentScoreChange": false,
+      "missedBySkip": true
+    },
+    {
+      "case": "test-added-under-instrumentation",
+      "simulates": "an extra passing test registered only when code is instrumented",
+      "realism": "contrived",
+      "original": {
+        "exit": 2,
+        "detected": true,
+        "baseline": "infrastructure-error",
+        "tests": {
+          "passed": 0,
+          "failed": 0,
+          "skipped": 0
+        },
+        "complete": false,
+        "score": null,
+        "killed": 0,
+        "survived": 0,
+        "total": 4,
+        "diagnostics": [
+          "disabled switching validation",
+          "instrumented baseline failed; mutation execution blocked"
+        ],
+        "errors": [
+          "instrumented baseline (inactive switching and probes) changed baseline test counts"
+        ]
+      },
+      "skip": {
+        "exit": 1,
+        "detected": false,
+        "baseline": "passed",
+        "tests": {
+          "passed": 3,
+          "failed": 0,
+          "skipped": 0
+        },
+        "complete": true,
+        "score": 50,
+        "killed": 2,
+        "survived": 2,
+        "total": 4,
+        "diagnostics": [
+          "experimental: original baseline skipped; instrumented baseline is the only gate",
+          "disabled switching validation"
+        ],
+        "errors": []
+      },
+      "silentScoreChange": false,
+      "missedBySkip": true
+    },
+    {
+      "case": "masked-real-failure",
+      "simulates": "a test that fails on the original code but passes once instrumentation changes source text",
+      "realism": "contrived",
+      "original": {
+        "exit": 2,
+        "detected": true,
+        "baseline": "failed",
+        "tests": {
+          "passed": 2,
+          "failed": 1,
+          "skipped": 0
+        },
+        "complete": false,
+        "score": null,
+        "killed": 0,
+        "survived": 0,
+        "total": 4,
+        "diagnostics": [],
+        "errors": [
+          "expected 113 to be greater than 250"
+        ]
+      },
+      "skip": {
+        "exit": 1,
+        "detected": false,
+        "baseline": "passed",
+        "tests": {
+          "passed": 3,
+          "failed": 0,
+          "skipped": 0
+        },
+        "complete": true,
+        "score": 50,
+        "killed": 2,
+        "survived": 2,
+        "total": 4,
+        "diagnostics": [
+          "experimental: original baseline skipped; instrumented baseline is the only gate",
+          "disabled switching validation"
+        ],
+        "errors": []
+      },
+      "silentScoreChange": false,
+      "missedBySkip": true
+    },
+    {
+      "case": "real-failure",
+      "simulates": "a genuinely failing test (a real bug or broken expectation)",
+      "realism": "common",
+      "original": {
+        "exit": 2,
+        "detected": true,
+        "baseline": "failed",
+        "tests": {
+          "passed": 2,
+          "failed": 1,
+          "skipped": 0
+        },
+        "complete": false,
+        "score": null,
+        "killed": 0,
+        "survived": 0,
+        "total": 4,
+        "diagnostics": [],
+        "errors": [
+          "expected 3 to be 9 // Object.is equality"
+        ]
+      },
+      "skip": {
+        "exit": 2,
+        "detected": true,
+        "baseline": "failed",
+        "tests": {
+          "passed": 2,
+          "failed": 1,
+          "skipped": 0
+        },
+        "complete": false,
+        "score": null,
+        "killed": 0,
+        "survived": 0,
+        "total": 4,
+        "diagnostics": [
+          "experimental: original baseline skipped; instrumented baseline is the only gate",
+          "disabled switching validation",
+          "instrumented baseline failed; mutation execution blocked"
+        ],
+        "errors": [
+          "expected 3 to be 9 // Object.is equality"
+        ]
+      },
+      "silentScoreChange": false,
+      "missedBySkip": false
+    },
+    {
+      "case": "stack-line",
+      "simulates": "a test asserting the source line of a thrown error",
+      "realism": "plausible",
+      "original": {
+        "exit": 1,
+        "detected": false,
+        "baseline": "passed",
+        "tests": {
+          "passed": 3,
+          "failed": 0,
+          "skipped": 0
+        },
+        "complete": true,
+        "score": 50,
+        "killed": 2,
+        "survived": 2,
+        "total": 4,
+        "diagnostics": [
+          "disabled switching validation"
+        ],
+        "errors": []
+      },
+      "skip": {
+        "exit": 1,
+        "detected": false,
+        "baseline": "passed",
+        "tests": {
+          "passed": 3,
+          "failed": 0,
+          "skipped": 0
+        },
+        "complete": true,
+        "score": 50,
+        "killed": 2,
+        "survived": 2,
+        "total": 4,
+        "diagnostics": [
+          "experimental: original baseline skipped; instrumented baseline is the only gate",
+          "disabled switching validation"
+        ],
+        "errors": []
+      },
+      "silentScoreChange": false,
+      "missedBySkip": false
+    },
+    {
+      "case": "arity-and-name",
+      "simulates": "tests asserting Function.length and Function.name",
+      "realism": "plausible",
+      "original": {
+        "exit": 1,
+        "detected": false,
+        "baseline": "passed",
+        "tests": {
+          "passed": 3,
+          "failed": 0,
+          "skipped": 0
+        },
+        "complete": true,
+        "score": 50,
+        "killed": 2,
+        "survived": 2,
+        "total": 4,
+        "diagnostics": [
+          "disabled switching validation"
+        ],
+        "errors": []
+      },
+      "skip": {
+        "exit": 1,
+        "detected": false,
+        "baseline": "passed",
+        "tests": {
+          "passed": 3,
+          "failed": 0,
+          "skipped": 0
+        },
+        "complete": true,
+        "score": 50,
+        "killed": 2,
+        "survived": 2,
+        "total": 4,
+        "diagnostics": [
+          "experimental: original baseline skipped; instrumented baseline is the only gate",
+          "disabled switching validation"
+        ],
+        "errors": []
+      },
+      "silentScoreChange": false,
+      "missedBySkip": false
+    }
+  ]
+}
