@@ -58,7 +58,7 @@ pub enum TestOutcome {
     Skipped,
 }
 
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct Tests {
     pub passed: u64,
@@ -78,6 +78,8 @@ pub struct Mutation {
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct Request {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub lanes: Option<Vec<Request>>,
     pub protocol: u32,
     pub run_id: String,
     pub job_id: String,
@@ -86,6 +88,8 @@ pub struct Request {
     pub root: String,
     pub config: String,
     pub deadline_ms: u64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub workers: Option<usize>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub pool: Option<String>,
     pub mutation: Option<Mutation>,
@@ -206,6 +210,8 @@ impl Coverage {
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct Response {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub lanes: Option<Vec<Response>>,
     pub protocol: u32,
     pub run_id: String,
     pub job_id: String,
@@ -229,6 +235,31 @@ impl Response {
             || self.generation != request.generation
         {
             return Err("adapter returned a stale or incompatible response".into());
+        }
+        match (&request.lanes, &self.lanes) {
+            (Some(jobs), Some(results)) if jobs.len() == results.len() => {
+                if self.outcome != TestOutcome::Skipped
+                    || self.tests != Tests::default()
+                    || !self.errors.is_empty()
+                {
+                    return Err("lane batch carries a result of its own".into());
+                }
+                for (job, result) in jobs.iter().zip(results) {
+                    if job.lanes.is_some() || result.lanes.is_some() {
+                        return Err("nested lanes".into());
+                    }
+                    result.validate(job)?;
+                }
+            }
+            (Some(_), None)
+                if matches!(
+                    self.outcome,
+                    TestOutcome::InfrastructureError
+                        | TestOutcome::Timeout
+                        | TestOutcome::ResourceExhausted
+                ) => {}
+            (None, None) => {}
+            _ => return Err("invalid lane response inventory".into()),
         }
         let executed_tests = self
             .tests
@@ -419,6 +450,28 @@ pub struct Report {
     pub summary: Summary,
     pub cache: CacheReport,
     pub resources: serde_json::Value,
+    pub sources: Vec<SourceBinding>,
+    pub mutators: MutatorSelection,
+}
+
+/// Every mutator family this version can generate, sorted.
+pub const MUTATOR_FAMILIES: [&str; 3] = ["arithmetic", "boolean-literal", "comparison-boundary"];
+
+/// Binds report evidence to the exact bytes of one `--source` file.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SourceBinding {
+    pub file: String,
+    pub sha256: String,
+    pub mutants: usize,
+}
+
+/// Machine-readable mutator selection (`all` or an explicit `subset`).
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct MutatorSelection {
+    pub selection: &'static str,
+    pub families: Vec<String>,
 }
 
 #[cfg(test)]
@@ -449,6 +502,7 @@ mod tests {
     #[test]
     fn infrastructure_is_never_a_kill_and_empty_pass_is_rejected() {
         let request = Request {
+            lanes: None,
             protocol: 1,
             run_id: "r".into(),
             job_id: "j".into(),
@@ -457,6 +511,7 @@ mod tests {
             root: "/".into(),
             config: "/c".into(),
             deadline_ms: 10,
+            workers: None,
             pool: None,
             mutation: None,
             collect_coverage: None,
@@ -464,6 +519,7 @@ mod tests {
             selection: None,
         };
         let mut response = Response {
+            lanes: None,
             protocol: 1,
             run_id: "r".into(),
             job_id: "j".into(),
@@ -484,6 +540,77 @@ mod tests {
         assert!(response.validate(&request).is_ok());
         response.generation = 2;
         assert!(response.validate(&request).is_err());
+    }
+
+    #[test]
+    fn lane_batches_need_one_valid_result_per_lane_and_no_result_of_their_own() {
+        let lane = |job: &str| Request {
+            lanes: None,
+            protocol: 1,
+            run_id: "r".into(),
+            job_id: job.into(),
+            generation: 1,
+            kind: "mutant".into(),
+            root: "/".into(),
+            config: "/c".into(),
+            deadline_ms: 10,
+            workers: None,
+            pool: None,
+            mutation: None,
+            collect_coverage: None,
+            resident: None,
+            selection: None,
+        };
+        let result = |job: &str, outcome| Response {
+            lanes: None,
+            protocol: 1,
+            run_id: "r".into(),
+            job_id: job.into(),
+            generation: 1,
+            outcome,
+            tests: Tests::default(),
+            errors: vec![],
+            coverage: None,
+            resident: None,
+        };
+        let mut batch = lane("a");
+        batch.lanes = Some(vec![lane("a"), lane("b")]);
+        let crashed = TestOutcome::InfrastructureError;
+        let mut valid = result("a", TestOutcome::Skipped);
+        valid.lanes = Some(vec![result("a", crashed), result("b", crashed)]);
+        assert!(valid.validate(&batch).is_ok());
+
+        let rejected = |change: &dyn Fn(&mut Response)| {
+            let mut response = valid.clone();
+            change(&mut response);
+            response.validate(&batch).unwrap_err()
+        };
+        fn lanes(response: &mut Response) -> &mut Vec<Response> {
+            response.lanes.as_mut().unwrap()
+        }
+        assert!(
+            rejected(&|r| {
+                lanes(r).pop();
+            })
+            .contains("inventory")
+        );
+        assert!(rejected(&|r| lanes(r)[1].lanes = Some(vec![])).contains("nested"));
+        assert!(rejected(&|r| lanes(r)[1].job_id = "z".into()).contains("stale"));
+        assert!(rejected(&|r| r.outcome = TestOutcome::Failed).contains("of its own"));
+        assert!(rejected(&|r| r.errors.push("x".into())).contains("of its own"));
+        assert!(rejected(&|r| r.tests.failed = 1).contains("of its own"));
+
+        // Only a failed batch may omit the lanes, and only a batch may have them.
+        let mut failed = result("a", crashed);
+        assert!(failed.validate(&batch).is_ok());
+        failed.outcome = TestOutcome::Skipped;
+        assert!(failed.validate(&batch).unwrap_err().contains("inventory"));
+        assert!(
+            valid
+                .validate(&lane("a"))
+                .unwrap_err()
+                .contains("inventory")
+        );
     }
 
     #[test]
@@ -565,6 +692,7 @@ mod tests {
         .unwrap();
         request.selection = Some(coverage().select("covered"));
         let mut response = Response {
+            lanes: None,
             protocol: 1,
             run_id: "r".into(),
             job_id: "j".into(),
@@ -606,6 +734,7 @@ mod tests {
             map: serde_json::json!({}),
         };
         let mut response = Response {
+            lanes: None,
             protocol: 1,
             run_id: "r".into(),
             job_id: "j".into(),

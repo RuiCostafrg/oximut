@@ -1,8 +1,12 @@
 import { readFile } from 'node:fs/promises';
+import { getCompileCacheDir } from 'node:module';
 import { resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { createVitest, version, type Reporter } from 'vitest/node';
 import type { Request, Result } from './protocol.ts';
 import { SelectionSupport } from './m3-selection.ts';
+
+const compileCacheFlush = fileURLToPath(new URL('./compile-cache.cjs', import.meta.url));
 
 const selectionSupport = new SelectionSupport();
 
@@ -12,6 +16,9 @@ let busy = false;
 let job: Request;
 
 function message(error: unknown): string {
+  // Vitest 5 wraps project setup failures in an AggregateError; keep their causes.
+  if (error instanceof AggregateError)
+    return [error.message, ...error.errors.map(message)].join('\n');
   return error instanceof Error ? error.message : String(error);
 }
 function transformError(error: unknown): boolean {
@@ -29,7 +36,7 @@ async function command(name: string, args: Request): Promise<unknown> {
   if (name === 'initialize') {
     job = args;
     if (vitest) throw new Error('Already initialized');
-    if (version !== '4.1.12') throw new Error(`Unsupported Vitest ${version}; expected 4.1.12`);
+    if (version !== '5.1.0') throw new Error(`Unsupported Vitest ${version}; expected 5.1.0`);
     const mutation = args.mutation;
     vitest = await createVitest(
       'test',
@@ -42,6 +49,8 @@ async function command(name: string, args: Request): Promise<unknown> {
         maxConcurrency: 1,
         fileParallelism: false,
         isolate: true,
+        // Mutation transforms vary without changing source bytes; disk cache keys do not.
+        fsModuleCache: false,
         coverage: { enabled: false },
         reporters: [
           {
@@ -73,10 +82,15 @@ async function command(name: string, args: Request): Promise<unknown> {
       },
     );
     await vitest.standalone();
+    // Fresh forks reuse compiled Vitest runtime code (see m2-worker.ts).
+    if (getCompileCacheDir())
+      for (const project of vitest.projects)
+        project.config.execArgv = [...project.config.execArgv, '--require', compileCacheFlush];
     if (
       vitest.projects.length !== 1 ||
       vitest.projects.some(
         (project) =>
+          project.config.fsModuleCache !== false ||
           project.config.pool !== 'forks' ||
           project.config.isolate !== true ||
           project.config.maxWorkers !== 1 ||
@@ -86,7 +100,7 @@ async function command(name: string, args: Request): Promise<unknown> {
       )
     )
       throw new Error(
-        'Unsupported resource configuration: one Node project, one fork, sequential files and tests, and isolation are required',
+        'Unsupported resource configuration: one Node project, one fork, sequential files and tests, isolation, and disabled filesystem module caching are required',
       );
     return { versions: { node: process.version, vitest: version }, controllerPid: process.pid };
   }
@@ -104,7 +118,7 @@ async function command(name: string, args: Request): Promise<unknown> {
     job.selection?.mode === 'files'
       ? specifications.filter((spec) => job.selection?.files.includes(resolve(spec.moduleId)))
       : specifications;
-  // Match the file pragma precedence and syntax in pinned Vitest 4.1.12.
+  // Match the file pragma precedence and syntax in pinned Vitest 5.1.0.
   for (const spec of selected) {
     const content = await readFile(spec.moduleId, 'utf8');
     const environment =

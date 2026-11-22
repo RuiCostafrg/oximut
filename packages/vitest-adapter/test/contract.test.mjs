@@ -54,7 +54,7 @@ test(
           }),
         ]);
         assert.equal(message.id, 1);
-        assert.match(message.error, /Unsupported Vitest 4\.1\.11; expected 4\.1\.12/);
+        assert.match(message.error, /Unsupported Vitest 4\.1\.11; expected 5\.1\.0/);
       } finally {
         child.kill();
         await exited;

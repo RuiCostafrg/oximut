@@ -191,8 +191,9 @@ executed mutant set. Selection granularity and early termination differ; tests
 actually executed need not be equal. Fresh Oximut provides a correctness reference.
 Both scales must meet the targets; choosing a favorable mode or scale afterward
 cannot satisfy the campaign. The requested targets supersede earlier engineering
-aspirations for this campaign: Oximut/Stryker wall time ≤0.80 and sampled peak
-aggregate RSS ≤0.50. CPU time is reported separately without inventing a CPU target.
+aspirations for this campaign: Oximut/Stryker wall time ≤0.50, CPU time ≤0.80 and
+sampled peak aggregate RSS ≤0.80 (`targets.THRESHOLDS`). Each is reported as met,
+missed or inconclusive; none fails a job unless `--require-targets` is passed.
 
 Build first with `cargo build --locked --release -p oximut-cli`, then run on a quiet
 host with no concurrent builds, tests, or benchmarks:

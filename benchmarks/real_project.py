@@ -17,6 +17,73 @@ import run as measurement
 ROOT = Path(__file__).resolve().parents[1]
 CORPUS = ROOT / 'benchmarks/real-project/colord'
 METRICS = m6.METRICS
+# Every workload shares the one vendored corpus (same source, tests and expected-test
+# lists); a manifest only chooses the mutation scope. The default keeps every existing
+# command, gate and test exactly as it was.
+WORKLOADS = {'colord': 'workload.json', 'colord-scale': 'workload-scale.json'}
+DEFAULT_WORKLOAD = 'colord'
+# Stryker operators outside the compared scope are always excluded; the compared families
+# map onto Stryker's own operators, and a family a workload does not declare is excluded too.
+STRYKER_ALWAYS_EXCLUDED = [
+    'EqualityOperator', 'AssignmentOperator', 'CallExpression', 'ArrayDeclaration',
+    'ArrowFunction', 'BlockStatement', 'ConditionalExpression', 'LogicalOperator',
+    'MethodExpression', 'ObjectLiteral', 'OptionalChaining', 'Regex', 'StringLiteral',
+    'UnaryOperator', 'UpdateOperator',
+]
+STRYKER_FAMILIES = {'arithmetic': 'ArithmeticOperator', 'boolean-literal': 'BooleanLiteral'}
+
+
+def workload_name(value):
+    """argparse type: only a declared workload may be selected."""
+    if value not in WORKLOADS:
+        raise argparse.ArgumentTypeError(
+            f'unknown workload {value!r}; choose from {", ".join(sorted(WORKLOADS))}')
+    return value
+
+
+def manifest_path(name=DEFAULT_WORKLOAD):
+    return CORPUS / WORKLOADS[workload_name(name)]
+
+
+def load_manifest(name=DEFAULT_WORKLOAD):
+    """Read a workload manifest; `extends` names a sibling manifest whose keys it overrides."""
+    manifest = measurement.read_json(manifest_path(name))
+    base = manifest.pop('extends', None)
+    if base is not None:
+        parent = measurement.read_json(CORPUS / base)
+        if 'extends' in parent:
+            raise ValueError('workload manifests may extend only a complete manifest')
+        manifest = {**parent, **manifest}
+    if manifest.get('name') != name:
+        raise ValueError(f'manifest {WORKLOADS[name]} does not declare name {name!r}')
+    unknown = set(manifest['families']) - STRYKER_FAMILIES.keys()
+    if unknown:
+        raise ValueError(f'workload declares families Stryker cannot be matched on: {sorted(unknown)}')
+    return manifest
+
+
+# The digest recorded in every row identifies the measured scope. Descriptive keys and the
+# sentinel gate are left out so a manifest gaining them keeps the digest retained campaigns
+# were qualified against; the manifest files themselves are hashed into run provenance.
+WORKLOAD_IDENTITY_EXCLUDED = {'name', 'sentinel', 'extends', 'description', 'scopeNotes'}
+
+
+def workload_digest(manifest):
+    return m6.digest({key: value for key, value in manifest.items()
+                      if key not in WORKLOAD_IDENTITY_EXCLUDED})
+
+
+def stryker_excluded_mutations(manifest):
+    return STRYKER_ALWAYS_EXCLUDED + [
+        operator for family, operator in STRYKER_FAMILIES.items()
+        if family not in manifest['families']]
+
+
+def manifest_provenance_paths(name=DEFAULT_WORKLOAD):
+    """Every manifest file whose bytes decide the chosen workload."""
+    paths = [manifest_path(name)]
+    base = measurement.read_json(paths[0]).get('extends')
+    return paths + ([CORPUS / base] if base is not None else [])
 
 
 def verify_inputs(project, manifest):
@@ -53,7 +120,8 @@ def validate_tests(tool, report, project, manifest):
             raise ValueError('Oximut baseline test attribution incomplete')
         identities = [[relative(test['file'], project), test['name']]
                       for test in coverage['tests']]
-    expected = manifest['expectedOximutTests'] if tool == 'oximut' else manifest['expectedTests']
+    # From Vitest 5, Stryker reports names joined with ' > ', exactly as Oximut does.
+    expected = manifest['expectedTests'] if tool == 'vitest' else manifest['expectedOximutTests']
     if sorted(identities) != sorted(expected):
         raise ValueError(f'{tool} test identities differ from declared upstream tests')
     # Both exact representations are pinned from ordinary Vitest ancestorTitles/title.
@@ -71,18 +139,52 @@ def validate(tool, report_path, project, row, manifest):
         if any(m['file'] not in manifest['mutate'] for m in artifact['mutations'].values()):
             raise ValueError('mutant outside declared source scope')
         if not artifact['known_killed_sentinel_identity']:
-            # Exact production edit, directly asserted by the upstream invert tests.
-            filename = 'src/manipulate/invert.ts'
+            # Exact production edit the upstream tests directly assert; the manifest names it.
+            declared = manifest['sentinel']
+            filename = declared['file']
             source = (project / filename).read_text()
+            if source.count(declared['original']) < 1:
+                raise ValueError('declared sentinel edit is absent from the source')
             sentinel = filename + ':' + hashlib.sha256(
-                source.replace('255 - rgba.r', '255 + rgba.r', 1).encode()).hexdigest()
+                source.replace(declared['original'], declared['replacement'], 1).encode()).hexdigest()
             if artifact['mutations'].get(sentinel, {}).get('outcome') != 'killed':
-                raise ValueError('upstream invert arithmetic sentinel was not killed')
+                raise ValueError('declared upstream sentinel mutant was not killed')
             artifact['known_killed_sentinel_identity'] = sentinel
     return artifact
 
 
-def prepare(project, manifest):
+def concurrency_arg(value):
+    """Accept the range Oximut's --workers accepts, before any campaign starts."""
+    number = int(value)
+    if not 1 <= number <= 1024:
+        raise argparse.ArgumentTypeError('concurrency must be between 1 and 1024')
+    return number
+
+
+def require_matched_concurrency(concurrency, available=None):
+    """Oximut caps workers at usable CPUs and Stryker does not, so refuse to mismatch them."""
+    available = len(os.sched_getaffinity(0)) if available is None else available
+    if concurrency > available:
+        raise ValueError(f'concurrency {concurrency} exceeds {available} usable CPUs; '
+                         'Oximut would cap its workers while Stryker would not')
+
+
+def parallelism_errors(row, concurrency):
+    """A run that ended up with fewer workers than Stryker is not a matched comparison."""
+    if concurrency == 1:
+        return []
+    resources = row.get('resources')
+    if not isinstance(resources, dict):
+        return ['missing resources for matched parallelism']
+    errors = []
+    if resources.get('effectiveWorkers') != concurrency:
+        errors.append(f"ran {resources.get('effectiveWorkers')} workers, not the matched {concurrency}")
+    if resources.get('admissionPauses') != 0:
+        errors.append(f"memory pressure paused admission {resources.get('admissionPauses')} times")
+    return errors
+
+
+def prepare(project, manifest, concurrency=1):
     shutil.copytree(CORPUS, project, ignore=shutil.ignore_patterns(
         'node_modules', '.oximut', '.vitest', '.stryker-tmp*'))
     (project / 'node_modules').symlink_to(ROOT / 'node_modules', target_is_directory=True)
@@ -91,13 +193,8 @@ def prepare(project, manifest):
         'mutate': manifest['mutate'],
         'files': ['src/**/*.ts', 'tests/**/*.ts', 'vitest.config.ts', 'package.json'],
         'testRunner': 'vitest', 'vitest': {'configFile': 'vitest.config.ts', 'related': False},
-        'coverageAnalysis': 'perTest', 'concurrency': 1, 'checkers': [],
-        'mutator': {'excludedMutations': [
-            'EqualityOperator', 'AssignmentOperator', 'CallExpression', 'ArrayDeclaration',
-            'ArrowFunction', 'BlockStatement', 'ConditionalExpression', 'LogicalOperator',
-            'MethodExpression', 'ObjectLiteral', 'OptionalChaining', 'Regex', 'StringLiteral',
-            'UnaryOperator', 'UpdateOperator',
-        ]},
+        'coverageAnalysis': 'perTest', 'concurrency': concurrency, 'checkers': [],
+        'mutator': {'excludedMutations': stryker_excluded_mutations(manifest)},
         'incremental': False, 'reporters': ['json', 'progress'],
         'tempDirName': '.stryker-tmp-real-project', 'cleanTempDir': True,
     }
@@ -114,7 +211,7 @@ def command(tool, args, project, report, manifest):
         return ['node', str(ROOT / 'node_modules/@stryker-mutator/core/bin/stryker.js'),
                 'run', 'stryker.config.mjs']
     result = [str(args.binary), '--root', str(project), '--config', 'vitest.config.ts',
-              '--report', str(report), '--workers', '1', '--execution', 'persistent',
+              '--report', str(report), '--workers', str(getattr(args, 'concurrency', 1)), '--execution', 'persistent',
               '--test-selection', '--no-cache', '--order-seed', '100']
     if args.adapter is not None:
         result.extend(['--adapter', str(args.adapter)])
@@ -203,7 +300,12 @@ def mode_args_error(values):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--workload', type=workload_name, default=DEFAULT_WORKLOAD,
+                        help='Mutation scope manifest on the vendored colord corpus: '
+                             + ', '.join(sorted(WORKLOADS)))
     parser.add_argument('--oximut-arg', action='append', default=[])
+    parser.add_argument('--concurrency', type=concurrency_arg, default=1,
+                        help='Matched parallelism: Stryker concurrency and Oximut --workers (1-1024, at most the usable CPUs)')
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--binary', type=Path, default=ROOT / 'target/release/oximut')
     parser.add_argument('--adapter', type=Path,
@@ -243,21 +345,27 @@ def main(argv=None):
             parser.error('--adapter must be inside --adapter-source-dir')
     if 'oximut' in args.tools and args.adapter_source_dir is None:
         parser.error('provide --adapter or --adapter-source-dir to record matching adapter provenance')
+    try:
+        require_matched_concurrency(args.concurrency)
+    except ValueError as error:
+        parser.error(str(error))
     output = args.output.resolve()
     output.mkdir(parents=True, exist_ok=False)
     (output / '.gitignore').write_text('*/project/\n')
-    manifest = measurement.read_json(CORPUS / 'workload.json')
+    manifest = load_manifest(args.workload)
     verify_inputs(CORPUS, manifest)
     meta = measurement.metadata()
-    if (meta['versions']['node'] != 'v26.3.1' or meta['versions']['vitest'] != '4.1.12'
-            or meta['versions']['@stryker-mutator/core'] != '10.0.0'
-            or meta['versions']['@stryker-mutator/vitest-runner'] != '10.0.0'):
+    if (meta['versions']['node'] != 'v26.3.1' or meta['versions']['vitest'] != '5.1.0'
+            or meta['versions']['@stryker-mutator/core'] != '10.1.1'
+            or meta['versions']['@stryker-mutator/vitest-runner'] != '10.1.1'):
         raise ValueError('pinned Node/Vitest/Stryker toolchain required')
-    meta.update(execution_inputs=execution_inputs(args), workload=manifest, diagnostic_unrestricted=args.diagnostic_unrestricted,
+    meta.update(execution_inputs=execution_inputs(args), workload=manifest, workload_name=args.workload, diagnostic_unrestricted=args.diagnostic_unrestricted,
+                concurrency=args.concurrency,
                 binary_sha256=measurement.file_hash(args.binary) if args.binary.exists() else None,
                 harness_sha256={str(path.relative_to(ROOT)): measurement.file_hash(path)
                                 for path in [Path(__file__), Path(m6.__file__), Path(measurement.__file__),
-                                             CORPUS / 'vitest.config.ts', CORPUS / 'package.json']},
+                                             CORPUS / 'vitest.config.ts', CORPUS / 'package.json',
+                                             *manifest_provenance_paths(args.workload)]},
                 policy='Clean private copies; no cache; sequential tools, alternating order. '
                        'RSS is sampled aggregate smaps_rollup, CPU is process-tree wait4 rusage. '
                        'All raw artifacts/projects retained. Ratios require all tests and exact full '
@@ -272,7 +380,7 @@ def main(argv=None):
                 directory = output / f'{index:02d}-{tool}'
                 directory.mkdir()
                 project, report = directory / 'project', directory / 'report.json'
-                prepare(project, manifest)
+                prepare(project, manifest, getattr(args, 'concurrency', 1))
                 m6.write_json(directory / 'project-inputs.json', {
                     'sha256': {str(path.relative_to(project)): measurement.file_hash(path)
                                for path in project.rglob('*') if path.is_file()
@@ -290,13 +398,17 @@ def main(argv=None):
                 row = measurement.run_command(cmd, project, directory / 'output.log',
                                               args.timeout, .02, 16_777_216, env)
                 row.update(execution_inputs=inputs, tool=tool, round=index, warmup=index < args.warmups,
-                           report_file=str(report), workload_sha256=m6.digest(manifest),
+                           report_file=str(report), workload_sha256=workload_digest(manifest),
                            mutator_families=(['unrestricted'] if tool == 'oximut'
                                              and args.diagnostic_unrestricted else manifest['families']))
                 try:
                     if execution_inputs(args) != inputs:
                         raise ValueError('binary or adapter sources changed during measured command')
                     row.update(validate(tool, report, project, row, manifest))
+                    if tool == 'oximut':
+                        unmatched = parallelism_errors(row, getattr(args, 'concurrency', 1))
+                        if unmatched:
+                            raise ValueError('; '.join(unmatched))
                     row['success'] = True
                 except (OSError, ValueError, TypeError, KeyError) as error:
                     row.update(success=False, validation_error=str(error))
@@ -320,7 +432,8 @@ def main(argv=None):
                        'raw_medians': {metric: (statistics.median(row[metric] for row in measured)
                                                if measured else None)
                                        for metric in METRICS}})
-    m6.write_json(output / 'summary.json', {'correctness_gate': passed, 'groups': groups,
+    m6.write_json(output / 'summary.json', {'correctness_gate': passed, 'groups': groups, 'concurrency': args.concurrency,
+                                          'workload': args.workload,
                                           'ratios': ratios, 'raw_measurement_count': len(rows)})
     print(f'Exact comparison gate: {passed}; {output}', flush=True)
     return 0 if passed else 1

@@ -8,8 +8,41 @@ const schema = JSON.parse(await readFile(new URL('../docs/report.schema.json', i
 const ajv = new Ajv2020({ allErrors: true });
 const validate = ajv.compile(schema);
 
+const FAMILIES = ['arithmetic', 'boolean-literal', 'comparison-boundary'];
+
+// Cross-field rules the JSON schema cannot express. Consumers such as ts-crap
+// reject reports that break them, so CI checks every emitted report too.
+function checkBindings(report) {
+  if (report.sources) {
+    const counts = new Map();
+    for (const source of report.sources) {
+      if (counts.has(source.file)) throw new Error(`sources lists ${source.file} twice`);
+      counts.set(source.file, 0);
+    }
+    for (const mutant of report.mutants) {
+      if (!counts.has(mutant.file)) throw new Error(`mutant ${mutant.id} is in ${mutant.file}, which sources does not list`);
+      counts.set(mutant.file, counts.get(mutant.file) + 1);
+    }
+    for (const source of report.sources) {
+      if (counts.get(source.file) !== source.mutants) {
+        throw new Error(`sources says ${source.file} has ${source.mutants} mutant(s); the report has ${counts.get(source.file)}`);
+      }
+    }
+  }
+  if (report.mutators) {
+    const { selection, families } = report.mutators;
+    if (new Set(families).size !== families.length) throw new Error('mutators.families repeats a family');
+    if (selection === 'all' && families.length !== FAMILIES.length) throw new Error('mutators.selection is "all" but families is not every family');
+    if (selection === 'subset' && !families.length) throw new Error('mutators.selection is "subset" but families is empty');
+    const unselected = report.mutants.find(mutant => !families.includes(mutant.operator));
+    if (unselected) throw new Error(`mutant ${unselected.id} uses ${unselected.operator}, which mutators.families does not list`);
+  }
+}
+
 export function validateReport(report, label = 'report') {
   if (!validate(report)) throw new Error(`${label}: ${ajv.errorsText(validate.errors, { separator: '; ' })}`);
+  try { checkBindings(report); }
+  catch (error) { throw new Error(`${label}: ${error.message}`); }
 }
 
 // Explicit files are always validated, regardless of their names or contents.

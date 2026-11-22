@@ -1,11 +1,22 @@
 import { readFile } from 'node:fs/promises';
+import { getCompileCacheDir } from 'node:module';
 import { resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { normalizePath } from 'vite';
-import { createVitest, version, type Reporter } from 'vitest/node';
-import { validateRequest, type Request, type Result } from './protocol.ts';
+import { createVitest, type Reporter, version } from 'vitest/node';
 import { SelectionSupport } from './m3-selection.ts';
+import {
+  type Request,
+  type Result,
+  restoreLaneResidents,
+  SHARED_LANE_RESIDENT,
+  validateRequest,
+} from './protocol.ts';
 
 const selectionSupport = new SelectionSupport();
+let sharedLanes: import('./shared-lanes.ts').SharedLanes | undefined;
+let controllerReusable = false;
+const compileCacheFlush = fileURLToPath(new URL('./compile-cache.cjs', import.meta.url));
 
 let vitest: Awaited<ReturnType<typeof createVitest>> | undefined;
 let currentRun: Parameters<NonNullable<Reporter['onTestRunEnd']>> | undefined;
@@ -31,6 +42,9 @@ function same(a?: NonNullable<Request['mutation']>, b?: NonNullable<Request['mut
 }
 
 function message(error: unknown): string {
+  // Vitest 5 wraps project setup failures in an AggregateError; keep their causes.
+  if (error instanceof AggregateError)
+    return [error.message, ...error.errors.map(message)].join('\n');
   return error instanceof Error ? error.message : String(error);
 }
 function transformError(error: unknown): boolean {
@@ -46,7 +60,7 @@ function transformError(error: unknown): boolean {
 }
 /** Drain the pinned pool without closing Vite or losing controller transforms. */
 async function awaitWorkerTermination(context: NonNullable<typeof vitest>, remainingMs: number) {
-  // Vitest 4.1.12 createPool() hides its Pool in a closure. Its wrapper.close()
+  // Vitest 5.1.0 createPool() hides its Pool in a closure. Its wrapper.close()
   // calls Pool.cancel(): it drains activeTasks, sharedRunners and exitPromises,
   // then resets cancellation so the same pool can run again. runTests() alone
   // does not await runner.stop(), including Worker.terminate() for threads.
@@ -81,7 +95,7 @@ async function awaitWorkerTermination(context: NonNullable<typeof vitest>, remai
 async function command(name: string, args: Request): Promise<unknown> {
   if (name === 'initialize') {
     if (vitest) throw new Error('Already initialized');
-    if (version !== '4.1.12') throw new Error(`Unsupported Vitest ${version}; expected 4.1.12`);
+    if (version !== '5.1.0') throw new Error(`Unsupported Vitest ${version}; expected 5.1.0`);
     // The native coordinator sends requests directly; validate them here.
     validateRequest(args);
     pool = args.pool === 'threads' ? 'threads' : 'forks';
@@ -102,6 +116,8 @@ async function command(name: string, args: Request): Promise<unknown> {
         maxConcurrency: 1,
         fileParallelism: false,
         isolate: true,
+        // Mutation transforms vary without changing source bytes; disk cache keys do not.
+        fsModuleCache: false,
         coverage: { enabled: false },
         reporters: [
           {
@@ -131,10 +147,18 @@ async function command(name: string, args: Request): Promise<unknown> {
       },
     );
     await vitest.standalone();
+    // Fresh test forks reuse compiled Vitest runtime code through Node's
+    // compile cache (CLI-provided per-run directory). Forks are stopped by
+    // signal, so a fork-only preload flushes the cache on Vitest's stop
+    // request. V8 validates cached code against source and flags.
+    if (getCompileCacheDir())
+      for (const project of vitest.projects)
+        project.config.execArgv = [...project.config.execArgv, '--require', compileCacheFlush];
     if (
       vitest.projects.length !== 1 ||
       vitest.projects.some(
         (project) =>
+          project.config.fsModuleCache !== false ||
           project.config.pool !== pool ||
           project.config.isolate !== true ||
           project.config.maxWorkers !== 1 ||
@@ -144,7 +168,7 @@ async function command(name: string, args: Request): Promise<unknown> {
       )
     )
       throw new Error(
-        'Unsupported resource configuration: one Node project, one requested worker, sequential files and tests, and isolation are required',
+        'Unsupported resource configuration: one Node project, one requested worker, sequential files and tests, isolation, and disabled filesystem module caching are required',
       );
     if (
       vitest.projects.some(
@@ -167,10 +191,13 @@ async function command(name: string, args: Request): Promise<unknown> {
             !/^(?:vite:|vitest(?::|$)|oximut-m2-mutation$|builtin:|alias$)/.test(plugin.name),
         ),
     );
+    // A lane installs its own runner, which would replace a configured one.
+    controllerReusable = !unsupported && !vitest.projects.some((project) => project.config.runner);
     return {
       versions: { node: process.version, vitest: version },
       controllerPid: process.pid,
       pool: vitest.projects[0].config.pool,
+      laneResidentEncoding: SHARED_LANE_RESIDENT,
       reuse: unsupported
         ? `fresh: custom plugins, global setup, projects, or isolation configuration (${vitest.projects.flatMap((project) => project.vite.config.plugins.map((plugin) => plugin.name)).join(',')})`
         : 'controller',
@@ -179,19 +206,30 @@ async function command(name: string, args: Request): Promise<unknown> {
   if (!vitest) throw new Error('Not initialized');
   if (name === 'close') {
     selectionSupport.close();
+    await sharedLanes?.close();
     await vitest.close();
     return { closed: true };
   }
-  if (name !== 'run') throw new Error(`Unknown command: ${name}`);
+  if (name !== 'run' && name !== 'warm' && name !== SHARED_LANE_RESIDENT)
+    throw new Error(`Unknown command: ${name}`);
   const started = performance.now();
   const job = (args as unknown as { request: Request }).request;
+  if (name === SHARED_LANE_RESIDENT) restoreLaneResidents(job);
   validateRequest(job);
   if ((job.pool === 'threads' ? 'threads' : 'forks') !== pool)
     throw new Error('Pool cannot change after initialization');
+  if (job.lanes) {
+    // Custom plugins, runners, global setup or multiple projects can't be shared across lanes.
+    if (!controllerReusable) throw new Error('Shared lanes require a reusable controller project');
+    await vitest.close();
+    sharedLanes ??= new (await import('./shared-lanes.ts')).SharedLanes();
+    return sharedLanes.run(job);
+  }
   const next = job.mutation;
   const probesChanged = JSON.stringify(probes) !== JSON.stringify(job.collectCoverage);
-  if (probesChanged) {
-    // Probe changes can affect every source file and attribution dependency.
+  if (probesChanged || job.collectCoverage) {
+    // Probe changes affect every source file and attribution dependency.
+    // Repeated probes also need fresh transforms for this job's observed set.
     for (const project of vitest.projects) project.vite.moduleGraph.invalidateAll();
   } else {
     // Invalidate exactly the files whose served module changes, restoring the
@@ -213,17 +251,65 @@ async function command(name: string, args: Request): Promise<unknown> {
   probes = job.collectCoverage;
   resident = job.resident;
   servedModules = served(mutation, resident);
+  if (name === 'warm') {
+    // Transform only: never collectTests, import a module, or start a pool.
+    // SSR is the Node test environment used by pinned Vitest 5.1.0.
+    const specifications = await vitest.globTestSpecifications();
+    let transformed = 0;
+    for (const project of vitest.projects) {
+      const environment = project.vite.environments.ssr;
+      const seen = new Set<string>();
+      const transform = async (url: string): Promise<void> => {
+        if (seen.has(url)) return;
+        seen.add(url);
+        await environment.transformRequest(url);
+        transformed++;
+        const module = await environment.moduleGraph.getModuleByUrl(url);
+        for (const dependency of module?.importedModules ?? []) {
+          if (dependency.file && !dependency.file.includes('/node_modules/'))
+            await transform(dependency.url);
+        }
+      };
+      for (const file of servedModules.keys()) await transform(normalizePath(file));
+      for (const spec of specifications) await transform(normalizePath(spec.moduleId));
+    }
+    return {
+      warmed: true,
+      transformed,
+      outcome: 'skipped',
+      tests: { passed: 0, failed: 0, skipped: 0 },
+      errors: [],
+      ...(job.resident ? { resident: job.resident.length } : {}),
+    };
+  }
   currentRun = undefined;
   delete process.env.OXIMUT_ACTIVE_MUTANT;
   if (job.kind === 'mutant' && next) process.env.OXIMUT_ACTIVE_MUTANT = next.id;
+  const previousWorkers = vitest.projects.map((project) => project.config.maxWorkers);
+  const previousBail = vitest.projects.map((project) => project.config.bail);
+  const cancellations: string[] = [];
+  // runFiles clears onCancel listeners before starting workers (5.1.0).
+  // Observe the public cancellation entry point instead, scoped to this job.
+  const cancelCurrentRun = vitest.cancelCurrentRun;
+  vitest.cancelCurrentRun = function (reason) {
+    cancellations.push(String(reason));
+    return cancelCurrentRun.call(this, reason);
+  };
   try {
+    // Vitest 5.1.0 serializes project.config afresh for each worker start.
+    for (const project of vitest.projects) {
+      project.config.bail = job.kind === 'mutant' ? 1 : 0;
+      // 5.1.0 groupSpecs reads this on every run; createPool calls
+      // setMaxWorkers for that group. Isolation still gives each file a fresh runner.
+      project.config.maxWorkers = job.kind === 'baseline' ? (job.workers ?? 1) : 1;
+    }
     selectionSupport.begin(vitest, job);
     const specifications = await vitest.globTestSpecifications();
     const selected =
       job.selection?.mode === 'files'
         ? specifications.filter((spec) => job.selection?.files.includes(resolve(spec.moduleId)))
         : specifications;
-    // Match the file pragma precedence and syntax in pinned Vitest 4.1.12.
+    // Match the file pragma precedence and syntax in pinned Vitest 5.1.0.
     for (const spec of selected) {
       const content = await readFile(spec.moduleId, 'utf8');
       const environment =
@@ -237,6 +323,11 @@ async function command(name: string, args: Request): Promise<unknown> {
     await vitest.runTestSpecifications(selected, true);
     await awaitWorkerTermination(vitest, job.deadlineMs - (performance.now() - started));
   } finally {
+    vitest.cancelCurrentRun = cancelCurrentRun;
+    for (const [index, project] of vitest.projects.entries()) {
+      project.config.bail = previousBail[index];
+      project.config.maxWorkers = previousWorkers[index];
+    }
     delete process.env.OXIMUT_ACTIVE_MUTANT;
   }
   if (!currentRun) throw new Error('Missing onTestRunEnd event');
@@ -249,14 +340,18 @@ async function command(name: string, args: Request): Promise<unknown> {
     ...[...module.children.allSuites()].flatMap((suite) => suite.errors()),
   ]);
   const errors = [...unhandled, ...moduleErrors];
-  let incomplete = reason === 'interrupted';
+  let pending = false;
+  let hasTestError = false;
   for (const module of modules) {
     for (const test of module.children.allTests()) {
       const result = test.result();
       if (result.state === 'passed' || result.state === 'failed' || result.state === 'skipped')
         tests[result.state]++;
-      else incomplete = true;
-      if (result.state === 'failed') errors.push(...(result.errors ?? []));
+      else pending = true;
+      if (result.state === 'failed') {
+        hasTestError ||= Boolean(result.errors?.length);
+        errors.push(...(result.errors ?? []));
+      }
     }
   }
   let outcome: Result['outcome'];
@@ -266,6 +361,16 @@ async function command(name: string, args: Request): Promise<unknown> {
   const timedOut = errors.some((error) =>
     /(?:Test|Hook) timed out in \d+ms/.test(String(error.message ?? '')),
   );
+  // The reporter reason is 'interrupted', not the cancellation's 'test-failure'.
+  // Require both signals and a real test error; all other error precedence stays intact.
+  const bailed =
+    job.kind === 'mutant' &&
+    reason === 'interrupted' &&
+    cancellations.length > 0 &&
+    cancellations.every((reason) => reason === 'test-failure') &&
+    tests.failed > 0 &&
+    hasTestError;
+  const incomplete = (reason === 'interrupted' || pending || cancellations.length > 0) && !bailed;
   if (unhandled.length || incomplete || processFailure) outcome = 'infrastructure-error';
   else if (moduleErrors.some(transformError)) outcome = 'invalid';
   else if (timedOut) outcome = 'timeout';

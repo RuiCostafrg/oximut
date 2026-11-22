@@ -1,0 +1,15 @@
+F.
+======================================================================
+FAIL: test_explicit_environment_controls_peak_capture_in_both_directions (test_measurement.CommandTests.test_explicit_environment_controls_peak_capture_in_both_directions)
+Honor explicit profiling environments rather than parent switches.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/root/.t3/worktrees/oximut/t3-70aeded9-05f9ddead373f23e/benchmarks/tests/test_measurement.py", line 160, in test_explicit_environment_controls_peak_capture_in_both_directions
+    self.assertIsNotNone(result.get('peak_rss_snapshot'))
+    ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: unexpectedly None
+
+----------------------------------------------------------------------
+Ran 2 tests in 1.316s
+
+FAILED (failures=1)

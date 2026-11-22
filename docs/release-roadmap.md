@@ -116,7 +116,7 @@ evidence exists.
 | Expansion | Evidence required before adding support or making the claim |
 | --- | --- |
 | More Linux distributions, kernels, architectures, or containers | Run correctness, installer, process supervision, and resource-accounting checks on each named target; document any missing `/proc`, subreaper, or cgroup behavior. |
-| Additional Node, npm, Python, Rust, Vitest, or Oxc versions | Add a deliberate version matrix and run adapter lifecycle, CLI, install, and acceptance checks for each supported combination. Current adapter entrypoints reject Vitest versions other than 4.1.12. |
+| Additional Node, npm, Python, Rust, Vitest, or Oxc versions | Add a deliberate version matrix and run adapter lifecycle, CLI, install, and acceptance checks for each supported combination. Current adapter entrypoints reject Vitest versions other than 5.1.0. |
 | Additional Vitest project features, plugins, environments, concurrency, or multiple projects | Specify behavior and isolation guarantees for each feature; add fixtures for attribution, invalidation, fallback, and failure behavior before advertising support. |
 | Hard memory caps or broader resource guarantees | Add an OS-enforced mechanism and validate its limits and failure reporting on the target OS. Current sampled RSS admission/cancellation does not establish a strict cap. |
 | Smaller standalone npm/runtime package, crates.io, or more binary targets | Define packaging and provenance, test clean installation and relocation per target, and publish license/dependency metadata. The current source bundle includes root development dependencies. |

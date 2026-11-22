@@ -1,5 +1,12 @@
 // TypeScript consumers share the checked JavaScript implementation.
-export { envelope, MAX_REQUEST_BYTES, MAX_RESPONSE_BYTES, validateRequest } from './protocol.mjs';
+export {
+  envelope,
+  MAX_REQUEST_BYTES,
+  MAX_RESPONSE_BYTES,
+  restoreLaneResidents,
+  SHARED_LANE_RESIDENT,
+  validateRequest,
+} from './protocol.mjs';
 
 export interface Selection {
   mode: 'files' | 'full' | 'none';
@@ -17,6 +24,7 @@ export interface Coverage {
 }
 
 export interface Request {
+  lanes?: Omit<Request, 'lanes'>[];
   protocol: 1;
   runId: string;
   jobId: string;
@@ -25,6 +33,8 @@ export interface Request {
   root: string;
   config: string;
   deadlineMs: number;
+  /** Per-baseline file concurrency; mutants always use one worker. */
+  workers?: number;
   mutation: null | { id: string; file: string; code: string; map: Record<string, unknown> };
   pool?: 'threads';
   collectCoverage?: NonNullable<Request['mutation']>[];
@@ -33,6 +43,7 @@ export interface Request {
   selection?: Selection;
 }
 export interface Result {
+  lanes?: Omit<Response, 'lanes'>[];
   outcome: 'passed' | 'failed' | 'invalid' | 'timeout' | 'infrastructure-error' | 'skipped';
   tests: { passed: number; failed: number; skipped: number };
   errors: string[];

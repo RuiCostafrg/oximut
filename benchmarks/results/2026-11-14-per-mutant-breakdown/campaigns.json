@@ -1,0 +1,49 @@
+{
+  "before_commit": "7297840df3996c9e6098afbe6d37db41b294ee0b",
+  "after_commit": "1620854c74b3eee1027659730958bbcbcdea9e3b",
+  "warmups": 1,
+  "repetitions": 5,
+  "runs": [
+    {
+      "config": "scale-2w-threads",
+      "id": 43593395274,
+      "workers": 2,
+      "workload": "colord-scale",
+      "after_args": [
+        "--isolation",
+        "fresh-thread"
+      ],
+      "url": "https://github.com/RuiCostafrg/oximut/actions/runs/43593395274"
+    },
+    {
+      "config": "scale-4w-threads",
+      "id": 43593398752,
+      "workers": 4,
+      "workload": "colord-scale",
+      "after_args": [
+        "--isolation",
+        "fresh-thread"
+      ],
+      "url": "https://github.com/RuiCostafrg/oximut/actions/runs/43593398752"
+    },
+    {
+      "config": "colord-4w-threads",
+      "id": 43593401959,
+      "workers": 4,
+      "workload": "colord",
+      "after_args": [
+        "--isolation",
+        "fresh-thread"
+      ],
+      "url": "https://github.com/RuiCostafrg/oximut/actions/runs/43593401959"
+    },
+    {
+      "config": "colord-4w-default",
+      "id": 43593404492,
+      "workers": 4,
+      "workload": "colord",
+      "after_args": [],
+      "url": "https://github.com/RuiCostafrg/oximut/actions/runs/43593404492"
+    }
+  ]
+}

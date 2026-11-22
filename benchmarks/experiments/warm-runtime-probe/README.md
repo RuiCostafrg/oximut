@@ -3,7 +3,17 @@
 This is a standalone structural probe of pinned Vitest 4.1.12, not a product mode
 or performance benchmark. Fresh forks remain Oximut's default.
 
-From the repo root, with its installed dependencies and Node 26.3.1:
+The repository now uses Vitest 5, so run this probe from a separate worktree of the
+last Vitest 4.1.12 revision. That leaves your checkout and its dependencies alone:
+
+```sh
+git fetch --no-tags --depth=1 origin 34acb9fee79a9e010f956b1326c52dc537aa1a64
+git worktree add ../oximut-vitest4 FETCH_HEAD
+cd ../oximut-vitest4
+npm ci --ignore-scripts
+```
+
+From that worktree, with Node 26.3.1:
 
 ```sh
 node benchmarks/experiments/warm-runtime-probe/probe.mjs --output /tmp/oximut-stock-probe-new

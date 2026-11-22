@@ -1,0 +1,9 @@
+diff --git a/.github/workflows/real-project-benchmark.yml b/.github/workflows/real-project-benchmark.yml
+index 9a840f1..d47c299 100644
+--- a/.github/workflows/real-project-benchmark.yml
++++ b/.github/workflows/real-project-benchmark.yml
+@@ -64,2 +64,2 @@ jobs:
+-      # Main 7297840 (after #63, colord-scale workload); diagnostic clocks and peak attribution stay off here.
+-      BEFORE_COMMIT: 7297840df3996c9e6098afbe6d37db41b294ee0b
++      # Compare compact controller transport against its exact main parent.
++      BEFORE_COMMIT: 62c08df8fc83c16e9430f48a230e5895776c40ec

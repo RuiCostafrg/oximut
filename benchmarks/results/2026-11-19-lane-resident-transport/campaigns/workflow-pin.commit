@@ -1,0 +1,6 @@
+tree 6848579cabc3de51a7a4926562636aacd3f7f6b0
+parent 2f94feb3b1c08560fadebf31d740759958c66273
+author RuiCostafrg <35194998+RuiCostafrg@users.noreply.github.com> 1795105991 +0100
+committer RuiCostafrg <35194998+RuiCostafrg@users.noreply.github.com> 1795105991 +0100
+
+bench: pin compact lane resident baseline for native comparison

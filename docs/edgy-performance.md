@@ -114,13 +114,15 @@ The stock negative controls remain executable. All probe resource/phase metrics,
 paired ratios and CIs are unmeasured/N/A; the [latest qualified control](../benchmarks/experiments/warm-runtime-probe/BASELINE.md)
 still misses wall and CPU goals.
 
-Before extending this guard, measure self CPU in the Rust resource sampler and
-controller input/cleanup checks, alongside worker bootstrap. Source inspection
-shows repeated current-RSS reads for aggregate and slot accounting, but there is
-no CPU attribution for those reads yet. Keep their cadence, fresh-read semantics,
-and fail-closed admission/cleanup unchanged during diagnosis. This measurement
-decides whether a safe accounting optimization deserves priority over more
-runtime-isolation work; it is not evidence of a saving.
+Self CPU in the Rust resource sampler has since been measured. The
+[precise accounting capture](../benchmarks/results/2026-11-05-precise-accounting-profile/README.md)
+(run 42058991084) attributes ~0.70 s of CLI thread CPU to all sampling windows,
+~0.63 s of it to 574 `smaps_rollup` RSS walks across 78 samples, almost all
+kernel time on the scheduler thread. #47 keeps sampling cadence, fresh
+per-observation identity checks and fail-closed admission/cleanup unchanged,
+but walks each verified PID's RSS once per sample. Kernel RSS counters were
+rejected because they lagged the page walk by tens of MiB. The saving must
+still be established by the paired native benchmark.
 
 The [whole-job native capture](../benchmarks/results/2026-11-04-whole-mutant-profile/README.md)
 passed qualification and its original capture gate. It fails the current

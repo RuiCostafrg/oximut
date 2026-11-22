@@ -4,9 +4,10 @@ mod coordinator;
 mod processes;
 mod resources;
 mod scheduler;
+mod wait;
 use oximut_core::{
-    Coverage, Mutant, MutantResult, Mutation, Outcome, PROTOCOL, Provenance, Report, Request,
-    Response, Summary, TestOutcome, Tests,
+    Coverage, Mutant, MutantResult, Mutation, MutatorSelection, Outcome, PROTOCOL, Provenance,
+    Report, Request, Response, SourceBinding, Summary, TestOutcome, Tests,
 };
 use std::sync::Arc;
 use std::{
@@ -19,7 +20,7 @@ use std::{
     time::{Duration, Instant, SystemTime, UNIX_EPOCH},
 };
 
-const HELP: &str = "Usage: oximut [--root DIR] [--config FILE] --source FILE [--source FILE ...]\n  --version           Print the Cargo package version\n  --report FILE       JSON report (- for stdout)\n  --timeout-ms N      Per-job deadline, default 30000 ms\n  --workers N         Maximum simultaneous mutation jobs (default 1; bounded by CPU limits)\n  --memory-budget-mib N Aggregate sampled RSS budget in MiB (1 MiB = 1048576 bytes); default host/container limit\n  --memory-reserve-mib N Reserved admission headroom in MiB (default 64)\n  --execution MODE   fresh (default) or persistent controller\n  --isolation MODE   fresh-process (default) or fresh-thread (requires persistent)\n  --test-selection    Collect baseline hits and conservatively select hit test files\n  --mutators FAMILIES Repeatable comma-separated union: arithmetic,boolean-literal,comparison-boundary (default: all)\n  --order-seed N     Deterministically shuffle mutant execution order\n  --adapter FILE      Node adapter entry point override (an m2-runner.mjs beside m2-worker.ts runs natively)\n  --cache             Cache instrumentation; outcomes require --cache-inputs-complete\n  --cache-policy MODE  auto (default) learns whether outcome caching saves work; always validates/reuses eligible outcomes\n  --cache-inputs-complete Assert all nondeterministic/external inputs are declared\n  --cache-input FILE  Additional input file/directory (repeatable)\n  --cache-env NAME    Additional environment input (repeatable; values stay private)\n  --no-cache, --force Bypass all cache reads and writes\n  --list              Generate mutants as JSON without executing tests\n  --baseline-only     Run original sources without mutants\nExit: 0 complete/no survivors; 1 survivors/no coverage; 2 incomplete/error.\nScore: killed/(killed+survived+no-coverage)*100; empty denominator => null.\nInvalid/timeout/infrastructure-error/resource-exhausted/skipped are excluded and make a run incomplete.";
+const HELP: &str = "Usage: oximut [--root DIR] [--config FILE] --source FILE [--source FILE ...]\n  --version           Print the Cargo package version\n  --report FILE       JSON report (- for stdout)\n  --timeout-ms N      Per-job deadline, default 30000 ms\n  --workers N         Maximum simultaneous mutation jobs / persistent baseline files (default 1; bounded by CPU limits)\n  --memory-budget-mib N Aggregate sampled RSS budget in MiB (1 MiB = 1048576 bytes); default host/container limit\n  --memory-reserve-mib N Reserved admission headroom in MiB (default 64)\n  --execution MODE   fresh (default) or persistent controller\n  --isolation MODE   fresh-process (default) or fresh-thread (requires persistent)\n  --no-shared-controller Use one Vitest controller per worker instead of the default shared controller\n  --test-selection    Collect baseline hits and conservatively select hit test files\n  --mutators FAMILIES Repeatable comma-separated union: arithmetic,boolean-literal,comparison-boundary (default: all)\n  --order-seed N     Deterministically shuffle mutant execution order\n  --adapter FILE      Node adapter entry point override (an m2-runner.mjs beside m2-worker.ts runs natively)\n  --cache             Cache instrumentation; outcomes require --cache-inputs-complete\n  --cache-policy MODE  auto (default) learns whether outcome caching saves work; always validates/reuses eligible outcomes\n  --cache-inputs-complete Assert all nondeterministic/external inputs are declared\n  --cache-input FILE  Additional input file/directory (repeatable)\n  --cache-env NAME    Additional environment input (repeatable; values stay private)\n  --no-cache, --force Bypass all cache reads and writes\n  --list              Generate mutants as JSON without executing tests\n  --baseline-only     Run original sources without mutants\nExit: 0 complete/no survivors; 1 survivors/no coverage; 2 incomplete/error.\nScore: killed/(killed+survived+no-coverage)*100; empty denominator => null.\nInvalid/timeout/infrastructure-error/resource-exhausted/skipped are excluded and make a run incomplete.";
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 enum Execution {
@@ -66,6 +67,8 @@ struct Options {
     cache_inputs: Vec<PathBuf>,
     cache_env: Vec<String>,
     workers: usize,
+    #[serde(default)]
+    shared_controller: bool,
     memory_budget_mib: Option<u64>,
     memory_reserve_mib: u64,
     #[serde(default)]
@@ -98,6 +101,7 @@ fn parse_options(mut args: impl Iterator<Item = String>) -> Result<Option<Option
     let mut cache_inputs = vec![];
     let mut cache_env = vec![];
     let mut workers = 1;
+    let mut no_shared_controller = false;
     let mut memory_budget_mib = None;
     let mut memory_reserve_mib = 64;
     let mut mutators = BTreeSet::new();
@@ -117,10 +121,7 @@ fn parse_options(mut args: impl Iterator<Item = String>) -> Result<Option<Option
                     .next()
                     .ok_or_else(|| "missing value for --mutators".to_string())?;
                 for family in value.split(',') {
-                    if family.is_empty()
-                        || !["arithmetic", "boolean-literal", "comparison-boundary"]
-                            .contains(&family)
-                    {
+                    if family.is_empty() || !oximut_core::MUTATOR_FAMILIES.contains(&family) {
                         return Err(format!(
                             "unknown or empty mutator family {family:?}; expected arithmetic, boolean-literal, comparison-boundary"
                         ));
@@ -128,6 +129,7 @@ fn parse_options(mut args: impl Iterator<Item = String>) -> Result<Option<Option
                     mutators.insert(family.to_string());
                 }
             }
+            "--no-shared-controller" => no_shared_controller = true,
             "--baseline-only" => baseline_only = true,
             "--test-selection" => test_selection = true,
             "--cache" => cache = true,
@@ -308,6 +310,11 @@ fn parse_options(mut args: impl Iterator<Item = String>) -> Result<Option<Option
             return Err("report path would overwrite a project source file".into());
         }
     }
+    // Default for parallel persistent runs; unsupported projects fall back at run time.
+    let shared_controller = !no_shared_controller
+        && execution == Execution::Persistent
+        && workers >= 2
+        && coordinator::native_worker(&adapter).is_some();
     Ok(Some(Options {
         root,
         config,
@@ -328,6 +335,7 @@ fn parse_options(mut args: impl Iterator<Item = String>) -> Result<Option<Option
         cache_inputs,
         cache_env,
         workers,
+        shared_controller,
         memory_budget_mib,
         memory_reserve_mib,
         mutators,
@@ -336,6 +344,7 @@ fn parse_options(mut args: impl Iterator<Item = String>) -> Result<Option<Option
 
 fn infrastructure(request: &Request, error: impl Into<String>) -> Response {
     Response {
+        lanes: None,
         protocol: PROTOCOL,
         run_id: request.run_id.clone(),
         job_id: request.job_id.clone(),
@@ -425,19 +434,20 @@ fn terminate(child: &mut std::process::Child, owned: &BTreeMap<u32, u64>) {
     {
         let deadline = Instant::now() + Duration::from_millis(500);
         loop {
-            let mut pending = false;
+            let mut pending = vec![];
             for (&pid, &start) in owned {
                 if still_owned(pid, start)
                     && unsafe { libc::waitpid(pid as i32, std::ptr::null_mut(), libc::WNOHANG) }
                         == 0
                 {
-                    pending = true;
+                    pending.push(pid);
                 }
             }
-            if !pending || Instant::now() >= deadline {
+            if pending.is_empty() || Instant::now() >= deadline {
                 break;
             }
-            thread::sleep(Duration::from_millis(5));
+            // Pending processes are running children: wake when one exits.
+            wait::any_exit(pending, deadline, Duration::from_millis(5), true);
         }
     }
 }
@@ -499,7 +509,9 @@ fn invoke(options: &Options, request: &Request) -> Response {
                 terminate(&mut child, &owned);
                 return Err("adapter exceeded controller deadline and was terminated".into());
             }
-            thread::sleep(Duration::from_millis(10));
+            // Wake on the adapter's exit, or for the next ownership snapshot.
+            let until = (last_snapshot + Duration::from_millis(50)).min(started + limit);
+            wait::any_exit([child.id()], until, Duration::from_millis(10), true);
         };
         owned.extend(descendants(std::process::id()));
         owned.remove(&child.id());
@@ -541,17 +553,24 @@ fn shuffle<T>(items: &mut [T], mut state: u64) {
     }
 }
 
+/// Responses from an adapter or a scheduler worker are at most 1 MiB.
+const RESPONSE_LIMIT: usize = 1_048_576;
+
 fn read_response(path: &Path, request: &Request) -> Result<Response, String> {
     let file = fs::File::open(path).map_err(|e| format!("missing adapter response: {e}"))?;
     let mut bytes = Vec::new();
-    file.take(1_048_577)
+    file.take(RESPONSE_LIMIT as u64 + 1)
         .read_to_end(&mut bytes)
         .map_err(|e| e.to_string())?;
-    if bytes.len() > 1_048_576 {
+    parse_response(&bytes, request)
+}
+
+fn parse_response(bytes: &[u8], request: &Request) -> Result<Response, String> {
+    if bytes.len() > RESPONSE_LIMIT {
         return Err("adapter response exceeds 1 MiB limit".into());
     }
     let response: Response =
-        serde_json::from_slice(&bytes).map_err(|e| format!("malformed adapter response: {e}"))?;
+        serde_json::from_slice(bytes).map_err(|e| format!("malformed adapter response: {e}"))?;
     response.validate(request)?;
     Ok(response)
 }
@@ -682,7 +701,13 @@ impl Session {
             if Instant::now() >= deadline {
                 break Err("persistent adapter shutdown exceeded deadline".into());
             }
-            thread::sleep(Duration::from_millis(10));
+            // Wake on exit, or for the next ownership snapshot.
+            wait::any_exit(
+                [self.child.id()],
+                (Instant::now() + Duration::from_millis(10)).min(deadline),
+                Duration::from_millis(10),
+                true,
+            );
         };
         self.snapshot();
         terminate(&mut self.child, &self.owned);
@@ -783,6 +808,26 @@ fn request_budget() -> usize {
 
 fn encoded_len<T: serde::Serialize + ?Sized>(value: &T) -> usize {
     serde_json::to_vec(value).map_or(usize::MAX, |bytes| bytes.len())
+}
+
+/// Omit lane copies only when every lane retains the batch's resident Arc.
+/// The caller must use a wire encoding that restores these aliases.
+fn without_duplicate_lane_residents(request: &Request) -> Option<Request> {
+    let set = request.resident.as_ref()?;
+    let lanes = request.lanes.as_ref()?;
+    if set.is_empty()
+        || lanes.is_empty()
+        || !lanes
+            .iter()
+            .all(|lane| lane.resident.as_ref().is_some_and(|r| Arc::ptr_eq(r, set)))
+    {
+        return None;
+    }
+    let mut wire = request.clone();
+    for lane in wire.lanes.iter_mut().flatten() {
+        lane.resident = None;
+    }
+    Some(wire)
 }
 
 /// Partition switched modules into groups validated and served together. A
@@ -892,6 +937,33 @@ fn run(options: Options) -> Result<u8, String> {
     }
 }
 
+/// Hash of the exact bytes generated from, in the same path form as mutant `file`.
+fn source_binding(path: &Path, source: &str, mutants: usize) -> SourceBinding {
+    use sha2::{Digest, Sha256};
+    SourceBinding {
+        file: path.to_string_lossy().into_owned(),
+        sha256: Sha256::digest(source.as_bytes())
+            .iter()
+            .map(|byte| format!("{byte:02x}"))
+            .collect(),
+        mutants,
+    }
+}
+
+fn mutator_selection(requested: &BTreeSet<String>) -> MutatorSelection {
+    if requested.is_empty() {
+        MutatorSelection {
+            selection: "all",
+            families: oximut_core::MUTATOR_FAMILIES.map(String::from).to_vec(),
+        }
+    } else {
+        MutatorSelection {
+            selection: "subset",
+            families: requested.iter().cloned().collect(),
+        }
+    }
+}
+
 fn run_attempt(options: &Options, previous: Option<RetryEvidence>) -> Result<Attempt, String> {
     let preparation_started = Instant::now();
     let mut phase_wall_ms = BTreeMap::new();
@@ -913,6 +985,7 @@ fn run_attempt(options: &Options, previous: Option<RetryEvidence>) -> Result<Att
     let mut probe_transforms = vec![];
     let mut probe_reasons = vec![];
     let mut inventory = vec![];
+    let mut sources = Vec::new();
     for path in &options.sources {
         let source = fs::read_to_string(path).map_err(|e| format!("{}: {e}", path.display()))?;
         let identity = path
@@ -942,9 +1015,11 @@ fn run_attempt(options: &Options, previous: Option<RetryEvidence>) -> Result<Att
                 map: first.map.clone(),
             });
         }
+        let before = mutants.len();
         mutants.extend(generated.mutants.into_iter().filter(|mutant| {
             options.mutators.is_empty() || options.mutators.contains(&mutant.operator)
         }));
+        sources.push(source_binding(path, &source, mutants.len() - before));
         diagnostics.extend(
             generated
                 .diagnostics
@@ -997,6 +1072,7 @@ fn run_attempt(options: &Options, previous: Option<RetryEvidence>) -> Result<Att
             .as_nanos()
     );
     let mut request = Request {
+        lanes: None,
         protocol: PROTOCOL,
         run_id: run_id.clone(),
         job_id: "baseline".into(),
@@ -1005,6 +1081,7 @@ fn run_attempt(options: &Options, previous: Option<RetryEvidence>) -> Result<Att
         root: options.root.to_string_lossy().into_owned(),
         config: options.config.to_string_lossy().into_owned(),
         deadline_ms: options.timeout_ms,
+        workers: None,
         pool: (options.execution == Execution::Persistent
             && options.isolation == Isolation::FreshThread)
             .then(|| "threads".into()),
@@ -1014,6 +1091,16 @@ fn run_attempt(options: &Options, previous: Option<RetryEvidence>) -> Result<Att
         selection: None,
     };
     let mut scheduler = scheduler::Scheduler::new(options)?;
+    let groups: Vec<Arc<Vec<Mutation>>> = plan_groups(resident, request_budget())
+        .into_iter()
+        .map(Arc::new)
+        .collect();
+    if !options.baseline_only && !mutants.is_empty() {
+        let mut warm_request = request.clone();
+        warm_request.job_id = "spare-warm".into();
+        warm_request.resident = groups.first().cloned();
+        scheduler.prepare_spares(&warm_request);
+    }
     phase_wall_ms.insert(
         "inputAndSchedulerPreparation",
         preparation_started.elapsed().as_secs_f64() * 1000.0,
@@ -1031,10 +1118,6 @@ fn run_attempt(options: &Options, previous: Option<RetryEvidence>) -> Result<Att
     let instrumented_started = Instant::now();
     let collect = options.test_selection;
     let budget = request_budget();
-    let groups: Vec<Arc<Vec<Mutation>>> = plan_groups(resident, budget)
-        .into_iter()
-        .map(Arc::new)
-        .collect();
     let group_of: BTreeMap<String, usize> = groups
         .iter()
         .enumerate()
@@ -1288,11 +1371,12 @@ fn run_attempt(options: &Options, previous: Option<RetryEvidence>) -> Result<Att
                 request.generation = generation_offset + index as u64 + 1;
                 request.kind = "mutant".into();
                 request.selection = selection.clone();
-                // A lone module is served through `mutation` alone.
+                // A lone module is served through `mutation` alone, except that
+                // shared lanes need a resident module for every mutant.
                 request.resident = group_of
                     .get(&mutant.file)
                     .map(|&index| groups[index].clone())
-                    .filter(|group| group.len() > 1);
+                    .filter(|group| options.shared_controller || group.len() > 1);
                 request.mutation = Some(Mutation {
                     id: mutant.id.clone(),
                     file: mutant.file.clone(),
@@ -1303,6 +1387,7 @@ fn run_attempt(options: &Options, previous: Option<RetryEvidence>) -> Result<Att
                 infrastructure(&request, "pending scheduler execution")
             } else {
                 Response {
+                    lanes: None,
                     protocol: PROTOCOL,
                     run_id: run_id.clone(),
                     job_id: mutant.id.clone(),
@@ -1460,6 +1545,18 @@ fn run_attempt(options: &Options, previous: Option<RetryEvidence>) -> Result<Att
         summary,
         cache: cache.report.clone(),
         resources,
+        sources: if options.baseline_only {
+            sources
+                .into_iter()
+                .map(|source| SourceBinding {
+                    mutants: 0,
+                    ..source
+                })
+                .collect()
+        } else {
+            sources
+        },
+        mutators: mutator_selection(&options.mutators),
     };
     let json = serde_json::to_string_pretty(&report).map_err(|e| e.to_string())?;
     if let Some(path) = &options.report {
@@ -1582,9 +1679,93 @@ fn main() -> ExitCode {
     }
 }
 
+/// Tests that spawn processes or reap descendants of the test process run
+/// one at a time: a global cleanup must never touch another test's children.
+#[cfg(test)]
+static PROCESS_TEST: std::sync::Mutex<()> = std::sync::Mutex::new(());
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn source_binding_hashes_exact_bytes_in_mutant_path_form() {
+        let path = Path::new("/p/src/a.ts");
+        let binding = source_binding(path, "abc", 0);
+        assert_eq!(
+            binding.sha256,
+            "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
+        );
+        assert_eq!(binding.file, "/p/src/a.ts");
+        assert_eq!(binding.mutants, 0);
+        let json = serde_json::to_value(&binding).unwrap();
+        assert_eq!(json["sha256"].as_str().unwrap().len(), 64);
+        assert_ne!(binding.sha256, source_binding(path, "abc\n", 0).sha256);
+    }
+
+    #[test]
+    fn source_counts_match_filtered_mutants_and_zero_files_are_listed() {
+        let subject = Path::new(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../fixtures/m1/src/subject.ts"
+        ));
+        let directory = tempfile::tempdir().unwrap();
+        let empty = directory.path().join("empty.ts");
+        fs::write(&empty, "export const fixed = 1;\n").unwrap();
+        let paths = [subject.to_path_buf(), empty.clone()];
+        let mut bindings = vec![];
+        for path in &paths {
+            let source = fs::read_to_string(path).unwrap();
+            let generated = oximut_instrument::generate("src/subject.ts", path, &source).unwrap();
+            let file = path.to_string_lossy().into_owned();
+            assert!(generated.mutants.iter().all(|m| m.file == file));
+            let selected = generated
+                .mutants
+                .iter()
+                .filter(|mutant| mutant.operator == "boolean-literal")
+                .count();
+            bindings.push(source_binding(path, &source, selected));
+        }
+        // Entries stay in --source order, and a file no mutant survives the
+        // --mutators filter for is still listed with its hash.
+        assert_eq!(bindings.len(), 2);
+        assert_eq!(bindings[0].file, subject.to_string_lossy().into_owned());
+        assert!(bindings[0].mutants > 0);
+        assert_eq!(bindings[1].file, empty.to_string_lossy().into_owned());
+        assert_eq!(bindings[1].mutants, 0);
+        assert_eq!(
+            bindings[1].sha256,
+            source_binding(&empty, "export const fixed = 1;\n", 0).sha256
+        );
+        // A whole filter family can remove every mutant of a listed file.
+        let source = fs::read_to_string(subject).unwrap();
+        let generated = oximut_instrument::generate("src/subject.ts", subject, &source).unwrap();
+        let arithmetic = generated
+            .mutants
+            .iter()
+            .filter(|mutant| mutant.operator == "arithmetic")
+            .count();
+        assert_eq!(arithmetic, 0);
+        let filtered = source_binding(subject, &source, arithmetic);
+        assert_eq!(filtered.mutants, 0);
+        assert_eq!(filtered.sha256, bindings[0].sha256);
+    }
+
+    #[test]
+    fn mutator_selection_all_and_sorted_subset() {
+        let all = serde_json::to_value(mutator_selection(&BTreeSet::new())).unwrap();
+        assert_eq!(
+            all,
+            serde_json::json!({"selection":"all","families":["arithmetic","boolean-literal","comparison-boundary"]})
+        );
+        let subset: BTreeSet<String> = ["comparison-boundary", "arithmetic"]
+            .map(String::from)
+            .into();
+        assert_eq!(
+            serde_json::to_value(mutator_selection(&subset)).unwrap(),
+            serde_json::json!({"selection":"subset","families":["arithmetic","comparison-boundary"]})
+        );
+    }
 
     #[test]
     fn isolation_options_and_legacy_serialization() {
@@ -1624,6 +1805,37 @@ mod tests {
         .unwrap()
         .unwrap();
         assert_eq!(thread.isolation, Isolation::FreshThread);
+        let shared_thread_args = [
+            "--source",
+            concat!(
+                env!("CARGO_MANIFEST_DIR"),
+                "/../../fixtures/m1/src/subject.ts"
+            ),
+            "--execution",
+            "persistent",
+            "--isolation",
+            "fresh-thread",
+            "--workers",
+            "2",
+        ];
+        assert!(
+            parse(&shared_thread_args)
+                .unwrap()
+                .unwrap()
+                .shared_controller
+        );
+        assert!(
+            !parse(
+                &shared_thread_args
+                    .into_iter()
+                    .chain(["--no-shared-controller"])
+                    .collect::<Vec<_>>()
+            )
+            .unwrap()
+            .unwrap()
+            .shared_controller
+        );
+
         assert!(
             parse(&["--isolation", "fresh-thread"])
                 .err()
@@ -1760,6 +1972,7 @@ mod tests {
         let directory = tempfile::tempdir().unwrap();
         let path = directory.path().join("response.json");
         let request = Request {
+            lanes: None,
             protocol: PROTOCOL,
             run_id: "run".into(),
             job_id: "job".into(),
@@ -1768,6 +1981,7 @@ mod tests {
             root: "/".into(),
             config: "/config".into(),
             deadline_ms: 100,
+            workers: None,
             pool: None,
             mutation: None,
             collect_coverage: None,

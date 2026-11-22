@@ -3,6 +3,10 @@
   "files": {
     "includes": [
       "*.ts",
+      "compile-cache.cjs",
+      "lane-runner.mjs",
+      "test/shared-lanes.test.mjs",
+      "test/transform-share.test.mjs",
       "protocol.mjs",
       "test/protocol.test.mjs",
       "test/protocol-types.ts",
@@ -11,7 +15,8 @@
       "test/m1.test.mjs",
       "test/m2.test.mjs",
       "test/m3.test.mjs",
-      "test/contract.test.mjs"
+      "test/contract.test.mjs",
+      "test/compile-cache.test.mjs"
     ]
   },
   "formatter": { "indentStyle": "space", "indentWidth": 2, "lineWidth": 100 },

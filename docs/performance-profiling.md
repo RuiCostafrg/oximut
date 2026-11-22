@@ -61,6 +61,25 @@ identity tracking is sampled, not an exhaustive process audit. This changes no
 resource-budget sampling, test isolation, baseline, or mutation workload. Its
 performance effect requires a separate matched measurement.
 
+Each scheduler slot gives Node a private compile cache
+(`NODE_COMPILE_CACHE=<slot temporary directory>/node-compile-cache`), unless the
+caller already set one. The adapter, Vitest controller and every fresh test fork
+inherit it, so later forks reuse compiled Vitest runtime code instead of
+recompiling it. V8 validates cached code against source content and flags, so
+results cannot depend on stale entries. Vitest stops forks with SIGTERM after
+their teardown, which skips Node's exit-time flush. A fork-only preload
+(`compile-cache.cjs`, appended to each project's `execArgv`) therefore flushes
+when the worker receives Vitest's stop request. Other processes that inherit the
+preload run a different entrypoint and skip it. The default directory is
+removed with the slot, so nothing persists across runs. A caller-provided
+`NODE_COMPILE_CACHE` is left in place and remains the caller's to manage.
+`--no-cache` governs Oximut's persistent caches across runs. Like Vite's
+in-memory transform cache, this per-run code cache stays enabled unless the
+caller sets `NODE_DISABLE_COMPILE_CACHE=1`, which Node honours (the fork preload
+and its `execArgv` injection are then skipped as well); V8's validation
+means it cannot change outcomes. Test isolation is unaffected: every fork still starts fresh and
+evaluates its modules anew.
+
 Periodic accounting now discovers only the owned tree. The CLI and each slot
 are subreapers, so every owned process, including adopted orphans, is reachable
 through the per-thread `/proc/<pid>/task/<tid>/children` links. Periodic resource
@@ -82,8 +101,15 @@ Only memory-pressure admission waits take a broad sample, at most once per
 sampling interval. Before this change, every 10ms poll while all slots were busy
 (the whole mutation phase with one worker) forced a broad host scan. Every abort, termination and shutdown verification still performs a
 fresh broad discovery before signalling or concluding cleanup, so the
-fail-closed cleanup gates are unchanged. Identity and RSS reads for tree members
-remain fresh and strict.
+fail-closed cleanup gates are unchanged. Identity checks for tree members remain
+fresh and strict for every aggregate, slot and CLI-floor observation. In an
+exact sample, each verified PID's RSS is read once (one `smaps_rollup` walk where
+available, otherwise the documented approximate `/proc/PID/stat` fallback) and
+reused by the overlapping trees of that sample only; errors are never cached and
+every new exact sample reads afresh. Counter samples (periodic samples between
+forced ones, see `docs/m5.md`) read only `/proc/PID/statm` for each verified PID,
+as an escalation hint; they never feed peaks or decisions. The report's
+`exactSamples` and `counterSamples` count each kind.
 
 If process discovery fails, the supervisor performs bounded best-effort cleanup
 of previously observed identities, including its directly spawned controller.
@@ -184,6 +210,18 @@ place of `--segments`; the modes are mutually exclusive to avoid inspector
 sessions stopping each other's samples. Diagnostic fixture tests live beside
 the preload and run with `python3 -m unittest discover -s benchmarks/profiling
 -p 'test_*.py' -v` before the workflow builds or captures anything.
+
+The workflow's `concurrency` input (and `--concurrency` locally) runs the capture at a
+matched worker count, at most the usable CPUs. With the shared controller
+(two or more workers) one controller serves every lane, and a mutant batch is a single
+request carrying one mutant per lane. The preload records the batch's lane count and
+mutant identities; the capture reconciles every lane against the qualification report,
+and a batch of N lanes forks N workers inside one controller job. The report built
+from such a capture is [`benchmarks/results/2026-11-10-bottleneck-report`](../benchmarks/results/2026-11-10-bottleneck-report/README.md),
+rendered by `benchmarks/bottleneck_report_lanes.py`. Note the process boundary of the shared
+controller being profiled: each mutant's selected test files share one fork (Vitest resets modules between
+them, but process-level state such as patched globals or native addon state can carry over). Use
+`--no-shared-controller` for the per-file fork boundary; that is also the shape the 2026-11-07 report profiled.
 
 ### Startup and exit-time captures
 

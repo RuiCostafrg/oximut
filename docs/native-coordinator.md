@@ -77,7 +77,7 @@ The startup-qualified profile capture and the code identify the costs:
 Stryker, by contrast: one instrumented dry run (no uninstrumented oracle),
 `pool: 'threads'` overriding the project's `forks`, mutants switched at runtime
 through a global, and `bail: 1`. Because the project sets `isolate: true`, Vitest
-4.1.12's pool stops each runner after its test file and never returns it to the
+5.1.0's pool stops each runner after its test file and never returns it to the
 shared-runner list, so every test file still gets a fresh worker *thread*.
 
 ## Honest reading of the proposed architecture
@@ -178,7 +178,8 @@ deliberately in its own commit with the reason.
   today's, never weaker. Content-hashed cache fingerprints stay where they
   apply today: in cache-enabled runs, after the baseline and before
   publication.
-- Blocking `poll(2)` with deadlines replaces the 10/15 ms sleeps.
+- Blocking `poll(2)` with deadlines replaces the 10/15 ms sleeps (the
+  scheduler to slot leg followed later; see "Scheduler to slot hand-off").
 - Expected effect: two fewer processes (CPU and RSS), about 100 ms less per job.
 
 ### P3 — One process accountant
@@ -216,6 +217,120 @@ deliberately in its own commit with the reason.
   of on every switched expression. This is valid because each worker is fresh.
 - Avoid re-reading test files per job for the environment pragma (cache by
   content hash).
+
+## Scheduler to slot hand-off
+
+Each slot stays a separate `oximut --internal-worker` process: it is the
+subreaper whose descendants are exactly its controller tree, which is what
+leak checks, verified cleanup and per-slot memory accounting rely on, and a
+crashed slot only takes its own tree with it. The scheduler and the slot talk
+over a private socket pair: length-prefixed frames (4-byte big-endian length,
+a tag byte, then JSON) for run, warm and stop requests, responses and shutdown
+diagnostics. The channel is IPC, not durable state, so nothing on it is
+synced to disk; `options.json` stays a file written once when the slot starts.
+Requests stay within 8 MiB (checked by the slot from the header) and responses
+within 1 MiB (checked by the scheduler from the header).
+
+The slot blocks reading its channel. The scheduler waits with `poll(2)` on
+every busy slot's channel until the next resource sample (50 ms) or the
+earliest slot deadline, so a response is accepted, and the next job sent, as
+soon as it arrives; sampling keeps its own cadence and never gates dispatch.
+The slot marks its end close-on-exec, so only the slot holds it: a slot that
+dies hangs up the channel, which ends the wait at once. A slot whose scheduler
+hangs up shuts down with verified cleanup instead of waiting forever. Memory
+pressure admission keeps its short timed wait.
+
+Process exits are awaited with pidfds instead of fixed sleeps: the
+controller's exit after `close`, test forks still exiting after a job (the
+leak-check grace), verified cleanup and teardown, slot shutdown, and the
+global subreaper cleanup. A process that has exited but must be reaped by
+another parent cannot wake a pidfd wait, so when only such processes remain
+the wait falls back to the previous interval; so does every wait on kernels
+without pidfd. Every bound (deadlines, exit grace, cleanup and shutdown
+deadlines) is unchanged, and slot shutdown still snapshots ownership every
+10 ms. The relay adapter (`Session`) keeps its file protocol, since it is that
+adapter's contract; only its exit waits use pidfds.
+
+## Parallel persistent baselines
+
+For persistent baselines, the scheduler forwards a `workers` limit capped by
+both effective CPU concurrency and the current memory admission capacity (and
+protocol maximum 1024). Before any worker cost is measured, the first baseline
+assumes 256 MiB per fork and always keeps at least one. Serial dispatch still admits only one baseline job;
+its internal fresh workers consume that admitted capacity. Aggregate RSS and
+host/cgroup pressure sampling still cover the entire slot process tree and
+abort on exhaustion. The original and instrumented baseline oracles, inventories,
+deadline, worker termination and post-job descendant cleanup gates are unchanged.
+With one controller per worker, mutant jobs retain one test worker per controller;
+the shared controller below instead runs one per lane.
+
+## Spare controller warm-up
+
+Persistent runs with more than one admitted worker and a nonempty initial mutant
+inventory prepare spare slots during original baseline dispatch. Baseline-only
+runs prepare no spares. Resident groups are planned before that dispatch;
+spares initialize with the first group's instrumented modules, then receive a
+private `warm` command. The command globs test specifications and recursively
+requests Vite SSR transforms of resident modules, test files and their local
+import graphs. It never collects tests, imports user modules or starts a test
+pool. Each mutant still gets fresh isolated workers. Other resident groups and
+static overrides retain the normal invalidation behavior.
+
+Warm-up retains scheduler memory admission, aggregate RSS accounting, deadlines,
+ownership discovery, leak verification and shutdown. Pending spares stay separate
+from the real dispatch queue. In-flight warm jobs occupy their slot until their
+acknowledgement arrives, but do not count as active real jobs, consume real-job
+CPU capacity or block serial baseline admission. Baseline dispatch returns once
+its real job completes; later dispatch loops accept warm acknowledgements. Thus
+the instrumented baseline can use its full admitted fork limit while spares warm.
+Mutants use ready slots and wait when all remaining slots are still busy warming;
+a warming slot never starts a duplicate controller.
+
+Refused admission skips remaining spares. A warm or spare initialization failure
+is diagnostic only: its slot is aborted and may start lazily for a mutant. Global
+exhaustion or interruption still stops every slot and fails closed. Shutdown
+writes stop to all normally closing slots before polling their exits together,
+with an independent seven-second deadline per slot, unchanged exit/ownership checks
+and final global subreaper cleanup. In-flight warms are abandoned immediately
+through verified abort; completed warms close normally and retain their diagnostics.
+Single-worker runs and relay adapters send no warm command. Warm acknowledgements
+carry zero tests and never enter baseline or mutant results.
+
+## Shared controller (default for parallel persistent runs)
+
+With at least two admitted workers, persistent execution and the native adapter,
+mutants run in one controller. Lanes are named Vitest
+projects; each mutant still gets one fresh OS process for all its selected
+files, and stop-at-first-failure applies per mutant. `--no-shared-controller`
+selects one controller per worker. With `--isolation fresh-thread`, each mutant
+instead gets one fresh worker thread for all selected files inside the same shared
+controller. The pool drains and awaits every thread's termination before lane
+reassignment, including hard deadlines; test order within a file is unchanged.
+This remains opt-in and has the thread-mode limitations described in [m2.md](m2.md).
+Projects whose controller can't be shared
+(custom plugins or runners, global setup, non-Node test files) fall back to one controller
+per worker and record a diagnostic; configurations that persistent execution
+already rejects, such as multiple projects, are still rejected.
+
+The process boundary differs from one controller per worker, where every selected
+test file gets its own fork. Here a mutant's selected files share its one fork:
+Vitest still resets modules between them, but process-level state such as patched
+globals or native addon state can carry from one file to the next. Use
+`--no-shared-controller` when tests depend on a process per file.
+
+Lanes share module transforms: `transform-share.ts` wraps each lane project's
+`ModuleTransformService.fetch` so one lane transforms a file and every other lane
+is served that result (single flight, keyed by pipeline fingerprint, Vite
+environment, tmp-copy mode, url, start offset and, for non-absolute urls, the
+importer; the fingerprint covers the resolved configs including plugin behavior,
+and a config too deep to serialize turns sharing off). Only plain fetches of files
+under the project root or the lane runner's directory are shared; externalized modules, `node_modules`, errors, cache-validation fetches and
+results whose tmp copy vanished go to the lane's own service. The share is cleared
+whenever `SharedLanes` invalidates the module graphs (changed resident modules),
+on close and on every new context, and `fsModuleCache` stays off.
+
+This depends on
+private details of Vitest 5.1.0; `shared-lanes.ts` refuses any other version.
 
 ## Release or follow-up
 

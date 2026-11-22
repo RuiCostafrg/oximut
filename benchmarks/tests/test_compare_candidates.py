@@ -12,8 +12,8 @@ import compare_candidates as campaign
 
 
 class CampaignTests(unittest.TestCase):
-    def evidence(self):
-        manifest = json.loads((campaign.workload.CORPUS / 'workload.json').read_text())
+    def evidence(self, workload_name='colord'):
+        manifest = campaign.workload.load_manifest(workload_name)
         provenance = {variant: {'binary_sha256': variant, 'adapter_source_sha256': {'runner': variant}}
                       for variant in campaign.VARIANTS}
         rows = []
@@ -24,7 +24,7 @@ class CampaignTests(unittest.TestCase):
                                warmup=index == 0, success=True,
                                memory_method='sum-live-smaps_rollup-rss', memory_errors=[],
                                declared_test_identity_sha256=campaign.m6.digest(sorted(manifest['expectedTests'])),
-                               workload_sha256=campaign.m6.digest(manifest),
+                               workload_sha256=campaign.workload.workload_digest(manifest),
                                mutator_families=manifest['families'],
                                execution_inputs=copy.deepcopy(provenance[variant]),
                                mutations={} if tool == 'vitest' else {'exact': {'outcome': 'killed'}},
@@ -36,7 +36,7 @@ class CampaignTests(unittest.TestCase):
                     rows.append(row)
         return rows, provenance
 
-    def test_paired_ratios_and_cpu_without_invented_cpu_target(self):
+    def test_paired_ratios_and_cpu_against_the_project_goal(self):
         rows, provenance, policy = self.strict_evidence()
         rows[-2]['resources']['phaseWallMs']['originalBaseline'] = 123.
         result = campaign.evaluate(rows, 1, 5, provenance, **policy)
@@ -48,7 +48,46 @@ class CampaignTests(unittest.TestCase):
         self.assertEqual(result['comparisons']['after_vs_stryker']['metrics']['wall_seconds']['paired_ratios'], [.2] * 5)
         self.assertEqual(result['comparisons']['after_vs_before']['metrics']['wall_seconds']['median'], .4)
         cpu = result['comparisons']['after_vs_stryker']['metrics']['cpu_seconds']
-        self.assertNotIn('target_ratio', cpu)
+        self.assertEqual(cpu['target_ratio'], .8)
+        self.assertEqual(cpu['status'], 'target met')
+        self.assertAlmostEqual(cpu['median_cpu_reduction_percent'], 60)
+
+    def test_workload_is_threaded_through_and_gates_identity(self):
+        rows, provenance = self.evidence('colord-scale')
+        scale = campaign.evaluate(rows, 1, 5, provenance, workload_name='colord-scale')
+        self.assertTrue(scale['correctness_gate']['passed'], scale['correctness_gate']['errors'])
+        self.assertEqual(scale['workload'], 'colord-scale')
+        self.assertIn('arithmetic families', scale['scope'])
+        self.assertIn('20 declared production mutation files', scale['scope'])
+        # Rows recorded for one workload never qualify as another.
+        crossed = campaign.evaluate(rows, 1, 5, provenance)
+        self.assertFalse(crossed['correctness_gate']['passed'])
+        self.assertEqual(crossed['comparisons'], {})
+        self.assertTrue(any('changed declared workload' in e or 'families' in e
+                            for e in crossed['correctness_gate']['errors']))
+        default_rows, default_provenance = self.evidence()
+        crossed = campaign.evaluate(default_rows, 1, 5, default_provenance, workload_name='colord-scale')
+        self.assertFalse(crossed['correctness_gate']['passed'])
+        default = campaign.evaluate(default_rows, 1, 5, default_provenance)
+        self.assertEqual(default['workload'], 'colord')
+        self.assertIn('5 declared production mutation files', default['scope'])
+        self.assertIn('102 upstream tests', default['scope'])
+
+    def test_subcommand_passes_the_workload_and_defaults_to_the_original(self):
+        args = SimpleNamespace(before_binary=Path('/b'), before_adapter_dir=Path('/a'), timeout=600)
+        command = campaign.subcommand(args, Path('/out'), False, 'before', ['oximut'])
+        self.assertEqual(command[command.index('--workload') + 1], 'colord')
+        args.workload = 'colord-scale'
+        command = campaign.subcommand(args, Path('/out'), False, 'before', ['oximut'])
+        self.assertEqual(command[command.index('--workload') + 1], 'colord-scale')
+
+    def test_unknown_workload_is_rejected(self):
+        import contextlib
+        import io
+        with contextlib.redirect_stderr(io.StringIO()) as stderr, self.assertRaises(SystemExit) as raised:
+            campaign.main(['--output', '/nonexistent/out', '--workload', 'nope'])
+        self.assertEqual(raised.exception.code, 2)
+        self.assertIn('unknown workload', stderr.getvalue())
 
     def test_target_misses_stay_valid_evidence(self):
         rows, provenance = self.evidence()
@@ -279,14 +318,17 @@ class CampaignTests(unittest.TestCase):
             provenance = {'binary_sha256': 'same', 'adapter_source_sha256': {}}
             with (patch.object(campaign.workload.measurement, 'metadata', return_value={'versions': {}}),
                   patch.object(campaign.workload, 'execution_inputs', return_value=provenance),
+                  patch.object(campaign.workload, 'require_matched_concurrency'),
                   patch.object(campaign.subprocess, 'run') as command):
                 result = campaign.main(['--before-binary', str(binary), '--after-binary', str(binary),
                                         '--before-adapter-dir', str(adapter), '--after-adapter-dir', str(adapter),
                                         '--after-commit', 'a' * 40, '--require-build-integrity',
                                         '--after-oximut-arg=--isolation', '--after-oximut-arg=fresh-thread',
-                                        '--output', str(output)])
+                                        '--concurrency', '2', '--output', str(output)])
             self.assertEqual(result, 1)
             command.assert_not_called()
+            self.assertEqual(json.loads((output / 'summary.json').read_text())['concurrency'], 2)
+            self.assertEqual(json.loads((output / 'metadata.json').read_text())['concurrency'], 2)
             self.assertTrue((output / 'metadata.json').is_file())
             self.assertEqual((output / 'measurements.jsonl').read_text(), '')
             self.assertEqual(json.loads((output / 'attempts.json').read_text()), [])
@@ -571,6 +613,19 @@ class SubcampaignCleanupTests(unittest.TestCase):
         self.assertTrue(attempt['descendant_cleanup_required'])
         # Detached tools are still signalled even though the root cannot be reaped.
         reap.assert_called_once_with(0.1)
+
+
+
+class MatchedParallelismTests(unittest.TestCase):
+    def test_throttled_or_capped_runs_are_not_matched(self):
+        full = {'resources': {'effectiveWorkers': 4, 'admissionPauses': 0}}
+        self.assertEqual(campaign.workload.parallelism_errors(full, 4), [])
+        self.assertEqual(campaign.workload.parallelism_errors({}, 1), [])
+        capped = {'resources': {'effectiveWorkers': 2, 'admissionPauses': 0}}
+        self.assertIn('not the matched 4', campaign.workload.parallelism_errors(capped, 4)[0])
+        paused = {'resources': {'effectiveWorkers': 4, 'admissionPauses': 3}}
+        self.assertIn('paused admission', campaign.workload.parallelism_errors(paused, 4)[0])
+        self.assertTrue(campaign.workload.parallelism_errors({}, 2))
 
 
 if __name__ == '__main__':
