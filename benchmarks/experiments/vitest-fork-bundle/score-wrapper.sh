@@ -9,6 +9,10 @@ scratch=$(mktemp -d "$root/node_modules/vitest/dist/.oximut-score.XXXXXX")
 seed_pid=
 cleanup() {
   if test -n "$seed_pid"; then wait "$seed_pid" || true; fi
+  if test "${OXIMUT_ZYGOTE_WORKERS:-}" = 1; then
+    evidence=$(mktemp -d "$OXIMUT_ZYGOTE_EVIDENCE_DIR/run.XXXXXX")
+    cp "$scratch"/project-bundle/zygote-*.json "$evidence"/ 2>/dev/null || true
+  fi
   python3 -c 'from pathlib import Path; import shutil, sys; shutil.rmtree(Path(sys.argv[1]))' "$scratch"
 }
 trap cleanup EXIT
@@ -30,7 +34,7 @@ else
 fi
 options="--require=\"$experiment/snapshot-flags.cjs\""
 case "${SCORE_MODE:-}" in
-  worker-snapshot-composed-score|worker-snapshot-rolling-score|worker-snapshot-windowed-score|worker-snapshot-late-score|worker-snapshot-factory-score|worker-snapshot-shared-image-score|worker-snapshot-single-image-score|worker-snapshot-reuse-build-score|worker-snapshot-early-build-score|worker-snapshot-skip-original-score)
+  worker-snapshot-composed-score|worker-snapshot-rolling-score|worker-snapshot-windowed-score|worker-snapshot-late-score|worker-snapshot-factory-score|worker-snapshot-shared-image-score|worker-snapshot-single-image-score|worker-snapshot-reuse-build-score|worker-snapshot-early-build-score|worker-snapshot-skip-original-score|worker-snapshot-zygote-score)
     export OXIMUT_PROJECT_BUNDLE_DIR="$scratch/project-bundle"
     mkdir "$OXIMUT_PROJECT_BUNDLE_DIR"
     options+=" --require=\"$experiment/project-bundle.cjs\""

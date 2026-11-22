@@ -111,6 +111,22 @@ def verify_factory_capture(root, reference, build, *, shared, mutants_only, reus
                                                    capture_name=capture.name, factory_forks=forks.keys())}
 
 
+def verify_zygote(root):
+    """Every after-arm run served its mutant workers from zygotes, without losses."""
+    runs = sorted((root / 'zygote-evidence').glob('run.*'))
+    assert len(runs) == 6, runs
+    per_run = []
+    for run in runs:
+        counters = [read_json(path) for path in sorted(run.glob('zygote-*.json'))]
+        assert counters, run
+        assert all(c['zygotes'] >= 1 and c['forks'] > 0 and c['forks'] == c['exits']
+                   and c['zygoteFailures'] == 0 for c in counters), counters
+        per_run.append({'controllers': len(counters), 'zygotes': sum(c['zygotes'] for c in counters),
+                        'forks': sum(c['forks'] for c in counters)})
+    provenance = (root / 'zygote-provenance.txt').read_text().split()
+    return {'runs': per_run, 'provenance': dict(zip(provenance[1::2], provenance[0::2]))}
+
+
 def verify(directory, reference):
     artifact, = read_json(directory / 'artifacts.json')['artifacts']
     checksum = digest(directory / 'artifact.zip')
@@ -130,7 +146,8 @@ def verify(directory, reference):
                     'worker-snapshot-windowed-score', 'worker-snapshot-late-score',
                     'worker-snapshot-factory-score', 'worker-snapshot-shared-image-score',
                     'worker-snapshot-single-image-score', 'worker-snapshot-reuse-build-score',
-                    'worker-snapshot-early-build-score', 'worker-snapshot-skip-original-score')
+                    'worker-snapshot-early-build-score', 'worker-snapshot-skip-original-score',
+                    'worker-snapshot-zygote-score')
     build = read_json(root / 'build-metadata.json')
     benchmark = root / 'snapshot-score'
     metadata = read_json(benchmark / 'metadata.json')
@@ -172,6 +189,9 @@ def verify(directory, reference):
     elif mode == 'worker-snapshot-skip-original-score':
         check_wrapper('before', 'early-build-score-wrapper.sh')
         check_wrapper('after', 'skip-original-score-wrapper.sh')
+    elif mode == 'worker-snapshot-zygote-score':
+        check_wrapper('before', 'early-build-score-wrapper.sh')
+        check_wrapper('after', 'zygote-score-wrapper.sh')
     else:
         assert provenance['before']['binary_sha256'] == build['binary_sha256']
         check_wrapper('after', 'score-wrapper.sh')
@@ -262,13 +282,17 @@ def verify(directory, reference):
         **({'factory_diagnostic': verify_factory_capture(
             root, reference, build, shared=mode != 'worker-snapshot-factory-score',
             mutants_only=mode in ('worker-snapshot-single-image-score', 'worker-snapshot-reuse-build-score',
-                                  'worker-snapshot-early-build-score', 'worker-snapshot-skip-original-score'),
+                                  'worker-snapshot-early-build-score', 'worker-snapshot-skip-original-score',
+                                  'worker-snapshot-zygote-score'),
             reused_build=mode in ('worker-snapshot-reuse-build-score', 'worker-snapshot-early-build-score',
-                                  'worker-snapshot-skip-original-score'),
-            early_build=mode in ('worker-snapshot-early-build-score', 'worker-snapshot-skip-original-score'))}
+                                  'worker-snapshot-skip-original-score', 'worker-snapshot-zygote-score'),
+            early_build=mode in ('worker-snapshot-early-build-score', 'worker-snapshot-skip-original-score',
+                                 'worker-snapshot-zygote-score'))}
            if mode in ('worker-snapshot-factory-score', 'worker-snapshot-shared-image-score',
                        'worker-snapshot-single-image-score', 'worker-snapshot-reuse-build-score',
-                       'worker-snapshot-early-build-score', 'worker-snapshot-skip-original-score') else {}),
+                       'worker-snapshot-early-build-score', 'worker-snapshot-skip-original-score',
+                       'worker-snapshot-zygote-score') else {}),
+        **({'zygote': verify_zygote(root)} if mode == 'worker-snapshot-zygote-score' else {}),
     }
 
 

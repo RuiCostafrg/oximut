@@ -17,6 +17,9 @@ if (process.env.OXIMUT_SNAPSHOT_BLOB && process.argv[1]?.endsWith('/m2-worker.ts
         ...(image ? {env: {...options.env, OXIMUT_SNAPSHOT_BLOB: image}} : {}),
         execArgv: [...options.execArgv, ...tier, '--snapshot-blob=' + (image ?? process.env.OXIMUT_SNAPSHOT_BLOB)],
       };
+      if (image && process.env.OXIMUT_ZYGOTE_WORKERS === '1') {
+        return require('./zygote-pool.cjs').zygoteFork(original, entry, args, options);
+      }
     }
     return Reflect.apply(original, this, [entry, args, options]);
   };

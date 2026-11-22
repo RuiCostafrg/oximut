@@ -40,7 +40,11 @@ if (addonPath) {
     // not exist after fork(), which hangs. Leave with _exit() once JavaScript
     // 'exit' handlers have run.
     process.reallyExit = (code) => addon._exitNow(code | 0);
-    for (const [key, value] of Object.entries(env ?? {})) process.env[key] = String(value);
+    // A requested environment replaces the zygote's, as fork({env}) would.
+    if (env) {
+      for (const key of Object.keys(process.env)) if (!Object.hasOwn(env, key)) delete process.env[key];
+      for (const [key, value] of Object.entries(env)) process.env[key] = String(value);
+    }
     addon.closeFd(parentEnd);
     process.once('disconnect', () => {
       addon.clearCloexec(childEnd);
