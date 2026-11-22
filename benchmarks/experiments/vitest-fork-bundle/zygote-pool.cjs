@@ -156,6 +156,9 @@ class ZygoteChild extends EventEmitter {
         'syscall', read(`/proc/${this.pid}/task/${tid}/syscall`), 'comm', read(`/proc/${this.pid}/task/${tid}/comm`));
     }
     trace('stalled-recent', this.traceId, ...this.#recent);
+    const zygotePid = this.traceId.split(':')[0];
+    const zygoteTasks = (() => { try { return fs.readdirSync(`/proc/${zygotePid}/task`); } catch { return []; } })();
+    trace('zygote-threads', zygotePid, ...zygoteTasks.map((tid) => `${tid}=${read(`/proc/${zygotePid}/task/${tid}/comm`)}`));
     // A symbolized native stack (the controller is an ancestor, so YAMA allows it).
     const result = require('node:child_process').spawnSync('gdb', ['-p', String(this.pid), '-batch', '-nx',
       '-ex', 'set pagination off', '-ex', 'info threads', '-ex', 'thread apply all bt 40',
