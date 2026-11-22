@@ -14,12 +14,19 @@ if (addonPath) {
   delete process.env.OXIMUT_ZYGOTE_ADDON;
   const signalNames = Object.fromEntries(Object.entries(signals).map(([name, number]) => [number, name]));
   const children = new Map();
+  const traceDir = process.env.OXIMUT_ZYGOTE_TRACE_DIR;
+  const fs = require('node:fs');
+  const trace = traceDir
+    ? (...fields) => fs.appendFileSync(require('node:path').join(traceDir, `zygote-${addon.getpid()}.log`),
+      `${performance.now().toFixed(1)} ${fields.join(' ')}\n`)
+    : () => {};
   const queue = [];
   let inflight = false;
 
   const reap = () => {
     for (let result; (result = addon.waitpidNohang());) {
       const id = children.get(result.pid);
+      trace('reaped', id, result.pid, result.code, result.signal);
       children.delete(result.pid);
       if (id !== undefined) {
         process.send({ __oximut_zygote__: 'exit', id, pid: result.pid, code: result.code,
@@ -53,6 +60,7 @@ if (addonPath) {
       const send = process.send;
       _forkChild(childEnd, 'advanced');
       process.send = send;
+      trace('child-channel', addon.getpid());
       // Vitest's message listener predates this channel, so hold a reference.
       process.channel.ref();
       process.on('exit', (code) => addon._exitNow(code | 0));
@@ -67,6 +75,7 @@ if (addonPath) {
     const [parentEnd, childEnd] = addon.socketpair();
     const pid = addon.fork();
     if (pid === 0) return becomeChild(parentEnd, childEnd, env);
+    trace('forked', id, pid, 'queue', queue.length);
     addon.closeFd(childEnd);
     children.set(pid, id);
     // Never read here: the child's first messages belong to the controller.
@@ -76,6 +85,7 @@ if (addonPath) {
 
   function onInternalMessage(message) {
     if (message?.cmd === 'NODE_HANDLE_ACK' || message?.cmd === 'NODE_HANDLE_NACK') {
+      trace('ack', message.cmd);
       inflight = false;
       setImmediate(spawnNext);
     }
@@ -83,6 +93,7 @@ if (addonPath) {
 
   function onZygoteMessage(message) {
     if (message?.__oximut_zygote__ === 'spawn') {
+      trace('spawn', message.id, 'inflight', inflight, 'queue', queue.length);
       queue.push(message);
       spawnNext();
     } else if (message?.__oximut_zygote__ === 'shutdown') {

@@ -114,6 +114,7 @@ def verify_factory_capture(root, reference, build, *, shared, mutants_only, reus
 def verify_zygote(root):
     """Every after-arm run served its mutant workers from zygotes, without losses."""
     runs = sorted((root / 'zygote-evidence').glob('run.*'))
+    assert not list((root / 'zygote-evidence').glob('trace.*')), 'a traced run is diagnostic only'
     assert len(runs) == 6, runs
     per_run = []
     for run in runs:

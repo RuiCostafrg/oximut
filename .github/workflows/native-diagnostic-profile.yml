@@ -60,6 +60,10 @@ on:
         options:
           - none
           - execution
+      zygote_trace:
+        description: Diagnostic only - trace zygote events in the zygote score (not a qualifying score)
+        type: boolean
+        default: false
       accounting_variant:
         description: Snapshot wrapper used by the accounting diagnostic
         type: choice
@@ -158,6 +162,7 @@ jobs:
           PROFILE_WORKLOAD: ${{ inputs.workload }}
           MATCHED_CONCURRENCY: ${{ inputs.concurrency }}
           SCORE_MODE: ${{ inputs.capture_mode }}
+          OXIMUT_ZYGOTE_TRACE: ${{ inputs.zygote_trace && '1' || '0' }}
         run: |
           set -euo pipefail
           test "$PROFILE_WORKLOAD" = colord-scale

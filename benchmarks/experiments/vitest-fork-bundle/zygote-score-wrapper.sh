@@ -7,4 +7,7 @@ set -euo pipefail
 export OXIMUT_ZYGOTE_WORKERS=1
 export OXIMUT_EXPERIMENTAL_RESIDENT_HELPERS=1
 export OXIMUT_ZYGOTE_ADDON="$OXIMUT_ZYGOTE_SCORE_ADDON"
+if test "${OXIMUT_ZYGOTE_TRACE:-}" = 1; then
+  export OXIMUT_ZYGOTE_TRACE_DIR=$(mktemp -d "$OXIMUT_ZYGOTE_EVIDENCE_DIR/trace.XXXXXX")
+fi
 exec "$(dirname -- "${BASH_SOURCE[0]}")/early-build-score-wrapper.sh" "$@"

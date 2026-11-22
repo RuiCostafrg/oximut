@@ -15,6 +15,12 @@ const addon = process.env.OXIMUT_ZYGOTE_ADDON;
 assert(addon && fs.existsSync(addon), 'OXIMUT_ZYGOTE_ADDON must name the built fork addon');
 const zygotes = new Map();
 const counters = {zygotes: 0, forks: 0, exits: 0, zygoteFailures: 0};
+// Diagnostic event trace, one file per controller, when a directory is given.
+const traceDir = process.env.OXIMUT_ZYGOTE_TRACE_DIR;
+const trace = traceDir
+  ? (...fields) => fs.appendFileSync(path.join(traceDir, `controller-${process.pid}.log`),
+    `${(performance.now()).toFixed(1)} ${fields.join(' ')}\n`)
+  : () => {};
 
 // Node's `advanced` IPC framing: a 4-byte big-endian length, then a V8
 // serialization whose host objects carry a tag (0: ArrayBufferView, 1: other).
@@ -71,15 +77,20 @@ class ZygoteChild extends EventEmitter {
   #ended = false;
 
   attach(pid, socket) {
+    trace('attach', this.traceId, pid, 'queued', this.#queue.length);
     this.pid = pid;
     this.#socket = socket;
     const state = {pending: Buffer.alloc(0)};
     socket.on('data', (chunk) => {
-      for (const message of decode(state, chunk)) this.emit('message', message);
+      for (const message of decode(state, chunk)) {
+        if (!this.seen) { this.seen = true; trace('first-message', this.traceId, message?.type); }
+        this.emit('message', message);
+      }
     });
     // Like Node's channel, a failed read is a disconnect, not an error.
-    socket.on('error', (error) => { if (error.syscall !== 'read') this.emit('error', error); });
+    socket.on('error', (error) => { trace('socket-error', this.traceId, error.code, error.syscall); if (error.syscall !== 'read') this.emit('error', error); });
     socket.on('close', () => {
+      trace('socket-close', this.traceId);
       this.#ended = true;
       this.connected = false;
       this.emit('disconnect');
@@ -92,6 +103,7 @@ class ZygoteChild extends EventEmitter {
 
   // Node reports exit after the IPC messages a child wrote before exiting.
   exited(code, signal) {
+    trace('status', this.traceId, code, signal);
     this.#status = {code, signal};
     this.#maybeExit();
   }
@@ -100,6 +112,7 @@ class ZygoteChild extends EventEmitter {
     if (!this.#status || (!this.#ended && this.#socket)) return;
     if (this.exitCode !== null || this.signalCode !== null) return;
     counters.exits++;
+    trace('emit-exit', this.traceId);
     this.exitCode = this.#status.code;
     this.signalCode = this.#status.signal;
     this.emit('exit', this.exitCode, this.signalCode);
@@ -121,6 +134,7 @@ class ZygoteChild extends EventEmitter {
   }
 
   kill(signal = 'SIGTERM') {
+    trace('kill', this.traceId, signal, this.pid);
     if (this.exitCode !== null || this.signalCode !== null || this.#status) return false;
     if (this.pid === undefined) {
       this.#pendingSignal = signal;
@@ -157,6 +171,7 @@ function startZygote(original, entry, args, options) {
   const zygote = {process: process_, ready: false, nextId: 0, waiting: [], children: new Map()};
   process_.on('message', (message, handle) => {
     const kind = message?.__oximut_zygote__;
+    trace('zygote-message', process_.pid, kind, message?.id ?? '');
     if (kind === 'ready') {
       zygote.ready = true;
       for (const request of zygote.waiting) process_.send(request);
@@ -171,6 +186,7 @@ function startZygote(original, entry, args, options) {
     }
   });
   process_.on('exit', (code, signal) => {
+    trace('zygote-exit', process_.pid, code, signal, zygote.children.size);
     for (const child of zygote.children.values()) {
       counters.zygoteFailures++;
       child.emit('error', new Error(`zygote exited ${code}/${signal} before its worker`));
@@ -190,6 +206,8 @@ function zygoteFork(original, entry, args, options) {
   }
   const id = zygote.nextId++;
   const child = new ZygoteChild();
+  child.traceId = `${zygote.process.pid}:${id}`;
+  trace('spawn-request', child.traceId, zygote.ready, options.env?.OXIMUT_ACTIVE_MUTANT?.slice(0, 8));
   zygote.children.set(id, child);
   const request = {__oximut_zygote__: 'spawn', id, env: options.env};
   if (zygote.ready) zygote.process.send(request); else zygote.waiting.push(request);
