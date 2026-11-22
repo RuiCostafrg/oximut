@@ -161,35 +161,33 @@ test('M3 validates selection and collection requests before executing', async (t
   );
 });
 
-test(
-  'M3 collects stable duplicate identities, explicit empty hits and preserves whole-file observers',
-  { timeout: 120000 },
-  async (t) => {
-    const root = await fixture(t);
-    const first = await run(root, collect(root));
-    assert.equal(first.outcome, 'passed', JSON.stringify(first));
-    assert.equal(first.coverage.complete, true, JSON.stringify(first.coverage));
-    assert.equal(first.coverage.tests.length, 3);
-    assert.equal(new Set(first.coverage.tests.map((test) => test.id)).size, 3);
-    const duplicate = first.coverage.tests.filter((test) => test.name === 'duplicate');
-    assert.equal(duplicate.length, 2);
-    assert.deepEqual(first.coverage.hits.find((hit) => hit.mutantId === covered).tests, [
-      duplicate[0].id,
-    ]);
-    assert.deepEqual(first.coverage.hits.find((hit) => hit.mutantId === uncalled).tests, []);
-    const second = await run(root, collect(root));
-    assert.deepEqual(second.coverage, first.coverage);
-    const selected = await run(root, {
-      ...request(root, 'export const enabled = () => false;'),
-      selection: selection(root),
-    });
-    assert.equal(selected.outcome, 'failed', JSON.stringify(selected));
-    assert.deepEqual(selected.tests, { passed: 1, failed: 1, skipped: 0 });
-    const mismatch = await run(root, { ...request(root, source), selection: selection(root, 1) });
-    assert.equal(mismatch.outcome, 'infrastructure-error');
-    assert.match(mismatch.errors.join(), /inventory changed/);
-  },
-);
+test('M3 collects stable duplicate identities, explicit empty hits and preserves whole-file observers', {
+  timeout: 120000,
+}, async (t) => {
+  const root = await fixture(t);
+  const first = await run(root, collect(root));
+  assert.equal(first.outcome, 'passed', JSON.stringify(first));
+  assert.equal(first.coverage.complete, true, JSON.stringify(first.coverage));
+  assert.equal(first.coverage.tests.length, 3);
+  assert.equal(new Set(first.coverage.tests.map((test) => test.id)).size, 3);
+  const duplicate = first.coverage.tests.filter((test) => test.name === 'duplicate');
+  assert.equal(duplicate.length, 2);
+  assert.deepEqual(first.coverage.hits.find((hit) => hit.mutantId === covered).tests, [
+    duplicate[0].id,
+  ]);
+  assert.deepEqual(first.coverage.hits.find((hit) => hit.mutantId === uncalled).tests, []);
+  const second = await run(root, collect(root));
+  assert.deepEqual(second.coverage, first.coverage);
+  const selected = await run(root, {
+    ...request(root, 'export const enabled = () => false;'),
+    selection: selection(root),
+  });
+  assert.equal(selected.outcome, 'failed', JSON.stringify(selected));
+  assert.deepEqual(selected.tests, { passed: 1, failed: 1, skipped: 0 });
+  const mismatch = await run(root, { ...request(root, source), selection: selection(root, 1) });
+  assert.equal(mismatch.outcome, 'infrastructure-error');
+  assert.match(mismatch.errors.join(), /inventory changed/);
+});
 
 test('M3 treats native require bypass as incomplete collection', { timeout: 60000 }, async (t) => {
   const root = await fixture(t);
@@ -214,101 +212,93 @@ test('M3 treats native require bypass as incomplete collection', { timeout: 6000
   assert.ok(result.coverage.reasons.includes('source-not-transformed'));
 });
 
-test(
-  'M3 captures hooks and import execution and falls back for concurrent tests',
-  { timeout: 90000 },
-  async (t) => {
-    const root = await fixture(t);
-    await writeFile(
-      join(root, 'a.test.ts'),
-      `import { beforeAll, beforeEach, afterEach, test, expect } from 'vitest'; import { enabled, hook } from './source';
+test('M3 captures hooks and import execution and falls back for concurrent tests', {
+  timeout: 90000,
+}, async (t) => {
+  const root = await fixture(t);
+  await writeFile(
+    join(root, 'a.test.ts'),
+    `import { beforeAll, beforeEach, afterEach, test, expect } from 'vitest'; import { enabled, hook } from './source';
 const initialized = hook(); beforeAll(() => { hook(); }); beforeEach(() => { hook(); }); afterEach(() => { hook(); });
 test('hook', () => expect(enabled() && initialized).toBe(true));`,
-    );
-    const hooks = await run(root, collect(root));
-    assert.equal(hooks.coverage.complete, true, JSON.stringify(hooks));
-    assert.equal(hooks.coverage.hits.find((hit) => hit.mutantId === hook).outsideTest, true);
-    await writeFile(
-      join(root, 'a.test.ts'),
-      "import { test, expect } from 'vitest'; import { enabled } from './source'; test.concurrent('concurrent', async () => expect(enabled()).toBe(true));",
-    );
-    const concurrent = await run(root, collect(root));
-    assert.equal(concurrent.coverage.complete, false);
-    assert.ok(concurrent.coverage.reasons.includes('concurrent-tests'));
-  },
-);
+  );
+  const hooks = await run(root, collect(root));
+  assert.equal(hooks.coverage.complete, true, JSON.stringify(hooks));
+  assert.equal(hooks.coverage.hits.find((hit) => hit.mutantId === hook).outsideTest, true);
+  await writeFile(
+    join(root, 'a.test.ts'),
+    "import { test, expect } from 'vitest'; import { enabled } from './source'; test.concurrent('concurrent', async () => expect(enabled()).toBe(true));",
+  );
+  const concurrent = await run(root, collect(root));
+  assert.equal(concurrent.coverage.complete, false);
+  assert.ok(concurrent.coverage.reasons.includes('concurrent-tests'));
+});
 
-test(
-  'M3 persistent collection does not retain probes or test filters across jobs',
-  { timeout: 120000 },
-  async (t) => {
-    const root = await fixture(t);
-    const send = await session(root);
-    const first = await send(collect(root));
-    assert.equal(first.coverage.complete, true, JSON.stringify(first));
-    const selected = await send({ ...request(root, source), selection: selection(root) });
-    assert.equal(selected.outcome, 'passed', JSON.stringify(selected));
-    assert.equal(selected.tests.passed, 2);
-    assert.equal(selected.coverage, undefined);
-    const baseline = await send(request(root));
-    assert.equal(baseline.outcome, 'passed', JSON.stringify(baseline));
-    assert.equal(baseline.tests.passed, 3);
-    assert.equal(baseline.coverage, undefined);
-    const again = await send(collect(root));
-    assert.deepEqual(again.coverage, first.coverage);
-  },
-);
+test('M3 persistent collection does not retain probes or test filters across jobs', {
+  timeout: 120000,
+}, async (t) => {
+  const root = await fixture(t);
+  const send = await session(root);
+  const first = await send(collect(root));
+  assert.equal(first.coverage.complete, true, JSON.stringify(first));
+  const selected = await send({ ...request(root, source), selection: selection(root) });
+  assert.equal(selected.outcome, 'passed', JSON.stringify(selected));
+  assert.equal(selected.tests.passed, 2);
+  assert.equal(selected.coverage, undefined);
+  const baseline = await send(request(root));
+  assert.equal(baseline.outcome, 'passed', JSON.stringify(baseline));
+  assert.equal(baseline.tests.passed, 3);
+  assert.equal(baseline.coverage, undefined);
+  const again = await send(collect(root));
+  assert.deepEqual(again.coverage, first.coverage);
+});
 
-test(
-  'M3 retains kills when a mutation dynamically skips another test',
-  { timeout: 120000 },
-  async (t) => {
-    const root = await fixture(t);
-    await writeFile(
-      join(root, 'a.test.ts'),
-      `import { test, expect } from 'vitest'; import { enabled } from './source';
+test('M3 retains kills when a mutation dynamically skips another test', {
+  timeout: 120000,
+}, async (t) => {
+  const root = await fixture(t);
+  await writeFile(
+    join(root, 'a.test.ts'),
+    `import { test, expect } from 'vitest'; import { enabled } from './source';
 test('conditionally skipped', (context) => { if (!enabled()) context.skip(); expect(1).toBe(1); });
 test('observer', () => expect(enabled()).toBe(true));`,
-    );
-    const input = {
-      ...request(root, 'export const enabled = () => false;'),
-      selection: selection(root),
-    };
-    const fresh = await run(root, input);
-    assert.equal(fresh.outcome, 'failed', JSON.stringify(fresh));
-    assert.deepEqual(fresh.tests, { passed: 0, failed: 1, skipped: 1 });
-    const send = await session(root);
-    const persistent = await send(input);
-    assert.equal(persistent.outcome, 'failed', JSON.stringify(persistent));
-    assert.deepEqual(persistent.tests, fresh.tests);
-  },
-);
+  );
+  const input = {
+    ...request(root, 'export const enabled = () => false;'),
+    selection: selection(root),
+  };
+  const fresh = await run(root, input);
+  assert.equal(fresh.outcome, 'failed', JSON.stringify(fresh));
+  assert.deepEqual(fresh.tests, { passed: 0, failed: 1, skipped: 1 });
+  const send = await session(root);
+  const persistent = await send(input);
+  assert.equal(persistent.outcome, 'failed', JSON.stringify(persistent));
+  assert.deepEqual(persistent.tests, fresh.tests);
+});
 
-test(
-  'M3 function source reflection cannot establish no-coverage',
-  { timeout: 60000 },
-  async (t) => {
-    const root = await fixture(t);
-    await writeFile(
-      join(root, 'a.test.ts'),
-      "import { test, expect } from 'vitest'; import { enabled } from './source'; test('source reflection', () => expect(enabled.toString().includes('true')).toBe(true));",
-    );
-    const result = await run(root, collect(root));
-    assert.equal(result.outcome, 'passed', JSON.stringify(result));
-    assert.equal(result.coverage.complete, false);
-    assert.ok(result.coverage.reasons.includes('source-reflection'));
-    const killed = await run(root, request(root, 'export const enabled = () => false;'));
-    assert.equal(killed.outcome, 'failed', JSON.stringify(killed));
-    const fallback = await run(root, {
-      ...request(root, 'export const enabled = () => false;'),
-      selection: {
-        mode: 'full',
-        files: [],
-        selectedTests: 2,
-        totalTests: 2,
-        reasons: ['source-reflection'],
-      },
-    });
-    assert.equal(fallback.outcome, killed.outcome, JSON.stringify(fallback));
-  },
-);
+test('M3 function source reflection cannot establish no-coverage', {
+  timeout: 60000,
+}, async (t) => {
+  const root = await fixture(t);
+  await writeFile(
+    join(root, 'a.test.ts'),
+    "import { test, expect } from 'vitest'; import { enabled } from './source'; test('source reflection', () => expect(enabled.toString().includes('true')).toBe(true));",
+  );
+  const result = await run(root, collect(root));
+  assert.equal(result.outcome, 'passed', JSON.stringify(result));
+  assert.equal(result.coverage.complete, false);
+  assert.ok(result.coverage.reasons.includes('source-reflection'));
+  const killed = await run(root, request(root, 'export const enabled = () => false;'));
+  assert.equal(killed.outcome, 'failed', JSON.stringify(killed));
+  const fallback = await run(root, {
+    ...request(root, 'export const enabled = () => false;'),
+    selection: {
+      mode: 'full',
+      files: [],
+      selectedTests: 2,
+      totalTests: 2,
+      reasons: ['source-reflection'],
+    },
+  });
+  assert.equal(fallback.outcome, killed.outcome, JSON.stringify(fallback));
+});
