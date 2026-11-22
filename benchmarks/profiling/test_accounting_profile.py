@@ -1,6 +1,7 @@
 """Accounting evidence corruption checks; no builds or performance claims."""
 import copy
 import json
+import shutil
 from pathlib import Path
 import sys
 import subprocess
@@ -9,6 +10,8 @@ import unittest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import profile_native as diagnostic
+
+NODE = shutil.which('node')
 
 
 class AccountingCaptureTests(unittest.TestCase):
@@ -100,6 +103,7 @@ class AccountingCaptureTests(unittest.TestCase):
         data=copy.deepcopy(self.report); data['resources']['accountingDiagnostics']['sampling']['selfCpuNs']=14
         self.assertTrue(self.capture(data)['errors'])
 
+    @unittest.skipUnless(NODE, 'Node.js not installed')
     def test_schema_requires_version_two_for_any_precise_clock_field(self):
         """Reject partial precision extensions while accepting complete legacy data."""
         legacy=json.loads((diagnostic.ROOT/'benchmarks/results/2026-11-05-accounting-profile/qualification/00-oximut/report.json').read_text())
@@ -126,7 +130,7 @@ for (const item of JSON.parse(readFileSync(0,'utf8'))) {
  assert.equal(accepted,item.valid,item.name);
 }
 """
-        result=subprocess.run(['node','--input-type=module','-e',script],cwd=diagnostic.ROOT,
+        result=subprocess.run([NODE,'--input-type=module','-e',script],cwd=diagnostic.ROOT,
                               input=json.dumps(cases),text=True,capture_output=True)
         self.assertEqual(result.returncode,0,result.stderr)
 
