@@ -48,8 +48,9 @@ class ExplicitNodeProfileTests(unittest.TestCase):
                 raise unittest.SkipTest('pinned Vitest dependencies not installed')
             raise AssertionError('cannot resolve installed Vitest: ' + result.stderr)
         cls.entry = Path(result.stdout.strip()).parent / 'dist/workers/forks.js'
-        if json.loads(Path(result.stdout.strip()).read_text())['version'] != '4.1.12':
-            raise AssertionError('profiling contract requires pinned Vitest 4.1.12')
+        pinned = json.loads((ROOT / 'package.json').read_text())['devDependencies']['vitest']
+        if json.loads(Path(result.stdout.strip()).read_text())['version'] != pinned:
+            raise AssertionError(f'profiling contract requires the pinned Vitest {pinned}')
         if not cls.entry.is_file():
             raise AssertionError('installed Vitest fork entry missing')
 
