@@ -1,4 +1,4 @@
-![oximut banner](assets/readme-banner.svg)
+![Oximut — Rust + Oxc mutation testing](assets/readme-banner.svg)
 
 # Oximut
 
