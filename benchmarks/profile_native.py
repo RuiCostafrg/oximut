@@ -9,6 +9,8 @@ import os
 from pathlib import Path
 import pstats
 import re
+import shlex
+import shutil
 import subprocess
 import sys
 from types import SimpleNamespace
@@ -22,6 +24,27 @@ SUPPORT = ROOT / 'benchmarks/profiling'
 EXPECTED_EDITS = {'colord': (10, True), 'colord-scale': (206, False)}
 # Per tool command, matching the benchmark workflow's headroom for the larger workload.
 RUN_TIMEOUT = {'colord': 600, 'colord-scale': 1200}
+
+
+def install_node_profiler_launcher(directory, profiles):
+    """Expose flags in execArgv so Vitest can propagate and finalize profiling.
+
+    NODE_OPTIONS is still used for the identity preload. The shell immediately
+    execs the resolved Node binary, preserving the coordinator's PID and IPC FD.
+    This is diagnostic setup; launcher and profiler overhead remain measured.
+    """
+    executable = shutil.which('node')
+    if executable is None:
+        raise ValueError('Node executable not found for explicit profiling')
+    executable = str(Path(executable).resolve(strict=True))
+    flags = ['--cpu-prof', f'--cpu-prof-dir={profiles.resolve(strict=True)}']
+    launcher = directory / 'node'
+    with launcher.open('x') as stream:
+        stream.write('#!/bin/sh\nexec ' + ' '.join(shlex.quote(arg) for arg in
+                     [executable, *flags]) + ' "$@"\n')
+    launcher.chmod(0o755)
+    return {'executable': executable, 'exec_argv': flags, 'launcher': str(launcher),
+            'launcher_sha256': workload.measurement.file_hash(launcher)}
 
 
 def qualification_errors(directory, code, workload_name=workload.DEFAULT_WORKLOAD):
@@ -50,6 +73,22 @@ def qualification_errors(directory, code, workload_name=workload.DEFAULT_WORKLOA
     return errors
 
 
+def node_frame_position_valid(frame):
+    """Accept ordinary positions and the pinned Vitest anonymous wrapper offset."""
+    line, column = frame.get('lineNumber'), frame.get('columnNumber')
+    if type(line) is not int or line < -1 or type(column) is not int:
+        return False
+    if column >= -1:
+        return True
+    # Vitest 4.1.12 ModuleEvaluator uses a 209-character standard wrapper
+    # prefix with columnOffset=-209. Its anonymous arrow starts at column 13,
+    # so Node's real VM profiler reports 13-209=-196 on line 0. Keep other
+    # negative positions unsupported rather than accepting arbitrary offsets.
+    return (column == -196 and line == 0 and frame.get('functionName') == ''
+            and isinstance(frame.get('url'), str) and frame['url'].startswith('file:///')
+            and len(frame['url']) > len('file:///'))
+
+
 def node_profile_finalized(data):
     """Require a connected CPU call tree and usable, internally consistent samples."""
     try:
@@ -65,8 +104,7 @@ def node_profile_finalized(data):
             frame = node.get('callFrame')
             if (node['id'] in nodes or not isinstance(frame, dict)
                     or not all(isinstance(frame.get(k), str) for k in ('functionName', 'scriptId', 'url'))
-                    or not all(type(frame.get(k)) is int and frame[k] >= -1
-                               for k in ('lineNumber', 'columnNumber'))
+                    or not node_frame_position_valid(frame)
                     or not isinstance(node.get('children', []), list)
                     or not all(type(child) is int for child in node.get('children', []))):
                 return False
@@ -681,6 +719,8 @@ def main(argv=None):
                        help='Trace complete controller jobs with a partial first-mutant CPU sample window; no whole-tree CPU attribution')
     modes.add_argument('--accounting', action='store_true',
                        help='Measure Rust sampling-thread self CPU, without Node or Python profilers')
+    modes.add_argument('--cpu-prof-exec-argv', action='store_true',
+                       help='Pass exit-time CPU profiler flags on the Node command line, enabling Vitest profiling shutdown handling')
     parser.add_argument('--concurrency', type=workload.concurrency_arg, default=1,
                         help='Matched parallelism for Oximut --workers and Stryker concurrency (default 1)')
     parser.add_argument('--workload', type=workload.workload_name, default=workload.DEFAULT_WORKLOAD,
@@ -694,7 +734,8 @@ def main(argv=None):
     result = {'diagnostic_only': True, 'profiler_overhead': True, 'concurrency': args.concurrency,
               'workload': args.workload,
               'node_capture_mode': ('rust-accounting-self' if args.accounting else 'controller-jobs' if args.controller_jobs else
-                                    'partial-inspector-startup' if args.segments else 'exit-time-cpu-prof'),
+                                    'partial-inspector-startup' if args.segments else
+                                    'exit-time-cpu-prof-exec-argv' if args.cpu_prof_exec_argv else 'exit-time-cpu-prof'),
               'qualification_errors': [], 'failure': None,
               'scope': ('Unchanged colord: 41 sources, 102 tests, five mutation sources, ten arithmetic edits.'
                         if args.workload == 'colord' else
@@ -720,12 +761,14 @@ def main(argv=None):
         shim = shimdir / 'python3'
         shim.write_text(f'#!{sys.executable}\n' + (SUPPORT / 'python-shim.py').read_text())
         shim.chmod(0o755)
+        if args.cpu_prof_exec_argv:
+            result['node_launcher'] = install_node_profiler_launcher(shimdir, profiles)
         env = {**os.environ, 'PATH': str(shimdir) + os.pathsep + os.environ['PATH'],
                'OXIMUT_PROFILE_PYTHON': sys.executable,
                'OXIMUT_PROFILE_SUPERVISOR': str(adapter / 'supervisor.py'),
                'OXIMUT_PROFILE_DIR': str(profiles),
                'OXIMUT_PROFILE_SEGMENTS': '1' if args.segments else '0',
-               'NODE_OPTIONS': ('' if args.segments else f'--cpu-prof --cpu-prof-dir="{profiles}" ') +
+               'NODE_OPTIONS': ('' if args.segments or args.cpu_prof_exec_argv else f'--cpu-prof --cpu-prof-dir="{profiles}" ') +
                                f'--require="{SUPPORT / "node-identity.cjs"}"'}
         if args.controller_jobs:
             # Keep this capture separate from the startup/exit-time profilers:
