@@ -196,6 +196,10 @@ function zygoteFork(original, entry, args, options) {
   return child;
 }
 
+globalThis[Symbol.for('oximut.diagnostic.residentHelpers')] = () => [...zygotes.values()]
+  .filter(({process: zygote}) => zygote.exitCode === null && zygote.signalCode === null)
+  .map(({process: zygote}) => zygote.pid);
+
 process.on('exit', () => {
   for (const zygote of zygotes.values()) zygote.process.kill('SIGKILL');
   const directory = process.env.OXIMUT_PROJECT_BUNDLE_DIR;

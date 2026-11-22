@@ -5,5 +5,6 @@ set -euo pipefail
 : "${OXIMUT_ZYGOTE_SCORE_ADDON:?expected the built zygote fork addon}"
 : "${OXIMUT_ZYGOTE_EVIDENCE_DIR:?expected a directory for zygote counters}"
 export OXIMUT_ZYGOTE_WORKERS=1
+export OXIMUT_EXPERIMENTAL_RESIDENT_HELPERS=1
 export OXIMUT_ZYGOTE_ADDON="$OXIMUT_ZYGOTE_SCORE_ADDON"
 exec "$(dirname -- "${BASH_SOURCE[0]}")/early-build-score-wrapper.sh" "$@"

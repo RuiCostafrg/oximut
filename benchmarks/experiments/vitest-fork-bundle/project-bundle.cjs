@@ -13,6 +13,7 @@ if (directory && process.argv[1]?.endsWith('/m2-worker.ts')) {
   const shareProjectImage = process.env.OXIMUT_SHARE_PROJECT_IMAGE === '1';
   const reuseProjectBuild = process.env.OXIMUT_REUSE_PROJECT_BUILD === '1';
   const earlyProjectBuild = process.env.OXIMUT_EARLY_PROJECT_BUILD === '1';
+  const zygoteWorkers = process.env.OXIMUT_ZYGOTE_WORKERS === '1';
   assert(!reuseProjectBuild || (projectFactories && shareProjectImage),
     'Project build reuse requires shared project images');
   assert(!earlyProjectBuild || reuseProjectBuild,
@@ -236,8 +237,15 @@ ${observation(true)}
   registerHooks({
     load(url, context, nextLoad) {
       const result = nextLoad(url, context);
-      if (earlyProjectBuild && url.endsWith('/packages/vitest-adapter/m2-worker.ts')) {
+      if ((earlyProjectBuild || zygoteWorkers) && url.endsWith('/packages/vitest-adapter/m2-worker.ts')) {
         let source = String(result.source);
+        if (zygoteWorkers) {
+          // Declare live zygotes so the CLI admits them as resident helpers.
+          const reply = '    process.send?.({ protocol: 1, id: request.id, result });';
+          source = replaceOnce(source, reply, `    const helpers = globalThis[Symbol.for('oximut.diagnostic.residentHelpers')]?.() ?? [];
+    process.send?.({ protocol: 1, id: request.id, result: helpers.length ? {...result, residentHelpers: helpers} : result });`);
+        }
+        if (!earlyProjectBuild) return {...result, source};
         const accepted = '  validateRequest(job);';
         source = replaceOnce(source, accepted, accepted + `
   if (job.kind === 'baseline' && (job.resident?.length || job.collectCoverage?.length)) {

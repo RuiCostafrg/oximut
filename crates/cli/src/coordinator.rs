@@ -738,6 +738,32 @@ impl Coordinator {
         }
     }
 
+    /// Experimental, behind OXIMUT_EXPERIMENTAL_RESIDENT_HELPERS=1: admit
+    /// declared helpers to the leak baseline. Each must be a live direct child
+    /// of the controller; everything else is still verified as a leak, and
+    /// shutdown still reaps the whole tree.
+    fn admit_helpers(&mut self, helpers: &[u32]) -> Result<(), String> {
+        if std::env::var_os("OXIMUT_EXPERIMENTAL_RESIDENT_HELPERS").is_none_or(|value| value != "1")
+        {
+            return Err("controller declared resident helpers without opting in".into());
+        }
+        let controller = self.controller.as_mut().expect("controller");
+        let parent = controller.child.id();
+        for &pid in helpers {
+            match processes::identity(pid)? {
+                Some((ppid, start)) if ppid == parent => {
+                    controller.baseline.insert(pid, start);
+                }
+                _ => {
+                    return Err(format!(
+                        "resident helper {pid} is not a live child of the controller"
+                    ));
+                }
+            }
+        }
+        Ok(())
+    }
+
     /// Processes owned now that were not owned when the controller started.
     /// A test fork can exit during enumeration: an empty second scan alone
     /// cannot prove disappearance, so every observed PID is checked too.
@@ -942,8 +968,21 @@ impl Coordinator {
             self.jobs += 1;
             self.jobs_run += 1;
         }
+        // Experimental: long-lived helpers the controller started during this
+        // job (a worker zygote). Never part of the result itself.
+        let mut helpers = Vec::new();
         let response = match reply {
             Ok(Reply::Result(mut result)) => {
+                if let Some(fields) = result.as_object_mut()
+                    && let Some(declared) = fields.remove("residentHelpers")
+                {
+                    helpers = declared
+                        .as_array()
+                        .into_iter()
+                        .flatten()
+                        .filter_map(|pid| pid.as_u64().and_then(|pid| u32::try_from(pid).ok()))
+                        .collect();
+                }
                 if warm && result.get("warmed").and_then(serde_json::Value::as_bool) != Some(true) {
                     Err("controller did not acknowledge warm".into())
                 } else {
@@ -987,6 +1026,12 @@ impl Coordinator {
                 .controller
                 .as_ref()
                 .is_some_and(|c| c.reuse != "controller");
+        if !retire && !helpers.is_empty() {
+            if let Err(error) = self.admit_helpers(&helpers) {
+                let failure = infrastructure(request, error);
+                return self.retire_with(request, failure);
+            }
+        }
         let leaked = if retire {
             false
         } else {

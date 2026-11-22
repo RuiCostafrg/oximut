@@ -204,6 +204,7 @@ def verify(directory, reference):
     historical_tests = baseline_tests(reference.parent, historical['oximut'])
     assert len(historical_selection) == 206
     measurements = {'before': [], 'after': []}
+    controller_counts = {}
     attempts = read_json(benchmark / 'attempts.json')
     assert len(attempts) == 12
     assert {(entry['variant'], entry['round']) for entry in attempts} == {
@@ -237,11 +238,18 @@ def verify(directory, reference):
             skipped = any(diagnostic.startswith('experimental: original baseline skipped')
                           for diagnostic in oximut_report(location, oximut)['diagnostics'])
             assert skipped == (mode == 'worker-snapshot-skip-original-score' and variant == 'after')
+            controllers = [int(line.split()[2]) for line in oximut_report(location, oximut)['diagnostics']
+                           if line.startswith('native coordinator: ')]
+            assert len(controllers) == 1
+            controller_counts.setdefault(variant, set()).add(controllers[0])
             resources = oximut['resources']
             assert resources['effectiveWorkers'] == resources['maxActiveJobs'] == 4
             if index:
                 measurements[variant].append(trial)
 
+    # A controller retired after leak verification shows up as extra controllers.
+    if mode == 'worker-snapshot-zygote-score':
+        assert controller_counts['after'] == controller_counts['before'], controller_counts
     metrics = ('wall_seconds', 'cpu_seconds', 'peak_aggregate_rss_bytes')
     medians = {}
     cpu_deficits = {}
@@ -273,6 +281,7 @@ def verify(directory, reference):
                           if line.startswith('Model name:')),
         'versions': metadata['versions'],
         'qualification_rows': 36,
+        'controllers_per_run': {variant: sorted(counts) for variant, counts in controller_counts.items()},
         'medians': medians,
         'comparisons': summary['comparisons'],
         'targets_met': summary['targets_met'],
