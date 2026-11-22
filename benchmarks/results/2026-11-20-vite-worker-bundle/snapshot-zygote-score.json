@@ -1,0 +1,595 @@
+{
+  "run": "https://github.com/RuiCostafrg/oximut/actions/runs/45034935540",
+  "commit": "e86ab67969bf4b620c8f3a78f01e21d1d8cfc57b",
+  "mode": "worker-snapshot-zygote-score",
+  "artifact_sha256": "8de00a24e9af51a0d28b5413985232bffcd774804a9d189e0dff107c913eba2c",
+  "binary_sha256": "b76c802b538fd67c0b5119136102ea31d0dc0ecfdac83ac2c53f37e9ab916821",
+  "wrapper_sha256": "b220ce3951c629b8fc5cf609812501a993e52bf3d8e12aa15a90a6f6eba1ae1a",
+  "cpu_model": "AMD EPYC 9V74 80-Core Processor",
+  "versions": {
+    "@stryker-mutator/core": "10.1.1",
+    "@stryker-mutator/vitest-runner": "10.1.1",
+    "@vitest/coverage-v8": "5.1.0",
+    "cargo": "cargo 1.96.0 (30a34c682 2026-05-25)",
+    "node": "v26.3.1",
+    "node_runtime": "{\"execPath\":\"/opt/hostedtoolcache/node/26.3.1/x64/bin/node\",\"platform\":\"linux\",\"arch\":\"x64\"}",
+    "npm": "11.16.0",
+    "python": "3.13.18 (main, Oct 26 2026, 14:20:56) [GCC 13.3.0]",
+    "python_executable": "/opt/hostedtoolcache/Python/3.13.18/x64/bin/python3",
+    "python_platform": "linux",
+    "rustc": "rustc 1.96.0 (ac68faa20 2026-05-25)",
+    "typescript": "7.0.2",
+    "vitest": "5.1.0"
+  },
+  "qualification_rows": 36,
+  "controllers_per_run": {
+    "before": [
+      2
+    ],
+    "after": [
+      2
+    ]
+  },
+  "medians": {
+    "before": {
+      "oximut": {
+        "wall_seconds": 11.121193104999975,
+        "cpu_seconds": 29.031165,
+        "peak_aggregate_rss_bytes": 906010624
+      },
+      "stryker": {
+        "wall_seconds": 17.62355503899994,
+        "cpu_seconds": 54.963025,
+        "peak_aggregate_rss_bytes": 1216884736
+      }
+    },
+    "after": {
+      "oximut": {
+        "wall_seconds": 7.975537333000034,
+        "cpu_seconds": 18.258086,
+        "peak_aggregate_rss_bytes": 942956544
+      },
+      "stryker": {
+        "wall_seconds": 17.617179419999957,
+        "cpu_seconds": 55.023908000000006,
+        "peak_aggregate_rss_bytes": 1207590912
+      }
+    }
+  },
+  "comparisons": {
+    "after_vs_before": {
+      "denominator": "before/oximut",
+      "metrics": {
+        "cpu_seconds": {
+          "bootstrap_95_percent": [
+            0.624148221402758,
+            0.6319814553898856
+          ],
+          "max": 0.6319814553898856,
+          "median": 0.6273452072473036,
+          "median_cpu_reduction_percent": 37.26547927526964,
+          "min": 0.624148221402758,
+          "paired_ratios": [
+            0.6316538081970381,
+            0.624148221402758,
+            0.6319814553898856,
+            0.6269149908581336,
+            0.6273452072473036
+          ]
+        },
+        "peak_aggregate_rss_bytes": {
+          "bootstrap_95_percent": [
+            1.004191270321478,
+            1.067620932438348
+          ],
+          "max": 1.067620932438348,
+          "median": 1.0396130815292492,
+          "min": 1.004191270321478,
+          "paired_ratios": [
+            1.0429984538459451,
+            1.004191270321478,
+            1.0396130815292492,
+            1.067620932438348,
+            1.0065176397356328
+          ]
+        },
+        "wall_seconds": {
+          "bootstrap_95_percent": [
+            0.7078223968362782,
+            0.7494932601147904
+          ],
+          "max": 0.7494932601147904,
+          "median": 0.710324134077891,
+          "min": 0.7078223968362782,
+          "paired_ratios": [
+            0.710324134077891,
+            0.7091616008224266,
+            0.7078223968362782,
+            0.7303803853876136,
+            0.7494932601147904
+          ]
+        }
+      },
+      "numerator": "after/oximut"
+    },
+    "after_vs_stryker": {
+      "denominator": "after/stryker",
+      "metrics": {
+        "cpu_seconds": {
+          "bootstrap_95_percent": [
+            0.3289912886269857,
+            0.3358023908088762
+          ],
+          "max": 0.3358023908088762,
+          "median": 0.33244185223105355,
+          "median_cpu_reduction_percent": 66.75581477689465,
+          "median_target_met": true,
+          "min": 0.3289912886269857,
+          "paired_ratios": [
+            0.33244185223105355,
+            0.3327211143637558,
+            0.3358023908088762,
+            0.33182096044504866,
+            0.3289912886269857
+          ],
+          "status": "target met",
+          "target_ratio": 0.8
+        },
+        "peak_aggregate_rss_bytes": {
+          "bootstrap_95_percent": [
+            0.7411496670171749,
+            0.7928243680262779
+          ],
+          "max": 0.7928243680262779,
+          "median": 0.7808576022142174,
+          "median_target_met": true,
+          "min": 0.7411496670171749,
+          "paired_ratios": [
+            0.7832190385659967,
+            0.7736451886205031,
+            0.7808576022142174,
+            0.7928243680262779,
+            0.7411496670171749
+          ],
+          "status": "target met",
+          "target_ratio": 0.8
+        },
+        "wall_seconds": {
+          "bootstrap_95_percent": [
+            0.4496349000922841,
+            0.4746441729363078
+          ],
+          "max": 0.4746441729363078,
+          "median": 0.45271363496166594,
+          "median_target_met": true,
+          "min": 0.4496349000922841,
+          "paired_ratios": [
+            0.45271363496166594,
+            0.449828583424636,
+            0.4496349000922841,
+            0.4606489129291057,
+            0.4746441729363078
+          ],
+          "status": "target met",
+          "target_ratio": 0.5
+        }
+      },
+      "numerator": "after/oximut"
+    },
+    "before_vs_stryker": {
+      "denominator": "before/stryker",
+      "metrics": {
+        "cpu_seconds": {
+          "bootstrap_95_percent": [
+            0.5248163544595417,
+            0.5310185601477195
+          ],
+          "max": 0.5310185601477195,
+          "median": 0.5298780953195352,
+          "median_cpu_reduction_percent": 47.01219046804648,
+          "median_target_met": true,
+          "min": 0.5248163544595417,
+          "paired_ratios": [
+            0.5259646794666225,
+            0.530323776252097,
+            0.5310185601477195,
+            0.5298780953195352,
+            0.5248163544595417
+          ],
+          "status": "target met",
+          "target_ratio": 0.8
+        },
+        "peak_aggregate_rss_bytes": {
+          "bootstrap_95_percent": [
+            0.7245837614942624,
+            0.7615490432834767
+          ],
+          "max": 0.7615490432834767,
+          "median": 0.7445328199103978,
+          "median_target_met": true,
+          "min": 0.7245837614942624,
+          "paired_ratios": [
+            0.7445328199103978,
+            0.7615490432834767,
+            0.7558521350308905,
+            0.7245837614942624,
+            0.740869848288584
+          ],
+          "status": "target met",
+          "target_ratio": 0.8
+        },
+        "wall_seconds": {
+          "bootstrap_95_percent": [
+            0.6262892290273245,
+            0.6360965640513846
+          ],
+          "max": 0.6360965640513846,
+          "median": 0.6350703082829531,
+          "median_target_met": false,
+          "min": 0.6262892290273245,
+          "paired_ratios": [
+            0.6350703082829531,
+            0.6313820580851555,
+            0.6360965640513846,
+            0.6262892290273245,
+            0.63534715148116
+          ],
+          "status": "target missed",
+          "target_ratio": 0.5
+        }
+      },
+      "numerator": "before/oximut"
+    }
+  },
+  "targets_met": true,
+  "longest_sample_gaps_seconds": {
+    "before": {
+      "oximut": 0.10405991299990092,
+      "stryker": 0.15455972999995993
+    },
+    "after": {
+      "oximut": 0.09046401000000515,
+      "stryker": 0.13437498600001163
+    }
+  },
+  "reported_mutant_test_count_ranges": {
+    "before": [
+      3616,
+      3671
+    ],
+    "after": [
+      3616,
+      3671
+    ]
+  },
+  "necessary_cpu_seconds_saved_median_at_four_cpus": {
+    "before": -6.21041502999995,
+    "after": -16.83945150799998
+  },
+  "factory_diagnostic": {
+    "qualification": {
+      "commit": "e86ab67969bf4b620c8f3a78f01e21d1d8cfc57b",
+      "outcomes": {
+        "killed": 202,
+        "survived": 4
+      },
+      "whole_file_selection": {
+        "files": 204,
+        "full": 2
+      },
+      "tests": 102,
+      "mutant_forks": 206,
+      "baseline_forks": 8,
+      "batches": 52,
+      "launch_selectors_and_files_verified": true,
+      "outcome_sha256": "58bf365f43cbf79069ffc2259de3d70dd98cf75a68676bf54e9b6edef3c09837",
+      "declared_tests_sha256": "3fa4823cc6cd2edda5cb41e6fbe411e20a6857b0a3081ae59ae7d6b1ee05651b"
+    },
+    "worker_cpu_ms": {
+      "startup": 11164.071,
+      "through_first_collection": 2600.808,
+      "after_first_collection": 5584.013,
+      "stop": 97.32199999999992
+    },
+    "last_finish_path_ms": {
+      "request_to_fork": 1311.099268,
+      "startup": 3906.104182999995,
+      "dispatch_delay": 4.649676000003922,
+      "through_first_collection": 900.9478599999995,
+      "after_first_collection": 1755.1595339999967,
+      "finish_to_reply": 290.3824490000013
+    },
+    "project_images": {
+      "project-fc02179deb18ca1eebc931322008686ed81f32e464d6b3bfff8f95024a7aeb38.blob": {
+        "bytes": 10554542,
+        "sha256": "bfe0cbd815865a85a741b58c01d0f5f7974e94c8786d47510147ee2e09d333b2"
+      }
+    },
+    "first_collection": {
+      "all_mutants": {
+        "workers": 206,
+        "methods": {},
+        "stats": {
+          "elapsed_ms": {
+            "sum": 3172.380377,
+            "median": 14.264709,
+            "p90": 21.904466
+          },
+          "fetch_union_ms": {
+            "sum": 0.0,
+            "median": 0.0,
+            "p90": 0.0
+          },
+          "outside_fetch_union_ms": {
+            "sum": 3172.380377,
+            "median": 14.264709,
+            "p90": 21.904466
+          },
+          "worker_cpu_ms": {
+            "sum": 2600.808,
+            "median": 13.11,
+            "p90": 13.806999999999999
+          },
+          "sync_compile_cpu_ms": {
+            "sum": 0.0,
+            "median": 0.0,
+            "p90": 0.0
+          },
+          "sync_compile_wall_ms": {
+            "sum": 0.0,
+            "median": 0.0,
+            "p90": 0.0
+          },
+          "inline_evaluator_self_ms": {
+            "sum": 0.0,
+            "median": 0.0,
+            "p90": 0.0
+          },
+          "external_evaluator_self_ms": {
+            "sum": 0.0,
+            "median": 0.0,
+            "p90": 0.0
+          },
+          "evaluator_self_negative_entries": {
+            "sum": 0.0,
+            "median": 0.0,
+            "p90": 0.0
+          },
+          "compile_count": {
+            "sum": 0.0,
+            "median": 0.0,
+            "p90": 0.0
+          },
+          "evaluator_entries": {
+            "sum": 0.0,
+            "median": 0.0,
+            "p90": 0.0
+          }
+        }
+      },
+      "last_finishers": {
+        "workers": 52,
+        "methods": {},
+        "stats": {
+          "elapsed_ms": {
+            "sum": 833.647347,
+            "median": 15.287008499999999,
+            "p90": 23.7023298
+          },
+          "fetch_union_ms": {
+            "sum": 0.0,
+            "median": 0.0,
+            "p90": 0.0
+          },
+          "outside_fetch_union_ms": {
+            "sum": 833.647347,
+            "median": 15.287008499999999,
+            "p90": 23.7023298
+          },
+          "worker_cpu_ms": {
+            "sum": 642.804,
+            "median": 12.8645,
+            "p90": 13.894499999999999
+          },
+          "sync_compile_cpu_ms": {
+            "sum": 0.0,
+            "median": 0.0,
+            "p90": 0.0
+          },
+          "sync_compile_wall_ms": {
+            "sum": 0.0,
+            "median": 0.0,
+            "p90": 0.0
+          },
+          "inline_evaluator_self_ms": {
+            "sum": 0.0,
+            "median": 0.0,
+            "p90": 0.0
+          },
+          "external_evaluator_self_ms": {
+            "sum": 0.0,
+            "median": 0.0,
+            "p90": 0.0
+          },
+          "evaluator_self_negative_entries": {
+            "sum": 0.0,
+            "median": 0.0,
+            "p90": 0.0
+          },
+          "compile_count": {
+            "sum": 0.0,
+            "median": 0.0,
+            "p90": 0.0
+          },
+          "evaluator_entries": {
+            "sum": 0.0,
+            "median": 0.0,
+            "p90": 0.0
+          }
+        }
+      },
+      "first_batch_mutants": {
+        "workers": 8,
+        "methods": {},
+        "stats": {
+          "elapsed_ms": {
+            "sum": 117.688722,
+            "median": 14.2199995,
+            "p90": 17.7277694
+          },
+          "fetch_union_ms": {
+            "sum": 0.0,
+            "median": 0.0,
+            "p90": 0.0
+          },
+          "outside_fetch_union_ms": {
+            "sum": 117.688722,
+            "median": 14.2199995,
+            "p90": 17.7277694
+          },
+          "worker_cpu_ms": {
+            "sum": 101.677,
+            "median": 13.0555,
+            "p90": 13.7113
+          },
+          "sync_compile_cpu_ms": {
+            "sum": 0.0,
+            "median": 0.0,
+            "p90": 0.0
+          },
+          "sync_compile_wall_ms": {
+            "sum": 0.0,
+            "median": 0.0,
+            "p90": 0.0
+          },
+          "inline_evaluator_self_ms": {
+            "sum": 0.0,
+            "median": 0.0,
+            "p90": 0.0
+          },
+          "external_evaluator_self_ms": {
+            "sum": 0.0,
+            "median": 0.0,
+            "p90": 0.0
+          },
+          "evaluator_self_negative_entries": {
+            "sum": 0.0,
+            "median": 0.0,
+            "p90": 0.0
+          },
+          "compile_count": {
+            "sum": 0.0,
+            "median": 0.0,
+            "p90": 0.0
+          },
+          "evaluator_entries": {
+            "sum": 0.0,
+            "median": 0.0,
+            "p90": 0.0
+          }
+        }
+      },
+      "steady_batch_mutants": {
+        "workers": 198,
+        "methods": {},
+        "stats": {
+          "elapsed_ms": {
+            "sum": 3054.691655,
+            "median": 14.264709,
+            "p90": 21.8812864
+          },
+          "fetch_union_ms": {
+            "sum": 0.0,
+            "median": 0.0,
+            "p90": 0.0
+          },
+          "outside_fetch_union_ms": {
+            "sum": 3054.691655,
+            "median": 14.264709,
+            "p90": 21.8812864
+          },
+          "worker_cpu_ms": {
+            "sum": 2499.131,
+            "median": 13.1235,
+            "p90": 13.805000000000001
+          },
+          "sync_compile_cpu_ms": {
+            "sum": 0.0,
+            "median": 0.0,
+            "p90": 0.0
+          },
+          "sync_compile_wall_ms": {
+            "sum": 0.0,
+            "median": 0.0,
+            "p90": 0.0
+          },
+          "inline_evaluator_self_ms": {
+            "sum": 0.0,
+            "median": 0.0,
+            "p90": 0.0
+          },
+          "external_evaluator_self_ms": {
+            "sum": 0.0,
+            "median": 0.0,
+            "p90": 0.0
+          },
+          "evaluator_self_negative_entries": {
+            "sum": 0.0,
+            "median": 0.0,
+            "p90": 0.0
+          },
+          "compile_count": {
+            "sum": 0.0,
+            "median": 0.0,
+            "p90": 0.0
+          },
+          "evaluator_entries": {
+            "sum": 0.0,
+            "median": 0.0,
+            "p90": 0.0
+          }
+        }
+      }
+    }
+  },
+  "zygote": {
+    "runs": [
+      {
+        "controllers": 2,
+        "zygotes": 2,
+        "forks": 206
+      },
+      {
+        "controllers": 2,
+        "zygotes": 2,
+        "forks": 206
+      },
+      {
+        "controllers": 2,
+        "zygotes": 2,
+        "forks": 206
+      },
+      {
+        "controllers": 2,
+        "zygotes": 2,
+        "forks": 206
+      },
+      {
+        "controllers": 2,
+        "zygotes": 2,
+        "forks": 206
+      },
+      {
+        "controllers": 2,
+        "zygotes": 2,
+        "forks": 206
+      }
+    ],
+    "provenance": {
+      "/home/runner/work/_temp/native-diagnostic/zygote-fork.node": "00778ea009db8bf275ff2620506f31856a869583cd3a185a28abdae1f099b856",
+      "benchmarks/experiments/zygote-fork/fork.c": "38f03c9c35107401d236b345ec6d6f767864d2ed868323bda02a3d57365d6d4b",
+      "benchmarks/profiling/zygote-worker.cjs": "7b572eafcad5be78161208a0ab73afbd1f56905ffa067ccc7d2611ca28530d87",
+      "benchmarks/experiments/vitest-fork-bundle/zygote-pool.cjs": "056481869dee4b1ff465621eb36db45e6fbe09cc40187de693b6b3e877c15950"
+    }
+  }
+}

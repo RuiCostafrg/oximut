@@ -1265,3 +1265,83 @@ python3 benchmarks/results/2026-11-20-vite-worker-bundle/score.py \
   /root/oximut-evidence/vitest-fork-bundle/snapshot-native-skip-original-score \
   /root/oximut-evidence/scale-bottlenecks/workers/artifact/capture/qualification/measurements.jsonl
 ```
+
+## Zygote-forked mutant workers: all three targets met
+
+Each mutant worker is now forked from one restored-image zygote per
+controller instead of booting a fresh `node`. Every worker is still its own
+fresh OS process with its own IPC socket and environment, and runs Vitest's
+unmodified worker. The control is the early-build wrapper.
+
+Paired score, five measured pairs after one warmup, 36 verified rows (206
+mutant identities and outcomes, 102 tests), 2 controllers in both arms,
+206 zygote forks in every after-arm run:
+
+| Ratio, median (95% CI) | Wall | CPU | Sampled peak RSS |
+| --- | ---: | ---: | ---: |
+| Zygote vs Stryker | **0.453×** (0.450–0.475) | **0.332×** (0.329–0.336) | **0.781×** (0.741–0.793) |
+| Early-build control vs Stryker | 0.635× | 0.530× | 0.745× |
+| Zygote vs control | 0.710× (0.708–0.749) | 0.627× (0.624–0.632) | 1.040× (1.004–1.068) |
+
+This run's control is slower against Stryker than in the early-build
+campaign (0.635× against 0.578×); it ran on an AMD EPYC 9V74 runner. The
+paired ratios compare arms on the same runner. Sampled RSS rises 4%,
+because shared copy-on-write pages count once per process, and its upper
+bound sits close to the 0.80 target.
+
+Three problems had to be solved first. Each run is kept as evidence.
+
+1. **Leak verification retired every controller**
+   ([run 45017095020](https://github.com/RuiCostafrg/oximut/actions/runs/45017095020)):
+   52 controllers for 54 jobs and 49 s wall. The CLI treats any new
+   process left after a job as a leak, and the zygote is long-lived by
+   design. Behind `OXIMUT_EXPERIMENTAL_RESIDENT_HELPERS=1`, a controller
+   now declares its zygotes in each result. The CLI admits a declared pid
+   only if it is a live direct child of the controller. Every other new
+   process is still a leak, and shutdown still reaps the whole tree.
+   `score.py` now requires equal controller counts in both arms.
+2. **Workers deadlocked during garbage collection**
+   ([run 45018686379](https://github.com/RuiCostafrg/oximut/actions/runs/45018686379)).
+   Six to eight jobs per run hit the job deadline, mostly the same mutants
+   every round. Traces showed every RPC answered and the worker blocked in
+   `futex` with one thread
+   ([run 45024535456](https://github.com/RuiCostafrg/oximut/actions/runs/45024535456)).
+   gdb ([run 45031162065](https://github.com/RuiCostafrg/oximut/actions/runs/45031162065))
+   placed it in `pthread_cond_signal`, called from
+   `node::WorkerThreadsTaskRunner::PostTask` inside a scavenge. Node 26
+   keeps four `node-V8Worker` threads even with `--single-threaded`, and
+   V8 still posts one task per scavenge. `fork()` copies the task queue's
+   condvar with the zygote's sleeping workers counted, so the first group
+   switch in the child waits for threads it does not have.
+3. **The fix.** `fork.c` measures where a waiter sleeps inside
+   `pthread_cond_t` (offset 40 on the runner's glibc, 32 locally). It reads
+   from `/proc` the condvar that every idle V8 worker sleeps on, and defers
+   the fork while any worker is busy. The child re-initializes that condvar
+   before anything else runs. The traced confirmation run
+   ([run 45034945651](https://github.com/RuiCostafrg/oximut/actions/runs/45034945651))
+   found all four workers on one condvar for every fork, with no stalls.
+
+Caveats:
+
+- This is benchmark-only and Linux-only. It depends on Node internals
+  (`_forkChild`), a native addon, and glibc's condvar layout, which is
+  measured at runtime rather than assumed.
+- The controller speaks Node's `advanced` IPC framing directly, because
+  `--expose-internals` is not allowed in `NODE_OPTIONS`.
+- Children skip Node's normal exit path and leave through `_exit()`, after
+  the JavaScript `exit` handlers run.
+- The isolation rule changes from "no process survives a job" to "only a
+  declared zygote, which never runs tests, survives a job".
+
+- [Native paired zygote run](https://github.com/RuiCostafrg/oximut/actions/runs/45034935540)
+- [Verified zygote score](snapshot-zygote-score.json)
+- Raw artifacts at `/root/oximut-evidence/vitest-fork-bundle/snapshot-native-zygote-score`.
+  Diagnostic runs are under `snapshot-native-zygote-{score-retiring,trace,stall,gdb,gdb2,condvar-trace}`.
+
+```sh
+gh workflow run native-diagnostic-profile.yml --ref t3/fresh-worker-startup \
+  -f capture_mode=worker-snapshot-zygote-score -f workload=colord-scale -f concurrency=4
+python3 benchmarks/results/2026-11-20-vite-worker-bundle/score.py \
+  /root/oximut-evidence/vitest-fork-bundle/snapshot-native-zygote-score \
+  /root/oximut-evidence/scale-bottlenecks/workers/artifact/capture/qualification/measurements.jsonl
+```
