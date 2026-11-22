@@ -81,9 +81,11 @@ class ZygoteChild extends EventEmitter {
     this.pid = pid;
     this.#socket = socket;
     const state = {pending: Buffer.alloc(0)};
+    this.decodeState = state;
     socket.on('data', (chunk) => {
       for (const message of decode(state, chunk)) {
         if (!this.seen) { this.seen = true; trace('first-message', this.traceId, message?.type); }
+        if (traceDir) this.#remember('in', message, chunk.length);
         this.emit('message', message);
       }
     });
@@ -127,14 +129,38 @@ class ZygoteChild extends EventEmitter {
       return false;
     }
     const buffer = encode(message);
+    if (traceDir) this.#remember('out', message, buffer.length);
     if (this.#socket) return this.#socket.write(buffer, callback);
     this.#queue.push(buffer);
     if (callback) process.nextTick(callback, null);
     return true;
   }
 
+  #recent = [];
+  #state;
+  #remember(direction, message, bytes) {
+    const summary = message?.type ?? message?.m ?? message?.t ?? Object.keys(message ?? {}).join(',');
+    this.#recent.push(`${performance.now().toFixed(1)}:${direction}:${summary}:${message?.i ?? ''}:${bytes}`);
+    if (this.#recent.length > 12) this.#recent.shift();
+  }
+
+  // Diagnostic: what a worker that never finished was doing.
+  #dumpStalled() {
+    const read = (file) => { try { return fs.readFileSync(file, 'utf8').trim().replace(/\s+/g, ' '); } catch (e) { return e.code; } };
+    const tasks = (() => { try { return fs.readdirSync(`/proc/${this.pid}/task`); } catch { return []; } })();
+    trace('stalled', this.traceId, 'state', read(`/proc/${this.pid}/stat`).split(' ')[2],
+      'threads', tasks.length, 'pendingBytes', this.decodeState?.pending.length ?? -1,
+      'writable', this.#socket?.writableLength ?? -1);
+    for (const tid of tasks) {
+      trace('stalled-task', this.traceId, tid, 'wchan', read(`/proc/${this.pid}/task/${tid}/wchan`),
+        'syscall', read(`/proc/${this.pid}/task/${tid}/syscall`), 'comm', read(`/proc/${this.pid}/task/${tid}/comm`));
+    }
+    trace('stalled-recent', this.traceId, ...this.#recent);
+  }
+
   kill(signal = 'SIGTERM') {
     trace('kill', this.traceId, signal, this.pid);
+    if (traceDir && signal === 'SIGKILL' && this.pid !== undefined && !this.#status) this.#dumpStalled();
     if (this.exitCode !== null || this.signalCode !== null || this.#status) return false;
     if (this.pid === undefined) {
       this.#pendingSignal = signal;
