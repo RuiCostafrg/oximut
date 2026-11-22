@@ -102,46 +102,42 @@ test('M1 rejects malformed requests and protocol versions before execution', asy
   );
 });
 
-test(
-  'M1 runs baseline, unchanged code, known killed and surviving mutations without changing source',
-  { timeout: 120000 },
-  async (t) => {
-    const root = await fixture(t);
-    for (const [code, outcome] of [
-      [undefined, 'passed'],
-      [source, 'passed'],
-      [source.replace('= true', '= false'), 'failed'],
-      [source.replace('= 1', '= 2'), 'passed'],
-    ]) {
-      const output = await run(root, request(root, code));
-      assert.equal(output.outcome, outcome, JSON.stringify(output));
-      assert.equal(output.tests.passed + output.tests.failed, 1);
-      assert.equal(await readFile(join(root, 'source.ts'), 'utf8'), source);
-    }
-  },
-);
+test('M1 runs baseline, unchanged code, known killed and surviving mutations without changing source', {
+  timeout: 120000,
+}, async (t) => {
+  const root = await fixture(t);
+  for (const [code, outcome] of [
+    [undefined, 'passed'],
+    [source, 'passed'],
+    [source.replace('= true', '= false'), 'failed'],
+    [source.replace('= 1', '= 2'), 'passed'],
+  ]) {
+    const output = await run(root, request(root, code));
+    assert.equal(output.outcome, outcome, JSON.stringify(output));
+    assert.equal(output.tests.passed + output.tests.failed, 1);
+    assert.equal(await readFile(join(root, 'source.ts'), 'utf8'), source);
+  }
+});
 
-test(
-  'M1 distinguishes invalid transforms from assertions and worker crashes',
-  { timeout: 90000 },
-  async (t) => {
-    const root = await fixture(t);
-    const invalid = await run(root, request(root, 'export const enabled = ;'));
-    assert.equal(invalid.outcome, 'invalid', JSON.stringify(invalid));
-    await writeFile(
-      join(root, 'sample.test.ts'),
-      "import { test } from 'vitest'; test('crashes', () => process.kill(process.pid, 'SIGKILL'));\n",
-    );
-    const crashed = await run(root, request(root));
-    assert.equal(crashed.outcome, 'infrastructure-error', JSON.stringify(crashed));
-    await writeFile(
-      join(root, 'sample.test.ts'),
-      "import { test } from 'vitest'; test('exits', () => process.exit(9));\n",
-    );
-    const exited = await run(root, request(root));
-    assert.equal(exited.outcome, 'infrastructure-error', JSON.stringify(exited));
-  },
-);
+test('M1 distinguishes invalid transforms from assertions and worker crashes', {
+  timeout: 90000,
+}, async (t) => {
+  const root = await fixture(t);
+  const invalid = await run(root, request(root, 'export const enabled = ;'));
+  assert.equal(invalid.outcome, 'invalid', JSON.stringify(invalid));
+  await writeFile(
+    join(root, 'sample.test.ts'),
+    "import { test } from 'vitest'; test('crashes', () => process.kill(process.pid, 'SIGKILL'));\n",
+  );
+  const crashed = await run(root, request(root));
+  assert.equal(crashed.outcome, 'infrastructure-error', JSON.stringify(crashed));
+  await writeFile(
+    join(root, 'sample.test.ts'),
+    "import { test } from 'vitest'; test('exits', () => process.exit(9));\n",
+  );
+  const exited = await run(root, request(root));
+  assert.equal(exited.outcome, 'infrastructure-error', JSON.stringify(exited));
+});
 
 test('M1 never passes empty or entirely skipped execution', { timeout: 90000 }, async (t) => {
   const root = await fixture(t, "import { test } from 'vitest'; test.skip('skipped', () => {});\n");
@@ -150,35 +146,32 @@ test('M1 never passes empty or entirely skipped execution', { timeout: 90000 }, 
   assert.notEqual((await run(root, request(root))).outcome, 'passed');
 });
 
-test(
-  'M1 classifies Vitest async test and hook timeouts as timeout',
-  { timeout: 90000 },
-  async (t) => {
-    const root = await fixture(
-      t,
-      "import { test } from 'vitest'; test('hangs', () => new Promise(() => {}), 20);\n",
-    );
-    const timedOut = await run(root, request(root));
-    assert.equal(timedOut.outcome, 'timeout', JSON.stringify(timedOut));
-    await writeFile(
-      join(root, 'sample.test.ts'),
-      "import { test, beforeAll } from 'vitest'; beforeAll(() => new Promise(() => {}), 20); test('never runs', () => {});\n",
-    );
-    const hook = await run(root, request(root));
-    assert.equal(hook.outcome, 'timeout', JSON.stringify(hook));
-  },
-);
+test('M1 classifies Vitest async test and hook timeouts as timeout', {
+  timeout: 90000,
+}, async (t) => {
+  const root = await fixture(
+    t,
+    "import { test } from 'vitest'; test('hangs', () => new Promise(() => {}), 20);\n",
+  );
+  const timedOut = await run(root, request(root));
+  assert.equal(timedOut.outcome, 'timeout', JSON.stringify(timedOut));
+  await writeFile(
+    join(root, 'sample.test.ts'),
+    "import { test, beforeAll } from 'vitest'; beforeAll(() => new Promise(() => {}), 20); test('never runs', () => {});\n",
+  );
+  const hook = await run(root, request(root));
+  assert.equal(hook.outcome, 'timeout', JSON.stringify(hook));
+});
 
-test(
-  'M1 applies startup deadlines and reaps a CPU-hung test and detached descendant',
-  { timeout: 60000 },
-  async (t) => {
-    const root = await fixture(t);
-    assert.equal((await run(root, { ...request(root), deadlineMs: 1 })).outcome, 'timeout');
-    const marker = join(root, 'started.json');
-    await writeFile(
-      join(root, 'sample.test.ts'),
-      `
+test('M1 applies startup deadlines and reaps a CPU-hung test and detached descendant', {
+  timeout: 60000,
+}, async (t) => {
+  const root = await fixture(t);
+  assert.equal((await run(root, { ...request(root), deadlineMs: 1 })).outcome, 'timeout');
+  const marker = join(root, 'started.json');
+  await writeFile(
+    join(root, 'sample.test.ts'),
+    `
     import { test } from 'vitest';
     import { spawn } from 'node:child_process';
     import { writeFileSync } from 'node:fs';
@@ -189,11 +182,10 @@ test(
       while (true) {}
     });
   `,
-    );
-    const output = await run(root, { ...request(root), deadlineMs: 10000 });
-    assert.equal(output.outcome, 'timeout', JSON.stringify(output));
-    for (const pid of JSON.parse(await readFile(marker, 'utf8'))) {
-      assert.throws(() => process.kill(pid, 0), { code: 'ESRCH' });
-    }
-  },
-);
+  );
+  const output = await run(root, { ...request(root), deadlineMs: 10000 });
+  assert.equal(output.outcome, 'timeout', JSON.stringify(output));
+  for (const pid of JSON.parse(await readFile(marker, 'utf8'))) {
+    assert.throws(() => process.kill(pid, 0), { code: 'ESRCH' });
+  }
+});
