@@ -6,6 +6,7 @@ import errno
 import sys
 import time
 import subprocess
+import shutil
 import tempfile
 from unittest import mock
 from pathlib import Path
@@ -53,6 +54,8 @@ class SourceInstaller(unittest.TestCase):
         for name in ("package.json", "package-lock.json", ".npmrc", "LICENSE",
                      "scripts/oximut-launcher.py"):
             (self.repo / name).write_text("fixture")
+        shutil.copy2(Path(__file__).resolve().parents[1] / "scripts/build-zygote-addon.py",
+                     self.repo / "scripts/build-zygote-addon.py")
         self.prefix = Path(self.temporary.name) / "installed"
         self.stale = self.repo / "target/release/oximut"
         self.stale.parent.mkdir(parents=True)
@@ -81,6 +84,59 @@ class SourceInstaller(unittest.TestCase):
         command = run.call_args_list[0].args[0]
         for argument in ("--locked", "--release", "--message-format=json-render-diagnostics"):
             self.assertIn(argument, command)
+
+    def install_with_fake_build(self, build):
+        executable = self.repo / "target/release/oximut"
+        executable.write_text("binary")
+        with mock.patch.object(INSTALLER, "run_phase") as run, \
+                mock.patch.object(INSTALLER, "build_zygote_addon", build):
+            run.side_effect = [subprocess.CompletedProcess([], 0, self.artifact(executable)),
+                               subprocess.CompletedProcess([], 0)]
+            INSTALLER.install(self.prefix)
+
+    def test_addon_build_runs_in_stage_and_skip_does_not_fail_install(self):
+        calls = []
+        self.install_with_fake_build(lambda stage: calls.append(stage))
+        self.assertEqual(len(calls), 1)
+        self.assertEqual(calls[0].name, "bundle")
+        self.assertTrue((self.prefix / "bin/oximut").exists())
+
+    def test_addon_build_skip_message_and_stage_target(self):
+        native = self.repo / "packages/vitest-adapter/native"
+        native.mkdir()
+        (native / "zygote-fork.c").write_text("int x;")
+        seen = []
+
+        def skipped(source, output, **kwargs):
+            seen.append((Path(source), Path(output)))
+            return False, "no C compiler found"
+        module = mock.Mock(build_addon=skipped)
+        with mock.patch.object(INSTALLER.importlib.util, "module_from_spec", return_value=module), \
+                mock.patch.object(INSTALLER.importlib.util, "spec_from_file_location"), \
+                mock.patch.object(INSTALLER.sys, "stderr") as stderr:
+            executable = self.repo / "target/release/oximut"
+            executable.write_text("binary")
+            with mock.patch.object(INSTALLER, "run_phase") as run:
+                run.side_effect = [subprocess.CompletedProcess([], 0, self.artifact(executable)),
+                                   subprocess.CompletedProcess([], 0)]
+                INSTALLER.install(self.prefix)
+        source, output = seen[0]
+        self.assertEqual(source.parts[-3:], ("vitest-adapter", "native", "zygote-fork.c"))
+        self.assertEqual(source.parts[-5], "bundle")
+        self.assertEqual(output.name, "zygote-fork.node")
+        self.assertEqual(output.parent.name, "build")
+        self.assertNotIn(str(self.repo), str(output))
+        written = "".join(call.args[0] for call in stderr.write.call_args_list)
+        self.assertIn("Zygote addon skipped: no C compiler found; Oximut will use normal workers", written)
+        self.assertTrue((self.prefix / "bin/oximut").exists())
+
+    def test_developer_built_addon_is_not_copied(self):
+        build = self.repo / "packages/vitest-adapter/native/build"
+        build.mkdir(parents=True)
+        (build / "zygote-fork.node").write_text("dev build for another machine")
+        self.install_with_fake_build(lambda stage: None)
+        installed = self.prefix / "lib/oximut/packages/vitest-adapter/native"
+        self.assertFalse((installed / "build").exists())
 
     def test_missing_artifact_never_falls_back_to_stale_binary(self):
         with mock.patch.object(INSTALLER, "run_phase", return_value=
