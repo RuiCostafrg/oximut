@@ -143,7 +143,7 @@ jobs:
             name="$1"; shift
             env "$@" python3 benchmarks/real_project.py --binary "$PROFILE_ROOT/oximut" \
               --adapter packages/vitest-adapter/m2-runner.mjs --adapter-source-dir packages/vitest-adapter \
-              --defer-ratios --tools oximut --oximut-arg --zygote --warmups 0 --repetitions 1 \
+              --defer-ratios --tools oximut --oximut-arg=--zygote --warmups 0 --repetitions 1 \
               --concurrency "$MATCHED_CONCURRENCY" --workload "$WORKLOAD" --timeout 1200 \
               --output "$out/$name" 2>&1 | tee "$out/$name.log" || true
           }
