@@ -370,13 +370,39 @@ struct ZygoteWatchdog {
 // Leaves room for the batch's own, slightly longer, deadline field.
 const MAX_LANE_BATCH: usize = 8 * 1024 * 1024 - 64;
 /// Time a batch has to report once a lane is stopped at the job deadline.
-const LANE_REPORT_MS: u64 = 1000;
+pub(crate) const LANE_REPORT_MS: u64 = 1000;
+/// Experimental `--rolling-lanes`: a batch holds at most this many lanes per
+/// slot. The controller refills a slot as soon as its lane finishes, so the batch
+/// barrier only remains at batch ends, and the response stays well under its limit.
+const ROLLING_MAX_ROUNDS: usize = 32;
+/// The adapter's request validation bounds job deadlines.
+const MAX_DEADLINE_MS: u64 = 2_147_483_647;
 
+/// A lane batch of `batch`, run by `width` lanes at a time. A batch of more
+/// lanes than the width is rolling: the controller keeps `width` lanes busy
+/// and starts the next one as each finishes.
 fn lane_batch(batch: &[(usize, Request)], width: usize) -> Request {
     let mut request = batch[0].1.clone();
     // The adapter keeps this many lanes, so a smaller batch reuses its context.
-    request.workers = Some(width.max(batch.len()).min(1024));
-    request.deadline_ms = request.deadline_ms.saturating_add(LANE_REPORT_MS);
+    let rolling = batch.len() > width;
+    request.workers = Some(
+        if rolling {
+            width
+        } else {
+            width.max(batch.len())
+        }
+        .min(1024),
+    );
+    // Each lane has the job deadline from the moment it starts and then a
+    // moment to report. Lanes of a rolling batch run one after another in each
+    // slot, so the batch as a whole may take that long once per round: a
+    // batch deadline that cannot fire before the last lane could still be running.
+    let rounds = batch.len().div_ceil(width.max(1)).max(1) as u64;
+    request.deadline_ms = request
+        .deadline_ms
+        .saturating_add(LANE_REPORT_MS)
+        .saturating_mul(rounds)
+        .min(MAX_DEADLINE_MS);
     request.lanes = Some(batch.iter().map(|(_, r)| r.clone()).collect());
     request
 }
@@ -832,10 +858,12 @@ impl<'a> Scheduler<'a> {
                         }
                         self.budget.max_active_jobs = self.budget.max_active_jobs.max(
                             self.budget.active
-                                + request
-                                    .lanes
-                                    .as_ref()
-                                    .map_or(0, |lanes| lanes.len().saturating_sub(1)),
+                                + request.lanes.as_ref().map_or(0, |lanes| {
+                                    lanes
+                                        .len()
+                                        .min(request.workers.unwrap_or(usize::MAX))
+                                        .saturating_sub(1)
+                                }),
                         );
                     }
                     Err(error) => {
@@ -1009,7 +1037,16 @@ impl<'a> Scheduler<'a> {
                 let capacity = self.budget.capacity(&pids);
                 let limit = self.budget.baseline_fork_limit(capacity, &pids);
                 let width = *width.get_or_insert(self.slots.len().min(total).min(limit));
-                while batch.len() < limit.min(width) {
+                // Rolling needs all `width` lanes' worth of admission headroom;
+                // under memory pressure the batch is smaller than the width and
+                // runs without a barrier-free refill, as ever.
+                let rolling = self.options.rolling_lanes && limit >= width;
+                let capacity_lanes = if rolling {
+                    width * ROLLING_MAX_ROUNDS
+                } else {
+                    limit.min(width)
+                };
+                while batch.len() < capacity_lanes {
                     let Some(next) = pending.front_mut() else {
                         break;
                     };
@@ -1510,7 +1547,9 @@ mod tests {
         let batch = lane_batch(&[(0, job.clone()), (1, job)], 4);
         assert_eq!(batch.workers, Some(4));
         let huge = vec![(0, request()); 1025];
-        assert_eq!(lane_batch(&huge, 2).workers, Some(1024));
+        assert_eq!(lane_batch(&huge, 2000).workers, Some(1024));
+        // More lanes than slots is a rolling batch, which keeps its slot count.
+        assert_eq!(lane_batch(&huge, 2).workers, Some(2));
         assert_eq!(batch.deadline_ms, 5000 + LANE_REPORT_MS);
         assert!(
             batch
@@ -1519,6 +1558,37 @@ mod tests {
                 .iter()
                 .all(|lane| lane.deadline_ms == 5000)
         );
+    }
+
+    #[test]
+    fn a_rolling_lane_batch_keeps_its_width_and_cannot_time_out_before_its_last_lane() {
+        let mut job = request();
+        job.deadline_ms = 5000;
+        let lanes: Vec<_> = (0..9).map(|index| (index, job.clone())).collect();
+        let rolling = lane_batch(&lanes, 4);
+        // The adapter reads more lanes than workers as a rolling batch.
+        assert_eq!(rolling.workers, Some(4));
+        assert_eq!(rolling.lanes.as_ref().unwrap().len(), 9);
+        // Nine lanes through four slots take three rounds, each of which may use a
+        // lane's whole deadline and its report time.
+        assert_eq!(rolling.deadline_ms, 3 * (5000 + LANE_REPORT_MS));
+        assert!(Worker::limit(&rolling) > Duration::from_millis(3 * 5000));
+        // A batch within the width is the barrier batch it always was.
+        let barrier = lane_batch(&lanes[..4], 4);
+        assert_eq!(barrier.deadline_ms, 5000 + LANE_REPORT_MS);
+        assert_eq!(barrier.workers, Some(4));
+        // Per-lane deadlines stay per lane; only the batch's grows.
+        assert!(
+            rolling
+                .lanes
+                .unwrap()
+                .iter()
+                .all(|lane| lane.deadline_ms == 5000)
+        );
+        // The adapter bounds deadlines.
+        job.deadline_ms = u64::MAX / 4;
+        let huge = lane_batch(&[(0, job.clone()), (1, job)], 1);
+        assert_eq!(huge.deadline_ms, MAX_DEADLINE_MS);
     }
 
     fn request() -> Request {

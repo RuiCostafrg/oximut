@@ -94,12 +94,21 @@ async function scenario(
   environment = {},
   testSuffix = '',
   initializeWith = 'baseline',
+  width = undefined,
 ) {
   const { root, job, testFile, otherFile } = await fixture(t, testSuffix);
   const both = {
     mode: 'files',
     files: [otherFile, testFile],
     selectedTests: 3,
+    totalTests: 3,
+    expectedSkipped: 0,
+    reasons: [],
+  };
+  const only = {
+    mode: 'files',
+    files: [otherFile],
+    selectedTests: 1,
     totalTests: 3,
     expectedSkipped: 0,
     reasons: [],
@@ -147,9 +156,13 @@ async function scenario(
       job(id, {
         ...(precollect === undefined ? {} : { precollect }),
         ...(selection === 'both' ? { selection: both } : {}),
+        ...(selection === 'other' ? { selection: only } : {}),
       }),
     );
-    const reply = await command('run', { request: { ...jobs[0], lanes: jobs } });
+    // A width below the lane count makes the batch rolling.
+    const reply = await command('run', {
+      request: { ...jobs[0], ...(width ? { workers: width } : {}), lanes: jobs },
+    });
     replies.push(reply);
     // Every mutant worker is gone once its batch is answered: the CLI verifies it.
     const logged = (await readFile(join(root, 'events'), 'utf8')).split('\n').filter(Boolean);
@@ -335,5 +348,51 @@ zygoteTest(
     assert.equal(result.counters.templates, 1);
     assert.equal(result.counters.templated, 3);
     assert.deepEqual(result.alive, [[], []]);
+  },
+);
+
+zygoteTest(
+  'rolling lanes build every template early and fork each mutant from its own',
+  { timeout: 240000 },
+  async (t) => {
+    // Seven lanes through two slots over three selected file sets, so three
+    // templates; the load-time mutant keeps the ordinary zygote path.
+    const result = await scenario(
+      t,
+      [
+        [
+          ['fn', true],
+          ['top', false],
+          ['none', true],
+          ['n1', true, 'other'],
+          ['n2', true, 'other'],
+          ['n3', true, 'both'],
+          ['n4', true, 'both'],
+        ],
+      ],
+      { OXIMUT_ZYGOTE: '1' },
+      '',
+      'baseline',
+      2,
+    );
+    assert.deepEqual(result.outcomes, [
+      ['failed', 'failed', 'passed', 'passed', 'passed', 'passed', 'passed'],
+    ]);
+    assert.equal(result.counters.templates, 3);
+    assert.equal(result.counters.templated, 6);
+    assert.equal(result.counters.zygoteFailures, 0);
+    assert.equal(result.counters.fallbacks, 0);
+    assert.deepEqual(result.alive, [[]]);
+    // The templates collected with no mutant; every mutant worker is its own
+    // process. Only sample.test.ts logs, so n1 and n2, which select just the
+    // other file, leave no event.
+    assert.equal(new Set(result.events.map((event) => event.pid)).size, result.events.length);
+    assert.deepEqual(
+      result.events
+        .map((event) => event.active)
+        .filter(Boolean)
+        .sort(),
+      ['fn', 'n3', 'n4', 'none', 'top'],
+    );
   },
 );

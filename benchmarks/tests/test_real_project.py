@@ -182,6 +182,14 @@ class AdapterProvenanceTests(unittest.TestCase):
             with self.subTest(rejected=rejected):
                 self.assertIsNotNone(benchmark.mode_args_error(rejected))
 
+    def test_rolling_lanes_is_an_allowed_bare_mode_flag(self):
+        self.assertIsNone(benchmark.mode_args_error(['--zygote', '--zygote-precollect', '--rolling-lanes']))
+        self.assertIsNone(benchmark.mode_args_error(['--rolling-lanes']))
+        for rejected in (['--rolling-lanes=1'], ['--rolling-lanes', '--workers'],
+                         ['--rolling-lanes', 'x']):
+            with self.subTest(rejected=rejected):
+                self.assertIsNotNone(benchmark.mode_args_error(rejected))
+
     def test_full_adapter_graph_and_binary_changes_are_visible(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -507,4 +515,4 @@ class ModeArgumentTests(unittest.TestCase):
                              '--after-binary', 'b', '--after-adapter-dir', 'd',
                              '--after-commit', 'a' * 40] if flag.startswith('--after') else [])])
             # The allowlist, not some later path check, must reject it.
-            self.assertIn(f'{flag}: only --isolation, --no-zygote, --zygote, --zygote-precollect may be passed', stderr.getvalue())
+            self.assertIn(f'{flag}: only --isolation, --no-zygote, --rolling-lanes, --zygote, --zygote-precollect may be passed', stderr.getvalue())

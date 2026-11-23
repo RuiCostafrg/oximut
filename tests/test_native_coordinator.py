@@ -88,13 +88,20 @@ process.on('message', (message) => {
           : JSON.stringify(lane.resident) === JSON.stringify(request.resident)))
       return reply({ error: 'unexpected resident encoding' });
     log({ event: 'lanes', command, ids: request.lanes.map(lane => lane.jobId),
-      deadline: request.deadlineMs, jobs: request.lanes.map(lane => lane.deadlineMs) });
+      deadline: request.deadlineMs, jobs: request.lanes.map(lane => lane.deadlineMs),
+      workers: request.workers });
     const passed = { outcome: 'passed', tests: { passed: 1, failed: 0, skipped: 0 },
       errors: [], resident: request.resident.length };
+    // Under the watchdog mode the first lane of every batch deadlocks in a zygote
+    // worker and passes in a real fork.
+    const stuck = (lane, index) => mode === 'lanes-rolling-watchdog' && index === 0
+      && !lane.bypassZygote;
     return reply({ result: { ...passed, outcome: 'skipped',
-      tests: { passed: 0, failed: 0, skipped: 0 }, lanes: request.lanes.map(lane => ({
+      tests: { passed: 0, failed: 0, skipped: 0 }, lanes: request.lanes.map((lane, index) => ({
       ...passed, protocol: lane.protocol, jobId: lane.jobId, runId: lane.runId,
       generation: lane.generation,
+      ...(stuck(lane, index) ? { outcome: 'timeout', tests: { passed: 0, failed: 0, skipped: 0 },
+        errors: ['Job deadline exceeded'] } : {}),
     })) } });
   }
   if (mode.startsWith('lanes-') && command !== 'run')
@@ -353,6 +360,20 @@ class NativeCoordinator(unittest.TestCase):
         self.assertFalse(any('zygote watchdog' in d for d in report['diagnostics']))
         self.assert_reaped(events)
 
+    def run_cli_unchecked(self, mode, extra_args=()):
+        """The CLI refused its options: there is no log or report to read."""
+        with tempfile.TemporaryDirectory(prefix='oximut-native-') as directory:
+            adapter = Path(directory) / 'm2-runner.mjs'
+            adapter.write_text('throw new Error("the native coordinator must not run this");\n')
+            (Path(directory) / 'm2-worker.ts').write_text(CONTROLLER)
+            result = subprocess.run([
+                str(REPO / 'target/debug/oximut'), '--root', str(ROOT),
+                '--source', str(ROOT / 'src/subject.ts'), '--execution', 'persistent',
+                '--adapter', str(adapter), '--report', '-', '--no-cache', *extra_args,
+            ], env={**os.environ, 'OXIMUT_FAKE_MODE': mode, 'OXIMUT_FAKE_LOG': str(Path(directory) / 'log')},
+                text=True, capture_output=True, timeout=120)
+            return result, None, None
+
     def run_cli(self, mode, timeout_ms=5000, extra_args=(), full=False, shared=False):
         with tempfile.TemporaryDirectory(prefix='oximut-native-') as directory:
             adapter = Path(directory) / 'm2-runner.mjs'
@@ -422,6 +443,67 @@ class NativeCoordinator(unittest.TestCase):
                     self.assertEqual(batch['deadline'], 6000)
                     self.assertTrue(all(1 <= ms <= 5000 for ms in batch['jobs']))
                 self.assert_reaped(events)
+
+    def test_rolling_lanes_send_one_large_batch_with_a_deadline_that_covers_every_round(self):
+        self.require_two_workers()
+        timeout_ms = 5000
+        extra = ('--workers', '2')
+        result, report, events = self.run_cli(
+            'lanes-legacy', timeout_ms=timeout_ms, extra_args=extra, full=True, shared=True)
+        self.require_spare_capacity(report)
+        stock = [event for event in events if event['event'] == 'lanes']
+        count = len(report['mutants'])
+        self.assertGreater(count, 2, 'the fixture must have more mutants than workers')
+        self.assertTrue(all(len(batch['ids']) <= 2 for batch in stock), stock)
+        self.assertGreater(len(stock), 1)
+        result, report, events = self.run_cli(
+            'lanes-legacy', timeout_ms=timeout_ms, extra_args=(*extra, '--rolling-lanes'),
+            full=True, shared=True)
+        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+        self.assertTrue(report['summary']['complete'], result.stdout + result.stderr)
+        self.assertTrue(any('rolling-lanes=on' in d for d in report['diagnostics']))
+        batches = [event for event in events if event['event'] == 'lanes']
+        # Every mutant in one batch, attributed in order, run two at a time.
+        self.assertEqual(len(batches), 1, batches)
+        [batch] = batches
+        self.assertEqual(batch['ids'], [m['id'] for m in report['mutants']])
+        self.assertEqual(batch['workers'], 2)
+        # Each lane has its own deadline; the batch one covers every round of lanes.
+        rounds = -(-count // 2)
+        self.assertEqual(batch['deadline'], rounds * (timeout_ms + 1000))
+        self.assertTrue(all(1 <= ms <= timeout_ms for ms in batch['jobs']))
+        self.assertEqual({m['outcome'] for m in report['mutants']}, {'survived'})
+        self.assert_reaped(events)
+
+    def test_rolling_lanes_need_the_shared_controller(self):
+        result, report, events = self.run_cli_unchecked(
+            'normal', extra_args=('--workers', '2', '--no-shared-controller', '--rolling-lanes'))
+        self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
+        self.assertIn('--rolling-lanes requires the shared controller', result.stderr)
+
+    def test_zygote_watchdog_reruns_a_timed_out_rolling_lane_without_the_zygote(self):
+        self.require_two_workers()
+        result, report, events = self.run_cli(
+            'lanes-rolling-watchdog', full=True, shared=True,
+            extra_args=('--workers', '2', '--zygote', '--rolling-lanes'))
+        self.require_spare_capacity(report)
+        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+        self.assertTrue(report['summary']['complete'], result.stdout + result.stderr)
+        first = report['mutants'][0]['id']
+        self.assertEqual({m['outcome'] for m in report['mutants']}, {'survived'})
+        batches = [event for event in events if event['event'] == 'lanes']
+        self.assertEqual(batches[0]['ids'], [m['id'] for m in report['mutants']])
+        # The timed-out lane was rerun once on its own with the zygote bypassed; the
+        # rerun passed, so the zygote is off for what comes after.
+        reruns = [e for e in events if e['event'] == 'run' and e['job'] == first]
+        self.assertEqual([e.get('bypass') for e in reruns][-1], True, events)
+        self.assertEqual(len(reruns), 2, reruns)
+        diagnostics = report['diagnostics']
+        self.assertIn('zygote watchdog: 1 timeout reruns', diagnostics)
+        self.assertEqual(sum('zygote worker timed out where a normal worker did not; '
+                             'zygote disabled for the rest of the run' == d for d in diagnostics), 1,
+                         diagnostics)
+        self.assert_reaped(events)
 
     def test_nonblocking_warm_preserves_baseline_capacity_and_reuses_slot(self):
         self.require_two_workers()

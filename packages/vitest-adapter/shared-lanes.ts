@@ -1,10 +1,11 @@
-import { readFile } from 'node:fs/promises';
+import { readdir, readFile } from 'node:fs/promises';
 import { createRequire, getCompileCacheDir } from 'node:module';
-import { dirname, resolve } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import { performance } from 'node:perf_hooks';
+import { setImmediate as waitForPoolBookkeeping } from 'node:timers/promises';
 import { fileURLToPath } from 'node:url';
 import { createVitest, ForksPoolWorker, ThreadsPoolWorker, version } from 'vitest/node';
-import { envelope, type Request, type Result } from './protocol.ts';
+import { envelope, type Request, type Response, type Result } from './protocol.ts';
 import {
   fingerprint,
   type ProjectLike,
@@ -13,6 +14,11 @@ import {
 } from './transform-share.ts';
 
 type Context = Awaited<ReturnType<typeof createVitest>>;
+type LanePlan = {
+  name: string;
+  files: string[];
+  selected: Awaited<ReturnType<Context['globTestSpecifications']>>;
+};
 const runner = fileURLToPath(new URL('./lane-runner.mjs', import.meta.url));
 // Opt-in diagnostic timeline (OXIMUT_TRACE_TIMELINE); see timeline.cjs.
 const trace = process.env.OXIMUT_TRACE_TIMELINE
@@ -37,6 +43,40 @@ const HARD_DEADLINE = 'Job deadline exceeded';
 const LANE_EXITED = 'Lane worker exited before completion';
 // Vitest's unattributed report of a pool worker that exited.
 const POOL_EXIT = /^\[vitest-pool\]: Worker oximut-lane-(?:forks|threads) emitted error\.$/;
+
+/**
+ * Experimental rolling lanes run one stock Vitest pool per lane slot, all in
+ * the same context, so a slot can start its next mutant the moment its previous
+ * worker has exited. Vitest 5.1.0 does not export its pool factory; it lives in a
+ * hashed chunk of the pinned package, found by its source and used only after
+ * the version check. Without it the lanes run in barrier rounds instead.
+ */
+type LanePool = {
+  runTests(
+    specs: Awaited<ReturnType<Context['globTestSpecifications']>>,
+    invalidates: string[],
+  ): Promise<void>;
+  close(): Promise<void>;
+};
+type PoolFactory = (ctx: Context) => LanePool;
+let poolFactory: Promise<PoolFactory | undefined> | undefined;
+function rollingPoolFactory(): Promise<PoolFactory | undefined> {
+  poolFactory ??= (async () => {
+    try {
+      const chunks = new URL('./dist/chunks/', import.meta.resolve('vitest/package.json'));
+      for (const name of await readdir(fileURLToPath(chunks))) {
+        if (!/^index\..+\.js$/.test(name)) continue;
+        const source = await readFile(join(fileURLToPath(chunks), name), 'utf8');
+        const exported = /\bcreatePool as (\w+)\b/.exec(source)?.[1];
+        if (!exported || !/\bfunction createPool\(ctx\) \{/.test(source)) continue;
+        const factory = (await import(new URL(name, chunks).href))[exported];
+        return typeof factory === 'function' ? (factory as PoolFactory) : undefined;
+      }
+    } catch {}
+    return undefined;
+  })();
+  return poolFactory;
+}
 
 /**
  * Node always terminates a Worker after its native `error` event. Report only
@@ -75,6 +115,11 @@ export class SharedLanes {
   private files = new Map<string, string[]>();
   private failures = new Map<string, string>();
   private deadline = 0;
+  // Rolling batches: each lane's own deadline, from the moment that lane starts.
+  private laneDeadlines = new Map<string, number>();
+  // Rolling batches: lane slots whose current worker has not exited yet.
+  private liveForks = new Set<string>();
+  private rolling = false;
   private threads = new Set<ThreadsPoolWorker>();
   private transforms = new TransformShare();
   private laneMutants = new Map<string, string>();
@@ -84,6 +129,8 @@ export class SharedLanes {
   private warmFiles: string[] = [];
   // Test files (with their setup files) free of template-unsafe Vitest APIs.
   private safeFiles = new Map<string, boolean>();
+  // Test files already checked to run in the Node environment.
+  private nodeFiles = new Set<string>();
 
   private readonly templatePool?: TemplatePool;
 
@@ -96,6 +143,7 @@ export class SharedLanes {
     this.context = undefined;
     this.transforms.clear();
     this.dropTemplates();
+    this.nodeFiles.clear();
     try {
       await context?.close();
     } finally {
@@ -108,10 +156,18 @@ export class SharedLanes {
     const jobs = batch.lanes!;
     sample('batch_enter', { lanes: jobs.map((job) => job.mutation?.id) });
     const pool = batch.pool === 'threads' ? 'threads' : 'forks';
+    // More lanes than the width: the lanes roll through the slots, each starting as
+    // the previous worker of its slot has exited. Threads and unsupported Vitest
+    // builds keep the barrier, one width-sized round after another.
+    const slots = batch.workers ?? jobs.length;
+    const rolling = jobs.length > slots;
+    if (rolling && (pool !== 'forks' || !(await rollingPoolFactory())))
+      return this.runInRounds(batch, slots);
     // The batch's own deadline adds time to report after a lane is stopped.
     this.deadline = performance.now() + jobs[0].deadlineMs;
     this.failures.clear();
     this.files.clear();
+    this.laneDeadlines.clear();
     const modules = new Map<string, NonNullable<Request['mutation']>>();
     for (const job of jobs) {
       // Active-only modules cannot be served under one URL in concurrent lanes.
@@ -129,7 +185,7 @@ export class SharedLanes {
     const changed = JSON.stringify([...modules]) !== JSON.stringify([...this.modules]);
     this.modules = modules;
     // A stable lane count keeps the context across a smaller final batch.
-    const width = Math.max(batch.workers ?? jobs.length, jobs.length);
+    const width = rolling ? slots : Math.max(slots, jobs.length);
     if (this.context && (this.width !== width || this.pool !== pool)) await this.close();
     // Precollect needs forks and the zygote pool; per-job eligibility comes later.
     const precollect =
@@ -190,14 +246,20 @@ export class SharedLanes {
                     await start();
                     note?.('lane_fork_returned');
                     if (worker instanceof ThreadsPoolWorker) this.threads.add(worker);
+                    if (this.rolling) this.liveForks.add(name);
                     worker.on('exit', () => {
                       note?.('lane_exit');
+                      this.liveForks.delete(name);
                       clearTimeout(timer);
                       if (!finished && !stopping && !this.failures.has(name))
                         this.failures.set(name, LANE_EXITED);
                     });
                   };
                   worker.send = (message) => {
+                    // One pool per slot all number their first worker 1; a slot's
+                    // number is its lane's, as in a single shared pool.
+                    if (this.rolling && message.type === 'start')
+                      (message as unknown as { poolId: number }).poolId = index + 1;
                     if (message.type === 'start') note?.('lane_start_sent');
                     if (message.type === 'stop') note?.('lane_stop_sent');
                     if (message.type === 'run') {
@@ -223,7 +285,10 @@ export class SharedLanes {
                             ).fork.kill('SIGKILL');
                           }
                         },
-                        Math.max(1, this.deadline - performance.now()),
+                        Math.max(
+                          1,
+                          (this.laneDeadlines.get(name) ?? this.deadline) - performance.now(),
+                        ),
                       );
                     }
                     return send(message);
@@ -293,10 +358,12 @@ export class SharedLanes {
       for (const project of this.context.projects) project.vite.moduleGraph.invalidateAll();
     }
     const ctx = this.context;
+    this.rolling = rolling;
     trace?.emit('controller', 'context_ready', {});
     for (const [index, project] of ctx.projects.entries()) {
-      // Lanes beyond this batch stay idle: they receive no specification.
-      if (jobs[index]) {
+      // Lanes beyond this batch stay idle: they receive no specification. A
+      // rolling slot takes its mutant when it starts one.
+      if (!rolling && jobs[index]) {
         project.config.env = {
           ...project.config.env,
           OXIMUT_ACTIVE_MUTANT: jobs[index].mutation!.id,
@@ -313,23 +380,13 @@ export class SharedLanes {
     const specs = await new ctx.config.sequence.sequencer(ctx).sort(
       await ctx.globTestSpecifications(),
     );
+    if (rolling) return this.runRolling(batch, ctx, slots, specs, precollect);
     const representatives = [];
-    const plans: { name: string; files: string[]; selected: typeof specs }[] = [];
+    const plans: LanePlan[] = [];
     for (const [index, job] of jobs.entries()) {
-      const name = `oximut-lane-${index}`;
-      const selected = specs.filter(
-        (spec) =>
-          spec.project.name === name &&
-          (job.selection?.mode !== 'files' || job.selection.files.includes(resolve(spec.moduleId))),
-      );
-      for (const spec of selected) {
-        const source = await readFile(spec.moduleId, 'utf8');
-        if (/@(?:vitest|jest)-environment\s+(?!node\b)/.test(source))
-          throw new Error('Shared lanes require Node test files');
-      }
-      const files = selected.map((spec) => spec.moduleId);
-      this.files.set(name, files);
-      plans.push({ name, files, selected });
+      const plan = await this.plan(specs, `oximut-lane-${index}`, job);
+      this.files.set(plan.name, plan.files);
+      plans.push(plan);
     }
     for (const [index, job] of jobs.entries()) {
       const project = ctx.projects[index];
@@ -376,73 +433,9 @@ export class SharedLanes {
       POOL_EXIT.test(String((error as Error).message)),
     ).length;
     const unattributed = result.unhandledErrors.length > poolExits || poolExits > exits;
-    const lanes = jobs.map((job, index) => {
-      const name = `oximut-lane-${index}`;
-      const modules = result.testModules.filter(
-        (module) => module.project.name === name && this.files.get(name)!.includes(module.moduleId),
-      );
-      const tests = { passed: 0, failed: 0, skipped: 0 };
-      const moduleErrors = modules.flatMap((module) => [
-        ...module.errors(),
-        ...[...module.children.allSuites()].flatMap((suite) => suite.errors()),
-      ]);
-      const errors = [...moduleErrors];
-      // After a local bail the remaining files may never report; a failure stands.
-      let pending =
-        modules.length !== this.files.get(name)!.length ||
-        modules.some((module) => module.state() === 'pending' || module.state() === 'queued');
-      for (const module of modules)
-        for (const test of module.children.allTests()) {
-          const state = test.result();
-          if (state.state === 'passed' || state.state === 'failed' || state.state === 'skipped')
-            tests[state.state]++;
-          else pending = true;
-          errors.push(...(state.errors ?? []));
-        }
-      const messages = errors.map((error) => String(error.message ?? error).slice(0, messageLimit));
-      const failure =
-        this.failures.get(name) ||
-        (tests.failed && !errors.length ? 'Failed test without error evidence' : undefined);
-      // Aggregate errors have lost project identity: conservatively taint all lanes.
-      const untrusted = failure || (unattributed ? 'Unattributed batch error' : undefined);
-      const timedOut = messages.some((error) => /(?:Test|Hook) timed out in \d+ms/.test(error));
-      const invalid = moduleErrors.some((error) =>
-        /Transform failed|Parse failure|Failed to parse source|Unexpected token|Expected.*but found/.test(
-          String(error.message),
-        ),
-      );
-      let outcome: Result['outcome'] =
-        failure === HARD_DEADLINE && !unattributed
-          ? 'timeout'
-          : untrusted || messages.some((m) => /process\.exit unexpectedly called/.test(m))
-            ? 'infrastructure-error'
-            : invalid
-              ? 'invalid'
-              : timedOut
-                ? 'timeout'
-                : moduleErrors.length
-                  ? 'infrastructure-error'
-                  : tests.failed
-                    ? 'failed'
-                    : pending
-                      ? 'infrastructure-error'
-                      : tests.passed
-                        ? 'passed'
-                        : 'skipped';
-      if (
-        outcome === 'passed' &&
-        job.selection &&
-        (tests.passed + tests.skipped !== job.selection.selectedTests ||
-          tests.skipped !== (job.selection.expectedSkipped ?? 0))
-      )
-        outcome = 'infrastructure-error';
-      return envelope(job, {
-        outcome,
-        tests,
-        errors: [...(untrusted ? [untrusted] : []), ...messages].slice(0, 8),
-        ...(job.resident ? { resident: job.resident.length } : {}),
-      });
-    });
+    const lanes = jobs.map((job, index) =>
+      this.laneResult(job, index, result.testModules, unattributed, messageLimit),
+    );
     sample('batch_done');
     return {
       outcome: 'skipped',
@@ -451,6 +444,308 @@ export class SharedLanes {
       ...(batch.resident ? { resident: batch.resident.length } : {}),
       lanes,
     };
+  }
+
+  /**
+   * Rolling lanes: `slots` lane workers stay busy through all the batch's lanes.
+   * Each slot owns a stock Vitest pool, so its next mutant starts as soon as its
+   * previous worker has exited and the result is attributed, and nothing waits
+   * for the slowest lane. A lane's own deadline starts when that lane does.
+   */
+  private async runRolling(
+    batch: Request,
+    ctx: Context,
+    slots: number,
+    specs: Awaited<ReturnType<Context['globTestSpecifications']>>,
+    precollect: boolean,
+  ): Promise<Result> {
+    const jobs = batch.lanes!;
+    const createPool = (await rollingPoolFactory())!;
+    sample('rolling_begin', { lanes: jobs.length, slots });
+    // Every lane's files are known now: an unsupported test file fails the batch
+    // before anything starts, as in a barrier batch.
+    const plans: LanePlan[] = [];
+    for (const job of jobs) plans.push(await this.plan(specs, 'oximut-lane-0', job));
+    // Templates: all that the batch needs are started now, in the order the lanes
+    // need them, and build one after another while the first lanes already run.
+    const templates = new Map<string, Promise<boolean>>();
+    let building: Promise<unknown> = Promise.resolve(true);
+    if (precollect)
+      for (const [position, job] of jobs.entries()) {
+        const key = await this.templateCandidate(job, plans[position].files, ctx.projects[0]);
+        if (!key || templates.has(key)) continue;
+        const known = this.templates.get(key);
+        if (known !== undefined) {
+          templates.set(key, Promise.resolve(known));
+          continue;
+        }
+        const build = building.then(() => this.warm(key, plans[position].files)).catch(() => false);
+        building = build;
+        templates.set(key, build);
+      }
+    // Unhandled errors carry no project. One that arrives while lanes run taints
+    // them all, as in a barrier batch; one that no lane can have caused (none
+    // running) is not taken from any lane's result, but never goes unseen.
+    const state = ctx.state;
+    const active = new Set<string>();
+    const tainted = new Set<string>();
+    let stray = 0;
+    const catchError = state.catchError.bind(state);
+    state.catchError = (error, type) => {
+      const before = state.getUnhandledErrors().length;
+      catchError(error, type);
+      if (state.getUnhandledErrors().length === before) return;
+      if (active.size === 0) stray++;
+      for (const name of active) tainted.add(name);
+    };
+    const results: Response[] = new Array(jobs.length);
+    let next = 0;
+    let fatal: unknown;
+    const slot = async (index: number) => {
+      const name = `oximut-lane-${index}`;
+      const pool = createPool(ctx);
+      try {
+        while (fatal === undefined && next < jobs.length) {
+          const position = next++;
+          const job = jobs[position];
+          try {
+            results[position] = await this.runLane(
+              ctx,
+              pool,
+              index,
+              job,
+              position,
+              specs,
+              templates,
+              active,
+              tainted,
+            );
+          } catch (error) {
+            // Whatever went wrong, this lane's result is unknown and the slot
+            // cannot be trusted; the others finish what they have started.
+            fatal ??= error;
+            active.delete(name);
+            results[position] = envelope(job, {
+              outcome: 'infrastructure-error',
+              tests: { passed: 0, failed: 0, skipped: 0 },
+              errors: [String((error as Error)?.message ?? error).slice(0, 2048)],
+              ...(job.resident ? { resident: job.resident.length } : {}),
+            });
+          }
+        }
+      } finally {
+        await pool.close().catch(() => {});
+      }
+    };
+    try {
+      await Promise.all(Array.from({ length: slots }, (_, index) => slot(index)));
+      await building;
+    } finally {
+      state.catchError = catchError;
+      this.laneDeadlines.clear();
+      await building.catch(() => {});
+      // Pools of other slots may still be draining after a failure.
+      for (const [position, job] of jobs.entries())
+        results[position] ??= envelope(job, {
+          outcome: 'infrastructure-error',
+          tests: { passed: 0, failed: 0, skipped: 0 },
+          errors: [`Rolling lanes stopped before this lane started: ${String(fatal)}`],
+          ...(job.resident ? { resident: job.resident.length } : {}),
+        });
+    }
+    if (fatal !== undefined) await this.close();
+    else if (stray > 0)
+      for (const result of results) {
+        result.outcome = 'infrastructure-error';
+        result.errors = ['Unattributed batch error', ...result.errors].slice(0, 8);
+      }
+    sample('rolling_end');
+    return {
+      outcome: 'skipped',
+      tests: { passed: 0, failed: 0, skipped: 0 },
+      errors: [],
+      ...(batch.resident ? { resident: batch.resident.length } : {}),
+      lanes: fitMessages(results),
+    };
+  }
+
+  /** One lane job through its slot: start, run in a fresh worker, wait for its exit, attribute. */
+  private async runLane(
+    ctx: Context,
+    pool: LanePool,
+    index: number,
+    job: Omit<Request, 'lanes'>,
+    position: number,
+    specs: Awaited<ReturnType<Context['globTestSpecifications']>>,
+    templates: Map<string, Promise<boolean>>,
+    active: Set<string>,
+    tainted: Set<string>,
+  ): Promise<Response> {
+    const name = `oximut-lane-${index}`;
+    const project = ctx.projects[index];
+    const plan = await this.plan(specs, name, job);
+    this.files.set(name, plan.files);
+    this.failures.delete(name);
+    tainted.delete(name);
+    // A template still being built is waited for; a lane never forks from one
+    // that is not ready, and its own deadline has not started yet.
+    const candidate = templates.size
+      ? await this.templateCandidate(job, plan.files, project)
+      : undefined;
+    const ready = candidate ? await templates.get(candidate) : undefined;
+    const { OXIMUT_ZYGOTE_TEMPLATE: _stale, ...env } = project.config.env ?? {};
+    project.config.env = {
+      ...env,
+      OXIMUT_ACTIVE_MUTANT: job.mutation!.id,
+      ...(ready ? { OXIMUT_ZYGOTE_TEMPLATE: candidate } : {}),
+    };
+    this.laneDeadlines.set(name, performance.now() + job.deadlineMs);
+    if (trace) this.laneMutants.set(name, job.mutation!.id);
+    // Vitest only clears the specifications it runs. Results of this slot's
+    // previous mutant must not survive for the files of this one.
+    ctx.state.clearFiles(project, plan.files);
+    sample('lane_job_begin', { lane: name, mutant: job.mutation!.id, position });
+    active.add(name);
+    try {
+      if (plan.selected.length) {
+        try {
+          await pool.runTests([plan.selected[0]], []);
+        } catch (error) {
+          // The exit of a worker we know stopped (deadline or crash) explains its
+          // pool error. Any other error is unattributed, whatever its source.
+          const failure = this.failures.get(name);
+          const errors = error instanceof AggregateError ? error.errors : [error];
+          const explained =
+            (failure === LANE_EXITED || failure === HARD_DEADLINE) &&
+            errors.length === 1 &&
+            POOL_EXIT.test(String((errors[0] as Error)?.message));
+          if (!explained) ctx.state.catchError(error, 'Unhandled Error');
+        } finally {
+          // The pool resolves a task before it forgets it, and a worker that
+          // crashed leaves a task a cancel would wait on forever.
+          await waitForPoolBookkeeping();
+          await pool.close();
+        }
+        if (this.liveForks.has(name))
+          throw new Error('Rolling lane still owns a live fork after pool drain');
+      }
+    } finally {
+      active.delete(name);
+    }
+    sample('lane_job_end', { lane: name, mutant: job.mutation!.id, position });
+    return this.laneResult(job, index, ctx.state.getTestModules(), tainted.has(name), 2048);
+  }
+
+  /** Barrier fallback for more lanes than slots: `slots` lanes at a time. */
+  private async runInRounds(batch: Request, slots: number): Promise<Result> {
+    const jobs = batch.lanes!;
+    const lanes: Response[] = [];
+    let result: Result | undefined;
+    for (let start = 0; start < jobs.length; start += slots) {
+      result = await this.run({
+        ...batch,
+        workers: slots,
+        lanes: jobs.slice(start, start + slots),
+      });
+      lanes.push(...(result.lanes ?? []));
+    }
+    return { ...result!, lanes };
+  }
+
+  /** One lane's response, from the test modules its project reported. */
+  private laneResult(
+    job: Omit<Request, 'lanes'>,
+    index: number,
+    testModules: Awaited<ReturnType<Context['runTestSpecifications']>>['testModules'],
+    unattributed: boolean,
+    messageLimit: number,
+  ): Response {
+    const name = `oximut-lane-${index}`;
+    const modules = testModules.filter(
+      (module) => module.project.name === name && this.files.get(name)!.includes(module.moduleId),
+    );
+    const tests = { passed: 0, failed: 0, skipped: 0 };
+    const moduleErrors = modules.flatMap((module) => [
+      ...module.errors(),
+      ...[...module.children.allSuites()].flatMap((suite) => suite.errors()),
+    ]);
+    const errors = [...moduleErrors];
+    // After a local bail the remaining files may never report; a failure stands.
+    let pending =
+      modules.length !== this.files.get(name)!.length ||
+      modules.some((module) => module.state() === 'pending' || module.state() === 'queued');
+    for (const module of modules)
+      for (const test of module.children.allTests()) {
+        const state = test.result();
+        if (state.state === 'passed' || state.state === 'failed' || state.state === 'skipped')
+          tests[state.state]++;
+        else pending = true;
+        errors.push(...(state.errors ?? []));
+      }
+    const messages = errors.map((error) => String(error.message ?? error).slice(0, messageLimit));
+    const failure =
+      this.failures.get(name) ||
+      (tests.failed && !errors.length ? 'Failed test without error evidence' : undefined);
+    // Aggregate errors have lost project identity: conservatively taint all lanes.
+    const untrusted = failure || (unattributed ? 'Unattributed batch error' : undefined);
+    const timedOut = messages.some((error) => /(?:Test|Hook) timed out in \d+ms/.test(error));
+    const invalid = moduleErrors.some((error) =>
+      /Transform failed|Parse failure|Failed to parse source|Unexpected token|Expected.*but found/.test(
+        String(error.message),
+      ),
+    );
+    let outcome: Result['outcome'] =
+      failure === HARD_DEADLINE && !unattributed
+        ? 'timeout'
+        : untrusted || messages.some((m) => /process\.exit unexpectedly called/.test(m))
+          ? 'infrastructure-error'
+          : invalid
+            ? 'invalid'
+            : timedOut
+              ? 'timeout'
+              : moduleErrors.length
+                ? 'infrastructure-error'
+                : tests.failed
+                  ? 'failed'
+                  : pending
+                    ? 'infrastructure-error'
+                    : tests.passed
+                      ? 'passed'
+                      : 'skipped';
+    if (
+      outcome === 'passed' &&
+      job.selection &&
+      (tests.passed + tests.skipped !== job.selection.selectedTests ||
+        tests.skipped !== (job.selection.expectedSkipped ?? 0))
+    )
+      outcome = 'infrastructure-error';
+    return envelope(job, {
+      outcome,
+      tests,
+      errors: [...(untrusted ? [untrusted] : []), ...messages].slice(0, 8),
+      ...(job.resident ? { resident: job.resident.length } : {}),
+    });
+  }
+
+  /** The files a lane's job selects in the lane's project. */
+  private async plan(
+    specs: Awaited<ReturnType<Context['globTestSpecifications']>>,
+    name: string,
+    job: Omit<Request, 'lanes'>,
+  ): Promise<LanePlan> {
+    const selected = specs.filter(
+      (spec) =>
+        spec.project.name === name &&
+        (job.selection?.mode !== 'files' || job.selection.files.includes(resolve(spec.moduleId))),
+    );
+    for (const spec of selected) {
+      if (this.nodeFiles.has(spec.moduleId)) continue;
+      const source = await readFile(spec.moduleId, 'utf8');
+      if (/@(?:vitest|jest)-environment\s+(?!node\b)/.test(source))
+        throw new Error('Shared lanes require Node test files');
+      this.nodeFiles.add(spec.moduleId);
+    }
+    return { name, files: selected.map((spec) => spec.moduleId), selected };
   }
 
   /**
@@ -536,7 +831,17 @@ export class SharedLanes {
    * APIs a template cannot hand over, keep the ordinary zygote path.
    */
   private async templateKey(
-    job: Request,
+    job: Omit<Request, 'lanes'>,
+    files: string[],
+    project: Context['projects'][number],
+  ): Promise<string | undefined> {
+    const key = await this.templateCandidate(job, files, project);
+    return key && (await this.warm(key, files)) ? key : undefined;
+  }
+
+  /** The template key a job could use, before any template is built for it. */
+  private async templateCandidate(
+    job: Omit<Request, 'lanes'>,
     files: string[],
     project: Context['projects'][number],
   ): Promise<string | undefined> {
@@ -550,8 +855,7 @@ export class SharedLanes {
       }
       if (!safe) return undefined;
     }
-    const key = JSON.stringify(files);
-    return (await this.warm(key, files)) ? key : undefined;
+    return JSON.stringify(files);
   }
 
   private dropTemplates() {
@@ -636,6 +940,17 @@ export class SharedLanes {
     for (const [index, service] of services.entries())
       this.transforms.wrap(service, names[index], allowed);
   }
+}
+
+/**
+ * A response's error messages share one budget, so eight errors per lane
+ * escaped stay well under the 1 MiB response limit however many lanes it holds.
+ */
+function fitMessages(lanes: Response[]): Response[] {
+  const count = lanes.reduce((sum, lane) => sum + lane.errors.length, 0);
+  const limit = Math.min(2048, Math.floor((128 * 1024) / Math.max(1, count)));
+  for (const lane of lanes) lane.errors = lane.errors.map((message) => message.slice(0, limit));
+  return lanes;
 }
 
 function isTransformService(value: unknown): value is TransformService {
