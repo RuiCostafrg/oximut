@@ -46,7 +46,10 @@ jobs:
       - run: npm run format:check
       - run: npm run lint
       - run: npm run typecheck
-      - run: npm test
+      - name: Build the zygote addon
+        run: python3 scripts/build-zygote-addon.py
+      - name: Adapter, fixture and benchmark tests (zygote addon required)
+        run: OXIMUT_REQUIRE_ZYGOTE_ADDON=1 npm test
       - name: Controller profiling IPC and evidence regressions
         run: python3 -m unittest discover -s benchmarks/profiling -p 'test_*.py' -v
       - name: Report and list schema validator contract

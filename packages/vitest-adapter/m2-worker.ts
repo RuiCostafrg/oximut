@@ -1,5 +1,5 @@
 import { readFile } from 'node:fs/promises';
-import { getCompileCacheDir } from 'node:module';
+import { createRequire, getCompileCacheDir } from 'node:module';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { normalizePath } from 'vite';
@@ -14,6 +14,15 @@ import {
 } from './protocol.ts';
 
 const selectionSupport = new SelectionSupport();
+// Opt-in zygote workers for mutants (Linux). Unset, nothing is loaded or patched.
+const zygote =
+  process.env.OXIMUT_ZYGOTE === '1'
+    ? (createRequire(import.meta.url)('./zygote/pool.cjs') as {
+        install(): boolean;
+        residentHelpers(): number[];
+      })
+    : undefined;
+zygote?.install();
 let sharedLanes: import('./shared-lanes.ts').SharedLanes | undefined;
 let controllerReusable = false;
 const compileCacheFlush = fileURLToPath(new URL('./compile-cache.cjs', import.meta.url));
@@ -410,7 +419,13 @@ process.on('message', async (input: unknown) => {
   busy = true;
   try {
     const result = await command(request.command, request.args);
-    process.send?.({ protocol: 1, id: request.id, result });
+    // Live zygotes outlive the job; declare them so the CLI can admit them.
+    const helpers = zygote?.residentHelpers() ?? [];
+    process.send?.({
+      protocol: 1,
+      id: request.id,
+      result: helpers.length ? { ...(result as object), residentHelpers: helpers } : result,
+    });
   } catch (error) {
     process.send?.({ protocol: 1, id: request.id, error: message(error) });
   } finally {

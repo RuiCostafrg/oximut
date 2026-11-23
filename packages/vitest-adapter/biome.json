@@ -4,6 +4,8 @@
     "includes": [
       "*.ts",
       "compile-cache.cjs",
+      "zygote/*.cjs",
+      "test/zygote.test.mjs",
       "lane-runner.mjs",
       "test/shared-lanes.test.mjs",
       "test/transform-share.test.mjs",
