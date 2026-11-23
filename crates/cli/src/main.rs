@@ -4,6 +4,7 @@ mod coordinator;
 mod processes;
 mod resources;
 mod scheduler;
+mod trace;
 mod wait;
 use oximut_core::{
     Coverage, Mutant, MutantResult, Mutation, MutatorSelection, Outcome, PROTOCOL, Provenance,
@@ -1742,6 +1743,7 @@ fn main() -> ExitCode {
             }
         };
     }
+    trace::event("cli_start", || serde_json::json!({}));
     match options().and_then(|options| options.map_or(Ok(0), run)) {
         Ok(code) => ExitCode::from(code),
         Err(error) => {

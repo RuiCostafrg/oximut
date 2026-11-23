@@ -1,5 +1,6 @@
 //! A central event loop owns admission. Each slot is a Rust subreaper process,
 //! so detached grandchildren can never be mistaken for a sibling slot's work.
+use super::trace;
 use super::*;
 use std::collections::{BTreeSet, VecDeque};
 use std::os::fd::{AsRawFd, FromRawFd, RawFd};
@@ -43,6 +44,18 @@ const MAX_REQUEST: usize = 8 * 1024 * 1024;
 /// The frame for a job. Lane batches whose every lane holds the very same
 /// resident set (by identity, never by comparing content) travel with the set
 /// once instead of once more per lane; nothing else changes on the wire.
+/// Identity of a job for timeline events: its slot and, for lane batches, the lane mutants.
+fn trace_job(slot: usize, index: usize, request: &Request) -> serde_json::Value {
+    let id = |request: &Request| request.mutation.as_ref().map(|m| m.id.clone());
+    serde_json::json!({
+        "slot": slot,
+        "job": (index != WARM_JOB).then_some(index),
+        "kind": request.kind,
+        "mutant": id(request),
+        "lanes": request.lanes.as_ref().map(|lanes| lanes.iter().map(id).collect::<Vec<_>>()),
+    })
+}
+
 fn encode_request(index: usize, request: &Request) -> Result<(u8, Vec<u8>), String> {
     if index == WARM_JOB {
         return Ok((
@@ -639,6 +652,15 @@ impl<'a> Scheduler<'a> {
             // override test failures and can never contribute a mutation kill.
             for slot in 0..self.slots.len() {
                 let ready = self.slots[slot].as_mut().and_then(Worker::ready);
+                if let Some(result) = &ready {
+                    trace::event("reply", || {
+                        let (index, request, _) =
+                            self.slots[slot].as_ref().unwrap().busy.as_ref().unwrap();
+                        let mut job = trace_job(slot, *index, request);
+                        job["ok"] = result.is_ok().into();
+                        job
+                    });
+                }
                 if let Some(result) = ready {
                     self.sample(true);
                     if self.slots[slot].as_ref().unwrap().busy.as_ref().unwrap().0 != WARM_JOB
@@ -649,6 +671,7 @@ impl<'a> Scheduler<'a> {
                     }
                     let worker = self.slots[slot].as_mut().expect("ready worker");
                     let (index, request, _) = worker.busy.take().expect("ready job");
+                    trace::event("slot_idle_begin", || trace_job(slot, index, &request));
                     if index != WARM_JOB {
                         self.budget.active -= 1;
                     }
@@ -769,9 +792,20 @@ impl<'a> Scheduler<'a> {
                             .min(1024),
                     );
                 }
+                let existed = self.slots[slot].is_some();
+                trace::event("dispatch_begin", || trace_job(slot, index, &request));
+                if existed {
+                    trace::event("slot_idle_end", || trace_job(slot, index, &request));
+                }
                 if self.slots[slot].is_none() {
                     match Worker::start(self.options) {
-                        Ok(worker) => self.slots[slot] = Some(worker),
+                        Ok(worker) => {
+                            trace::event(
+                                "slot_started",
+                                || serde_json::json!({ "slot": slot, "slotPid": worker.child.id() }),
+                            );
+                            self.slots[slot] = Some(worker)
+                        }
                         Err(error) => {
                             if index == WARM_JOB {
                                 self.diagnostics
@@ -792,6 +826,7 @@ impl<'a> Scheduler<'a> {
                 let worker = self.slots[slot].as_mut().unwrap();
                 match worker.send(index, request.clone()) {
                     Ok(()) => {
+                        trace::event("dispatch_sent", || trace_job(slot, index, &request));
                         if index != WARM_JOB {
                             self.budget.active += 1;
                         }
