@@ -1,0 +1,80 @@
+# Zygote workers (experimental, Linux)
+
+By default every mutant runs in a fresh Vitest worker process that starts from
+scratch: it forks, imports Vitest and runs the tests. With `--zygote` the
+persistent controller instead keeps **one warm Node process** (the zygote) that
+has already imported what a worker needs, and `fork()`s each mutant worker from
+it. Every mutant still runs in its own process; only the start-up cost goes away.
+
+## Measured effect
+
+On the `colord-scale` workload at 4 workers, the zygote alone against Stryker
+measured **0.74x wall time, 0.58x CPU time and 0.65x peak memory**. Stock Oximut
+was about 1.0x wall on the same workload. This is one workload on one machine;
+see [real-project-benchmark.md](real-project-benchmark.md) for the method and run
+the benchmark on your own project before relying on it.
+
+## Requirements
+
+- Linux with glibc (musl/Alpine, macOS and Windows use normal workers).
+- A C compiler at install time. The installer builds the addon
+  (`packages/vitest-adapter/native/zygote-fork.c`, via
+  `scripts/build-zygote-addon.py`) and prints a skip notice when it cannot; the
+  install still succeeds. See [install.md](install.md).
+- `--execution persistent`, `--isolation fresh-process` (the default) and the
+  reference persistent adapter. Other combinations are rejected at start-up.
+
+## Enabling it
+
+```sh
+oximut --root . --source src/subject.ts --execution persistent --zygote
+```
+
+`OXIMUT_ZYGOTE=1` is the adapter-level switch the flag sets; you do not need it.
+
+## Fallbacks
+
+Oximut falls back to normal forked workers, with a diagnostic, when:
+
+- the addon is missing or cannot be loaded;
+- the zygote dies, or is not ready within 10 seconds.
+
+Outcomes do not change; the run only loses the speed-up. After a zygote failure
+every later worker in that run is a normal fork.
+
+## Timeout watchdog
+
+A zygote worker that deadlocks looks like a timeout, which a normal worker would
+not produce. So the controller treats a zygote timeout with suspicion:
+
+- A mutant that times out under the zygote is **rerun once on a normal worker**.
+  The rerun's result is the one reported.
+- If the rerun does **not** time out (a mismatch), the zygote is **disabled for
+  the rest of the run**.
+- If the rerun times out too, the timeout stands and the zygote stays enabled.
+- Costs: a timed-out mutant takes up to two deadlines instead of one, and runs
+  without `--zygote` never rerun timeouts.
+
+## Isolation change
+
+Normally the controller's only children are the workers of running jobs. With a
+zygote, one extra declared child, a live direct child of the controller, may
+outlive jobs. It is admitted and reaped like any other child. Mutant workers are
+forked from it, so each mutant gets its own process and the mutant environment is
+set per fork, but they inherit the zygote's warm module state instead of loading
+it fresh. Baseline workers remain stock.
+
+## Diagnostics
+
+The report's diagnostics show `zygote=on` in the execution line, and, when the
+watchdog acted, `zygote watchdog: N timeout reruns` and, on a mismatch,
+`zygote worker timed out where a normal worker did not; zygote disabled for the
+rest of the run`. Fallbacks log `zygote workers unavailable` or `zygote workers
+disabled` on stderr.
+
+## Status
+
+Experimental: the flag, its prerequisites and its diagnostics may change. CI
+(`.github/workflows/zygote.yml`, not a required check) runs it on Ubuntu 22.04
+and 24.04, proves outcome parity against a normal run, and proves the Alpine
+fallback.

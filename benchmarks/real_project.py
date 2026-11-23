@@ -277,6 +277,7 @@ def compare_rows(rows):
 # Extra Oximut arguments may only select opt-in execution modes; workload,
 # adapter, scope and reporting flags stay owned by the harness and provenance.
 MODE_VALUES = {'--isolation': {'fresh-process', 'fresh-thread'}}
+MODE_FLAGS = {'--zygote'}
 
 
 def mode_args_error(values):
@@ -287,6 +288,8 @@ def mode_args_error(values):
             if value not in MODE_VALUES[pending]:
                 return f'unsupported value for {pending}: {value!r}'
             pending = None
+        elif value in MODE_FLAGS:
+            continue
         elif value in MODE_VALUES:
             pending = value
         elif '=' in value and value.split('=', 1)[0] in MODE_VALUES:
@@ -294,7 +297,7 @@ def mode_args_error(values):
             if choice not in MODE_VALUES[flag]:
                 return f'unsupported value for {flag}: {choice!r}'
         else:
-            return f'only {", ".join(sorted(MODE_VALUES))} may be passed as extra Oximut arguments: {value!r}'
+            return f'only {", ".join(sorted([*MODE_VALUES, *MODE_FLAGS]))} may be passed as extra Oximut arguments: {value!r}'
     return f'missing value for {pending}' if pending is not None else None
 
 

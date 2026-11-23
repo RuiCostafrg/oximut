@@ -50,6 +50,7 @@ are for matched tool comparisons and scoped analysis, not performance-target gam
 - [M5 budgets](docs/m5.md): worker limits, memory units, admission, and enforcement limits.
 - [M6 decision](docs/m6.md): measured scope, release gates, and remaining work.
 - [Compatibility](docs/compatibility.md), [report schema](docs/report-schema.md), and [source installation](docs/install.md).
+- [Zygote workers](docs/zygote.md): experimental Linux fast path (`--zygote`).
 - [Architecture](docs/architecture.md): ownership, execution protocol, and correctness rules.
 - [Benchmark plan](docs/benchmarks.md): fair comparison with Stryker and success criteria.
 - [Vitest lifecycle decision](docs/adr/0001-vitest-lifecycle.md): measured reuse boundaries.
