@@ -432,6 +432,11 @@ impl Controller {
             .env("RAYON_NUM_THREADS", "1")
             .env("UV_THREADPOOL_SIZE", "1")
             .process_group(0);
+        if options.zygote {
+            command.env("OXIMUT_ZYGOTE", "1");
+        } else {
+            command.env_remove("OXIMUT_ZYGOTE");
+        }
         // The child keeps its channel end at the same descriptor number.
         unsafe {
             command.pre_exec(move || {
@@ -738,6 +743,28 @@ impl Coordinator {
         }
     }
 
+    /// Experimental, behind --zygote: admit declared helpers to the leak
+    /// baseline. Each must be a live direct child of the controller;
+    /// everything else is still verified as a leak, and shutdown still reaps
+    /// the whole tree.
+    fn admit_helpers(&mut self, helpers: &[u32]) -> Result<(), String> {
+        let controller = self.controller.as_mut().expect("controller");
+        let parent = controller.child.id();
+        for &pid in helpers {
+            match processes::identity(pid)? {
+                Some((ppid, start)) if ppid == parent => {
+                    controller.baseline.insert(pid, start);
+                }
+                _ => {
+                    return Err(format!(
+                        "resident helper {pid} is not a live child of the controller"
+                    ));
+                }
+            }
+        }
+        Ok(())
+    }
+
     /// Processes owned now that were not owned when the controller started.
     /// A test fork can exit during enumeration: an empty second scan alone
     /// cannot prove disappearance, so every observed PID is checked too.
@@ -942,15 +969,24 @@ impl Coordinator {
             self.jobs += 1;
             self.jobs_run += 1;
         }
+        // Long-lived helpers the controller started during this job (a worker
+        // zygote). Never part of the result itself.
+        let mut helpers = Vec::new();
         let response = match reply {
             Ok(Reply::Result(mut result)) => {
-                if warm && result.get("warmed").and_then(serde_json::Value::as_bool) != Some(true) {
+                let declared = take_helpers(&mut result, options.zygote);
+                if let Err(error) = &declared {
+                    Err(error.clone())
+                } else if warm
+                    && result.get("warmed").and_then(serde_json::Value::as_bool) != Some(true)
+                {
                     Err("controller did not acknowledge warm".into())
                 } else {
                     if warm && let Some(fields) = result.as_object_mut() {
                         fields.remove("warmed");
                         fields.remove("transformed");
                     }
+                    helpers = declared.unwrap_or_default();
                     envelope(request, result)
                 }
             }
@@ -987,6 +1023,13 @@ impl Coordinator {
                 .controller
                 .as_ref()
                 .is_some_and(|c| c.reuse != "controller");
+        if !retire
+            && !helpers.is_empty()
+            && let Err(error) = self.admit_helpers(&helpers)
+        {
+            let failure = infrastructure(request, error);
+            return self.retire_with(request, failure);
+        }
         let leaked = if retire {
             false
         } else {
@@ -1062,6 +1105,28 @@ impl Drop for Coordinator {
     fn drop(&mut self) {
         let _ = self.finish();
     }
+}
+
+/// Remove the controller's `residentHelpers` declaration from a result, so it
+/// never reaches result decoding. Declaring helpers needs the opt-in.
+fn take_helpers(result: &mut serde_json::Value, opted_in: bool) -> Result<Vec<u32>, String> {
+    let Some(declared) = result
+        .as_object_mut()
+        .and_then(|fields| fields.remove("residentHelpers"))
+    else {
+        return Ok(vec![]);
+    };
+    if !opted_in {
+        return Err("controller declared resident helpers without opting in".into());
+    }
+    declared
+        .as_array()
+        .and_then(|pids| {
+            pids.iter()
+                .map(|pid| pid.as_u64().and_then(|pid| u32::try_from(pid).ok()))
+                .collect()
+        })
+        .ok_or_else(|| "controller declared malformed resident helpers".into())
 }
 
 fn encode_message(id: u64, command: &str, args: &serde_json::Value) -> serde_json::Result<Vec<u8>> {

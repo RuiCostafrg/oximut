@@ -20,7 +20,7 @@ use std::{
     time::{Duration, Instant, SystemTime, UNIX_EPOCH},
 };
 
-const HELP: &str = "Usage: oximut [--root DIR] [--config FILE] --source FILE [--source FILE ...]\n  --version           Print the Cargo package version\n  --report FILE       JSON report (- for stdout)\n  --timeout-ms N      Per-job deadline, default 30000 ms\n  --workers N         Maximum simultaneous mutation jobs / persistent baseline files (default 1; bounded by CPU limits)\n  --memory-budget-mib N Aggregate sampled RSS budget in MiB (1 MiB = 1048576 bytes); default host/container limit\n  --memory-reserve-mib N Reserved admission headroom in MiB (default 64)\n  --execution MODE   fresh (default) or persistent controller\n  --isolation MODE   fresh-process (default) or fresh-thread (requires persistent)\n  --no-shared-controller Use one Vitest controller per worker instead of the default shared controller\n  --test-selection    Collect baseline hits and conservatively select hit test files\n  --mutators FAMILIES Repeatable comma-separated union: arithmetic,boolean-literal,comparison-boundary (default: all)\n  --order-seed N     Deterministically shuffle mutant execution order\n  --adapter FILE      Node adapter entry point override (an m2-runner.mjs beside m2-worker.ts runs natively)\n  --cache             Cache instrumentation; outcomes require --cache-inputs-complete\n  --cache-policy MODE  auto (default) learns whether outcome caching saves work; always validates/reuses eligible outcomes\n  --cache-inputs-complete Assert all nondeterministic/external inputs are declared\n  --cache-input FILE  Additional input file/directory (repeatable)\n  --cache-env NAME    Additional environment input (repeatable; values stay private)\n  --no-cache, --force Bypass all cache reads and writes\n  --list              Generate mutants as JSON without executing tests\n  --baseline-only     Run original sources without mutants\nExit: 0 complete/no survivors; 1 survivors/no coverage; 2 incomplete/error.\nScore: killed/(killed+survived+no-coverage)*100; empty denominator => null.\nInvalid/timeout/infrastructure-error/resource-exhausted/skipped are excluded and make a run incomplete.";
+const HELP: &str = "Usage: oximut [--root DIR] [--config FILE] --source FILE [--source FILE ...]\n  --version           Print the Cargo package version\n  --report FILE       JSON report (- for stdout)\n  --timeout-ms N      Per-job deadline, default 30000 ms\n  --workers N         Maximum simultaneous mutation jobs / persistent baseline files (default 1; bounded by CPU limits)\n  --memory-budget-mib N Aggregate sampled RSS budget in MiB (1 MiB = 1048576 bytes); default host/container limit\n  --memory-reserve-mib N Reserved admission headroom in MiB (default 64)\n  --execution MODE   fresh (default) or persistent controller\n  --isolation MODE   fresh-process (default) or fresh-thread (requires persistent)\n  --zygote            Experimental, Linux only: fork Vitest mutant workers from one warm Node process (requires --execution persistent, fresh-process isolation and the reference persistent adapter)\n  --no-shared-controller Use one Vitest controller per worker instead of the default shared controller\n  --test-selection    Collect baseline hits and conservatively select hit test files\n  --mutators FAMILIES Repeatable comma-separated union: arithmetic,boolean-literal,comparison-boundary (default: all)\n  --order-seed N     Deterministically shuffle mutant execution order\n  --adapter FILE      Node adapter entry point override (an m2-runner.mjs beside m2-worker.ts runs natively)\n  --cache             Cache instrumentation; outcomes require --cache-inputs-complete\n  --cache-policy MODE  auto (default) learns whether outcome caching saves work; always validates/reuses eligible outcomes\n  --cache-inputs-complete Assert all nondeterministic/external inputs are declared\n  --cache-input FILE  Additional input file/directory (repeatable)\n  --cache-env NAME    Additional environment input (repeatable; values stay private)\n  --no-cache, --force Bypass all cache reads and writes\n  --list              Generate mutants as JSON without executing tests\n  --baseline-only     Run original sources without mutants\nExit: 0 complete/no survivors; 1 survivors/no coverage; 2 incomplete/error.\nScore: killed/(killed+survived+no-coverage)*100; empty denominator => null.\nInvalid/timeout/infrastructure-error/resource-exhausted/skipped are excluded and make a run incomplete.";
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 enum Execution {
@@ -69,6 +69,9 @@ struct Options {
     workers: usize,
     #[serde(default)]
     shared_controller: bool,
+    /// Experimental: controllers serve mutant workers from a zygote.
+    #[serde(default)]
+    zygote: bool,
     memory_budget_mib: Option<u64>,
     memory_reserve_mib: u64,
     #[serde(default)]
@@ -102,6 +105,7 @@ fn parse_options(mut args: impl Iterator<Item = String>) -> Result<Option<Option
     let mut cache_env = vec![];
     let mut workers = 1;
     let mut no_shared_controller = false;
+    let mut zygote = false;
     let mut memory_budget_mib = None;
     let mut memory_reserve_mib = 64;
     let mut mutators = BTreeSet::new();
@@ -130,6 +134,7 @@ fn parse_options(mut args: impl Iterator<Item = String>) -> Result<Option<Option
                 }
             }
             "--no-shared-controller" => no_shared_controller = true,
+            "--zygote" => zygote = true,
             "--baseline-only" => baseline_only = true,
             "--test-selection" => test_selection = true,
             "--cache" => cache = true,
@@ -294,6 +299,20 @@ fn parse_options(mut args: impl Iterator<Item = String>) -> Result<Option<Option
             return Err("--isolation fresh-thread requires the reference persistent adapter (m2-runner.mjs beside m2-worker.ts)".into());
         }
     }
+    if zygote {
+        if execution != Execution::Persistent {
+            return Err("--zygote requires --execution persistent".into());
+        }
+        if isolation != Isolation::FreshProcess {
+            return Err("--zygote requires --isolation fresh-process".into());
+        }
+        let canonical_adapter = adapter
+            .canonicalize()
+            .map_err(|e| format!("adapter: {e}"))?;
+        if coordinator::native_worker(&canonical_adapter).is_none() {
+            return Err("--zygote requires the reference persistent adapter (m2-runner.mjs beside m2-worker.ts)".into());
+        }
+    }
     if let Some(path) = &report
         && path != Path::new("-")
         && let Ok(target) = path.canonicalize()
@@ -336,6 +355,7 @@ fn parse_options(mut args: impl Iterator<Item = String>) -> Result<Option<Option
         cache_env,
         workers,
         shared_controller,
+        zygote,
         memory_budget_mib,
         memory_reserve_mib,
         mutators,
@@ -1032,7 +1052,7 @@ fn run_attempt(options: &Options, previous: Option<RetryEvidence>) -> Result<Att
     }
     diagnostics.push(match options.execution {
         Execution::Fresh => "execution=fresh; isolation=fresh-controller-and-test-process".into(),
-        Execution::Persistent => format!("execution=persistent; isolation={}; controller reuse only; baseline=original-and-instrumented", if options.isolation == Isolation::FreshThread { "fresh-test-threads" } else { "fresh-test-forks" }),
+        Execution::Persistent => format!("execution=persistent; isolation={}; controller reuse only; baseline=original-and-instrumented{}", if options.isolation == Isolation::FreshThread { "fresh-test-threads" } else { "fresh-test-forks" }, if options.zygote { "; zygote=on" } else { "" }),
     });
     diagnostics.push(if options.mutators.is_empty() {
         "mutator families=all".into()
@@ -1089,6 +1109,7 @@ fn run_attempt(options: &Options, previous: Option<RetryEvidence>) -> Result<Att
         collect_coverage: None,
         resident: None,
         selection: None,
+        bypass_zygote: None,
     };
     let mut scheduler = scheduler::Scheduler::new(options)?;
     let groups: Vec<Arc<Vec<Mutation>>> = plan_groups(resident, request_budget())
@@ -1852,6 +1873,82 @@ mod tests {
     }
 
     #[test]
+    fn zygote_option_is_opt_in_and_checks_its_prerequisites() {
+        let subject = concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../fixtures/m1/src/subject.ts"
+        );
+        let parse = |args: &[&str]| {
+            parse_options(
+                [
+                    "--root",
+                    concat!(env!("CARGO_MANIFEST_DIR"), "/../../fixtures/m1"),
+                    "--source",
+                    subject,
+                ]
+                .into_iter()
+                .chain(args.iter().copied())
+                .map(str::to_string),
+            )
+        };
+        assert!(
+            !parse(&["--execution", "persistent"])
+                .unwrap()
+                .unwrap()
+                .zygote
+        );
+        let on = parse(&["--execution", "persistent", "--zygote"])
+            .unwrap()
+            .unwrap();
+        assert!(on.zygote);
+        assert_eq!(on.isolation, Isolation::FreshProcess);
+        // Older serialized options predate the field.
+        let mut legacy = serde_json::to_value(on).unwrap();
+        legacy.as_object_mut().unwrap().remove("zygote");
+        assert!(!serde_json::from_value::<Options>(legacy).unwrap().zygote);
+        assert!(
+            parse(&["--zygote"])
+                .err()
+                .unwrap()
+                .contains("--zygote requires --execution persistent")
+        );
+        assert!(
+            parse(&["--execution", "fresh", "--zygote"])
+                .err()
+                .unwrap()
+                .contains("--zygote requires --execution persistent")
+        );
+        assert!(
+            parse(&[
+                "--execution",
+                "persistent",
+                "--isolation",
+                "fresh-thread",
+                "--zygote"
+            ])
+            .err()
+            .unwrap()
+            .contains("--zygote requires --isolation fresh-process")
+        );
+        // An adapter that is not the reference one runs through the relay.
+        let unrelated =
+            std::env::temp_dir().join(format!("oximut-zygote-{}.mjs", std::process::id()));
+        std::fs::write(&unrelated, "").unwrap();
+        let error = parse(&[
+            "--execution",
+            "persistent",
+            "--zygote",
+            "--adapter",
+            unrelated.to_str().unwrap(),
+        ])
+        .err()
+        .unwrap();
+        std::fs::remove_file(&unrelated).unwrap();
+        assert!(error.contains("--zygote requires the reference persistent adapter"));
+        assert!(HELP.contains("--zygote") && HELP.contains("Experimental, Linux only"));
+    }
+
+    #[test]
     fn production_budget_maps_to_the_adapter_limit() {
         assert_eq!(REQUEST_LIMIT - REQUEST_HEADROOM, 7 * 1024 * 1024);
         assert_eq!(
@@ -1987,6 +2084,7 @@ mod tests {
             collect_coverage: None,
             resident: None,
             selection: None,
+            bypass_zygote: None,
         };
         fs::write(&path, vec![b' '; 1_048_577]).unwrap();
         assert!(

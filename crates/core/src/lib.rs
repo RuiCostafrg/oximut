@@ -103,6 +103,9 @@ pub struct Request {
     pub resident: Option<std::sync::Arc<Vec<Mutation>>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub selection: Option<Selection>,
+    /// Watchdog: serve this job's test workers with real forks, not the zygote.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub bypass_zygote: Option<bool>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -517,6 +520,7 @@ mod tests {
             collect_coverage: None,
             resident: None,
             selection: None,
+            bypass_zygote: None,
         };
         let mut response = Response {
             lanes: None,
@@ -560,6 +564,7 @@ mod tests {
             collect_coverage: None,
             resident: None,
             selection: None,
+            bypass_zygote: None,
         };
         let result = |job: &str, outcome| Response {
             lanes: None,

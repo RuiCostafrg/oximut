@@ -1,7 +1,7 @@
 //! A central event loop owns admission. Each slot is a Rust subreaper process,
 //! so detached grandchildren can never be mistaken for a sibling slot's work.
 use super::*;
-use std::collections::VecDeque;
+use std::collections::{BTreeSet, VecDeque};
 use std::os::fd::{AsRawFd, FromRawFd, RawFd};
 use std::os::unix::net::UnixStream;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -340,6 +340,18 @@ pub struct Scheduler<'a> {
     cleanup_ok: bool,
     spares: VecDeque<(usize, Request)>,
     lanes_ran: bool,
+    zygote: ZygoteWatchdog,
+}
+/// Guards `--zygote` runs against a deadlocked forked worker, which would look
+/// like a timeout and could count as a detection. A Timeout is rerun once with
+/// the zygote bypassed; if the rerun gives another outcome, the zygote is
+/// disabled for the rest of the run.
+#[derive(Default)]
+struct ZygoteWatchdog {
+    disabled: bool,
+    reruns: u64,
+    /// Mutant indexes whose single bypassed rerun is queued or running.
+    rerunning: BTreeSet<usize>,
 }
 /// Whether a job still fits the request limit once wrapped as a one-lane batch.
 // Leaves room for the batch's own, slightly longer, deadline field.
@@ -449,6 +461,7 @@ impl<'a> Scheduler<'a> {
             cleanup_ok: true,
             spares: VecDeque::new(),
             lanes_ran: false,
+            zygote: ZygoteWatchdog::default(),
         })
     }
     pub fn prepare_spares(&mut self, request: &Request) {
@@ -653,6 +666,13 @@ impl<'a> Scheduler<'a> {
                             if untrusted { "failed" } else { "ready" },
                             response.errors.join("; ")
                         ));
+                    } else if self.settle_rerun(index, &request, &response) {
+                        // Same admission and deadline as any job, and next in line.
+                        let mut again = request.clone();
+                        again.bypass_zygote = Some(true);
+                        self.zygote.reruns += 1;
+                        self.zygote.rerunning.insert(index);
+                        pending.push_front((index, again));
                     } else {
                         completed.push((index, response));
                     }
@@ -763,6 +783,12 @@ impl<'a> Scheduler<'a> {
                         }
                     }
                 }
+                if self.zygote.disabled && request.kind == "mutant" {
+                    request.bypass_zygote = Some(true);
+                    for lane in request.lanes.iter_mut().flatten() {
+                        lane.bypass_zygote = Some(true);
+                    }
+                }
                 let worker = self.slots[slot].as_mut().unwrap();
                 match worker.send(index, request.clone()) {
                     Ok(()) => {
@@ -824,6 +850,40 @@ impl<'a> Scheduler<'a> {
             }
         }
         completed
+    }
+    /// Zygote watchdog bookkeeping for a mutant response. Returns whether the
+    /// mutant timed out under the zygote and must be rerun once without it.
+    /// A finished rerun disables the zygote when it disagrees with the timeout.
+    fn settle_rerun(&mut self, index: usize, request: &Request, response: &Response) -> bool {
+        if self.zygote.rerunning.remove(&index) {
+            if response.outcome != TestOutcome::Timeout && !self.zygote.disabled {
+                self.zygote.disabled = true;
+                self.diagnostics.push(
+                    "zygote worker timed out where a normal worker did not; zygote disabled for the rest of the run"
+                        .into(),
+                );
+            }
+            return false;
+        }
+        request.kind == "mutant" && request.lanes.is_none() && self.watching(response)
+    }
+    /// Whether a timed-out mutant is a watchdog case: zygote on and not yet disabled.
+    fn watching(&self, response: &Response) -> bool {
+        self.options.zygote && !self.zygote.disabled && response.outcome == TestOutcome::Timeout
+    }
+    /// Rerun timed-out lane jobs one by one with the zygote bypassed. The lane
+    /// controllers give way to ordinary ones, and each rerun goes through the
+    /// normal admission and per-job deadline.
+    fn rerun_timeouts(&mut self, jobs: Vec<(usize, Request)>) -> Vec<(usize, Response)> {
+        self.retire_lane_controllers();
+        let mut pending = VecDeque::new();
+        for (index, mut job) in jobs {
+            job.bypass_zygote = Some(true);
+            self.zygote.reruns += 1;
+            self.zygote.rerunning.insert(index);
+            pending.push_back((index, job));
+        }
+        self.dispatch(pending, false)
     }
     /// What the dispatch loop waits for: input, pending output or a hang-up on any busy
     /// slot's channel, until the next resource sample or slot deadline.
@@ -951,6 +1011,7 @@ impl<'a> Scheduler<'a> {
                     return;
                 }
                 let responses = response.lanes;
+                let mut timed_out = vec![];
                 for (offset, (index, job)) in batch.into_iter().enumerate() {
                     let item = responses
                         .as_ref()
@@ -966,9 +1027,20 @@ impl<'a> Scheduler<'a> {
                                 )
                             }
                         });
+                    if self.watching(&item) {
+                        timed_out.push((index, job));
+                        continue;
+                    }
                     results[index].outcome = item.mutant_outcome();
                     results[index].tests = item.tests;
                     results[index].errors = item.errors;
+                }
+                if !timed_out.is_empty() {
+                    for (index, response) in self.rerun_timeouts(timed_out) {
+                        results[index].outcome = response.mutant_outcome();
+                        results[index].tests = response.tests;
+                        results[index].errors = response.errors;
+                    }
                 }
             }
             return;
@@ -1022,6 +1094,12 @@ impl<'a> Scheduler<'a> {
         if let Some(reason) = &self.budget.exhaustion {
             self.diagnostics
                 .push(format!("resource admission stopped: {reason}"));
+        }
+        if self.zygote.reruns > 0 {
+            self.diagnostics.push(format!(
+                "zygote watchdog: {} timeout reruns",
+                self.zygote.reruns
+            ));
         }
         diagnostics.append(&mut self.diagnostics);
         self.cleanup_ok && self.budget.exhaustion.is_none()
