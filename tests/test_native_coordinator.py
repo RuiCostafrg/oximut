@@ -129,6 +129,27 @@ process.on('message', (message) => {
     };
     wait(); return;
   }
+  if ((mode === 'warm-fail' || mode === 'warm-start-fail') && request.kind === 'mutant') {
+    // A failed spare warm is only reported as failed once its reply is
+    // consumed; the scheduler then kills the spare. Hold every mutant until
+    // the spare controller is gone so the run cannot end with the warm still
+    // in flight (reported as "abandoned at shutdown").
+    const spare = () => readFileSync(process.env.OXIMUT_FAKE_LOG, 'utf8').trim().split('\n')
+      .map((line) => JSON.parse(line))
+      .find((e) => e.event === 'initialize' && e.job === 'spare-warm')?.pid;
+    const gone = (pid) => {
+      try { process.kill(pid, 0); } catch { return true; }
+      try { return /^[ZX]/.test(readFileSync(`/proc/${pid}/stat`, 'utf8').split(') ')[1]); }
+      catch { return true; }
+    };
+    const wait = () => {
+      const pid = spare();
+      if (pid === undefined || !gone(pid)) return setTimeout(wait, 10);
+      reply({ result: { outcome: 'passed', tests: { passed: 1, failed: 0, skipped: 0 },
+        errors: [], ...(request.resident ? { resident: request.resident.length } : {}) } });
+    };
+    wait(); return;
+  }
   if (mode === 'hang') return;
   if (mode === 'crash') process.exit(3);
   if (mode === 'error') return reply({ error: 'boom from controller' });
@@ -334,6 +355,8 @@ class NativeCoordinator(unittest.TestCase):
             with self.subTest(mode=mode):
                 result, report, events = self.run_cli(mode, extra_args=('--workers', '2'), full=True)
                 self.require_spare_capacity(report)
+                if any('spare warm skipped' in d for d in report['diagnostics']):
+                    self.skipTest('resource admission refused the spare warm')
                 self.assertTrue(report['summary']['complete'], result.stdout + result.stderr)
                 self.assertEqual([m['outcome'] for m in report['mutants']],
                                  [m['outcome'] for m in expected['mutants']])
