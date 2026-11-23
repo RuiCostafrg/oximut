@@ -15,7 +15,13 @@ export default class LaneRunner extends TestRunner {
     // Vitest-side phases of one lane worker: runner built, collection (importing
     // and registering the test files), execution of the collected tests.
     const mark = (event) =>
-      trace.emit('worker', event, { mutant: process.env.OXIMUT_ACTIVE_MUTANT });
+      trace.emit('worker', event, {
+        mutant: process.env.OXIMUT_ACTIVE_MUTANT,
+        // The precollect template's own collect has no mutant and is warm; a
+        // mutant's worker forked from a template is templated (its second start).
+        warm: process.env.OXIMUT_ZYGOTE_WARM === '1',
+        templated: !!process.env.OXIMUT_ZYGOTE_TEMPLATE && process.env.OXIMUT_ZYGOTE_WARM !== '1',
+      });
     mark('runner_created');
     this.onBeforeCollect = () => mark('collect_begin');
     this.onCollected = () => mark('collect_end');

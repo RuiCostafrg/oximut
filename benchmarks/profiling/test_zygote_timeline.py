@@ -15,19 +15,28 @@ def event(files, role, pid, t, name, **fields):
         {'t': t, 'event': name, 'role': role, 'pid': pid, **fields})
 
 
-def batch(files, shift, job, lanes):
-    """One two-lane batch on slot 0. `lanes` maps mutant id to its worker pid and result delay."""
+def batch(files, shift, job, lanes, elu=((0, 0), (0, 0)), template=False):
+    """One two-lane batch on slot 0. `lanes` maps mutant id to its worker pid and result delay.
+
+    `elu` is the cumulative controller (active, idle) ms at batch_enter and batch_done;
+    `template` adds a template build and forks the lanes from it (precollect)."""
     s = lambda offset: 1000 + shift + offset
     ids = list(lanes)
     event(files, 'scheduler', 1, s(0), 'dispatch_begin', slot=0, job=job, kind='mutant', mutant=ids[0], lanes=ids)
     event(files, 'scheduler', 1, s(2), 'dispatch_sent', slot=0, job=job, kind='mutant', mutant=ids[0], lanes=ids)
     event(files, 'controller', 2, s(3), 'request_received', id=job, command='run', lanes=ids)
-    event(files, 'controller', 2, s(4), 'batch_enter', lanes=ids)
+    event(files, 'controller', 2, s(4), 'batch_enter', lanes=ids, eluActive=elu[0][0], eluIdle=elu[0][1])
     event(files, 'controller', 2, s(10), 'context_ready')
+    if template:
+        event(files, 'controller', 2, s(10), 'template_build_begin', key='["t"]')
+        event(files, 'controller', 2, s(11), 'template_build_end', key='["t"]', ready=True, ms=40.5)
     event(files, 'controller', 2, s(12), 'pool_run_begin')
     for mutant, (pid, delay) in lanes.items():
         event(files, 'controller', 2, s(12), 'lane_fork_requested', lane='x', mutant=mutant)
         event(files, 'pool', 2, s(12), 'spawn_requested', id=pid, mutant=mutant)
+        if template:
+            event(files, 'pool', 2, s(12), 'template_fork_requested', id=pid, mutant=mutant)
+            event(files, 'pool', 2, s(21), 'template_fork_attached', id=pid, mutant=mutant)
         event(files, 'pool', 2, s(13), 'spawn_sent', id=pid, mutant=mutant)
         event(files, 'zygote', 3, s(14), 'spawn_received', id=pid, mutant=mutant)
         event(files, 'zygote', 3, s(15), 'fork_begin', id=pid, mutant=mutant)
@@ -47,6 +56,7 @@ def batch(files, shift, job, lanes):
         event(files, 'controller', 2, s(130 + delay), 'lane_exit', lane='x', mutant=mutant)
     event(files, 'controller', 2, s(160), 'pool_run_end')
     event(files, 'controller', 2, s(165), 'pool_closed')
+    event(files, 'controller', 2, s(166), 'batch_done', eluActive=elu[1][0], eluIdle=elu[1][1])
     event(files, 'controller', 2, s(167), 'reply_sent', id=job, command='run')
     event(files, 'scheduler', 1, s(169), 'reply', slot=0, job=job, kind='mutant', mutant=ids[0], lanes=ids, ok=True)
 
@@ -64,8 +74,8 @@ class ZygoteTimelineTests(unittest.TestCase):
         event(files, 'scheduler', 1, 700, 'reply', slot=0, job=0, kind='baseline', ok=True)
         event(files, 'pool', 2, 990, 'zygote_start')
         event(files, 'pool', 2, 995, 'zygote_ready')
-        batch(files, 0, 1, {'a': (11, 0), 'b': (12, 30)})
-        batch(files, 180, 2, {'c': (13, 0), 'd': (14, 30)})
+        batch(files, 0, 1, {'a': (11, 0), 'b': (12, 30)}, elu=((10, 10), (50, 60)))
+        batch(files, 180, 2, {'c': (13, 0), 'd': (14, 30)}, elu=((60, 70), (110, 110)), template=True)
         return files
 
     def test_summary_reports_each_metric_of_a_two_batch_trace(self):
@@ -96,6 +106,31 @@ class ZygoteTimelineTests(unittest.TestCase):
         self.assertAlmostEqual(slot['busy_fraction'], 338 / 349)
         self.assertAlmostEqual(slot['busy_fraction'] + slot['idle_fraction'], 1)
         self.assertEqual(summary['lane_occupancy']['width'], 2)
+
+    def test_precollect_template_builds_event_loop_and_pool_run_breakdown(self):
+        with tempfile.TemporaryDirectory() as directory:
+            write(directory, self.synthetic())
+            summary = timeline.analyze(directory)
+            text = timeline.render(summary)
+        self.assertEqual(summary['template_builds']['count'], 1)
+        self.assertEqual(summary['template_builds']['total_ms'], 40.5)
+        # Cumulative samples 10/10 at the first batch_enter, 110/110 at the last batch_done.
+        self.assertAlmostEqual(summary['controller_event_loop']['utilization'], 0.5)
+        pre = summary['precollect_per_mutant_ms']
+        self.assertEqual(pre['templated_mutants'], 2)
+        self.assertEqual(pre['templated_fork_to_attach']['median'], 9)
+        self.assertEqual(pre['templated_start_to_collect_end']['median'], 78)
+        # In each batch lane 1 finishes 30 ms before lane 2; the run ends 5 ms after its last result.
+        pool = summary['pool_run_breakdown_ms']
+        self.assertEqual(pool['batches'], 2)
+        self.assertEqual(pool['pool_run']['median'], 148)
+        self.assertEqual(pool['slowest_lane']['median'], 143)
+        self.assertEqual(pool['after_slowest_lane']['median'], 5)
+        self.assertEqual(pool['lane_wait_for_slowest_mean']['median'], 15)
+        self.assertEqual(pool['lane_wait_for_slowest_max']['median'], 30)
+        self.assertAlmostEqual(pool['lane_wait_fraction']['mean'], 30 / (148 * 2))
+        for line in ('template builds: 1', 'controller event loop', 'pool_run per batch (2 batches', 'precollect, templated'):
+            self.assertIn(line, text)
 
     def test_cli_writes_json_and_text(self):
         with tempfile.TemporaryDirectory() as directory:

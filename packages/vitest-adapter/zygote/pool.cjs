@@ -101,6 +101,7 @@ class ZygoteChild extends EventEmitter {
   connected = true;
   attachTimer = undefined;
   mutant = undefined;
+  templated = false;
   #launch;
   #socket;
   #real;
@@ -444,7 +445,10 @@ function startZygote(entry, args, options, template) {
           id: message.id,
           mutant: child.mutant,
           workerPid: message.pid,
+          templated: child.templated,
         });
+      if (trace && child.templated)
+        trace.emit('pool', 'template_fork_attached', { id: message.id, mutant: child.mutant });
       child.attach(message.pid, handle);
     } else if (kind === 'exit') {
       const child = zygote.children.get(message.id);
@@ -497,7 +501,16 @@ function zygoteFork(entry, args, options) {
   zygote.children.set(id, child);
   if (trace) {
     child.mutant = options.env.OXIMUT_ACTIVE_MUTANT;
-    trace.emit('pool', 'spawn_requested', { id, mutant: child.mutant, queued: !zygote.ready });
+    child.templated = templated;
+    trace.emit('pool', 'spawn_requested', {
+      id,
+      mutant: child.mutant,
+      queued: !zygote.ready,
+      templated,
+      template: templated ? zygote.template : undefined,
+    });
+    // A mutant's worker forked from a warm template (precollect).
+    if (templated) trace.emit('pool', 'template_fork_requested', { id, mutant: child.mutant });
   }
   const message = { __oximut_zygote__: 'spawn', id, env: options.env };
   if (zygote.ready) request(zygote, child, message);
@@ -510,6 +523,7 @@ function templateFork(entry, args, options) {
   const name = options.env.OXIMUT_ZYGOTE_TEMPLATE;
   dropTemplate(name);
   precollect.templates++;
+  if (trace) trace.emit('pool', 'template_zygote_start', { template: name });
   // The controller's mutant, if it has one, is not the template's.
   const env = { ...options.env, OXIMUT_ACTIVE_MUTANT: '' };
   const zygote = startZygote(entry, args, { ...options, env }, name);
@@ -600,6 +614,7 @@ function templateReady(name) {
   const zygote = templates.get(name);
   if (!zygote || zygote.failed || !zygote.ready) return false;
   zygote.warm = true;
+  if (trace) trace.emit('pool', 'template_ready', { template: name, zygotePid: zygote.process.pid });
   return true;
 }
 

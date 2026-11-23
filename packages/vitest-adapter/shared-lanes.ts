@@ -19,6 +19,14 @@ const trace = process.env.OXIMUT_TRACE_TIMELINE
       emit(role: string, event: string, fields?: Record<string, unknown>): void;
     })
   : undefined;
+// Controller event-loop busy time, cumulative, sampled at batch boundaries: the
+// controller serves every lane worker's module fetches and resolves, so its
+// utilization over the mutation phase says whether it limits the lanes.
+const sample = (event: string, fields: Record<string, unknown> = {}) => {
+  if (!trace) return;
+  const { active, idle } = performance.eventLoopUtilization();
+  trace.emit('controller', event, { ...fields, eluActive: active, eluIdle: idle });
+};
 const WARM_PROJECT = 'oximut-warm';
 // Vitest APIs whose effects a template cannot hand to a later run of the same
 // file: they act on module registries or process-wide state at load time.
@@ -97,7 +105,7 @@ export class SharedLanes {
   async run(batch: Request): Promise<Result> {
     if (version !== '5.1.0') throw new Error('Shared lanes require Vitest 5.1.0');
     const jobs = batch.lanes!;
-    trace?.emit('controller', 'batch_enter', { lanes: jobs.map((job) => job.mutation?.id) });
+    sample('batch_enter', { lanes: jobs.map((job) => job.mutation?.id) });
     const pool = batch.pool === 'threads' ? 'threads' : 'forks';
     // The batch's own deadline adds time to report after a lane is stopped.
     this.deadline = performance.now() + jobs[0].deadlineMs;
@@ -339,10 +347,10 @@ export class SharedLanes {
       if (selected.length) representatives.push(selected[0]);
     }
     let result: Awaited<ReturnType<Context['runTestSpecifications']>>;
-    trace?.emit('controller', 'pool_run_begin', {});
+    sample('pool_run_begin');
     try {
       result = await ctx.runTestSpecifications(representatives, true);
-      trace?.emit('controller', 'pool_run_end', {});
+      sample('pool_run_end');
       // runTestSpecifications does not await isolated stop(). Drain before reassigning.
       const pool = (ctx as unknown as { pool?: { close?: () => Promise<void> } }).pool;
       if (typeof pool?.close !== 'function')
@@ -434,7 +442,7 @@ export class SharedLanes {
         ...(job.resident ? { resident: job.resident.length } : {}),
       });
     });
-    trace?.emit('controller', 'batch_done', {});
+    sample('batch_done');
     return {
       outcome: 'skipped',
       tests: { passed: 0, failed: 0, skipped: 0 },
@@ -562,6 +570,8 @@ export class SharedLanes {
     const ctx = this.context!;
     const project = ctx.projects.find((candidate) => candidate.name === WARM_PROJECT);
     let ready = false;
+    const built = trace ? performance.now() : 0;
+    trace?.emit('controller', 'template_build_begin', { key });
     if (project && this.templatePool) {
       // The controller's own environment can name a mutant: the template has none.
       project.config.env = {
@@ -588,6 +598,11 @@ export class SharedLanes {
       if (!ready) this.templatePool.dropTemplate(key);
     }
     this.templates.set(key, ready);
+    trace?.emit('controller', 'template_build_end', {
+      key,
+      ready,
+      ms: performance.now() - built,
+    });
     return ready;
   }
 

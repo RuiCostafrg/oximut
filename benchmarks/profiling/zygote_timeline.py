@@ -40,6 +40,15 @@ SEGMENTS = [
     ('fork_request_to_exit', ('controller', 'lane_fork_requested'), ('controller', 'lane_exit')),
 ]
 
+# Precollect only: segments of the mutants whose worker was forked from a template
+# (pool `template_fork_*` events). A templated worker's second start and run is its
+# controller `lane_start_sent` to the end of its (shortened) collect.
+TEMPLATED_SEGMENTS = [
+    ('templated_fork_to_attach', ('pool', 'template_fork_requested'), ('pool', 'template_fork_attached')),
+    ('templated_start_to_collect_end', ('controller', 'lane_start_sent'), ('worker', 'collect_end')),
+    ('templated_collect', ('worker', 'collect_begin'), ('worker', 'collect_end')),
+]
+
 
 def percentile(values, q):
     """Linear-interpolated percentile of a non-empty list (q in 0..100)."""
@@ -165,6 +174,18 @@ def analyze(directory):
                 values.append(end - start)
         segments[name] = stats(values)
     summary['per_mutant_ms'] = segments
+    templated_mutants = [marks for marks in per_mutant.values() if ('pool', 'template_fork_requested') in marks]
+    if templated_mutants:
+        summary['precollect_per_mutant_ms'] = {
+            'templated_mutants': len(templated_mutants),
+            **{name: stats([marks[b] - marks[a] for marks in templated_mutants if a in marks and b in marks])
+               for name, a, b in TEMPLATED_SEGMENTS}}
+    builds = [e for e in by.get(('controller', 'template_build_end'), [])]
+    if builds:
+        summary['template_builds'] = {
+            'count': len(builds), 'ready': sum(1 for e in builds if e.get('ready')),
+            'total_ms': sum(e.get('ms', 0) for e in builds),
+            'builds': [{'key': e.get('key'), 'ready': e.get('ready'), 'ms': e.get('ms')} for e in builds]}
     summary['negative_segment_samples'] = {
         name: sum(1 for marks in per_mutant.values()
                   if (marks.get((a[0], a[1])) is not None and marks.get((b[0], b[1])) is not None
@@ -262,6 +283,42 @@ def analyze(directory):
                 wasted += sum(max(results) - t for t in results)
                 durations += (max(results) - job['begin']) * len(results)
         summary['lane_tail_skew_ms'] = stats(skews)
+        # Controller event-loop utilization (performance.eventLoopUtilization(), cumulative,
+        # sampled at batch events) between the first and last sample inside the mutation phase.
+        samples = sorted((e for e in events if e['role'] == 'controller' and 'eluActive' in e
+                          and window_start <= e['t'] <= window_end), key=lambda e: e['t'])
+        if len(samples) >= 2:
+            active = samples[-1]['eluActive'] - samples[0]['eluActive']
+            idle = samples[-1]['eluIdle'] - samples[0]['eluIdle']
+            summary['controller_event_loop'] = {
+                'utilization': active / (active + idle) if active + idle else None,
+                'active_ms': active, 'idle_ms': idle, 'from': samples[0]['event'], 'to': samples[-1]['event'],
+                'span_ms': samples[-1]['t'] - samples[0]['t']}
+        # Per batch pool_run: how long lanes sat finished while the slowest lane ran.
+        pool_rows = []
+        for job in mutant_jobs:
+            marks = job.get('controller_phases') or {}
+            results = [per_mutant.get(m, {}).get(('controller', 'lane_result')) for m in job['mutants']]
+            results = [t for t in results if t is not None]
+            if 'pool_run_begin' in marks and 'pool_run_end' in marks and results:
+                run = marks['pool_run_end'] - marks['pool_run_begin']
+                slowest = max(results) - marks['pool_run_begin']
+                # Lanes that never reported a result waited the whole run.
+                waits = [max(results) - t for t in results] + [run - slowest] * (len(job['mutants']) - len(results))
+                pool_rows.append({'pool_run': run, 'slowest_lane': slowest,
+                                  'after_slowest_lane': run - slowest, 'lanes': len(job['mutants']),
+                                  'lane_wait_mean': sum(waits) / len(waits), 'lane_wait_max': max(waits),
+                                  'lane_wait_fraction': sum(waits) / (run * len(waits)) if run else None})
+        if pool_rows:
+            summary['pool_run_breakdown_ms'] = {
+                'batches': len(pool_rows),
+                'pool_run': stats([r['pool_run'] for r in pool_rows]),
+                'slowest_lane': stats([r['slowest_lane'] for r in pool_rows]),
+                'after_slowest_lane': stats([r['after_slowest_lane'] for r in pool_rows]),
+                'lane_wait_for_slowest_mean': stats([r['lane_wait_mean'] for r in pool_rows]),
+                'lane_wait_for_slowest_max': stats([r['lane_wait_max'] for r in pool_rows]),
+                'lane_wait_fraction': stats([r['lane_wait_fraction'] for r in pool_rows
+                                             if r['lane_wait_fraction'] is not None])}
         summary['lane_tail_skew_wasted_lane_fraction'] = wasted / durations if durations else None
     return summary
 
@@ -296,14 +353,36 @@ def render(summary):
     zygote = summary.get('zygote_startup_ms')
     if zygote:
         lines.append(f"zygote start -> ready: {zygote['start_to_ready']:.0f} ms")
+    builds = summary.get('template_builds')
+    if builds:
+        lines.append(f"template builds: {builds['count']} ({builds['ready']} ready), total {builds['total_ms']:.0f} ms")
+    loop = summary.get('controller_event_loop')
+    if loop and loop['utilization'] is not None:
+        lines.append(f"controller event loop over the mutation phase: {loop['utilization']:.1%} busy "
+                     f"({loop['active_ms']:.0f} active / {loop['idle_ms']:.0f} idle ms, {loop['from']} .. {loop['to']})")
     lines.append('per mutant (ms):')
     for name, entry in summary.get('per_mutant_ms', {}).items():
         lines.append(f"  {name:36} {fmt(entry)}")
+    precollect = summary.get('precollect_per_mutant_ms')
+    if precollect:
+        lines.append(f"precollect, templated mutants ({precollect['templated_mutants']}) (ms):")
+        for name, entry in precollect.items():
+            if name != 'templated_mutants':
+                lines.append(f"  {name:36} {fmt(entry)}")
     lines.append('scheduler / controller (ms, per job):')
     for name, entry in summary.get('scheduler_ms', {}).items():
         lines.append(f"  {name:36} {fmt(entry)}")
     for name, entry in summary.get('controller_batch_ms', {}).items():
         lines.append(f"  {name:36} {fmt(entry)}")
+    pool = summary.get('pool_run_breakdown_ms')
+    if pool:
+        lines.append(f"pool_run per batch ({pool['batches']} batches, ms):")
+        for name in ('pool_run', 'slowest_lane', 'after_slowest_lane', 'lane_wait_for_slowest_mean',
+                     'lane_wait_for_slowest_max'):
+            lines.append(f"  {name:36} {fmt(pool[name])}")
+        fraction = pool['lane_wait_fraction']
+        if fraction:
+            lines.append(f"  lanes idle waiting for the slowest lane: {fraction['mean']:.1%} of pool_run (mean over batches)")
     skew = summary.get('lane_tail_skew_ms')
     lines.append(f"lane batch tail skew (first to last lane result, ms): {fmt(skew)}")
     if summary.get('lane_tail_skew_wasted_lane_fraction') is not None:

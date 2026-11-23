@@ -20,6 +20,10 @@ on:
         options:
           - colord
           - colord-scale
+      timeline_oximut_args:
+        description: 'Space-separated extra Oximut flags for zygote-timeline only, e.g. "--zygote --zygote-precollect --test-selection"'
+        type: string
+        default: '--zygote'
       concurrency:
         description: 'Matched parallelism: Oximut --workers and Stryker concurrency'
         type: string
@@ -133,17 +137,22 @@ jobs:
         env:
           MATCHED_CONCURRENCY: ${{ inputs.concurrency || '1' }}
           WORKLOAD: ${{ inputs.workload || 'colord-scale' }}
+          TIMELINE_OXIMUT_ARGS: ${{ inputs.timeline_oximut_args || '--zygote' }}
         run: |
           set -euo pipefail
           out="$PROFILE_ROOT/zygote-timeline"
+          # Each flag travels as --oximut-arg=<value>: a bare `--oximut-arg --x` breaks argparse.
+          read -r -a timeline_args <<< "$TIMELINE_OXIMUT_ARGS"
+          oximut_args=()
+          for value in "${timeline_args[@]}"; do oximut_args+=("--oximut-arg=$value"); done
           mkdir -p "$out/trace"
-          # Oximut alone: one run of `--execution persistent --zygote`, no profiler, no warmup.
+          # Oximut alone: one run with the requested Oximut flags (default `--zygote`), no profiler, no warmup.
           # The harness exits 1 without the other tools to compare, so check the row instead.
           run() {
             name="$1"; shift
             env "$@" python3 benchmarks/real_project.py --binary "$PROFILE_ROOT/oximut" \
               --adapter packages/vitest-adapter/m2-runner.mjs --adapter-source-dir packages/vitest-adapter \
-              --defer-ratios --tools oximut --oximut-arg=--zygote --warmups 0 --repetitions 1 \
+              --defer-ratios --tools oximut "${oximut_args[@]}" --warmups 0 --repetitions 1 \
               --concurrency "$MATCHED_CONCURRENCY" --workload "$WORKLOAD" --timeout 1200 \
               --output "$out/$name" 2>&1 | tee "$out/$name.log" || true
           }

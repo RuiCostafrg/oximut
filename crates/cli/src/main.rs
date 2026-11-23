@@ -372,7 +372,9 @@ fn parse_options(mut args: impl Iterator<Item = String>) -> Result<Option<Option
     };
     if zygote_precollect && !zygote {
         return Err(match &zygote_off_reason {
-            Some(reason) => format!("--zygote-precollect requires the zygote, which is off ({reason})"),
+            Some(reason) => {
+                format!("--zygote-precollect requires the zygote, which is off ({reason})")
+            }
             None => "--zygote-precollect requires --zygote".into(),
         });
     }
