@@ -59,7 +59,7 @@ jobs:
       - name: Real installed and relocated smoke across the candidate boundary
         run: OXIMUT_REQUIRE_SANDBOX=1 OXIMUT_TEST_BINARY="$PWD/target/debug/oximut" python3 -m unittest discover -s tests -p test_candidate_sandbox.py -v
       - name: M1 correctness, M2 isolation, M3 selection, M4 cache, and M5 acceptance
-        run: python3 -m unittest discover -s tests -v
+        run: OXIMUT_REQUIRE_ZYGOTE_ADDON=1 python3 -m unittest discover -s tests -v
       - name: Verify Oxc parses the fixture sources
         run: cargo run --locked -p oximut-oxc-smoke -- fixtures/pure/src/logic.ts fixtures/stateful/src/service.ts
       - name: Baseline smoke (not a performance comparison)

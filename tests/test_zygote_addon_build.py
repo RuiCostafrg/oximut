@@ -33,6 +33,13 @@ def glibc_node_path():
     return None
 
 
+def skip_unless_required(test, reason):
+    """CI sets OXIMUT_REQUIRE_ZYGOTE_ADDON=1 so a missing toolchain fails instead of skipping."""
+    if os.environ.get("OXIMUT_REQUIRE_ZYGOTE_ADDON") == "1":
+        test.fail(f"zygote addon build required: {reason}")
+    test.skipTest(reason)
+
+
 class ZygoteAddonBuild(unittest.TestCase):
     def setUp(self):
         self.temporary = tempfile.TemporaryDirectory()
@@ -42,7 +49,7 @@ class ZygoteAddonBuild(unittest.TestCase):
     def test_real_build_produces_loadable_addon(self):
         path = glibc_node_path()
         if path is None:
-            self.skipTest("no glibc Node with headers and C compiler")
+            skip_unless_required(self, "no glibc Node with headers and C compiler")
         with mock.patch.dict(os.environ, {"PATH": path}):
             built, reason = BUILD.build_addon(SOURCE, self.output)
             self.assertTrue(built, reason)
@@ -54,7 +61,7 @@ class ZygoteAddonBuild(unittest.TestCase):
 
     def test_compiler_failure_reports_reason_and_leaves_no_output(self):
         if not BUILD.is_glibc() or shutil.which("node") is None:
-            self.skipTest("needs glibc and node to reach the compile step")
+            skip_unless_required(self, "needs glibc and node to reach the compile step")
         with mock.patch.dict(os.environ, {"CC": "false"}):
             with mock.patch.object(BUILD, "is_glibc", return_value=True):
                 built, reason = BUILD.build_addon(SOURCE, self.output, node=shutil.which("node"))
