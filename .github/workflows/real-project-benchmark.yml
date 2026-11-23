@@ -6,7 +6,7 @@ on:
       after_oximut_args:
         type: string
         default: ''
-        description: 'Extra Oximut args for the after candidate only, space-separated, e.g. --isolation fresh-thread'
+        description: 'Extra Oximut args for the after candidate only, space-separated, e.g. --isolation fresh-thread, or --zygote'
       concurrency:
         type: string
         default: '1'
@@ -99,6 +99,8 @@ jobs:
           echo "CAMPAIGN_DIR=$RUNNER_TEMP/real-project-comparison" >> "$GITHUB_ENV"
           echo "AFTER_COMMIT=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
       - run: npm ci --ignore-scripts
+      - name: Build the zygote addon (used only by an after candidate run with --zygote)
+        run: python3 scripts/build-zygote-addon.py
       - name: Check harness gates before building
         run: python3 -m unittest discover -s benchmarks/tests -v
       - name: Build both candidates before any timing

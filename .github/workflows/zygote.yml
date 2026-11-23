@@ -1,0 +1,94 @@
+name: Zygote workers
+
+# Not a required check: it exercises the opt-in Linux zygote fast path on glibc
+# and proves the musl fallback. Mirrors the setup steps of ci.yml.
+on:
+  pull_request:
+    paths:
+      - packages/vitest-adapter/**
+      - crates/**
+      - scripts/build-zygote-addon.py
+      - scripts/zygote-parity.py
+      - .github/workflows/zygote.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: zygote-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  glibc:
+    name: glibc (${{ matrix.os }}, node ${{ matrix.node }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    # Oximut supports only the pinned Node. The latest 26.x leg is an advisory
+    # canary for the Node internals the zygote relies on; it never blocks.
+    continue-on-error: ${{ matrix.node != 'pinned' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-22.04, ubuntu-24.04]
+        node: [pinned, '26']
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Select the pinned Node version
+        if: matrix.node == 'pinned'
+        run: echo "NODE_VERSION=$(tr -d '[:space:]' < .node-version)" >> "$GITHUB_ENV"
+      - name: Select the latest Node 26.x
+        if: matrix.node != 'pinned'
+        run: echo "NODE_VERSION=${{ matrix.node }}" >> "$GITHUB_ENV"
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: '3.13'
+      - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # stable
+        with:
+          toolchain: '1.96.0'
+      - name: npm ci (the canary bypasses the exact engine pin)
+        run: npm ci ${{ matrix.node != 'pinned' && '--engine-strict=false' || '' }}
+      - run: cargo build -p oximut-cli --locked
+      - name: Build the zygote addon (a skip is a failure here)
+        run: |
+          python3 scripts/build-zygote-addon.py | tee addon-build.log
+          if grep -q '^skipped' addon-build.log; then
+            echo "::error::the zygote addon build was skipped on glibc"
+            exit 1
+          fi
+          test -f packages/vitest-adapter/native/build/zygote-fork.node
+      - name: Adapter zygote tests (addon required)
+        run: OXIMUT_REQUIRE_ZYGOTE_ADDON=1 node --test packages/vitest-adapter/test/zygote.test.mjs
+      - name: Native coordinator tests, including --zygote
+        run: OXIMUT_REQUIRE_ZYGOTE_ADDON=1 python3 -m unittest tests.test_native_coordinator -v
+      - name: End-to-end parity with and without --zygote
+        run: python3 scripts/zygote-parity.py --binary target/debug/oximut
+
+  musl-fallback:
+    name: musl fallback (alpine)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    # The pinned version of .node-version (26.3.1) on Alpine/musl.
+    container: node:26.3.1-alpine
+    steps:
+      - name: Install tools the container lacks
+        run: apk add --no-cache git python3 bash
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - run: npm ci
+      - name: The addon build must skip on musl
+        run: |
+          python3 scripts/build-zygote-addon.py | tee addon-build.log
+          grep -q '^skipped: libc is not glibc' addon-build.log
+          test ! -e packages/vitest-adapter/native/build/zygote-fork.node
+      - name: Adapter zygote tests, fallback cases only (no addon, none required)
+        # Without OXIMUT_REQUIRE_ZYGOTE_ADDON the tests that need the real addon
+        # skip; every fallback case must still pass.
+        run: node --test packages/vitest-adapter/test/zygote.test.mjs

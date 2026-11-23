@@ -167,6 +167,13 @@ class AdapterProvenanceTests(unittest.TestCase):
                          original + args.oximut_arg)
         self.assertEqual(benchmark.execution_inputs(args)['oximut_args'], args.oximut_arg)
 
+    def test_zygote_is_an_allowed_bare_mode_flag(self):
+        self.assertIsNone(benchmark.mode_args_error(['--zygote']))
+        self.assertIsNone(benchmark.mode_args_error(['--isolation', 'fresh-process', '--zygote']))
+        for rejected in (['--zygote=1'], ['--zygote', '--workers'], ['--zygote', 'x']):
+            with self.subTest(rejected=rejected):
+                self.assertIsNotNone(benchmark.mode_args_error(rejected))
+
     def test_full_adapter_graph_and_binary_changes_are_visible(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -492,4 +499,4 @@ class ModeArgumentTests(unittest.TestCase):
                              '--after-binary', 'b', '--after-adapter-dir', 'd',
                              '--after-commit', 'a' * 40] if flag.startswith('--after') else [])])
             # The allowlist, not some later path check, must reject it.
-            self.assertIn(f'{flag}: only --isolation may be passed', stderr.getvalue())
+            self.assertIn(f'{flag}: only --isolation, --zygote may be passed', stderr.getvalue())
