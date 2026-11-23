@@ -18,6 +18,9 @@ const { syncBuiltinESMExports } = require('node:module');
 const path = require('node:path');
 const v8 = require('node:v8');
 
+// Opt-in diagnostic timeline (OXIMUT_TRACE_TIMELINE); see ../timeline.cjs.
+const trace = process.env.OXIMUT_TRACE_TIMELINE ? require('../timeline.cjs') : undefined;
+
 const FORKS_ENTRY = '/vitest/dist/workers/forks.js';
 const preload = path.join(__dirname, 'worker.cjs');
 const defaultAddon = path.resolve(__dirname, '../native/build/zygote-fork.node');
@@ -93,6 +96,7 @@ class ZygoteChild extends EventEmitter {
   stderr = null;
   connected = true;
   attachTimer = undefined;
+  mutant = undefined;
   #launch;
   #socket;
   #real;
@@ -272,6 +276,7 @@ function fail(zygote, reason) {
 }
 
 function request(zygote, child, message) {
+  if (trace) trace.emit('pool', 'spawn_sent', { id: message.id, mutant: child.mutant });
   // A zygote that never answers a spawn request is as bad as one that died.
   child.attachTimer = setTimeout(
     () => fail(zygote, `no worker attached within ${readyTimeoutMs()} ms`),
@@ -298,6 +303,7 @@ function startZygote(entry, args, options) {
     },
   ]);
   counters.zygotes++;
+  if (trace) trace.emit('pool', 'zygote_start', { zygotePid: process_.pid });
   // Children inherit the zygote's stdio, so their output arrives here.
   process_.stdout.pipe(process.stdout, { end: false });
   process_.stderr.pipe(process.stderr, { end: false });
@@ -320,6 +326,7 @@ function startZygote(entry, args, options) {
     if (kind === 'ready') {
       clearTimeout(zygote.readyTimer);
       zygote.ready = true;
+      if (trace) trace.emit('pool', 'zygote_ready', { zygotePid: process_.pid });
       const waiting = zygote.waiting;
       zygote.waiting = [];
       for (const { child, message: pending } of waiting) request(zygote, child, pending);
@@ -336,10 +343,24 @@ function startZygote(entry, args, options) {
       clearTimeout(child.attachTimer);
       if (!handle) return fail(zygote, 'a spawned worker carried no IPC socket');
       counters.forks++;
+      if (trace)
+        trace.emit('pool', 'spawned', {
+          id: message.id,
+          mutant: child.mutant,
+          workerPid: message.pid,
+        });
       child.attach(message.pid, handle);
     } else if (kind === 'exit') {
       const child = zygote.children.get(message.id);
       zygote.children.delete(message.id);
+      if (trace)
+        trace.emit('pool', 'child_exit', {
+          id: message.id,
+          mutant: child?.mutant,
+          workerPid: message.pid,
+          code: message.code,
+          signal: message.signal,
+        });
       child?.exited(message.code, message.signal);
     }
   });
@@ -362,6 +383,10 @@ function zygoteFork(entry, args, options) {
   const id = zygote.nextId++;
   const child = new ZygoteChild({ entry, args, options });
   zygote.children.set(id, child);
+  if (trace) {
+    child.mutant = options.env.OXIMUT_ACTIVE_MUTANT;
+    trace.emit('pool', 'spawn_requested', { id, mutant: child.mutant, queued: !zygote.ready });
+  }
   const message = { __oximut_zygote__: 'spawn', id, env: options.env };
   if (zygote.ready) request(zygote, child, message);
   else zygote.waiting.push({ child, message });

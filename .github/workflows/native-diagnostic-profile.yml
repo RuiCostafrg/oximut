@@ -12,6 +12,14 @@ on:
           - controller-jobs
           - segments
           - cpu-prof-exec-argv
+          - zygote-timeline
+      workload:
+        description: 'Mutation scope for zygote-timeline only (other modes keep their default workload)'
+        type: choice
+        default: colord-scale
+        options:
+          - colord
+          - colord-scale
       concurrency:
         description: 'Matched parallelism: Oximut --workers and Stryker concurrency'
         type: string
@@ -95,7 +103,15 @@ jobs:
           }
           (root / 'build-metadata.json').write_text(json.dumps(record, indent=2) + '\n')
           PY
+      - name: Build the zygote addon (zygote-timeline only; skipped is a failure)
+        if: inputs.capture_mode == 'zygote-timeline'
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 scripts/build-zygote-addon.py | tee "$PROFILE_ROOT/zygote-addon-build.log"
+          test -f packages/vitest-adapter/native/build/zygote-fork.node
       - name: Capture unchanged workload with profiler overhead, no ratios or targets
+        if: inputs.capture_mode != 'zygote-timeline'
         shell: bash
         env:
           CAPTURE_MODE: ${{ inputs.capture_mode || 'accounting' }}
@@ -111,6 +127,45 @@ jobs:
           esac
           python3 benchmarks/profile_native.py --binary "$PROFILE_ROOT/oximut" \
             "${CAPTURE_ARGS[@]}" --concurrency "$MATCHED_CONCURRENCY" --output "$PROFILE_ROOT/capture" 2>&1 | tee "$PROFILE_ROOT/diagnostic.log"
+      - name: Capture the zygote timeline trace, plus an untraced run for the overhead comparison
+        if: inputs.capture_mode == 'zygote-timeline'
+        shell: bash
+        env:
+          MATCHED_CONCURRENCY: ${{ inputs.concurrency || '1' }}
+          WORKLOAD: ${{ inputs.workload || 'colord-scale' }}
+        run: |
+          set -euo pipefail
+          out="$PROFILE_ROOT/zygote-timeline"
+          mkdir -p "$out/trace"
+          # Oximut alone: one run of `--execution persistent --zygote`, no profiler, no warmup.
+          # The harness exits 1 without the other tools to compare, so check the row instead.
+          run() {
+            name="$1"; shift
+            env "$@" python3 benchmarks/real_project.py --binary "$PROFILE_ROOT/oximut" \
+              --adapter packages/vitest-adapter/m2-runner.mjs --adapter-source-dir packages/vitest-adapter \
+              --defer-ratios --tools oximut --oximut-arg --zygote --warmups 0 --repetitions 1 \
+              --concurrency "$MATCHED_CONCURRENCY" --workload "$WORKLOAD" --timeout 1200 \
+              --output "$out/$name" 2>&1 | tee "$out/$name.log" || true
+          }
+          run untraced -u OXIMUT_TRACE_TIMELINE
+          run traced "OXIMUT_TRACE_TIMELINE=$out/trace"
+          python3 benchmarks/profiling/zygote_timeline.py "$out/trace" --json "$out/timeline-summary.json" | tee "$out/timeline-summary.txt"
+          python3 - <<'PY'
+          import json, os, pathlib
+          out = pathlib.Path(os.environ['PROFILE_ROOT']) / 'zygote-timeline'
+          rows = {name: json.loads((out / name / 'measurements.jsonl').read_text().splitlines()[0])
+                  for name in ('untraced', 'traced')}
+          failed = [name for name, row in rows.items() if not row.get('success')]
+          keys = ('wall_seconds', 'cpu_seconds', 'peak_aggregate_rss_bytes')
+          overhead = {'untraced': {k: rows['untraced'][k] for k in keys},
+                      'traced': {k: rows['traced'][k] for k in keys},
+                      'traced_over_untraced': {k: rows['traced'][k] / rows['untraced'][k] for k in keys},
+                      'note': 'One run each, untraced first; indicative only. Trace overhead is a lower bound on the noise.'}
+          (out / 'overhead.json').write_text(json.dumps(overhead, indent=2) + '\n')
+          print(json.dumps(overhead, indent=2))
+          if failed:
+              raise SystemExit(f'runs failed validation: {failed}')
+          PY
       - name: Publish diagnostic status and remove dependency symlinks
         if: always()
         shell: bash
@@ -119,7 +174,13 @@ jobs:
             echo '### Diagnostic CPU capture (profiler overhead; no performance score)'
             echo 'Qualification failures and incomplete profiles are retained. No automatic retries.'
             echo 'Accounting mode measures CLI sampling-thread self CPU only; Node/Python modes remain separate. No mode partitions whole product CPU.'
-            if test -f "$RUNNER_TEMP/native-diagnostic/capture/diagnostic.json"; then
+            if test -f "$RUNNER_TEMP/native-diagnostic/zygote-timeline/timeline-summary.txt"; then
+              echo 'zygote-timeline: opt-in trace, one traced and one untraced run; no performance score.'
+              echo '```'
+              cat "$RUNNER_TEMP/native-diagnostic/zygote-timeline/timeline-summary.txt"
+              test -f "$RUNNER_TEMP/native-diagnostic/zygote-timeline/overhead.json" && cat "$RUNNER_TEMP/native-diagnostic/zygote-timeline/overhead.json"
+              echo '```'
+            elif test -f "$RUNNER_TEMP/native-diagnostic/capture/diagnostic.json"; then
               echo '```json'
               python3 - <<'PY'
           import json, os, pathlib, sys

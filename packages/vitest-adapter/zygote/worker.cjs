@@ -14,6 +14,8 @@ if (addonPath) {
   const { signals } = require('node:os').constants;
   const addon = require(addonPath);
   delete process.env.OXIMUT_ZYGOTE_ADDON;
+  // Opt-in diagnostic timeline (OXIMUT_TRACE_TIMELINE); see ../timeline.cjs.
+  const trace = process.env.OXIMUT_TRACE_TIMELINE ? require('../timeline.cjs') : undefined;
   const signalNames = Object.fromEntries(
     Object.entries(signals).map(([name, number]) => [number, name]),
   );
@@ -39,7 +41,7 @@ if (addonPath) {
     }
   };
 
-  const becomeChild = (parentEnd, childEnd, env) => {
+  const becomeChild = (parentEnd, childEnd, env, id) => {
     process.removeListener('message', onZygoteMessage);
     process.removeListener('internalMessage', onInternalMessage);
     process.removeAllListeners('disconnect');
@@ -51,6 +53,7 @@ if (addonPath) {
       configurable: true,
       enumerable: true,
     });
+    if (trace) trace.emit('worker', 'fork_entered', { id, mutant: env?.OXIMUT_ACTIVE_MUTANT });
     // Node's exit path disposes the platform and joins worker threads that do
     // not exist after fork(), which hangs. Leave with _exit() once JavaScript
     // 'exit' handlers have run.
@@ -71,6 +74,7 @@ if (addonPath) {
       process.send = send;
       // Vitest's message listener predates this channel, so hold a reference.
       process.channel.ref();
+      if (trace) process.once('message', () => trace.emit('worker', 'first_message', { id }));
       process.on('exit', (code) => addon._exitNow(code | 0));
     });
     process.disconnect();
@@ -81,8 +85,13 @@ if (addonPath) {
     inflight = true;
     // fork() returns -2 while a V8 worker thread is busy (see zygote-fork.c).
     const [parentEnd, childEnd] = addon.socketpair();
+    if (trace) {
+      const [{ id, env }] = queue;
+      trace.emit('zygote', 'fork_begin', { id, mutant: env?.OXIMUT_ACTIVE_MUTANT });
+    }
     const pid = addon.fork();
     if (pid === -2) {
+      if (trace) trace.emit('zygote', 'fork_busy', { id: queue[0].id });
       addon.closeFd(parentEnd);
       addon.closeFd(childEnd);
       inflight = false;
@@ -90,9 +99,11 @@ if (addonPath) {
       return;
     }
     const { id, env } = queue.shift();
-    if (pid === 0) return becomeChild(parentEnd, childEnd, env);
+    if (pid === 0) return becomeChild(parentEnd, childEnd, env, id);
     addon.closeFd(childEnd);
     children.set(pid, id);
+    if (trace)
+      trace.emit('zygote', 'forked', { id, workerPid: pid, mutant: env?.OXIMUT_ACTIVE_MUTANT });
     // Never read here: the child's first messages belong to the controller.
     const socket = new net.Socket({
       fd: parentEnd,
@@ -112,6 +123,11 @@ if (addonPath) {
 
   const onZygoteMessage = (message) => {
     if (message?.__oximut_zygote__ === 'spawn') {
+      if (trace)
+        trace.emit('zygote', 'spawn_received', {
+          id: message.id,
+          mutant: message.env?.OXIMUT_ACTIVE_MUTANT,
+        });
       queue.push(message);
       spawnNext();
     } else if (message?.__oximut_zygote__ === 'shutdown') {

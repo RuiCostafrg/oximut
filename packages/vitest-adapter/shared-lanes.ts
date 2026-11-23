@@ -1,5 +1,5 @@
 import { readFile } from 'node:fs/promises';
-import { getCompileCacheDir } from 'node:module';
+import { createRequire, getCompileCacheDir } from 'node:module';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createVitest, ForksPoolWorker, ThreadsPoolWorker, version } from 'vitest/node';
@@ -13,6 +13,12 @@ import {
 
 type Context = Awaited<ReturnType<typeof createVitest>>;
 const runner = fileURLToPath(new URL('./lane-runner.mjs', import.meta.url));
+// Opt-in diagnostic timeline (OXIMUT_TRACE_TIMELINE); see timeline.cjs.
+const trace = process.env.OXIMUT_TRACE_TIMELINE
+  ? (createRequire(import.meta.url)('./timeline.cjs') as {
+      emit(role: string, event: string, fields?: Record<string, unknown>): void;
+    })
+  : undefined;
 const HARD_DEADLINE = 'Job deadline exceeded';
 const LANE_EXITED = 'Lane worker exited before completion';
 // Vitest's unattributed report of a pool worker that exited.
@@ -50,6 +56,7 @@ export class SharedLanes {
   private deadline = 0;
   private threads = new Set<ThreadsPoolWorker>();
   private transforms = new TransformShare();
+  private laneMutants = new Map<string, string>();
 
   async close() {
     const context = this.context;
@@ -65,6 +72,7 @@ export class SharedLanes {
   async run(batch: Request): Promise<Result> {
     if (version !== '5.1.0') throw new Error('Shared lanes require Vitest 5.1.0');
     const jobs = batch.lanes!;
+    trace?.emit('controller', 'batch_enter', { lanes: jobs.map((job) => job.mutation?.id) });
     const pool = batch.pool === 'threads' ? 'threads' : 'forks';
     // The batch's own deadline adds time to report after a lane is stopped.
     this.deadline = performance.now() + jobs[0].deadlineMs;
@@ -132,17 +140,30 @@ export class SharedLanes {
                 let timer: ReturnType<typeof setTimeout> | undefined;
                 let finished = false;
                 let stopping = false;
+                const note = trace
+                  ? (event: string) =>
+                      trace.emit('controller', event, {
+                        lane: name,
+                        mutant: this.laneMutants.get(name),
+                      })
+                  : undefined;
                 worker.start = async () => {
+                  note?.('lane_fork_requested');
                   await start();
+                  note?.('lane_fork_returned');
                   if (worker instanceof ThreadsPoolWorker) this.threads.add(worker);
                   worker.on('exit', () => {
+                    note?.('lane_exit');
                     clearTimeout(timer);
                     if (!finished && !stopping && !this.failures.has(name))
                       this.failures.set(name, LANE_EXITED);
                   });
                 };
                 worker.send = (message) => {
+                  if (message.type === 'start') note?.('lane_start_sent');
+                  if (message.type === 'stop') note?.('lane_stop_sent');
                   if (message.type === 'run') {
+                    note?.('lane_run_sent');
                     // Pinned PoolRunner request shape. Send all selected Node files
                     // in one isolated task: exactly one fresh worker per mutant.
                     const run = message as unknown as {
@@ -172,7 +193,12 @@ export class SharedLanes {
                 worker.deserialize = (data) => {
                   const message = deserialize(data);
                   const wire = message as { type?: string; m?: string };
-                  if (wire?.type === 'testfileFinished') finished = true;
+                  if (wire?.type === 'started') note?.('lane_started');
+                  if (wire?.type === 'stopped') note?.('lane_stopped');
+                  if (wire?.type === 'testfileFinished') {
+                    note?.('lane_result');
+                    finished = true;
+                  }
                   if (wire?.m === 'onUnhandledError')
                     this.failures.set(name, 'Unhandled lane worker error');
                   return message;
@@ -218,19 +244,23 @@ export class SharedLanes {
       // A new context owns new servers, module graphs and transform services.
       this.transforms.clear();
       this.shareTransforms(context, batch.root);
+      trace?.emit('controller', 'context_created', { width });
     } else if (changed) {
       // The resident code changed: no lane may serve a previous batch's result.
       this.transforms.clear();
       for (const project of this.context.projects) project.vite.moduleGraph.invalidateAll();
     }
     const ctx = this.context;
+    trace?.emit('controller', 'context_ready', {});
     for (const [index, project] of ctx.projects.entries()) {
       // Lanes beyond this batch stay idle: they receive no specification.
-      if (jobs[index])
+      if (jobs[index]) {
         project.config.env = {
           ...project.config.env,
           OXIMUT_ACTIVE_MUTANT: jobs[index].mutation!.id,
         };
+        if (trace) this.laneMutants.set(`oximut-lane-${index}`, jobs[index].mutation!.id);
+      }
       if (
         project.config.environment !== 'node' ||
         project.config.globalSetup?.length ||
@@ -262,13 +292,16 @@ export class SharedLanes {
       if (selected.length) representatives.push(selected[0]);
     }
     let result: Awaited<ReturnType<Context['runTestSpecifications']>>;
+    trace?.emit('controller', 'pool_run_begin', {});
     try {
       result = await ctx.runTestSpecifications(representatives, true);
+      trace?.emit('controller', 'pool_run_end', {});
       // runTestSpecifications does not await isolated stop(). Drain before reassigning.
       const pool = (ctx as unknown as { pool?: { close?: () => Promise<void> } }).pool;
       if (typeof pool?.close !== 'function')
         throw new Error('Unsupported Vitest pool: missing termination handle');
       await pool.close();
+      trace?.emit('controller', 'pool_closed', {});
       // An unexpected exit marks the runner stopped, so Vitest may skip stop().
       // Still drain thread stdio and termination before returning/reassigning.
       await this.drainThreads();
@@ -354,6 +387,7 @@ export class SharedLanes {
         ...(job.resident ? { resident: job.resident.length } : {}),
       });
     });
+    trace?.emit('controller', 'batch_done', {});
     return {
       outcome: 'skipped',
       tests: { passed: 0, failed: 0, skipped: 0 },

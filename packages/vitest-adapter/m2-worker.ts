@@ -24,6 +24,21 @@ const zygote =
       })
     : undefined;
 zygote?.install();
+// Opt-in diagnostic timeline (OXIMUT_TRACE_TIMELINE); see timeline.cjs.
+const trace = process.env.OXIMUT_TRACE_TIMELINE
+  ? (createRequire(import.meta.url)('./timeline.cjs') as {
+      emit(role: string, event: string, fields?: Record<string, unknown>): void;
+    })
+  : undefined;
+function describe(name: string, args: Request) {
+  const job = (args as unknown as { request?: Request }).request ?? args;
+  return {
+    command: name,
+    kind: job?.kind,
+    mutant: job?.mutation?.id,
+    lanes: job?.lanes?.map((lane) => lane.mutation?.id),
+  };
+}
 let sharedLanes: import('./shared-lanes.ts').SharedLanes | undefined;
 let controllerReusable = false;
 const compileCacheFlush = fileURLToPath(new URL('./compile-cache.cjs', import.meta.url));
@@ -428,16 +443,26 @@ process.on('message', async (input: unknown) => {
     return;
   }
   busy = true;
+  trace?.emit('controller', 'request_received', {
+    id: request.id,
+    ...describe(request.command, request.args),
+  });
   try {
     const result = await command(request.command, request.args);
     // Live zygotes outlive the job; declare them so the CLI can admit them.
     const helpers = zygote?.residentHelpers() ?? [];
+    trace?.emit('controller', 'reply_sent', { id: request.id, command: request.command });
     process.send?.({
       protocol: 1,
       id: request.id,
       result: helpers.length ? { ...(result as object), residentHelpers: helpers } : result,
     });
   } catch (error) {
+    trace?.emit('controller', 'reply_sent', {
+      id: request.id,
+      command: request.command,
+      error: true,
+    });
     process.send?.({ protocol: 1, id: request.id, error: message(error) });
   } finally {
     busy = false;
