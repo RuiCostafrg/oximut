@@ -86,6 +86,46 @@ watchdog acted, `zygote watchdog: N timeout reruns` and, on a mismatch,
 rest of the run`. Fallbacks log `zygote workers unavailable` or `zygote workers
 disabled` on stderr.
 
+## Precollect (experimental, off by default)
+
+`--zygote-precollect` (with `--zygote` and `--test-selection`) goes one step
+further: a mutant worker is forked from a *template* zygote that already fetched,
+and for one selected test file also evaluated, the work that worker would repeat.
+The mutant is still chosen when the instrumented expression is evaluated
+(`process.env.OXIMUT_ACTIVE_MUTANT`), and every mutant still runs in its own
+forked process.
+
+A template is built per selected set of test files, on first use, by a hidden
+Vitest project, so fetches, resolves and RPC use Vitest's own pool code; its
+worker stays up instead of being stopped, and mutant workers are forked from it.
+Each child gets its own IPC channel and runs a second Vitest `start` and `run`.
+
+- **One selected file:** the template evaluated the file's modules with no mutant
+  active. The child runs with `isolate: false`, so only the test file and its
+  setup files are evaluated again; every other module is inherited copy-on-write.
+- **Several selected files:** each file must start from fresh modules, so the
+  template only leaves fetched code and loaded externals behind; modules are
+  evaluated in the child as usual.
+
+Mutants evaluated while a module loads would never see their mutation in an
+inherited module, so they keep the ordinary zygote path:
+
+- the instrumenter classifies each mutant (`loadTime`): true unless the mutated
+  expression is inside a function body that runs only when called. Immediately
+  invoked functions, functions passed as arguments, class field initializers,
+  static blocks and computed keys are load time; unknown is load time. The rule
+  is syntactic and cannot see a top-level call into a function declared elsewhere;
+- selection must be `files`. A mutant the baseline probes saw evaluated outside
+  any test (module load, collection, including through calls from other modules)
+  already selects the full suite, so a mutant on this path was never load-time
+  in the baseline;
+- test or setup files using `vi.mock`, `vi.hoisted`, fake timers, `vi.stubEnv`
+  and similar load-time Vitest APIs keep the ordinary path.
+
+Known deviations: a test file's top-level code runs once in the template and
+again in the child, and templates (one per selected file set) stay resident,
+which costs memory. The diagnostics report how many mutants were eligible.
+
 ## Status
 
 Experimental: the flag, its prerequisites and its diagnostics may change. CI

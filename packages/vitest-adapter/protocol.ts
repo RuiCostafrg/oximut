@@ -43,6 +43,12 @@ export interface Request {
   selection?: Selection;
   /** Serve this job's mutant test workers with real forks, bypassing the zygote. */
   bypassZygote?: boolean;
+  /**
+   * Experimental precollect: true forks the worker from a template that already
+   * collected the (single) selected test file; false marks a load-time mutant
+   * that must keep the ordinary zygote path. Absent: precollect is off.
+   */
+  precollect?: boolean;
 }
 export interface Result {
   lanes?: Omit<Response, 'lanes'>[];

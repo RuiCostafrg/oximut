@@ -1051,6 +1051,7 @@ mod tests {
             shared_controller: false,
             zygote: false,
             zygote_off_reason: None,
+            zygote_precollect: false,
             memory_budget_mib: None,
             memory_reserve_mib: 64,
             mutators: BTreeSet::new(),

@@ -21,6 +21,9 @@ const zygote =
         install(): boolean;
         residentHelpers(): number[];
         bypass(mutantIds: string[]): void;
+        templateReady(name: string): boolean;
+        dropTemplate(name: string): void;
+        dropTemplates(): void;
       })
     : undefined;
 zygote?.install();
@@ -247,7 +250,7 @@ async function command(name: string, args: Request): Promise<unknown> {
     // Custom plugins, runners, global setup or multiple projects can't be shared across lanes.
     if (!controllerReusable) throw new Error('Shared lanes require a reusable controller project');
     await vitest.close();
-    sharedLanes ??= new (await import('./shared-lanes.ts')).SharedLanes();
+    sharedLanes ??= new (await import('./shared-lanes.ts')).SharedLanes(zygote);
     // The CLI's zygote watchdog marks lanes whose workers must be real forks.
     zygote?.bypass(
       job.lanes.flatMap((lane) => (lane.bypassZygote && lane.mutation ? [lane.mutation.id] : [])),
