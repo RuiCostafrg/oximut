@@ -25,6 +25,9 @@ const zygotes = new Map();
 const counters = { zygotes: 0, forks: 0, exits: 0, zygoteFailures: 0, fallbacks: 0 };
 // Set by install(): { addon, original, disabled }.
 let state;
+// Mutant ids whose workers must be real forks while their job runs (the CLI's
+// zygote watchdog). Nothing else changes: the zygote and its other children stay.
+let bypassed = new Set();
 
 function readyTimeoutMs() {
   // The override exists for tests; the default is the contract.
@@ -408,7 +411,8 @@ function install() {
       typeof entry === 'string' &&
       entry.endsWith(FORKS_ENTRY) &&
       Array.isArray(args) &&
-      options?.env?.OXIMUT_ACTIVE_MUTANT
+      options?.env?.OXIMUT_ACTIVE_MUTANT &&
+      !bypassed.has(options.env.OXIMUT_ACTIVE_MUTANT)
     )
       return zygoteFork(entry, args, options);
     return Reflect.apply(original, this, [entry, args, options]);
@@ -431,4 +435,9 @@ function residentHelpers() {
     .map(({ process: zygote }) => zygote.pid);
 }
 
-module.exports = { install, residentHelpers, counters };
+/** Serve workers of exactly these mutants with real forks until changed. */
+function bypass(mutantIds) {
+  bypassed = new Set(mutantIds);
+}
+
+module.exports = { install, residentHelpers, bypass, counters };

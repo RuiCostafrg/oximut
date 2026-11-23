@@ -346,3 +346,71 @@ zygoteTest(
     assert.equal(result.diagnostics.match(/zygote workers disabled/g).length, 1);
   },
 );
+
+zygoteTest(
+  'bypassZygote serves exactly that job, single or lane, with real forks',
+  { timeout: 240000 },
+  async (t) => {
+    const { root, job } = await fixture(t);
+    const env = { ...process.env, OXIMUT_ZYGOTE: '1' };
+    env.OXIMUT_ZYGOTE_COUNTERS_DIR = join(root, 'counters');
+    const child = fork(join(repository, 'packages/vitest-adapter/m2-worker.ts'), [], {
+      stdio: ['ignore', 'pipe', 'pipe', 'ipc'],
+      env,
+    });
+    const exited = new Promise((resolve) => child.once('exit', resolve));
+    t.after(async () => {
+      child.kill('SIGKILL');
+      await exited;
+    });
+    let sequence = 0;
+    const command = (command, args) =>
+      new Promise((resolve, reject) => {
+        const id = ++sequence;
+        child.once('message', (reply) =>
+          reply.error ? reject(new Error(reply.error)) : resolve(reply.result),
+        );
+        child.send({ protocol: 1, id, command, args });
+      });
+    const events = async () =>
+      (await readFile(join(root, 'events'), 'utf8'))
+        .trim()
+        .split('\n')
+        .filter(Boolean)
+        .map(JSON.parse);
+    await command('initialize', { ...job('init'), kind: 'baseline', mutation: null });
+    const [first] = [await command('run', { request: job('survive') })];
+    assert.equal(first.residentHelpers.length, 1);
+    const [zygote] = first.residentHelpers;
+    const bypassed = await command('run', { request: { ...job('survive'), bypassZygote: true } });
+    const after = await command('run', { request: job('survive') });
+    const lanes = ['survive', 'kill'].map((id, index) => ({
+      ...job(id),
+      bypassZygote: index === 0 ? true : undefined,
+    }));
+    const batch = await command('run', { request: { ...lanes[0], lanes } });
+    for (const reply of [first, bypassed, after]) assert.equal(reply.outcome, 'passed');
+    assert.deepEqual(
+      batch.lanes.map((lane) => lane.outcome),
+      ['passed', 'failed'],
+    );
+    // The zygote survives its bypassed jobs, and still serves the others.
+    for (const reply of [bypassed, after, batch]) assert.deepEqual(reply.residentHelpers, [zygote]);
+    const seen = await events();
+    assert.equal(seen.length, 5);
+    const parents = seen.map((event) => event.ppid);
+    // Run order: zygote, controller (bypassed), zygote, then the lanes in either order.
+    assert.deepEqual(parents.slice(0, 3), [zygote, child.pid, zygote]);
+    assert.deepEqual([...parents.slice(3)].sort(), [zygote, child.pid].sort());
+    const bypassedLane = seen.slice(3).find((event) => event.ppid === child.pid);
+    assert.equal(bypassedLane.active, 'survive');
+    await command('close', {});
+    child.disconnect();
+    await exited;
+    const [file] = await readdir(join(root, 'counters'));
+    const counters = JSON.parse(await readFile(join(root, 'counters', file), 'utf8'));
+    assert.equal(counters.forks, 3);
+    assert.equal(counters.fallbacks, 0);
+    assert.equal(counters.zygoteFailures, 0);
+  },
+);

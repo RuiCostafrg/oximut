@@ -19,6 +19,7 @@ const log = (event) => appendFileSync(process.env.OXIMUT_FAKE_LOG,
   JSON.stringify({ ...event, pid: process.pid }) + '\n');
 log({ event: 'start' });
 let jobs = 0;
+let helper;
 process.on('message', (message) => {
   const { id, command, args } = message;
   const reply = (body) => process.send({ protocol: 1, id, ...body });
@@ -75,7 +76,8 @@ process.on('message', (message) => {
   }
   const request = args.request;
   jobs++;
-  log({ event: 'run', job: request.jobId, workers: request.workers });
+  log({ event: 'run', job: request.jobId, workers: request.workers,
+    bypass: request.bypassZygote, kind: request.kind });
   if (mode.startsWith('lanes-') && request.lanes) {
     const compact = mode === 'lanes-compact';
     const expected = compact ? 'run-shared-lane-resident-v1' : 'run';
@@ -150,6 +152,17 @@ process.on('message', (message) => {
     };
     wait(); return;
   }
+  if (mode.startsWith('zygote-') && request.kind === 'mutant') {
+    // A zygote worker that deadlocks looks like a timeout; a real fork does not.
+    const timesOut = mode === 'zygote-always-timeout' || !request.bypassZygote;
+    if (timesOut) return reply({ result: { outcome: 'timeout',
+      tests: { passed: 0, failed: 0, skipped: 0 }, errors: ['Test timed out in 5ms'] } });
+  }
+  if (mode.startsWith('helper') && !helper) {
+    // A long-lived direct child the controller declares, like a worker zygote.
+    helper = spawn(process.execPath, ['-e', 'setInterval(() => {}, 1000)'], { stdio: 'ignore' });
+    log({ event: 'helper', child: helper.pid });
+  }
   if (mode === 'hang') return;
   if (mode === 'crash') process.exit(3);
   if (mode === 'error') return reply({ error: 'boom from controller' });
@@ -166,8 +179,12 @@ process.on('message', (message) => {
     child.unref();
     log({ event: 'leaked', child: child.pid });
   }
+  // 'helper' declares its own child; 'helper-stranger' a live process that is
+  // not the controller's child (the slot worker above it).
+  const declared = mode === 'helper' ? [helper.pid] : mode === 'helper-stranger' ? [process.ppid] : undefined;
   reply({ result: { outcome: 'passed', tests: { passed: 1, failed: 0, skipped: 0 },
-    errors: [], ...(request.resident ? { resident: request.resident.length } : {}) } });
+    errors: [], ...(request.resident ? { resident: request.resident.length } : {}),
+    ...(declared ? { residentHelpers: declared } : {}) } });
 });
 process.once('disconnect', () => process.exit(0));
 """
@@ -208,6 +225,121 @@ class NativeCoordinator(unittest.TestCase):
             accepted = subprocess.run(args, cwd=REPO, capture_output=True, text=True, timeout=60)
             self.assertEqual(accepted.returncode, 0, accepted.stdout + accepted.stderr)
             self.assertEqual(json.loads(accepted.stdout)['baseline']['outcome'], 'passed')
+
+    def test_zygote_checks_canonical_adapter(self):
+        with tempfile.TemporaryDirectory(prefix='oximut-native-zygote-symlink-') as directory:
+            directory = Path(directory)
+            target = directory / 'target'
+            target.mkdir()
+            (target / 'm2-runner.mjs').write_text('throw new Error("must not execute");')
+            adapter = directory / 'm2-runner.mjs'
+            adapter.symlink_to(target / 'm2-runner.mjs')
+            (directory / 'm2-worker.ts').write_text(CONTROLLER)
+            args = [str(REPO / 'target/debug/oximut'), '--root', str(ROOT),
+                    '--source', str(ROOT / 'src/subject.ts'), '--baseline-only',
+                    '--execution', 'persistent', '--zygote',
+                    '--adapter', str(adapter), '--report', '-']
+            rejected = subprocess.run(args, cwd=REPO, capture_output=True, text=True, timeout=60)
+            self.assertEqual(rejected.returncode, 2, rejected.stdout + rejected.stderr)
+            self.assertIn('--zygote requires the reference persistent adapter', rejected.stderr)
+            adapter.unlink()
+            (directory / 'm2-worker.ts').unlink()
+            adapter.symlink_to(REPO / 'packages/vitest-adapter/m2-runner.mjs')
+            accepted = subprocess.run(args, cwd=REPO, capture_output=True, text=True, timeout=120)
+            self.assertEqual(accepted.returncode, 0, accepted.stdout + accepted.stderr)
+            report = json.loads(accepted.stdout)
+            self.assertEqual(report['baseline']['outcome'], 'passed')
+            self.assertIn('zygote=on', json.dumps(report['diagnostics']))
+
+    def test_declared_helpers_are_admitted_only_with_zygote_and_reaped(self):
+        result, report, events = self.run_cli('helper', full=True, extra_args=('--zygote',))
+        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+        self.assertTrue(report['summary']['complete'], result.stdout + result.stderr)
+        self.assertEqual(report['baseline']['outcome'], 'passed')
+        self.assertTrue(any('zygote=on' in d for d in report['diagnostics']), report['diagnostics'])
+        [helper] = {e['child'] for e in events if e['event'] == 'helper'}
+        self.assertFalse(alive(helper), 'resident helper survived shutdown')
+        # The helper never retired its controller: one stayed for every job.
+        self.assertEqual(len(self.controllers(events)), 1, events)
+        self.assertTrue(report['mutants'])
+        self.assertNotIn('residentHelpers', result.stdout)
+        self.assert_reaped(events)
+
+        result, report, events = self.run_cli('helper', full=True)
+        self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
+        self.assertEqual(report['baseline']['outcome'], 'infrastructure-error', result.stderr)
+        self.assertIn('declared resident helpers without opting in',
+                      json.dumps(report['baseline']['errors']))
+        self.assertFalse(report['summary']['complete'])
+        self.assertFalse(any('zygote=on' in d for d in report['diagnostics']))
+        for helper in {e['child'] for e in events if e['event'] == 'helper'}:
+            self.assertFalse(alive(helper), 'retired controller left its helper behind')
+        self.assert_reaped(events)
+
+    def test_declared_helper_that_is_not_a_controller_child_is_rejected(self):
+        result, report, events = self.run_cli(
+            'helper-stranger', full=True, extra_args=('--zygote',))
+        self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
+        self.assertEqual(report['baseline']['outcome'], 'infrastructure-error', result.stderr)
+        self.assertRegex(json.dumps(report['baseline']['errors']),
+                         r'resident helper \d+ is not a live child of the controller')
+        self.assertFalse(report['summary']['complete'])
+        self.assert_reaped(events)
+
+    def mutant_runs(self, events):
+        runs = {}
+        for event in events:
+            if event['event'] == 'run' and event['kind'] == 'mutant':
+                runs.setdefault(event['job'], []).append(event.get('bypass'))
+        return runs
+
+    def test_zygote_watchdog_reruns_a_timeout_without_the_zygote(self):
+        result, report, events = self.run_cli('zygote-watchdog', full=True,
+                                              extra_args=('--zygote',))
+        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+        self.assertTrue(report['summary']['complete'], result.stdout + result.stderr)
+        mutants = report['mutants']
+        self.assertGreaterEqual(len(mutants), 2)
+        self.assertEqual({m['outcome'] for m in mutants}, {'survived'})
+        runs = self.mutant_runs(events)
+        first, *rest = [m['id'] for m in mutants]
+        # The first mutant ran under the zygote, timed out, and was rerun once.
+        self.assertEqual(runs[first], [None, True])
+        # From then on every request carries bypassZygote and nothing is rerun.
+        for mutant in rest:
+            self.assertEqual(runs[mutant], [True])
+        diagnostics = report['diagnostics']
+        self.assertEqual(sum('zygote worker timed out where a normal worker did not; '
+                             'zygote disabled for the rest of the run' == d for d in diagnostics), 1,
+                         diagnostics)
+        self.assertIn('zygote watchdog: 1 timeout reruns', diagnostics)
+        self.assert_reaped(events)
+
+    def test_zygote_watchdog_reports_a_timeout_that_the_rerun_repeats(self):
+        result, report, events = self.run_cli('zygote-always-timeout', full=True,
+                                              extra_args=('--zygote',))
+        self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
+        self.assertFalse(report['summary']['complete'])
+        mutants = report['mutants']
+        self.assertGreaterEqual(len(mutants), 2)
+        self.assertEqual({m['outcome'] for m in mutants}, {'timeout'})
+        runs = self.mutant_runs(events)
+        for mutant in mutants:
+            # Exactly one rerun, never more.
+            self.assertEqual(runs[mutant['id']], [None, True], mutant['id'])
+        diagnostics = report['diagnostics']
+        self.assertIn(f'zygote watchdog: {len(mutants)} timeout reruns', diagnostics)
+        self.assertFalse(any('zygote disabled' in d for d in diagnostics), diagnostics)
+        self.assert_reaped(events)
+
+    def test_timeouts_are_never_rerun_without_zygote(self):
+        result, report, events = self.run_cli('zygote-always-timeout', full=True)
+        mutants = report['mutants']
+        self.assertEqual({m['outcome'] for m in mutants}, {'timeout'})
+        for mutant in mutants:
+            self.assertEqual(self.mutant_runs(events)[mutant['id']], [None])
+        self.assertFalse(any('zygote watchdog' in d for d in report['diagnostics']))
+        self.assert_reaped(events)
 
     def run_cli(self, mode, timeout_ms=5000, extra_args=(), full=False, shared=False):
         with tempfile.TemporaryDirectory(prefix='oximut-native-') as directory:

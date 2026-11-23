@@ -65,6 +65,8 @@ export function validateRequest(value) {
       /** @type {number} */ (value.workers) > 1024)
   )
     throw new Error('Invalid workers');
+  if (value.bypassZygote !== undefined && typeof value.bypassZygote !== 'boolean')
+    throw new Error('Invalid bypassZygote');
   if (value.lanes !== undefined) {
     if (
       value.kind !== 'mutant' ||

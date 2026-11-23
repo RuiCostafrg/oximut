@@ -41,6 +41,8 @@ export interface Request {
   /** Shared switched modules served for every listed file throughout the job. */
   resident?: NonNullable<Request['mutation']>[];
   selection?: Selection;
+  /** Serve this job's mutant test workers with real forks, bypassing the zygote. */
+  bypassZygote?: boolean;
 }
 export interface Result {
   lanes?: Omit<Response, 'lanes'>[];

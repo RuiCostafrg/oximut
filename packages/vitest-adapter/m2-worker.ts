@@ -20,6 +20,7 @@ const zygote =
     ? (createRequire(import.meta.url)('./zygote/pool.cjs') as {
         install(): boolean;
         residentHelpers(): number[];
+        bypass(mutantIds: string[]): void;
       })
     : undefined;
 zygote?.install();
@@ -232,7 +233,15 @@ async function command(name: string, args: Request): Promise<unknown> {
     if (!controllerReusable) throw new Error('Shared lanes require a reusable controller project');
     await vitest.close();
     sharedLanes ??= new (await import('./shared-lanes.ts')).SharedLanes();
-    return sharedLanes.run(job);
+    // The CLI's zygote watchdog marks lanes whose workers must be real forks.
+    zygote?.bypass(
+      job.lanes.flatMap((lane) => (lane.bypassZygote && lane.mutation ? [lane.mutation.id] : [])),
+    );
+    try {
+      return await sharedLanes.run(job);
+    } finally {
+      zygote?.bypass([]);
+    }
   }
   const next = job.mutation;
   const probesChanged = JSON.stringify(probes) !== JSON.stringify(job.collectCoverage);
@@ -294,6 +303,7 @@ async function command(name: string, args: Request): Promise<unknown> {
   currentRun = undefined;
   delete process.env.OXIMUT_ACTIVE_MUTANT;
   if (job.kind === 'mutant' && next) process.env.OXIMUT_ACTIVE_MUTANT = next.id;
+  zygote?.bypass(job.bypassZygote && next ? [next.id] : []);
   const previousWorkers = vitest.projects.map((project) => project.config.maxWorkers);
   const previousBail = vitest.projects.map((project) => project.config.bail);
   const cancellations: string[] = [];
@@ -338,6 +348,7 @@ async function command(name: string, args: Request): Promise<unknown> {
       project.config.maxWorkers = previousWorkers[index];
     }
     delete process.env.OXIMUT_ACTIVE_MUTANT;
+    zygote?.bypass([]);
   }
   if (!currentRun) throw new Error('Missing onTestRunEnd event');
   const [modules, unhandled, reason] = currentRun as Parameters<

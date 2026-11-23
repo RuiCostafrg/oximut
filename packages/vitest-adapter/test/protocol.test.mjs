@@ -347,6 +347,15 @@ test('worker limit is a bounded positive integer', () => {
     assert.throws(() => runtime.validateRequest({ ...baseline, workers }), /Invalid workers/);
 });
 
+test('bypassZygote is an optional boolean', () => {
+  for (const bypassZygote of [true, false]) runtime.validateRequest({ ...mutant, bypassZygote });
+  for (const bypassZygote of [1, 'true', null])
+    assert.throws(
+      () => runtime.validateRequest({ ...mutant, bypassZygote }),
+      /Invalid bypassZygote/,
+    );
+});
+
 test('shared lane batches reject every inconsistent assignment', () => {
   const lane = (jobId, extra = {}) => ({ ...mutant, jobId, ...extra });
   const batch = (lanes, extra = {}) => ({ ...mutant, jobId: 'batch', lanes, ...extra });
