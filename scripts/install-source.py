@@ -10,6 +10,22 @@ import signal
 import subprocess
 import sys
 import tempfile
+import importlib.util
+
+
+def build_zygote_addon(stage):
+    """Compile the optional zygote addon into the stage; never fails the install."""
+    spec = importlib.util.spec_from_file_location(
+        "oximut_zygote_addon", Path(__file__).resolve().with_name("build-zygote-addon.py"))
+    module = importlib.util.module_from_spec(spec)
+    try:
+        spec.loader.exec_module(module)
+        native = stage / "packages" / "vitest-adapter" / "native"
+        built, reason = module.build_addon(native / "zygote-fork.c", native / "build" / "zygote-fork.node")
+    except Exception as error:  # The addon is optional.
+        built, reason = False, f"{type(error).__name__}: {error}"
+    print("Built zygote addon" if built else
+          f"Zygote addon skipped: {reason}; Oximut will use normal workers", file=sys.stderr)
 
 
 def positive_seconds(value):
@@ -111,6 +127,9 @@ def install(prefix, *, build_timeout_seconds=3600, npm_timeout_seconds=900):
             shutil.copy2(repo / name, stage / name)
         shutil.copytree(repo / "packages" / "vitest-adapter", stage / "packages" / "vitest-adapter",
                         ignore=shutil.ignore_patterns("node_modules", ".experiment-*", "__pycache__"))
+        # Never copy a developer-built addon; it must be compiled for this machine.
+        shutil.rmtree(stage / "packages" / "vitest-adapter" / "native" / "build", ignore_errors=True)
+        build_zygote_addon(stage)
         # Full lockfile intentionally includes developer tools until a standalone
         # adapter package is released. Never silently reuse checkout node_modules.
         npm = run_phase(["npm", "ci", "--include=dev", "--ignore-scripts", "--no-audit", "--no-fund"],

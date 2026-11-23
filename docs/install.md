@@ -50,6 +50,11 @@ install or modify that project's dependencies.
 the native executable's development default refers to the build checkout's
 adapter. Use the launcher above, or pass an explicit adapter with its dependencies.
 
+On Linux with glibc and a C compiler, the installer also compiles an optional
+native "zygote" addon into the bundle; otherwise it prints a skip notice, the
+install still succeeds, and Oximut uses normal workers. The feature itself is
+not enabled yet.
+
 The installer refuses to overwrite an existing `PREFIX/bin/oximut` or
 `PREFIX/lib/oximut`. To update, install into a new prefix and switch your PATH.
 To uninstall, remove those two paths. It does not edit shell startup files.
