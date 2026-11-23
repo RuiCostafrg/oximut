@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run fixtures/m1 persistently with and without --zygote and require identical results.
+"""Run fixtures/m1 persistently with --zygote and with --no-zygote and require identical results.
 
 Fails unless both runs are complete with the same exit code and mutant outcomes,
 and the zygote run's counters show forks and no zygote failures.
@@ -44,7 +44,7 @@ def main(argv=None):
     args = parser.parse_args(argv)
     with tempfile.TemporaryDirectory(prefix='oximut-zygote-parity-') as tmp:
         directory = Path(tmp)
-        plain, plain_report, _, plain_files = run(args.binary, args.root, [], directory, 'plain', args.timeout)
+        plain, plain_report, _, plain_files = run(args.binary, args.root, ['--no-zygote'], directory, 'plain', args.timeout)
         zygote, zygote_report, counters, files = run(args.binary, args.root, ['--zygote'], directory, 'zygote', args.timeout)
     outcomes = lambda report: {m['id']: m['outcome'] for m in report['mutants']}
     problems = []

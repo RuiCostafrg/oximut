@@ -1,8 +1,9 @@
-# Zygote workers (experimental, Linux)
+# Zygote workers (Linux)
 
 By default every mutant runs in a fresh Vitest worker process that starts from
-scratch: it forks, imports Vitest and runs the tests. With `--zygote` the
-persistent controller instead keeps **one warm Node process** (the zygote) that
+scratch: it forks, imports Vitest and runs the tests. On Linux, persistent runs
+(`--execution persistent`) use the zygote by default: the
+controller instead keeps **one warm Node process** (the zygote) that
 has already imported what a worker needs, and `fork()`s each mutant worker from
 it. Every mutant still runs in its own process; only the start-up cost goes away.
 
@@ -26,11 +27,22 @@ the benchmark on your own project before relying on it.
 
 ## Enabling it
 
+It is **on by default** for `--execution persistent` runs on Linux with
+`--isolation fresh-process` and the reference persistent adapter. Otherwise
+(other OS, fresh execution, `--isolation fresh-thread`, a custom adapter) it is
+off silently. If the native addon is missing or fails to load, normal workers
+run instead.
+
 ```sh
-oximut --root . --source src/subject.ts --execution persistent --zygote
+oximut --root . --source src/subject.ts --execution persistent              # auto
+oximut --root . --source src/subject.ts --execution persistent --no-zygote  # opt out
+oximut --root . --source src/subject.ts --execution persistent --zygote     # require it
 ```
 
-`OXIMUT_ZYGOTE=1` is the adapter-level switch the flag sets; you do not need it.
+An explicit `--zygote` errors when its prerequisites do not hold; combining it
+with `--no-zygote` is an error.
+
+`OXIMUT_ZYGOTE=1` is the adapter-level switch the CLI sets; you do not need it.
 
 ## Fallbacks
 
@@ -53,7 +65,7 @@ not produce. So the controller treats a zygote timeout with suspicion:
   the rest of the run**.
 - If the rerun times out too, the timeout stands and the zygote stays enabled.
 - Costs: a timed-out mutant takes up to two deadlines instead of one, and runs
-  without `--zygote` never rerun timeouts.
+  without the zygote never rerun timeouts.
 
 ## Isolation change
 
@@ -66,7 +78,9 @@ it fresh. Baseline workers remain stock.
 
 ## Diagnostics
 
-The report's diagnostics show `zygote=on` in the execution line, and, when the
+The report's diagnostics show `zygote=on` or `zygote=off` (with a reason such
+as `not Linux`, `--no-zygote` or `isolation fresh-thread`) in the persistent
+execution line, and, when the
 watchdog acted, `zygote watchdog: N timeout reruns` and, on a mismatch,
 `zygote worker timed out where a normal worker did not; zygote disabled for the
 rest of the run`. Fallbacks log `zygote workers unavailable` or `zygote workers

@@ -1,8 +1,10 @@
 """The native coordinator keeps the relay's deadline, cleanup and reuse contract."""
 import json
 import os
+import platform
 from pathlib import Path
 import subprocess
+import sys
 import tempfile
 import time
 import unittest
@@ -251,6 +253,14 @@ class NativeCoordinator(unittest.TestCase):
             self.assertEqual(report['baseline']['outcome'], 'passed')
             self.assertIn('zygote=on', json.dumps(report['diagnostics']))
 
+    # Rust reports target_os=android under PRoot, where auto stays off.
+    @unittest.skipUnless(sys.platform == 'linux' and 'proot' not in platform.release().lower(),
+                         'auto zygote needs a real Linux target')
+    def test_zygote_is_on_by_default_for_persistent_runs_on_linux(self):
+        result, report, events = self.run_cli('helper', full=True)
+        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+        self.assertTrue(any('zygote=on' in d for d in report['diagnostics']), report['diagnostics'])
+
     def test_declared_helpers_are_admitted_only_with_zygote_and_reaped(self):
         result, report, events = self.run_cli('helper', full=True, extra_args=('--zygote',))
         self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
@@ -265,13 +275,14 @@ class NativeCoordinator(unittest.TestCase):
         self.assertNotIn('residentHelpers', result.stdout)
         self.assert_reaped(events)
 
-        result, report, events = self.run_cli('helper', full=True)
+        result, report, events = self.run_cli('helper', full=True, extra_args=('--no-zygote',))
         self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
         self.assertEqual(report['baseline']['outcome'], 'infrastructure-error', result.stderr)
         self.assertIn('declared resident helpers without opting in',
                       json.dumps(report['baseline']['errors']))
         self.assertFalse(report['summary']['complete'])
         self.assertFalse(any('zygote=on' in d for d in report['diagnostics']))
+        self.assertTrue(any('zygote=off (--no-zygote)' in d for d in report['diagnostics']))
         for helper in {e['child'] for e in events if e['event'] == 'helper'}:
             self.assertFalse(alive(helper), 'retired controller left its helper behind')
         self.assert_reaped(events)
@@ -333,7 +344,8 @@ class NativeCoordinator(unittest.TestCase):
         self.assert_reaped(events)
 
     def test_timeouts_are_never_rerun_without_zygote(self):
-        result, report, events = self.run_cli('zygote-always-timeout', full=True)
+        result, report, events = self.run_cli('zygote-always-timeout', full=True,
+                                              extra_args=('--no-zygote',))
         mutants = report['mutants']
         self.assertEqual({m['outcome'] for m in mutants}, {'timeout'})
         for mutant in mutants:
