@@ -1169,15 +1169,25 @@ fn encode_controller_run(
 }
 
 /// Job deadlines include controller start-up. Lanes start counting when the
-/// adapter receives them, so they only get what is left of the job's budget.
+/// adapter receives them, so they only get what is left of the job's budget,
+/// less the time the job allows its lanes to report. A rolling batch's budget
+/// covers its lanes one after another, so only a batch of a single round
+/// ever has less than a lane's full deadline.
 fn charge_lane_startup(args: &mut serde_json::Value, spent: Duration) {
     let spent = u64::try_from(spent.as_millis()).unwrap_or(u64::MAX);
+    let job = args
+        .get("deadlineMs")
+        .and_then(serde_json::Value::as_u64)
+        .unwrap_or(u64::MAX);
     let lanes = args
         .get_mut("lanes")
         .and_then(serde_json::Value::as_array_mut);
     for lane in lanes.into_iter().flatten() {
         if let Some(budget) = lane.get("deadlineMs").and_then(serde_json::Value::as_u64) {
-            lane["deadlineMs"] = budget.saturating_sub(spent).max(1).into();
+            let left = job
+                .saturating_sub(crate::scheduler::LANE_REPORT_MS)
+                .saturating_sub(spent);
+            lane["deadlineMs"] = budget.min(left).max(1).into();
         }
     }
 }
@@ -1293,6 +1303,22 @@ mod tests {
         assert_eq!(args["lanes"][1]["deadlineMs"], 3500);
         charge_lane_startup(&mut args, Duration::from_secs(60));
         assert_eq!(args["lanes"][1]["deadlineMs"], 1);
+    }
+
+    #[test]
+    fn rolling_lanes_keep_their_full_deadline_when_the_batch_has_room() {
+        // Three rounds of 5 s lanes and their 1 s to report: the lanes' own
+        // deadline is untouched by 1.5 s of start-up, as the first round's would be
+        // if it had the whole job to itself.
+        let mut args = serde_json::json!({
+            "deadlineMs": 18000,
+            "lanes": [{ "deadlineMs": 5000 }, { "deadlineMs": 5000 }],
+        });
+        charge_lane_startup(&mut args, Duration::from_millis(1500));
+        assert_eq!(args["lanes"][0]["deadlineMs"], 5000);
+        // Only what the job lacks is taken from them.
+        charge_lane_startup(&mut args, Duration::from_secs(16));
+        assert_eq!(args["lanes"][1]["deadlineMs"], 1000);
     }
 
     #[test]

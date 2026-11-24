@@ -99,6 +99,78 @@ def first_after(events, start):
     return next((event for event in events if event['t'] >= start), None)
 
 
+def lane_intervals(per_mutant, begin, end):
+    """(start, end) of every mutant that has both events."""
+    return [(marks[begin], marks[end]) for marks in per_mutant.values()
+            if begin in marks and end in marks and marks[end] >= marks[begin]]
+
+
+def concurrency(intervals, start, end):
+    """Time-weighted mean number of intervals alive in [start, end), and the fraction of that
+    window with fewer than the maximum alive (computed by sweeping the interval endpoints)."""
+    points = []
+    for a, b in intervals:
+        a, b = max(a, start), min(b, end)
+        if b > a:
+            points += [(a, 1), (b, -1)]
+    points.sort()
+    alive, last, area, levels = 0, start, 0.0, {}
+    for t, delta in points:
+        levels[alive] = levels.get(alive, 0.0) + (t - last)
+        area += alive * (t - last)
+        alive += delta
+        last = t
+    levels[alive] = levels.get(alive, 0.0) + (end - last)
+    area += alive * (end - last)
+    span = end - start
+    return (area / span if span else None), levels
+
+
+def occupancy_over_time(per_mutant, width, start, end, buckets=10):
+    """Lane workers alive (fork requested .. exit) and running (run sent .. result) over time:
+    the mean count per equal slice of the mutation phase, and the share of the phase spent below
+    `width` alive workers. Meaningful for rolling and barrier batches alike."""
+    alive = lane_intervals(per_mutant, ('controller', 'lane_fork_requested'), ('controller', 'lane_exit'))
+    running = lane_intervals(per_mutant, ('controller', 'lane_run_sent'), ('controller', 'lane_result'))
+    span = end - start
+    if not alive or span <= 0:
+        return None
+    slices = []
+    for index in range(buckets):
+        a, b = start + span * index / buckets, start + span * (index + 1) / buckets
+        slices.append({'from_ms': a - start, 'alive_mean': concurrency(alive, a, b)[0],
+                       'running_mean': concurrency(running, a, b)[0]})
+    mean_alive, levels = concurrency(alive, start, end)
+    below = sum(duration for level, duration in levels.items() if level < width)
+    return {'width': width, 'alive_mean': mean_alive,
+            'running_mean': concurrency(running, start, end)[0],
+            'time_below_width_fraction': below / span,
+            'time_with_no_worker_fraction': levels.get(0, 0.0) / span,
+            'slices': slices}
+
+
+def rolling_summary(per_mutant, by, width, rolling_jobs, start, end):
+    """Rolling-lane batches: how fast a lane slot refills after its lane ends.
+
+    The controller emits lane_job_begin/lane_job_end around every lane job of a slot.
+    The refill gap is the time from a slot's lane_job_end to its next lane_job_begin."""
+    slots = {}
+    for event in by.get(('controller', 'lane_job_begin'), []):
+        mutant = event.get('mutant')
+        end_mark = per_mutant.get(mutant, {}).get(('controller', 'lane_job_end'))
+        if end_mark is not None:
+            slots.setdefault(event.get('lane'), []).append((event['t'], end_mark))
+    gaps, jobs = [], []
+    for lane, items in slots.items():
+        items.sort()
+        jobs += [b - a for a, b in items]
+        gaps += [items[i + 1][0] - items[i][1] for i in range(len(items) - 1)]
+    return {'batches': len(rolling_jobs), 'lanes_per_batch': stats([len(job['mutants']) for job in rolling_jobs]),
+            'slots': len(slots), 'lane_job_ms': stats(jobs), 'refill_gap_ms': stats(gaps),
+            'note': 'a lane job runs from lane_job_begin (slot takes the mutant) to lane_job_end '
+                    '(its worker has exited and the result is attributed); refill gap is the slot idle time between jobs'}
+
+
 def analyze(directory):
     events, malformed = load_events(directory)
     counts = {}
@@ -241,8 +313,14 @@ def analyze(directory):
                                      'mutants': sum(len(job['mutants']) or 1 for job in mutant_jobs),
                                      'slots': per_slot}
         # Lane workers (shared-lane batches): how much of width x window a lane worker is alive/running.
+        # The controller reports its lane count; without it a batch's lane count stands in
+        # (a rolling batch holds more lanes than lane slots, so the count must come from there).
+        contexts = [e['width'] for e in by.get(('controller', 'context_created'), []) if e.get('width')]
         widths = [len(job['mutants']) for job in mutant_jobs if len(job['mutants']) > 0]
-        width = max(widths) if widths else 0
+        width = max(contexts) if contexts else (max(widths) if widths else 0)
+        rolling_jobs = [job for job in mutant_jobs if width and len(job['mutants']) > width]
+        if rolling_jobs or by.get(('controller', 'rolling_begin')):
+            summary['rolling'] = rolling_summary(per_mutant, by, width, rolling_jobs, window_start, window_end)
         lane_live = sum(marks[('controller', 'lane_exit')] - marks[('controller', 'lane_fork_requested')]
                         for marks in per_mutant.values()
                         if ('controller', 'lane_exit') in marks and ('controller', 'lane_fork_requested') in marks)
@@ -256,6 +334,7 @@ def analyze(directory):
                 'run_to_result_fraction': lane_run / (width * window),
                 'note': 'sum over mutants of lane worker lifetime (fork requested to exit) or run-to-result time, '
                         'divided by width x mutation-phase duration'}
+            summary['lane_occupancy_over_time'] = occupancy_over_time(per_mutant, width, window_start, window_end)
         else:
             summary['lane_occupancy'] = None
         # First dispatch and worker-level milestones relative to process start.
@@ -278,7 +357,8 @@ def analyze(directory):
         for job in mutant_jobs:
             results = [per_mutant.get(m, {}).get(('controller', 'lane_result')) for m in job['mutants']]
             results = [t for t in results if t is not None]
-            if len(job['mutants']) > 1 and len(results) > 1:
+            # A rolling batch has no tail to wait for: its lanes finish at different times by design.
+            if len(job['mutants']) > 1 and len(results) > 1 and not (width and len(job['mutants']) > width):
                 skews.append(max(results) - min(results))
                 wasted += sum(max(results) - t for t in results)
                 durations += (max(results) - job['begin']) * len(results)
@@ -358,6 +438,19 @@ def render(summary):
     if occupancy:
         lines.append(f"lane workers (width {occupancy['width']}): alive {occupancy['live_fraction']:.1%}, "
                      f"run-to-result {occupancy['run_to_result_fraction']:.1%} of width x phase")
+    rolling = summary.get('rolling')
+    if rolling:
+        lines.append(f"rolling lanes: {rolling['batches']} batches over {rolling['slots']} slots "
+                     f"(batch-barrier metrics below do not apply to them)")
+        lines.append(f"  lane job (begin .. worker exited, attributed) (ms): {fmt(rolling['lane_job_ms'])}")
+        lines.append(f"  slot refill gap between lane jobs (ms):           {fmt(rolling['refill_gap_ms'])}")
+    over_time = summary.get('lane_occupancy_over_time')
+    if over_time:
+        lines.append(f"lane workers alive over time (mean of {over_time['width']} slots): "
+                     f"{over_time['alive_mean']:.2f} alive, {over_time['running_mean']:.2f} running; "
+                     f"below width {over_time['time_below_width_fraction']:.1%} of the phase, "
+                     f"no worker {over_time['time_with_no_worker_fraction']:.1%}")
+        lines.append('  alive per tenth of the phase: ' + ' '.join(f"{item['alive_mean']:.1f}" for item in over_time['slices']))
     startup = summary.get('startup_ms') or {}
     if startup.get('cli_start_to_first_mutant_dispatch') is not None:
         lines.append(f"cli start -> first mutant dispatch: {startup['cli_start_to_first_mutant_dispatch']:.0f} ms; "

@@ -146,6 +146,61 @@ class ZygoteTimelineTests(unittest.TestCase):
         for line in ('template builds: 1', 'controller event loop', 'pool_run per batch (2 batches', 'precollect, templated'):
             self.assertIn(line, text)
 
+    def rolling_trace(self):
+        """One rolling batch of five lanes through two slots: slot 0 runs m0, m2, m4 back to
+        back with 5 ms between jobs, slot 1 runs m1 for 300 ms and then m3."""
+        files = {}
+        ids = ['m0', 'm1', 'm2', 'm3', 'm4']
+        event(files, 'scheduler', 1, 500, 'cli_start')
+        event(files, 'scheduler', 1, 1000, 'dispatch_begin', slot=0, job=1, kind='mutant', mutant='m0', lanes=ids)
+        event(files, 'scheduler', 1, 1002, 'dispatch_sent', slot=0, job=1, kind='mutant', mutant='m0', lanes=ids)
+        event(files, 'controller', 2, 1003, 'context_created', width=2)
+        event(files, 'controller', 2, 1004, 'rolling_begin', lanes=5, slots=2)
+        # (lane, begin, exit) of each lane job; the worker lives from fork request to exit.
+        jobs = {'m0': ('oximut-lane-0', 1010, 1100), 'm1': ('oximut-lane-1', 1010, 1310),
+                'm2': ('oximut-lane-0', 1105, 1205), 'm3': ('oximut-lane-1', 1315, 1365),
+                'm4': ('oximut-lane-0', 1210, 1260)}
+        for mutant, (lane, begin, exit_) in jobs.items():
+            event(files, 'controller', 2, begin, 'lane_job_begin', lane=lane, mutant=mutant)
+            event(files, 'controller', 2, begin + 1, 'lane_fork_requested', lane=lane, mutant=mutant)
+            event(files, 'controller', 2, begin + 20, 'lane_run_sent', lane=lane, mutant=mutant)
+            event(files, 'controller', 2, exit_ - 4, 'lane_result', lane=lane, mutant=mutant)
+            event(files, 'controller', 2, exit_ - 1, 'lane_exit', lane=lane, mutant=mutant)
+            event(files, 'controller', 2, exit_, 'lane_job_end', lane=lane, mutant=mutant)
+        event(files, 'controller', 2, 1370, 'rolling_end')
+        event(files, 'controller', 2, 1371, 'reply_sent', id=1, command='run')
+        event(files, 'scheduler', 1, 1373, 'reply', slot=0, job=1, kind='mutant', mutant='m0', lanes=ids, ok=True)
+        return files
+
+    def test_rolling_batch_reports_lane_slots_refill_gaps_and_occupancy_over_time(self):
+        with tempfile.TemporaryDirectory() as directory:
+            write(directory, self.rolling_trace())
+            summary = timeline.analyze(directory)
+            text = timeline.render(summary)
+        # The lane slots come from the controller, not from the five lanes of the batch.
+        self.assertEqual(summary['lane_occupancy']['width'], 2)
+        rolling = summary['rolling']
+        self.assertEqual(rolling['batches'], 1)
+        self.assertEqual(rolling['slots'], 2)
+        self.assertEqual(rolling['lanes_per_batch']['median'], 5)
+        # Slot 0 refills after 5 ms twice; slot 1 after 5 ms once.
+        self.assertEqual(rolling['refill_gap_ms']['n'], 3)
+        self.assertEqual(rolling['refill_gap_ms']['median'], 5)
+        self.assertEqual(rolling['lane_job_ms']['n'], 5)
+        self.assertEqual(rolling['lane_job_ms']['max'], 300)
+        # No barrier tail is reported for a batch that is not one.
+        self.assertIsNone(summary['lane_tail_skew_ms'])
+        occupancy = summary['lane_occupancy_over_time']
+        self.assertEqual(occupancy['width'], 2)
+        # Phase 1000..1373. No worker is alive for 11 ms at the start, 7 ms while slot 1
+        # refills after m1 and 9 ms after the last exit; slot 1 runs alone from 1259 to 1309.
+        self.assertGreater(occupancy['alive_mean'], 1.5)
+        self.assertLess(occupancy['time_below_width_fraction'], 0.4)
+        self.assertAlmostEqual(occupancy['time_with_no_worker_fraction'], 27 / 373)
+        self.assertEqual(len(occupancy['slices']), 10)
+        for line in ('rolling lanes: 1 batches over 2 slots', 'slot refill gap', 'lane workers alive over time'):
+            self.assertIn(line, text)
+
     def test_cli_writes_json_and_text(self):
         with tempfile.TemporaryDirectory() as directory:
             write(directory, self.synthetic())

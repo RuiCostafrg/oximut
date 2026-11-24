@@ -21,7 +21,7 @@ use std::{
     time::{Duration, Instant, SystemTime, UNIX_EPOCH},
 };
 
-const HELP: &str = "Usage: oximut [--root DIR] [--config FILE] --source FILE [--source FILE ...]\n  --version           Print the Cargo package version\n  --report FILE       JSON report (- for stdout)\n  --timeout-ms N      Per-job deadline, default 30000 ms\n  --workers N         Maximum simultaneous mutation jobs / persistent baseline files (default 1; bounded by CPU limits)\n  --memory-budget-mib N Aggregate sampled RSS budget in MiB (1 MiB = 1048576 bytes); default host/container limit\n  --memory-reserve-mib N Reserved admission headroom in MiB (default 64)\n  --execution MODE   fresh (default) or persistent controller\n  --isolation MODE   fresh-process (default) or fresh-thread (requires persistent)\n  --zygote            Fork Vitest mutant workers from one warm Node process; on by default for persistent runs on Linux with fresh-process isolation and the reference persistent adapter (explicit --zygote errors if those do not hold)\n  --zygote-precollect Experimental, with --zygote and --test-selection: fork a mutant's worker from a warm process that already collected its one test file; mutants evaluated at module load keep the ordinary zygote path\n  --no-zygote         Opt out of the zygote and use normal workers\n  --no-shared-controller Use one Vitest controller per worker instead of the default shared controller\n  --test-selection    Collect baseline hits and conservatively select hit test files\n  --mutators FAMILIES Repeatable comma-separated union: arithmetic,boolean-literal,comparison-boundary (default: all)\n  --order-seed N     Deterministically shuffle mutant execution order\n  --adapter FILE      Node adapter entry point override (an m2-runner.mjs beside m2-worker.ts runs natively)\n  --cache             Cache instrumentation; outcomes require --cache-inputs-complete\n  --cache-policy MODE  auto (default) learns whether outcome caching saves work; always validates/reuses eligible outcomes\n  --cache-inputs-complete Assert all nondeterministic/external inputs are declared\n  --cache-input FILE  Additional input file/directory (repeatable)\n  --cache-env NAME    Additional environment input (repeatable; values stay private)\n  --no-cache, --force Bypass all cache reads and writes\n  --list              Generate mutants as JSON without executing tests\n  --baseline-only     Run original sources without mutants\nExit: 0 complete/no survivors; 1 survivors/no coverage; 2 incomplete/error.\nScore: killed/(killed+survived+no-coverage)*100; empty denominator => null.\nInvalid/timeout/infrastructure-error/resource-exhausted/skipped are excluded and make a run incomplete.";
+const HELP: &str = "Usage: oximut [--root DIR] [--config FILE] --source FILE [--source FILE ...]\n  --version           Print the Cargo package version\n  --report FILE       JSON report (- for stdout)\n  --timeout-ms N      Per-job deadline, default 30000 ms\n  --workers N         Maximum simultaneous mutation jobs / persistent baseline files (default 1; bounded by CPU limits)\n  --memory-budget-mib N Aggregate sampled RSS budget in MiB (1 MiB = 1048576 bytes); default host/container limit\n  --memory-reserve-mib N Reserved admission headroom in MiB (default 64)\n  --execution MODE   fresh (default) or persistent controller\n  --isolation MODE   fresh-process (default) or fresh-thread (requires persistent)\n  --zygote            Fork Vitest mutant workers from one warm Node process; on by default for persistent runs on Linux with fresh-process isolation and the reference persistent adapter (explicit --zygote errors if those do not hold)\n  --zygote-precollect Experimental, with --zygote and --test-selection: fork a mutant's worker from a warm process that already collected its one test file; mutants evaluated at module load keep the ordinary zygote path\n  --rolling-lanes     Experimental, with the shared controller: keep every lane slot busy and start the next mutant as soon as a lane's worker has exited, instead of waiting for the slowest lane of a batch\n  --no-zygote         Opt out of the zygote and use normal workers\n  --no-shared-controller Use one Vitest controller per worker instead of the default shared controller\n  --test-selection    Collect baseline hits and conservatively select hit test files\n  --mutators FAMILIES Repeatable comma-separated union: arithmetic,boolean-literal,comparison-boundary (default: all)\n  --order-seed N     Deterministically shuffle mutant execution order\n  --adapter FILE      Node adapter entry point override (an m2-runner.mjs beside m2-worker.ts runs natively)\n  --cache             Cache instrumentation; outcomes require --cache-inputs-complete\n  --cache-policy MODE  auto (default) learns whether outcome caching saves work; always validates/reuses eligible outcomes\n  --cache-inputs-complete Assert all nondeterministic/external inputs are declared\n  --cache-input FILE  Additional input file/directory (repeatable)\n  --cache-env NAME    Additional environment input (repeatable; values stay private)\n  --no-cache, --force Bypass all cache reads and writes\n  --list              Generate mutants as JSON without executing tests\n  --baseline-only     Run original sources without mutants\nExit: 0 complete/no survivors; 1 survivors/no coverage; 2 incomplete/error.\nScore: killed/(killed+survived+no-coverage)*100; empty denominator => null.\nInvalid/timeout/infrastructure-error/resource-exhausted/skipped are excluded and make a run incomplete.";
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 enum Execution {
@@ -80,6 +80,10 @@ struct Options {
     /// collected the mutant's test file (requires `--zygote`).
     #[serde(default)]
     zygote_precollect: bool,
+    /// Experimental: lane batches hold many more lanes than the width and the
+    /// controller refills each slot as its lane finishes (requires the shared controller).
+    #[serde(default)]
+    rolling_lanes: bool,
     memory_budget_mib: Option<u64>,
     memory_reserve_mib: u64,
     #[serde(default)]
@@ -138,6 +142,7 @@ fn parse_options(mut args: impl Iterator<Item = String>) -> Result<Option<Option
     let mut no_shared_controller = false;
     let mut zygote_flag: Option<bool> = None;
     let mut zygote_precollect = false;
+    let mut rolling_lanes = false;
     let mut memory_budget_mib = None;
     let mut memory_reserve_mib = 64;
     let mut mutators = BTreeSet::new();
@@ -173,6 +178,7 @@ fn parse_options(mut args: impl Iterator<Item = String>) -> Result<Option<Option
                 zygote_flag = Some(arg == "--zygote");
             }
             "--zygote-precollect" => zygote_precollect = true,
+            "--rolling-lanes" => rolling_lanes = true,
             "--baseline-only" => baseline_only = true,
             "--test-selection" => test_selection = true,
             "--cache" => cache = true,
@@ -402,6 +408,9 @@ fn parse_options(mut args: impl Iterator<Item = String>) -> Result<Option<Option
         && execution == Execution::Persistent
         && workers >= 2
         && coordinator::native_worker(&adapter).is_some();
+    if rolling_lanes && !shared_controller {
+        return Err("--rolling-lanes requires the shared controller (--execution persistent, --workers 2 or more, no --no-shared-controller)".into());
+    }
     Ok(Some(Options {
         root,
         config,
@@ -426,6 +435,7 @@ fn parse_options(mut args: impl Iterator<Item = String>) -> Result<Option<Option
         zygote,
         zygote_off_reason,
         zygote_precollect,
+        rolling_lanes,
         memory_budget_mib,
         memory_reserve_mib,
         mutators,
@@ -1122,7 +1132,7 @@ fn run_attempt(options: &Options, previous: Option<RetryEvidence>) -> Result<Att
     }
     diagnostics.push(match options.execution {
         Execution::Fresh => "execution=fresh; isolation=fresh-controller-and-test-process".into(),
-        Execution::Persistent => format!("execution=persistent; isolation={}; controller reuse only; baseline=original-and-instrumented{}{}", if options.isolation == Isolation::FreshThread { "fresh-test-threads" } else { "fresh-test-forks" }, match (options.zygote, &options.zygote_off_reason) { (true, _) => "; zygote=on".to_string(), (false, Some(reason)) => format!("; zygote=off ({reason})"), (false, None) => "; zygote=off".to_string() }, if options.zygote_precollect { "; zygote-precollect=on" } else { "" }),
+        Execution::Persistent => format!("execution=persistent; isolation={}; controller reuse only; baseline=original-and-instrumented{}{}{}", if options.isolation == Isolation::FreshThread { "fresh-test-threads" } else { "fresh-test-forks" }, match (options.zygote, &options.zygote_off_reason) { (true, _) => "; zygote=on".to_string(), (false, Some(reason)) => format!("; zygote=off ({reason})"), (false, None) => "; zygote=off".to_string() }, if options.zygote_precollect { "; zygote-precollect=on" } else { "" }, if options.rolling_lanes { "; rolling-lanes=on" } else { "" }),
     });
     diagnostics.push(if options.mutators.is_empty() {
         "mutator families=all".into()
@@ -2126,6 +2136,59 @@ mod tests {
                 .contains("--zygote-precollect requires --test-selection")
         );
         assert!(HELP.contains("--zygote-precollect"));
+    }
+
+    #[test]
+    fn rolling_lanes_option_is_opt_in_and_needs_the_shared_controller() {
+        let subject = concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../fixtures/m1/src/subject.ts"
+        );
+        let parse = |args: &[&str]| {
+            parse_options(
+                [
+                    "--root",
+                    concat!(env!("CARGO_MANIFEST_DIR"), "/../../fixtures/m1"),
+                    "--source",
+                    subject,
+                    "--execution",
+                    "persistent",
+                ]
+                .into_iter()
+                .chain(args.iter().copied())
+                .map(str::to_string),
+            )
+        };
+        assert!(!parse(&["--workers", "2"]).unwrap().unwrap().rolling_lanes);
+        let on = parse(&["--workers", "2", "--rolling-lanes"])
+            .unwrap()
+            .unwrap();
+        assert!(on.shared_controller && on.rolling_lanes);
+        // Older serialized options predate the field.
+        let mut legacy = serde_json::to_value(on).unwrap();
+        legacy.as_object_mut().unwrap().remove("rolling_lanes");
+        assert!(
+            !serde_json::from_value::<Options>(legacy)
+                .unwrap()
+                .rolling_lanes
+        );
+        for args in [
+            &["--workers", "1", "--rolling-lanes"][..],
+            &[
+                "--workers",
+                "2",
+                "--no-shared-controller",
+                "--rolling-lanes",
+            ][..],
+        ] {
+            assert!(
+                parse(args)
+                    .err()
+                    .unwrap()
+                    .contains("--rolling-lanes requires the shared controller")
+            );
+        }
+        assert!(HELP.contains("--rolling-lanes"));
     }
 
     #[test]

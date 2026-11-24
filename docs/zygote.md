@@ -128,6 +128,47 @@ Known deviations: a test file's top-level code runs once in the template and
 again in the child, and templates (one per selected file set) stay resident,
 which costs memory. The diagnostics report how many mutants were eligible.
 
+## Rolling lanes (experimental, off by default)
+
+With the shared controller, mutants normally run as batches of `width` lanes: a
+batch ends when its slowest lane has finished, and every batch is one round trip
+between the Rust scheduler and the controller. `--rolling-lanes` removes both costs
+for fork-based lanes (it needs the shared controller and works with or without
+`--zygote`):
+
+- The scheduler sends **one large batch**: up to 32 lanes per slot, bounded by the
+  8 MiB request size and by identical resident modules. The controller keeps
+  `width` lanes busy through it. Each slot owns a stock Vitest pool in the shared
+  context, so as soon as a slot's worker has exited and its result is attributed,
+  the next queued mutant starts there. Nothing waits for the slowest lane.
+  A batch of at most `width` lanes, a memory-limited batch and thread isolation
+  keep the barrier behaviour; a Vitest build whose pool factory cannot be found
+  runs the lanes in barrier rounds.
+- Every mutant still runs in its own forked process, results are attributed per
+  lane, and a resident or image change still drains every slot first, because a
+  batch only holds lanes of one resident set.
+- **Deadlines stay per lane.** A lane's timer starts when its slot takes it (after
+  any wait for its template), not when the batch arrives. The batch's own deadline,
+  which the scheduler and the coordinator enforce, is one lane deadline plus its
+  1 s reporting time, times the number of rounds `ceil(lanes / width)`: it is an
+  upper bound on a healthy batch and cannot fire before the last lane could finish.
+  A controller that hangs is therefore noticed after that bound, not after one lane
+  deadline.
+- Unhandled errors carry no project. One that arrives while lanes run taints the
+  lanes running at that moment, as the whole batch was tainted before; a pool error
+  explained by that lane's own deadline or crash taints nobody.
+- With `--zygote-precollect`, every template the batch needs is started when the
+  batch arrives, in the order its lanes need them, and builds one after another
+  while the first lanes already run. A lane whose template is still building waits
+  for it; its deadline has not started.
+- The zygote watchdog is unchanged: a lane that times out under the zygote is
+  rerun once on its own with the zygote bypassed.
+
+The timeline trace keeps its per-lane events. In rolling mode the batch-oriented
+metrics (pool_run, lane tail skew, result to reply) do not apply; the analyzer
+reports a rolling summary with the lane job time and the slot refill gap, and the
+lane workers alive over time.
+
 ## Status
 
 Experimental: the flag, its prerequisites and its diagnostics may change. CI

@@ -1070,6 +1070,7 @@ mod tests {
             zygote: false,
             zygote_off_reason: None,
             zygote_precollect: false,
+            rolling_lanes: false,
             memory_budget_mib: None,
             memory_reserve_mib: 64,
             mutators: BTreeSet::new(),

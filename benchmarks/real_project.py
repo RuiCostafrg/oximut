@@ -277,7 +277,7 @@ def compare_rows(rows):
 # Extra Oximut arguments may only select opt-in execution modes; workload,
 # adapter, scope and reporting flags stay owned by the harness and provenance.
 MODE_VALUES = {'--isolation': {'fresh-process', 'fresh-thread'}}
-MODE_FLAGS = {'--zygote', '--no-zygote', '--zygote-precollect'}
+MODE_FLAGS = {'--zygote', '--no-zygote', '--zygote-precollect', '--rolling-lanes'}
 
 
 def mode_args_error(values):
