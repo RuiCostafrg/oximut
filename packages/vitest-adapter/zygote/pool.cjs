@@ -25,7 +25,11 @@ const FORKS_ENTRY = '/vitest/dist/workers/forks.js';
 const preload = path.join(__dirname, 'worker.cjs');
 const defaultAddon = path.resolve(__dirname, '../native/build/zygote-fork.node');
 const zygotes = new Map();
+// Experimental precollect: one pre-warmed zygote per selected set of test files (see TemplateHandle).
+const templates = new Map();
 const counters = { zygotes: 0, forks: 0, exits: 0, zygoteFailures: 0, fallbacks: 0 };
+// Experimental precollect, reported only when it was used.
+const precollect = { templates: 0, templated: 0 };
 // Set by install(): { addon, original, disabled }.
 let state;
 // Mutant ids whose workers must be real forks while their job runs (the CLI's
@@ -97,6 +101,7 @@ class ZygoteChild extends EventEmitter {
   connected = true;
   attachTimer = undefined;
   mutant = undefined;
+  templated = false;
   #launch;
   #socket;
   #real;
@@ -105,10 +110,13 @@ class ZygoteChild extends EventEmitter {
   #pendingDisconnect = false;
   #status;
   #ended = false;
+  #keepModules;
 
-  constructor(launch) {
+  // keepModules: the worker inherits one test file's evaluated modules.
+  constructor(launch, keepModules = false) {
     super();
     this.#launch = launch;
+    this.#keepModules = keepModules;
   }
 
   get attached() {
@@ -203,6 +211,16 @@ class ZygoteChild extends EventEmitter {
   }
 
   send(message, ...rest) {
+    // A child of a single-file template already holds that file's modules,
+    // evaluated once by the template: tell the worker not to reset them before
+    // the file (isolate false evaluates only the invalidated test file again).
+    // A template of several files only leaves fetched code behind, and every
+    // file still starts from fresh modules.
+    if (this.#keepModules && message?.type === 'start' && message.context?.config)
+      message = {
+        ...message,
+        context: { ...message.context, config: { ...message.context.config, isolate: false } },
+      };
     if (this.#real) return this.#real.send(message, ...rest);
     const callback = rest.find((value) => typeof value === 'function');
     if (!this.connected) {
@@ -247,6 +265,75 @@ class ZygoteChild extends EventEmitter {
   }
 }
 
+/**
+ * ChildProcess stand-in over a template zygote's own channel, so a Vitest pool
+ * worker can drive it (start, collect) like any forked worker. Vitest's messages
+ * pass untouched in both directions; the zygote protocol's are tagged. Stopping
+ * the pool worker must not stop the zygote: the owner releases it by dropping
+ * the template.
+ */
+class TemplateHandle extends EventEmitter {
+  // Lets the pool worker driving it tell it from a real process.
+  oximutTemplate = true;
+  exitCode = null;
+  signalCode = null;
+  stdout = null;
+  stderr = null;
+  connected = true;
+  #zygote;
+
+  constructor(zygote) {
+    super();
+    this.#zygote = zygote;
+    this.pid = zygote.process.pid;
+  }
+
+  send(message, ...rest) {
+    const callback = rest.find((value) => typeof value === 'function');
+    const zygote = this.#zygote;
+    if (zygote.failed) {
+      const error = Object.assign(new Error('Channel closed'), { code: 'ERR_IPC_CHANNEL_CLOSED' });
+      if (callback) process.nextTick(callback, error);
+      return false;
+    }
+    if (!zygote.ready) {
+      zygote.held.push(message);
+      if (callback) process.nextTick(callback, null);
+      return true;
+    }
+    return zygote.process.send(message, callback);
+  }
+
+  kill() {
+    dropTemplate(this.#zygote.template);
+    return true;
+  }
+
+  disconnect() {}
+  ref() {}
+  unref() {}
+}
+
+function dropTemplate(name) {
+  const zygote = templates.get(name);
+  if (!zygote) return;
+  templates.delete(name);
+  zygote.failed = true;
+  clearTimeout(zygote.readyTimer);
+  try {
+    zygote.process.kill('SIGKILL');
+  } catch {}
+  for (const child of zygote.children.values()) {
+    clearTimeout(child.attachTimer);
+    if (child.attached) child.abandon();
+    else {
+      counters.fallbacks++;
+      child.fallBack();
+    }
+  }
+  zygote.children.clear();
+}
+
 // One failure ends the zygote for this controller: disable it, kill it, and
 // settle every child it still owed us.
 function fail(zygote, reason) {
@@ -288,7 +375,7 @@ function request(zygote, child, message) {
   });
 }
 
-function startZygote(entry, args, options) {
+function startZygote(entry, args, options, template) {
   const env = { ...options.env, OXIMUT_ZYGOTE_ADDON: state.addon };
   env.NODE_OPTIONS = `${env.NODE_OPTIONS ?? ''} --require=${JSON.stringify(preload)}`.trim();
   const process_ = Reflect.apply(state.original, childProcess, [
@@ -315,6 +402,12 @@ function startZygote(entry, args, options) {
     waiting: [],
     children: new Map(),
     readyTimer: undefined,
+    // Set for a template: the test-file set it pre-collected, its handle, and the
+    // Vitest messages sent before it was ready.
+    template,
+    handle: undefined,
+    held: [],
+    warm: false,
   };
   zygote.readyTimer = setTimeout(
     () => fail(zygote, `not ready within ${readyTimeoutMs()} ms`),
@@ -323,10 +416,14 @@ function startZygote(entry, args, options) {
   zygote.readyTimer.unref();
   process_.on('message', (message, handle) => {
     const kind = message?.__oximut_zygote__;
-    if (kind === 'ready') {
+    if (kind === undefined) {
+      // Not ours: a template's Vitest worker talking to its pool worker.
+      zygote.handle?.emit('message', message, handle);
+    } else if (kind === 'ready') {
       clearTimeout(zygote.readyTimer);
       zygote.ready = true;
       if (trace) trace.emit('pool', 'zygote_ready', { zygotePid: process_.pid });
+      for (const held of zygote.held.splice(0)) process_.send(held);
       const waiting = zygote.waiting;
       zygote.waiting = [];
       for (const { child, message: pending } of waiting) request(zygote, child, pending);
@@ -348,7 +445,10 @@ function startZygote(entry, args, options) {
           id: message.id,
           mutant: child.mutant,
           workerPid: message.pid,
+          templated: child.templated,
         });
+      if (trace && child.templated)
+        trace.emit('pool', 'template_fork_attached', { id: message.id, mutant: child.mutant });
       child.attach(message.pid, handle);
     } else if (kind === 'exit') {
       const child = zygote.children.get(message.id);
@@ -365,7 +465,14 @@ function startZygote(entry, args, options) {
     }
   });
   process_.on('error', (error) => fail(zygote, `cannot start: ${error.message}`));
-  process_.on('exit', (code, signal) => fail(zygote, `exited ${code}/${signal}`));
+  process_.on('exit', (code, signal) => {
+    fail(zygote, `exited ${code}/${signal}`);
+    if (zygote.handle) {
+      zygote.handle.exitCode = code;
+      zygote.handle.signalCode = signal;
+      zygote.handle.emit('exit', code, signal);
+    }
+  });
   return zygote;
 }
 
@@ -374,23 +481,55 @@ function zygoteFork(entry, args, options) {
     counters.fallbacks++;
     return Reflect.apply(state.original, childProcess, [entry, args, options]);
   }
-  const key = JSON.stringify([entry, args, options.execArgv ?? [], options.cwd ?? null]);
-  let zygote = zygotes.get(key);
-  if (!zygote) {
-    zygote = startZygote(entry, args, options);
-    zygotes.set(key, zygote);
+  // A mutant whose test file has a warm template is forked from that template.
+  let zygote = templates.get(options.env.OXIMUT_ZYGOTE_TEMPLATE);
+  const templated = zygote?.warm === true && !zygote.failed;
+  if (!templated) {
+    const key = JSON.stringify([entry, args, options.execArgv ?? [], options.cwd ?? null]);
+    zygote = zygotes.get(key);
+    if (!zygote) {
+      zygote = startZygote(entry, args, options);
+      zygotes.set(key, zygote);
+    }
   }
+  if (templated) precollect.templated++;
   const id = zygote.nextId++;
-  const child = new ZygoteChild({ entry, args, options });
+  const child = new ZygoteChild(
+    { entry, args, options },
+    templated && JSON.parse(zygote.template).length === 1,
+  );
   zygote.children.set(id, child);
   if (trace) {
     child.mutant = options.env.OXIMUT_ACTIVE_MUTANT;
-    trace.emit('pool', 'spawn_requested', { id, mutant: child.mutant, queued: !zygote.ready });
+    child.templated = templated;
+    trace.emit('pool', 'spawn_requested', {
+      id,
+      mutant: child.mutant,
+      queued: !zygote.ready,
+      templated,
+      template: templated ? zygote.template : undefined,
+    });
+    // A mutant's worker forked from a warm template (precollect).
+    if (templated) trace.emit('pool', 'template_fork_requested', { id, mutant: child.mutant });
   }
   const message = { __oximut_zygote__: 'spawn', id, env: options.env };
   if (zygote.ready) request(zygote, child, message);
   else zygote.waiting.push({ child, message });
   return child;
+}
+
+// A Vitest pool worker for the template of one set of test files: the zygote itself.
+function templateFork(entry, args, options) {
+  const name = options.env.OXIMUT_ZYGOTE_TEMPLATE;
+  dropTemplate(name);
+  precollect.templates++;
+  if (trace) trace.emit('pool', 'template_zygote_start', { template: name });
+  // The controller's mutant, if it has one, is not the template's.
+  const env = { ...options.env, OXIMUT_ACTIVE_MUTANT: '' };
+  const zygote = startZygote(entry, args, { ...options, env }, name);
+  zygote.handle = new TemplateHandle(zygote);
+  templates.set(name, zygote);
+  return zygote.handle;
 }
 
 function unavailableReason(addon) {
@@ -418,7 +557,7 @@ function install() {
       try {
         fs.writeFileSync(
           path.join(countersDir, `zygote-${process.pid}.json`),
-          JSON.stringify(counters),
+          JSON.stringify(precollect.templates ? { ...counters, ...precollect } : counters),
         );
       } catch {}
     });
@@ -432,27 +571,29 @@ function install() {
   const original = childProcess.fork;
   state = { addon, original, disabled: false };
   childProcess.fork = function oximutZygoteFork(entry, args, options) {
-    if (
-      typeof entry === 'string' &&
-      entry.endsWith(FORKS_ENTRY) &&
-      Array.isArray(args) &&
-      options?.env?.OXIMUT_ACTIVE_MUTANT &&
-      !bypassed.has(options.env.OXIMUT_ACTIVE_MUTANT)
-    )
-      return zygoteFork(entry, args, options);
+    if (typeof entry === 'string' && entry.endsWith(FORKS_ENTRY) && Array.isArray(args)) {
+      const env = options?.env;
+      // The controller's own environment may name a mutant too, so the warm
+      // project says what it is explicitly.
+      if (env?.OXIMUT_ZYGOTE_WARM && env.OXIMUT_ZYGOTE_TEMPLATE && !state.disabled)
+        return templateFork(entry, args, options);
+      if (env?.OXIMUT_ACTIVE_MUTANT && !bypassed.has(env.OXIMUT_ACTIVE_MUTANT))
+        return zygoteFork(entry, args, options);
+    }
     return Reflect.apply(original, this, [entry, args, options]);
   };
   // Vitest imports `fork` by name; refresh the live ESM binding.
   syncBuiltinESMExports();
   process.on('exit', () => {
-    for (const zygote of zygotes.values()) zygote.process.kill('SIGKILL');
+    for (const zygote of [...zygotes.values(), ...templates.values()])
+      zygote.process.kill('SIGKILL');
   });
   return true;
 }
 
 // Live zygote PIDs. They outlive a job on purpose; the CLI must admit them.
 function residentHelpers() {
-  return [...zygotes.values()]
+  return [...zygotes.values(), ...templates.values()]
     .filter(
       ({ failed, process: zygote }) =>
         !failed && zygote.exitCode === null && zygote.signalCode === null,
@@ -465,4 +606,30 @@ function bypass(mutantIds) {
   bypassed = new Set(mutantIds);
 }
 
-module.exports = { install, residentHelpers, bypass, counters };
+/**
+ * Whether a template for this set of test files exists and its pre-collection
+ * finished; mutants selecting exactly those files are forked from it from now on.
+ */
+function templateReady(name) {
+  const zygote = templates.get(name);
+  if (!zygote || zygote.failed || !zygote.ready) return false;
+  zygote.warm = true;
+  if (trace)
+    trace.emit('pool', 'template_ready', { template: name, zygotePid: zygote.process.pid });
+  return true;
+}
+
+/** Forget every template (their modules are stale), killing the zygotes. */
+function dropTemplates() {
+  for (const name of [...templates.keys()]) dropTemplate(name);
+}
+
+module.exports = {
+  install,
+  residentHelpers,
+  bypass,
+  templateReady,
+  dropTemplate,
+  dropTemplates,
+  counters,
+};

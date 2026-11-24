@@ -31,6 +31,16 @@ pub struct Mutant {
     pub location: Location,
     pub code: String,
     pub map: serde_json::Value,
+    /// Whether the mutated expression may be evaluated while its module loads
+    /// (top level, class field initializers, static blocks, immediately invoked
+    /// functions) rather than only inside a function body called later. Unknown
+    /// is `true`: precollected workers must never receive such a mutant.
+    #[serde(default = "load_time_unless_known")]
+    pub load_time: bool,
+}
+
+fn load_time_unless_known() -> bool {
+    true
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq, Eq)]
@@ -106,6 +116,12 @@ pub struct Request {
     /// Watchdog: serve this job's test workers with real forks, not the zygote.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub bypass_zygote: Option<bool>,
+    /// Experimental `--zygote-precollect`: `Some(true)` forks this mutant's worker
+    /// from a zygote that already collected its single selected test file,
+    /// `Some(false)` keeps the ordinary zygote path (load-time mutant or a
+    /// selection precollection cannot serve), `None` means the option is off.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub precollect: Option<bool>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -521,6 +537,7 @@ mod tests {
             resident: None,
             selection: None,
             bypass_zygote: None,
+            precollect: None,
         };
         let mut response = Response {
             lanes: None,
@@ -565,6 +582,7 @@ mod tests {
             resident: None,
             selection: None,
             bypass_zygote: None,
+            precollect: None,
         };
         let result = |job: &str, outcome| Response {
             lanes: None,

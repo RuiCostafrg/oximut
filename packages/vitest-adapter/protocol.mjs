@@ -67,6 +67,8 @@ export function validateRequest(value) {
     throw new Error('Invalid workers');
   if (value.bypassZygote !== undefined && typeof value.bypassZygote !== 'boolean')
     throw new Error('Invalid bypassZygote');
+  if (value.precollect !== undefined && typeof value.precollect !== 'boolean')
+    throw new Error('Invalid precollect');
   if (value.lanes !== undefined) {
     if (
       value.kind !== 'mutant' ||

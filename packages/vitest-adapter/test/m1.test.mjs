@@ -164,7 +164,7 @@ test('M1 classifies Vitest async test and hook timeouts as timeout', {
 });
 
 test('M1 applies startup deadlines and reaps a CPU-hung test and detached descendant', {
-  timeout: 60000,
+  timeout: 120000,
 }, async (t) => {
   const root = await fixture(t);
   assert.equal((await run(root, { ...request(root), deadlineMs: 1 })).outcome, 'timeout');
@@ -183,9 +183,13 @@ test('M1 applies startup deadlines and reaps a CPU-hung test and detached descen
     });
   `,
   );
-  const output = await run(root, { ...request(root), deadlineMs: 10000 });
+  // The deadline also covers Vitest's own start-up. It must outlast that on a loaded
+  // host, or the hang never starts and there is no descendant to reap (no marker file).
+  const output = await run(root, { ...request(root), deadlineMs: 20000 });
   assert.equal(output.outcome, 'timeout', JSON.stringify(output));
-  for (const pid of JSON.parse(await readFile(marker, 'utf8'))) {
+  const started = await readFile(marker, 'utf8').catch(() => undefined);
+  assert.ok(started, `the test never started before its deadline: ${JSON.stringify(output)}`);
+  for (const pid of JSON.parse(started)) {
     assert.throws(() => process.kill(pid, 0), { code: 'ESRCH' });
   }
 });

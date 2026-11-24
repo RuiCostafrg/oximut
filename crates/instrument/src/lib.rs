@@ -22,15 +22,53 @@ struct Edit {
     expression: Span,
     operator: &'static str,
     replacement: &'static str,
+    load_time: bool,
 }
 
 struct Collector<'s> {
     source: &'s str,
     edits: Vec<Edit>,
     diagnostics: Vec<String>,
+    /// Function-like bodies currently being walked that run only when called.
+    deferred: usize,
+    /// Spans of function expressions and arrows whose creation is the whole
+    /// effect of the surrounding construct (`const f = () => ..`): their bodies
+    /// run when called, not when the module loads.
+    deferred_bodies: std::collections::HashSet<(u32, u32)>,
+}
+
+/// Look through parentheses and TypeScript-only wrappers to the expression that
+/// decides what a value is at run time.
+fn unwrapped<'e, 'a>(mut expression: &'e Expression<'a>) -> &'e Expression<'a> {
+    loop {
+        expression = match expression {
+            Expression::ParenthesizedExpression(inner) => &inner.expression,
+            Expression::TSAsExpression(inner) => &inner.expression,
+            Expression::TSSatisfiesExpression(inner) => &inner.expression,
+            Expression::TSNonNullExpression(inner) => &inner.expression,
+            Expression::TSTypeAssertion(inner) => &inner.expression,
+            _ => return expression,
+        };
+    }
+}
+
+fn function_span(expression: &Expression<'_>) -> Option<(u32, u32)> {
+    match unwrapped(expression) {
+        Expression::FunctionExpression(function) => Some((function.span.start, function.span.end)),
+        Expression::ArrowFunctionExpression(arrow) => Some((arrow.span.start, arrow.span.end)),
+        _ => None,
+    }
 }
 
 impl Collector<'_> {
+    /// Record that this value, when it is a function expression or arrow, is
+    /// only created here and called later.
+    fn defer_body(&mut self, value: &Expression<'_>) {
+        if let Some(span) = function_span(value) {
+            self.deferred_bodies.insert(span);
+        }
+    }
+
     fn exclude(&mut self, span: Span, reason: &str) {
         self.diagnostics.push(format!(
             "excluded bytes {}..{}: {reason}",
@@ -46,6 +84,7 @@ impl<'a> Visit<'a> for Collector<'_> {
             expression: it.span,
             operator: "boolean-literal",
             replacement: if it.value { "false" } else { "true" },
+            load_time: self.deferred == 0,
         });
     }
 
@@ -76,6 +115,7 @@ impl<'a> Visit<'a> for Collector<'_> {
                     expression: it.span,
                     operator,
                     replacement,
+                    load_time: self.deferred == 0,
                 });
             } else {
                 self.exclude(it.span, "operator token could not be located safely");
@@ -103,8 +143,46 @@ impl<'a> Visit<'a> for Collector<'_> {
         if it.declare || it.body.is_none() {
             self.exclude(it.span, "ambient declaration or overload");
         } else {
+            let deferred =
+                it.is_declaration() || self.deferred_bodies.contains(&(it.span.start, it.span.end));
+            self.deferred += usize::from(deferred);
             walk::walk_function(self, it, flags);
+            self.deferred -= usize::from(deferred);
         }
+    }
+
+    fn visit_arrow_function_expression(&mut self, it: &ArrowFunctionExpression<'a>) {
+        let deferred = self.deferred_bodies.contains(&(it.span.start, it.span.end));
+        self.deferred += usize::from(deferred);
+        walk::walk_arrow_function_expression(self, it);
+        self.deferred -= usize::from(deferred);
+    }
+
+    // Anything not listed here (call arguments, array elements, operands, an
+    // immediately invoked function) may run its function body while the module
+    // loads, so its mutants count as load time.
+    fn visit_variable_declarator(&mut self, it: &VariableDeclarator<'a>) {
+        if let Some(init) = &it.init {
+            self.defer_body(init);
+        }
+        walk::walk_variable_declarator(self, it);
+    }
+
+    fn visit_assignment_expression(&mut self, it: &AssignmentExpression<'a>) {
+        self.defer_body(&it.right);
+        walk::walk_assignment_expression(self, it);
+    }
+
+    fn visit_object_property(&mut self, it: &ObjectProperty<'a>) {
+        self.defer_body(&it.value);
+        walk::walk_object_property(self, it);
+    }
+
+    fn visit_export_default_declaration(&mut self, it: &ExportDefaultDeclaration<'a>) {
+        if let Some(expression) = it.declaration.as_expression() {
+            self.defer_body(expression);
+        }
+        walk::walk_export_default_declaration(self, it);
     }
 
     fn visit_class(&mut self, it: &Class<'a>) {
@@ -119,6 +197,11 @@ impl<'a> Visit<'a> for Collector<'_> {
         if it.declare || it.r#type == PropertyDefinitionType::TSAbstractPropertyDefinition {
             self.exclude(it.span, "ambient or abstract property");
         } else {
+            // A field initializer runs when the class is defined or constructed:
+            // load time. A function value's body still runs only when called.
+            if let Some(value) = &it.value {
+                self.defer_body(value);
+            }
             walk::walk_property_definition(self, it);
         }
     }
@@ -132,6 +215,9 @@ impl<'a> Visit<'a> for Collector<'_> {
         {
             self.exclude(it.span, "abstract method or overload");
         } else {
+            // Methods, accessors and constructors run when called or constructed.
+            self.deferred_bodies
+                .insert((it.value.span.start, it.value.span.end));
             walk::walk_method_definition(self, it);
         }
     }
@@ -227,6 +313,8 @@ pub fn generate(identity: &str, path: &Path, source: &str) -> Result<Generated, 
         source,
         edits: vec![],
         diagnostics: vec![],
+        deferred: 0,
+        deferred_bodies: Default::default(),
     };
     collector.visit_program(&parsed.program);
     collector
@@ -282,6 +370,7 @@ pub fn generate(identity: &str, path: &Path, source: &str) -> Result<Generated, 
             },
             map: source_map(&file, source, start, end, edit.replacement),
             code,
+            load_time: edit.load_time,
         });
     }
     Ok(Generated {
@@ -349,6 +438,8 @@ fn switch(
         source,
         edits: vec![],
         diagnostics: vec![],
+        deferred: 0,
+        deferred_bodies: Default::default(),
     };
     collector.visit_program(&parsed.program);
     // The M1 generator may reject a replacement; retain exactly its candidates.
@@ -560,6 +651,8 @@ pub fn generate_probes(
         source,
         edits: vec![],
         diagnostics: vec![],
+        deferred: 0,
+        deferred_bodies: Default::default(),
     };
     collector.visit_program(&parsed.program);
     let mut opens = std::collections::BTreeMap::<usize, Vec<(usize, String)>>::new();
@@ -741,6 +834,150 @@ mod tests {
     use super::*;
     fn mutations(source: &str) -> Generated {
         generate("src/a.ts", Path::new("/project/src/a.ts"), source).unwrap()
+    }
+
+    /// `load_time` of every mutant, in source order.
+    fn load_time(source: &str) -> Vec<bool> {
+        mutations(source)
+            .mutants
+            .iter()
+            .map(|mutant| mutant.load_time)
+            .collect()
+    }
+
+    #[test]
+    fn top_level_code_is_load_time() {
+        assert_eq!(
+            load_time("const a = 1 + 2; if (a > 2) { const b = true; }"),
+            [true, true, true]
+        );
+        assert_eq!(
+            load_time("for (let i = 0; i < 3; i++) { 1 * 2; }"),
+            [true, true]
+        );
+    }
+
+    #[test]
+    fn function_bodies_run_later() {
+        assert_eq!(load_time("function f() { return 1 + 2; }"), [false]);
+        assert_eq!(
+            load_time("export default function () { return true; }"),
+            [false]
+        );
+        assert_eq!(
+            load_time("const f = function () { return 1 + 2; };"),
+            [false]
+        );
+        assert_eq!(load_time("const f = (a) => a + 1;"), [false]);
+        assert_eq!(load_time("let f; f = () => 1 * 2;"), [false]);
+        assert_eq!(load_time("export default () => 1 - 2;"), [false]);
+        // Parentheses and TypeScript wrappers do not change what a value is.
+        assert_eq!(
+            load_time("const f = ((a: number) => a + 1) as Fn;"),
+            [false]
+        );
+        // Parameter defaults run per call; a load-time default does not.
+        assert_eq!(
+            load_time("function f(a = 1 + 2) { return a; } const g = (b = 3 * 4) => b;"),
+            [false, false]
+        );
+        // The outer function is deferred, so everything nested in it is too.
+        assert_eq!(
+            load_time("function f() { const g = () => 1 + 2; return (() => 3 * 4)(); }"),
+            [false, false]
+        );
+    }
+
+    #[test]
+    fn immediately_invoked_functions_and_callbacks_are_load_time() {
+        assert_eq!(load_time("(function () { return 1 + 2; })();"), [true]);
+        assert_eq!(load_time("(() => 1 + 2)();"), [true]);
+        assert_eq!(load_time("!function () { return true; }();"), [true]);
+        assert_eq!(
+            load_time("new (function () { this.x = 1 + 2; })();"),
+            [true]
+        );
+        assert_eq!(load_time("(function (a = 1 + 2) {})();"), [true]);
+        // A callback may be invoked synchronously by the call that receives it.
+        assert_eq!(load_time("const xs = [1, 2].map((x) => x + 1);"), [true]);
+        assert_eq!(
+            load_time("register(function () { return 1 * 2; });"),
+            [true]
+        );
+        assert_eq!(
+            load_time("const o = new Map([[1, 2]]).forEach(() => true);"),
+            [true]
+        );
+        // Not a recognised position for a deferred function: unknown is load time.
+        assert_eq!(load_time("const f = cond ? () => 1 + 2 : null;"), [true]);
+        assert_eq!(load_time("const fns = [() => 1 + 2];"), [true]);
+        assert_eq!(
+            load_time("(function () { return function () { return 1 + 2; }; })();"),
+            [true]
+        );
+        // Inside a deferred function, even an IIFE only runs when called.
+        assert_eq!(
+            load_time("function f() { return (() => 1 + 2)(); } const x = [1].map((y) => y * 2);"),
+            [false, true]
+        );
+    }
+
+    #[test]
+    fn class_members_follow_when_they_run() {
+        assert_eq!(
+            load_time(
+                "class A { m() { return 1 + 2; } get g() { return true; } constructor() { 3 * 4; } }"
+            ),
+            [false, false, false]
+        );
+        assert_eq!(
+            load_time(
+                "class A { static m() { return 1 + 2; } static async n() { return 3 - 4; } }"
+            ),
+            [false, false]
+        );
+        // Field initializers, static blocks and computed keys run with the class.
+        assert_eq!(
+            load_time("class A { x = 1 + 2; static y = true; static { 3 * 4; } ['k' + 'l']() {} }"),
+            [true, true, true, true]
+        );
+        // A function-valued field still runs its body only when called.
+        assert_eq!(
+            load_time("class A { h = () => 1 + 2; static s = () => 3 * 4; }"),
+            [false, false]
+        );
+        // A class declared inside a function is built when the function runs.
+        assert_eq!(
+            load_time("function f() { return class { x = 1 + 2; static { 3 * 4; } }; }"),
+            [false, false]
+        );
+        assert_eq!(
+            load_time("class A extends mix(1 + 2) { m() { return true; } }"),
+            [true, false]
+        );
+    }
+
+    #[test]
+    fn object_members_follow_when_they_run() {
+        assert_eq!(
+            load_time(
+                "const o = { m() { return 1 + 2; }, a: () => 3 * 4, get g() { return true; }, v: 5 - 6, [7 + 8]: 1 };"
+            ),
+            [false, false, false, true, true]
+        );
+    }
+
+    #[test]
+    fn deserialized_mutants_without_a_classification_are_load_time() {
+        let mutant = mutations("function f() { return 1 + 2; }")
+            .mutants
+            .remove(0);
+        assert!(!mutant.load_time);
+        let mut json = serde_json::to_value(&mutant).unwrap();
+        assert_eq!(json["loadTime"], false);
+        json.as_object_mut().unwrap().remove("loadTime");
+        let restored: Mutant = serde_json::from_value(json).unwrap();
+        assert!(restored.load_time);
     }
 
     #[test]
