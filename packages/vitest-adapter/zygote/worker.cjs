@@ -19,6 +19,12 @@ if (addonPath) {
   const signalNames = Object.fromEntries(
     Object.entries(signals).map(([name, number]) => [number, name]),
   );
+  // A precollect template reports whether its collect left anything a fork must not
+  // share (see quiescence.cjs). It listens before the readiness count below.
+  const quiescence =
+    process.env.OXIMUT_ZYGOTE_WARM === '1' && process.env.OXIMUT_ZYGOTE_PRECOLLECT_GUARD !== 'off'
+      ? require('./quiescence.cjs').watchCollect()
+      : undefined;
   const children = new Map();
   const queue = [];
   let inflight = false;
@@ -47,6 +53,7 @@ if (addonPath) {
     process.removeAllListeners('disconnect');
     process.removeAllListeners('SIGCHLD');
     clearInterval(reaper);
+    quiescence?.dispose();
     // Node cached the zygote's pid at bootstrap.
     Object.defineProperty(process, 'pid', {
       value: addon.getpid(),

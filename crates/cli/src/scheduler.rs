@@ -1349,6 +1349,7 @@ fn serve(mut channel: UnixStream, options: &Options) -> Result<(), String> {
                             "native coordinator: {} controllers for {} jobs",
                             coordinator.controllers_started, coordinator.jobs_run
                         ));
+                        diagnostics.extend(coordinator.ineligible.summary());
                     }
                 }
                 if let Err(error) = &cleanup {
