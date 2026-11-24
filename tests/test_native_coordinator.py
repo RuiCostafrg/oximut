@@ -32,7 +32,7 @@ process.on('message', (message) => {
     return reply({ result: { controllerPid: process.pid,
       pool: args.pool === 'threads' ? 'threads' : 'forks',
       ...(mode === 'bad-pool' ? { pool: 'forks' } : {}),
-      ...(mode === 'lanes-compact' ? { laneResidentEncoding: 'run-shared-lane-resident-v1' } : {}),
+      ...(mode === 'lanes-compact' ? { laneResidentEncoding: 'run-shared-lane-resident-v2' } : {}),
       reuse: mode === 'fresh' ? 'fresh: test' : 'controller' } });
   }
   if (command === 'close') {
@@ -82,7 +82,7 @@ process.on('message', (message) => {
     bypass: request.bypassZygote, kind: request.kind });
   if (mode.startsWith('lanes-') && request.lanes) {
     const compact = mode === 'lanes-compact';
-    const expected = compact ? 'run-shared-lane-resident-v1' : 'run';
+    const expected = compact ? 'run-shared-lane-resident-v2' : 'run';
     if (command !== expected || !request.resident?.length ||
         !request.lanes.every(lane => compact ? !Object.hasOwn(lane, 'resident')
           : JSON.stringify(lane.resident) === JSON.stringify(request.resident)))
@@ -426,7 +426,7 @@ class NativeCoordinator(unittest.TestCase):
     def test_native_lane_encoding_negotiates_with_the_controller(self):
         self.require_two_workers()
         for mode, command in (('lanes-legacy', 'run'),
-                              ('lanes-compact', 'run-shared-lane-resident-v1')):
+                              ('lanes-compact', 'run-shared-lane-resident-v2')):
             with self.subTest(mode=mode):
                 result, report, events = self.run_cli(
                     mode, extra_args=('--workers', '2'), full=True, shared=True)

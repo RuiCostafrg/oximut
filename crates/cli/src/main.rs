@@ -910,8 +910,34 @@ fn encoded_len<T: serde::Serialize + ?Sized>(value: &T) -> usize {
     serde_json::to_vec(value).map_or(usize::MAX, |bytes| bytes.len())
 }
 
+/// A lane's mutation that is just a reference to the module its batch holds
+/// resident for that file: an empty `code` and a null `map`, which no real
+/// mutation can have (the adapter requires an object source map).
+fn resident_reference(mutation: &Mutation) -> Mutation {
+    Mutation {
+        id: mutation.id.clone(),
+        file: mutation.file.clone(),
+        code: String::new(),
+        map: serde_json::Value::Null,
+    }
+}
+
+fn is_resident_reference(mutation: &Mutation) -> bool {
+    mutation.code.is_empty() && mutation.map.is_null()
+}
+
+/// Shared lanes require every lane's mutation to be the resident module of its
+/// file, so such a mutation travels as a reference instead of a second copy.
+fn lane_mutation_matches_resident(mutation: &Mutation, resident: &[Mutation]) -> bool {
+    resident
+        .iter()
+        .find(|module| module.file == mutation.file)
+        .is_some_and(|module| module.code == mutation.code && module.map == mutation.map)
+}
+
 /// Omit lane copies only when every lane retains the batch's resident Arc.
-/// The caller must use a wire encoding that restores these aliases.
+/// Lane mutations equal to the resident module of their file become
+/// references. The caller must use a wire encoding that restores these.
 fn without_duplicate_lane_residents(request: &Request) -> Option<Request> {
     let set = request.resident.as_ref()?;
     let lanes = request.lanes.as_ref()?;
@@ -926,6 +952,11 @@ fn without_duplicate_lane_residents(request: &Request) -> Option<Request> {
     let mut wire = request.clone();
     for lane in wire.lanes.iter_mut().flatten() {
         lane.resident = None;
+        if let Some(mutation) = &lane.mutation
+            && lane_mutation_matches_resident(mutation, set)
+        {
+            lane.mutation = Some(resident_reference(mutation));
+        }
     }
     Some(wire)
 }

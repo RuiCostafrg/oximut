@@ -128,6 +128,34 @@ test('compact lane decoding restores exact values and aliases instead of stringi
   assert.equal(strings, 4);
 });
 
+test('compact lanes resolve mutation references against the resident modules', () => {
+  const batch = JSON.parse(JSON.stringify(compactLaneRequest()));
+  const expanded = structuredClone(batch);
+  for (const lane of batch.lanes)
+    lane.mutation = { id: lane.mutation.id, file: lane.mutation.file, code: '', map: null };
+  runtime.restoreLaneResidents(batch);
+  for (const lane of expanded.lanes) lane.resident = structuredClone(expanded.resident);
+  // The restored lanes are the expanded ones; map and code are shared, not copied.
+  assert.deepEqual(batch, expanded);
+  for (const lane of batch.lanes) {
+    assert.equal(lane.mutation.map, batch.resident[0].map);
+    assert.equal(lane.mutation.code, batch.resident[0].code);
+  }
+  runtime.validateRequest(batch);
+  // A reference to a module that is not resident cannot be resolved.
+  const dangling = JSON.parse(JSON.stringify(compactLaneRequest()));
+  dangling.lanes[1].mutation = {
+    ...dangling.lanes[1].mutation,
+    file: '/other.ts',
+    code: '',
+    map: null,
+  };
+  assert.throws(
+    () => runtime.restoreLaneResidents(dangling),
+    /Lane mutation references a module that is not resident/,
+  );
+});
+
 test('compact lane messages still enforce shape and expanded request constraints', () => {
   const batch = compactLaneRequest();
   for (const bad of [

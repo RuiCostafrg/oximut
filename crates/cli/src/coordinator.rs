@@ -1139,7 +1139,7 @@ fn encode_message(id: u64, command: &str, args: &serde_json::Value) -> serde_jso
 
 // Private IPC command and exact initialize capability. Older controllers
 // continue to receive the original run command with the expanded request.
-const SHARED_LANE_RESIDENT: &str = "run-shared-lane-resident-v1";
+const SHARED_LANE_RESIDENT: &str = "run-shared-lane-resident-v2";
 
 fn supports_shared_lane_resident(initialized: &serde_json::Value) -> bool {
     initialized
@@ -1356,7 +1356,7 @@ mod tests {
         for reply in [
             json!({"reuse": "controller"}),
             json!({"laneResidentEncoding": true}),
-            json!({"laneResidentEncoding": "run-shared-lane-resident-v2"}),
+            json!({"laneResidentEncoding": "run-shared-lane-resident-v1"}),
         ] {
             assert!(!supports_shared_lane_resident(&reply));
             for initialized in [None, Some(expanded.clone())] {
@@ -1392,6 +1392,12 @@ mod tests {
             let resident = compact["resident"].clone();
             for lane in compact["lanes"].as_array_mut().unwrap() {
                 lane["resident"] = resident.clone();
+                // A lane's mutation is its file's resident module: sent as a reference.
+                assert_eq!(lane["mutation"]["code"], "");
+                assert!(lane["mutation"]["map"].is_null());
+                let module = &resident[0];
+                lane["mutation"]["code"] = module["code"].clone();
+                lane["mutation"]["map"] = module["map"].clone();
             }
             let mut expected = expanded.clone();
             charge_lane_startup(&mut compact, Duration::from_millis(3));
@@ -1530,9 +1536,17 @@ mod tests {
                 };
                 let (expanded, compact) = (bytes(false), bytes(true));
                 let resident_bytes = encoded_len(&*resident);
+                // Each lane also drops its mutation's module, leaving a reference.
+                let referenced: usize = jobs[..width]
+                    .iter()
+                    .map(|job| {
+                        let m = job.mutation.as_ref().unwrap();
+                        encoded_len(m) - encoded_len(&resident_reference(m))
+                    })
+                    .sum();
                 assert_eq!(
                     expanded - compact,
-                    width * (resident_bytes + ",\"resident\":".len())
+                    width * (resident_bytes + ",\"resident\":".len()) + referenced
                         - (SHARED_LANE_RESIDENT.len() - "run".len())
                 );
                 assert!(compact * 3 < expanded * 2);
