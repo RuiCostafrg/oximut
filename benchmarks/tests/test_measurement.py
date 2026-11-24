@@ -114,7 +114,9 @@ class CommandTests(unittest.TestCase):
         result = self.run_python(script, timeout=timeout)
         self.assertTrue(result['timed_out'])
         self.assertFalse(result['success'])
-        self.assertLess(time.monotonic() - before, timeout + 3)
+        # Both children would sleep for 60 s: a bound well below that shows the deadline
+        # killed them, however long a loaded host takes to notice (it took 5.2 s once).
+        self.assertLess(time.monotonic() - before, 30)
         descendant = int((self.path / 'output.log').read_text().strip())
         self.assertFalse(Path(f'/proc/{descendant}').exists(), 'descendant must be reaped')
         # Discovery can span scans when the parent exits before the child is seen.
@@ -131,9 +133,27 @@ class CommandTests(unittest.TestCase):
         descendant = int((self.path / 'output.log').read_text().strip())
         self.assertFalse(Path(f'/proc/{descendant}').exists())
 
+    # The sampler reads /proc every 10 ms, so a process only counts if it is still alive
+    # when a sample runs. A loaded host can starve the sampler for longer than a 50 ms
+    # fixture lives; the fixtures below stay alive for a second after their work instead.
+    LIVE_FOR_SAMPLING = 'time.sleep(1)'
+
+    def run_sampled(self, script, **kwargs):
+        """run_python, repeated (at most 3 runs) until the sampler saw the process alive.
+
+        A starved sampler can still miss even a one-second fixture. That is the host, not
+        the property under test (what is recorded about a process the sampler did see),
+        so only a run that observed nothing is repeated."""
+        for _ in range(2):
+            result = self.run_python(script, **kwargs)
+            if result['peak_aggregate_rss_bytes'] > 0:
+                return result
+        return self.run_python(script, **kwargs)
+
     def test_reaped_child_cpu_and_process_tree_memory_are_recorded(self):
-        child = "import time; a=bytearray(10000000); end=time.process_time()+.05\nwhile time.process_time()<end: pass"
-        result = self.run_python(f'import subprocess,sys; subprocess.run([sys.executable,"-c",{child!r}],check=True)')
+        child = ("import time; a=bytearray(10000000); end=time.process_time()+.05\n"
+                 f"while time.process_time()<end: pass\n{self.LIVE_FOR_SAMPLING}")
+        result = self.run_sampled(f'import subprocess,sys; subprocess.run([sys.executable,"-c",{child!r}],check=True)')
         self.assertTrue(result['success'])
         self.assertGreater(result['cpu_seconds'], .03)
         self.assertGreater(result['peak_aggregate_rss_bytes'], 0)
@@ -144,7 +164,7 @@ class CommandTests(unittest.TestCase):
     def test_opt_in_peak_snapshot_reconciles_with_the_reported_memory_peak(self):
         """Reconcile recorded process components with the measured aggregate peak."""
         with mock.patch.dict(os.environ,{'OXIMUT_PROFILE_MEMORY':'1'}):
-            result=self.run_python('import time; data=bytearray(8000000); time.sleep(.05)')
+            result=self.run_sampled(f'import time; data=bytearray(8000000); {self.LIVE_FOR_SAMPLING}')
         self.assertTrue(result['success'])
         snapshot=result['peak_rss_snapshot']
         self.assertEqual(sum(p['rss_bytes'] for p in snapshot['processes']),result['peak_aggregate_rss_bytes'])
@@ -153,9 +173,9 @@ class CommandTests(unittest.TestCase):
 
     def test_explicit_environment_controls_peak_capture_in_both_directions(self):
         """Honor explicit profiling environments rather than parent switches."""
-        script='import time; time.sleep(.05)'
+        script=f'import time; {self.LIVE_FOR_SAMPLING}'
         with mock.patch.dict(os.environ,{'OXIMUT_PROFILE_MEMORY':'0'}):
-            result=self.run_python(script,env={**os.environ,'OXIMUT_PROFILE_MEMORY':'1'})
+            result=self.run_sampled(script,env={**os.environ,'OXIMUT_PROFILE_MEMORY':'1'})
         self.assertTrue(result['success'])
         self.assertIsNotNone(result.get('peak_rss_snapshot'))
         with mock.patch.dict(os.environ,{'OXIMUT_PROFILE_MEMORY':'1'}):

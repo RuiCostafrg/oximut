@@ -832,17 +832,33 @@ fn fingerprint(
     profile.resource_policy_ms = elapsed_ms(started);
     let resources = resources?;
     let started = Instant::now();
-    let result = fingerprint_inputs(options, tool, &node, &resources, profile);
+    let result = fingerprint_inputs(
+        options,
+        tool,
+        &node,
+        &resources,
+        super::resources::cpu_limit(),
+        profile,
+    );
     profile.inputs_ms = elapsed_ms(started);
     result
 }
+/// The host's CPU limit is an input of every fingerprint. It is read live from
+/// the scheduler's affinity mask, which some hosts change while a process runs,
+/// so tests that compare fingerprints pin it instead of reading the host's.
+#[cfg(test)]
+const PINNED_CPU_LIMIT: usize = 4;
 #[cfg(test)]
 fn fingerprint_with_runtime(options: &Options, tool: &str, node: &[u8]) -> Result<String, String> {
     fingerprint_with_policy(
         options,
         tool,
         node,
-        &super::resources::cache_policy(options)?,
+        &serde_json::json!({
+            "effectiveMemoryBudgetBytes": 1024u64 * 1024 * 1024,
+            "ancestorMemoryLimitsBytes": [],
+            "cpuLimitWorkers": PINNED_CPU_LIMIT,
+        }),
     )
 }
 #[cfg(test)]
@@ -857,6 +873,7 @@ fn fingerprint_with_policy(
         tool,
         node,
         resources,
+        PINNED_CPU_LIMIT,
         &mut FingerprintProfile::default(),
     )
 }
@@ -865,6 +882,7 @@ fn fingerprint_inputs(
     tool: &str,
     node: &[u8],
     resources: &serde_json::Value,
+    cpu_limit: usize,
     profile: &mut FingerprintProfile,
 ) -> Result<String, String> {
     let mut paths = vec![
@@ -970,7 +988,7 @@ fn fingerprint_inputs(
             options.workers,
             options.memory_budget_mib,
             options.memory_reserve_mib,
-            super::resources::cpu_limit(),
+            cpu_limit,
             options.order_seed,
             &options.mutators,
             &options.sources,
@@ -1218,7 +1236,15 @@ mod tests {
         let expected = fingerprint_with_policy(&options, "tool", &runtime, &policy).unwrap();
         let mut profile = FingerprintProfile::default();
         assert_eq!(
-            fingerprint_inputs(&options, "tool", &runtime, &policy, &mut profile).unwrap(),
+            fingerprint_inputs(
+                &options,
+                "tool",
+                &runtime,
+                &policy,
+                PINNED_CPU_LIMIT,
+                &mut profile
+            )
+            .unwrap(),
             expected
         );
         assert!(profile.files_hashed >= 4);
