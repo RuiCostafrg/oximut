@@ -364,6 +364,8 @@ pub struct Scheduler<'a> {
     cleanup_ok: bool,
     spares: VecDeque<(usize, Request)>,
     lanes_ran: bool,
+    /// Lanes re-run on an ordinary worker after their shared batch failed.
+    lanes_redispatched: u64,
     zygote: ZygoteWatchdog,
 }
 /// Guards `--zygote` runs against a deadlocked forked worker, which would look
@@ -542,6 +544,7 @@ impl<'a> Scheduler<'a> {
             cleanup_ok: true,
             spares: VecDeque::new(),
             lanes_ran: false,
+            lanes_redispatched: 0,
             zygote: ZygoteWatchdog::default(),
         })
     }
@@ -1055,6 +1058,7 @@ impl<'a> Scheduler<'a> {
             let mut width = None;
             let mut pending: VecDeque<_> = jobs.into();
             let mut sizes = RequestSizes::default();
+            let mut failed_batches = 0u32;
             while let Some(first) = pending.pop_front() {
                 // A request too large to wrap in a lane batch still runs normally.
                 let mut first = first;
@@ -1138,21 +1142,12 @@ impl<'a> Scheduler<'a> {
                 }
                 let responses = response.lanes;
                 let mut timed_out = vec![];
+                let mut missing = vec![];
                 for (offset, (index, job)) in batch.into_iter().enumerate() {
-                    let item = responses
-                        .as_ref()
-                        .and_then(|r| r.get(offset))
-                        .cloned()
-                        .unwrap_or_else(|| {
-                            if response.outcome == TestOutcome::ResourceExhausted {
-                                exhausted(&job, &response.errors.join("; "))
-                            } else {
-                                infrastructure(
-                                    &job,
-                                    format!("Shared batch failed: {}", response.errors.join("; ")),
-                                )
-                            }
-                        });
+                    let Some(item) = responses.as_ref().and_then(|r| r.get(offset)).cloned() else {
+                        missing.push((index, job));
+                        continue;
+                    };
                     if self.watching(&item) {
                         timed_out.push((index, job));
                         continue;
@@ -1160,6 +1155,51 @@ impl<'a> Scheduler<'a> {
                     results[index].outcome = item.mutant_outcome();
                     results[index].tests = item.tests;
                     results[index].errors = item.errors;
+                }
+                // Lanes with their own result keep it. The others lost their
+                // controller (or its report), not a verdict: each runs once more
+                // on an ordinary worker before it is reported as a failure.
+                let retry = !missing.is_empty()
+                    && response.outcome != TestOutcome::ResourceExhausted
+                    && !INTERRUPTED.load(Ordering::Relaxed);
+                if !missing.is_empty() && !retry {
+                    for (index, job) in missing {
+                        let item = if response.outcome == TestOutcome::ResourceExhausted {
+                            exhausted(&job, &response.errors.join("; "))
+                        } else {
+                            infrastructure(
+                                &job,
+                                format!("Shared batch failed: {}", response.errors.join("; ")),
+                            )
+                        };
+                        results[index].outcome = item.mutant_outcome();
+                        results[index].tests = item.tests;
+                        results[index].errors = item.errors;
+                    }
+                } else if retry {
+                    self.lanes_redispatched += missing.len() as u64;
+                    self.retire_lane_controllers();
+                    for (index, response) in self.dispatch(missing.into(), false) {
+                        results[index].outcome = response.mutant_outcome();
+                        results[index].tests = response.tests;
+                        results[index].errors = response.errors;
+                    }
+                    failed_batches += 1;
+                    if failed_batches >= 2 && !pending.is_empty() {
+                        // A controller that keeps failing would cost every batch twice.
+                        self.diagnostics.push(
+                            "shared controller failed twice in a row, using one controller per worker for the rest"
+                                .into(),
+                        );
+                        for (index, response) in self.dispatch(std::mem::take(&mut pending), false)
+                        {
+                            results[index].outcome = response.mutant_outcome();
+                            results[index].tests = response.tests;
+                            results[index].errors = response.errors;
+                        }
+                    }
+                } else {
+                    failed_batches = 0;
                 }
                 if !timed_out.is_empty() {
                     for (index, response) in self.rerun_timeouts(timed_out) {
@@ -1220,6 +1260,12 @@ impl<'a> Scheduler<'a> {
         if let Some(reason) = &self.budget.exhaustion {
             self.diagnostics
                 .push(format!("resource admission stopped: {reason}"));
+        }
+        if self.lanes_redispatched > 0 {
+            self.diagnostics.push(format!(
+                "shared lanes: {} lanes re-dispatched after a failed batch",
+                self.lanes_redispatched
+            ));
         }
         if self.zygote.reruns > 0 {
             self.diagnostics.push(format!(

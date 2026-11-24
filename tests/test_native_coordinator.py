@@ -90,14 +90,24 @@ process.on('message', (message) => {
     log({ event: 'lanes', command, ids: request.lanes.map(lane => lane.jobId),
       deadline: request.deadlineMs, jobs: request.lanes.map(lane => lane.deadlineMs),
       workers: request.workers });
+    // 'lanes-die-first' loses the controller in its first batch only;
+    // 'lanes-die-always' in every batch.
+    if (mode === 'lanes-die-always' || (mode === 'lanes-die-first' &&
+        !existsSync(process.env.OXIMUT_FAKE_LOG + '.died'))) {
+      writeFileSync(process.env.OXIMUT_FAKE_LOG + '.died', '');
+      process.exit(3);
+    }
     const passed = { outcome: 'passed', tests: { passed: 1, failed: 0, skipped: 0 },
       errors: [], resident: request.resident.length };
+    // 'lanes-short' reports only the first half of each batch.
+    const reported = mode === 'lanes-short'
+      ? request.lanes.slice(0, Math.floor(request.lanes.length / 2)) : request.lanes;
     // Under the watchdog mode the first lane of every batch deadlocks in a zygote
     // worker and passes in a real fork.
     const stuck = (lane, index) => mode === 'lanes-rolling-watchdog' && index === 0
       && !lane.bypassZygote;
     return reply({ result: { ...passed, outcome: 'skipped',
-      tests: { passed: 0, failed: 0, skipped: 0 }, lanes: request.lanes.map((lane, index) => ({
+      tests: { passed: 0, failed: 0, skipped: 0 }, lanes: reported.map((lane, index) => ({
       ...passed, protocol: lane.protocol, jobId: lane.jobId, runId: lane.runId,
       generation: lane.generation,
       ...(stuck(lane, index) ? { outcome: 'timeout', tests: { passed: 0, failed: 0, skipped: 0 },
@@ -374,15 +384,18 @@ class NativeCoordinator(unittest.TestCase):
                 text=True, capture_output=True, timeout=120)
             return result, None, None
 
-    def run_cli(self, mode, timeout_ms=5000, extra_args=(), full=False, shared=False):
+    def run_cli(self, mode, timeout_ms=5000, extra_args=(), full=False, shared=False,
+                fixture=None):
+        root = REPO / fixture if fixture else ROOT
+        source = root / ('src/arithmetic.ts' if fixture else 'src/subject.ts')
         with tempfile.TemporaryDirectory(prefix='oximut-native-') as directory:
             adapter = Path(directory) / 'm2-runner.mjs'
             adapter.write_text('throw new Error("the native coordinator must not run this");\n')
             (Path(directory) / 'm2-worker.ts').write_text(CONTROLLER)
             log = Path(directory) / 'log.jsonl'
             result = subprocess.run([
-                str(REPO / 'target/debug/oximut'), '--root', str(ROOT),
-                '--source', str(ROOT / 'src/subject.ts'), *([] if full else ['--baseline-only']),
+                str(REPO / 'target/debug/oximut'), '--root', str(root),
+                '--source', str(source), *([] if full else ['--baseline-only']),
                 '--execution', 'persistent', '--adapter', str(adapter), '--report', '-',
                 '--timeout-ms', str(timeout_ms), '--no-cache',
                 *([] if shared else ['--no-shared-controller']), *extra_args,
@@ -503,6 +516,59 @@ class NativeCoordinator(unittest.TestCase):
         self.assertEqual(sum('zygote worker timed out where a normal worker did not; '
                              'zygote disabled for the rest of the run' == d for d in diagnostics), 1,
                          diagnostics)
+        self.assert_reaped(events)
+
+    def test_a_controller_lost_mid_batch_re_dispatches_every_lane_it_did_not_report(self):
+        self.require_two_workers()
+        result, report, events = self.run_cli(
+            'lanes-die-first', full=True, shared=True,
+            extra_args=('--workers', '2', '--rolling-lanes'))
+        self.require_spare_capacity(report)
+        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+        self.assertTrue(report['summary']['complete'], result.stdout + result.stderr)
+        count = len(report['mutants'])
+        # No mutant is reported as an infrastructure failure: each has its real outcome.
+        self.assertEqual({m['outcome'] for m in report['mutants']}, {'survived'},
+                         report['mutants'])
+        batches = [event for event in events if event['event'] == 'lanes']
+        self.assertEqual(batches[0]['ids'], [m['id'] for m in report['mutants']])
+        self.assertIn(f'shared lanes: {count} lanes re-dispatched after a failed batch',
+                      report['diagnostics'])
+        self.assert_reaped(events)
+
+    def test_a_malformed_short_lane_report_re_dispatches_every_lane_once(self):
+        self.require_two_workers()
+        result, report, events = self.run_cli(
+            'lanes-short', full=True, shared=True,
+            extra_args=('--workers', '2', '--rolling-lanes'))
+        self.require_spare_capacity(report)
+        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+        self.assertEqual({m['outcome'] for m in report['mutants']}, {'survived'},
+                         report['mutants'])
+        position = next(i for i, e in enumerate(events) if e['event'] == 'lanes')
+        batch = events[position]
+        # The batch report is validated as a whole, so none of its lanes counts as a
+        # result; each ran again, once, on an ordinary worker.
+        again = [e['job'] for e in events[position:]
+                 if e['event'] == 'run' and e['kind'] == 'mutant']
+        self.assertEqual(sorted(again), sorted(batch['ids']))
+        self.assertIn(f"shared lanes: {len(batch['ids'])} lanes re-dispatched after a failed batch",
+                      report['diagnostics'])
+        self.assert_reaped(events)
+
+    def test_a_controller_that_keeps_failing_is_given_up_after_two_batches(self):
+        self.require_two_workers()
+        result, report, events = self.run_cli(
+            'lanes-die-always', full=True, shared=True, fixture='fixtures/matched-small',
+            extra_args=('--workers', '2'))
+        self.require_spare_capacity(report)
+        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+        self.assertEqual({m['outcome'] for m in report['mutants']}, {'survived'},
+                         report['mutants'])
+        batches = [event for event in events if event['event'] == 'lanes']
+        self.assertEqual(len(batches), 2, batches)
+        self.assertIn('shared controller failed twice in a row, using one controller per '
+                      'worker for the rest', report['diagnostics'])
         self.assert_reaped(events)
 
     def test_nonblocking_warm_preserves_baseline_capacity_and_reuses_slot(self):
