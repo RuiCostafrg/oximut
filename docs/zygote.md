@@ -137,7 +137,12 @@ for fork-based lanes (it needs the shared controller and works with or without
 `--zygote`):
 
 - The scheduler sends **one large batch**: up to 32 lanes per slot, bounded by the
-  8 MiB request size and by identical resident modules. The controller keeps
+  8 MiB request size and by lanes that share the very same resident module set (one
+  allocation, which is what lets the batch carry it once). The batch is priced as it
+  travels: the resident set once, and each lane without it, its mutation reduced to
+  a reference (empty `code`, null `map`) to the resident module of its file, which
+  the slot and the adapter resolve (lane encoding `run-shared-lane-resident-v2`; an
+  older controller still gets the expanded request). The controller keeps
   `width` lanes busy through it. Each slot owns a stock Vitest pool in the shared
   context, so as soon as a slot's worker has exited and its result is attributed,
   the next queued mutant starts there. Nothing waits for the slowest lane.
@@ -167,7 +172,8 @@ for fork-based lanes (it needs the shared controller and works with or without
 The timeline trace keeps its per-lane events. In rolling mode the batch-oriented
 metrics (pool_run, lane tail skew, result to reply) do not apply; the analyzer
 reports a rolling summary with the lane job time and the slot refill gap, and the
-lane workers alive over time.
+lane workers alive over time. The scheduler's `batch_built` event records why each
+batch stopped growing (`capacity`, `bytes`, `queue_empty` or `resident_mismatch`).
 
 ## Status
 
