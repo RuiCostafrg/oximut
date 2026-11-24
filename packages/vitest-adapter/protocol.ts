@@ -49,6 +49,11 @@ export interface Request {
    * that must keep the ordinary zygote path. Absent: precollect is off.
    */
   precollect?: boolean;
+  /**
+   * Experimental precollect, on a `warm` request only: the sets of test files (the
+   * selections of the first mutants) whose templates to start building now.
+   */
+  templates?: string[][];
 }
 export interface Result {
   lanes?: Omit<Response, 'lanes'>[];

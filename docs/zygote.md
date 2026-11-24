@@ -186,7 +186,22 @@ for fork-based lanes (it needs the shared controller and works with or without
 - With `--zygote-precollect`, every template the batch needs is started when the
   batch arrives, in the order its lanes need them, and builds one after another
   while the first lanes already run. A lane whose template is still building waits
-  for it; its deadline has not started.
+  for it; its deadline has not started. Templates are built one at a time (the
+  hidden project runs one collect), and a template asked for twice is built once.
+- **Templates start before the batch.** The CLI knows each mutant's selected test
+  files as soon as the instrumented baseline is done. It then sends the controller
+  that will run the batch (slot 0, which ran the baselines) a `warm` request with
+  `templates`: the most common sets of test files, at most one per lane slot. The
+  controller answers at once, creates the lane context and starts those templates
+  in the background; the batch waits only for the context. Whatever does not come
+  up is simply not a template, and a prebuild for sets the batch does not use costs
+  only those templates. The window is the CLI's own planning (cache lookups, input
+  checks) plus the batch's dispatch; template builds themselves (about 0.6 to 0.9 s
+  each on the matched-scale fixture, one at a time) are longer than that, so the
+  first lanes still wait for their templates. `OXIMUT_TEMPLATE_PREBUILD=off`
+  restores the old order, for comparing the two. The timeline analyzer's
+  `templates:` line shows how many templates were ready before the first mutant
+  dispatch and how far ahead of it they were started.
 - The zygote watchdog is unchanged: a lane that times out under the zygote is
   rerun once on its own with the zygote bypassed.
 

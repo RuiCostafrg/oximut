@@ -375,6 +375,21 @@ test('worker limit is a bounded positive integer', () => {
     assert.throws(() => runtime.validateRequest({ ...baseline, workers }), /Invalid workers/);
 });
 
+test('templates are an optional list of non-empty lists of absolute file paths', () => {
+  runtime.validateRequest({ ...mutant, templates: [['/a.test.ts'], ['/a.test.ts', '/b.test.ts']] });
+  runtime.validateRequest({ ...mutant, templates: [] });
+  for (const templates of [
+    'x',
+    [[]],
+    [['relative.test.ts']],
+    [[1]],
+    [['/a\0']],
+    ['/a.test.ts'],
+    Array.from({ length: 1025 }, () => ['/a.test.ts']),
+  ])
+    assert.throws(() => runtime.validateRequest({ ...mutant, templates }), /Invalid templates/);
+});
+
 test('bypassZygote is an optional boolean', () => {
   for (const bypassZygote of [true, false]) runtime.validateRequest({ ...mutant, bypassZygote });
   for (const bypassZygote of [1, 'true', null])

@@ -258,6 +258,20 @@ def analyze(directory):
             'count': len(builds), 'ready': sum(1 for e in builds if e.get('ready')),
             'total_ms': sum(e.get('ms', 0) for e in builds),
             'builds': [{'key': e.get('key'), 'ready': e.get('ready'), 'ms': e.get('ms')} for e in builds]}
+    # Precollect: when the templates came up relative to the first mutant batch, and
+    # whether the controller was asked to start them ahead of it (`prebuild_*`).
+    ready = sorted(e['t'] for e in by.get(('pool', 'template_ready'), []))
+    dispatches = [e['t'] for e in by.get(('scheduler', 'dispatch_begin'), []) if e.get('kind') == 'mutant']
+    ineligible = by.get(('pool', 'template_ineligible'), [])
+    if ready or ineligible:
+        prebuild = by.get(('controller', 'prebuild_begin'), [])
+        first = min(dispatches) if dispatches else None
+        summary['template_timing'] = {
+            'ready': len(ready), 'ineligible': len(ineligible),
+            'ready_before_first_dispatch': sum(1 for t in ready if first is not None and t < first),
+            'first_ready_after_first_dispatch_ms': (ready[0] - first) if ready and first is not None else None,
+            'last_ready_after_first_dispatch_ms': (ready[-1] - first) if ready and first is not None else None,
+            'prebuild_lead_ms': (first - min(e['t'] for e in prebuild)) if prebuild and first is not None else None}
     summary['negative_segment_samples'] = {
         name: sum(1 for marks in per_mutant.values()
                   if (marks.get((a[0], a[1])) is not None and marks.get((b[0], b[1])) is not None
@@ -461,6 +475,16 @@ def render(summary):
     builds = summary.get('template_builds')
     if builds:
         lines.append(f"template builds: {builds['count']} ({builds['ready']} ready), total {builds['total_ms']:.0f} ms")
+    timing = summary.get('template_timing')
+    if timing:
+        text = f"templates: {timing['ready']} ready, {timing['ineligible']} ineligible"
+        if timing['first_ready_after_first_dispatch_ms'] is not None:
+            text += (f"; {timing['ready_before_first_dispatch']} ready before the first mutant dispatch, first at "
+                     f"{timing['first_ready_after_first_dispatch_ms']:+.0f} ms, last at "
+                     f"{timing['last_ready_after_first_dispatch_ms']:+.0f} ms")
+        if timing['prebuild_lead_ms'] is not None:
+            text += f"; started {timing['prebuild_lead_ms']:.0f} ms ahead of that dispatch"
+        lines.append(text)
     loop = summary.get('controller_event_loop')
     if loop and loop['utilization'] is not None:
         lines.append(f"controller event loop over the mutation phase: {loop['utilization']:.1%} busy "

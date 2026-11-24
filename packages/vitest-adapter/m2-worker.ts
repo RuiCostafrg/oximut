@@ -247,6 +247,23 @@ async function command(name: string, args: Request): Promise<unknown> {
   validateRequest(job);
   if ((job.pool === 'threads' ? 'threads' : 'forks') !== pool)
     throw new Error('Pool cannot change after initialization');
+  if (name === 'warm' && job.templates) {
+    // Experimental precollect: the first batch's lane context and templates are
+    // started now and awaited by the batch. A controller that cannot share lanes
+    // just warms nothing; the batch fails or falls back as it always did.
+    if (controllerReusable && !job.lanes) {
+      sharedLanes ??= new (await import('./shared-lanes.ts')).SharedLanes(zygote);
+      const ordinary = vitest;
+      sharedLanes.prebuild(job, () => ordinary.close());
+    }
+    return {
+      warmed: true,
+      outcome: 'skipped',
+      tests: { passed: 0, failed: 0, skipped: 0 },
+      errors: [],
+      ...(job.resident ? { resident: job.resident.length } : {}),
+    };
+  }
   if (job.lanes) {
     // Custom plugins, runners, global setup or multiple projects can't be shared across lanes.
     if (!controllerReusable) throw new Error('Shared lanes require a reusable controller project');

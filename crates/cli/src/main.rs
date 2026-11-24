@@ -1222,6 +1222,7 @@ fn run_attempt(options: &Options, previous: Option<RetryEvidence>) -> Result<Att
         selection: None,
         bypass_zygote: None,
         precollect: None,
+        templates: None,
     };
     let mut scheduler = scheduler::Scheduler::new(options)?;
     let groups: Vec<Arc<Vec<Mutation>>> = plan_groups(resident, request_budget())
@@ -1415,6 +1416,47 @@ fn run_attempt(options: &Options, previous: Option<RetryEvidence>) -> Result<Att
     let generation_offset = request.generation;
     let post_baseline_started = Instant::now();
     let baseline_ok = baseline.outcome == TestOutcome::Passed;
+    if options.zygote_precollect && baseline_ok && !options.baseline_only {
+        // The selections are known now: have the controller start the most common
+        // templates while the rest of the planning runs (see `prebuild_templates`).
+        let mut sets: Vec<(Vec<String>, usize)> = vec![];
+        let mut resident = None;
+        let mut eligible = 0usize;
+        for mutant in &mutants {
+            let Some(selected) = selection_for(&baseline, mutant)
+                .filter(|selected| selected.mode == "files" && !selected.files.is_empty())
+            else {
+                continue;
+            };
+            if mutant.load_time {
+                continue;
+            }
+            eligible += 1;
+            resident = resident.or_else(|| {
+                group_of
+                    .get(&mutant.file)
+                    .map(|&index| groups[index].clone())
+                    .filter(|group| options.shared_controller || group.len() > 1)
+            });
+            match sets.iter_mut().find(|(files, _)| *files == selected.files) {
+                Some((_, count)) => *count += 1,
+                None => sets.push((selected.files, 1)),
+            }
+        }
+        // Most common first; ties keep the order the mutants come in.
+        sets.sort_by_key(|(_, count)| std::cmp::Reverse(*count));
+        if resident.is_some() {
+            let mut prebuild = request.clone();
+            prebuild.job_id = "template-prebuild".into();
+            prebuild.generation = generation_offset;
+            prebuild.resident = resident;
+            scheduler.prebuild_templates(
+                prebuild,
+                sets.into_iter().map(|(files, _)| files).collect(),
+                eligible,
+            );
+        }
+    }
     let mut results = vec![];
     let mut jobs = vec![];
     let cached_valid = baseline_ok
@@ -2360,6 +2402,7 @@ mod tests {
             selection: None,
             bypass_zygote: None,
             precollect: None,
+            templates: None,
         };
         fs::write(&path, vec![b' '; 1_048_577]).unwrap();
         assert!(

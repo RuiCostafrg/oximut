@@ -122,6 +122,10 @@ pub struct Request {
     /// selection precollection cannot serve), `None` means the option is off.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub precollect: Option<bool>,
+    /// Experimental `--zygote-precollect`, on a warm request only: the sets of
+    /// test files whose templates the controller should start building now.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub templates: Option<Vec<Vec<String>>>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -538,6 +542,7 @@ mod tests {
             selection: None,
             bypass_zygote: None,
             precollect: None,
+            templates: None,
         };
         let mut response = Response {
             lanes: None,
@@ -583,6 +588,7 @@ mod tests {
             selection: None,
             bypass_zygote: None,
             precollect: None,
+            templates: None,
         };
         let result = |job: &str, outcome| Response {
             lanes: None,

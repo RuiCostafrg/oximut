@@ -8,6 +8,8 @@ use std::os::unix::net::UnixStream;
 use std::sync::atomic::{AtomicBool, Ordering};
 // Internal warm acknowledgements never index the public mutant result array.
 const WARM_JOB: usize = usize::MAX;
+/// The one request that starts templates ahead of the first batch (see `prebuild_templates`).
+const PREBUILD_JOB: usize = usize::MAX - 1;
 static INTERRUPTED: AtomicBool = AtomicBool::new(false);
 extern "C" fn interrupt_handler(_: libc::c_int) {
     INTERRUPTED.store(true, Ordering::Relaxed);
@@ -57,7 +59,7 @@ fn trace_job(slot: usize, index: usize, request: &Request) -> serde_json::Value 
 }
 
 fn encode_request(index: usize, request: &Request) -> Result<(u8, Vec<u8>), String> {
-    if index == WARM_JOB {
+    if index == WARM_JOB || index == PREBUILD_JOB {
         return Ok((
             WARM,
             serde_json::to_vec(request).map_err(|e| e.to_string())?,
@@ -547,6 +549,86 @@ impl<'a> Scheduler<'a> {
             lanes_redispatched: 0,
             zygote: ZygoteWatchdog::default(),
         })
+    }
+    /// Experimental `--zygote-precollect`: once the instrumented baseline has
+    /// told which test files each mutant selects, ask the controller that will run
+    /// the first batch (slot 0, which ran the baselines) to create its lane context
+    /// and start the most common templates now, instead of when the batch arrives.
+    /// They build while the CLI finishes planning. The controller answers at once
+    /// and the batch waits for the context, so this only ever moves work earlier.
+    /// At most one template per slot (each is a resident process); `total` is the
+    /// number of mutants the batch will hold, which gives the lane width.
+    pub fn prebuild_templates(
+        &mut self,
+        mut request: Request,
+        sets: Vec<Vec<String>>,
+        total: usize,
+    ) {
+        // OXIMUT_TEMPLATE_PREBUILD=off keeps the old order, for comparing the two.
+        if !(self.options.shared_controller && self.options.zygote_precollect)
+            || self.slots.len() < 2
+            || sets.is_empty()
+            || env::var_os("OXIMUT_TEMPLATE_PREBUILD").is_some_and(|value| value == "off")
+        {
+            return;
+        }
+        let sets: Vec<_> = sets.into_iter().take(self.slots.len()).collect();
+        let count = sets.len();
+        request.templates = Some(sets);
+        request.workers = Some(self.slots.len().min(total).min(1024));
+        let Some(Some(worker)) = self.slots.get_mut(0) else {
+            return;
+        };
+        if worker.busy.is_some() {
+            return;
+        }
+        trace::event(
+            "prebuild_begin",
+            || serde_json::json!({ "templates": count }),
+        );
+        if let Err(error) = worker.send(PREBUILD_JOB, request) {
+            self.diagnostics
+                .push(format!("template prebuild not sent: {error}"));
+            worker.abort();
+            self.slots[0] = None;
+            return;
+        }
+        let deadline = Instant::now() + Duration::from_secs(60);
+        let result = loop {
+            let worker = self.slots[0].as_mut().expect("prebuild slot");
+            if let Some(result) = worker.ready() {
+                worker.busy.take();
+                break result;
+            }
+            if Instant::now() >= deadline {
+                break Err("timed out".into());
+            }
+            self.wait_for_events();
+        };
+        trace::event(
+            "prebuild_end",
+            || serde_json::json!({ "ok": result.is_ok() }),
+        );
+        match result {
+            Ok(response) if response.outcome == TestOutcome::Skipped => {
+                // The controller gave up its ordinary Vitest instance for the lanes.
+                self.lanes_ran = true;
+                self.diagnostics.push(format!(
+                    "zygote precollect: {count} template{} started before the first batch",
+                    if count == 1 { "" } else { "s" }
+                ));
+            }
+            other => {
+                let reason = match other {
+                    Ok(response) => response.errors.join("; "),
+                    Err(error) => error,
+                };
+                self.diagnostics
+                    .push(format!("template prebuild failed: {reason}"));
+                self.slots[0].as_mut().expect("prebuild slot").abort();
+                self.slots[0] = None;
+            }
+        }
     }
     pub fn prepare_spares(&mut self, request: &Request) {
         if !(self.options.shared_controller && self.slots.len() >= 2)
@@ -1906,6 +1988,85 @@ mod tests {
         assert!(scheduler.spares.is_empty());
         let spare = scheduler.slots[1].as_ref().expect("queued spare started");
         assert_eq!(spare.busy.as_ref().unwrap().0, WARM_JOB);
+    }
+
+    /// A fake slot that records the frame it gets and answers it with `outcome`.
+    fn prebuild_worker(record: &Path, outcome: &str) -> Worker {
+        let script = format!(
+            "m=recv()\nif m is None or m[0]==b'S': sys.exit(0)\nt,p=m\npathlib.Path(args[0]).write_bytes(t+p)\nr=json.loads(p)\nsend(b'A',json.dumps({{'protocol':1,'runId':r['runId'],'jobId':r['jobId'],'generation':r['generation'],'outcome':'{outcome}','tests':{{'passed':0,'failed':0,'skipped':0}},'errors':['x']}}).encode())\nwhile recv() is not None: pass"
+        );
+        worker(&script, &[record.to_str().unwrap()])
+    }
+
+    fn precollect_options() -> Options {
+        let mut options = options();
+        options.zygote_precollect = true;
+        options.shared_controller = true;
+        options
+    }
+
+    #[test]
+    fn template_prebuild_is_one_warm_frame_for_at_most_one_template_per_slot() {
+        let _guard = PROCESS_TEST.lock().unwrap_or_else(|e| e.into_inner());
+        let options = precollect_options();
+        let mut scheduler = Scheduler::new(&options).unwrap();
+        let directory = tempfile::tempdir().unwrap();
+        let record = directory.path().join("frame");
+        scheduler.slots = vec![Some(prebuild_worker(&record, "skipped")), None];
+        let sets: Vec<Vec<String>> = (0..3).map(|n| vec![format!("/t/{n}.test.ts")]).collect();
+        scheduler.prebuild_templates(request(), sets, 10);
+        let frame = fs::read(&record).unwrap();
+        assert_eq!(frame[0], WARM);
+        let sent: Request = serde_json::from_slice(&frame[1..]).unwrap();
+        // Two slots: the two most common sets, in the order given; the lane width
+        // is the slot count.
+        assert_eq!(
+            sent.templates,
+            Some(vec![
+                vec!["/t/0.test.ts".to_string()],
+                vec!["/t/1.test.ts".to_string()]
+            ])
+        );
+        assert_eq!(sent.workers, Some(2));
+        assert!(
+            scheduler.lanes_ran,
+            "the controller gave up its ordinary Vitest"
+        );
+        assert!(scheduler.slots[0].as_ref().unwrap().busy.is_none());
+        assert_eq!(
+            scheduler.diagnostics,
+            ["zygote precollect: 2 templates started before the first batch"]
+        );
+        scheduler.close_slots(&[0]);
+    }
+
+    #[test]
+    fn a_failed_template_prebuild_costs_the_slot_and_nothing_else() {
+        let _guard = PROCESS_TEST.lock().unwrap_or_else(|e| e.into_inner());
+        let options = precollect_options();
+        let mut scheduler = Scheduler::new(&options).unwrap();
+        let directory = tempfile::tempdir().unwrap();
+        let record = directory.path().join("frame");
+        scheduler.slots = vec![Some(prebuild_worker(&record, "infrastructure-error")), None];
+        scheduler.prebuild_templates(request(), vec![vec!["/t/0.test.ts".into()]], 1);
+        assert!(scheduler.slots[0].is_none());
+        assert!(!scheduler.lanes_ran);
+        assert_eq!(scheduler.diagnostics, ["template prebuild failed: x"]);
+    }
+
+    #[test]
+    fn template_prebuild_needs_precollect_and_the_shared_controller() {
+        let _guard = PROCESS_TEST.lock().unwrap_or_else(|e| e.into_inner());
+        let mut options = precollect_options();
+        options.shared_controller = false;
+        let mut scheduler = Scheduler::new(&options).unwrap();
+        let directory = tempfile::tempdir().unwrap();
+        let record = directory.path().join("frame");
+        scheduler.slots = vec![Some(prebuild_worker(&record, "skipped")), None];
+        scheduler.prebuild_templates(request(), vec![vec!["/t/0.test.ts".into()]], 1);
+        assert!(!record.exists(), "nothing is sent");
+        assert!(scheduler.slots[0].as_ref().unwrap().busy.is_none());
+        scheduler.close_slots(&[0]);
     }
 
     #[test]

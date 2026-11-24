@@ -99,6 +99,7 @@ async function scenario(
   initializeWith = 'baseline',
   width = undefined,
   observe = true,
+  prebuild = undefined,
 ) {
   const { root, job, testFile, otherFile } = await fixture(t, testSuffix, observe);
   const both = {
@@ -157,6 +158,21 @@ async function scenario(
       ? job('first')
       : { ...job('init', { selection: undefined }), kind: 'baseline', mutation: null },
   );
+  // The CLI's early start: the lane context and the templates of the sets it expects,
+  // answered at once, before the first batch.
+  let prebuilt;
+  if (prebuild) {
+    const sets = { single: [testFile], other: [otherFile], both: [otherFile, testFile] };
+    prebuilt = await command('warm', {
+      request: {
+        ...job('prebuild', { selection: undefined }),
+        kind: 'baseline',
+        mutation: null,
+        ...(width ? { workers: width } : {}),
+        templates: prebuild.map((name) => sets[name]),
+      },
+    });
+  }
   const replies = [];
   const alive = [];
   for (const batch of batches) {
@@ -203,6 +219,7 @@ async function scenario(
     outcomes: replies.map((reply) => reply.lanes.map((lane) => lane.outcome)),
     helpers: replies.map((reply) => reply.residentHelpers),
     ineligible: replies.flatMap((reply) => reply.precollectIneligible ?? []),
+    prebuilt,
     alive,
     counters,
     events,
@@ -555,5 +572,93 @@ zygoteTest(
     // The trace itself was written, by the template as well.
     const written = (await readdir(trace)).filter((name) => name.startsWith('worker-'));
     assert.ok(written.length > 0, 'no worker trace files');
+  },
+);
+
+zygoteTest(
+  'templates started ahead of the first batch are the ones its lanes fork from, built once',
+  { timeout: 240000 },
+  async (t) => {
+    const { mkdtemp } = await import('node:fs/promises');
+    const { tmpdir } = await import('node:os');
+    const trace = await mkdtemp(join(tmpdir(), 'oximut-trace-'));
+    t.after(() => rm(trace, { recursive: true, force: true }));
+    // The same seven lanes through two slots as the rolling test: three templates.
+    const result = await scenario(
+      t,
+      [
+        [
+          ['fn', true],
+          ['top', false],
+          ['none', true],
+          ['n1', true, 'other'],
+          ['n2', true, 'other'],
+          ['n3', true, 'both'],
+          ['n4', true, 'both'],
+        ],
+      ],
+      { OXIMUT_ZYGOTE: '1', OXIMUT_TRACE_TIMELINE: trace },
+      '',
+      'baseline',
+      2,
+      false,
+      ['single', 'other', 'both'],
+    );
+    // The warm request is answered as a plain warm; the work continues behind it.
+    assert.equal(result.prebuilt.warmed, true);
+    assert.equal(result.prebuilt.outcome, 'skipped');
+    assert.deepEqual(result.outcomes, [
+      ['failed', 'failed', 'passed', 'passed', 'passed', 'passed', 'passed'],
+    ]);
+    // Three templates in all, none built twice, and every eligible mutant used one.
+    assert.equal(result.counters.templates, 3);
+    assert.equal(result.counters.templated, 6);
+    assert.equal(result.counters.zygoteFailures, 0);
+    assert.equal(result.counters.fallbacks, 0);
+    assert.deepEqual(result.alive, [[]]);
+    const lines = [];
+    for (const name of await readdir(trace))
+      if (name.startsWith('controller-'))
+        for (const line of (await readFile(join(trace, name), 'utf8')).split('\n'))
+          if (line) lines.push(JSON.parse(line));
+    lines.sort((a, b) => a.t - b.t);
+    const index = (event) => lines.findIndex((line) => line.event === event);
+    const builds = lines.filter((line) => line.event === 'template_build_end');
+    assert.equal(builds.length, 3);
+    assert.ok(builds.every((build) => build.ready));
+    const started = lines[index('prebuild_started')];
+    // At most one template per lane slot; the third is built when the batch needs it.
+    assert.equal(started.templates, 2);
+    // The context and the first build came before the batch's own start.
+    assert.ok(index('prebuild_begin') < index('batch_enter'), 'prebuild before the batch');
+    assert.ok(index('context_created') < index('batch_enter'), 'context before the batch');
+    assert.ok(index('template_build_begin') < index('rolling_begin'));
+  },
+);
+
+zygoteTest(
+  'a prebuild for sets the batch does not use costs nothing but the templates',
+  { timeout: 240000 },
+  async (t) => {
+    const result = await scenario(
+      t,
+      [
+        [
+          ['fn', true],
+          ['none', true],
+        ],
+      ],
+      { OXIMUT_ZYGOTE: '1' },
+      '',
+      'baseline',
+      undefined,
+      false,
+      ['other'],
+    );
+    // The batch uses the template of its own file set, built on demand.
+    assert.deepEqual(result.outcomes, [['failed', 'passed']]);
+    assert.equal(result.counters.templated, 2);
+    assert.equal(result.counters.zygoteFailures, 0);
+    assert.deepEqual(result.alive, [[]]);
   },
 );

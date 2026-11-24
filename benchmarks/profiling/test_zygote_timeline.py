@@ -107,6 +107,28 @@ class ZygoteTimelineTests(unittest.TestCase):
         self.assertAlmostEqual(slot['busy_fraction'] + slot['idle_fraction'], 1)
         self.assertEqual(summary['lane_occupancy']['width'], 2)
 
+    def test_template_timing_says_how_early_the_templates_were_ready(self):
+        files = self.synthetic()
+        # The first mutant batch is dispatched at 1000: one template was ready 100 ms
+        # before it (prebuilt 50 ms ahead), one 191 ms after, one was not quiescent.
+        event(files, 'controller', 2, 950, 'prebuild_begin', sets=2, width=2)
+        event(files, 'pool', 2, 900, 'template_ready', template='a')
+        event(files, 'pool', 2, 1191, 'template_ready', template='b')
+        event(files, 'pool', 2, 1200, 'template_ineligible', template='c', reasons={})
+        with tempfile.TemporaryDirectory() as directory:
+            write(directory, files)
+            summary = timeline.analyze(directory)
+            text = timeline.render(summary)
+        timing = summary['template_timing']
+        self.assertEqual(timing['ready'], 2)
+        self.assertEqual(timing['ineligible'], 1)
+        self.assertEqual(timing['ready_before_first_dispatch'], 1)
+        self.assertEqual(timing['first_ready_after_first_dispatch_ms'], -100)
+        self.assertEqual(timing['last_ready_after_first_dispatch_ms'], 191)
+        self.assertEqual(timing['prebuild_lead_ms'], 50)
+        self.assertIn('templates: 2 ready, 1 ineligible; 1 ready before the first mutant dispatch', text)
+        self.assertIn('started 50 ms ahead of that dispatch', text)
+
     def test_event_loop_utilization_differences_each_controller_separately(self):
         files = self.synthetic()
         # A second controller (another slot) whose cumulative counters are unrelated to the first's:

@@ -125,6 +125,14 @@ export class SharedLanes {
   private laneMutants = new Map<string, string>();
   // Template keys (JSON lists of test files) whose zygote exists or could not be built.
   private templates = new Map<string, boolean>();
+  // Template builds one at a time (the warm project runs one collect), in the order
+  // asked, and each key only once while it is in flight.
+  private buildChain: Promise<unknown> = Promise.resolve();
+  private inflight = new Map<string, Promise<boolean>>();
+  // Bumped when the templates are dropped, so a build that straddles it is not kept.
+  private generation = 0;
+  // The context a prebuild is creating, which a batch waits for.
+  private preparing: Promise<void> = Promise.resolve();
   // The files the template being built collects.
   private warmFiles: string[] = [];
   // Test files (with their setup files) free of template-unsafe Vitest APIs.
@@ -139,10 +147,16 @@ export class SharedLanes {
   }
 
   async close() {
+    await this.preparing;
     const context = this.context;
     this.context = undefined;
     this.transforms.clear();
     this.dropTemplates();
+    // Dropping a template ends its build; do not close the context under one.
+    await Promise.race([
+      this.buildChain.catch(() => {}),
+      new Promise((r) => setTimeout(r, 10_000)),
+    ]);
     this.nodeFiles.clear();
     try {
       await context?.close();
@@ -153,6 +167,8 @@ export class SharedLanes {
 
   async run(batch: Request): Promise<Result> {
     if (version !== '5.1.0') throw new Error('Shared lanes require Vitest 5.1.0');
+    // A prebuild has the context and the first templates under way: use them.
+    await this.preparing;
     const jobs = batch.lanes!;
     sample('batch_enter', { lanes: jobs.map((job) => job.mutation?.id) });
     const pool = batch.pool === 'threads' ? 'threads' : 'forks';
@@ -191,165 +207,7 @@ export class SharedLanes {
     const precollect =
       pool === 'forks' && !!this.templatePool && jobs.some((job) => job.precollect !== undefined);
     if (!this.context) {
-      const context = await createVitest('test', {
-        root: batch.root,
-        config: batch.config,
-        watch: false,
-        maxWorkers: width,
-        maxConcurrency: 1,
-        fileParallelism: true,
-        isolate: true,
-        bail: 0,
-        coverage: { enabled: false },
-        reporters: [],
-        // Mutation transforms vary without changing source bytes; disk cache keys do not.
-        fsModuleCache: false,
-        projects: [
-          ...Array.from({ length: width }, (_, index) => ({
-            extends: true,
-            plugins: [
-              {
-                name: 'oximut-shared-resident',
-                enforce: 'pre',
-                transform: (_code: string, id: string) => {
-                  const module = this.modules.get(resolve(id.split('?')[0]));
-                  if (module) return { code: module.code, map: JSON.stringify(module.map) };
-                },
-              },
-            ],
-            test: {
-              name: `oximut-lane-${index}`,
-              pool: {
-                name: `oximut-lane-${pool}`,
-                createPoolWorker: (options: ConstructorParameters<typeof ForksPoolWorker>[0]) => {
-                  const worker =
-                    pool === 'threads'
-                      ? new ExitOnlyThreadsPoolWorker(options)
-                      : new ForksPoolWorker(options);
-                  const start = worker.start.bind(worker);
-                  const stop = worker.stop.bind(worker);
-                  const send = worker.send.bind(worker);
-                  const deserialize = worker.deserialize.bind(worker);
-                  const name = options.project.name;
-                  let timer: ReturnType<typeof setTimeout> | undefined;
-                  let finished = false;
-                  let stopping = false;
-                  const note = trace
-                    ? (event: string) =>
-                        trace.emit('controller', event, {
-                          lane: name,
-                          mutant: this.laneMutants.get(name),
-                        })
-                    : undefined;
-                  worker.start = async () => {
-                    note?.('lane_fork_requested');
-                    await start();
-                    note?.('lane_fork_returned');
-                    if (worker instanceof ThreadsPoolWorker) this.threads.add(worker);
-                    if (this.rolling) this.liveForks.add(name);
-                    worker.on('exit', () => {
-                      note?.('lane_exit');
-                      this.liveForks.delete(name);
-                      clearTimeout(timer);
-                      if (!finished && !stopping && !this.failures.has(name))
-                        this.failures.set(name, LANE_EXITED);
-                    });
-                  };
-                  worker.send = (message) => {
-                    // One pool per slot all number their first worker 1; a slot's
-                    // number is its lane's, as in a single shared pool.
-                    if (this.rolling && message.type === 'start')
-                      (message as unknown as { poolId: number }).poolId = index + 1;
-                    if (message.type === 'start') note?.('lane_start_sent');
-                    if (message.type === 'stop') note?.('lane_stop_sent');
-                    if (message.type === 'run') {
-                      note?.('lane_run_sent');
-                      // Pinned PoolRunner request shape. Send all selected Node files
-                      // in one isolated task: exactly one fresh worker per mutant.
-                      const run = message as unknown as {
-                        context: { files: { filepath: string }[] };
-                      };
-                      run.context.files = this.files.get(name)!.map((filepath) => ({ filepath }));
-                      timer = setTimeout(
-                        () => {
-                          this.failures.set(name, HARD_DEADLINE);
-                          if (worker instanceof ThreadsPoolWorker) {
-                            // terminate() also stops synchronous infinite loops. The pool
-                            // still owns stop() and awaits exit before the next batch.
-                            void (
-                              worker as unknown as { thread: { terminate(): Promise<number> } }
-                            ).thread.terminate();
-                          } else {
-                            (
-                              worker as unknown as { fork: { kill(signal: string): void } }
-                            ).fork.kill('SIGKILL');
-                          }
-                        },
-                        Math.max(
-                          1,
-                          (this.laneDeadlines.get(name) ?? this.deadline) - performance.now(),
-                        ),
-                      );
-                    }
-                    return send(message);
-                  };
-                  worker.deserialize = (data) => {
-                    const message = deserialize(data);
-                    const wire = message as { type?: string; m?: string };
-                    if (wire?.type === 'started') note?.('lane_started');
-                    if (wire?.type === 'stopped') note?.('lane_stopped');
-                    if (wire?.type === 'testfileFinished') {
-                      note?.('lane_result');
-                      finished = true;
-                    }
-                    if (wire?.m === 'onUnhandledError')
-                      this.failures.set(name, 'Unhandled lane worker error');
-                    return message;
-                  };
-                  let stopped: Promise<void> | undefined;
-                  worker.stop = () => {
-                    stopping = true;
-                    clearTimeout(timer);
-                    if (!(worker instanceof ThreadsPoolWorker)) return stop();
-                    stopped ??= stop().then(() => {
-                      this.threads.delete(worker);
-                    });
-                    return stopped;
-                  };
-                  return worker;
-                },
-              },
-              runner,
-              isolate: true,
-              bail: 0,
-              maxWorkers: width,
-              fileParallelism: true,
-              maxConcurrency: 1,
-            },
-          })),
-          ...(precollect ? [this.warmProject()] : []),
-        ],
-      });
-      try {
-        await context.standalone();
-      } catch (error) {
-        await context.close();
-        throw error;
-      }
-      this.context = context;
-      this.width = width;
-      this.pool = pool;
-      if (getCompileCacheDir())
-        for (const project of context.projects)
-          project.config.execArgv = [
-            ...project.config.execArgv,
-            '--require',
-            fileURLToPath(new URL('./compile-cache.cjs', import.meta.url)),
-          ];
-      // A new context owns new servers, module graphs and transform services.
-      this.transforms.clear();
-      this.shareTransforms(context, batch.root);
-      trace?.emit('controller', 'context_created', { width });
+      await this.createContext(batch.root, batch.config, width, pool, precollect);
     } else if (changed) {
       // The resident code changed: no lane may serve a previous batch's result,
       // and no template holds the new modules.
@@ -357,7 +215,7 @@ export class SharedLanes {
       this.dropTemplates();
       for (const project of this.context.projects) project.vite.moduleGraph.invalidateAll();
     }
-    const ctx = this.context;
+    const ctx = this.context!;
     this.rolling = rolling;
     trace?.emit('controller', 'context_ready', {});
     for (const [index, project] of ctx.projects.entries()) {
@@ -444,6 +302,175 @@ export class SharedLanes {
       ...(batch.resident ? { resident: batch.resident.length } : {}),
       lanes,
     };
+  }
+
+  /** The shared lane context: one project per lane slot, plus the hidden warm project for precollect. */
+  private async createContext(
+    root: string,
+    config: string,
+    width: number,
+    pool: 'forks' | 'threads',
+    precollect: boolean,
+  ) {
+    const context = await createVitest('test', {
+      root,
+      config,
+      watch: false,
+      maxWorkers: width,
+      maxConcurrency: 1,
+      fileParallelism: true,
+      isolate: true,
+      bail: 0,
+      coverage: { enabled: false },
+      reporters: [],
+      // Mutation transforms vary without changing source bytes; disk cache keys do not.
+      fsModuleCache: false,
+      projects: [
+        ...Array.from({ length: width }, (_, index) => ({
+          extends: true,
+          plugins: [
+            {
+              name: 'oximut-shared-resident',
+              enforce: 'pre',
+              transform: (_code: string, id: string) => {
+                const module = this.modules.get(resolve(id.split('?')[0]));
+                if (module) return { code: module.code, map: JSON.stringify(module.map) };
+              },
+            },
+          ],
+          test: {
+            name: `oximut-lane-${index}`,
+            pool: {
+              name: `oximut-lane-${pool}`,
+              createPoolWorker: (options: ConstructorParameters<typeof ForksPoolWorker>[0]) => {
+                const worker =
+                  pool === 'threads'
+                    ? new ExitOnlyThreadsPoolWorker(options)
+                    : new ForksPoolWorker(options);
+                const start = worker.start.bind(worker);
+                const stop = worker.stop.bind(worker);
+                const send = worker.send.bind(worker);
+                const deserialize = worker.deserialize.bind(worker);
+                const name = options.project.name;
+                let timer: ReturnType<typeof setTimeout> | undefined;
+                let finished = false;
+                let stopping = false;
+                const note = trace
+                  ? (event: string) =>
+                      trace.emit('controller', event, {
+                        lane: name,
+                        mutant: this.laneMutants.get(name),
+                      })
+                  : undefined;
+                worker.start = async () => {
+                  note?.('lane_fork_requested');
+                  await start();
+                  note?.('lane_fork_returned');
+                  if (worker instanceof ThreadsPoolWorker) this.threads.add(worker);
+                  if (this.rolling) this.liveForks.add(name);
+                  worker.on('exit', () => {
+                    note?.('lane_exit');
+                    this.liveForks.delete(name);
+                    clearTimeout(timer);
+                    if (!finished && !stopping && !this.failures.has(name))
+                      this.failures.set(name, LANE_EXITED);
+                  });
+                };
+                worker.send = (message) => {
+                  // One pool per slot all number their first worker 1; a slot's
+                  // number is its lane's, as in a single shared pool.
+                  if (this.rolling && message.type === 'start')
+                    (message as unknown as { poolId: number }).poolId = index + 1;
+                  if (message.type === 'start') note?.('lane_start_sent');
+                  if (message.type === 'stop') note?.('lane_stop_sent');
+                  if (message.type === 'run') {
+                    note?.('lane_run_sent');
+                    // Pinned PoolRunner request shape. Send all selected Node files
+                    // in one isolated task: exactly one fresh worker per mutant.
+                    const run = message as unknown as {
+                      context: { files: { filepath: string }[] };
+                    };
+                    run.context.files = this.files.get(name)!.map((filepath) => ({ filepath }));
+                    timer = setTimeout(
+                      () => {
+                        this.failures.set(name, HARD_DEADLINE);
+                        if (worker instanceof ThreadsPoolWorker) {
+                          // terminate() also stops synchronous infinite loops. The pool
+                          // still owns stop() and awaits exit before the next batch.
+                          void (
+                            worker as unknown as { thread: { terminate(): Promise<number> } }
+                          ).thread.terminate();
+                        } else {
+                          (worker as unknown as { fork: { kill(signal: string): void } }).fork.kill(
+                            'SIGKILL',
+                          );
+                        }
+                      },
+                      Math.max(
+                        1,
+                        (this.laneDeadlines.get(name) ?? this.deadline) - performance.now(),
+                      ),
+                    );
+                  }
+                  return send(message);
+                };
+                worker.deserialize = (data) => {
+                  const message = deserialize(data);
+                  const wire = message as { type?: string; m?: string };
+                  if (wire?.type === 'started') note?.('lane_started');
+                  if (wire?.type === 'stopped') note?.('lane_stopped');
+                  if (wire?.type === 'testfileFinished') {
+                    note?.('lane_result');
+                    finished = true;
+                  }
+                  if (wire?.m === 'onUnhandledError')
+                    this.failures.set(name, 'Unhandled lane worker error');
+                  return message;
+                };
+                let stopped: Promise<void> | undefined;
+                worker.stop = () => {
+                  stopping = true;
+                  clearTimeout(timer);
+                  if (!(worker instanceof ThreadsPoolWorker)) return stop();
+                  stopped ??= stop().then(() => {
+                    this.threads.delete(worker);
+                  });
+                  return stopped;
+                };
+                return worker;
+              },
+            },
+            runner,
+            isolate: true,
+            bail: 0,
+            maxWorkers: width,
+            fileParallelism: true,
+            maxConcurrency: 1,
+          },
+        })),
+        ...(precollect ? [this.warmProject()] : []),
+      ],
+    });
+    try {
+      await context.standalone();
+    } catch (error) {
+      await context.close();
+      throw error;
+    }
+    this.context = context;
+    this.width = width;
+    this.pool = pool;
+    if (getCompileCacheDir())
+      for (const project of context.projects)
+        project.config.execArgv = [
+          ...project.config.execArgv,
+          '--require',
+          fileURLToPath(new URL('./compile-cache.cjs', import.meta.url)),
+        ];
+    // A new context owns new servers, module graphs and transform services.
+    this.transforms.clear();
+    this.shareTransforms(context, root);
+    trace?.emit('controller', 'context_created', { width });
   }
 
   /**
@@ -859,8 +886,63 @@ export class SharedLanes {
   }
 
   private dropTemplates() {
+    this.generation++;
     this.templates.clear();
+    this.inflight.clear();
     this.templatePool?.dropTemplates();
+  }
+
+  /**
+   * Experimental precollect: the CLI knows which sets of test files its mutants
+   * select as soon as the instrumented baseline is done, well before it sends the
+   * first batch. Create the lane context and start the templates now, in the
+   * order given and at most one per lane slot, so they build while the CLI
+   * finishes its own planning and the batch is on its way. Returns at once; the
+   * context is awaited by the batch (and by close), the templates by the lanes
+   * that need them. Nothing here may fail the run: whatever does not come up is
+   * simply not a template.
+   */
+  prebuild(job: Request, closeOrdinary: () => Promise<void>): void {
+    const sets = job.templates ?? [];
+    const pool = job.pool === 'threads' ? 'threads' : 'forks';
+    if (version !== '5.1.0' || pool !== 'forks' || !this.templatePool || !sets.length) return;
+    const width = job.workers ?? sets.length;
+    const resident = job.resident ?? [];
+    const begun = trace ? performance.now() : 0;
+    trace?.emit('controller', 'prebuild_begin', { sets: sets.length, width });
+    this.preparing = this.preparing
+      .then(async () => {
+        await closeOrdinary();
+        const modules = new Map<string, NonNullable<Request['mutation']>>();
+        for (const module of resident) modules.set(resolve(module.file), module);
+        const changed = JSON.stringify([...modules]) !== JSON.stringify([...this.modules]);
+        this.modules = modules;
+        if (this.context && (this.width !== width || this.pool !== pool)) await this.close();
+        if (!this.context) await this.createContext(job.root, job.config, width, pool, true);
+        else if (changed) {
+          this.transforms.clear();
+          this.dropTemplates();
+          for (const project of this.context.projects) project.vite.moduleGraph.invalidateAll();
+        }
+        const ctx = this.context!;
+        const specs = await new ctx.config.sequence.sequencer(ctx).sort(
+          await ctx.globTestSpecifications(),
+        );
+        // The same keys the lanes ask for: the files each selection has in lane 0.
+        const keys: [string, string[]][] = [];
+        for (const files of sets.slice(0, width)) {
+          const wanted = { selection: { mode: 'files', files }, precollect: true } as Request;
+          const plan = await this.plan(specs, 'oximut-lane-0', wanted);
+          const key = await this.templateCandidate(wanted, plan.files, ctx.projects[0]);
+          if (key) keys.push([key, plan.files]);
+        }
+        for (const [key, files] of keys) void this.warm(key, files);
+        trace?.emit('controller', 'prebuild_started', {
+          templates: keys.length,
+          ms: performance.now() - begun,
+        });
+      })
+      .catch(() => {});
   }
 
   /**
@@ -869,9 +951,22 @@ export class SharedLanes {
    * files once with no mutant active. The worker is then kept as the template
    * instead of being stopped (see zygote/pool.cjs).
    */
-  private async warm(key: string, files: string[]): Promise<boolean> {
+  private warm(key: string, files: string[]): Promise<boolean> {
+    const known = this.templates.get(key);
+    if (known !== undefined) return Promise.resolve(known);
+    let building = this.inflight.get(key);
+    if (!building) {
+      building = this.buildChain.then(() => this.build(key, files)).catch(() => false);
+      this.buildChain = building;
+      this.inflight.set(key, building);
+    }
+    return building;
+  }
+
+  private async build(key: string, files: string[]): Promise<boolean> {
     const known = this.templates.get(key);
     if (known !== undefined) return known;
+    const generation = this.generation;
     const ctx = this.context!;
     const project = ctx.projects.find((candidate) => candidate.name === WARM_PROJECT);
     let ready = false;
@@ -902,7 +997,10 @@ export class SharedLanes {
       }
       if (!ready) this.templatePool.dropTemplate(key);
     }
-    this.templates.set(key, ready);
+    if (generation === this.generation) {
+      this.templates.set(key, ready);
+      this.inflight.delete(key);
+    }
     trace?.emit('controller', 'template_build_end', {
       key,
       ready,

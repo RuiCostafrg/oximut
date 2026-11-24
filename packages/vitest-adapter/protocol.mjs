@@ -84,6 +84,21 @@ export function validateRequest(value) {
     throw new Error('Invalid bypassZygote');
   if (value.precollect !== undefined && typeof value.precollect !== 'boolean')
     throw new Error('Invalid precollect');
+  if (
+    value.templates !== undefined &&
+    (!Array.isArray(value.templates) ||
+      value.templates.length > 1024 ||
+      !value.templates.every(
+        (files) =>
+          Array.isArray(files) &&
+          files.length > 0 &&
+          files.length <= 1024 &&
+          files.every(
+            (file) => typeof file === 'string' && isAbsolute(file) && !file.includes('\0'),
+          ),
+      ))
+  )
+    throw new Error('Invalid templates');
   if (value.lanes !== undefined) {
     if (
       value.kind !== 'mutant' ||
