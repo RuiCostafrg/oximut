@@ -124,6 +124,27 @@ inherited module, so they keep the ordinary zygote path:
 - test or setup files using `vi.mock`, `vi.hoisted`, fake timers, `vi.stubEnv`
   and similar load-time Vitest APIs keep the ordinary path.
 
+Top-level code also runs once in the template, so whatever it leaves behind is
+shared by every concurrent fork: a directory from `mkdtemp`, an open server or
+socket, a child process, a timer, a request in flight. A quiescence guard
+(`zygote/quiescence.cjs`) watches the template's collect only and makes the
+template **ineligible** when collect
+
+- left active handles or requests beyond those it started with
+  (`process.getActiveResourcesInfo()` before and after),
+- left a timer pending (including unref'd ones; timeouts that fired and cleared
+  intervals do not count),
+- wrote, created or removed files or directories (`fs` and `fs.promises` write,
+  append, `mkdir`, `mkdtemp`, `rename`, `copyFile`, `cp`, `rm`, `unlink`, links,
+  `createWriteStream`, `open` for writing), or
+- started a child process (`spawn`, `exec`, `execFile`, `fork` and their sync forms).
+
+An ineligible template is dropped and its mutants take the ordinary zygote path,
+which is still correct, only slower. The run reports it as
+`zygote precollect: N templates ineligible (active handles: ..., fs writes: ...)`
+and the timeline trace has a `template_ineligible` event with the details.
+`OXIMUT_ZYGOTE_PRECOLLECT_GUARD=off` disables the guard, for measuring its cost.
+
 Known deviations: a test file's top-level code runs once in the template and
 again in the child, and templates (one per selected file set) stay resident,
 which costs memory. The diagnostics report how many mutants were eligible.

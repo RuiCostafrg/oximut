@@ -29,12 +29,20 @@ const zygotes = new Map();
 const templates = new Map();
 const counters = { zygotes: 0, forks: 0, exits: 0, zygoteFailures: 0, fallbacks: 0 };
 // Experimental precollect, reported only when it was used.
-const precollect = { templates: 0, templated: 0 };
+const precollect = { templates: 0, templated: 0, ineligible: 0 };
+// Templates whose collect was not quiescent (see quiescence.cjs), not yet reported.
+let ineligible = [];
 // Set by install(): { addon, original, disabled }.
 let state;
 // Mutant ids whose workers must be real forks while their job runs (the CLI's
 // zygote watchdog). Nothing else changes: the zygote and its other children stay.
 let bypassed = new Set();
+
+// OXIMUT_ZYGOTE_PRECOLLECT_GUARD=off keeps every template, whatever its collect left
+// behind. For measuring what the guard costs; never needed for correctness.
+function guardEnabled() {
+  return process.env.OXIMUT_ZYGOTE_PRECOLLECT_GUARD !== 'off';
+}
 
 function readyTimeoutMs() {
   // The override exists for tests; the default is the contract.
@@ -408,6 +416,8 @@ function startZygote(entry, args, options, template) {
     handle: undefined,
     held: [],
     warm: false,
+    // The template's own report of whether its collect left shared state behind.
+    quiescence: undefined,
   };
   zygote.readyTimer = setTimeout(
     () => fail(zygote, `not ready within ${readyTimeoutMs()} ms`),
@@ -427,6 +437,8 @@ function startZygote(entry, args, options, template) {
       const waiting = zygote.waiting;
       zygote.waiting = [];
       for (const { child, message: pending } of waiting) request(zygote, child, pending);
+    } else if (kind === 'quiescence') {
+      zygote.quiescence = { eligible: message.eligible === true, reasons: message.reasons ?? {} };
     } else if (kind === 'spawned') {
       const child = zygote.children.get(message.id);
       if (!child) {
@@ -613,10 +625,35 @@ function bypass(mutantIds) {
 function templateReady(name) {
   const zygote = templates.get(name);
   if (!zygote || zygote.failed || !zygote.ready) return false;
+  if (guardEnabled()) {
+    // No report means the guard did not run: treat that as not quiescent.
+    const report = zygote.quiescence ?? {
+      eligible: false,
+      reasons: { handles: [], timers: [], fsWrites: [], children: ['no quiescence report'] },
+    };
+    if (!report.eligible) {
+      precollect.ineligible++;
+      ineligible.push({ template: name, reasons: report.reasons });
+      if (trace)
+        trace.emit('pool', 'template_ineligible', {
+          template: name,
+          zygotePid: zygote.process.pid,
+          reasons: report.reasons,
+        });
+      return false;
+    }
+  }
   zygote.warm = true;
   if (trace)
     trace.emit('pool', 'template_ready', { template: name, zygotePid: zygote.process.pid });
   return true;
+}
+
+/** Templates found ineligible since the last call: `{ template, reasons }` each. */
+function takeIneligible() {
+  const taken = ineligible;
+  ineligible = [];
+  return taken;
 }
 
 /** Forget every template (their modules are stale), killing the zygotes. */
@@ -629,6 +666,7 @@ module.exports = {
   residentHelpers,
   bypass,
   templateReady,
+  takeIneligible,
   dropTemplate,
   dropTemplates,
   counters,

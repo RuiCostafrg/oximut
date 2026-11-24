@@ -22,6 +22,7 @@ const zygote =
         residentHelpers(): number[];
         bypass(mutantIds: string[]): void;
         templateReady(name: string): boolean;
+        takeIneligible(): { template: string; reasons: Record<string, string[]> }[];
         dropTemplate(name: string): void;
         dropTemplates(): void;
       })
@@ -454,11 +455,21 @@ process.on('message', async (input: unknown) => {
     const result = await command(request.command, request.args);
     // Live zygotes outlive the job; declare them so the CLI can admit them.
     const helpers = zygote?.residentHelpers() ?? [];
+    // Templates whose collect left shared state behind took the ordinary path; the
+    // CLI reports them. Like the helpers this is never part of the result itself.
+    const ineligible = zygote?.takeIneligible() ?? [];
     trace?.emit('controller', 'reply_sent', { id: request.id, command: request.command });
     process.send?.({
       protocol: 1,
       id: request.id,
-      result: helpers.length ? { ...(result as object), residentHelpers: helpers } : result,
+      result:
+        helpers.length || ineligible.length
+          ? {
+              ...(result as object),
+              ...(helpers.length ? { residentHelpers: helpers } : {}),
+              ...(ineligible.length ? { precollectIneligible: ineligible } : {}),
+            }
+          : result,
     });
   } catch (error) {
     trace?.emit('controller', 'reply_sent', {

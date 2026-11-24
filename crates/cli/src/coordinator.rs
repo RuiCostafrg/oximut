@@ -696,6 +696,8 @@ pub struct Coordinator {
     /// Controllers started and jobs run, reported as reuse evidence.
     pub controllers_started: usize,
     pub jobs_run: usize,
+    /// Precollect templates the controller found unfit to fork from.
+    pub ineligible: Ineligible,
     /// Set when cleanup could not prove the slot owns nothing: no later job
     /// may run beside processes that may have survived.
     poisoned: Option<String>,
@@ -711,6 +713,7 @@ impl Coordinator {
             reuse_modes: BTreeSet::new(),
             controllers_started: 0,
             jobs_run: 0,
+            ineligible: Ineligible::default(),
             poisoned: None,
         }
     }
@@ -975,6 +978,7 @@ impl Coordinator {
         let response = match reply {
             Ok(Reply::Result(mut result)) => {
                 let declared = take_helpers(&mut result, options.zygote);
+                self.ineligible.note(take_ineligible(&mut result));
                 if let Err(error) = &declared {
                     Err(error.clone())
                 } else if warm
@@ -1129,6 +1133,87 @@ fn take_helpers(result: &mut serde_json::Value, opted_in: bool) -> Result<Vec<u3
         .ok_or_else(|| "controller declared malformed resident helpers".into())
 }
 
+/// Precollect templates whose collect left state that concurrent forks would
+/// share (open handles, files written, child processes, timers), counted with
+/// what left it. Such a template is not used: its mutants take the ordinary zygote
+/// path, which is correct and only slower.
+#[derive(Default)]
+pub struct Ineligible {
+    templates: usize,
+    reasons: BTreeMap<&'static str, BTreeSet<String>>,
+}
+
+impl Ineligible {
+    fn note(&mut self, reports: Vec<BTreeMap<String, Vec<String>>>) {
+        for report in reports {
+            self.templates += 1;
+            for (key, label) in [
+                ("handles", "active handles"),
+                ("timers", "timers"),
+                ("fsWrites", "fs writes"),
+                ("children", "child processes"),
+            ] {
+                // "Timeout x2" and "mkdtempSync /tmp/x": the kind, without detail.
+                let kinds = report
+                    .get(key)
+                    .into_iter()
+                    .flatten()
+                    .filter_map(|reason| reason.split_whitespace().next())
+                    .map(String::from);
+                self.reasons.entry(label).or_default().extend(kinds);
+            }
+        }
+    }
+
+    /// The diagnostic line, if any template was ineligible.
+    pub fn summary(&self) -> Option<String> {
+        if self.templates == 0 {
+            return None;
+        }
+        let causes: Vec<String> = self
+            .reasons
+            .iter()
+            .filter(|(_, kinds)| !kinds.is_empty())
+            .map(|(label, kinds)| {
+                format!(
+                    "{label}: {}",
+                    kinds
+                        .iter()
+                        .map(String::as_str)
+                        .collect::<Vec<_>>()
+                        .join(", ")
+                )
+            })
+            .collect();
+        let plural = if self.templates == 1 { "" } else { "s" };
+        Some(format!(
+            "zygote precollect: {} template{plural} ineligible ({}); their mutants used the ordinary zygote path",
+            self.templates,
+            causes.join("; ")
+        ))
+    }
+}
+
+/// Remove the controller's `precollectIneligible` report from a result:
+/// one `{ template, reasons: { handles, timers, fsWrites, children } }` per template.
+fn take_ineligible(result: &mut serde_json::Value) -> Vec<BTreeMap<String, Vec<String>>> {
+    let Some(reports) = result
+        .as_object_mut()
+        .and_then(|fields| fields.remove("precollectIneligible"))
+    else {
+        return vec![];
+    };
+    reports
+        .as_array()
+        .into_iter()
+        .flatten()
+        .map(|report| {
+            serde_json::from_value(report.get("reasons").cloned().unwrap_or_default())
+                .unwrap_or_default()
+        })
+        .collect()
+}
+
 fn encode_message(id: u64, command: &str, args: &serde_json::Value) -> serde_json::Result<Vec<u8>> {
     let mut bytes = serde_json::to_vec(&serde_json::json!({
         "protocol": 1, "id": id, "command": command, "args": args,
@@ -1196,6 +1281,37 @@ fn charge_lane_startup(args: &mut serde_json::Value, spent: Duration) {
 mod tests {
     use super::*;
     use serde_json::{Value, json};
+
+    #[test]
+    fn ineligible_templates_are_counted_and_named_by_kind_only() {
+        let mut result = json!({
+            "outcome": "skipped",
+            "precollectIneligible": [
+                { "template": "[\"/a\"]", "reasons": {
+                    "handles": ["Timeout x2"], "timers": [],
+                    "fsWrites": ["mkdtempSync /tmp/secret", "writeFileSync /tmp/other"],
+                    "children": [] } },
+                { "template": "[\"/b\"]", "reasons": {
+                    "handles": ["TCPServerWrap"], "timers": ["setTimeout"], "fsWrites": [],
+                    "children": ["spawn node"] } },
+            ],
+        });
+        let mut ineligible = Ineligible::default();
+        assert_eq!(ineligible.summary(), None);
+        ineligible.note(take_ineligible(&mut result));
+        assert!(result.get("precollectIneligible").is_none(), "{result}");
+        assert_eq!(
+            ineligible.summary().unwrap(),
+            "zygote precollect: 2 templates ineligible (active handles: TCPServerWrap, Timeout; \
+             child processes: spawn; fs writes: mkdtempSync, writeFileSync; timers: setTimeout); \
+             their mutants used the ordinary zygote path"
+        );
+        // A malformed report still counts as an ineligible template.
+        let mut malformed = json!({ "precollectIneligible": [{ "reasons": 7 }] });
+        let mut other = Ineligible::default();
+        other.note(take_ineligible(&mut malformed));
+        assert!(other.summary().unwrap().contains("1 template ineligible"));
+    }
 
     fn stat(parent: u32, start: u64) -> String {
         // Include spaces and ')' in comm to exercise the final-delimiter rule.

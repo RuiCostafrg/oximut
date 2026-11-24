@@ -31,7 +31,9 @@ const code = `export const top = process.env.OXIMUT_ACTIVE_MUTANT === 'top' ? 2 
 export function fn() { return process.env.OXIMUT_ACTIVE_MUTANT === 'fn' ? 2 : 1; }`;
 const map = { version: 3, sources: ['subject.ts'], names: [], mappings: 'AAAA' };
 
-async function fixture(t, testSuffix = '') {
+// `observe`: the test file logs one line per evaluation of its top level (an append,
+// which is exactly what the template guard rejects, so those runs turn it off).
+async function fixture(t, testSuffix = '', observe = true) {
   await mkdir(join(repository, '.oximut'), { recursive: true });
   const root = await mkdtemp(join(repository, '.oximut/precollect-'));
   await symlink(join(repository, 'node_modules'), join(root, 'node_modules'));
@@ -46,14 +48,15 @@ async function fixture(t, testSuffix = '') {
     "export default { test: { include: ['*.test.ts'] } };",
   );
   const testFile = join(root, 'sample.test.ts');
+  const suffix = typeof testSuffix === 'function' ? testSuffix(root) : testSuffix;
   await writeFile(
     testFile,
     `import { test, expect } from 'vitest';
 import { appendFileSync } from 'node:fs';
 import { top, fn } from './subject';
-appendFileSync(${JSON.stringify(join(root, 'events'))}, JSON.stringify({ pid: process.pid, ppid: process.ppid, active: process.env.OXIMUT_ACTIVE_MUTANT ?? null }) + '\\n');
+${observe ? `appendFileSync(${JSON.stringify(join(root, 'events'))}, JSON.stringify({ pid: process.pid, ppid: process.ppid, active: process.env.OXIMUT_ACTIVE_MUTANT ?? null }) + '\\n');` : ''}
 test('top', () => expect(top).toBe(1));
-test('fn', () => expect(fn()).toBe(1));${testSuffix}`,
+test('fn', () => expect(fn()).toBe(1));${suffix}`,
   );
   const otherFile = join(root, 'other.test.ts');
   await writeFile(
@@ -95,8 +98,9 @@ async function scenario(
   testSuffix = '',
   initializeWith = 'baseline',
   width = undefined,
+  observe = true,
 ) {
-  const { root, job, testFile, otherFile } = await fixture(t, testSuffix);
+  const { root, job, testFile, otherFile } = await fixture(t, testSuffix, observe);
   const both = {
     mode: 'files',
     files: [otherFile, testFile],
@@ -115,7 +119,11 @@ async function scenario(
   };
   const env = { ...process.env };
   for (const name of Object.keys(env)) if (name.startsWith('OXIMUT_ZYGOTE')) delete env[name];
-  Object.assign(env, { OXIMUT_ZYGOTE_COUNTERS_DIR: join(root, 'counters'), ...environment });
+  Object.assign(env, {
+    OXIMUT_ZYGOTE_COUNTERS_DIR: join(root, 'counters'),
+    ...(observe ? { OXIMUT_ZYGOTE_PRECOLLECT_GUARD: 'off' } : {}),
+    ...environment,
+  });
   const child = fork(join(repository, 'packages/vitest-adapter/m2-worker.ts'), [], {
     stdio: ['ignore', 'pipe', 'pipe', 'ipc'],
     env,
@@ -194,6 +202,7 @@ async function scenario(
   return {
     outcomes: replies.map((reply) => reply.lanes.map((lane) => lane.outcome)),
     helpers: replies.map((reply) => reply.residentHelpers),
+    ineligible: replies.flatMap((reply) => reply.precollectIneligible ?? []),
     alive,
     counters,
     events,
@@ -394,5 +403,157 @@ zygoteTest(
         .sort(),
       ['fn', 'n3', 'n4', 'none', 'top'],
     );
+  },
+);
+
+// What a test file's top level leaves behind is shared by every fork of its template.
+// Each of these must make the template ineligible: its mutants take the ordinary
+// zygote path and still get the outcomes of an ordinary run.
+const quiescence = [
+  {
+    name: 'a temporary directory made at load time',
+    suffix: (root) =>
+      `\nimport { mkdtempSync } from 'node:fs';\nmkdtempSync(${JSON.stringify(join(root, 'scratch-'))});`,
+    category: 'fsWrites',
+    reason: /^mkdtempSync /,
+  },
+  {
+    name: 'a file written at load time',
+    suffix: (root) =>
+      `\nimport { writeFileSync } from 'node:fs';\nwriteFileSync(${JSON.stringify(join(root, 'written'))}, 'x');`,
+    category: 'fsWrites',
+    reason: /^writeFileSync /,
+  },
+  {
+    name: 'a file opened for appending at load time',
+    suffix: (root) =>
+      `\nimport { openSync } from 'node:fs';\nopenSync(${JSON.stringify(join(root, 'opened'))}, 'a');`,
+    category: 'fsWrites',
+    reason: /^openSync /,
+  },
+  {
+    name: 'a listening server',
+    suffix: "\nimport { createServer } from 'node:net';\ncreateServer().listen(0);",
+    category: 'handles',
+    reason: /^TCPServerWrap/,
+  },
+  {
+    name: 'an interval',
+    suffix: '\nsetInterval(() => {}, 100000);',
+    category: 'handles',
+    reason: /^Timeout/,
+  },
+  {
+    name: 'a timer that is not ref-counted',
+    suffix: '\nsetTimeout(() => {}, 100000).unref();',
+    category: 'timers',
+    reason: /^setTimeout$/,
+  },
+  {
+    name: 'a child process',
+    suffix:
+      "\nimport { spawnSync } from 'node:child_process';\nspawnSync(process.execPath, ['-e', '0']);",
+    category: 'children',
+    reason: /^spawnSync /,
+  },
+];
+for (const { name, suffix, category, reason } of quiescence) {
+  zygoteTest(
+    `precollect does not template a test file that leaves ${name}`,
+    { timeout: 240000 },
+    async (t) => {
+      const result = await scenario(
+        t,
+        [
+          [
+            ['top', false],
+            ['fn', true],
+            ['none', true],
+          ],
+        ],
+        { OXIMUT_ZYGOTE: '1' },
+        suffix,
+        'baseline',
+        undefined,
+        false,
+      );
+      // The ordinary zygote path gives the outcomes of an ordinary run.
+      assert.deepEqual(result.outcomes, [['failed', 'failed', 'passed']]);
+      assert.equal(result.counters.templates, 1);
+      assert.equal(result.counters.templated, 0);
+      assert.equal(result.counters.ineligible, 1);
+      assert.equal(result.counters.zygoteFailures, 0);
+      assert.deepEqual(result.alive, [[]]);
+      const [report] = result.ineligible;
+      assert.ok(
+        report.reasons[category].some((entry) => reason.test(entry)),
+        JSON.stringify(report),
+      );
+    },
+  );
+}
+
+zygoteTest(
+  'precollect keeps templating a test file that only logs, reads and waits for a timer',
+  { timeout: 240000 },
+  async (t) => {
+    const result = await scenario(
+      t,
+      [
+        [
+          ['top', false],
+          ['fn', true],
+          ['none', true],
+        ],
+      ],
+      { OXIMUT_ZYGOTE: '1' },
+      `
+import { readFileSync } from 'node:fs';
+readFileSync(import.meta.filename, 'utf8');
+console.log('collected');
+await new Promise((resolve) => setTimeout(resolve, 5));
+await new Promise((resolve) => setImmediate(resolve));`,
+      'baseline',
+      undefined,
+      false,
+    );
+    assert.deepEqual(result.outcomes, [['failed', 'failed', 'passed']]);
+    assert.equal(result.counters.templates, 1);
+    assert.equal(result.counters.templated, 2);
+    assert.equal(result.counters.ineligible, 0);
+    assert.deepEqual(result.ineligible, []);
+    assert.equal(result.counters.zygoteFailures, 0);
+    assert.deepEqual(result.alive, [[]]);
+  },
+);
+
+zygoteTest(
+  'tracing the timeline does not make a template ineligible',
+  { timeout: 240000 },
+  async (t) => {
+    const { mkdtemp } = await import('node:fs/promises');
+    const { tmpdir } = await import('node:os');
+    const trace = await mkdtemp(join(tmpdir(), 'oximut-trace-'));
+    t.after(() => rm(trace, { recursive: true, force: true }));
+    const result = await scenario(
+      t,
+      [
+        [
+          ['fn', true],
+          ['none', true],
+        ],
+      ],
+      { OXIMUT_ZYGOTE: '1', OXIMUT_TRACE_TIMELINE: trace },
+      '',
+      'baseline',
+      undefined,
+      false,
+    );
+    assert.deepEqual(result.outcomes, [['failed', 'passed']]);
+    assert.equal(result.counters.templated, 2);
+    assert.equal(result.counters.ineligible, 0);
+    // The trace itself was written, by the template as well.
+    const written = (await readdir(trace)).filter((name) => name.startsWith('worker-'));
+    assert.ok(written.length > 0, 'no worker trace files');
   },
 );

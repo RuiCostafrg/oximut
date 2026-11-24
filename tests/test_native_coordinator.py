@@ -106,7 +106,13 @@ process.on('message', (message) => {
     // worker and passes in a real fork.
     const stuck = (lane, index) => mode === 'lanes-rolling-watchdog' && index === 0
       && !lane.bypassZygote;
-    return reply({ result: { ...passed, outcome: 'skipped',
+    // 'lanes-ineligible': a controller reporting precollect templates it did not use.
+    const ineligible = mode === 'lanes-ineligible' ? { precollectIneligible: [
+      { template: '["/a.test.ts"]', reasons: { handles: ['Timeout x2'],
+        fsWrites: ['mkdtempSync /tmp/a', 'writeFileSync /tmp/b'], timers: [], children: [] } },
+      { template: '["/b.test.ts"]', reasons: { handles: ['TCPServerWrap'],
+        fsWrites: [], timers: [], children: ['spawn node'] } }] } : {};
+    return reply({ result: { ...passed, ...ineligible, outcome: 'skipped',
       tests: { passed: 0, failed: 0, skipped: 0 }, lanes: reported.map((lane, index) => ({
       ...passed, protocol: lane.protocol, jobId: lane.jobId, runId: lane.runId,
       generation: lane.generation,
@@ -516,6 +522,23 @@ class NativeCoordinator(unittest.TestCase):
         self.assertEqual(sum('zygote worker timed out where a normal worker did not; '
                              'zygote disabled for the rest of the run' == d for d in diagnostics), 1,
                          diagnostics)
+        self.assert_reaped(events)
+
+    def test_ineligible_precollect_templates_are_reported_and_never_part_of_a_result(self):
+        self.require_two_workers()
+        result, report, events = self.run_cli(
+            'lanes-ineligible', full=True, shared=True, extra_args=('--workers', '2'))
+        self.require_spare_capacity(report)
+        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+        self.assertEqual({m['outcome'] for m in report['mutants']}, {'survived'})
+        lines = [d for d in report['diagnostics'] if d.startswith('zygote precollect:')]
+        # Counted per template, named by kind only (never by path), one line for the run.
+        self.assertEqual(len(lines), 1, report['diagnostics'])
+        batches = len([e for e in events if e['event'] == 'lanes'])
+        self.assertEqual(lines[0], (
+            f'zygote precollect: {2 * batches} templates ineligible (active handles: TCPServerWrap, '
+            'Timeout; child processes: spawn; fs writes: mkdtempSync, writeFileSync); '
+            'their mutants used the ordinary zygote path'))
         self.assert_reaped(events)
 
     def test_a_controller_lost_mid_batch_re_dispatches_every_lane_it_did_not_report(self):
