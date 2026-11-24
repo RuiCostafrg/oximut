@@ -283,17 +283,29 @@ def analyze(directory):
                 wasted += sum(max(results) - t for t in results)
                 durations += (max(results) - job['begin']) * len(results)
         summary['lane_tail_skew_ms'] = stats(skews)
-        # Controller event-loop utilization (performance.eventLoopUtilization(), cumulative,
-        # sampled at batch events) between the first and last sample inside the mutation phase.
-        samples = sorted((e for e in events if e['role'] == 'controller' and 'eluActive' in e
-                          and window_start <= e['t'] <= window_end), key=lambda e: e['t'])
-        if len(samples) >= 2:
-            active = samples[-1]['eluActive'] - samples[0]['eluActive']
-            idle = samples[-1]['eluIdle'] - samples[0]['eluIdle']
+        # Controller event-loop utilization. performance.eventLoopUtilization() is cumulative per
+        # process, so each controller (one per slot) is differenced against its own samples inside
+        # the mutation phase; mixing processes would subtract unrelated counters (>100% busy).
+        by_pid = {}
+        for e in sorted(events, key=lambda e: e['t']):
+            if e['role'] == 'controller' and 'eluActive' in e and window_start <= e['t'] <= window_end:
+                by_pid.setdefault(e['pid'], []).append(e)
+        controllers = []
+        for pid, samples in by_pid.items():
+            if len(samples) >= 2:
+                active = samples[-1]['eluActive'] - samples[0]['eluActive']
+                idle = samples[-1]['eluIdle'] - samples[0]['eluIdle']
+                if active >= 0 and idle >= 0:
+                    controllers.append({'pid': pid, 'active_ms': active, 'idle_ms': idle,
+                                        'span_ms': samples[-1]['t'] - samples[0]['t']})
+        if controllers:
+            active = sum(c['active_ms'] for c in controllers)
+            idle = sum(c['idle_ms'] for c in controllers)
             summary['controller_event_loop'] = {
                 'utilization': active / (active + idle) if active + idle else None,
-                'active_ms': active, 'idle_ms': idle, 'from': samples[0]['event'], 'to': samples[-1]['event'],
-                'span_ms': samples[-1]['t'] - samples[0]['t']}
+                'active_ms': active, 'idle_ms': idle, 'controllers': controllers,
+                'note': 'busy fraction of the controllers\' own event loops between their first and last '
+                        'sample inside the mutation phase, summed over controllers'}
         # Per batch pool_run: how long lanes sat finished while the slowest lane ran.
         pool_rows = []
         for job in mutant_jobs:
@@ -359,7 +371,7 @@ def render(summary):
     loop = summary.get('controller_event_loop')
     if loop and loop['utilization'] is not None:
         lines.append(f"controller event loop over the mutation phase: {loop['utilization']:.1%} busy "
-                     f"({loop['active_ms']:.0f} active / {loop['idle_ms']:.0f} idle ms, {loop['from']} .. {loop['to']})")
+                     f"({loop['active_ms']:.0f} active / {loop['idle_ms']:.0f} idle ms, {len(loop['controllers'])} controller(s))")
     lines.append('per mutant (ms):')
     for name, entry in summary.get('per_mutant_ms', {}).items():
         lines.append(f"  {name:36} {fmt(entry)}")

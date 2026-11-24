@@ -88,9 +88,11 @@ disabled` on stderr.
 
 ## Precollect (experimental, off by default)
 
-`--zygote-precollect` (with `--zygote` and `--test-selection`) goes one step
-further: a mutant worker is forked from a *template* zygote that already fetched,
-and for one selected test file also evaluated, the work that worker would repeat.
+`--zygote-precollect` goes one step further. It needs `--zygote` and
+`--test-selection` (selection tells it which test file a mutant runs), and the CLI
+refuses to start without them. A mutant worker is forked from a *template* zygote
+that already fetched, and for one selected test file also evaluated, the work that
+worker would repeat.
 The mutant is still chosen when the instrumented expression is evaluated
 (`process.env.OXIMUT_ACTIVE_MUTANT`), and every mutant still runs in its own
 forked process.

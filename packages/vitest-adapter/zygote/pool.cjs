@@ -25,7 +25,7 @@ const FORKS_ENTRY = '/vitest/dist/workers/forks.js';
 const preload = path.join(__dirname, 'worker.cjs');
 const defaultAddon = path.resolve(__dirname, '../native/build/zygote-fork.node');
 const zygotes = new Map();
-// Experimental precollect: one pre-warmed zygote per test file (see TemplateHandle).
+// Experimental precollect: one pre-warmed zygote per selected set of test files (see TemplateHandle).
 const templates = new Map();
 const counters = { zygotes: 0, forks: 0, exits: 0, zygoteFailures: 0, fallbacks: 0 };
 // Experimental precollect, reported only when it was used.
@@ -402,7 +402,7 @@ function startZygote(entry, args, options, template) {
     waiting: [],
     children: new Map(),
     readyTimer: undefined,
-    // Set for a template: the test file it pre-collected, its handle, and the
+    // Set for a template: the test-file set it pre-collected, its handle, and the
     // Vitest messages sent before it was ready.
     template,
     handle: undefined,
@@ -518,7 +518,7 @@ function zygoteFork(entry, args, options) {
   return child;
 }
 
-// A Vitest pool worker for the template of one test file: the zygote itself.
+// A Vitest pool worker for the template of one set of test files: the zygote itself.
 function templateFork(entry, args, options) {
   const name = options.env.OXIMUT_ZYGOTE_TEMPLATE;
   dropTemplate(name);
@@ -607,8 +607,8 @@ function bypass(mutantIds) {
 }
 
 /**
- * Whether a template for this test file exists and its pre-collection finished;
- * mutants of that file are forked from it from now on.
+ * Whether a template for this set of test files exists and its pre-collection
+ * finished; mutants selecting exactly those files are forked from it from now on.
  */
 function templateReady(name) {
   const zygote = templates.get(name);

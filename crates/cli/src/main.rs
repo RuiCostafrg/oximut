@@ -378,6 +378,9 @@ fn parse_options(mut args: impl Iterator<Item = String>) -> Result<Option<Option
             None => "--zygote-precollect requires --zygote".into(),
         });
     }
+    if zygote_precollect && !test_selection {
+        return Err("--zygote-precollect requires --test-selection".into());
+    }
     if let Some(path) = &report
         && path != Path::new("-")
         && let Ok(target) = path.canonicalize()
@@ -2098,7 +2101,7 @@ mod tests {
             )
         };
         assert!(!parse(&["--zygote"]).unwrap().unwrap().zygote_precollect);
-        let on = parse(&["--zygote", "--zygote-precollect"])
+        let on = parse(&["--zygote", "--zygote-precollect", "--test-selection"])
             .unwrap()
             .unwrap();
         assert!(on.zygote && on.zygote_precollect);
@@ -2111,10 +2114,16 @@ mod tests {
                 .zygote_precollect
         );
         assert!(
-            parse(&["--no-zygote", "--zygote-precollect"])
+            parse(&["--no-zygote", "--zygote-precollect", "--test-selection"])
                 .err()
                 .unwrap()
                 .contains("--zygote-precollect requires the zygote")
+        );
+        assert!(
+            parse(&["--zygote", "--zygote-precollect"])
+                .err()
+                .unwrap()
+                .contains("--zygote-precollect requires --test-selection")
         );
         assert!(HELP.contains("--zygote-precollect"));
     }

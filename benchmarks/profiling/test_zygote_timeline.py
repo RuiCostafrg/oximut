@@ -107,6 +107,20 @@ class ZygoteTimelineTests(unittest.TestCase):
         self.assertAlmostEqual(slot['busy_fraction'] + slot['idle_fraction'], 1)
         self.assertEqual(summary['lane_occupancy']['width'], 2)
 
+    def test_event_loop_utilization_differences_each_controller_separately(self):
+        files = self.synthetic()
+        # A second controller (another slot) whose cumulative counters are unrelated to the first's:
+        # differencing across processes would give a negative idle and >100% busy.
+        event(files, 'controller', 9, 1100, 'batch_enter', eluActive=5000, eluIdle=9000)
+        event(files, 'controller', 9, 1300, 'batch_done', eluActive=5300, eluIdle=9100)
+        with tempfile.TemporaryDirectory() as directory:
+            write(directory, files)
+            loop = timeline.analyze(directory)['controller_event_loop']
+        self.assertEqual({c['pid']: (c['active_ms'], c['idle_ms']) for c in loop['controllers']},
+                         {2: (100, 100), 9: (300, 100)})
+        self.assertAlmostEqual(loop['utilization'], 400 / 600)
+        self.assertLessEqual(loop['utilization'], 1)
+
     def test_precollect_template_builds_event_loop_and_pool_run_breakdown(self):
         with tempfile.TemporaryDirectory() as directory:
             write(directory, self.synthetic())
