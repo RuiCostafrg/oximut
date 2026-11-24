@@ -5,6 +5,9 @@ import { join, resolve } from 'node:path';
 import test from 'node:test';
 
 const repository = resolve(import.meta.dirname, '../../..');
+// Longest a lane waits for its neighbours, and how long a `mid*` lane holds its slot.
+const WAIT_MS = 40000;
+const MID_MS = 10000;
 
 // Experimental rolling lanes: a batch with more lanes than slots keeps every slot
 // busy, so a slot starts its next mutant as soon as its previous worker has exited.
@@ -17,25 +20,49 @@ async function fixture(t) {
   await writeFile(join(root, 'subject.ts'), 'export const active = "uninstrumented";');
   await writeFile(
     join(root, 'vitest.config.mjs'),
-    "export default { test: { include: ['*.test.ts'], testTimeout: 20000 } };",
+    "export default { test: { include: ['*.test.ts'], testTimeout: 120000 } };",
   );
-  // `slow*` mutants take two seconds, `crash` kills its own process, `hang` never
-  // yields, `killed` fails; every other mutant passes at once. The events record
-  // when each mutant's worker entered and finished.
+  // Lanes order themselves through the events file instead of through wall-clock
+  // margins, so a loaded host only makes the test slower, never wrong:
+  // - `slow*` mutants wait until three `f*` mutants have finished: a batch that holds
+  //   them behind a barrier would never get there, and fails after WAIT_MS;
+  // - `mid*` mutants hold their slot for MID_MS;
+  // - `hang` waits until four `f*` mutants have finished, then never yields: the
+  //   neighbouring slot must keep serving lanes while `hang` holds its own slot;
+  // - `crash` kills its own process, `killed` fails; every other mutant passes at once.
+  // The events record when each mutant's worker entered and finished.
   await writeFile(
     join(root, 'rolling.test.ts'),
     `
 import { test, expect } from 'vitest';
-import { appendFileSync } from 'node:fs';
+import { appendFileSync, readFileSync } from 'node:fs';
 import { active } from './subject';
-const log = (type) => appendFileSync(${JSON.stringify(join(root, 'events'))},
+const events = ${JSON.stringify(join(root, 'events'))};
+const log = (type) => appendFileSync(events,
   JSON.stringify({ type, id: active, pid: process.pid, t: Date.now() }) + '\\n');
+const finishedFast = () => readFileSync(events, 'utf8').split('\\n').filter(Boolean)
+  .map((line) => JSON.parse(line)).filter((e) => e.type === 'done' && e.id.startsWith('f')).length;
+const WAIT_MS = ${WAIT_MS};
+const pause = (ms) => Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
 log('enter');
 test('work', async () => {
-  if (active.startsWith('slow')) await new Promise((r) => setTimeout(r, 2000));
-  if (active.startsWith('mid')) await new Promise((r) => setTimeout(r, 3000));
+  if (active.startsWith('slow')) {
+    const give_up = Date.now() + WAIT_MS;
+    while (finishedFast() < 3) {
+      if (Date.now() > give_up) throw new Error('fast lanes never ran beside a slow one');
+      await new Promise((r) => setTimeout(r, 50));
+    }
+  }
+  if (active.startsWith('mid')) await new Promise((r) => setTimeout(r, ${MID_MS}));
   if (active === 'crash') process.kill(process.pid, 'SIGKILL');
-  if (active === 'hang') while (true) {}
+  if (active === 'hang') {
+    const give_up = Date.now() + WAIT_MS;
+    while (finishedFast() < 4) {
+      if (Date.now() > give_up) throw new Error('fast lanes never ran beside the hung one');
+      pause(50);
+    }
+    while (true) {}
+  }
   expect(active.startsWith('killed')).toBe(false);
   log('done');
 });`,
@@ -46,7 +73,7 @@ test('work', async () => {
     code,
     map: { version: 3, sources: ['subject.ts'], names: [], mappings: 'AAAA' },
   };
-  const job = (id, deadlineMs = 30000) => ({
+  const job = (id, deadlineMs = 60000) => ({
     resident: [module],
     protocol: 1,
     runId: 'rolling',
@@ -140,7 +167,8 @@ test('rolling lanes attribute lanes of very different durations and match a barr
       spans.filter((other) => other.enter <= span.enter && other.end >= span.enter).length <= 2,
       `more than two workers alive at once at ${span.enter}`,
     );
-  // No barrier: while the first slow lane works, its slot's neighbour runs the fast lanes.
+  // No barrier: slow1 only finishes once three fast lanes have, and those can only run
+  // in its slot's neighbour, so they started before it ended (ordering, not durations).
   const slow1 = spans[0];
   const during = spans.filter((span) => span.index > 1 && span.enter < slow1.end);
   assert.ok(during.length >= 3, `only ${during.length} later lanes started while slow1 ran`);
@@ -148,35 +176,39 @@ test('rolling lanes attribute lanes of very different durations and match a barr
 });
 
 test('a lane deadline starts with its lane and one timeout leaves its neighbours alone', {
-  timeout: 180000,
+  timeout: 240000,
 }, async (t) => {
   const s = await fixture(t);
   const c = await s.controller();
-  // Six three-second lanes through two slots with a 6 s deadline: the last two
-  // start after the batch is 6 s old and finish after 9 s, far past a batch-start clock.
-  const slow = ['mid1', 'mid2', 'mid3', 'mid4', 'mid5', 'mid6'].map((id) => s.job(id, 6000));
-  const slowResult = await c.run({ ...slow[0], workers: 2, lanes: slow });
-  assert.deepEqual(summary(slowResult.lanes), slow.map((job) => [job.jobId, 'passed']));
+  // Six lanes of MID_MS through two slots with a deadline just under 2 x MID_MS: the last
+  // round starts after the batch is older than that deadline, which a batch-start clock
+  // would have used up. Each lane keeps 0.9 x MID_MS to spare for its own start-up.
+  const deadline = Math.floor(1.9 * MID_MS);
+  const mids = ['mid1', 'mid2', 'mid3', 'mid4', 'mid5', 'mid6'].map((id) => s.job(id, deadline));
+  const midResult = await c.run({ ...mids[0], workers: 2, lanes: mids });
+  assert.deepEqual(summary(midResult.lanes), mids.map((job) => [job.jobId, 'passed']));
+  const enters = (await s.events()).filter((event) => event.type === 'enter').map((e) => e.t);
+  assert.ok(
+    Math.max(...enters) - Math.min(...enters) >= deadline,
+    'the last lanes must start after the batch is older than the lane deadline',
+  );
   await rm(join(s.root, 'events'));
-  // A hung lane times out on its own clock. Its slot-mates keep running and
-  // are reported with their own results, before and after it.
+  // A hung lane times out on its own clock. Its slot-mates keep running and are
+  // reported with their own results, before and after it. The hung lane only hangs
+  // once four fast lanes have finished beside it, so they ran while it held its slot.
   const ids = ['f1', 'hang', 'f2', 'f3', 'f4', 'f5'];
-  const jobs = ids.map((id) => s.job(id, 5000));
-  const started = performance.now();
+  // The deadline outlasts WAIT_MS, so a starved neighbour fails the assertions below
+  // instead of being masked by the timeout.
+  const jobs = ids.map((id) => s.job(id, 45000));
   const result = await c.run({ ...jobs[0], workers: 2, lanes: jobs });
   assert.deepEqual(
     summary(result.lanes),
     ids.map((id) => [id, id === 'hang' ? 'timeout' : 'passed']),
   );
-  assert.ok(performance.now() - started < 30000);
   const log = await s.events();
-  // The other slot finished every later lane while the hung one was still stuck.
   const hangEnter = log.find((event) => event.id === 'hang' && event.type === 'enter').t;
   const finished = log.filter((event) => event.type === 'done' && event.t > hangEnter);
-  assert.ok(
-    finished.length >= 4 && finished.every((event) => event.t < hangEnter + 5000),
-    'later lanes finished before the hung lane was stopped',
-  );
+  assert.ok(finished.length >= 4, 'later lanes finished while the hung lane held its slot');
   gone([...new Set(log.map((event) => event.pid))]);
   await c.close();
 });
