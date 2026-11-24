@@ -526,3 +526,34 @@ await new Promise((resolve) => setImmediate(resolve));`,
     assert.deepEqual(result.alive, [[]]);
   },
 );
+
+zygoteTest(
+  'tracing the timeline does not make a template ineligible',
+  { timeout: 240000 },
+  async (t) => {
+    const { mkdtemp } = await import('node:fs/promises');
+    const { tmpdir } = await import('node:os');
+    const trace = await mkdtemp(join(tmpdir(), 'oximut-trace-'));
+    t.after(() => rm(trace, { recursive: true, force: true }));
+    const result = await scenario(
+      t,
+      [
+        [
+          ['fn', true],
+          ['none', true],
+        ],
+      ],
+      { OXIMUT_ZYGOTE: '1', OXIMUT_TRACE_TIMELINE: trace },
+      '',
+      'baseline',
+      undefined,
+      false,
+    );
+    assert.deepEqual(result.outcomes, [['failed', 'passed']]);
+    assert.equal(result.counters.templated, 2);
+    assert.equal(result.counters.ineligible, 0);
+    // The trace itself was written, by the template as well.
+    const written = (await readdir(trace)).filter((name) => name.startsWith('worker-'));
+    assert.ok(written.length > 0, 'no worker trace files');
+  },
+);

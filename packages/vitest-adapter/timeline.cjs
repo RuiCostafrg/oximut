@@ -10,6 +10,10 @@
 // milliseconds from SystemTime) compare directly. A fork() child keeps its
 // parent's timeOrigin and the shared monotonic clock, so it stays on the same scale.
 const fs = require('node:fs');
+// Taken at load, before the precollect quiescence guard (zygote/quiescence.cjs)
+// instruments `fs` for a template's collect: the trace's own writes are not the
+// test file's and must not make a template ineligible.
+const { mkdirSync, openSync, writeSync } = fs;
 const path = require('node:path');
 const { performance } = require('node:perf_hooks');
 
@@ -22,8 +26,8 @@ function descriptor(role) {
   let fd = files.get(name);
   if (fd === undefined) {
     try {
-      fs.mkdirSync(directory, { recursive: true });
-      fd = fs.openSync(path.join(directory, name), 'a');
+      mkdirSync(directory, { recursive: true });
+      fd = openSync(path.join(directory, name), 'a');
     } catch {
       fd = null;
     }
@@ -38,7 +42,7 @@ function emit(role, event, fields) {
   const fd = directory ? descriptor(role) : null;
   if (fd === null) return;
   try {
-    fs.writeSync(fd, `${JSON.stringify({ t, event, role, pid: process.pid, ...fields })}\n`);
+    writeSync(fd, `${JSON.stringify({ t, event, role, pid: process.pid, ...fields })}\n`);
   } catch {}
 }
 
