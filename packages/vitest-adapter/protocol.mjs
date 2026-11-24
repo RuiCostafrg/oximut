@@ -7,7 +7,8 @@ import { isAbsolute, relative, resolve } from 'node:path';
 export const MAX_REQUEST_BYTES = 8 * 1024 * 1024;
 export const MAX_RESPONSE_BYTES = 1024 * 1024;
 // Private native controller command, advertised by initialize.
-export const SHARED_LANE_RESIDENT = 'run-shared-lane-resident-v1';
+// v2: lanes also omit their mutation's module, which is the resident module of its file.
+export const SHARED_LANE_RESIDENT = 'run-shared-lane-resident-v2';
 
 /** @param {unknown} value @returns {value is Record<string, unknown>} */
 function record(value) {
@@ -19,7 +20,9 @@ function identity(value) {
 }
 
 /**
- * Restore this message's aliases before the normal request validator runs.
+ * Restore this message's aliases before the normal request validator runs: each
+ * lane takes the batch's resident modules, and a lane mutation sent as a
+ * reference (empty code, null map) takes the resident module of its file.
  * @param {unknown} value
  */
 export function restoreLaneResidents(value) {
@@ -33,7 +36,18 @@ export function restoreLaneResidents(value) {
     !value.lanes.every((lane) => record(lane) && !Object.hasOwn(lane, 'resident'))
   )
     throw new Error('Invalid shared lane resident encoding');
-  for (const lane of value.lanes) lane.resident = value.resident;
+  /** @type {Map<string, Record<string, unknown>>} */
+  const byFile = new Map();
+  for (const lane of value.lanes) {
+    lane.resident = value.resident;
+    const mutation = lane.mutation;
+    if (!record(mutation) || mutation.code !== '' || mutation.map !== null) continue;
+    if (!byFile.size)
+      for (const module of value.resident) if (record(module)) byFile.set(module.file, module);
+    const module = byFile.get(mutation.file);
+    if (!module) throw new Error('Lane mutation references a module that is not resident');
+    lane.mutation = { ...mutation, code: module.code, map: module.map };
+  }
 }
 
 /** @param {unknown} value @returns {asserts value is Request} */

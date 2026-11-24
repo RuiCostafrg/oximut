@@ -178,7 +178,7 @@ export class SharedLanes {
         throw new Error('Shared lanes require a resident instrumented module for every mutant');
       if (
         existing.code !== active.code ||
-        JSON.stringify(existing.map) !== JSON.stringify(active.map)
+        (existing.map !== active.map && JSON.stringify(existing.map) !== JSON.stringify(active.map))
       )
         throw new Error('Shared lanes require the resident instrumented module');
     }
