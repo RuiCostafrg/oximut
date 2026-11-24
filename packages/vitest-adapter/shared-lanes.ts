@@ -1,6 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { createRequire, getCompileCacheDir } from 'node:module';
 import { dirname, resolve } from 'node:path';
+import { performance } from 'node:perf_hooks';
 import { fileURLToPath } from 'node:url';
 import { createVitest, ForksPoolWorker, ThreadsPoolWorker, version } from 'vitest/node';
 import { envelope, type Request, type Result } from './protocol.ts';
@@ -154,7 +155,7 @@ export class SharedLanes {
               {
                 name: 'oximut-shared-resident',
                 enforce: 'pre',
-                transform: (_code, id) => {
+                transform: (_code: string, id: string) => {
                   const module = this.modules.get(resolve(id.split('?')[0]));
                   if (module) return { code: module.code, map: JSON.stringify(module.map) };
                 },
@@ -164,7 +165,7 @@ export class SharedLanes {
               name: `oximut-lane-${index}`,
               pool: {
                 name: `oximut-lane-${pool}`,
-                createPoolWorker: (options) => {
+                createPoolWorker: (options: ConstructorParameters<typeof ForksPoolWorker>[0]) => {
                   const worker =
                     pool === 'threads'
                       ? new ExitOnlyThreadsPoolWorker(options)
