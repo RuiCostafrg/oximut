@@ -144,7 +144,12 @@ test('compact lanes resolve mutation references against the resident modules', (
   runtime.validateRequest(batch);
   // A reference to a module that is not resident cannot be resolved.
   const dangling = JSON.parse(JSON.stringify(compactLaneRequest()));
-  dangling.lanes[1].mutation = { ...dangling.lanes[1].mutation, file: '/other.ts', code: '', map: null };
+  dangling.lanes[1].mutation = {
+    ...dangling.lanes[1].mutation,
+    file: '/other.ts',
+    code: '',
+    map: null,
+  };
   assert.throws(
     () => runtime.restoreLaneResidents(dangling),
     /Lane mutation references a module that is not resident/,

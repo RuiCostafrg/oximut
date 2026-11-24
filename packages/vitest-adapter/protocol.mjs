@@ -43,8 +43,9 @@ export function restoreLaneResidents(value) {
     const mutation = lane.mutation;
     if (!record(mutation) || mutation.code !== '' || mutation.map !== null) continue;
     if (!byFile.size)
-      for (const module of value.resident) if (record(module)) byFile.set(module.file, module);
-    const module = byFile.get(mutation.file);
+      for (const module of value.resident)
+        if (record(module) && typeof module.file === 'string') byFile.set(module.file, module);
+    const module = typeof mutation.file === 'string' ? byFile.get(mutation.file) : undefined;
     if (!module) throw new Error('Lane mutation references a module that is not resident');
     lane.mutation = { ...mutation, code: module.code, map: module.map };
   }
