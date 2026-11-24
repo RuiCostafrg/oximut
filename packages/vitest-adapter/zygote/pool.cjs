@@ -614,7 +614,8 @@ function templateReady(name) {
   const zygote = templates.get(name);
   if (!zygote || zygote.failed || !zygote.ready) return false;
   zygote.warm = true;
-  if (trace) trace.emit('pool', 'template_ready', { template: name, zygotePid: zygote.process.pid });
+  if (trace)
+    trace.emit('pool', 'template_ready', { template: name, zygotePid: zygote.process.pid });
   return true;
 }
 
