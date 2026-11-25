@@ -125,7 +125,7 @@ print('ISOLATED')
                 files, {'source': {'commit': 'a' * 40}}, 'b' * 64)), \
                 mock.patch.object(GATE, 'run', return_value='tool version'):
             with self.assertRaises(FileNotFoundError):
-                GATE.validate(self.base / 'unused', '1.0.0-rc.1', 'a' * 40, 'c' * 40, output)
+                GATE.validate(self.base / 'unused', '1.0.0-rc.2', 'a' * 40, 'c' * 40, output)
         self.assertEqual(json.loads(self.evidence.read_text())['status'], 'failed')
         self.assertEqual(self.harness.read_text(), 'trusted')
 
@@ -147,6 +147,15 @@ print('ISOLATED')
                             validator=ROOT / 'scripts/validate-reports.mjs', isolated=True)
             self.assertEqual(self.harness.read_text(), 'trusted')
             self.assertEqual(json.loads(self.evidence.read_text())['status'], 'failed')
+
+    def test_only_named_variables_enter_the_cleared_environment(self):
+        os.environ['OXIMUT_SANDBOX_LEAK'] = 'host'
+        self.addCleanup(os.environ.pop, 'OXIMUT_SANDBOX_LEAK', None)
+        script = ('import os; print(os.environ.get("OXIMUT_SANDBOX_LEAK"), '
+                  'os.environ.get("OXIMUT_ZYGOTE_COUNTERS_DIR"))')
+        output = SANDBOX.run(['/usr/bin/python3', '-c', script], cwd=self.work, writable=[self.work],
+                             env={'OXIMUT_ZYGOTE_COUNTERS_DIR': self.work / 'counters'})
+        self.assertEqual(output, f'None {self.work / "counters"}')
 
     def test_success_failure_and_timeout_kill_detached_descendants(self):
         self.assertEqual(SANDBOX.run(['/bin/echo', 'ok'], cwd=self.work,
