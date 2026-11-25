@@ -3,9 +3,23 @@ name: Multi-project benchmark
 # Oximut (default flags) against StrykerJS (@stryker-mutator/vitest-runner, coverageAnalysis
 # perTest) on several pinned real Vitest projects and matched worker counts. One matrix cell is
 # one project at one worker count; every cell uploads its raw rounds and `cell.json`, and the
-# summary job turns all cells into one markdown table. Manual only: results are evidence for
-# whether the colord numbers generalize, never a gate. See docs/multi-project-benchmark.md.
+# summary job turns all cells into one markdown table. Results are evidence for whether the
+# colord numbers generalize, never a gate. See docs/multi-project-benchmark.md.
+#
+# Triggers: manual dispatch (the full matrix by default), and pull requests that touch the
+# harness, which run a one-round smoke (ufo and valibot at 2 workers). Adding the
+# `multi-project-full` label to such a pull request runs the full matrix at 5 rounds instead.
 on:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled]
+    paths:
+      - .github/workflows/multi-project-benchmark.yml
+      - benchmarks/multi_project.py
+      - benchmarks/multi_project_report.py
+      - benchmarks/multi-project/**
+      - benchmarks/parity/corpus.json
+      - benchmarks/parity/configs/**
+      - benchmarks/tests/test_multi_project.py
   workflow_dispatch:
     inputs:
       projects:
@@ -35,12 +49,21 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: multi-project-benchmark-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   plan:
+    # Other labels on a pull request do not start a benchmark.
+    if: ${{ github.event_name != 'pull_request' || github.event.action != 'labeled' || github.event.label.name == 'multi-project-full' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     outputs:
       matrix: ${{ steps.plan.outputs.matrix }}
+      rounds: ${{ steps.plan.outputs.rounds }}
+      warmups: ${{ steps.plan.outputs.warmups }}
+      scope: ${{ steps.plan.outputs.scope }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -52,20 +75,35 @@ jobs:
         run: python3 -m unittest discover -s benchmarks/tests -p test_multi_project.py -v
       - id: plan
         env:
-          PROJECTS: ${{ inputs.projects || '' }}
-          WORKERS: ${{ inputs.workers || '2 4' }}
-          ROUNDS: ${{ inputs.rounds || '3' }}
-          WARMUPS: ${{ inputs.warmups || '1' }}
+          EVENT: ${{ github.event_name }}
+          FULL_LABEL: ${{ contains(github.event.pull_request.labels.*.name, 'multi-project-full') }}
+          INPUT_PROJECTS: ${{ inputs.projects }}
+          INPUT_WORKERS: ${{ inputs.workers }}
+          INPUT_ROUNDS: ${{ inputs.rounds }}
+          INPUT_WARMUPS: ${{ inputs.warmups }}
+          INPUT_SCOPE: ${{ inputs.scope }}
         run: |
           set -euo pipefail
+          # Dispatch: the inputs' defaults. Pull request: a smoke, or the full matrix with the label.
+          if [[ "$EVENT" == pull_request && "$FULL_LABEL" != true ]]; then
+            PROJECTS='ufo valibot'; WORKERS=2; ROUNDS=1; WARMUPS=0
+          elif [[ "$EVENT" == pull_request ]]; then
+            PROJECTS=''; WORKERS='2 4'; ROUNDS=5; WARMUPS=1
+          else
+            PROJECTS=$INPUT_PROJECTS; WORKERS=${INPUT_WORKERS:-2 4}; ROUNDS=${INPUT_ROUNDS:-3}; WARMUPS=${INPUT_WARMUPS:-1}
+          fi
+          SCOPE=${INPUT_SCOPE:-matched}
           [[ "$ROUNDS" =~ ^[0-9]{1,2}$ ]] && (( 10#$ROUNDS >= 1 )) || { echo "::error::rounds '$ROUNDS' must be 1-99"; exit 1; }
           [[ "$WARMUPS" =~ ^[0-9]$ ]] || { echo "::error::warmups '$WARMUPS' must be 0-9"; exit 1; }
           read -r -a names <<< "$PROJECTS"
           matrix=$(python3 benchmarks/multi_project.py --plan "$WORKERS" --projects "${names[@]}")
-          echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
-          echo "$matrix"
+          {
+            echo "matrix=$matrix"; echo "rounds=$ROUNDS"; echo "warmups=$WARMUPS"; echo "scope=$SCOPE"
+          } >> "$GITHUB_OUTPUT"
+          echo "$matrix rounds=$ROUNDS warmups=$WARMUPS scope=$SCOPE"
 
   build:
+    needs: plan
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
@@ -119,9 +157,9 @@ jobs:
         env:
           PROJECT: ${{ matrix.project }}
           WORKERS: ${{ matrix.workers }}
-          ROUNDS: ${{ inputs.rounds || '3' }}
-          WARMUPS: ${{ inputs.warmups || '1' }}
-          SCOPE: ${{ inputs.scope || 'matched' }}
+          ROUNDS: ${{ needs.plan.outputs.rounds }}
+          WARMUPS: ${{ needs.plan.outputs.warmups }}
+          SCOPE: ${{ needs.plan.outputs.scope }}
         run: |
           chmod +x "$RUNNER_TEMP/oximut-binary/oximut"
           echo "cpus: $(nproc)"
@@ -139,8 +177,8 @@ jobs:
           retention-days: 14
 
   summary:
-    needs: cell
-    if: ${{ !cancelled() }}
+    needs: [plan, cell]
+    if: ${{ !cancelled() && needs.plan.result == 'success' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
