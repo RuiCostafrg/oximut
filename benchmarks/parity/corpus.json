@@ -34,7 +34,8 @@
       "vitestConfig": "configs/pathe.vitest.config.ts",
       "configFile": "oximut-parity.vitest.config.ts",
       "mutate": [
-        "src/_path.ts"
+        "src/_path.ts",
+        "src/utils.ts"
       ]
     },
     {

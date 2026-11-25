@@ -413,8 +413,10 @@ async function command(name: string, args: Request): Promise<unknown> {
   if (unhandled.length || incomplete || processFailure) outcome = 'infrastructure-error';
   else if (moduleErrors.some(transformError)) outcome = 'invalid';
   else if (timedOut) outcome = 'timeout';
-  else if (moduleErrors.length) outcome = 'infrastructure-error';
-  else if (tests.failed) outcome = 'failed';
+  // A suite that throws while it is collected (describe-time setup calling the mutated
+  // code) or in a hook is the code under test failing: it kills like a failed test.
+  // Failures of the tool (unhandled errors, interruption, process exits) were taken above.
+  else if (tests.failed || moduleErrors.length) outcome = 'failed';
   else if (tests.passed) outcome = 'passed';
   else outcome = 'skipped';
   if (

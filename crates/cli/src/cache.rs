@@ -157,7 +157,7 @@ impl Outcomes {
                         && r.replacement == mutant.replacement
                         && same(&r.location, &mutant.location)
                         && match r.outcome {
-                            Outcome::Killed => r.tests.failed > 0,
+                            Outcome::Killed => r.tests.failed > 0 || !r.errors.is_empty(),
                             Outcome::Survived => {
                                 r.tests.passed > 0 && r.tests.failed == 0 && r.errors.is_empty()
                             }
@@ -1495,6 +1495,19 @@ mod tests {
         assert!(
             !Outcomes::new("key".into(), "run".into(), tests.clone(), vec![invalid])
                 .validate(&generated.mutants, &tests)
+        );
+        // A suite that threw while it was collected is a kill with error evidence.
+        let mut collection_error = result.clone();
+        collection_error.tests.failed = 0;
+        collection_error.errors = vec!["TypeError: x is not a function".into()];
+        assert!(
+            Outcomes::new(
+                "key".into(),
+                "run".into(),
+                tests.clone(),
+                vec![collection_error]
+            )
+            .validate(&generated.mutants, &tests)
         );
         let mut incomplete = result;
         incomplete.outcome = Outcome::InfrastructureError;

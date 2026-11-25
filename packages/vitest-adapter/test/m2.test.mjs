@@ -556,8 +556,12 @@ afterAll(() => { throw new Error('teardown sentinel'); });
 test('fails', () => { expect(enabled).toBe(true); });
 test('cancelled', () => { expect(enabled).toBe(true); });`,
   );
+  // A hook that throws is the suite failing, not the tool: with a failed test it kills,
+  // and the hook error stays in the evidence next to the test's own.
   const teardown = await s.run('kill');
-  assert.equal(teardown.outcome, 'infrastructure-error', JSON.stringify(teardown));
+  assert.equal(teardown.outcome, 'failed', JSON.stringify(teardown));
+  assert.equal(teardown.tests.failed, 1, JSON.stringify(teardown));
+  assert.ok(teardown.errors.includes('teardown sentinel'), JSON.stringify(teardown));
 });
 
 async function parallelFixture(t) {

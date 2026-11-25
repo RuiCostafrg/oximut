@@ -317,8 +317,12 @@ impl Response {
             {
                 Err("passing response requires nonempty successful tests and no errors".into())
             }
-            TestOutcome::Failed if self.tests.failed == 0 => {
-                Err("failed response requires a failed test; execution errors are not kills".into())
+            // A suite that throws while Vitest collects it (for example a mutant that makes
+            // `describe` setup code throw) fails with an error and no failed test: that is
+            // the code under test failing, and it kills. Failures of the tool itself are
+            // `infrastructure-error` and never reach this arm.
+            TestOutcome::Failed if self.tests.failed == 0 && self.errors.is_empty() => {
+                Err("failed response requires a failed test or error evidence".into())
             }
             _ => Ok(()),
         }
@@ -556,9 +560,16 @@ mod tests {
         response.outcome = TestOutcome::Passed;
         assert!(response.validate(&request).is_err());
         response.outcome = TestOutcome::Failed;
+        response.errors.clear();
         assert!(response.validate(&request).is_err());
         response.tests.failed = 1;
         assert!(response.validate(&request).is_ok());
+        // A suite that fails while it is collected has an error but no failed test.
+        response.tests.failed = 0;
+        response.errors = vec!["TypeError: x is not a function".into()];
+        assert!(response.validate(&request).is_ok());
+        assert_eq!(response.mutant_outcome(), Outcome::Killed);
+        response.tests.failed = 1;
         response.generation = 2;
         assert!(response.validate(&request).is_err());
     }

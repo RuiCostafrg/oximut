@@ -160,8 +160,8 @@ async function command(name: string, args: Request): Promise<unknown> {
   if (unhandled.length || incomplete || processFailure) outcome = 'infrastructure-error';
   else if (moduleErrors.some(transformError)) outcome = 'invalid';
   else if (timedOut) outcome = 'timeout';
-  else if (moduleErrors.length) outcome = 'infrastructure-error';
-  else if (tests.failed) outcome = 'failed';
+  // Collection and hook errors thrown by the code under test fail like a test.
+  else if (tests.failed || moduleErrors.length) outcome = 'failed';
   else if (tests.passed) outcome = 'passed';
   else outcome = 'skipped';
   if (

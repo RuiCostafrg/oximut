@@ -770,15 +770,14 @@ export class SharedLanes {
             ? 'invalid'
             : timedOut
               ? 'timeout'
-              : moduleErrors.length
-                ? 'infrastructure-error'
-                : tests.failed
-                  ? 'failed'
-                  : pending
-                    ? 'infrastructure-error'
-                    : tests.passed
-                      ? 'passed'
-                      : 'skipped';
+              : // Collection and hook errors thrown by the code under test fail like a test.
+                tests.failed || moduleErrors.length
+                ? 'failed'
+                : pending
+                  ? 'infrastructure-error'
+                  : tests.passed
+                    ? 'passed'
+                    : 'skipped';
     if (
       outcome === 'passed' &&
       job.selection &&

@@ -188,7 +188,9 @@ Mutant outcomes are `killed`, `survived`, `no-coverage`, `invalid`, `timeout`,
 outcomes use the corresponding test-level values (`passed`, `failed`, `invalid`,
 `timeout`, `infrastructure-error`, `resource-exhausted`, and `skipped`).
 Infrastructure faults, invalid transforms, timeouts, resource exhaustion, and
-skips never count as kills.
+skips never count as kills. A failed test response needs a failed test or error
+evidence: a test file whose collection throws (or whose suite hook throws) while a
+mutant is active fails with that error and no failed test, and kills the mutant.
 
 The denominator is exactly `killed + survived + noCoverage`. The score is
 `100 * killed / denominator`, or JSON `null` when the denominator is zero.
