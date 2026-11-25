@@ -7,7 +7,7 @@
       "repository": "https://github.com/unjs/radix3",
       "commit": "c3bdbf5b8843905f0424395bfe444d89f8bce0b8",
       "license": "MIT",
-      "description": "URL router: route matching, route/regexp conversion, overlap analysis and a route compiler; table-driven tests with fixtures.",
+      "description": "URL router: route matching, route/regexp conversion, overlap analysis and a route compiler; table-driven tests with fixtures. The parser-like top-level sources (compiler, pattern, segment regexp, group delimiters, match) are outside the scope: with them in, 61 of the first 177 Oximut mutants ran into its 30 s job deadline and one run did not finish in 30 minutes.",
       "vitestConfig": "configs/radix3.vitest.config.ts",
       "root": ".",
       "copy": [
@@ -22,7 +22,13 @@
         "*/index.ts",
         "*/types.ts",
         "*.d.ts",
-        "*/_suffix.ts"
+        "*/_suffix.ts",
+        "*/compiler.ts",
+        "*/_pattern.ts",
+        "*/_segment-regexp.ts",
+        "*/_group-delimiters.ts",
+        "*/_match.ts",
+        "*/_group-names.ts"
       ]
     },
     {
