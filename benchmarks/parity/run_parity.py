@@ -3,7 +3,7 @@
 
 For every project in corpus.json this fetches the pinned commit, runs Oximut once per
 execution mode and compares each mode's per-mutant outcomes with the reference mode
-(`--execution fresh --no-zygote`). The comparison key is the exact edited-file identity
+(`--execution fresh --no-zygote --no-test-selection`). The comparison key is the exact edited-file identity
 the other harnesses use (benchmarks/m6.py), so `mutation_identity_outcome_sha256` here
 means the same thing as in the colord benchmark reports.
 
@@ -34,16 +34,19 @@ REFERENCE = 'reference'
 
 # (name, extra Oximut arguments, diagnostics that must be reported, diagnostics that must be absent)
 MODES = (
-    (REFERENCE, ('--execution', 'fresh', '--no-zygote'), (), ('zygote=on',)),
-    ('persistent', ('--execution', 'persistent', '--no-zygote'), (), ('zygote=on',)),
-    ('zygote', ('--execution', 'persistent', '--zygote'), ('zygote=on',), ()),
-    ('zygote-selection-precollect-rolling',
-     ('--execution', 'persistent', '--zygote', '--test-selection', '--zygote-precollect', '--rolling-lanes'),
-     ('zygote=on', 'zygote-precollect=on', 'rolling-lanes=on'), ()),
+    (REFERENCE, ('--execution', 'fresh', '--no-zygote', '--no-test-selection'), (), ('zygote=on',)),
+    ('persistent', ('--execution', 'persistent', '--no-zygote', '--no-test-selection'), (), ('zygote=on',)),
+    ('zygote',
+     ('--execution', 'persistent', '--zygote', '--no-test-selection', '--no-zygote-precollect',
+      '--no-rolling-lanes'),
+     ('zygote=on',), ('zygote-precollect=on', 'rolling-lanes=on')),
+    # No mode flags: what a user gets by default (persistent, test selection, zygote,
+    # precollect and rolling lanes on Linux).
+    ('defaults', (), ('zygote=on', 'zygote-precollect=on', 'rolling-lanes=on'), ()),
 )
 MODE_NAMES = tuple(name for name, *_ in MODES)
 # Modes that skip tests by selection; only these may report a refinement (see explained_refinements).
-SELECTION_MODES = frozenset({'zygote-selection-precollect-rolling'})
+SELECTION_MODES = frozenset({'defaults'})
 
 
 class ParityError(Exception):

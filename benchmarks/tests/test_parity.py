@@ -174,7 +174,7 @@ class RunGateTests(unittest.TestCase):
 
     def test_fast_mode_must_report_each_flag_it_asked_for(self):
         counters = dict(zygotes=1, forks=5, exits=5, zygoteFailures=0, fallbacks=0)
-        mode = 'zygote-selection-precollect-rolling'
+        mode = 'defaults'
         full = ['zygote=on; zygote-precollect=on; rolling-lanes=on']
         self.assertEqual(parity.check_engagement(mode, report([{}], full), counters), [])
         partial = ['zygote=on; zygote-precollect=on; rolling-lanes=off']
@@ -188,11 +188,18 @@ FAKE_OXIMUT = textwrap.dedent('''\
     args = sys.argv[1:]
     value = lambda flag: args[args.index(flag) + 1]
     root = value('--root')
-    zygote = '--zygote' in args
+    # Mirrors the CLI defaults: persistent execution with the zygote, precollect and
+    # rolling lanes on unless a flag turns them off.
+    execution = value('--execution') if '--execution' in args else 'persistent'
+    zygote = execution == 'persistent' and '--no-zygote' not in args
+    precollect = zygote and '--no-zygote-precollect' not in args and '--no-test-selection' not in args
+    rolling = execution == 'persistent' and '--no-rolling-lanes' not in args
     flip = os.environ.get('FAKE_FLIP') == '1' and zygote
-    diagnostics = ['execution=' + value('--execution'), 'zygote=' + ('on' if zygote else 'off')]
-    if '--zygote-precollect' in args:
-        diagnostics += ['zygote-precollect=on', 'rolling-lanes=on']
+    diagnostics = ['execution=' + execution, 'zygote=' + ('on' if zygote else 'off')]
+    if precollect:
+        diagnostics.append('zygote-precollect=on')
+    if rolling:
+        diagnostics.append('rolling-lanes=on')
     mutants = []
     for index, (replacement, line) in enumerate([('const', 1), ('let ', 2)]):
         outcome = 'killed'
@@ -253,9 +260,9 @@ class EndToEndTests(ProjectCase):
         self.assertEqual(code, 1)
         self.assertIn('MISMATCH fake / zygote: 1 mutant(s)', stderr)
         self.assertIn('id1 src/a.ts:2 arithmetic: reference=killed zygote=survived', stderr)
-        self.assertIn('MISMATCH fake / zygote-selection-precollect-rolling', stderr)
+        self.assertIn('MISMATCH fake / defaults', stderr)
         self.assertNotIn('MISMATCH fake / persistent', stderr)
-        self.assertEqual(set(summary[0]['mismatches']), {'zygote', 'zygote-selection-precollect-rolling'})
+        self.assertEqual(set(summary[0]['mismatches']), {'zygote', 'defaults'})
         self.assertIn('**NO**', stdout)
 
 
