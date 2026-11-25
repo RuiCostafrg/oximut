@@ -101,6 +101,8 @@ def summarize_cell(cell):
             'rounds': len(runs),
         }
     summary['oximut']['complete'] = all(run.get('complete') for run in oximut)
+    summary['oximut']['selection_modes'] = oximut[0].get('selection_modes')
+    summary['oximut']['full_suite_reasons'] = oximut[0].get('full_suite_reasons')
     summary['oximut']['phase_wall_ms'] = oximut[0].get('phase_wall_ms')
     summary['oximut']['diagnostics'] = oximut[0].get('diagnostics')
     summary['stryker']['log'] = stryker[0].get('log')
@@ -132,6 +134,10 @@ def flags_for(summary):
         skew = stryker['mutants'] / oximut['mutants']
         if skew >= COUNT_SKEW or skew <= 1 / COUNT_SKEW:
             flags.append(f'Stryker ran {skew:.1f}x as many mutants')
+    full = (oximut.get('selection_modes') or {}).get('full', 0)
+    if oximut['mutants'] and full / oximut['mutants'] > 0.5:
+        reasons = ', '.join(sorted(oximut.get('full_suite_reasons') or {})) or 'no reason reported'
+        flags.append(f"test selection fell back to the whole suite for {full}/{oximut['mutants']} mutants ({reasons})")
     for name, tool in (('Oximut', oximut), ('Stryker', stryker)):
         if not tool['stable_outcomes']:
             flags.append(f'{name} outcomes differ between rounds')

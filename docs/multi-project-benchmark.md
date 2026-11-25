@@ -6,7 +6,7 @@ newest StrykerJS (`@stryker-mutator/core` and `@stryker-mutator/vitest-runner` a
 `package.json`, `coverageAnalysis: perTest`) on several pinned real projects at matched worker counts.
 Results are evidence, never a gate. Triggers: manual dispatch (inputs: `projects`, `workers`, `rounds`,
 `warmups`, `scope`; defaults run every project at 2 and 4 workers, 3 rounds after 1 warmup), and pull requests
-touching the harness, which run a one-round smoke (ufo, radix3 and es-toolkit, 2 workers). The label
+touching the harness, which run a one-round smoke (ufo, radix3 and es-toolkit-no-globalthis, 2 workers). The label
 `multi-project-full` on such a pull request runs the full matrix at 5 rounds. GitHub only dispatches a
 workflow that exists on the default branch, so a branch that adds or changes the workflow uses the
 pull-request triggers.
@@ -16,7 +16,7 @@ pull-request triggers.
 | Kind | Projects | Why |
 |---|---|---|
 | `startup` | the outcome-parity corpus, `benchmarks/parity/corpus.json`: ufo, pathe, hookable, std-env, tslog (3 to 57 Oximut mutants) | tiny scopes: wall time is dominated by fixed start-up cost |
-| `large` | radix3 (the whole `src`: router, route/regexp conversion, overlap analysis, compiler; 688 mutants) and es-toolkit (array, math, string, object, predicate and util modules plus the lodash-compatible math, string and util ones; 398 mutants), pinned in `benchmarks/multi-project/projects.json` | hundreds of mutants: wall time is dominated by per-mutant cost |
+| `large` | radix3 (the whole `src`: router, route/regexp conversion, overlap analysis, compiler; 688 mutants) and es-toolkit (array, math, string, object, predicate and util modules plus the lodash-compatible math, string and util ones; 398 mutants), pinned in `benchmarks/multi-project/projects.json`; es-toolkit also runs as `es-toolkit-no-globalthis`, the same scope minus the two sources that mention `globalThis`, because Oximut does not probe such files and that turns test selection off for the whole run | hundreds of mutants: wall time is dominated by per-mutant cost |
 
 Every project is a pinned commit (exact SHA, fetched shallow; nothing is installed) run against the
 repository's Vitest, with a benchmark-owned Vitest config in node environment and the isolation Oximut

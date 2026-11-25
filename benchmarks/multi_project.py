@@ -18,6 +18,7 @@ benchmarks/m6.py) and how they overlap, and the outcome counts of each tool.
 from __future__ import annotations
 
 import argparse
+from collections import Counter
 import fnmatch
 import json
 import math
@@ -371,7 +372,15 @@ def analyze(tool, row, report_path, project_dir, workers):
         unmatched = real_project.parallelism_errors({'resources': resources}, workers)
         if unmatched:
             raise BenchmarkError('oximut: ' + '; '.join(unmatched))
+        selections = [mutant.get('selection') or {} for mutant in report['mutants']]
+        fallback = [selection for selection in selections if selection.get('mode') == 'full']
+        reasons = {}
+        for selection in fallback:
+            for reason in selection.get('reasons', []):
+                reasons[reason] = reasons.get(reason, 0) + 1
         return {'outcomes': outcomes, 'complete': bool(summary.get('complete')),
+                'selection_modes': dict(sorted(Counter(selection.get('mode', 'off') for selection in selections).items())),
+                'full_suite_reasons': dict(sorted(reasons.items())),
                 'tests': baseline.get('tests', {}).get('passed'),
                 'diagnostics': [line for line in report.get('diagnostics', []) if '=' in line][:12],
                 'phase_wall_ms': resources.get('phaseWallMs')}

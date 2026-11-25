@@ -3,7 +3,7 @@ import { defineConfig } from 'vitest/config';
 
 // Multi-project benchmark config for radix3: the upstream test files that run with only Vitest and
 // Node (find.test.ts and find-all.test.ts import oxfmt, regexp.pcre.test.ts spawns external PCRE
-// tools), under the isolation Oximut requires (node environment, one fork, sequential files).
+// tools, wpt.test.ts compares with Node's own URLPattern, which differs on one case), under the isolation Oximut requires (node environment, one fork, sequential files).
 export default defineConfig({
   root: fileURLToPath(new URL('.', import.meta.url)),
   test: {
@@ -20,7 +20,6 @@ export default defineConfig({
       'test/scenarios.test.ts',
       'test/star.test.ts',
       'test/suffix.test.ts',
-      'test/wpt.test.ts',
     ],
     environment: 'node',
     pool: 'forks',

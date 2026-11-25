@@ -114,7 +114,7 @@ class CorpusTests(unittest.TestCase):
         kinds = {project['name']: project['kind'] for project in projects}
         self.assertEqual({name for name, kind in kinds.items() if kind == 'startup'},
                          {'ufo', 'pathe', 'hookable', 'std-env', 'tslog'})
-        self.assertEqual({name for name, kind in kinds.items() if kind == 'large'}, {'radix3', 'es-toolkit'})
+        self.assertEqual({name for name, kind in kinds.items() if kind == 'large'}, {'radix3', 'es-toolkit', 'es-toolkit-no-globalthis'})
         for project in projects:
             self.assertEqual(len(project['commit']), 40)
             self.assertTrue(Path(project['configSource']).is_file(), project['name'])
@@ -233,6 +233,14 @@ class AnalyzeTests(ProjectCase):
         self.assertEqual(sorted(extra['outcomes'].values()), ['killed', 'survived'])
         self.assertTrue(extra['complete'])
         self.assertEqual(extra['phase_wall_ms'], {'mutationExecution': 800})
+
+    def test_oximut_selection_fallbacks_are_recorded_with_their_reasons(self):
+        data = oximut_report(self.project, ['killed', 'survived'])
+        data['mutants'][0]['selection'] = {'mode': 'full', 'reasons': ['probe-globalThis-conflict', 'incomplete-attribution']}
+        data['mutants'][1]['selection'] = {'mode': 'files', 'reasons': []}
+        extra = bench.analyze('oximut', clean_row(exit_code=1), self.write_report(data), self.project, 2)
+        self.assertEqual(extra['selection_modes'], {'files': 1, 'full': 1})
+        self.assertEqual(extra['full_suite_reasons'], {'incomplete-attribution': 1, 'probe-globalThis-conflict': 1})
 
     def test_an_oximut_run_with_timeouts_is_kept_but_marked_incomplete(self):
         path = self.write_report(oximut_report(self.project, ['killed', 'timeout'], complete=False))
@@ -401,6 +409,15 @@ class ReportTests(unittest.TestCase):
         flags = report.summarize_cell(cell(runs))['flags']
         self.assertIn('Oximut outcomes differ between rounds', flags)
         self.assertIn('Oximut run incomplete (timeout or invalid mutants)', flags)
+
+    def test_whole_suite_fallback_for_most_mutants_is_flagged_with_its_reason(self):
+        fallback = {'selection_modes': {'full': 9, 'files': 1}, 'full_suite_reasons': {'probe-globalThis-conflict': 9}}
+        summary = report.summarize_cell(cell(paired_runs([4.] * 3, [10.] * 3, oximut=fallback)))
+        self.assertIn('test selection fell back to the whole suite for 9/10 mutants (probe-globalThis-conflict)',
+                      summary['flags'])
+        healthy = {'selection_modes': {'full': 1, 'files': 9}, 'full_suite_reasons': {'outside-test-execution': 1}}
+        summary = report.summarize_cell(cell(paired_runs([4.] * 3, [10.] * 3, oximut=healthy)))
+        self.assertFalse(any('fell back' in flag for flag in summary['flags']))
 
     def test_a_failed_plain_vitest_run_does_not_hide_the_comparison_but_is_flagged(self):
         runs = paired_runs([4.] * 3, [10.] * 3)
