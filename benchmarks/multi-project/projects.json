@@ -1,0 +1,59 @@
+{
+  "schemaVersion": 1,
+  "projects": [
+    {
+      "name": "valibot",
+      "kind": "large",
+      "repository": "https://github.com/open-circle/valibot",
+      "commit": "40fae9405d79ca477fdaade624600a567940dcbf",
+      "license": "MIT",
+      "description": "Schema validation library (library/ package): pure functions and validators, one colocated test file per action and schema.",
+      "vitestConfig": "configs/valibot.vitest.config.ts",
+      "root": "library",
+      "copy": ["src", "package.json"],
+      "mutate": [
+        "src/actions/**/*.ts",
+        "src/schemas/**/*.ts",
+        "src/methods/**/*.ts",
+        "src/utils/**/*.ts"
+      ],
+      "mutateExclude": [
+        "*.test.ts",
+        "*.test-d.ts",
+        "*/index.ts",
+        "*/types.ts",
+        "*/types/*"
+      ]
+    },
+    {
+      "name": "es-toolkit",
+      "kind": "large",
+      "repository": "https://github.com/toss/es-toolkit",
+      "commit": "24e7a7b8cb8035fae1ea2e7b507aab96698a38b9",
+      "license": "MIT",
+      "description": "Utility library: array, math, string, object, predicate and util modules plus their lodash-compatible counterparts; colocated spec files.",
+      "vitestConfig": "configs/es-toolkit.vitest.config.ts",
+      "root": ".",
+      "copy": ["src", "package.json"],
+      "mutate": [
+        "src/array/*.ts",
+        "src/math/*.ts",
+        "src/string/*.ts",
+        "src/object/*.ts",
+        "src/predicate/*.ts",
+        "src/util/*.ts",
+        "src/compat/array/*.ts",
+        "src/compat/math/*.ts",
+        "src/compat/object/*.ts",
+        "src/compat/string/*.ts",
+        "src/compat/util/*.ts",
+        "src/compat/predicate/*.ts"
+      ],
+      "mutateExclude": [
+        "*.spec.ts",
+        "*/index.ts",
+        "*.d.ts"
+      ]
+    }
+  ]
+}
