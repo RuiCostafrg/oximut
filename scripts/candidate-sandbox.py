@@ -43,7 +43,7 @@ def read_regular(path, limit=16 * 1024 * 1024):
 
 
 def run(command, *, cwd, writable, readonly=(), timeout=300, network=False,
-        node_options=None):
+        node_options=None, env=None):
     if 'proot' in platform.release().lower() or not Path('/usr/bin/python3').is_file():
         raise RuntimeError('native Linux with system Python required; PRoot is unsupported')
     if os.geteuid() == 0:
@@ -82,6 +82,9 @@ def run(command, *, cwd, writable, readonly=(), timeout=300, network=False,
     args += ['--setenv', 'PATH', path, '--setenv', 'CARGO_HOME', '/home/candidate/.cargo']
     if node_options:
         args += ['--setenv', 'NODE_OPTIONS', node_options]
+    # The environment is cleared; only explicitly named variables reach the command.
+    for name, value in sorted((env or {}).items()):
+        args += ['--setenv', name, str(value)]
     if network:
         args += ['--share-net']
     for option, paths in (('--ro-bind', readonly), ('--bind', writable)):

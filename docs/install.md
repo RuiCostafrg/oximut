@@ -1,6 +1,6 @@
 # Install from source
 
-Oximut supports source checkout installation. The initial **1.0.0-rc.1**
+Oximut supports source checkout installation. The initial **1.0.0-rc.2**
 candidate source archive format and its prerequisites are described in
 [Source distribution](distribution.md). There is no supported
 public npm or crates.io installation yet. The workspace packages remain private.
@@ -65,8 +65,13 @@ For a complete disposable installation and external-project smoke test:
 ```sh
 prefix="$(mktemp -d)/oximut"
 python3 scripts/install-source.py --prefix "$prefix"
-python3 scripts/smoke-install.py --prefix "$prefix"
+python3 scripts/smoke-install.py --prefix "$prefix" --require-zygote   # glibc Linux with a C compiler
 ```
+
+`--require-zygote` makes the smoke fail unless the prefix contains the addon, the
+persistent report says `zygote=on`, and the pool's counters show mutant workers
+forked from the zygote. Leave it off on hosts where the addon is expected to be
+skipped (musl, no compiler); the smoke then checks the normal-worker fallback.
 
 The smoke runs baseline and mutation testing in fresh and persistent modes from
 a temporary directory outside the checkout. Its isolated example project links

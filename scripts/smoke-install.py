@@ -25,7 +25,37 @@ def project_dependencies(prefix, root, isolated):
         (root / "node_modules").symlink_to(installed, target_is_directory=True)
 
 
-def smoke(prefix, *, reports_dir=None, validator=None, isolated=False):
+ADDON = Path("lib/oximut/packages/vitest-adapter/native/build/zygote-fork.node")
+
+
+def check_zygote(data, counters_dir, label):
+    """Assert a persistent run really forked its mutant workers from the zygote.
+
+    ``zygote=on`` only says the mode was requested. A missing or unloadable addon
+    falls back to normal workers and still passes, so the pool's own counters
+    (written when the controller exits) must show forks and no zygote failure.
+    Returns the number of zygote forks.
+    """
+    diagnostics = data.get("diagnostics", [])
+    if not any("zygote=on" in line for line in diagnostics):
+        raise RuntimeError(f"{label}: report lacks the zygote=on diagnostic: {diagnostics}")
+    if (data.get("cache") or {}).get("outcomeHits"):
+        return None  # Served from the outcome cache: no mutant ran.
+    files = sorted(counters_dir.iterdir())
+    if not files:
+        raise RuntimeError(f"{label}: zygote=on but the pool wrote no counters (addon unavailable?)")
+    totals = {}
+    for path in files:
+        for key, value in json.loads(SANDBOX.read_regular(path)).items():
+            totals[key] = totals.get(key, 0) + value
+    if totals.get("forks", 0) <= 0:
+        raise RuntimeError(f"{label}: zygote=on but no mutant worker was forked from it: {totals}")
+    if totals.get("zygoteFailures", 0):
+        raise RuntimeError(f"{label}: zygote failures: {totals}")
+    return totals["forks"]
+
+
+def smoke(prefix, *, reports_dir=None, validator=None, isolated=False, require_zygote=False):
     if (reports_dir is None) != (validator is None):
         raise ValueError("reports-dir and validator must be supplied together")
     if reports_dir is not None:
@@ -34,6 +64,8 @@ def smoke(prefix, *, reports_dir=None, validator=None, isolated=False):
         validator = validator.resolve()
     results = []
     prefix = prefix.resolve()
+    if require_zygote and not (prefix / ADDON).is_file():
+        raise RuntimeError(f"zygote addon missing from the installed prefix: {prefix / ADDON}")
     with tempfile.TemporaryDirectory(prefix="oximut-installed-project-") as temporary:
         root = Path(temporary) / "project"
         root.mkdir()
@@ -73,6 +105,9 @@ def smoke(prefix, *, reports_dir=None, validator=None, isolated=False):
                 # project inputs only after each command has fully exited.
                 report = Path(temporary) / "live-report.json"
                 report.unlink(missing_ok=True)
+                counters = Path(temporary) / "zygote-counters"
+                shutil.rmtree(counters, ignore_errors=True)
+                counters.mkdir()
                 arguments = ["--cache", "--cache-inputs-complete", "--cache-policy", "always"] if reports_dir else []
                 if case == "force":
                     arguments.append("--force")
@@ -83,11 +118,13 @@ def smoke(prefix, *, reports_dir=None, validator=None, isolated=False):
                 ]
                 if isolated:
                     SANDBOX.run(command, cwd=root, writable=[Path(temporary)],
-                                readonly=[prefix], node_options=f"--import={hook.as_uri()}")
+                                readonly=[prefix], node_options=f"--import={hook.as_uri()}",
+                                env={"OXIMUT_ZYGOTE_COUNTERS_DIR": counters})
                     # Namespace has exited and all descendants are dead before any reads/writes.
                     SANDBOX.safe_tree(Path(temporary), external_links=[(root / "node_modules", prefix / "lib/oximut/node_modules")])
                 else:
-                    result = subprocess.run(command, cwd=root, env=environment,
+                    result = subprocess.run(command, cwd=root,
+                                            env={**environment, "OXIMUT_ZYGOTE_COUNTERS_DIR": str(counters)},
                                             capture_output=True, text=True, timeout=300)
                     if result.returncode != 0:
                         raise RuntimeError(f"{execution}/{case} exited {result.returncode}: {result.stdout}\n{result.stderr}")
@@ -114,9 +151,16 @@ def smoke(prefix, *, reports_dir=None, validator=None, isolated=False):
                     archived.write_bytes(SANDBOX.read_regular(report))
                     subprocess.run(["node", str(validator), str(archived)], cwd=validator.parent,
                                    check=True, timeout=30)
+                forks = None
+                if require_zygote and execution == "persistent":
+                    forks = check_zygote(data, counters, f"{execution}/{case}")
                 results.append({"execution": execution, "case": case, "summary": summary,
-                                "cache": data.get("cache"), "report": str(archived if reports_dir else report)})
-                print(f"{execution}/{case}: baseline passed, {data['summary']['killed']} mutants killed")
+                                "cache": data.get("cache"), "zygoteForks": forks,
+                                "report": str(archived if reports_dir else report)})
+                note = ""
+                if require_zygote and execution == "persistent":
+                    note = f", zygote=on ({forks} forked workers)" if forks else ", zygote=on (cached outcomes)"
+                print(f"{execution}/{case}: baseline passed, {data['summary']['killed']} mutants killed{note}")
         if reports_dir:
             (reports_dir / "tests.json").write_text(json.dumps(results, indent=2) + "\n")
         return results
@@ -128,5 +172,8 @@ if __name__ == "__main__":
     parser.add_argument("--reports-dir", type=Path)
     parser.add_argument("--validator", type=Path, help="strict validate-reports.mjs entrypoint")
     parser.add_argument("--isolated", action="store_true", help="require Linux bubblewrap boundary")
+    parser.add_argument("--require-zygote", action="store_true",
+                        help="require the zygote addon and zygote-forked mutant workers (Linux glibc hosts)")
     args = parser.parse_args()
-    smoke(args.prefix, reports_dir=args.reports_dir, validator=args.validator, isolated=args.isolated)
+    smoke(args.prefix, reports_dir=args.reports_dir, validator=args.validator, isolated=args.isolated,
+          require_zygote=args.require_zygote)

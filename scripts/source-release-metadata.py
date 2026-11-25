@@ -80,11 +80,11 @@ def generate(repo, revision, workflow_commit, archive):
     builder.git(repo, "merge-base", "--is-ancestor", revision, workflow_commit)
     archive = archive.resolve()
     with tempfile.TemporaryDirectory(prefix="oximut-source-recheck-") as temporary:
-        expected = builder.build(repo, revision, "1.0.0-rc.1", Path(temporary))
+        expected = builder.build(repo, revision, "1.0.0-rc.2", Path(temporary))
         digest = builder.sha(archive.read_bytes())
         if archive.name != expected.name or digest != builder.sha(expected.read_bytes()):
             raise ValueError("archive differs from trusted builder output for candidate revision")
-    root = "oximut-1.0.0-rc.1/"
+    root = "oximut-1.0.0-rc.2/"
     with tarfile.open(archive, "r:gz") as tar:
         read = lambda name: tar.extractfile(root + name).read()
         manifest = json.loads(read("SOURCE-DISTRIBUTION/manifest.json"))
@@ -93,7 +93,7 @@ def generate(repo, revision, workflow_commit, archive):
                      digest, manifest["source"]["commitTime"])
     sbom_bytes = builder.json_bytes(sbom)
     evidence = {
-        "formatVersion": 1, "version": "1.0.0-rc.1", "candidateCommit": revision,
+        "formatVersion": 1, "version": "1.0.0-rc.2", "candidateCommit": revision,
         "workflowCommit": workflow_commit,
         "builderSha256": manifest["builderSha256"],
         "metadataGeneratorSha256": builder.sha(Path(__file__).read_bytes()),

@@ -187,7 +187,9 @@ def validate(archive, version, revision, tree, output):
                     prefix = relocated
                 reports = output / phase
                 log = run([sys.executable, harness / "scripts/smoke-install.py", "--prefix", prefix,
-                           "--reports-dir", reports, "--validator", harness / "scripts/validate-reports.mjs", "--isolated"],
+                           "--reports-dir", reports, "--validator", harness / "scripts/validate-reports.mjs", "--isolated",
+                           # The claimed host is Ubuntu 24.04 (glibc): the addon must be built and used.
+                           "--require-zygote"],
                           harness, timeout=1200)
                 evidence["tests"].append({"phase": phase, "passed": True, "log": log})
                 require(BUILDER.sha((prefix / "lib/oximut/oximut").read_bytes()) == evidence["binarySha256"],
