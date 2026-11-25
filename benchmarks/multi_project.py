@@ -56,7 +56,12 @@ STRYKER_STATUS = {'Killed': 'killed', 'Survived': 'survived', 'NoCoverage': 'no-
                   'Ignored': 'ignored'}
 # An Oximut outcome that means the engine, not the mutant, failed: the run says nothing about speed.
 ENGINE_FAILURES = frozenset({'infrastructure-error', 'resource-exhausted', 'skipped'})
-COPY_IGNORE = shutil.ignore_patterns('node_modules', '.oximut', '.vitest', '.stryker-tmp*', '.parity-commit')
+# tsconfig files are left out of every private copy: Stryker 10.1.1 rewrites any tsconfig it finds with
+# `ts.parseConfigFileTextToJson`, which the repository's TypeScript 7 no longer has, so Stryker would
+# crash on projects that ship one. Vitest and Oximut do not need them to run the sources, and both tools
+# see the same copy.
+COPY_IGNORE = shutil.ignore_patterns('node_modules', '.oximut', '.vitest', '.stryker-tmp*', '.parity-commit',
+                                     'tsconfig*.json')
 
 
 class BenchmarkError(Exception):
@@ -435,6 +440,7 @@ def run_cell(args, project, checkout):
             except BenchmarkError as error:
                 cell['runs'].append(failed_record(tool, row, error, index, warmup))
                 cell['status'], cell['error'] = 'failed', f'round {index} {tool}: {error}'
+                shutil.rmtree(project_dir, ignore_errors=True)
                 print(f'  FAILED: {error}', flush=True)
                 return cell
             stored, outcomes = record(tool, row, extra, index, warmup)

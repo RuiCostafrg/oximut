@@ -8,6 +8,8 @@ export default defineConfig({
   root: fileURLToPath(new URL('.', import.meta.url)),
   test: {
     include: ['src/**/*.test.ts'],
+    // Needs jsdom's `document` (a cross-realm Date); its source is outside the mutation scope too.
+    exclude: ['src/utils/_isValueMatch/_isValueMatch.test.ts'],
     environment: 'node',
     pool: 'forks',
     maxWorkers: 1,

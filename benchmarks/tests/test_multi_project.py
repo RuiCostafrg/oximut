@@ -153,6 +153,17 @@ class PrepareTests(ProjectCase):
         self.assertEqual((destination / bench.CONFIG_NAME).read_text(), 'export default {};')
         self.assertTrue((destination / 'node_modules').is_symlink())
 
+    def test_tsconfig_files_are_left_out_because_stryker_cannot_rewrite_them_under_typescript_7(self):
+        self.write('tsconfig.json', '{}')
+        self.write('tsconfig.base.json', '{}')
+        self.write('src/tsconfig.json', '{}')
+        config = self.directory / 'config.ts'
+        config.write_text('')
+        destination = self.directory / 'run'
+        bench.prepare_run({'name': 'p', 'copy': None, 'configSource': str(config)}, self.project, destination)
+        self.assertTrue((destination / 'src/a.ts').is_file())
+        self.assertEqual([p.name for p in destination.rglob('tsconfig*.json')], [])
+
     def test_a_declared_copy_path_missing_from_the_checkout_is_an_error(self):
         config = self.directory / 'config.ts'
         config.write_text('')

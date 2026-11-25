@@ -16,7 +16,7 @@ pull-request triggers.
 | Kind | Projects | Why |
 |---|---|---|
 | `startup` | the outcome-parity corpus, `benchmarks/parity/corpus.json`: ufo, pathe, hookable, std-env, tslog (3 to 57 Oximut mutants) | tiny scopes: wall time is dominated by fixed start-up cost |
-| `large` | valibot (`library/src`: actions, schemas, methods, utils; 469 mutants) and es-toolkit (array, math, string, object, predicate, util and their lodash-compatible counterparts; 677 mutants), pinned in `benchmarks/multi-project/projects.json` | hundreds of mutants: wall time is dominated by per-mutant cost |
+| `large` | valibot (`library/src`: actions, schemas, methods, utils; 467 mutants) and es-toolkit (array, math, string, object, predicate, util and their lodash-compatible counterparts; 677 mutants), pinned in `benchmarks/multi-project/projects.json` | hundreds of mutants: wall time is dominated by per-mutant cost |
 
 Every project is a pinned commit (exact SHA, fetched shallow; nothing is installed) run against the
 repository's Vitest, with a benchmark-owned Vitest config in node environment and the isolation Oximut

@@ -22,7 +22,8 @@
         "*.test-d.ts",
         "*/index.ts",
         "*/types.ts",
-        "*/types/*"
+        "*/types/*",
+        "*/_isValueMatch.ts"
       ]
     },
     {
