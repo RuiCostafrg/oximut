@@ -16,7 +16,7 @@ an email address or promise a response time.
 
 The supported configuration, when a release is made, is limited to the exact
 contract in [the compatibility matrix](docs/compatibility.md). The current
-source-only `1.0.0-rc.1` is a release candidate, not a stable release. Its
+source-only `1.0.0-rc.2` is a release candidate, not a stable release. Its
 acceptance is pending; no binary target matrix is claimed. See the
 [release checklist](docs/maintenance.md) for pending gates and evidence.
 

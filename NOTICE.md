@@ -4,7 +4,7 @@ Oximut's own source is licensed under the MIT License in [LICENSE](LICENSE),
 including its copyright and permission notice. This does not relicense third-party
 dependencies or establish that the complete installation is MIT-only.
 
-The 1.0.0-rc.1 source archive contains the full root `package-lock.json` and
+The 1.0.0-rc.2 source archive contains the full root `package-lock.json` and
 workspace `Cargo.lock`, including development, optional, and platform-specific
 locked entries. Runtime dependency source, npm tarballs, Cargo crates, `node_modules`,
 compiled executables, and their license texts are not vendored into the archive.

@@ -13,7 +13,7 @@ import test_distribution as distribution_fixture
 SPEC = importlib.util.spec_from_file_location("artifact_validator", Path(__file__).resolve().parents[1] / "scripts/validate-source.py")
 GATE = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(GATE)
-VERSION = "1.0.0-rc.1"
+VERSION = "1.0.0-rc.2"
 
 
 class ArtifactValidation(unittest.TestCase):
@@ -192,6 +192,8 @@ class ArtifactValidation(unittest.TestCase):
             self.assertTrue(command[1].endswith("smoke-install.py"))
             self.assertFalse(any(Path(cwd).parent.glob("oximut-1*")), "source must be removed")
             self.assertTrue((Path(cwd) / "docs/report.schema.json").is_file())
+            # The claimed glibc host must use the zygote, not just build it.
+            self.assertIn("--require-zygote", command)
             prefix = Path(command[command.index("--prefix") + 1])
             self.assertEqual((prefix / "lib/oximut/oximut").read_bytes(), b"exact compiled candidate")
             smokes.append(prefix)

@@ -17,14 +17,14 @@ The job checks out `github.workflow_sha`, requires it to equal the dispatch SHA,
 and requires the candidate to be an ancestor of that workflow commit. Archive
 construction reads candidate Git objects as data. Candidate installation and
 execution occur only inside the validation sandbox described below. This permits an older reviewed candidate with a newer trusted builder;
-both revisions and both script digests are recorded. Only `1.0.0-rc.1` is accepted,
+both revisions and both script digests are recorded. Only `1.0.0-rc.2` is accepted,
 and the builder checks all committed package versions against it.
 
 The trusted builder creates the archive. The metadata script independently
 rebuilds it in the same environment and compares the compressed archive SHA-256
 before producing external sidecars:
 
-- `oximut-1.0.0-rc.1-source.tar.gz` and its `.sha256` file;
+- `oximut-1.0.0-rc.2-source.tar.gz` and its `.sha256` file;
 - `.tar.gz.spdx.json`: SPDX 2.3 package inventory from the full root npm/Cargo
   locks, with no registry requests or license guesses;
 - `.tar.gz.evidence.json`: candidate/workflow commits, script/archive/inventory/
@@ -57,11 +57,11 @@ Use a clean checkout of the trusted workflow commit and an external output path:
 ```sh
 origin=$(git rev-parse HEAD)
 candidate=$origin # or an explicit reviewed ancestor SHA
-python3 scripts/build-source.py --revision "$candidate" --version 1.0.0-rc.1 \
+python3 scripts/build-source.py --revision "$candidate" --version 1.0.0-rc.2 \
   --output-dir /tmp/oximut-source-provenance
 python3 scripts/source-release-metadata.py --revision "$candidate" \
   --workflow-commit "$origin" \
-  --archive /tmp/oximut-source-provenance/oximut-1.0.0-rc.1-source.tar.gz
+  --archive /tmp/oximut-source-provenance/oximut-1.0.0-rc.2-source.tar.gz
 python3 -m unittest discover -s tests -p 'test_source_release_metadata.py' -v
 ```
 
@@ -77,16 +77,16 @@ independently of the downloaded candidate. For example, with the GitHub CLI:
 
 ```sh
 : "${REVIEWED_WORKFLOW_SHA:?Set the full reviewed workflow commit SHA}"
-gh attestation verify oximut-1.0.0-rc.1-source.tar.gz \
+gh attestation verify oximut-1.0.0-rc.2-source.tar.gz \
   --repo RuiCostafrg/oximut --signer-workflow RuiCostafrg/oximut/.github/workflows/source-candidate.yml \
   --source-ref refs/heads/main --signer-digest "$REVIEWED_WORKFLOW_SHA"
-gh attestation verify oximut-1.0.0-rc.1-source.tar.gz.evidence.json \
+gh attestation verify oximut-1.0.0-rc.2-source.tar.gz.evidence.json \
   --repo RuiCostafrg/oximut --signer-workflow RuiCostafrg/oximut/.github/workflows/source-candidate.yml \
   --source-ref refs/heads/main --signer-digest "$REVIEWED_WORKFLOW_SHA"
 gh attestation verify r3-validation.evidence.json \
   --repo RuiCostafrg/oximut --signer-workflow RuiCostafrg/oximut/.github/workflows/source-candidate.yml \
   --source-ref refs/heads/main --signer-digest "$REVIEWED_WORKFLOW_SHA"
-gh attestation verify oximut-1.0.0-rc.1-source.tar.gz.spdx.json \
+gh attestation verify oximut-1.0.0-rc.2-source.tar.gz.spdx.json \
   --repo RuiCostafrg/oximut --signer-workflow RuiCostafrg/oximut/.github/workflows/source-candidate.yml \
   --source-ref refs/heads/main --signer-digest "$REVIEWED_WORKFLOW_SHA"
 ```

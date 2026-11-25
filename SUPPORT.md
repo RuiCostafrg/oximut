@@ -6,7 +6,7 @@ Linux, Node, npm, Python, Rust, Oxc, Vitest, project, and instrumentation
 constraints. A pinned dependency version alone does not establish support for
 every project using it.
 
-The `1.0.0-rc.1` candidate is source-only and pending acceptance. It does not
+The `1.0.0-rc.2` candidate is source-only and pending acceptance. It does not
 establish a stable release or a binary compatibility matrix. The current
 release gates and their evidence status are tracked in the
 [maintenance checklist](docs/maintenance.md). Until those gates are accepted,

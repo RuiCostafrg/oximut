@@ -1,6 +1,6 @@
 # Candidate source distribution
 
-The initial distribution format for **1.0.0-rc.1** is a versioned source archive
+The distribution format for **1.0.0-rc.2** (unchanged since rc.1) is a versioned source archive
 intended for a GitHub Release attachment. This is a release candidate, not stable
 1.0.0. The builder creates local artifacts only: it does not create a release,
 push, tag, publish to npm/crates.io, or build downloadable binaries. GitHub's
@@ -25,10 +25,10 @@ and engine declarations must agree with the lockfile root entry.
 revision="$(git rev-parse HEAD)"
 python3 scripts/build-source.py \
   --revision "$revision" \
-  --version 1.0.0-rc.1 \
+  --version 1.0.0-rc.2 \
   --output-dir /tmp/oximut-source-candidate
 cd /tmp/oximut-source-candidate
-sha256sum -c oximut-1.0.0-rc.1-source.tar.gz.sha256
+sha256sum -c oximut-1.0.0-rc.2-source.tar.gz.sha256
 ```
 
 Use a new output directory outside the checkout; existing artifacts are never
@@ -76,11 +76,11 @@ sufficient disk space for the release build and full npm development dependency
 graph. The source builder does not download or check these toolchains.
 
 ```sh
-tar -xzf oximut-1.0.0-rc.1-source.tar.gz
-cd oximut-1.0.0-rc.1
+tar -xzf oximut-1.0.0-rc.2-source.tar.gz
+cd oximut-1.0.0-rc.2
 sha256sum -c SOURCE-DISTRIBUTION/SHA256SUMS
-python3 scripts/install-source.py --prefix "$HOME/oximut-rc1"
-python3 scripts/smoke-install.py --prefix "$HOME/oximut-rc1"
+python3 scripts/install-source.py --prefix "$HOME/oximut-rc2"
+python3 scripts/smoke-install.py --prefix "$HOME/oximut-rc2"          # add --require-zygote on glibc Linux
 ```
 
 The existing installer uses `cargo build --locked --release` and a fresh
@@ -92,9 +92,9 @@ To reinstall, run the installer into a new empty prefix. It refuses to overwrite
 an existing installation. Move the **whole prefix** together to relocate it:
 
 ```sh
-mv "$HOME/oximut-rc1" "$HOME/oximut-rc1-relocated"
-python3 scripts/smoke-install.py --prefix "$HOME/oximut-rc1-relocated"
-export PATH="$HOME/oximut-rc1-relocated/bin:$PATH"
+mv "$HOME/oximut-rc2" "$HOME/oximut-rc2-relocated"
+python3 scripts/smoke-install.py --prefix "$HOME/oximut-rc2-relocated"
+export PATH="$HOME/oximut-rc2-relocated/bin:$PATH"
 oximut --help
 ```
 
@@ -111,8 +111,8 @@ python3 -m unittest discover -s tests -p 'test_distribution.py' -v
 python3 -m unittest discover -s tests -p 'test_install.py' -v
 ```
 
-For unpublished RC1 notes, third-party licensing scope, and the manual source
-provenance gate, see [draft release notes](release-notes-1.0.0-rc.1.md),
+For RC2 notes, third-party licensing scope, and the manual source
+provenance gate, see [draft release notes](release-notes-1.0.0-rc.2.md),
 [notices](../NOTICE.md), and [source provenance](source-provenance.md).
 ## R3 exact artifact gate
 
@@ -174,3 +174,43 @@ Run the lightweight gate tests without Cargo/npm installation:
 python3 -m unittest discover -s tests -p 'test_artifact_validation.py' -v
 actionlint .github/workflows/source-artifact.yml
 ```
+
+## Validated Linux x86_64 prefix (private Homebrew tap)
+
+The source archive is the reviewable input. The **prebuilt prefix** that the
+private Homebrew tap installs (`validated-prefix.tar.gz`, attached to the GitHub
+pre-release) is a second artifact derived from it:
+
+1. `source-artifact.yml` builds the source archive for the PR/commit, then
+   `validate-source.py` installs it **once** on Ubuntu 24.04 x86_64 (Cargo
+   build, `npm ci`, zygote addon compile), deletes the extracted source, and
+   smokes the installed prefix, then the same prefix moved to a path with spaces.
+2. The workflow tars the final `relocated prefix with spaces/` directory as
+   `validated-prefix.tar.gz` with a `.sha256` sidecar, and uploads it with the
+   source archive and `evidence.json` as the `source-candidate-linux-x86_64`
+   Actions artifact.
+3. `evidence.json` records `binarySha256`: the SHA-256 of
+   `lib/oximut/oximut` in that exact prefix. The Homebrew formula pins both the
+   tarball SHA-256 (its `sha256`) and this binary SHA-256, and refuses to install
+   if the extracted binary differs. Nothing is rebuilt or re-installed by brew.
+
+The prefix includes the compiled zygote addon
+(`lib/oximut/packages/vitest-adapter/native/build/zygote-fork.node`). It is built
+by `scripts/build-zygote-addon.py` against the Node 26.3.1 headers that the
+runner used. It is a Node-API (`node_api.h`) addon, so it loads in any Node
+26.3.1 build, including the private Node the formula installs. It needs glibc
+2.34 or newer (the Oximut binary itself needs glibc 2.39). The R3 smoke runs
+with `--require-zygote`: the prefix must contain the addon, every persistent run
+that executes mutants must report `zygote=on`, and the pool's own counters must
+show forked workers and no zygote failure. A requested-but-unloadable addon
+would fall back to normal workers silently, which that check does not accept.
+
+A host without the addon (musl/Alpine, macOS, a source install without a C
+compiler) is still a working install: the installer prints
+`Zygote addon skipped: ...`, the run reports `zygote=off`, and mutants run in
+normal workers with identical outcomes. The musl fallback is exercised in CI by
+the `Zygote workers` workflow.
+
+Neither tarball nor evidence is a signed or attested binary: the attestation
+workflow (`source-candidate.yml`) attests the source archive and its metadata
+only.
