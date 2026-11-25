@@ -135,7 +135,7 @@ def stryker_excluded(scope):
 def stryker_config(files, workers, scope, related=False):
     config = {
         'mutate': files,
-        'files': ['**/*', '!node_modules/**', '!.stryker-tmp*/**', '!.oximut/**'],
+        'ignorePatterns': ['node_modules', '.stryker-tmp*', '.oximut'],
         'testRunner': 'vitest', 'vitest': {'configFile': CONFIG_NAME, 'related': related},
         'coverageAnalysis': 'perTest', 'concurrency': workers, 'checkers': [],
         'incremental': False, 'reporters': ['json'],
