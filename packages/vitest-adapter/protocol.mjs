@@ -102,7 +102,6 @@ export function validateRequest(value) {
         job.root !== value.root ||
         job.config !== value.config ||
         job.runId !== value.runId ||
-        job.deadlineMs !== value.lanes[0].deadlineMs ||
         /** @type {number} */ (job.deadlineMs) > /** @type {number} */ (value.deadlineMs) ||
         job.pool !== value.pool ||
         job.collectCoverage !== undefined ||

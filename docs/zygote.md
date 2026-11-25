@@ -88,7 +88,8 @@ A zygote worker that deadlocks looks like a timeout, which a normal worker would
 not produce. So the controller treats a zygote timeout with suspicion:
 
 - A mutant that times out under the zygote is **rerun once on a normal worker**.
-  The rerun's result is the one reported.
+  The rerun's result is the one reported. It is the same request, so it has the
+  mutant's own scaled deadline ([deadlines.md](deadlines.md)).
 - If the rerun does **not** time out (a mismatch), the zygote is **disabled for
   the rest of the run**.
 - If the rerun times out too, the timeout stands and the zygote stays enabled.

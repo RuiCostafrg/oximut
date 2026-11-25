@@ -4,6 +4,7 @@ import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createVitest, version, type Reporter } from 'vitest/node';
 import type { Request, Result } from './protocol.ts';
+import { attachBaselineEvidence } from './baseline-evidence.ts';
 import { SelectionSupport } from './m3-selection.ts';
 
 const compileCacheFlush = fileURLToPath(new URL('./compile-cache.cjs', import.meta.url));
@@ -179,6 +180,7 @@ async function command(name: string, args: Request): Promise<unknown> {
     errors: errors.slice(0, 8).map((error) => String(error.message ?? error).slice(0, 2048)),
   };
   result.coverage = selectionSupport.finish(vitest, job, modules, result);
+  attachBaselineEvidence(job, modules, result);
   selectionSupport.close();
   return result;
 }

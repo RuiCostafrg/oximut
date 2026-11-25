@@ -26,6 +26,10 @@ test('both workers reject an unpinned Vitest before creating a controller', {
       .replace("from 'vitest/node'", `from ${JSON.stringify(stub)}`)
       .replace("from 'vite'", `from ${JSON.stringify(import.meta.resolve('vite'))}`)
       .replace(
+        "from './baseline-evidence.ts'",
+        `from '${new URL('../baseline-evidence.ts', import.meta.url).href}'`,
+      )
+      .replace(
         "from './m3-selection.ts'",
         `from '${new URL('../m3-selection.ts', import.meta.url).href}'`,
       )
