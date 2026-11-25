@@ -17,7 +17,9 @@ class PersistentEquivalence(unittest.TestCase):
             result = subprocess.run([
                 str(BINARY), '--root', str(root), '--config', str(root / 'vitest.config.ts'),
                 '--source', str(root / 'src' / source), '--execution', mode,
-                '--order-seed', str(seed), '--report', str(report), *extra,
+                '--order-seed', str(seed), '--report', str(report),
+                # Selection is on by default; these tests name the modes they compare.
+                *([] if '--test-selection' in extra else ['--no-test-selection']), *extra,
             ], cwd=REPO, text=True, capture_output=True, timeout=180)
             self.assertIn(result.returncode, (0, 1), result.stdout + result.stderr)
             payload = json.loads(report.read_text())
@@ -70,7 +72,7 @@ test('enabled', () => expect(enabled).toBe(true));
             result = subprocess.run([
                 str(BINARY), '--root', str(root), '--source', 'source.ts',
                 '--config', 'vitest.config.mjs', '--execution', 'persistent',
-                '--workers', '2', '--no-cache',
+                '--workers', '2', '--no-cache', '--no-test-selection',
                 '--mutators', 'boolean-literal', '--report', str(report),
             ], cwd=REPO, capture_output=True, text=True, timeout=90)
             payload = json.loads(report.read_text())
@@ -122,8 +124,8 @@ test('enabled', () => expect(enabled).toBe(true));
                     result = subprocess.run([
                         str(BINARY), '--root', str(root), '--source', 'source.ts',
                         '--config', 'vitest.config.mjs', '--execution', 'persistent',
-                        '--workers', '2', '--no-cache', '--mutators', 'boolean-literal',
-                        '--report', str(report), *extra,
+                        '--workers', '2', '--no-cache', '--no-test-selection',
+                        '--mutators', 'boolean-literal', '--report', str(report), *extra,
                     ], cwd=REPO, capture_output=True, text=True, timeout=120)
                     payload = json.loads(report.read_text())
                     self.assertIn(result.returncode, (0, 1), payload)

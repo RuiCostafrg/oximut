@@ -28,7 +28,8 @@ INSTALL_SPEC.loader.exec_module(INSTALLER)
 class InstalledLauncher(unittest.TestCase):
     def test_prefix_and_mode_resolution(self):
         prefix = Path("/tmp/relocated prefix")
-        for arguments, runner in [([], "m1"), (["--execution", "persistent"], "m2"),
+        for arguments, runner in [([], "m2"), (["--execution", "fresh"], "m1"),
+                                  (["--execution", "persistent"], "m2"),
                                   (["--execution", "persistent", "--execution", "fresh"], "m1")]:
             self.assertEqual(LAUNCHER.command(prefix, arguments), [
                 str(prefix / "lib/oximut/oximut"), "--adapter",
@@ -41,7 +42,9 @@ class InstalledLauncher(unittest.TestCase):
                          [str(prefix / "lib/oximut/oximut"), *arguments])
         # Values that happen to look like flags must not change launcher mode.
         arguments = ["--config", "--execution", "--source", "persistent"]
-        self.assertIn("m1-runner.mjs", " ".join(LAUNCHER.command(prefix, arguments)))
+        self.assertIn("m2-runner.mjs", " ".join(LAUNCHER.command(prefix, arguments)))
+        arguments = ["--config", "--execution", "--source", "fresh"]
+        self.assertIn("m2-runner.mjs", " ".join(LAUNCHER.command(prefix, arguments)))
 
 
 class SourceInstaller(unittest.TestCase):

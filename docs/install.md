@@ -52,8 +52,9 @@ adapter. Use the launcher above, or pass an explicit adapter with its dependenci
 
 On Linux with glibc and a C compiler, the installer also compiles an optional
 native "zygote" addon into the bundle; otherwise it prints a skip notice, the
-install still succeeds, and Oximut uses normal workers. It is used by default for
-`--execution persistent` runs (opt out with `--no-zygote`); see [Zygote workers](zygote.md).
+install still succeeds, and Oximut uses normal workers. It is used by default on
+Linux, because persistent execution is the default (opt out with `--no-zygote` or
+`--execution fresh`); see [Zygote workers](zygote.md).
 
 The installer refuses to overwrite an existing `PREFIX/bin/oximut` or
 `PREFIX/lib/oximut`. To update, install into a new prefix and switch your PATH.

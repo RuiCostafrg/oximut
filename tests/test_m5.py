@@ -80,7 +80,7 @@ class ResourceBudget(unittest.TestCase):
     def command(self, *extra):
         return [str(BIN), '--root', str(self.root), '--source', 'subject.ts',
                 '--adapter', str(self.adapter), '--report', '-', '--timeout-ms', '500',
-                '--memory-reserve-mib', '8', *extra]
+                '--memory-reserve-mib', '8', '--execution', 'fresh', *extra]
 
     def environment(self, mode='normal'):
         return {**os.environ, 'OXIMUT_M5_MODE': mode, 'OXIMUT_M5_LOG': str(self.log)}

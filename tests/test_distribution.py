@@ -124,7 +124,7 @@ class SourceDistribution(unittest.TestCase):
                 "try { p.validateRequest(null); throw new Error('accepted invalid request'); }"
                 "catch (e) { if (e.message !== 'Unsupported or missing protocol (expected 1)') throw e; }",
             ], cwd=self.base, check=True, capture_output=True, text=True, timeout=10)
-            for arguments, runner in (([], "m1"), (["--execution", "persistent"], "m2")):
+            for arguments, runner in (([], "m2"), (["--execution", "fresh"], "m1"), (["--execution", "persistent"], "m2")):
                 result = json.loads(subprocess.check_output(
                     [str(prefix / "bin/oximut"), *arguments], cwd=self.base))
                 self.assertEqual(result, ["--adapter", str(

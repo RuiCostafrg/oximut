@@ -190,6 +190,23 @@ class AdapterProvenanceTests(unittest.TestCase):
             with self.subTest(rejected=rejected):
                 self.assertIsNotNone(benchmark.mode_args_error(rejected))
 
+    def test_opt_outs_are_allowed_bare_mode_flags(self):
+        for flag in ('--no-test-selection', '--no-zygote-precollect', '--no-rolling-lanes'):
+            self.assertIsNone(benchmark.mode_args_error([flag]), flag)
+            self.assertIsNotNone(benchmark.mode_args_error([f'{flag}=1']), flag)
+
+    def test_no_test_selection_replaces_the_pinned_flag_instead_of_conflicting(self):
+        args = SimpleNamespace(binary=Path('/candidate'), adapter=None,
+                               adapter_source_dir=None, diagnostic_unrestricted=False)
+        manifest = {'mutate': ['src/a.ts'], 'families': ['arithmetic']}
+        pinned = benchmark.command('oximut', args, Path('/p'), Path('/r'), manifest)
+        self.assertIn('--test-selection', pinned)
+        self.assertEqual(pinned[pinned.index('--execution') + 1], 'persistent')
+        args.oximut_arg = ['--no-test-selection']
+        opted_out = benchmark.command('oximut', args, Path('/p'), Path('/r'), manifest)
+        self.assertNotIn('--test-selection', opted_out)
+        self.assertIn('--no-test-selection', opted_out)
+
     def test_full_adapter_graph_and_binary_changes_are_visible(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -515,4 +532,4 @@ class ModeArgumentTests(unittest.TestCase):
                              '--after-binary', 'b', '--after-adapter-dir', 'd',
                              '--after-commit', 'a' * 40] if flag.startswith('--after') else [])])
             # The allowlist, not some later path check, must reject it.
-            self.assertIn(f'{flag}: only --isolation, --no-zygote, --rolling-lanes, --zygote, --zygote-precollect may be passed', stderr.getvalue())
+            self.assertIn(f'{flag}: only --isolation, --no-rolling-lanes, --no-test-selection, --no-zygote, --no-zygote-precollect, --rolling-lanes, --zygote, --zygote-precollect may be passed', stderr.getvalue())
