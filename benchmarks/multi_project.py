@@ -203,7 +203,7 @@ def prepare_run(project, source, destination):
 def tool_command(tool, binary, project_dir, files, workers, report):
     if tool == 'vitest':
         return ['node', str(ROOT / 'node_modules/vitest/vitest.mjs'), 'run', '--config', CONFIG_NAME,
-                '--reporter=json', f'--outputFile={report}']
+                '--reporter=default', '--reporter=json', f'--outputFile.json={report}']
     if tool == 'stryker':
         return ['node', str(ROOT / 'node_modules/@stryker-mutator/core/bin/stryker.js'),
                 'run', 'stryker.config.mjs']
@@ -444,6 +444,11 @@ def run_cell(args, project, checkout):
                 extra = analyze(tool, row, report, project_dir, args.workers)
             except BenchmarkError as error:
                 cell['runs'].append(failed_record(tool, row, error, index, warmup))
+                if tool == 'vitest':
+                    # Plain Vitest is only the suite-time reference: the cell keeps going and says so.
+                    print(f'  plain Vitest run unusable (cell continues): {error}', flush=True)
+                    shutil.rmtree(project_dir, ignore_errors=True)
+                    continue
                 cell['status'], cell['error'] = 'failed', f'round {index} {tool}: {error}'
                 shutil.rmtree(project_dir, ignore_errors=True)
                 print(f'  FAILED: {error}', flush=True)

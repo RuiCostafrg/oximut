@@ -402,6 +402,14 @@ class ReportTests(unittest.TestCase):
         self.assertIn('Oximut outcomes differ between rounds', flags)
         self.assertIn('Oximut run incomplete (timeout or invalid mutants)', flags)
 
+    def test_a_failed_plain_vitest_run_does_not_hide_the_comparison_but_is_flagged(self):
+        runs = paired_runs([4.] * 3, [10.] * 3)
+        runs.append({'tool': 'vitest', 'round': 4, 'warmup': False, 'valid': False, 'error': 'vitest: exit code 1',
+                     'wall_seconds': 2., 'cpu_seconds': 2., 'peak_aggregate_rss_bytes': 1, 'exit_code': 1})
+        summary = report.summarize_cell(cell(runs))
+        self.assertEqual(summary['status'], 'ok')
+        self.assertIn('plain Vitest run failed in 1 round(s): vitest: exit code 1', summary['flags'])
+
     def test_failed_and_skipped_cells_are_reported_not_dropped(self):
         failed = report.summarize_cell(cell([], status='failed', error='round 1 stryker: exit code 1'))
         skipped = report.summarize_cell(cell([], status='skipped', error='8 workers exceed the 4 usable CPUs',

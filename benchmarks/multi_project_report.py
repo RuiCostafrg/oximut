@@ -104,8 +104,10 @@ def summarize_cell(cell):
     summary['oximut']['phase_wall_ms'] = oximut[0].get('phase_wall_ms')
     summary['oximut']['diagnostics'] = oximut[0].get('diagnostics')
     summary['stryker']['log'] = stryker[0].get('log')
+    plain_failures = [run for run in cell['runs'] if run['tool'] == 'vitest' and not run['valid']]
     summary['vitest'] = {'wall_seconds': median(run['wall_seconds'] for run in vitest),
                          'tests': vitest[0].get('tests') if vitest else None}
+    summary['vitest']['failures'] = [run['error'] for run in plain_failures]
     summary['scope_comparison'] = cell.get('scope_comparison')
     summary['flags'] = flags_for(summary)
     return summary
@@ -135,6 +137,9 @@ def flags_for(summary):
             flags.append(f'{name} outcomes differ between rounds')
     if not oximut['complete']:
         flags.append('Oximut run incomplete (timeout or invalid mutants)')
+    if summary['vitest']['failures']:
+        flags.append(f"plain Vitest run failed in {len(summary['vitest']['failures'])} round(s): "
+                     f"{summary['vitest']['failures'][0]}")
     if summary['oximut']['rounds'] != summary['stryker']['rounds']:
         flags.append('unequal valid rounds')
     return flags
