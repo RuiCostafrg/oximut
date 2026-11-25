@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "workers": 4,
+  "projects": [
+    {
+      "name": "ufo",
+      "repository": "https://github.com/unjs/ufo",
+      "commit": "f06c800d0c59f2a4a1b9ba65eb6cb61a84419be6",
+      "license": "MIT",
+      "description": "Pure string/URL functions: the no-mocking baseline.",
+      "vitestConfig": "configs/ufo.vitest.config.ts",
+      "configFile": "oximut-parity.vitest.config.ts",
+      "mutate": [
+        "src/utils.ts",
+        "src/url.ts",
+        "src/parse.ts"
+      ]
+    },
+    {
+      "name": "pathe",
+      "repository": "https://github.com/unjs/pathe",
+      "commit": "bc7477a01f0bd60ada017add8142c9f9d69ccdc5",
+      "license": "MIT",
+      "description": "Path utilities; a test replaces process.cwd with vi.fn.",
+      "vitestConfig": "configs/pathe.vitest.config.ts",
+      "configFile": "oximut-parity.vitest.config.ts",
+      "mutate": [
+        "src/_path.ts",
+        "src/utils.ts"
+      ]
+    },
+    {
+      "name": "hookable",
+      "repository": "https://github.com/unjs/hookable",
+      "commit": "6815e4fed0411f3e2f91a31bdb107d8aeac0a266",
+      "license": "MIT",
+      "description": "Stateful async hook registry; vi.fn console stubs and node:vm.",
+      "vitestConfig": "configs/hookable.vitest.config.ts",
+      "configFile": "oximut-parity.vitest.config.ts",
+      "mutate": [
+        "src/hookable.ts",
+        "src/utils.ts",
+        "src/debugger.ts"
+      ]
+    },
+    {
+      "name": "std-env",
+      "repository": "https://github.com/unjs/std-env",
+      "commit": "a737979c093cf02381a21cb823c78e271cab24c2",
+      "license": "MIT",
+      "description": "Environment detection evaluated at module load; vi.stubEnv per test.",
+      "vitestConfig": "configs/std-env.vitest.config.ts",
+      "configFile": "oximut-parity.vitest.config.ts",
+      "mutate": [
+        "src/agents.ts",
+        "src/providers.ts",
+        "src/flags.ts"
+      ]
+    },
+    {
+      "name": "tslog",
+      "repository": "https://github.com/fullstack-build/tslog",
+      "commit": "3fe22e1aa80ef6ab5708c459ab265271479875e9",
+      "license": "MIT",
+      "description": "Fake timers, stubbed globals (fetch, AbortSignal) and module-level exit hooks.",
+      "vitestConfig": "configs/tslog.vitest.config.ts",
+      "configFile": "oximut-parity.vitest.config.ts",
+      "mutate": [
+        "src/subpaths/throttle.ts",
+        "src/subpaths/transports/http.ts",
+        "src/core/masking.ts"
+      ]
+    }
+  ]
+}
