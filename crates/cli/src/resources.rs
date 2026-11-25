@@ -566,21 +566,35 @@ fn rss_counter(pid: u32) -> Result<Option<u64>, String> {
         .map(Some)
         .ok_or_else(|| format!("RSS statm overflow for PID {pid}"))
 }
-fn rollup_rss(rollup: &str) -> Result<u64, String> {
-    let mut fields = rollup
+/// The `Rss` or `Pss` line of a smaps rollup, in bytes.
+fn rollup_field(rollup: &str, name: &str) -> Result<Option<u64>, String> {
+    let Some(line) = rollup
         .lines()
-        .find_map(|line| line.strip_prefix("Rss:"))
-        .ok_or("RSS rollup is missing Rss")?
-        .split_whitespace();
+        .find_map(|line| line.strip_prefix(name)?.strip_prefix(':'))
+    else {
+        return Ok(None);
+    };
+    let mut fields = line.split_whitespace();
     let kib: u64 = fields
         .next()
         .and_then(|value| value.parse().ok())
-        .ok_or("RSS rollup has invalid Rss")?;
+        .ok_or_else(|| format!("RSS rollup has invalid {name}"))?;
     if fields.next() != Some("kB") || fields.next().is_some() {
-        return Err("RSS rollup has invalid Rss units".into());
+        return Err(format!("RSS rollup has invalid {name} units"));
     }
     kib.checked_mul(1024)
-        .ok_or_else(|| "RSS rollup Rss overflow".into())
+        .map(Some)
+        .ok_or_else(|| format!("RSS rollup {name} overflow"))
+}
+/// The memory one process is charged for. Pss splits every shared page among the
+/// processes mapping it, so a tree of forks that share a warm zygote's or a
+/// template's pages (copy-on-write) is charged for those pages once, as the
+/// kernel's own counters see it; Rss would charge them once per process and
+/// price a four-lane controller at several times its real footprint. A rollup
+/// without Pss (it has been there since Linux 4.14) falls back to Rss.
+fn rollup_rss(rollup: &str) -> Result<u64, String> {
+    let rss = rollup_field(rollup, "Rss")?.ok_or("RSS rollup is missing Rss")?;
+    Ok(rollup_field(rollup, "Pss")?.map_or(rss, |pss| pss.min(rss)))
 }
 // Discovery is shared and identities are re-checked fresh for every aggregate/
 // slot observation, including roots and the final CLI floor. Each verified PID's
@@ -705,7 +719,7 @@ impl Budget {
             budget_bytes: budget,
             reserve_bytes: reserve,
             cgroups,
-            measurement: "Peaks and decisions use exact Linux /proc smaps_rollup Rss samples (forced and periodic escalations at least once per second), approximate stat RSS fallback on older/restricted kernels; other periodic samples use kernel counters only to decide escalation; main CLI and all descendants, shared pages counted per process",
+            measurement: "Peaks and decisions use exact Linux /proc smaps_rollup Pss samples (Rss if the rollup has no Pss) (forced and periodic escalations at least once per second), approximate stat RSS fallback on older/restricted kernels; other periodic samples use kernel counters only to decide escalation; main CLI and all descendants, each shared page divided among the processes mapping it (proportional set size, so a copy-on-write page shared by forks is counted once in total)",
             enforcement: "best-effort sampled admission and process-tree cancellation; existing cgroup limits are OS-enforced; no new hard cap installed",
             sample_interval_ms: SAMPLE_MS,
             peak_aggregate_rss_bytes: 0,
@@ -2378,17 +2392,27 @@ mod tests {
     }
 
     #[test]
-    fn rollup_uses_resident_rss_and_rejects_invalid_accounting() {
+    fn rollup_charges_shared_pages_by_proportion_and_rejects_invalid_accounting() {
+        // Pss is the charge; Pss_Anon and friends are other lines.
         assert_eq!(
-            rollup_rss("Pss: 1 kB\nRss: 65536 kB\nAnonymous: 2 kB\n").unwrap(),
+            rollup_rss("Rss: 65536 kB\nPss: 1024 kB\nPss_Anon: 7 kB\nAnonymous: 2 kB\n").unwrap(),
+            MIB
+        );
+        // No Pss: the resident size stands.
+        assert_eq!(
+            rollup_rss("Rss: 65536 kB\nAnonymous: 2 kB\n").unwrap(),
             64 * MIB
         );
+        // A Pss above Rss cannot be right; the smaller figure is never exceeded.
+        assert_eq!(rollup_rss("Rss: 1024 kB\nPss: 2048 kB\n").unwrap(), MIB);
         for invalid in [
             "Pss: 10 kB\n",
             "Rss: not-a-number kB\n",
             "Rss: 10 MB\n",
             "Rss: 10 kB extra\n",
             "Rss: 18446744073709551615 kB\n",
+            "Rss: 10 kB\nPss: nope kB\n",
+            "Rss: 10 kB\nPss: 1 MB\n",
         ] {
             assert!(rollup_rss(invalid).is_err(), "{invalid}");
         }
