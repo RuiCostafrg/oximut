@@ -101,6 +101,8 @@ function* decode(pending, chunk) {
  * and may instead adopt a real ChildProcess if the zygote fails first.
  */
 class ZygoteChild extends EventEmitter {
+  // Lets the lane pool tell a zygote child from a real process (shared-lanes.ts).
+  oximutZygote = true;
   pid = undefined;
   exitCode = null;
   signalCode = null;

@@ -557,3 +557,54 @@ zygoteTest(
     assert.ok(written.length > 0, 'no worker trace files');
   },
 );
+
+zygoteTest(
+  'a rolling zygote lane frees its slot at the result and the batch still leaves no worker behind',
+  { timeout: 240000 },
+  async (t) => {
+    const { mkdtemp } = await import('node:fs/promises');
+    const { tmpdir } = await import('node:os');
+    const trace = await mkdtemp(join(tmpdir(), 'oximut-trace-'));
+    t.after(() => rm(trace, { recursive: true, force: true }));
+    const result = await scenario(
+      t,
+      [
+        [
+          ['fn', true],
+          ['n1', true],
+          ['n2', true],
+          ['n3', true],
+          ['n4', true],
+        ],
+      ],
+      { OXIMUT_ZYGOTE: '1', OXIMUT_TRACE_TIMELINE: trace },
+      '',
+      'baseline',
+      2,
+      false,
+    );
+    // Outcomes are those of a worker that is stopped the ordinary way.
+    assert.deepEqual(result.outcomes, [['failed', 'passed', 'passed', 'passed', 'passed']]);
+    assert.equal(result.counters.zygoteFailures, 0);
+    assert.equal(result.counters.fallbacks, 0);
+    assert.deepEqual(result.alive, [[]]);
+    const controller = (await readdir(trace)).filter((name) => name.startsWith('controller-'));
+    const events = (
+      await Promise.all(controller.map((name) => readFile(join(trace, name), 'utf8')))
+    )
+      .flatMap((text) => text.split('\n').filter(Boolean))
+      .map((line) => JSON.parse(line));
+    const count = (name) => events.filter((event) => event.event === name).length;
+    // Every lane worker was killed at its result and every exit was still observed
+    // (and so reaped) before the batch was answered.
+    assert.equal(count('lane_killed'), 5);
+    assert.equal(count('lane_exit'), 5);
+    // Each exit is attributed to the lane's own mutant, not to its slot's next one.
+    for (const id of ['fn', 'n1', 'n2', 'n3', 'n4']) {
+      const mine = events.filter((event) => event.mutant === id);
+      const killed = mine.find((event) => event.event === 'lane_killed');
+      const exited = mine.find((event) => event.event === 'lane_exit');
+      assert.ok(killed && exited && exited.t >= killed.t, `${id}: killed then exited`);
+    }
+  },
+);
