@@ -3,7 +3,7 @@ import { defineConfig } from 'vitest/config';
 
 // Multi-project benchmark config for es-toolkit: the colocated spec files of the benchmarked
 // modules, run under the isolation Oximut requires (node environment, one fork, sequential
-// files). Specs that need packages the repository does not install (fast-check) or that import the
+// files). Specs that need a DOM (happy-dom), packages the repository does not install (fast-check) or that import the
 // built `es-toolkit/compat` package instead of the source are left out.
 const modules = ['array', 'math', 'string', 'object', 'predicate', 'util'];
 const compat = ['array', 'math', 'object', 'string', 'util', 'predicate'];
@@ -17,6 +17,9 @@ export default defineConfig({
     ],
     exclude: [
       'src/array/chunk.spec.ts',
+      // happy-dom specs: the benchmark is node-only.
+      'src/object/cloneDeep.dom.spec.ts',
+      'src/predicate/isBrowser.spec.ts',
       'src/compat/array/findLast.spec.ts',
       'src/compat/array/groupBy.spec.ts',
       'src/compat/array/reduce.spec.ts',

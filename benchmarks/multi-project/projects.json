@@ -53,7 +53,8 @@
       "mutateExclude": [
         "*.spec.ts",
         "*/index.ts",
-        "*.d.ts"
+        "*.d.ts",
+        "*/isBrowser.ts"
       ]
     }
   ]
