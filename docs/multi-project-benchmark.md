@@ -65,7 +65,8 @@ cache, alternating the order, using the same process-tree measurement as the oth
 (`benchmarks/run.py`: wall, CPU from `wait4` rusage, peak aggregate RSS). A cell fails (and records why)
 when a run times out, a command fails, the Oximut baseline fails, Oximut reports engine failures
 (infrastructure error, resource exhaustion) or ran fewer workers than requested. Oximut timeouts and
-invalid mutants keep the run (they are real behavior) but flag it incomplete.
+invalid mutants keep the run (they are real behavior) but flag it incomplete, and so do memory-pressure pauses of
+Oximut's admission (its default memory budget; the colord harness rejects them).
 
 Worker counts above the usable CPUs are recorded as `skipped`, never run: Oximut caps its workers at the
 CPU count and Stryker does not, so they would not be matched. GitHub standard runners have 4 vCPUs, so
@@ -80,8 +81,8 @@ interval, CPU ratio, RSS ratio, the Oximut outcome sha (`mutation_identity_outco
 parity corpus), and killed / survived / no-coverage counts of both tools. Ratios are Oximut divided by
 Stryker, paired per round; the interval is the deterministic paired percentile bootstrap used by
 `benchmarks/targets.py` (about the min-max range at 3 rounds). Further tables show where the time goes
-(Vitest suite time, share of Oximut's wall in its mutation phase, wall per mutant for both tools,
-Stryker's initial run) and the mutant overlap.
+(Vitest suite time, share of Oximut's wall in its mutation phase, how many Oximut mutants selected the
+whole suite or timed out, wall per mutant for both tools, Stryker's initial run) and the mutant overlap.
 
 Flags call out cells worth a second look: Oximut slower than Stryker, a wall ratio above the 0.5x goal,
 a detection-rate gap of 10 percentage points or more between the tools, shared mutants classified

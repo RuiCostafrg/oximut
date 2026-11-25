@@ -103,6 +103,7 @@ def summarize_cell(cell):
     summary['oximut']['complete'] = all(run.get('complete') for run in oximut)
     summary['oximut']['selection_modes'] = oximut[0].get('selection_modes')
     summary['oximut']['full_suite_reasons'] = oximut[0].get('full_suite_reasons')
+    summary['oximut']['admission_pauses'] = max(run.get('admission_pauses') or 0 for run in oximut)
     summary['oximut']['phase_wall_ms'] = oximut[0].get('phase_wall_ms')
     summary['oximut']['diagnostics'] = oximut[0].get('diagnostics')
     summary['stryker']['log'] = stryker[0].get('log')
@@ -126,7 +127,10 @@ def flags_for(summary):
             flags.append(f'wall ratio above the {WALL_TARGET:g}x target')
     gap_rates = (rate_text(oximut['counts']), rate_text(stryker['counts']))
     if None not in gap_rates and abs(gap_rates[0] - gap_rates[1]) >= SCORE_GAP:
-        flags.append(f'score gap {100 * (gap_rates[0] - gap_rates[1]):+.1f} pp (Oximut - Stryker)')
+        shared = (f"; the {summary['scope_comparison']['shared']} shared mutants: "
+                  f"{summary['scope_comparison']['shared_agree']} same verdict"
+                  if summary.get('scope_comparison') else '')
+        flags.append(f'score gap {100 * (gap_rates[0] - gap_rates[1]):+.1f} pp (Oximut - Stryker){shared}')
     comparison = summary.get('scope_comparison')
     if comparison and comparison['shared_disagree']:
         flags.append(f"{comparison['shared_disagree']}/{comparison['shared']} shared mutants classified differently")
@@ -141,6 +145,8 @@ def flags_for(summary):
     for name, tool in (('Oximut', oximut), ('Stryker', stryker)):
         if not tool['stable_outcomes']:
             flags.append(f'{name} outcomes differ between rounds')
+    if oximut.get('admission_pauses'):
+        flags.append(f"memory pressure paused Oximut's admission {oximut['admission_pauses']} time(s)")
     if not oximut['complete']:
         flags.append('Oximut run incomplete (timeout or invalid mutants)')
     if summary['vitest']['failures']:
@@ -206,6 +212,7 @@ def diagnostics_rows(summaries):
             summary['project'], str(summary['workers']),
             seconds(summary['vitest']['wall_seconds']),
             f'{100 * execution / wall_ms:.0f}%' if execution is not None and wall_ms else 'n/a',
+            str((oximut.get('selection_modes') or {}).get('full', 'n/a')), str(oximut['counts'].get('timeout', 0)),
             f"{wall_ms / oximut['mutants']:.0f}", f"{1000 * stryker['wall_seconds'] / stryker['mutants']:.0f}",
             seconds(stryker_log.get('initial_run_seconds')),
             f"{100 * stryker_log['mutation_phase_seconds'] / summary['stryker']['wall_seconds']:.0f}%"
@@ -215,6 +222,7 @@ def diagnostics_rows(summaries):
 
 
 DIAGNOSTIC_HEADER = ['Project', 'Workers', 'Vitest suite s', 'Oximut mutation-phase share of wall',
+                     'Oximut mutants on the whole suite', 'Oximut timeouts',
                      'Oximut ms/mutant (wall)', 'Stryker ms/mutant (wall)', 'Stryker initial run s',
                      'Stryker mutation-phase share of wall']
 

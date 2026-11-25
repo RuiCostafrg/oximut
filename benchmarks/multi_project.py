@@ -369,9 +369,10 @@ def analyze(tool, row, report_path, project_dir, workers):
         if failures:
             raise BenchmarkError(f'oximut: engine failure outcomes {failures}')
         resources = report.get('resources') if isinstance(report.get('resources'), dict) else {}
-        unmatched = real_project.parallelism_errors({'resources': resources}, workers)
-        if unmatched:
-            raise BenchmarkError('oximut: ' + '; '.join(unmatched))
+        # Fewer workers than Stryker is not a matched run. Memory-pressure pauses are Oximut's own default
+        # behavior, so the run is kept and the pauses are reported (the colord harness rejects them).
+        if workers > 1 and resources.get('effectiveWorkers') != workers:
+            raise BenchmarkError(f"oximut: ran {resources.get('effectiveWorkers')} workers, not the matched {workers}")
         selections = [mutant.get('selection') or {} for mutant in report['mutants']]
         fallback = [selection for selection in selections if selection.get('mode') == 'full']
         reasons = {}
@@ -383,6 +384,7 @@ def analyze(tool, row, report_path, project_dir, workers):
                 'full_suite_reasons': dict(sorted(reasons.items())),
                 'tests': baseline.get('tests', {}).get('passed'),
                 'diagnostics': [line for line in report.get('diagnostics', []) if '=' in line][:12],
+                'admission_pauses': resources.get('admissionPauses'),
                 'phase_wall_ms': resources.get('phaseWallMs')}
     try:
         outcomes, ignored, duplicates = stryker_outcomes(report, project_dir)

@@ -262,6 +262,12 @@ class AnalyzeTests(ProjectCase):
         with self.assertRaisesRegex(bench.BenchmarkError, 'matched 2'):
             bench.analyze('oximut', clean_row(), path, self.project, 2)
 
+    def test_memory_pressure_pauses_keep_the_run_but_are_recorded(self):
+        data = oximut_report(self.project, ['killed', 'killed'])
+        data['resources']['admissionPauses'] = 5
+        extra = bench.analyze('oximut', clean_row(), self.write_report(data), self.project, 2)
+        self.assertEqual(extra['admission_pauses'], 5)
+
     def test_timeouts_and_failed_commands_are_rejected(self):
         path = self.write_report(stryker_report(['Killed', 'Killed']))
         for override in ({'timed_out': True}, {'exit_code': 1}, {'descendant_cleanup_required': True},
@@ -384,6 +390,15 @@ class ReportTests(unittest.TestCase):
         summary = report.summarize_cell(cell(paired_runs([4.] * 3, [10.] * 3, stryker={'counts': stryker})))
         self.assertTrue(any(flag.startswith('score gap +30.0 pp') for flag in summary['flags']), summary['flags'])
 
+    def test_the_score_gap_flag_says_whether_the_shared_mutants_agree(self):
+        stryker = {'killed': 5, 'survived': 3, 'no-coverage': 2}
+        summary = report.summarize_cell(cell(paired_runs([4.] * 3, [10.] * 3, stryker={'counts': stryker})))
+        self.assertTrue(any('the 8 shared mutants: 8 same verdict' in flag for flag in summary['flags']), summary['flags'])
+
+    def test_admission_pauses_are_flagged(self):
+        summary = report.summarize_cell(cell(paired_runs([4.] * 3, [10.] * 3, oximut={'admission_pauses': 5})))
+        self.assertIn("memory pressure paused Oximut's admission 5 time(s)", summary['flags'])
+
     def test_a_small_score_gap_is_not_flagged(self):
         stryker = {'killed': 79, 'survived': 11, 'no-coverage': 10}
         summary = report.summarize_cell(cell(paired_runs([4.] * 3, [10.] * 3, stryker={'counts': stryker})))
@@ -464,7 +479,7 @@ class ReportTests(unittest.TestCase):
         row = report.diagnostics_rows([summary])[0]
         self.assertEqual(row[:3], ['demo', '4', '2.0'])
         self.assertEqual(row[3], '10%')       # 500 ms of mutation phase in a 5 s run
-        self.assertEqual(row[4:6], ['500', '1000'])
+        self.assertEqual(row[6:8], ['500', '1000'])
 
     def test_main_summarizes_a_directory_of_cells(self):
         with tempfile.TemporaryDirectory() as tmp:
