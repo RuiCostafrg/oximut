@@ -7,7 +7,7 @@ import sys
 
 def command(prefix, arguments):
     bundle = prefix / "lib" / "oximut"
-    execution = "fresh"
+    execution = "persistent"  # the CLI default
     # Consume values exactly as the native CLI does, including repeated options.
     takes_value = {
         "--root", "--config", "--source", "--report", "--timeout-ms",
@@ -29,7 +29,7 @@ def command(prefix, arguments):
             index += 1
     defaults = []
     if not explicit_adapter:
-        runner = "m2-runner.mjs" if execution == "persistent" else "m1-runner.mjs"
+        runner = "m1-runner.mjs" if execution == "fresh" else "m2-runner.mjs"
         defaults = ["--adapter", str(bundle / "packages" / "vitest-adapter" / runner)]
     return [str(bundle / "oximut"), *defaults, *arguments]
 

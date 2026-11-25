@@ -112,6 +112,13 @@ for (;;) {
 """
 
 
+
+def pinned_modes(extra):
+    """Execution and selection are on by default; these tests name the modes they cover."""
+    extra = [str(item) for item in extra]
+    return [*([] if "--execution" in extra else ["--execution", "fresh"]),
+            *([] if "--test-selection" in extra else ["--no-test-selection"])]
+
 class IncrementalCache(unittest.TestCase):
     def setUp(self):
         self.temporary = tempfile.TemporaryDirectory(prefix="oximut-m4-")
@@ -134,6 +141,7 @@ class IncrementalCache(unittest.TestCase):
             "--source", "src/subject.ts", "--adapter", str(self.adapter),
             "--report", str(self.report_path), "--cache", "--cache-inputs-complete",
             "--cache-policy", cache_policy,
+            *pinned_modes(extra),
             *map(str, extra),
         ]
         process_env = {**os.environ, "OXIMUT_CACHE_CALLS": str(self.calls),
@@ -178,7 +186,8 @@ class IncrementalCache(unittest.TestCase):
         def run(*extra):
             command = [str(BINARY), "--root", str(root), "--config", "vitest.config.ts",
                        "--source", "src/subject.ts", "--report", str(self.base / "vitest-report.json"),
-                       "--cache", "--cache-inputs-complete", "--cache-policy", "always", *extra]
+                       "--cache", "--cache-inputs-complete", "--cache-policy", "always",
+                       *pinned_modes(extra), *extra]
             result = subprocess.run(command, cwd=REPO, text=True, capture_output=True,
                                     timeout=180, env=os.environ.copy())
             self.assertIn(result.returncode, (0, 1), result.stdout + result.stderr)
@@ -572,7 +581,7 @@ class IncrementalCache(unittest.TestCase):
         no_assertion = subprocess.run(
             [str(BINARY), "--root", str(self.root), "--config", "vitest.config.ts",
              "--source", "src/subject.ts", "--adapter", str(self.adapter), "--report", str(self.report_path),
-             "--cache"], cwd=REPO, text=True, capture_output=True, timeout=60,
+             "--cache", *pinned_modes(())], cwd=REPO, text=True, capture_output=True, timeout=60,
             env={**os.environ, "OXIMUT_CACHE_CALLS": str(self.calls)},
         )
         self.assertIn(no_assertion.returncode, (0, 1), no_assertion.stdout + no_assertion.stderr)
@@ -583,7 +592,7 @@ class IncrementalCache(unittest.TestCase):
         second = subprocess.run(
             [str(BINARY), "--root", str(self.root), "--config", "vitest.config.ts",
              "--source", "src/subject.ts", "--adapter", str(self.adapter), "--report", str(self.report_path),
-             "--cache"], cwd=REPO, text=True, capture_output=True, timeout=60,
+             "--cache", *pinned_modes(())], cwd=REPO, text=True, capture_output=True, timeout=60,
             env={**os.environ, "OXIMUT_CACHE_CALLS": str(self.calls)},
         )
         self.assertIn(second.returncode, (0, 1), second.stdout + second.stderr)

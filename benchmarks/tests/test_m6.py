@@ -284,6 +284,27 @@ class GateTests(unittest.TestCase):
         self.assertFalse(m6.summarize(rows)[0]['outcomes_stable'])
 
 
+class ScenarioModeTests(unittest.TestCase):
+    """Defaults enable selection and the fast modes; a scenario must name what it measures."""
+
+    def command(self, mode):
+        args = SimpleNamespace(binary=Path('/binary'), workers=2, memory_budget_mib=None)
+        return m6.command(args, 'oximut', 'm1', Path('/project'), Path('/report'), mode)
+
+    def test_each_scenario_pins_its_execution_and_selection(self):
+        fresh, persistent, selection = (self.command(m) for m in ('fresh', 'persistent', 'selection'))
+        self.assertEqual(fresh[fresh.index('--execution') + 1], 'fresh')
+        self.assertEqual(persistent[persistent.index('--execution') + 1], 'persistent')
+        for command in (fresh, persistent):
+            self.assertIn('--no-test-selection', command)
+            self.assertNotIn('--test-selection', command)
+        self.assertIn('--test-selection', selection)
+        self.assertNotIn('--no-test-selection', selection)
+        for command in (persistent, selection):
+            self.assertIn('--no-zygote-precollect', command)
+            self.assertIn('--no-rolling-lanes', command)
+
+
 class CacheEvidenceTests(unittest.TestCase):
     def test_policy_arguments_distinguish_legacy_and_explicit_reuse(self):
         args = SimpleNamespace(binary=Path('/binary'), workers=1, memory_budget_mib=None,

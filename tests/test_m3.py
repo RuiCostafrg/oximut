@@ -20,8 +20,8 @@ class PreciseSelection(unittest.TestCase):
                 '--source', str(root / source), '--execution', execution,
                 '--order-seed', '73', '--report', str(report),
             ]
-            if selection:
-                command.append('--test-selection')
+            # Selection is on by default; the full-suite runs opt out explicitly.
+            command.append('--test-selection' if selection else '--no-test-selection')
             result = subprocess.run(command, cwd=REPO, text=True, capture_output=True, timeout=240)
             self.assertIn(result.returncode, (0, 1), result.stdout + result.stderr)
             payload = json.loads(report.read_text())

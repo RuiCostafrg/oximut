@@ -1,9 +1,9 @@
 # Zygote workers (Linux)
 
-By default every mutant runs in a fresh Vitest worker process that starts from
-scratch: it forks, imports Vitest and runs the tests. On Linux, persistent runs
-(`--execution persistent`) use the zygote by default: the
-controller instead keeps **one warm Node process** (the zygote) that
+With `--execution fresh` every mutant runs in a fresh Vitest worker process that
+starts from scratch: it forks, imports Vitest and runs the tests. Persistent
+execution is the default, and on Linux persistent runs use the zygote by default:
+the controller instead keeps **one warm Node process** (the zygote) that
 has already imported what a worker needs, and `fork()`s each mutant worker from
 it. Every mutant still runs in its own process; only the start-up cost goes away.
 
@@ -25,18 +25,46 @@ the benchmark on your own project before relying on it.
 - `--execution persistent`, `--isolation fresh-process` (the default) and the
   reference persistent adapter. Other combinations are rejected at start-up.
 
+## Defaults and opt-outs
+
+Persistent execution and test selection are the defaults, and the fast modes
+that build on them turn on by themselves when their prerequisites hold. Each mode
+is *auto* unless you pass its flag: the positive flag requires the mode (an
+error when a prerequisite is missing), the `--no-` flag turns it off, and
+naming both is an error.
+
+| Mode | Default | Opt out | Needs |
+| --- | --- | --- | --- |
+| Persistent execution | on | `--execution fresh` | none (fresh is the CI reference) |
+| Test selection | on | `--no-test-selection` | none |
+| Zygote | auto | `--no-zygote` | Linux, persistent, `--isolation fresh-process`, reference adapter |
+| Zygote precollect | auto | `--no-zygote-precollect` | zygote on, test selection on, shared controller (`--workers 2` or more) |
+| Rolling lanes | auto | `--no-rolling-lanes` | shared controller (persistent, `--workers 2` or more, no `--no-shared-controller`) |
+
+A missing prerequisite silently skips an *auto* mode. The run prints one line to
+stderr before it starts, for example
+
+```
+oximut: modes: execution=persistent (default), test-selection=on (default), zygote=on (auto), zygote-precollect=on (auto), rolling-lanes=on (auto)
+```
+
+naming the resolved modes and whether each was explicit, default or auto, with
+the reason an auto mode is off. The same modes appear in the report's execution
+diagnostic, and the outcome cache fingerprint covers the resolved modes (not the
+flags), so results cached under other modes are never reused.
+
 ## Enabling it
 
-It is **on by default** for `--execution persistent` runs on Linux with
+The zygote is **on by default** for persistent runs on Linux with
 `--isolation fresh-process` and the reference persistent adapter. Otherwise
 (other OS, fresh execution, `--isolation fresh-thread`, a custom adapter) it is
 off silently. If the native addon is missing or fails to load, normal workers
 run instead.
 
 ```sh
-oximut --root . --source src/subject.ts --execution persistent              # auto
-oximut --root . --source src/subject.ts --execution persistent --no-zygote  # opt out
-oximut --root . --source src/subject.ts --execution persistent --zygote     # require it
+oximut --root . --source src/subject.ts              # auto
+oximut --root . --source src/subject.ts --no-zygote  # opt out
+oximut --root . --source src/subject.ts --zygote     # require it
 ```
 
 An explicit `--zygote` errors when its prerequisites do not hold; combining it
@@ -86,11 +114,13 @@ watchdog acted, `zygote watchdog: N timeout reruns` and, on a mismatch,
 rest of the run`. Fallbacks log `zygote workers unavailable` or `zygote workers
 disabled` on stderr.
 
-## Precollect (experimental, off by default)
+## Precollect (automatic with two or more workers)
 
-`--zygote-precollect` goes one step further. It needs `--zygote` and
-`--test-selection` (selection tells it which test file a mutant runs), and the CLI
-refuses to start without them. A mutant worker is forked from a *template* zygote
+Precollect goes one step further and turns on by itself whenever the zygote, test
+selection and the shared controller are all active; `--no-zygote-precollect`
+opts out. An explicit `--zygote-precollect` needs the zygote and test selection
+(selection tells it which test file a mutant runs), and the CLI refuses to start
+without them. A mutant worker is forked from a *template* zygote
 that already fetched, and for one selected test file also evaluated, the work that
 worker would repeat.
 The mutant is still chosen when the instrumented expression is evaluated
@@ -149,13 +179,14 @@ Known deviations: a test file's top-level code runs once in the template and
 again in the child, and templates (one per selected file set) stay resident,
 which costs memory. The diagnostics report how many mutants were eligible.
 
-## Rolling lanes (experimental, off by default)
+## Rolling lanes (automatic with two or more workers)
 
-With the shared controller, mutants normally run as batches of `width` lanes: a
+With the shared controller, mutants can run as batches of `width` lanes: a
 batch ends when its slowest lane has finished, and every batch is one round trip
-between the Rust scheduler and the controller. `--rolling-lanes` removes both costs
-for fork-based lanes (it needs the shared controller and works with or without
-`--zygote`):
+between the Rust scheduler and the controller. Rolling lanes remove both costs
+for fork-based lanes. They are on whenever the shared controller is, and
+`--no-rolling-lanes` restores barrier batches; an explicit `--rolling-lanes`
+errors without the shared controller. They work with or without the zygote:
 
 - The scheduler sends **one large batch**: up to 32 lanes per slot, bounded by the
   8 MiB request size and by lanes that share the very same resident module set (one
@@ -198,7 +229,8 @@ batch stopped growing (`capacity`, `bytes`, `queue_empty` or `resident_mismatch`
 
 ## Status
 
-Experimental: the flag, its prerequisites and its diagnostics may change. CI
+The zygote, precollect and rolling lanes are on by default, and their flags,
+prerequisites and diagnostics may still change. CI
 (`.github/workflows/zygote.yml`, not a required check) runs it on Ubuntu 22.04
 and 24.04, proves outcome parity against a normal run, and proves the Alpine
 fallback.

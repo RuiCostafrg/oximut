@@ -52,6 +52,7 @@ def main():
                 report_path = args.output.resolve() / f'{name}.json'
                 command = [str(binary), '--root', str(root), '--config', str(root / 'vitest.config.ts'),
                            '--source', str(root / 'src' / source), '--execution', mode,
+                           '--no-test-selection', '--no-zygote-precollect', '--no-rolling-lanes',
                            '--order-seed', str(100 + repetition), '--report', str(report_path)]
                 started = time.monotonic()
                 result = subprocess.run(command, cwd=REPO, text=True, capture_output=True, timeout=180)

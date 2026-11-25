@@ -115,7 +115,7 @@ ratios. A qualification-only ordinary test command is available with
 `--tools vitest --warmups 0 --repetitions 1`; its per-run test gate can pass while
 the overall cross-tool gate remains false because there is no comparison.
 
-Persistent execution defaults to fresh forks per test file. `--isolation fresh-thread` opts into fresh Vitest worker threads; see [m2.md](m2.md) for semantics. The benchmark measures the default unless its dispatch input passes extra arguments.
+Persistent execution defaults to fresh forks per test file. `--isolation fresh-thread` opts into fresh Vitest worker threads; see [m2.md](m2.md) for semantics. The harness still passes `--execution persistent --test-selection` explicitly, because the pinned before candidate predates those defaults; the after candidate also gets the automatic zygote, precollect and rolling lanes (for at least two workers) with no extra arguments. The benchmark measures that unless its dispatch input passes extra arguments such as the opt-outs `--no-zygote`, `--no-zygote-precollect`, `--no-rolling-lanes` or `--no-test-selection` (which replaces the pinned `--test-selection`).
 
 Each run uses a new private copy, `--concurrency` workers (one by default;
 Stryker gets the same value, and it must not exceed the usable CPUs), file isolation and disabled
@@ -362,7 +362,7 @@ measurements, and writes a failed global summary with no comparative ratios.
 
 The workflow dispatch input `after_oximut_args` accepts space-separated extra
 Oximut arguments for the after candidate only, for example
-`--isolation fresh-thread`. The default is empty; pull-request campaigns keep
+`--isolation fresh-thread` or `--no-rolling-lanes`. The default is empty; pull-request campaigns keep
 the existing command. Words are passed literally without shell evaluation;
 quoted values containing spaces are not supported by this input.
 The campaign records the arguments in metadata, summary, and execution inputs.

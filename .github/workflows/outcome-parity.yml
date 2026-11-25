@@ -1,0 +1,122 @@
+name: Outcome parity
+
+# Proves the fast execution modes report the same per-mutant outcomes as the reference
+# mode (--execution fresh --no-zygote --no-test-selection) on pinned real open-source Vitest projects, not
+# only the vendored colord corpus. The corpus is benchmarks/parity/corpus.json. Any
+# difference fails the job and prints one line per differing mutant.
+on:
+  workflow_dispatch:
+    inputs:
+      projects:
+        type: string
+        default: ''
+        description: 'Space-separated corpus project names; empty runs the whole corpus'
+  pull_request:
+    paths:
+      - crates/**
+      - packages/vitest-adapter/**
+      - benchmarks/parity/**
+      - benchmarks/m6.py
+      - benchmarks/tests/test_parity.py
+      - scripts/build-zygote-addon.py
+      - Cargo.toml
+      - Cargo.lock
+      - package-lock.json
+      - .github/workflows/outcome-parity.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: outcome-parity-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  plan:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    outputs:
+      projects: ${{ steps.plan.outputs.projects }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: '3.13'
+      - name: Unit tests for the comparison logic
+        run: python3 -m unittest discover -s benchmarks/tests -p test_parity.py -v
+      - id: plan
+        env:
+          PROJECTS: ${{ inputs.projects || '' }}
+        run: |
+          read -r -a names <<< "$PROJECTS"
+          echo "projects=$(python3 benchmarks/parity/run_parity.py --list-projects --projects "${names[@]}")" >> "$GITHUB_OUTPUT"
+
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # stable
+        with:
+          toolchain: '1.96.0'
+      - run: cargo build --locked --release -p oximut-cli
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: oximut-parity-binary
+          path: target/release/oximut
+          if-no-files-found: error
+          retention-days: 7
+
+  parity:
+    name: parity (${{ matrix.project }})
+    needs: [plan, build]
+    if: ${{ needs.plan.outputs.projects != '[]' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        project: ${{ fromJSON(needs.plan.outputs.projects) }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .node-version
+          cache: npm
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: '3.13'
+      - run: npm ci --ignore-scripts
+      - name: Build the zygote addon (a skip is a failure here)
+        run: |
+          python3 scripts/build-zygote-addon.py | tee addon-build.log
+          if grep -q '^skipped' addon-build.log; then
+            echo "::error::the zygote addon build was skipped on glibc"
+            exit 1
+          fi
+          test -f packages/vitest-adapter/native/build/zygote-fork.node
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: oximut-parity-binary
+          path: ${{ runner.temp }}/oximut-binary
+      - name: Compare every mode with the reference
+        env:
+          PROJECT: ${{ matrix.project }}
+        run: |
+          chmod +x "$RUNNER_TEMP/oximut-binary/oximut"
+          echo "cpus: $(nproc)"
+          python3 benchmarks/parity/run_parity.py --binary "$RUNNER_TEMP/oximut-binary/oximut" \
+            --projects "$PROJECT" --output "$RUNNER_TEMP/parity-results"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: outcome-parity-${{ matrix.project }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/parity-results/**
+          if-no-files-found: warn
+          retention-days: 14

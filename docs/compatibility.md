@@ -63,7 +63,7 @@ through the supported Vitest/Vite transform graph. Browser projects, Jest,
 framework-specific formats, native/custom VM execution, and arbitrary plugin
 graphs have no support claim.
 
-Test selection is opt-in and retains whole test files when attribution is sound;
+Test selection is on by default (`--no-test-selection` opts out) and retains whole test files when attribution is sound;
 uncertain attribution falls back to broader execution. External files, services,
 time, randomness, and other undeclared behavior remain outside outcome-cache
 correctness guarantees. Outcome caching requires the user assertion

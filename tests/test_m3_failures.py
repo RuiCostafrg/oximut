@@ -56,7 +56,7 @@ class AttributionFailurePaths(unittest.TestCase):
                          'unsolicited', 'incomplete', 'duplicate-reference'):
                 with self.subTest(mode=mode):
                     result = subprocess.run(
-                        base + ['--test-selection', '--adapter', str(adapter), '--report', '-'],
+                        base + ['--execution', 'fresh', '--test-selection', '--adapter', str(adapter), '--report', '-'],
                         cwd=REPO, env={**os.environ, 'OXIMUT_BAD_COVERAGE': mode,
                                        'OXIMUT_MUTANT_IDS': json.dumps(ids)},
                         text=True, capture_output=True, timeout=30,

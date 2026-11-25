@@ -71,7 +71,7 @@ class CliFailurePaths(unittest.TestCase):
         return subprocess.run(
             [
                 str(BINARY), "--root", str(root), "--config", str(root / "vitest.config.ts"),
-                "--source", str(SOURCE), "--adapter", str(self.adapter),
+                "--source", str(SOURCE), "--execution", "fresh", "--adapter", str(self.adapter),
                 "--report", str(self.report),
                 "--timeout-ms", "1000",
             ],

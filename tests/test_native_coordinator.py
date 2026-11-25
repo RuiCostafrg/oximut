@@ -227,6 +227,12 @@ def alive(pid):
         return False
 
 
+
+def pinned_modes(extra):
+    """Selection and rolling lanes are on by default; these tests name the modes they cover."""
+    return ['--no-test-selection',
+            *([] if '--rolling-lanes' in extra else ['--no-rolling-lanes'])]
+
 class NativeCoordinator(unittest.TestCase):
     def test_fresh_thread_checks_canonical_adapter(self):
         with tempfile.TemporaryDirectory(prefix='oximut-native-symlink-') as directory:
@@ -385,6 +391,7 @@ class NativeCoordinator(unittest.TestCase):
             result = subprocess.run([
                 str(REPO / 'target/debug/oximut'), '--root', str(ROOT),
                 '--source', str(ROOT / 'src/subject.ts'), '--execution', 'persistent',
+                *pinned_modes(extra_args),
                 '--adapter', str(adapter), '--report', '-', '--no-cache', *extra_args,
             ], env={**os.environ, 'OXIMUT_FAKE_MODE': mode, 'OXIMUT_FAKE_LOG': str(Path(directory) / 'log')},
                 text=True, capture_output=True, timeout=120)
@@ -404,7 +411,8 @@ class NativeCoordinator(unittest.TestCase):
                 '--source', str(source), *([] if full else ['--baseline-only']),
                 '--execution', 'persistent', '--adapter', str(adapter), '--report', '-',
                 '--timeout-ms', str(timeout_ms), '--no-cache',
-                *([] if shared else ['--no-shared-controller']), *extra_args,
+                *([] if shared else ['--no-shared-controller']),
+                *pinned_modes(extra_args), *extra_args,
             ], env={**os.environ, 'OXIMUT_FAKE_MODE': mode, 'OXIMUT_FAKE_LOG': str(log)},
                 text=True, capture_output=True, timeout=120)
             events = [json.loads(line) for line in log.read_text().splitlines()]
