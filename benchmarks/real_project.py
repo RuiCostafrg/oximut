@@ -210,16 +210,20 @@ def command(tool, args, project, report, manifest):
     if tool == 'stryker':
         return ['node', str(ROOT / 'node_modules/@stryker-mutator/core/bin/stryker.js'),
                 'run', 'stryker.config.mjs']
+    # The harness pins persistent execution and test selection explicitly: the
+    # before candidate predates the defaults. Only the opt-out replaces a pin.
+    extra = getattr(args, 'oximut_arg', [])
     result = [str(args.binary), '--root', str(project), '--config', 'vitest.config.ts',
               '--report', str(report), '--workers', str(getattr(args, 'concurrency', 1)), '--execution', 'persistent',
-              '--test-selection', '--no-cache', '--order-seed', '100']
+              *([] if '--no-test-selection' in extra else ['--test-selection']),
+              '--no-cache', '--order-seed', '100']
     if args.adapter is not None:
         result.extend(['--adapter', str(args.adapter)])
     for filename in manifest['mutate']:
         result.extend(['--source', filename])
     if not args.diagnostic_unrestricted:
         result.extend(['--mutators', ','.join(manifest['families'])])
-    result.extend(getattr(args, 'oximut_arg', []))
+    result.extend(extra)
     return result
 
 
@@ -274,10 +278,11 @@ def compare_rows(rows):
     return comparisons, ratios
 
 
-# Extra Oximut arguments may only select opt-in execution modes; workload,
+# Extra Oximut arguments may only select execution modes (opt-ins and opt-outs); workload,
 # adapter, scope and reporting flags stay owned by the harness and provenance.
 MODE_VALUES = {'--isolation': {'fresh-process', 'fresh-thread'}}
-MODE_FLAGS = {'--zygote', '--no-zygote', '--zygote-precollect', '--rolling-lanes'}
+MODE_FLAGS = {'--zygote', '--no-zygote', '--zygote-precollect', '--no-zygote-precollect',
+              '--rolling-lanes', '--no-rolling-lanes', '--no-test-selection'}
 
 
 def mode_args_error(values):

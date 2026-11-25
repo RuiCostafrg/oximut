@@ -350,8 +350,11 @@ def command(args, tool, fixture, project, report, mode, cache=False, force=False
               '--order-seed', str(seed), '--execution', 'fresh' if mode == 'fresh' else 'persistent']
     for source in FIXTURES[fixture]:
         result.extend(['--source', 'src/' + source])
-    if mode == 'selection':
-        result.append('--test-selection')
+    # Test selection and the persistent fast modes are on by default; each mode
+    # names exactly what it measures, so the others are switched off explicitly.
+    result.append('--test-selection' if mode == 'selection' else '--no-test-selection')
+    if mode != 'fresh':
+        result.extend(['--no-zygote-precollect', '--no-rolling-lanes'])
     if cache:
         result.extend(['--cache', '--cache-inputs-complete', '--cache-env', 'OXIMUT_FIXTURE_MODE',
                        '--cache-env', 'OXIMUT_BENCH_INPUT'])

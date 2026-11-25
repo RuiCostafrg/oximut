@@ -1,7 +1,7 @@
 name: Outcome parity
 
 # Proves the fast execution modes report the same per-mutant outcomes as the reference
-# mode (--execution fresh --no-zygote) on pinned real open-source Vitest projects, not
+# mode (--execution fresh --no-zygote --no-test-selection) on pinned real open-source Vitest projects, not
 # only the vendored colord corpus. The corpus is benchmarks/parity/corpus.json. Any
 # difference fails the job and prints one line per differing mutant.
 on:

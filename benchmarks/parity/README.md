@@ -13,10 +13,10 @@ Vitest; none of them is installed.
 
 | mode | arguments |
 | --- | --- |
-| `reference` | `--execution fresh --no-zygote` |
-| `persistent` | `--execution persistent --no-zygote` |
-| `zygote` | `--execution persistent --zygote` |
-| `zygote-selection-precollect-rolling` | `--execution persistent --zygote --test-selection --zygote-precollect --rolling-lanes` |
+| `reference` | `--execution fresh --no-zygote --no-test-selection` |
+| `persistent` | `--execution persistent --no-zygote --no-test-selection` |
+| `zygote` | `--execution persistent --zygote --no-test-selection --no-zygote-precollect --no-rolling-lanes` |
+| `defaults` | none: the defaults (persistent, test selection, zygote, precollect, rolling lanes) |
 
 Every mode runs with `--workers 4 --no-cache`. Mutants are keyed by the exact edited
 file (`benchmarks/m6.py` `mutation_identity`), and `mutation_identity_outcome_sha256`

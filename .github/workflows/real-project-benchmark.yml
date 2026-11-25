@@ -6,7 +6,7 @@ on:
       after_oximut_args:
         type: string
         default: ''
-        description: 'Extra Oximut args for the after candidate only, space-separated, e.g. --isolation fresh-thread, or --zygote'
+        description: 'Extra Oximut args for the after candidate only, space-separated, e.g. --isolation fresh-thread, --no-zygote-precollect or --no-rolling-lanes (zygote, precollect and rolling lanes are automatic by default)'
       concurrency:
         type: string
         default: '1'

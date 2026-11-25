@@ -122,7 +122,7 @@ class CliContract(unittest.TestCase):
             adapter.write_text(COVERAGE_ADAPTER)
             result = subprocess.run(
                 [str(BINARY), *map(str, self.fixture_args()), "--adapter", str(adapter),
-                 "--test-selection", "--report", "-"],
+                 "--execution", "fresh", "--test-selection", "--report", "-"],
                 cwd=REPO, text=True, capture_output=True, timeout=30,
                 env={**os.environ, "OXIMUT_BAD_COVERAGE": "valid",
                      "OXIMUT_MUTANT_IDS": json.dumps(ids)},

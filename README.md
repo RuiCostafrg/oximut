@@ -6,11 +6,15 @@ Mutation testing for JavaScript and TypeScript, designed around a Rust + Oxc
 instrumentation engine and a thin Vitest adapter.
 
 **Status: M6 benchmark and alpha release evaluation.** The repository generates JS/TS mutants with
-Oxc and executes them with bounded worker concurrency, with text and JSON reports. Fresh execution
-remains the default correctness reference; opt-in persistent execution shares
-transformed code and a Vitest controller while retaining fresh test processes.
-Opt-in test selection collects baseline mutant hits and retains covering test files,
-with full-suite fallbacks when attribution is uncertain.
+Oxc and executes them with bounded worker concurrency, with text and JSON reports. Persistent
+execution is the default: it shares transformed code and one Vitest controller across mutants while
+every mutant still runs in a fresh test process (StrykerJS likewise reuses its test-runner process).
+`--execution fresh` opts out and remains the correctness reference used in CI.
+Test selection is on by default: it collects baseline mutant hits and retains covering test files,
+with full-suite fallbacks when attribution is uncertain (`--no-test-selection` opts out).
+On Linux the zygote, precollected templates and rolling lanes turn on automatically when their
+prerequisites hold (`--no-zygote`, `--no-zygote-precollect` and `--no-rolling-lanes` opt out).
+See [Defaults and opt-outs](docs/zygote.md#defaults-and-opt-outs).
 Opt-in caching separates instrumentation from outcomes and validates the baseline
 on every run. Outcome reuse requires an explicit declaration of complete inputs.
 The automatic cache policy learns when outcome validation costs more than fresh
@@ -50,7 +54,7 @@ are for matched tool comparisons and scoped analysis, not performance-target gam
 - [M5 budgets](docs/m5.md): worker limits, memory units, admission, and enforcement limits.
 - [M6 decision](docs/m6.md): measured scope, release gates, and remaining work.
 - [Compatibility](docs/compatibility.md), [report schema](docs/report-schema.md), and [source installation](docs/install.md).
-- [Zygote workers](docs/zygote.md): Linux fast path, on by default for persistent runs (`--no-zygote` opts out).
+- [Zygote workers](docs/zygote.md): Linux fast path, precollect and rolling lanes, on by default when their prerequisites hold (`--no-zygote`, `--no-zygote-precollect`, `--no-rolling-lanes` opt out).
 - [Architecture](docs/architecture.md): ownership, execution protocol, and correctness rules.
 - [Benchmark plan](docs/benchmarks.md): fair comparison with Stryker and success criteria.
 - [Vitest lifecycle decision](docs/adr/0001-vitest-lifecycle.md): measured reuse boundaries.
@@ -104,7 +108,7 @@ Dependabot also proposes npm and Cargo dependency updates.
 ## Layout
 
 The M1 components implement the correctness reference. M2 adds controller reuse
-and mutation switching. M3 adds opt-in conservative test selection. M4 adds
+and mutation switching (now the default execution). M3 adds conservative test selection (now the default). M4 adds
 opt-in instrumentation and outcome caching. M5 adds central worker scheduling
 and best-effort memory admission.
 

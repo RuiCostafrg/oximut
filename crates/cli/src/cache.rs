@@ -974,8 +974,18 @@ fn fingerprint_inputs(
         &mut tree.hash,
         &serde_json::to_vec(resources).map_err(|e| e.to_string())?,
     );
-    if options.shared_controller {
-        part(&mut tree.hash, b"shared-controller");
+    // Resolved modes, not the flags that led to them: a run that resolves to the
+    // same modes shares outcomes however it got there. Absent modes add nothing,
+    // so fingerprints of runs that never had them are unchanged.
+    for (enabled, mode) in [
+        (options.shared_controller, &b"shared-controller"[..]),
+        (options.zygote, b"zygote"),
+        (options.zygote_precollect, b"zygote-precollect"),
+        (options.rolling_lanes, b"rolling-lanes"),
+    ] {
+        if enabled {
+            part(&mut tree.hash, mode);
+        }
     }
     part(&mut tree.hash, OPERATORS.as_bytes());
     part(
@@ -1071,6 +1081,7 @@ mod tests {
             zygote_off_reason: None,
             zygote_precollect: false,
             rolling_lanes: false,
+            modes_summary: String::new(),
             memory_budget_mib: None,
             memory_reserve_mib: 64,
             mutators: BTreeSet::new(),
@@ -1337,6 +1348,24 @@ mod tests {
             fingerprint_with_runtime(&options, "tool-and-operators-a", &runtime).unwrap()
         );
         options.test_selection = false;
+        // Resolved modes are inputs: a zygote, precollect or rolling run does not
+        // share outcomes with one that resolved differently.
+        let plain = fingerprint_with_runtime(&options, "tool-and-operators-a", &runtime).unwrap();
+        assert_eq!(key, plain);
+        let flags: [fn(&mut Options) -> &mut bool; 4] = [
+            |o| &mut o.shared_controller,
+            |o| &mut o.zygote,
+            |o| &mut o.zygote_precollect,
+            |o| &mut o.rolling_lanes,
+        ];
+        for flag in flags {
+            *flag(&mut options) = true;
+            assert_ne!(
+                plain,
+                fingerprint_with_runtime(&options, "tool-and-operators-a", &runtime).unwrap()
+            );
+            *flag(&mut options) = false;
+        }
         options.order_seed = Some(7);
         assert_ne!(
             key,

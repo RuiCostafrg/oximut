@@ -55,8 +55,7 @@ class InstrumentedBaseline(unittest.TestCase):
             ]
             for source in SOURCES:
                 command += ['--source', str(source)]
-            if selection:
-                command.append('--test-selection')
+            command.append('--test-selection' if selection else '--no-test-selection')
             env = {**os.environ, 'OXIMUT_FAKE_MODE': mode, 'OXIMUT_FAKE_LOG': str(log)}
             env.pop('OXIMUT_DEBUG_REQUEST_BUDGET', None)
             if budget is not None:

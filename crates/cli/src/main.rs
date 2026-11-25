@@ -1,6 +1,7 @@
 //! Sequential fresh-reference and persistent-controller runners.
 mod cache;
 mod coordinator;
+mod modes;
 mod processes;
 mod resources;
 mod scheduler;
@@ -21,7 +22,7 @@ use std::{
     time::{Duration, Instant, SystemTime, UNIX_EPOCH},
 };
 
-const HELP: &str = "Usage: oximut [--root DIR] [--config FILE] --source FILE [--source FILE ...]\n  --version           Print the Cargo package version\n  --report FILE       JSON report (- for stdout)\n  --timeout-ms N      Per-job deadline, default 30000 ms\n  --workers N         Maximum simultaneous mutation jobs / persistent baseline files (default 1; bounded by CPU limits)\n  --memory-budget-mib N Aggregate sampled RSS budget in MiB (1 MiB = 1048576 bytes); default host/container limit\n  --memory-reserve-mib N Reserved admission headroom in MiB (default 64)\n  --execution MODE   fresh (default) or persistent controller\n  --isolation MODE   fresh-process (default) or fresh-thread (requires persistent)\n  --zygote            Fork Vitest mutant workers from one warm Node process; on by default for persistent runs on Linux with fresh-process isolation and the reference persistent adapter (explicit --zygote errors if those do not hold)\n  --zygote-precollect Experimental, with --zygote and --test-selection: fork a mutant's worker from a warm process that already collected its one test file; mutants evaluated at module load keep the ordinary zygote path\n  --rolling-lanes     Experimental, with the shared controller: keep every lane slot busy and start the next mutant as soon as a lane's worker has exited, instead of waiting for the slowest lane of a batch\n  --no-zygote         Opt out of the zygote and use normal workers\n  --no-shared-controller Use one Vitest controller per worker instead of the default shared controller\n  --test-selection    Collect baseline hits and conservatively select hit test files\n  --mutators FAMILIES Repeatable comma-separated union: arithmetic,boolean-literal,comparison-boundary (default: all)\n  --order-seed N     Deterministically shuffle mutant execution order\n  --adapter FILE      Node adapter entry point override (an m2-runner.mjs beside m2-worker.ts runs natively)\n  --cache             Cache instrumentation; outcomes require --cache-inputs-complete\n  --cache-policy MODE  auto (default) learns whether outcome caching saves work; always validates/reuses eligible outcomes\n  --cache-inputs-complete Assert all nondeterministic/external inputs are declared\n  --cache-input FILE  Additional input file/directory (repeatable)\n  --cache-env NAME    Additional environment input (repeatable; values stay private)\n  --no-cache, --force Bypass all cache reads and writes\n  --list              Generate mutants as JSON without executing tests\n  --baseline-only     Run original sources without mutants\nExit: 0 complete/no survivors; 1 survivors/no coverage; 2 incomplete/error.\nScore: killed/(killed+survived+no-coverage)*100; empty denominator => null.\nInvalid/timeout/infrastructure-error/resource-exhausted/skipped are excluded and make a run incomplete.";
+const HELP: &str = "Usage: oximut [--root DIR] [--config FILE] --source FILE [--source FILE ...]\n  --version           Print the Cargo package version\n  --report FILE       JSON report (- for stdout)\n  --timeout-ms N      Per-job deadline, default 30000 ms\n  --workers N         Maximum simultaneous mutation jobs / persistent baseline files (default 1; bounded by CPU limits)\n  --memory-budget-mib N Aggregate sampled RSS budget in MiB (1 MiB = 1048576 bytes); default host/container limit\n  --memory-reserve-mib N Reserved admission headroom in MiB (default 64)\n  --execution MODE   persistent (default: one reused controller; every mutant still runs in a fresh process) or fresh (a new controller per mutant, the reference for CI)\n  --isolation MODE   fresh-process (default) or fresh-thread (requires persistent)\n  --zygote            Fork Vitest mutant workers from one warm Node process; on by default for persistent runs on Linux with fresh-process isolation and the reference persistent adapter (explicit --zygote errors if those do not hold)\n  --zygote-precollect Fork a mutant's worker from a warm process that already collected its one test file; mutants evaluated at module load keep the ordinary zygote path. On by default when the zygote, test selection and the shared controller are active; explicit --zygote-precollect errors without the zygote or test selection\n  --rolling-lanes     Keep every lane slot busy and start the next mutant as soon as a lane's worker has exited, instead of waiting for the slowest lane of a batch. On by default with the shared controller; explicit --rolling-lanes errors without it\n  --no-zygote         Opt out of the zygote and use normal workers\n  --no-zygote-precollect Opt out of precollected templates\n  --no-rolling-lanes  Opt out of rolling lanes and run lanes in barrier batches\n  --no-shared-controller Use one Vitest controller per worker instead of the default shared controller\n  --test-selection    Collect baseline hits and conservatively select hit test files (default)\n  --no-test-selection Run the whole suite for every mutant\n  --mutators FAMILIES Repeatable comma-separated union: arithmetic,boolean-literal,comparison-boundary (default: all)\n  --order-seed N     Deterministically shuffle mutant execution order\n  --adapter FILE      Node adapter entry point override (an m2-runner.mjs beside m2-worker.ts runs natively)\n  --cache             Cache instrumentation; outcomes require --cache-inputs-complete\n  --cache-policy MODE  auto (default) learns whether outcome caching saves work; always validates/reuses eligible outcomes\n  --cache-inputs-complete Assert all nondeterministic/external inputs are declared\n  --cache-input FILE  Additional input file/directory (repeatable)\n  --cache-env NAME    Additional environment input (repeatable; values stay private)\n  --no-cache, --force Bypass all cache reads and writes\n  --list              Generate mutants as JSON without executing tests\n  --baseline-only     Run original sources without mutants\nExit: 0 complete/no survivors; 1 survivors/no coverage; 2 incomplete/error.\nScore: killed/(killed+survived+no-coverage)*100; empty denominator => null.\nInvalid/timeout/infrastructure-error/resource-exhausted/skipped are excluded and make a run incomplete.";
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 enum Execution {
@@ -88,36 +89,25 @@ struct Options {
     memory_reserve_mib: u64,
     #[serde(default)]
     mutators: BTreeSet<String>,
+    /// How each mode was resolved, for the line printed at the start of a run.
+    #[serde(default)]
+    modes_summary: String,
 }
 
 fn options() -> Result<Option<Options>, String> {
     parse_options(env::args().skip(1))
 }
 
-/// Auto mode for the zygote: on exactly for persistent, fresh-process runs of
-/// the reference adapter on Linux; otherwise the reason it is off.
-fn auto_zygote(
-    linux: bool,
-    execution: Execution,
-    isolation: Isolation,
-    reference_adapter: &dyn Fn() -> bool,
-) -> Result<(), String> {
-    if !linux {
-        return Err("not Linux".into());
-    }
-    if execution != Execution::Persistent {
-        return Err("execution fresh".into());
-    }
-    if isolation != Isolation::FreshProcess {
-        return Err("isolation fresh-thread".into());
-    }
-    if !reference_adapter() {
-        return Err("custom adapter".into());
-    }
-    Ok(())
+fn parse_options(args: impl Iterator<Item = String>) -> Result<Option<Options>, String> {
+    parse_options_on(args, cfg!(target_os = "linux"))
 }
 
-fn parse_options(mut args: impl Iterator<Item = String>) -> Result<Option<Options>, String> {
+/// `zygote_platform` says whether the host can run the zygote, so the automatic
+/// modes can be exercised on any platform.
+fn parse_options_on(
+    mut args: impl Iterator<Item = String>,
+    zygote_platform: bool,
+) -> Result<Option<Options>, String> {
     let mut root = env::current_dir().map_err(|e| e.to_string())?;
     let mut config = PathBuf::from("vitest.config.ts");
     let mut sources = vec![];
@@ -126,12 +116,12 @@ fn parse_options(mut args: impl Iterator<Item = String>) -> Result<Option<Option
     let mut adapter =
         Path::new(env!("CARGO_MANIFEST_DIR")).join("../../packages/vitest-adapter/m1-runner.mjs");
     let mut adapter_override = false;
-    let mut execution = Execution::Fresh;
+    let mut execution_flag: Option<Execution> = None;
     let mut isolation = Isolation::default();
     let mut order_seed = None;
     let mut list = false;
     let mut baseline_only = false;
-    let mut test_selection = false;
+    let mut test_selection = modes::Choice::Auto;
     let mut cache = false;
     let mut cache_inputs_complete = false;
     let mut cache_policy = CachePolicy::Auto;
@@ -140,9 +130,9 @@ fn parse_options(mut args: impl Iterator<Item = String>) -> Result<Option<Option
     let mut cache_env = vec![];
     let mut workers = 1;
     let mut no_shared_controller = false;
-    let mut zygote_flag: Option<bool> = None;
-    let mut zygote_precollect = false;
-    let mut rolling_lanes = false;
+    let mut zygote = modes::Choice::Auto;
+    let mut zygote_precollect = modes::Choice::Auto;
+    let mut rolling_lanes = modes::Choice::Auto;
     let mut memory_budget_mib = None;
     let mut memory_reserve_mib = 64;
     let mut mutators = BTreeSet::new();
@@ -171,16 +161,17 @@ fn parse_options(mut args: impl Iterator<Item = String>) -> Result<Option<Option
                 }
             }
             "--no-shared-controller" => no_shared_controller = true,
-            "--zygote" | "--no-zygote" => {
-                if zygote_flag.is_some() {
-                    return Err("--zygote and --no-zygote cannot be combined".into());
-                }
-                zygote_flag = Some(arg == "--zygote");
+            "--zygote" | "--no-zygote" => zygote.request("zygote", arg == "--zygote")?,
+            "--zygote-precollect" | "--no-zygote-precollect" => {
+                zygote_precollect.request("zygote-precollect", arg == "--zygote-precollect")?
             }
-            "--zygote-precollect" => zygote_precollect = true,
-            "--rolling-lanes" => rolling_lanes = true,
+            "--rolling-lanes" | "--no-rolling-lanes" => {
+                rolling_lanes.request("rolling-lanes", arg == "--rolling-lanes")?
+            }
             "--baseline-only" => baseline_only = true,
-            "--test-selection" => test_selection = true,
+            "--test-selection" | "--no-test-selection" => {
+                test_selection.request("test-selection", arg == "--test-selection")?
+            }
             "--cache" => cache = true,
             "--cache-inputs-complete" => cache_inputs_complete = true,
             "--no-cache" | "--force" => no_cache = true,
@@ -254,9 +245,9 @@ fn parse_options(mut args: impl Iterator<Item = String>) -> Result<Option<Option
                         }
                     }
                     "--execution" => {
-                        execution = match value.as_str() {
-                            "fresh" => Execution::Fresh,
-                            "persistent" => Execution::Persistent,
+                        execution_flag = match value.as_str() {
+                            "fresh" => Some(Execution::Fresh),
+                            "persistent" => Some(Execution::Persistent),
                             _ => return Err("--execution must be fresh or persistent".into()),
                         }
                     }
@@ -277,6 +268,16 @@ fn parse_options(mut args: impl Iterator<Item = String>) -> Result<Option<Option
             _ => return Err(format!("unknown option {arg}\n{HELP}")),
         }
     }
+    // Without --execution, a custom adapter keeps the fresh protocol; the
+    // reference adapter (the launcher's default) runs persistent.
+    let execution = execution_flag.unwrap_or_else(|| {
+        modes::default_execution(
+            !adapter_override
+                || adapter
+                    .canonicalize()
+                    .is_ok_and(|adapter| coordinator::native_worker(&adapter).is_some()),
+        )
+    });
     if isolation == Isolation::FreshThread && execution != Execution::Persistent {
         return Err("--isolation fresh-thread requires --execution persistent".into());
     }
@@ -343,50 +344,25 @@ fn parse_options(mut args: impl Iterator<Item = String>) -> Result<Option<Option
             return Err("--isolation fresh-thread requires the reference persistent adapter (m2-runner.mjs beside m2-worker.ts)".into());
         }
     }
-    let reference_adapter = || {
-        adapter
-            .canonicalize()
-            .ok()
-            .is_some_and(|a| coordinator::native_worker(&a).is_some())
-    };
-    let (zygote, zygote_off_reason) = match zygote_flag {
-        Some(true) => {
-            if execution != Execution::Persistent {
-                return Err("--zygote requires --execution persistent".into());
-            }
-            if isolation != Isolation::FreshProcess {
-                return Err("--zygote requires --isolation fresh-process".into());
-            }
-            let canonical_adapter = adapter
-                .canonicalize()
-                .map_err(|e| format!("adapter: {e}"))?;
-            if coordinator::native_worker(&canonical_adapter).is_none() {
-                return Err("--zygote requires the reference persistent adapter (m2-runner.mjs beside m2-worker.ts)".into());
-            }
-            (true, None)
-        }
-        Some(false) => (false, Some("--no-zygote".to_string())),
-        None => match auto_zygote(
-            cfg!(target_os = "linux"),
-            execution,
+    let modes = modes::resolve(
+        &modes::Requested {
+            execution: execution_flag,
             isolation,
-            &reference_adapter,
-        ) {
-            Ok(()) => (true, None),
-            Err(reason) => (false, Some(reason)),
+            workers,
+            no_shared_controller,
+            test_selection,
+            zygote,
+            zygote_precollect,
+            rolling_lanes,
         },
-    };
-    if zygote_precollect && !zygote {
-        return Err(match &zygote_off_reason {
-            Some(reason) => {
-                format!("--zygote-precollect requires the zygote, which is off ({reason})")
-            }
-            None => "--zygote-precollect requires --zygote".into(),
-        });
-    }
-    if zygote_precollect && !test_selection {
-        return Err("--zygote-precollect requires --test-selection".into());
-    }
+        &modes::Host {
+            zygote_platform,
+            reference_adapter: adapter
+                .canonicalize()
+                .map(|adapter| coordinator::native_worker(&adapter).is_some())
+                .map_err(|e| format!("adapter: {e}")),
+        },
+    )?;
     if let Some(path) = &report
         && path != Path::new("-")
         && let Ok(target) = path.canonicalize()
@@ -403,14 +379,6 @@ fn parse_options(mut args: impl Iterator<Item = String>) -> Result<Option<Option
             return Err("report path would overwrite a project source file".into());
         }
     }
-    // Default for parallel persistent runs; unsupported projects fall back at run time.
-    let shared_controller = !no_shared_controller
-        && execution == Execution::Persistent
-        && workers >= 2
-        && coordinator::native_worker(&adapter).is_some();
-    if rolling_lanes && !shared_controller {
-        return Err("--rolling-lanes requires the shared controller (--execution persistent, --workers 2 or more, no --no-shared-controller)".into());
-    }
     Ok(Some(Options {
         root,
         config,
@@ -420,10 +388,10 @@ fn parse_options(mut args: impl Iterator<Item = String>) -> Result<Option<Option
         adapter,
         list,
         baseline_only,
-        execution,
+        execution: modes.execution,
         isolation,
         order_seed,
-        test_selection,
+        test_selection: modes.test_selection,
         cache,
         cache_inputs_complete,
         cache_policy,
@@ -431,11 +399,12 @@ fn parse_options(mut args: impl Iterator<Item = String>) -> Result<Option<Option
         cache_inputs,
         cache_env,
         workers,
-        shared_controller,
-        zygote,
-        zygote_off_reason,
-        zygote_precollect,
-        rolling_lanes,
+        shared_controller: modes.shared_controller,
+        zygote: modes.zygote,
+        zygote_off_reason: modes.zygote_off_reason,
+        zygote_precollect: modes.zygote_precollect,
+        rolling_lanes: modes.rolling_lanes,
+        modes_summary: modes.summary,
         memory_budget_mib,
         memory_reserve_mib,
         mutators,
@@ -1059,6 +1028,9 @@ enum Attempt {
 }
 
 fn run(options: Options) -> Result<u8, String> {
+    if !options.list {
+        eprintln!("oximut: {}", options.modes_summary);
+    }
     match run_attempt(&options, None)? {
         Attempt::Complete(code) => Ok(code),
         Attempt::Retry(evidence) => match run_attempt(&options, Some(evidence))? {
@@ -1994,7 +1966,7 @@ mod tests {
         );
 
         assert!(
-            parse(&["--isolation", "fresh-thread"])
+            parse(&["--execution", "fresh", "--isolation", "fresh-thread"])
                 .err()
                 .unwrap()
                 .contains("requires --execution persistent")
@@ -2006,29 +1978,6 @@ mod tests {
             serde_json::from_value::<Options>(legacy).unwrap().isolation,
             Isolation::FreshProcess
         );
-    }
-
-    #[test]
-    fn auto_zygote_is_on_only_for_persistent_fresh_process_reference_runs_on_linux() {
-        use Execution::{Fresh, Persistent};
-        use Isolation::{FreshProcess, FreshThread};
-        let yes = || true;
-        let no = || false;
-        assert_eq!(auto_zygote(true, Persistent, FreshProcess, &yes), Ok(()));
-        assert_eq!(
-            auto_zygote(false, Persistent, FreshProcess, &yes),
-            Err("not Linux".to_string())
-        );
-        assert_eq!(
-            auto_zygote(true, Persistent, FreshThread, &yes),
-            Err("isolation fresh-thread".to_string())
-        );
-        assert_eq!(
-            auto_zygote(true, Persistent, FreshProcess, &no),
-            Err("custom adapter".to_string())
-        );
-        assert!(auto_zygote(true, Fresh, FreshProcess, &yes).is_err());
-        assert!(auto_zygote(false, Fresh, FreshThread, &no).is_err());
     }
 
     #[test]
@@ -2063,8 +2012,8 @@ mod tests {
         let both = parse(&["--execution", "persistent", "--zygote", "--no-zygote"]);
         assert!(both.err().unwrap().contains("cannot be combined"));
         // Fresh execution silently ignores auto and the opt-out alike.
-        assert!(!parse(&[]).unwrap().unwrap().zygote);
-        assert!(parse(&["--no-zygote"]).is_ok());
+        assert!(!parse(&["--execution", "fresh"]).unwrap().unwrap().zygote);
+        assert!(parse(&["--execution", "fresh", "--no-zygote"]).is_ok());
         let on = parse(&["--execution", "persistent", "--zygote"])
             .unwrap()
             .unwrap();
@@ -2074,12 +2023,6 @@ mod tests {
         let mut legacy = serde_json::to_value(on).unwrap();
         legacy.as_object_mut().unwrap().remove("zygote");
         assert!(!serde_json::from_value::<Options>(legacy).unwrap().zygote);
-        assert!(
-            parse(&["--zygote"])
-                .err()
-                .unwrap()
-                .contains("--zygote requires --execution persistent")
-        );
         assert!(
             parse(&["--execution", "fresh", "--zygote"])
                 .err()
@@ -2118,108 +2061,168 @@ mod tests {
                 && HELP.contains("--no-zygote")
                 && HELP.contains("on by default")
         );
-    }
-
-    #[test]
-    fn zygote_precollect_option_is_opt_in_and_needs_the_zygote() {
-        let subject = concat!(
-            env!("CARGO_MANIFEST_DIR"),
-            "/../../fixtures/m1/src/subject.ts"
-        );
-        let parse = |args: &[&str]| {
-            parse_options(
+        // Persistent execution is the default, so the zygote is automatic on a
+        // host that supports it and skipped silently on one that does not.
+        let on_linux = |args: &[&str]| {
+            parse_options_on(
                 [
                     "--root",
                     concat!(env!("CARGO_MANIFEST_DIR"), "/../../fixtures/m1"),
                     "--source",
                     subject,
-                    "--execution",
-                    "persistent",
                 ]
                 .into_iter()
                 .chain(args.iter().copied())
                 .map(str::to_string),
+                true,
             )
-        };
-        assert!(!parse(&["--zygote"]).unwrap().unwrap().zygote_precollect);
-        let on = parse(&["--zygote", "--zygote-precollect", "--test-selection"])
             .unwrap()
-            .unwrap();
-        assert!(on.zygote && on.zygote_precollect);
-        // Older serialized options predate the field.
-        let mut legacy = serde_json::to_value(on).unwrap();
-        legacy.as_object_mut().unwrap().remove("zygote_precollect");
-        assert!(
-            !serde_json::from_value::<Options>(legacy)
-                .unwrap()
-                .zygote_precollect
-        );
-        assert!(
-            parse(&["--no-zygote", "--zygote-precollect", "--test-selection"])
-                .err()
-                .unwrap()
-                .contains("--zygote-precollect requires the zygote")
-        );
-        assert!(
-            parse(&["--zygote", "--zygote-precollect"])
-                .err()
-                .unwrap()
-                .contains("--zygote-precollect requires --test-selection")
-        );
-        assert!(HELP.contains("--zygote-precollect"));
+            .unwrap()
+        };
+        assert!(on_linux(&[]).zygote);
+        assert!(!on_linux(&["--no-zygote"]).zygote);
+        assert!(!on_linux(&["--execution", "fresh"]).zygote);
+    }
+
+    /// Parse against a host whose platform does (or does not) support the zygote,
+    /// on the m1 fixture, so the automatic modes behave the same everywhere.
+    fn parse_on(zygote_platform: bool, args: &[&str]) -> Result<Option<Options>, String> {
+        parse_options_on(
+            [
+                "--root",
+                concat!(env!("CARGO_MANIFEST_DIR"), "/../../fixtures/m1"),
+                "--source",
+                concat!(
+                    env!("CARGO_MANIFEST_DIR"),
+                    "/../../fixtures/m1/src/subject.ts"
+                ),
+            ]
+            .into_iter()
+            .chain(args.iter().copied())
+            .map(str::to_string),
+            zygote_platform,
+        )
     }
 
     #[test]
-    fn rolling_lanes_option_is_opt_in_and_needs_the_shared_controller() {
-        let subject = concat!(
-            env!("CARGO_MANIFEST_DIR"),
-            "/../../fixtures/m1/src/subject.ts"
+    fn fast_modes_are_the_defaults_and_each_has_an_opt_out() {
+        let default = parse_on(true, &["--workers", "2"]).unwrap().unwrap();
+        assert_eq!(default.execution, Execution::Persistent);
+        assert!(default.test_selection && default.shared_controller);
+        assert!(default.zygote && default.zygote_precollect && default.rolling_lanes);
+        assert!(default.adapter.ends_with("m2-runner.mjs"));
+        assert!(
+            default
+                .modes_summary
+                .contains("execution=persistent (default)")
         );
-        let parse = |args: &[&str]| {
-            parse_options(
-                [
-                    "--root",
-                    concat!(env!("CARGO_MANIFEST_DIR"), "/../../fixtures/m1"),
-                    "--source",
-                    subject,
-                    "--execution",
-                    "persistent",
-                ]
-                .into_iter()
-                .chain(args.iter().copied())
-                .map(str::to_string),
-            )
-        };
-        assert!(!parse(&["--workers", "2"]).unwrap().unwrap().rolling_lanes);
-        let on = parse(&["--workers", "2", "--rolling-lanes"])
+
+        let opt_out = |flag: &str| parse_on(true, &["--workers", "2", flag]).unwrap().unwrap();
+        let fresh = parse_on(true, &["--workers", "2", "--execution", "fresh"])
             .unwrap()
             .unwrap();
-        assert!(on.shared_controller && on.rolling_lanes);
-        // Older serialized options predate the field.
-        let mut legacy = serde_json::to_value(on).unwrap();
-        legacy.as_object_mut().unwrap().remove("rolling_lanes");
+        assert_eq!(fresh.execution, Execution::Fresh);
+        assert!(fresh.adapter.ends_with("m1-runner.mjs"));
         assert!(
-            !serde_json::from_value::<Options>(legacy)
-                .unwrap()
-                .rolling_lanes
+            !fresh.zygote
+                && !fresh.zygote_precollect
+                && !fresh.rolling_lanes
+                && !fresh.shared_controller
         );
-        for args in [
-            &["--workers", "1", "--rolling-lanes"][..],
-            &[
-                "--workers",
-                "2",
-                "--no-shared-controller",
-                "--rolling-lanes",
-            ][..],
+        let no_selection = opt_out("--no-test-selection");
+        assert!(!no_selection.test_selection && !no_selection.zygote_precollect);
+        assert!(no_selection.zygote && no_selection.rolling_lanes);
+        let no_precollect = opt_out("--no-zygote-precollect");
+        assert!(!no_precollect.zygote_precollect && no_precollect.zygote);
+        assert!(no_precollect.rolling_lanes && no_precollect.test_selection);
+        let no_rolling = opt_out("--no-rolling-lanes");
+        assert!(!no_rolling.rolling_lanes && no_rolling.zygote_precollect);
+        let no_zygote = opt_out("--no-zygote");
+        assert!(!no_zygote.zygote && !no_zygote.zygote_precollect && no_zygote.rolling_lanes);
+
+        for (positive, negative) in [
+            ("--test-selection", "--no-test-selection"),
+            ("--zygote-precollect", "--no-zygote-precollect"),
+            ("--rolling-lanes", "--no-rolling-lanes"),
         ] {
             assert!(
-                parse(args)
+                parse_on(true, &["--workers", "2", positive, negative])
                     .err()
                     .unwrap()
-                    .contains("--rolling-lanes requires the shared controller")
+                    .contains("cannot be combined")
             );
         }
-        assert!(HELP.contains("--rolling-lanes"));
+        for flag in [
+            "--no-test-selection",
+            "--no-zygote-precollect",
+            "--no-rolling-lanes",
+        ] {
+            assert!(HELP.contains(flag));
+        }
+    }
+
+    #[test]
+    fn automatic_modes_are_skipped_silently_and_explicit_ones_error() {
+        // The default single worker has no shared controller.
+        let single = parse_on(true, &[]).unwrap().unwrap();
+        assert!(single.zygote && !single.zygote_precollect && !single.rolling_lanes);
+        // A host without the zygote still gets rolling lanes.
+        let other = parse_on(false, &["--workers", "2"]).unwrap().unwrap();
+        assert!(!other.zygote && !other.zygote_precollect && other.rolling_lanes);
+        assert_eq!(other.zygote_off_reason.as_deref(), Some("not Linux"));
+        assert!(other.modes_summary.contains("zygote=off (auto: not Linux)"));
+        // Explicit requests keep today's errors.
+        for (args, message) in [
+            (
+                &["--no-zygote", "--zygote-precollect"][..],
+                "--zygote-precollect requires the zygote",
+            ),
+            (
+                &["--no-test-selection", "--zygote-precollect"][..],
+                "--zygote-precollect requires --test-selection",
+            ),
+            (
+                &["--execution", "fresh", "--zygote-precollect"][..],
+                "--zygote-precollect requires the zygote",
+            ),
+            (
+                &["--rolling-lanes"][..],
+                "--rolling-lanes requires the shared controller",
+            ),
+            (
+                &[
+                    "--workers",
+                    "2",
+                    "--no-shared-controller",
+                    "--rolling-lanes",
+                ][..],
+                "--rolling-lanes requires the shared controller",
+            ),
+            (
+                &["--workers", "2", "--execution", "fresh", "--rolling-lanes"][..],
+                "--rolling-lanes requires the shared controller",
+            ),
+        ] {
+            assert!(
+                parse_on(true, args).err().unwrap().contains(message),
+                "{args:?}"
+            );
+        }
+        assert!(
+            parse_on(
+                true,
+                &["--workers", "2", "--rolling-lanes", "--zygote-precollect"]
+            )
+            .is_ok()
+        );
+        // Older serialized options predate the fields.
+        let mut legacy =
+            serde_json::to_value(parse_on(true, &["--workers", "2"]).unwrap().unwrap()).unwrap();
+        for field in ["zygote_precollect", "rolling_lanes", "modes_summary"] {
+            legacy.as_object_mut().unwrap().remove(field);
+        }
+        let legacy = serde_json::from_value::<Options>(legacy).unwrap();
+        assert!(!legacy.zygote_precollect && !legacy.rolling_lanes);
     }
 
     #[test]
