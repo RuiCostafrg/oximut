@@ -35,6 +35,9 @@ const sample = (event: string, fields: Record<string, unknown> = {}) => {
   trace.emit('controller', event, { ...fields, eluActive: active, eluIdle: idle });
 };
 const WARM_PROJECT = 'oximut-warm';
+// Rolling lanes build templates concurrently, one hidden warm project per build in
+// flight: at most this many, and never more than the lane slots.
+const MAX_WARM_BUILDERS = 4;
 // Vitest APIs whose effects a template cannot hand to a later run of the same
 // file: they act on module registries or process-wide state at load time.
 const TEMPLATE_UNSAFE =
@@ -125,8 +128,8 @@ export class SharedLanes {
   private laneMutants = new Map<string, string>();
   // Template keys (JSON lists of test files) whose zygote exists or could not be built.
   private templates = new Map<string, boolean>();
-  // The files the template being built collects.
-  private warmFiles: string[] = [];
+  // The files each warm project's template build collects, by project name.
+  private warmFiles = new Map<string, string[]>();
   // Test files (with their setup files) free of template-unsafe Vitest APIs.
   private safeFiles = new Map<string, boolean>();
   // Test files already checked to run in the Node environment.
@@ -327,7 +330,11 @@ export class SharedLanes {
               maxConcurrency: 1,
             },
           })),
-          ...(precollect ? [this.warmProject()] : []),
+          ...(precollect
+            ? Array.from({ length: rolling ? Math.min(width, MAX_WARM_BUILDERS) : 1 }, (_, index) =>
+                this.warmProject(index),
+              )
+            : []),
         ],
       });
       try {
@@ -467,22 +474,69 @@ export class SharedLanes {
     const plans: LanePlan[] = [];
     for (const job of jobs) plans.push(await this.plan(specs, 'oximut-lane-0', job));
     // Templates: all that the batch needs are started now, in the order the lanes
-    // need them, and build one after another while the first lanes already run.
+    // need them. They build concurrently, one warm project per build in flight, so
+    // a slot never waits behind another template's build, and a lane is only
+    // started once its own template has settled (see takeNext).
     const templates = new Map<string, Promise<boolean>>();
-    let building: Promise<unknown> = Promise.resolve(true);
+    const keys: (string | undefined)[] = [];
+    const settled = new Set<string>();
+    const free = ctx.projects
+      .filter((project) => project.name.startsWith(`${WARM_PROJECT}-`))
+      .map((_, builder) => builder);
+    const waiting: ((builder: number) => void)[] = [];
+    const acquire = () =>
+      free.length
+        ? Promise.resolve(free.shift()!)
+        : new Promise<number>((resolve) => waiting.push(resolve));
+    const release = (builder: number) => {
+      const next = waiting.shift();
+      if (next) next(builder);
+      else free.push(builder);
+    };
     if (precollect)
       for (const [position, job] of jobs.entries()) {
         const key = await this.templateCandidate(job, plans[position].files, ctx.projects[0]);
+        keys[position] = key;
         if (!key || templates.has(key)) continue;
         const known = this.templates.get(key);
         if (known !== undefined) {
+          settled.add(key);
           templates.set(key, Promise.resolve(known));
           continue;
         }
-        const build = building.then(() => this.warm(key, plans[position].files)).catch(() => false);
-        building = build;
+        const files = plans[position].files;
+        const build = (async () => {
+          const builder = await acquire();
+          try {
+            return await this.warm(key, files, builder, createPool);
+          } finally {
+            release(builder);
+          }
+        })()
+          .catch(() => false)
+          .then((ready) => {
+            settled.add(key);
+            return ready;
+          });
         templates.set(key, build);
       }
+    // The next lane for a free slot: the first still queued whose template is not
+    // pending, so a slot never idles while another lane could run. When every
+    // queued lane needs a template still building, wait for the next one to settle.
+    const queue = jobs.map((_, position) => position);
+    const takeNext = async (): Promise<number | undefined> => {
+      for (;;) {
+        if (fatal !== undefined || queue.length === 0) return undefined;
+        const at = queue.findIndex((position) => {
+          const key = keys[position];
+          return !key || settled.has(key);
+        });
+        if (at >= 0) return queue.splice(at, 1)[0];
+        await Promise.race(
+          [...templates].filter(([key]) => !settled.has(key)).map(([, build]) => build),
+        );
+      }
+    };
     // Unhandled errors carry no project. One that arrives while lanes run taints
     // them all, as in a barrier batch; one that no lane can have caused (none
     // running) is not taken from any lane's result, but never goes unseen.
@@ -499,14 +553,12 @@ export class SharedLanes {
       for (const name of active) tainted.add(name);
     };
     const results: Response[] = new Array(jobs.length);
-    let next = 0;
     let fatal: unknown;
     const slot = async (index: number) => {
       const name = `oximut-lane-${index}`;
       const pool = createPool(ctx);
       try {
-        while (fatal === undefined && next < jobs.length) {
-          const position = next++;
+        for (let position = await takeNext(); position !== undefined; position = await takeNext()) {
           const job = jobs[position];
           try {
             results[position] = await this.runLane(
@@ -517,6 +569,7 @@ export class SharedLanes {
               position,
               specs,
               templates,
+              keys[position],
               active,
               tainted,
             );
@@ -539,11 +592,11 @@ export class SharedLanes {
     };
     try {
       await Promise.all(Array.from({ length: slots }, (_, index) => slot(index)));
-      await building;
+      await Promise.all(templates.values());
     } finally {
       state.catchError = catchError;
       this.laneDeadlines.clear();
-      await building.catch(() => {});
+      await Promise.allSettled(templates.values());
       // Pools of other slots may still be draining after a failure.
       for (const [position, job] of jobs.entries())
         results[position] ??= envelope(job, {
@@ -578,6 +631,7 @@ export class SharedLanes {
     position: number,
     specs: Awaited<ReturnType<Context['globTestSpecifications']>>,
     templates: Map<string, Promise<boolean>>,
+    candidate: string | undefined,
     active: Set<string>,
     tainted: Set<string>,
   ): Promise<Response> {
@@ -587,11 +641,8 @@ export class SharedLanes {
     this.files.set(name, plan.files);
     this.failures.delete(name);
     tainted.delete(name);
-    // A template still being built is waited for; a lane never forks from one
-    // that is not ready, and its own deadline has not started yet.
-    const candidate = templates.size
-      ? await this.templateCandidate(job, plan.files, project)
-      : undefined;
+    // The lane was only taken once its template settled; one that is not ready
+    // (ineligible or failed) leaves it on the ordinary zygote path.
     const ready = candidate ? await templates.get(candidate) : undefined;
     const { OXIMUT_ZYGOTE_TEMPLATE: _stale, ...env } = project.config.env ?? {};
     project.config.env = {
@@ -753,7 +804,7 @@ export class SharedLanes {
    * environment never names a mutant, so the template evaluates every module
    * with all mutations off.
    */
-  private warmProject() {
+  private warmProject(index: number) {
     return {
       extends: true,
       plugins: [
@@ -767,7 +818,7 @@ export class SharedLanes {
         },
       ],
       test: {
-        name: WARM_PROJECT,
+        name: `${WARM_PROJECT}-${index}`,
         pool: {
           name: 'oximut-lane-forks',
           createPoolWorker: (options: ConstructorParameters<typeof ForksPoolWorker>[0]) => {
@@ -796,7 +847,7 @@ export class SharedLanes {
               if (wire.type === 'run') {
                 wire.type = 'collect';
                 (wire as unknown as { context: { files: { filepath: string }[] } }).context.files =
-                  this.warmFiles.map((filepath) => ({ filepath }));
+                  this.warmFiles.get(options.project.name)!.map((filepath) => ({ filepath }));
               } else if (wire.type === 'stop' && kept()) {
                 // Vitest's teardown would strip the zygote's message handlers: the
                 // worker stays up, as the template, and only the pool is told.
@@ -868,15 +919,25 @@ export class SharedLanes {
    * worker through the warm project, so it fetches, evaluates and collects the
    * files once with no mutant active. The worker is then kept as the template
    * instead of being stopped (see zygote/pool.cjs).
+   *
+   * `builder` picks the hidden warm project, so builds on different builders can
+   * run at the same time. With a pool factory the build runs in a pool of its own
+   * (as a lane does), otherwise through the context's run.
    */
-  private async warm(key: string, files: string[]): Promise<boolean> {
+  private async warm(
+    key: string,
+    files: string[],
+    builder = 0,
+    createPool?: PoolFactory,
+  ): Promise<boolean> {
     const known = this.templates.get(key);
     if (known !== undefined) return known;
     const ctx = this.context!;
-    const project = ctx.projects.find((candidate) => candidate.name === WARM_PROJECT);
+    const name = `${WARM_PROJECT}-${builder}`;
+    const project = ctx.projects.find((candidate) => candidate.name === name);
     let ready = false;
     const built = trace ? performance.now() : 0;
-    trace?.emit('controller', 'template_build_begin', { key });
+    trace?.emit('controller', 'template_build_begin', { key, builder });
     if (project && this.templatePool) {
       // The controller's own environment can name a mutant: the template has none.
       project.config.env = {
@@ -885,13 +946,22 @@ export class SharedLanes {
         OXIMUT_ZYGOTE_WARM: '1',
         OXIMUT_ACTIVE_MUTANT: '',
       };
-      this.warmFiles = files;
+      this.warmFiles.set(name, files);
       try {
         const spec = (await ctx.globTestSpecifications()).find(
           (candidate) =>
-            candidate.project.name === WARM_PROJECT && resolve(candidate.moduleId) === files[0],
+            candidate.project.name === name && resolve(candidate.moduleId) === files[0],
         );
-        if (spec) {
+        if (spec && createPool) {
+          const pool = createPool(ctx);
+          try {
+            await pool.runTests([spec], []);
+          } finally {
+            await waitForPoolBookkeeping();
+            await pool.close();
+          }
+          ready = this.templatePool.templateReady(key);
+        } else if (spec) {
           await ctx.runTestSpecifications([spec], true);
           const pool = (ctx as unknown as { pool?: { close?: () => Promise<void> } }).pool;
           await pool?.close?.();
@@ -905,6 +975,7 @@ export class SharedLanes {
     this.templates.set(key, ready);
     trace?.emit('controller', 'template_build_end', {
       key,
+      builder,
       ready,
       ms: performance.now() - built,
     });

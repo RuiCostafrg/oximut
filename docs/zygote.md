@@ -184,9 +184,14 @@ for fork-based lanes (it needs the shared controller and works with or without
   lanes running at that moment, as the whole batch was tainted before; a pool error
   explained by that lane's own deadline or crash taints nobody.
 - With `--zygote-precollect`, every template the batch needs is started when the
-  batch arrives, in the order its lanes need them, and builds one after another
-  while the first lanes already run. A lane whose template is still building waits
-  for it; its deadline has not started.
+  batch arrives, in the order its lanes need them. Templates build concurrently,
+  each in its own hidden warm project, up to the number of lane slots and at most
+  four at a time (more wait for a free builder). A free slot takes the first queued
+  lane whose template has settled, or that needs none, so lanes of a ready template
+  and ordinary-path lanes start while other templates still build; when every queued
+  lane needs a template still building, the slot waits for the next one. Lanes
+  therefore may start out of queue order; results stay attributed per lane. A lane's
+  deadline has not started while it waits.
 - The zygote watchdog is unchanged: a lane that times out under the zygote is
   rerun once on its own with the zygote bypassed.
 
