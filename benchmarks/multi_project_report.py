@@ -197,14 +197,15 @@ def diagnostics_rows(summaries):
             f'{100 * execution / wall_ms:.0f}%' if execution is not None and wall_ms else 'n/a',
             f"{wall_ms / oximut['mutants']:.0f}", f"{1000 * stryker['wall_seconds'] / stryker['mutants']:.0f}",
             seconds(stryker_log.get('initial_run_seconds')),
-            f"{stryker_log['tests_per_mutant']:.1f}" if stryker_log.get('tests_per_mutant') is not None else 'n/a',
+            f"{100 * stryker_log['mutation_phase_seconds'] / summary['stryker']['wall_seconds']:.0f}%"
+            if stryker_log.get('mutation_phase_seconds') is not None else 'n/a',
         ])
     return rows
 
 
 DIAGNOSTIC_HEADER = ['Project', 'Workers', 'Vitest suite s', 'Oximut mutation-phase share of wall',
                      'Oximut ms/mutant (wall)', 'Stryker ms/mutant (wall)', 'Stryker initial run s',
-                     'Stryker tests/mutant']
+                     'Stryker mutation-phase share of wall']
 
 
 def scope_rows(summaries):

@@ -211,12 +211,13 @@ class OutcomeTests(ProjectCase):
         self.assertEqual((result['shared_agree'], result['shared_disagree']), (2, 1))
         self.assertEqual(result['disagreements'], [{'identity': 'c', 'oximut': 'killed', 'stryker': 'survived'}])
 
-    def test_stryker_log_start_up_evidence_is_parsed_or_left_absent(self):
-        log = ('INFO Initial test run succeeded. Ran 102 tests in 3 seconds (net 55 ms, overhead 2945 ms).\n'
-               'INFO Ran 2.50 tests per mutant on average.')
+    def test_stryker_log_start_up_and_mutation_phase_timing_is_parsed_or_left_absent(self):
+        log = ('\x1b[32m17:15:45 (3032) INFO DryRunExecutor\x1b[39m Initial test run succeeded. Ran 489 tests in 1 second '
+               '(net 96.8 ms, overhead 1416.2 ms).\n'
+               '17:15:53 (3032) INFO MutationTestExecutor Done in 1 minute 10 seconds.')
         self.assertEqual(bench.parse_stryker_log(log),
-                         {'initial_run_seconds': 3.0, 'initial_run_net_ms': 55, 'initial_run_overhead_ms': 2945,
-                          'tests_per_mutant': 2.5})
+                         {'initial_run_seconds': 1.0, 'initial_run_net_ms': 96.8, 'initial_run_overhead_ms': 1416.2,
+                          'mutation_phase_seconds': 70})
         self.assertEqual(set(bench.parse_stryker_log('nothing useful').values()), {None})
 
 
@@ -312,7 +313,7 @@ def run(tool, round_index, wall, cpu=1., rss=100, sha='abc', counts=None, warmup
     if tool == 'oximut':
         base.update(complete=True, phase_wall_ms={'mutationExecution': 500}, diagnostics=['zygote=on'])
     if tool == 'stryker':
-        base.update(log={'initial_run_seconds': 3.0, 'tests_per_mutant': 2.0})
+        base.update(log={'initial_run_seconds': 3.0, 'mutation_phase_seconds': 8.0})
     base.update(extra)
     return base
 

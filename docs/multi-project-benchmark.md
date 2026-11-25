@@ -6,7 +6,7 @@ newest StrykerJS (`@stryker-mutator/core` and `@stryker-mutator/vitest-runner` a
 `package.json`, `coverageAnalysis: perTest`) on several pinned real projects at matched worker counts.
 Results are evidence, never a gate. Triggers: manual dispatch (inputs: `projects`, `workers`, `rounds`,
 `warmups`, `scope`; defaults run every project at 2 and 4 workers, 3 rounds after 1 warmup), and pull requests
-touching the harness, which run a one-round smoke (ufo and valibot, 2 workers). The label
+touching the harness, which run a one-round smoke (ufo and es-toolkit, 2 workers). The label
 `multi-project-full` on such a pull request runs the full matrix at 5 rounds. GitHub only dispatches a
 workflow that exists on the default branch, so a branch that adds or changes the workflow uses the
 pull-request triggers.

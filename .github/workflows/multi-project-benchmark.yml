@@ -7,7 +7,7 @@ name: Multi-project benchmark
 # colord numbers generalize, never a gate. See docs/multi-project-benchmark.md.
 #
 # Triggers: manual dispatch (the full matrix by default), and pull requests that touch the
-# harness, which run a one-round smoke (ufo and valibot at 2 workers). Adding the
+# harness, which run a one-round smoke (ufo and es-toolkit at 2 workers). Adding the
 # `multi-project-full` label to such a pull request runs the full matrix at 5 rounds instead.
 on:
   pull_request:
@@ -86,7 +86,7 @@ jobs:
           set -euo pipefail
           # Dispatch: the inputs' defaults. Pull request: a smoke, or the full matrix with the label.
           if [[ "$EVENT" == pull_request && "$FULL_LABEL" != true ]]; then
-            PROJECTS='ufo valibot'; WORKERS=2; ROUNDS=1; WARMUPS=0
+            PROJECTS='ufo es-toolkit'; WORKERS=2; ROUNDS=1; WARMUPS=0
           elif [[ "$EVENT" == pull_request ]]; then
             PROJECTS=''; WORKERS='2 4'; ROUNDS=5; WARMUPS=1
           else

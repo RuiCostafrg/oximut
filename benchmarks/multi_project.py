@@ -290,18 +290,23 @@ def compare_scope(oximut, stryker, limit=25):
 
 
 STRYKER_INITIAL = re.compile(
-    r'Initial test run succeeded\. Ran (\d+) tests? in ([\d.]+) seconds?\s*\(net (\d+) ms, overhead (\d+) ms\)')
-STRYKER_PER_MUTANT = re.compile(r'Ran ([\d.]+) tests? per mutant on average')
+    r'Initial test run succeeded\. Ran (\d+) tests? in ([\d.]+) seconds?\s*\(net ([\d.]+) ms, overhead ([\d.]+) ms\)')
+STRYKER_DONE = re.compile(r'MutationTestExecutor\S*\s+Done in ((?:\d+ (?:hours?|minutes?|seconds?)\s*)+)')
+UNIT_SECONDS = {'hour': 3600, 'minute': 60, 'second': 1}
 
 
 def parse_stryker_log(text):
-    """Start-up evidence from Stryker's own log; absent fields are None, never guessed."""
+    """Start-up and mutation-phase timing from Stryker's own log; absent fields are None, never guessed."""
+    text = re.sub(r'\x1b\[[0-9;]*m', '', text)
     initial = STRYKER_INITIAL.search(text)
-    per_mutant = STRYKER_PER_MUTANT.search(text)
+    done = STRYKER_DONE.search(text)
+    mutation = (sum(int(count) * UNIT_SECONDS[unit.rstrip('s')]
+                    for count, unit in re.findall(r'(\d+) (hours?|minutes?|seconds?)', done.group(1)))
+                if done else None)
     return {'initial_run_seconds': float(initial.group(2)) if initial else None,
-            'initial_run_net_ms': int(initial.group(3)) if initial else None,
-            'initial_run_overhead_ms': int(initial.group(4)) if initial else None,
-            'tests_per_mutant': float(per_mutant.group(1)) if per_mutant else None}
+            'initial_run_net_ms': float(initial.group(3)) if initial else None,
+            'initial_run_overhead_ms': float(initial.group(4)) if initial else None,
+            'mutation_phase_seconds': mutation}
 
 
 def cpu_model():
