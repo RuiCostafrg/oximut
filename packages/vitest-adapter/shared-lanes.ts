@@ -99,6 +99,16 @@ class ExitOnlyThreadsPoolWorker extends ThreadsPoolWorker {
   }
 }
 
+/** The slice of a lane worker's ChildProcess that killing it at its result uses. */
+type LaneFork = {
+  // Set by the zygote pool's stand-in for a child process (zygote/pool.cjs).
+  oximutZygote?: true;
+  exitCode: number | null;
+  signalCode: string | null;
+  kill(signal: string): boolean;
+  once(event: 'exit', listener: () => void): unknown;
+};
+
 /** The slice of the zygote pool (zygote/pool.cjs) that precollection uses. */
 export interface TemplatePool {
   templateReady(name: string): boolean;
@@ -117,8 +127,11 @@ export class SharedLanes {
   private deadline = 0;
   // Rolling batches: each lane's own deadline, from the moment that lane starts.
   private laneDeadlines = new Map<string, number>();
-  // Rolling batches: lane slots whose current worker has not exited yet.
-  private liveForks = new Set<string>();
+  // Rolling batches: lane workers that have not exited yet. One that already gave
+  // its result and was killed is `draining`: its slot no longer owns it.
+  private liveForks = new Set<{ slot: string; draining: boolean }>();
+  // Rolling batches: exits of killed workers whose slot has moved on (see fastExit).
+  private exiting = new Set<Promise<void>>();
   private rolling = false;
   private threads = new Set<ThreadsPoolWorker>();
   private transforms = new TransformShare();
@@ -148,6 +161,7 @@ export class SharedLanes {
       await context?.close();
     } finally {
       await this.drainThreads();
+      await this.drainExits().catch(() => {});
     }
   }
 
@@ -234,28 +248,78 @@ export class SharedLanes {
                   let timer: ReturnType<typeof setTimeout> | undefined;
                   let finished = false;
                   let stopping = false;
+                  // Rolling lanes on zygote workers: the worker was killed at its result.
+                  let killed = false;
+                  const live = { slot: name, draining: false };
+                  const messageListeners = new Set<(message: unknown) => void>();
+                  const listen = worker.on.bind(worker);
+                  const unlisten = worker.off.bind(worker);
+                  worker.on = (event, callback) => {
+                    if (event === 'message') messageListeners.add(callback);
+                    listen(event, callback);
+                  };
+                  worker.off = (event, callback) => {
+                    if (event === 'message') messageListeners.delete(callback);
+                    unlisten(event, callback);
+                  };
+                  // The slot may hold its next mutant by the time this worker exits.
+                  const mutant = this.laneMutants.get(name);
                   const note = trace
-                    ? (event: string) =>
-                        trace.emit('controller', event, {
-                          lane: name,
-                          mutant: this.laneMutants.get(name),
-                        })
+                    ? (event: string) => trace.emit('controller', event, { lane: name, mutant })
                     : undefined;
                   worker.start = async () => {
                     note?.('lane_fork_requested');
                     await start();
                     note?.('lane_fork_returned');
                     if (worker instanceof ThreadsPoolWorker) this.threads.add(worker);
-                    if (this.rolling) this.liveForks.add(name);
+                    if (this.rolling) this.liveForks.add(live);
                     worker.on('exit', () => {
                       note?.('lane_exit');
-                      this.liveForks.delete(name);
+                      this.liveForks.delete(live);
                       clearTimeout(timer);
                       if (!finished && !stopping && !this.failures.has(name))
                         this.failures.set(name, LANE_EXITED);
                     });
                   };
+                  // Vitest stops an isolated worker the moment it has its result: it asks
+                  // the worker to tear down, waits for its answer, sends SIGTERM and waits
+                  // for the exit, and only then does the slot take its next mutant. Nothing
+                  // the worker could still do changes the lane's verdict (every update it
+                  // owed has been answered before it reports the file finished), so a
+                  // zygote worker is killed at once and its exit is collected later, by
+                  // drainExits(); the zygote still reaps it. Forks Vitest started itself
+                  // and every failure path keep the stock stop.
+                  const fastExit = () => {
+                    if (!finished || !this.rolling) return false;
+                    let fork: LaneFork;
+                    try {
+                      fork = (worker as unknown as { fork: LaneFork }).fork;
+                    } catch {
+                      return false;
+                    }
+                    if (!fork.oximutZygote || fork.exitCode !== null || fork.signalCode !== null)
+                      return false;
+                    stopping = true;
+                    killed = true;
+                    live.draining = true;
+                    clearTimeout(timer);
+                    const gone = new Promise<void>((resolve) => fork.once('exit', () => resolve()));
+                    this.exiting.add(gone);
+                    void gone.then(() => this.exiting.delete(gone));
+                    fork.kill('SIGKILL');
+                    note?.('lane_killed');
+                    // The pool's stop waits for the worker's answer.
+                    queueMicrotask(() => {
+                      for (const listener of [...messageListeners])
+                        listener({ type: 'stopped', __vitest_worker_response__: true });
+                    });
+                    return true;
+                  };
                   worker.send = (message) => {
+                    if (message.type === 'stop' && fastExit()) {
+                      note?.('lane_stop_sent');
+                      return;
+                    }
                     // One pool per slot all number their first worker 1; a slot's
                     // number is its lane's, as in a single shared pool.
                     if (this.rolling && message.type === 'start')
@@ -310,6 +374,7 @@ export class SharedLanes {
                   worker.stop = () => {
                     stopping = true;
                     clearTimeout(timer);
+                    if (killed) return Promise.resolve();
                     if (!(worker instanceof ThreadsPoolWorker)) return stop();
                     stopped ??= stop().then(() => {
                       this.threads.delete(worker);
@@ -540,6 +605,8 @@ export class SharedLanes {
     try {
       await Promise.all(Array.from({ length: slots }, (_, index) => slot(index)));
       await building;
+      // No killed worker may outlive the batch: its exit is what the CLI checks.
+      await this.drainExits();
     } finally {
       state.catchError = catchError;
       this.laneDeadlines.clear();
@@ -626,7 +693,7 @@ export class SharedLanes {
           await waitForPoolBookkeeping();
           await pool.close();
         }
-        if (this.liveForks.has(name))
+        if ([...this.liveForks].some((fork) => fork.slot === name && !fork.draining))
           throw new Error('Rolling lane still owns a live fork after pool drain');
       }
     } finally {
@@ -913,6 +980,20 @@ export class SharedLanes {
 
   private async drainThreads() {
     await Promise.all([...this.threads].map((worker) => worker.stop()));
+  }
+
+  /** Wait until every worker killed at its result has exited and been reaped. */
+  private async drainExits(timeoutMs = 10_000) {
+    if (!this.exiting.size) return;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const late = new Promise<never>((_, reject) => {
+      timer = setTimeout(() => reject(new Error('A killed lane worker did not exit')), timeoutMs);
+    });
+    try {
+      await Promise.race([Promise.all([...this.exiting]), late]);
+    } finally {
+      clearTimeout(timer);
+    }
   }
 
   /**
