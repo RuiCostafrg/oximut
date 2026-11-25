@@ -268,7 +268,16 @@ fn parse_options_on(
             _ => return Err(format!("unknown option {arg}\n{HELP}")),
         }
     }
-    let execution = execution_flag.unwrap_or(modes::DEFAULT_EXECUTION);
+    // Without --execution, a custom adapter keeps the fresh protocol; the
+    // reference adapter (the launcher's default) runs persistent.
+    let execution = execution_flag.unwrap_or_else(|| {
+        modes::default_execution(
+            !adapter_override
+                || adapter
+                    .canonicalize()
+                    .is_ok_and(|adapter| coordinator::native_worker(&adapter).is_some()),
+        )
+    });
     if isolation == Isolation::FreshThread && execution != Execution::Persistent {
         return Err("--isolation fresh-thread requires --execution persistent".into());
     }
@@ -379,7 +388,7 @@ fn parse_options_on(
         adapter,
         list,
         baseline_only,
-        execution,
+        execution: modes.execution,
         isolation,
         order_seed,
         test_selection: modes.test_selection,

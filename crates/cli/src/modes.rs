@@ -78,8 +78,16 @@ pub struct Modes {
     pub summary: String,
 }
 
-/// The default execution: a persistent controller with per-mutant isolation.
-pub const DEFAULT_EXECUTION: Execution = Execution::Persistent;
+/// The default execution: a persistent controller with per-mutant isolation
+/// for the reference adapter. A custom adapter keeps the fresh protocol every
+/// adapter speaks, so it runs unchanged without `--execution fresh`.
+pub fn default_execution(reference_adapter: bool) -> Execution {
+    if reference_adapter {
+        Execution::Persistent
+    } else {
+        Execution::Fresh
+    }
+}
 
 /// Auto mode for the zygote: on exactly for persistent, fresh-process runs of
 /// the reference adapter on a supported platform; otherwise the reason it is off.
@@ -105,11 +113,13 @@ fn auto_zygote(
 }
 
 pub fn resolve(requested: &Requested, host: &Host) -> Result<Modes, String> {
-    let execution = requested.execution.unwrap_or(DEFAULT_EXECUTION);
     let reference_adapter = host
         .reference_adapter
         .as_ref()
         .is_ok_and(|reference| *reference);
+    let execution = requested
+        .execution
+        .unwrap_or_else(|| default_execution(reference_adapter));
 
     let (zygote, zygote_off_reason) = match requested.zygote {
         Choice::On => {
@@ -327,6 +337,17 @@ mod tests {
         let modes = resolve(&requested(), &custom).unwrap();
         assert!(!modes.zygote && !modes.shared_controller);
         assert!(!modes.zygote_precollect && !modes.rolling_lanes);
+        // ...and keeps the fresh protocol every adapter speaks unless asked otherwise.
+        assert_eq!(modes.execution, Execution::Fresh);
+        assert!(
+            modes
+                .summary
+                .starts_with("modes: execution=fresh (default)")
+        );
+        let mut persistent = requested();
+        persistent.execution = Some(Execution::Persistent);
+        let modes = resolve(&persistent, &custom).unwrap();
+        assert_eq!(modes.execution, Execution::Persistent);
         // Fresh execution has none of the persistent modes, silently.
         let mut fresh = requested();
         fresh.execution = Some(Execution::Fresh);
@@ -458,7 +479,10 @@ mod tests {
         );
         assert!(
             error(
-                &|r| r.zygote = Choice::On,
+                &|r| {
+                    r.execution = Some(Execution::Persistent);
+                    r.zygote = Choice::On;
+                },
                 &Host {
                     zygote_platform: true,
                     reference_adapter: Ok(false)
@@ -468,7 +492,10 @@ mod tests {
         );
         assert_eq!(
             error(
-                &|r| r.zygote = Choice::On,
+                &|r| {
+                    r.execution = Some(Execution::Persistent);
+                    r.zygote = Choice::On;
+                },
                 &Host {
                     zygote_platform: true,
                     reference_adapter: Err("adapter: missing".into())
