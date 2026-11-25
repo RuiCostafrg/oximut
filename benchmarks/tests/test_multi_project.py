@@ -132,8 +132,8 @@ class CorpusTests(unittest.TestCase):
             with self.assertRaises(bench.BenchmarkError):
                 bench.parse_workers(bad)
         matrix = bench.plan_matrix(bench.select_projects(bench.load_projects(), ['ufo', 'radix3']), [2, 4])
-        self.assertEqual([(c['project'], c['workers']) for c in matrix['include']],
-                         [('ufo', 2), ('ufo', 4), ('radix3', 2), ('radix3', 4)])
+        self.assertEqual([(c['project'], c['kind'], c['workers']) for c in matrix['include']],
+                         [('ufo', 'startup', 2), ('ufo', 'startup', 4), ('radix3', 'large', 2), ('radix3', 'large', 4)])
 
 
 class PrepareTests(ProjectCase):

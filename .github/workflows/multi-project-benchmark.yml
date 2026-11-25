@@ -8,7 +8,7 @@ name: Multi-project benchmark
 #
 # Triggers: manual dispatch (the full matrix by default), and pull requests that touch the
 # harness, which run a one-round smoke (ufo, radix3 and es-toolkit-no-globalthis at 2 workers). Adding the
-# `multi-project-full` label to such a pull request runs the full matrix at 5 rounds instead.
+# `multi-project-full` label to such a pull request runs the full matrix (5 rounds, 3 for the large projects) instead.
 on:
   pull_request:
     types: [opened, synchronize, reopened, labeled]
@@ -32,8 +32,12 @@ on:
         description: 'Space-separated matched worker counts. GitHub standard runners have 4 vCPUs, so 8 is recorded as skipped (oversubscribed), not run'
       rounds:
         type: string
+        default: '5'
+        description: 'Measured rounds per tool for the small (start-up) projects (a warmup round runs first); 3 or more gives a ratio interval'
+      large_rounds:
+        type: string
         default: '3'
-        description: 'Measured rounds per tool (a warmup round runs first); 3 or more gives a ratio interval'
+        description: 'Measured rounds per tool for the large (per-mutant) projects, whose rounds take many minutes'
       warmups:
         type: string
         default: '1'
@@ -62,6 +66,7 @@ jobs:
     outputs:
       matrix: ${{ steps.plan.outputs.matrix }}
       rounds: ${{ steps.plan.outputs.rounds }}
+      large_rounds: ${{ steps.plan.outputs.large_rounds }}
       warmups: ${{ steps.plan.outputs.warmups }}
       scope: ${{ steps.plan.outputs.scope }}
     steps:
@@ -80,27 +85,30 @@ jobs:
           INPUT_PROJECTS: ${{ inputs.projects }}
           INPUT_WORKERS: ${{ inputs.workers }}
           INPUT_ROUNDS: ${{ inputs.rounds }}
+          INPUT_LARGE_ROUNDS: ${{ inputs.large_rounds }}
           INPUT_WARMUPS: ${{ inputs.warmups }}
           INPUT_SCOPE: ${{ inputs.scope }}
         run: |
           set -euo pipefail
           # Dispatch: the inputs' defaults. Pull request: a smoke, or the full matrix with the label.
           if [[ "$EVENT" == pull_request && "$FULL_LABEL" != true ]]; then
-            PROJECTS='ufo radix3 es-toolkit-no-globalthis'; WORKERS=2; ROUNDS=1; WARMUPS=0
+            PROJECTS='ufo radix3 es-toolkit-no-globalthis'; WORKERS=2; ROUNDS=1; LARGE_ROUNDS=1; WARMUPS=0
           elif [[ "$EVENT" == pull_request ]]; then
-            PROJECTS=''; WORKERS='2 4'; ROUNDS=5; WARMUPS=1
+            PROJECTS=''; WORKERS='2 4'; ROUNDS=5; LARGE_ROUNDS=3; WARMUPS=1
           else
-            PROJECTS=$INPUT_PROJECTS; WORKERS=${INPUT_WORKERS:-2 4}; ROUNDS=${INPUT_ROUNDS:-3}; WARMUPS=${INPUT_WARMUPS:-1}
+            PROJECTS=$INPUT_PROJECTS; WORKERS=${INPUT_WORKERS:-2 4}; ROUNDS=${INPUT_ROUNDS:-5}; LARGE_ROUNDS=${INPUT_LARGE_ROUNDS:-3}; WARMUPS=${INPUT_WARMUPS:-1}
           fi
           SCOPE=${INPUT_SCOPE:-matched}
-          [[ "$ROUNDS" =~ ^[0-9]{1,2}$ ]] && (( 10#$ROUNDS >= 1 )) || { echo "::error::rounds '$ROUNDS' must be 1-99"; exit 1; }
+          for rounds in "$ROUNDS" "$LARGE_ROUNDS"; do
+            [[ "$rounds" =~ ^[0-9]{1,2}$ ]] && (( 10#$rounds >= 1 )) || { echo "::error::rounds '$rounds' must be 1-99"; exit 1; }
+          done
           [[ "$WARMUPS" =~ ^[0-9]$ ]] || { echo "::error::warmups '$WARMUPS' must be 0-9"; exit 1; }
           read -r -a names <<< "$PROJECTS"
           matrix=$(python3 benchmarks/multi_project.py --plan "$WORKERS" --projects "${names[@]}")
           {
-            echo "matrix=$matrix"; echo "rounds=$ROUNDS"; echo "warmups=$WARMUPS"; echo "scope=$SCOPE"
+            echo "matrix=$matrix"; echo "rounds=$ROUNDS"; echo "large_rounds=$LARGE_ROUNDS"; echo "warmups=$WARMUPS"; echo "scope=$SCOPE"
           } >> "$GITHUB_OUTPUT"
-          echo "$matrix rounds=$ROUNDS warmups=$WARMUPS scope=$SCOPE"
+          echo "$matrix rounds=$ROUNDS large_rounds=$LARGE_ROUNDS warmups=$WARMUPS scope=$SCOPE"
 
   build:
     needs: plan
@@ -157,7 +165,7 @@ jobs:
         env:
           PROJECT: ${{ matrix.project }}
           WORKERS: ${{ matrix.workers }}
-          ROUNDS: ${{ needs.plan.outputs.rounds }}
+          ROUNDS: ${{ matrix.kind == 'large' && needs.plan.outputs.large_rounds || needs.plan.outputs.rounds }}
           WARMUPS: ${{ needs.plan.outputs.warmups }}
           SCOPE: ${{ needs.plan.outputs.scope }}
         run: |

@@ -2,8 +2,11 @@ import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vitest/config';
 
 // Multi-project benchmark config for radix3: the upstream test files that run with only Vitest and
-// Node (find.test.ts and find-all.test.ts import oxfmt, regexp.pcre.test.ts spawns external PCRE
-// tools, wpt.test.ts compares with Node's own URLPattern, which differs on one case), under the isolation Oximut requires (node environment, one fork, sequential files).
+// Node, under the isolation Oximut requires (node environment, one fork, sequential files). Left out:
+// find.test.ts and find-all.test.ts (import oxfmt), regexp.pcre.test.ts (spawns external PCRE tools),
+// wpt.test.ts (compares with Node's own URLPattern, which differs on one case) and suffix.test.ts
+// (11 s of the 25 s suite in one file, which pushes Oximut's instrumented baseline past its default
+// 30 s per-job deadline; the source it alone covers is outside the mutation scope).
 export default defineConfig({
   root: fileURLToPath(new URL('.', import.meta.url)),
   test: {
@@ -19,7 +22,6 @@ export default defineConfig({
       'test/router.test.ts',
       'test/scenarios.test.ts',
       'test/star.test.ts',
-      'test/suffix.test.ts',
     ],
     environment: 'node',
     pool: 'forks',

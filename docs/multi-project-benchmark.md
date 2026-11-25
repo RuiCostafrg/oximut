@@ -5,9 +5,10 @@ Every earlier speed claim comes from one vendored workload (colord, [real-projec
 newest StrykerJS (`@stryker-mutator/core` and `@stryker-mutator/vitest-runner` as pinned in
 `package.json`, `coverageAnalysis: perTest`) on several pinned real projects at matched worker counts.
 Results are evidence, never a gate. Triggers: manual dispatch (inputs: `projects`, `workers`, `rounds`,
-`warmups`, `scope`; defaults run every project at 2 and 4 workers, 3 rounds after 1 warmup), and pull requests
+`large_rounds`, `warmups`, `scope`; defaults run every project at 2 and 4 workers, 5 measured rounds for the small
+projects and 3 for the large ones, after 1 warmup), and pull requests
 touching the harness, which run a one-round smoke (ufo, radix3 and es-toolkit-no-globalthis, 2 workers). The label
-`multi-project-full` on such a pull request runs the full matrix at 5 rounds. GitHub only dispatches a
+`multi-project-full` on such a pull request runs the same full matrix. GitHub only dispatches a
 workflow that exists on the default branch, so a branch that adds or changes the workflow uses the
 pull-request triggers.
 

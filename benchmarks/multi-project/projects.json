@@ -21,7 +21,8 @@
       "mutateExclude": [
         "*/index.ts",
         "*/types.ts",
-        "*.d.ts"
+        "*.d.ts",
+        "*/_suffix.ts"
       ]
     },
     {

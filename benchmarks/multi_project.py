@@ -493,7 +493,7 @@ def parse_workers(text):
 
 def plan_matrix(projects, workers):
     """GitHub Actions matrix: one cell per project and worker count."""
-    return {'include': [{'project': project['name'], 'workers': count}
+    return {'include': [{'project': project['name'], 'kind': project['kind'], 'workers': count}
                         for project in projects for count in workers]}
 
 
