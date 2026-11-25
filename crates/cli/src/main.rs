@@ -1086,7 +1086,10 @@ fn run_attempt(options: &Options, previous: Option<RetryEvidence>) -> Result<Att
         };
     let mut resident = vec![];
     let mut probe_transforms = vec![];
-    let mut probe_reasons = vec![];
+    // Files that cannot carry probes. Their mutants run the full suite and the
+    // inventory the baseline must attribute excludes them; one such file never
+    // widens selection for any other file's mutants.
+    let mut unprobed: BTreeMap<String, String> = BTreeMap::new();
     let mut inventory = vec![];
     let mut sources = Vec::new();
     for path in &options.sources {
@@ -1096,11 +1099,24 @@ fn run_attempt(options: &Options, previous: Option<RetryEvidence>) -> Result<Att
             .map_err(|e| e.to_string())?
             .to_string_lossy();
         let (generated, probe) = cache.artifact(options, &identity, path, &source)?;
-        inventory.extend(generated.mutants.iter().map(|mutant| mutant.id.clone()));
-        if let Some(probe) = probe {
-            match probe {
-                Ok(probe) => probe_transforms.push(probe),
-                Err(reason) => probe_reasons.push(reason),
+        match probe {
+            Some(Err(reason)) => {
+                if !generated.mutants.is_empty() {
+                    diagnostics.push(format!(
+                        "{}: test selection falls back to the full suite for this file's {} mutants: {reason}",
+                        path.display(),
+                        generated.mutants.len()
+                    ));
+                }
+                for mutant in &generated.mutants {
+                    unprobed.insert(mutant.id.clone(), format!("{identity}: {reason}"));
+                }
+            }
+            probe => {
+                inventory.extend(generated.mutants.iter().map(|mutant| mutant.id.clone()));
+                if let Some(Ok(probe)) = probe {
+                    probe_transforms.push(probe);
+                }
             }
         }
         if options.execution == Execution::Persistent
@@ -1340,10 +1356,8 @@ fn run_attempt(options: &Options, previous: Option<RetryEvidence>) -> Result<Att
                 tests: vec![],
                 hits: vec![],
                 reasons: vec!["missing-coverage".into()],
+                unprobed: BTreeMap::new(),
             });
-            collected_coverage
-                .reasons
-                .extend(probe_reasons.iter().cloned());
             if let Err(reason) = validate_coverage(
                 &collected_coverage,
                 &inventory,
@@ -1363,6 +1377,7 @@ fn run_attempt(options: &Options, previous: Option<RetryEvidence>) -> Result<Att
             if !collected_coverage.reasons.is_empty() {
                 collected_coverage.complete = false;
             }
+            collected_coverage.unprobed.clone_from(&unprobed);
             baseline.coverage = Some(collected_coverage);
         }
         request.collect_coverage = None;
@@ -1378,6 +1393,7 @@ fn run_attempt(options: &Options, previous: Option<RetryEvidence>) -> Result<Att
             tests: vec![],
             hits: vec![],
             reasons: vec!["coverage-request-exceeds-limit".into()],
+            unprobed: BTreeMap::new(),
         });
     }
     phase_wall_ms.insert(
@@ -2265,6 +2281,7 @@ mod tests {
                 },
             ],
             reasons: vec![],
+            unprobed: BTreeMap::new(),
         };
         validate_coverage(&coverage, &inventory, &root, &tests).unwrap();
         let selected = BTreeSet::from(["a"]);
