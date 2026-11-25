@@ -6,7 +6,7 @@ newest StrykerJS (`@stryker-mutator/core` and `@stryker-mutator/vitest-runner` a
 `package.json`, `coverageAnalysis: perTest`) on several pinned real projects at matched worker counts.
 Results are evidence, never a gate. Triggers: manual dispatch (inputs: `projects`, `workers`, `rounds`,
 `warmups`, `scope`; defaults run every project at 2 and 4 workers, 3 rounds after 1 warmup), and pull requests
-touching the harness, which run a one-round smoke (ufo and es-toolkit, 2 workers). The label
+touching the harness, which run a one-round smoke (ufo, radix3 and es-toolkit, 2 workers). The label
 `multi-project-full` on such a pull request runs the full matrix at 5 rounds. GitHub only dispatches a
 workflow that exists on the default branch, so a branch that adds or changes the workflow uses the
 pull-request triggers.
@@ -16,12 +16,20 @@ pull-request triggers.
 | Kind | Projects | Why |
 |---|---|---|
 | `startup` | the outcome-parity corpus, `benchmarks/parity/corpus.json`: ufo, pathe, hookable, std-env, tslog (3 to 57 Oximut mutants) | tiny scopes: wall time is dominated by fixed start-up cost |
-| `large` | valibot (`library/src`: actions, schemas, methods, utils; 467 mutants) and es-toolkit (array, math, string, object, predicate, util and their lodash-compatible counterparts; 677 mutants), pinned in `benchmarks/multi-project/projects.json` | hundreds of mutants: wall time is dominated by per-mutant cost |
+| `large` | radix3 (the whole `src`: router, route/regexp conversion, overlap analysis, compiler; 688 mutants) and es-toolkit (array, math, string, object, predicate and util modules plus the lodash-compatible math, string and util ones; 398 mutants), pinned in `benchmarks/multi-project/projects.json` | hundreds of mutants: wall time is dominated by per-mutant cost |
 
 Every project is a pinned commit (exact SHA, fetched shallow; nothing is installed) run against the
 repository's Vitest, with a benchmark-owned Vitest config in node environment and the isolation Oximut
 requires (`benchmarks/parity/configs/`, `benchmarks/multi-project/configs/`). The two groups are reported
 in separate tables and never averaged together. Mutant counts come from `--count-mutants` (`oximut --list`).
+
+Scopes are chosen so the plain suite runs in well under a minute in one fork, node-only, with only Vitest
+installed: Oximut's per-job deadline is 30 s by default and its baseline must fit it. Specs needing a DOM
+environment, packages the repository does not install or external tools are left out of the test list, and
+sources they alone cover are left out of the mutation scope. Candidates tried and dropped: valibot (its
+suite is rebuilt at module load, so about 190 of 467 mutants run the whole 3237-test suite and Oximut did
+not finish one round in 30 minutes at 2 workers), and es-toolkit's lodash-compatible array, object and
+predicate modules (the suite then takes about a minute and Oximut's baseline times out).
 
 ## Matched scope and what stays different
 

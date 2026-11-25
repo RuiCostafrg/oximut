@@ -114,7 +114,7 @@ class CorpusTests(unittest.TestCase):
         kinds = {project['name']: project['kind'] for project in projects}
         self.assertEqual({name for name, kind in kinds.items() if kind == 'startup'},
                          {'ufo', 'pathe', 'hookable', 'std-env', 'tslog'})
-        self.assertEqual({name for name, kind in kinds.items() if kind == 'large'}, {'valibot', 'es-toolkit'})
+        self.assertEqual({name for name, kind in kinds.items() if kind == 'large'}, {'radix3', 'es-toolkit'})
         for project in projects:
             self.assertEqual(len(project['commit']), 40)
             self.assertTrue(Path(project['configSource']).is_file(), project['name'])
@@ -131,9 +131,9 @@ class CorpusTests(unittest.TestCase):
         for bad in ('', '0', 'two', '2 -1', '2000'):
             with self.assertRaises(bench.BenchmarkError):
                 bench.parse_workers(bad)
-        matrix = bench.plan_matrix(bench.select_projects(bench.load_projects(), ['ufo', 'valibot']), [2, 4])
+        matrix = bench.plan_matrix(bench.select_projects(bench.load_projects(), ['ufo', 'radix3']), [2, 4])
         self.assertEqual([(c['project'], c['workers']) for c in matrix['include']],
-                         [('ufo', 2), ('ufo', 4), ('valibot', 2), ('valibot', 4)])
+                         [('ufo', 2), ('ufo', 4), ('radix3', 2), ('radix3', 4)])
 
 
 class PrepareTests(ProjectCase):

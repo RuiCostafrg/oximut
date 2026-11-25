@@ -2,28 +2,26 @@
   "schemaVersion": 1,
   "projects": [
     {
-      "name": "valibot",
+      "name": "radix3",
       "kind": "large",
-      "repository": "https://github.com/open-circle/valibot",
-      "commit": "40fae9405d79ca477fdaade624600a567940dcbf",
+      "repository": "https://github.com/unjs/radix3",
+      "commit": "c3bdbf5b8843905f0424395bfe444d89f8bce0b8",
       "license": "MIT",
-      "description": "Schema validation library (library/ package): pure functions and validators, one colocated test file per action and schema.",
-      "vitestConfig": "configs/valibot.vitest.config.ts",
-      "root": "library",
-      "copy": ["src", "package.json"],
+      "description": "URL router: route matching, route/regexp conversion, overlap analysis and a route compiler; table-driven tests with fixtures.",
+      "vitestConfig": "configs/radix3.vitest.config.ts",
+      "root": ".",
+      "copy": [
+        "src",
+        "test",
+        "package.json"
+      ],
       "mutate": [
-        "src/actions/**/*.ts",
-        "src/schemas/**/*.ts",
-        "src/methods/**/*.ts",
-        "src/utils/**/*.ts"
+        "src/**/*.ts"
       ],
       "mutateExclude": [
-        "*.test.ts",
-        "*.test-d.ts",
         "*/index.ts",
         "*/types.ts",
-        "*/types/*",
-        "*/_isValueMatch.ts"
+        "*.d.ts"
       ]
     },
     {
@@ -32,10 +30,13 @@
       "repository": "https://github.com/toss/es-toolkit",
       "commit": "24e7a7b8cb8035fae1ea2e7b507aab96698a38b9",
       "license": "MIT",
-      "description": "Utility library: array, math, string, object, predicate and util modules plus their lodash-compatible counterparts; colocated spec files.",
+      "description": "Utility library: array, math, string, object, predicate and util modules plus the lodash-compatible math, string and util ones; colocated spec files.",
       "vitestConfig": "configs/es-toolkit.vitest.config.ts",
       "root": ".",
-      "copy": ["src", "package.json"],
+      "copy": [
+        "src",
+        "package.json"
+      ],
       "mutate": [
         "src/array/*.ts",
         "src/math/*.ts",
@@ -43,12 +44,9 @@
         "src/object/*.ts",
         "src/predicate/*.ts",
         "src/util/*.ts",
-        "src/compat/array/*.ts",
         "src/compat/math/*.ts",
-        "src/compat/object/*.ts",
         "src/compat/string/*.ts",
-        "src/compat/util/*.ts",
-        "src/compat/predicate/*.ts"
+        "src/compat/util/*.ts"
       ],
       "mutateExclude": [
         "*.spec.ts",

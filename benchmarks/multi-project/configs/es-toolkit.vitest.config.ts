@@ -6,7 +6,9 @@ import { defineConfig } from 'vitest/config';
 // files). Specs that need a DOM (happy-dom), packages the repository does not install (fast-check) or that import the
 // built `es-toolkit/compat` package instead of the source are left out.
 const modules = ['array', 'math', 'string', 'object', 'predicate', 'util'];
-const compat = ['array', 'math', 'object', 'string', 'util', 'predicate'];
+// The lodash-compatible array, object and predicate modules are left out: with them the suite takes
+// about a minute in one fork, longer than Oximut's default 30 s per-job deadline allows its baseline.
+const compat = ['math', 'string', 'util'];
 
 export default defineConfig({
   root: fileURLToPath(new URL('.', import.meta.url)),
