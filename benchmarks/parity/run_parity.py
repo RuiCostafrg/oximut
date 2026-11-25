@@ -42,6 +42,8 @@ MODES = (
      ('zygote=on', 'zygote-precollect=on', 'rolling-lanes=on'), ()),
 )
 MODE_NAMES = tuple(name for name, *_ in MODES)
+# Modes that skip tests by selection; only these may report a refinement (see explained_refinements).
+SELECTION_MODES = frozenset({'zygote-selection-precollect-rolling'})
 
 
 class ParityError(Exception):
@@ -79,7 +81,9 @@ def mutant_records(report, project_dir):
         records[identity] = {
             'id': mutant['id'], 'file': filename, 'line': mutant['location']['start']['line'],
             'operator': mutant.get('operator', mutant.get('mutatorName')),
+            'original': mutant.get('original'),
             'replacement': mutant['replacement'], 'outcome': mutant['outcome'],
+            'selection': mutant.get('selection'),
         }
     return records
 
@@ -89,11 +93,49 @@ def outcome_digest(records):
     return m6.digest({identity: record['outcome'] for identity, record in records.items()})
 
 
-def compare_records(reference, other):
-    """Per-mutant differences of `other` against `reference`; empty when identical."""
+def refinement_key(record):
+    return (record['file'], record['line'], record['original'], record['replacement'])
+
+
+def is_refinement(expected, actual, allowed):
+    """True for the one difference test selection may legitimately cause, and only if pre-approved.
+
+    Selection proved that no test reaches the mutant (a complete baseline without hits) and
+    reports no-coverage; the reference runs the full suite and reports survived. The corpus must
+    list the mutant, after someone checked that the edited code really is unreachable from the tests.
+    """
+    if expected is None or actual is None:
+        return False
+    selection = actual.get('selection') or {}
+    return (expected['outcome'] == 'survived' and actual['outcome'] == 'no-coverage'
+            and selection.get('mode') == 'none'
+            and 'complete-baseline-without-hits' in selection.get('reasons', [])
+            and refinement_key(actual) in allowed)
+
+
+def explained_refinements(reference, other, allowed):
+    """Identities whose difference is an approved refinement (see is_refinement)."""
+    return sorted(identity for identity in reference.keys() & other.keys()
+                  if reference[identity]['outcome'] != other[identity]['outcome']
+                  and is_refinement(reference[identity], other[identity], allowed))
+
+
+def outcome_digest_adjusted(records, explained):
+    """The digest with approved refinements read as the reference's `survived`."""
+    return m6.digest({identity: 'survived' if identity in explained else record['outcome']
+                      for identity, record in records.items()})
+
+
+def compare_records(reference, other, allowed=frozenset()):
+    """Per-mutant differences of `other` against `reference`; empty when identical.
+
+    Approved refinements (see is_refinement) are not differences.
+    """
     differences = []
     for identity in sorted(reference.keys() | other.keys()):
         expected, actual = reference.get(identity), other.get(identity)
+        if is_refinement(expected, actual, allowed):
+            continue
         if expected is None or actual is None:
             present = expected or actual
             differences.append({
@@ -171,6 +213,7 @@ def fetch_project(project, work_dir=WORK_DIR):
     directory = work_dir / project['name']
     marker = directory / '.parity-commit'
     if marker.is_file() and marker.read_text().strip() == project['commit']:
+        shutil.copyfile(HERE / project['vitestConfig'], directory / project['configFile'])
         return directory
     shutil.rmtree(directory, ignore_errors=True)
     directory.mkdir(parents=True)
@@ -243,17 +286,28 @@ def evaluate_project(binary, project, project_dir, modes, workers, timeout, dire
             print(run['output_tail'], flush=True)
             print('::endgroup::', flush=True)
         records[mode] = mutant_records(run['report'], project_dir)
+    allowed = {(r['file'], r['line'], r['original'], r['replacement']) for r in project.get('expectedRefinements', [])}
+    explained = {}
     if REFERENCE in records:
         for mode, other in records.items():
-            if mode != REFERENCE:
-                found = compare_records(records[REFERENCE], other)
-                if found:
-                    differences[mode] = found
+            if mode == REFERENCE:
+                continue
+            permitted = allowed if mode in SELECTION_MODES else frozenset()
+            found = compare_records(records[REFERENCE], other, permitted)
+            if found:
+                differences[mode] = found
+            explained[mode] = explained_refinements(records[REFERENCE], other, permitted)
+            if mode in SELECTION_MODES:
+                seen = {refinement_key(other[identity]) for identity in explained[mode]}
+                for key in sorted(allowed - seen):
+                    problems.append(f'{mode}: expected refinement {key} was not observed; update corpus.json')
     modes_out = {}
     for mode, run in runs.items():
         resources = run['report'].get('resources', {})
         modes_out[mode] = {
             'mutation_identity_outcome_sha256': outcome_digest(records[mode]),
+            'approved_refinements': explained.get(mode, []),
+            'refinement_adjusted_sha256': outcome_digest_adjusted(records[mode], set(explained.get(mode, []))),
             'mutants': len(records[mode]),
             'summary': run['report'].get('summary'),
             'exit_code': run['exit_code'], 'wall_seconds': run['wall_seconds'],
@@ -274,8 +328,14 @@ def markdown_table(results):
     for result in results:
         reference = result['modes'].get(REFERENCE, {}).get('mutation_identity_outcome_sha256')
         for mode, data in result['modes'].items():
-            match = 'reference' if mode == REFERENCE else \
-                ('yes' if data['mutation_identity_outcome_sha256'] == reference else '**NO**')
+            if mode == REFERENCE:
+                match = 'reference'
+            elif data['mutation_identity_outcome_sha256'] == reference:
+                match = 'yes'
+            elif data['refinement_adjusted_sha256'] == reference and data['approved_refinements']:
+                match = f"yes, with {len(data['approved_refinements'])} approved survived to no-coverage refinement(s)"
+            else:
+                match = '**NO**'
             lines.append(f"| {result['name']} | {result['commit'][:10]} | {data['mutants']} | {mode} | "
                          f"`{data['mutation_identity_outcome_sha256']}` | {match} | {data['wall_seconds']} |")
     return '\n'.join(lines)

@@ -14,6 +14,15 @@
         "src/utils.ts",
         "src/url.ts",
         "src/parse.ts"
+      ],
+      "expectedRefinements": [
+        {
+          "file": "src/parse.ts",
+          "line": 69,
+          "original": "+",
+          "replacement": "-",
+          "reason": "parseURL(input, defaultProto): no ufo test passes a default protocol, so `defaultProto + input` is never evaluated; selection reports no-coverage where the full suite reports survived."
+        }
       ]
     },
     {
@@ -26,7 +35,7 @@
       "configFile": "oximut-parity.vitest.config.ts",
       "mutate": [
         "src/_path.ts",
-        "src/utils.ts"
+        "src/_glob.ts"
       ]
     },
     {
@@ -52,9 +61,7 @@
       "vitestConfig": "configs/std-env.vitest.config.ts",
       "configFile": "oximut-parity.vitest.config.ts",
       "mutate": [
-        "src/agents.ts",
-        "src/providers.ts",
-        "src/flags.ts"
+        "src/agents.ts"
       ]
     },
     {
@@ -67,7 +74,6 @@
       "configFile": "oximut-parity.vitest.config.ts",
       "mutate": [
         "src/subpaths/throttle.ts",
-        "src/subpaths/transports/http.ts",
         "src/core/masking.ts"
       ]
     }

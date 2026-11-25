@@ -104,6 +104,46 @@ class CompareTests(ProjectCase):
         self.assertIn('x1 src/a.ts:1 arithmetic: reference=killed zygote=survived', text)
 
 
+class RefinementTests(ProjectCase):
+    """Test selection may turn survived into no-coverage, but only for mutants the corpus approved."""
+
+    SELECTION = {'mode': 'none', 'files': [], 'selectedTests': 0, 'totalTests': 9,
+                 'reasons': ['complete-baseline-without-hits']}
+
+    def pair(self, selection=None, outcome='no-coverage'):
+        reference = self.records(dict(mutant(self.project, 'x1', 'const', 'survived'), original='1 + 2'))
+        entry = dict(mutant(self.project, 'x1', 'const', outcome), original='1 + 2')
+        if selection is not None:
+            entry['selection'] = selection
+        return reference, self.records(entry)
+
+    def allowed(self, reference):
+        return {parity.refinement_key(next(iter(reference.values())))}
+
+    def test_approved_refinement_is_not_a_difference_and_adjusts_the_digest(self):
+        reference, other = self.pair(self.SELECTION)
+        allowed = self.allowed(reference)
+        self.assertEqual(parity.compare_records(reference, other, allowed), [])
+        explained = parity.explained_refinements(reference, other, allowed)
+        self.assertEqual(len(explained), 1)
+        self.assertEqual(parity.outcome_digest_adjusted(other, set(explained)), parity.outcome_digest(reference))
+        self.assertNotEqual(parity.outcome_digest(other), parity.outcome_digest(reference))
+
+    def test_unapproved_refinement_is_a_difference(self):
+        reference, other = self.pair(self.SELECTION)
+        self.assertEqual(len(parity.compare_records(reference, other)), 1)
+
+    def test_approval_needs_selection_evidence_of_a_complete_baseline_without_hits(self):
+        reference, other = self.pair(dict(self.SELECTION, reasons=['incomplete-baseline']))
+        self.assertEqual(len(parity.compare_records(reference, other, self.allowed(reference))), 1)
+        reference, other = self.pair(None)
+        self.assertEqual(len(parity.compare_records(reference, other, self.allowed(reference))), 1)
+
+    def test_approval_never_covers_other_outcome_changes(self):
+        reference, other = self.pair(self.SELECTION, outcome='killed')
+        self.assertEqual(len(parity.compare_records(reference, other, self.allowed(reference))), 1)
+
+
 def report(outcomes, diagnostics=(), complete=True, root=None):
     return {'summary': {'complete': complete}, 'diagnostics': list(diagnostics),
             'mutants': outcomes if outcomes is not None else []}

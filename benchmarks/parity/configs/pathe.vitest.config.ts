@@ -6,7 +6,7 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
   root: fileURLToPath(new URL('.', import.meta.url)),
   test: {
-    include: ['test/index.spec.ts', 'test/utils.spec.ts'],
+    include: ['test/index.spec.ts', 'test/glob.spec.ts'],
     globals: true,
     environment: 'node',
     pool: 'forks',
