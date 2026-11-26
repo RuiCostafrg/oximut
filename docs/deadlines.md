@@ -38,6 +38,17 @@ mutant deadline = baseline time of the test files the mutant runs * --timeout-fa
   controller, its start-up (job deadlines include it). It is also the floor: an
   infinite-loop mutant in a small test file is stopped after about ten seconds, not the
   30 that a fixed deadline used to cost.
+* A mutant that runs as a **rolling lane** of the shared controller (the default with two
+  or more workers) needs less: its clock starts when its worker is asked to run, after
+  the controller is warm, the template ready and the worker forked. Such a job gets a
+  constant of **5000 ms** (what StrykerJS adds) instead. On a traced colord-scale run
+  with four workers the part of a lane's run that is not the tests was 3 ms until
+  collection began, 7 ms (p90 15 ms) to collect and 12 ms (p90 34 ms) from the last test
+  to the result. A lane that has to run on an ordinary worker anyway (a zygote watchdog
+  rerun, or a fallback when the shared controller fails) gets the 5000 ms back, so a rerun's deadline is the
+  full one. An explicit `--timeout-constant-ms` is used for every job and an explicit
+  `--timeout-ms` is never derived. The report's `deadlineMs` is the deadline the first
+  attempt ran under.
 * The result is bounded by 86400000 ms (24 h).
 
 An adapter that reports no per-file times (a custom adapter) gets the baseline job's wall
@@ -59,11 +70,11 @@ tests. `--baseline-timeout-ms` can still give the baseline its own.
   that passes. The deadline of the batch itself is a bound that cannot fire while a lane
   could still run: for each round of `width` lanes in order, that round's longest lane
   deadline plus one second to report, summed.
-* A mutant that times out under `--zygote` is rerun once on a normal worker (see
-  [zygote.md](zygote.md)). The rerun is the same request with `bypassZygote` set, so it has
-  the same scaled deadline.
+* A mutant that times out under `--zygote` is rerun once on a normal worker, unless its
+  worker was seen burning CPU or reported Vitest's own timeout (see [zygote.md](zygote.md)).
+  The rerun is the same request with `bypassZygote` set, so it has the same scaled deadline.
 * Controller start-up is charged to the first jobs of a cold controller as before, which is
-  why the constant is not small.
+  why the constant of a job that is not a lane is not small.
 
 ## Evidence
 

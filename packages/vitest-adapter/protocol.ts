@@ -66,5 +66,11 @@ export interface Result {
   fileTimings?: { file: string; durationMs: number }[];
   /** Count of resident modules served; required whenever the request had any. */
   resident?: number;
+  /**
+   * Timeouts only, optional: whether the worker was alive when the job timed out
+   * (`test-timeout`, `busy` on the CPU) or looked stalled (`idle`). The CLI's zygote
+   * watchdog reruns only timeouts that are not known to be genuine.
+   */
+  timeoutKind?: 'test-timeout' | 'busy' | 'idle';
 }
 export type Response = Pick<Request, 'protocol' | 'runId' | 'jobId' | 'generation'> & Result;
