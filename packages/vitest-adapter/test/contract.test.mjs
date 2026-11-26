@@ -29,6 +29,7 @@ test('both workers reject an unpinned Vitest before creating a controller', {
         "from './baseline-evidence.ts'",
         `from '${new URL('../baseline-evidence.ts', import.meta.url).href}'`,
       )
+      .replace("from './bail.ts'", `from '${new URL('../bail.ts', import.meta.url).href}'`)
       .replace(
         "from './m3-selection.ts'",
         `from '${new URL('../m3-selection.ts', import.meta.url).href}'`,
