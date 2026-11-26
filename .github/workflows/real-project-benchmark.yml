@@ -99,8 +99,10 @@ jobs:
           echo "CAMPAIGN_DIR=$RUNNER_TEMP/real-project-comparison" >> "$GITHUB_ENV"
           echo "AFTER_COMMIT=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
       - run: npm ci --ignore-scripts
-      - name: Build the zygote addon (used only by an after candidate run with --zygote)
-        run: python3 scripts/build-zygote-addon.py
+      - name: Build the candidate zygote addon
+        run: |
+          python3 scripts/build-zygote-addon.py
+          test -f packages/vitest-adapter/native/build/zygote-fork.node
       - name: Check harness gates before building
         run: python3 -m unittest discover -s benchmarks/tests -v
       - name: Build both candidates before any timing
@@ -110,6 +112,8 @@ jobs:
           git cat-file -e "$BEFORE_COMMIT^{commit}"
           git worktree add --detach "$BEFORE_WORKTREE" "$BEFORE_COMMIT"
           ln -s "$GITHUB_WORKSPACE/node_modules" "$BEFORE_WORKTREE/node_modules"
+          python3 "$BEFORE_WORKTREE/scripts/build-zygote-addon.py"
+          test -f "$BEFORE_WORKTREE/packages/vitest-adapter/native/build/zygote-fork.node"
           mkdir -p "$BINARY_DIR"
           cargo build --target-dir "$BEFORE_CARGO_TARGET_DIR" --manifest-path "$BEFORE_WORKTREE/Cargo.toml" --locked --release -p oximut-cli
           cp "$BEFORE_CARGO_TARGET_DIR/release/oximut" "$BINARY_DIR/before-oximut"
