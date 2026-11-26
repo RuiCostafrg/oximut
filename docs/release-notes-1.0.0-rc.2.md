@@ -27,11 +27,9 @@ Persistent execution, test selection and the fast modes are now on without flags
   stderr line naming each resolved mode (`oximut: modes: execution=persistent
   (default), ... zygote=on (auto) ...`) and the reason an auto mode is off; the
   same appears in the report diagnostics.
-- The shared controller, precollect and rolling lanes need two or more workers.
-  In rc.2 the default is still `--workers 1`, where only persistent execution, test
-  selection and the zygote apply; on `main` after rc.2 the default is
-  `--workers auto` (StrykerJS's rule on the usable CPUs, see
-  [M5](m5.md#worker-count)). The benchmark below uses 4 workers.
+- The shared controller, precollect and rolling lanes need `--workers 2` or more.
+  The default is still `--workers 1`, where only persistent execution, test
+  selection and the zygote apply. The benchmark below uses 4 workers.
 - An explicit positive flag (`--zygote`, `--zygote-precollect`, `--rolling-lanes`)
   errors when its prerequisites do not hold. `--x` together with `--no-x` is an error.
 - The outcome-cache fingerprint covers the resolved modes, so results cached by
