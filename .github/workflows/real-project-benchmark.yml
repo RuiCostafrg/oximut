@@ -61,8 +61,8 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 90
     env:
-      # Pair this experiment against the unmodified shipped controller.
-      BEFORE_COMMIT: 450457e17c90cb2c00d4c91137db84ab35491768
+      # Compare payload sharing while holding the one-template policy fixed.
+      BEFORE_COMMIT: e3e82261144dd272650d8eac87ddb478ec71e59d
       BUILD_FLAGS: --locked --release -p oximut-cli
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
