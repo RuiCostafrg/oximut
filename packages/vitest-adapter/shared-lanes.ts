@@ -595,6 +595,17 @@ export class SharedLanes {
     // need them, and build one after another while the first lanes already run.
     const templates = new Map<string, Promise<boolean>>();
     let building: Promise<unknown> = Promise.resolve(true);
+    if (precollect) {
+      // The controller outlives batches (a timeout no longer retires it), and a
+      // template is a live process: keep only what this batch uses, so that the
+      // run's process count and memory do not grow with the number of batches.
+      const needed = new Set<string>();
+      for (const [position, job] of jobs.entries()) {
+        const key = await this.templateCandidate(job, plans[position].files, ctx.projects[0]);
+        if (key) needed.add(key);
+      }
+      this.dropTemplatesExcept(needed);
+    }
     if (precollect)
       for (const [position, job] of jobs.entries()) {
         const key = await this.templateCandidate(job, plans[position].files, ctx.projects[0]);
@@ -997,6 +1008,15 @@ export class SharedLanes {
   private dropTemplates() {
     this.templates.clear();
     this.templatePool?.dropTemplates();
+  }
+
+  /** Drop every template whose key is not in `keep`, killing its zygote. */
+  private dropTemplatesExcept(keep: Set<string>) {
+    for (const key of [...this.templates.keys()]) {
+      if (keep.has(key)) continue;
+      this.templates.delete(key);
+      this.templatePool?.dropTemplate(key);
+    }
   }
 
   /**
