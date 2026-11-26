@@ -361,11 +361,11 @@ zygoteTest(
 );
 
 zygoteTest(
-  'rolling lanes build every template early and fork each mutant from its own',
+  'rolling lanes keep the most reused template and run other selections in fresh workers',
   { timeout: 240000 },
   async (t) => {
-    // Seven lanes through two slots over three selected file sets, so three
-    // templates; the load-time mutant keeps the ordinary zygote path.
+    // The most frequent file set appears after the first lane. Other file sets
+    // and the load-time mutant run with the ordinary zygote.
     const result = await scenario(
       t,
       [
@@ -377,6 +377,7 @@ zygoteTest(
           ['n2', true, 'other'],
           ['n3', true, 'both'],
           ['n4', true, 'both'],
+          ['n5', true, 'other'],
         ],
       ],
       { OXIMUT_ZYGOTE: '1' },
@@ -385,16 +386,15 @@ zygoteTest(
       2,
     );
     assert.deepEqual(result.outcomes, [
-      ['failed', 'failed', 'passed', 'passed', 'passed', 'passed', 'passed'],
+      ['failed', 'failed', 'passed', 'passed', 'passed', 'passed', 'passed', 'passed'],
     ]);
-    assert.equal(result.counters.templates, 3);
-    assert.equal(result.counters.templated, 6);
+    assert.equal(result.counters.templates, 1);
+    assert.equal(result.counters.templated, 3);
     assert.equal(result.counters.zygoteFailures, 0);
     assert.equal(result.counters.fallbacks, 0);
     assert.deepEqual(result.alive, [[]]);
-    // The templates collected with no mutant; every mutant worker is its own
-    // process. Only sample.test.ts logs, so n1 and n2, which select just the
-    // other file, leave no event.
+    // Every mutant worker has its own PID. Only sample.test.ts logs, so the
+    // mutants selecting the other file do not leave an event here.
     assert.equal(new Set(result.events.map((event) => event.pid)).size, result.events.length);
     assert.deepEqual(
       result.events

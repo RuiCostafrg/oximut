@@ -591,34 +591,31 @@ export class SharedLanes {
     // before anything starts, as in a barrier batch.
     const plans: LanePlan[] = [];
     for (const job of jobs) plans.push(await this.plan(specs, 'oximut-lane-0', job));
-    // Templates: all that the batch needs are started now, in the order the lanes
-    // need them, and build one after another while the first lanes already run.
+    // Each retained template is a live process. Keep the one with the most
+    // planned reuse and send the other selections through ordinary fresh forks.
     const templates = new Map<string, Promise<boolean>>();
-    let building: Promise<unknown> = Promise.resolve(true);
+    let building: Promise<boolean> | undefined;
     if (precollect) {
-      // The controller outlives batches (a timeout no longer retires it), and a
-      // template is a live process: keep only what this batch uses, so that the
-      // run's process count and memory do not grow with the number of batches.
-      const needed = new Set<string>();
+      const candidates = new Map<string, { files: string[]; uses: number }>();
       for (const [position, job] of jobs.entries()) {
-        const key = await this.templateCandidate(job, plans[position].files, ctx.projects[0]);
-        if (key) needed.add(key);
+        const files = plans[position].files;
+        const key = await this.templateCandidate(job, files, ctx.projects[0]);
+        if (!key) continue;
+        const candidate = candidates.get(key);
+        if (candidate) candidate.uses++;
+        else candidates.set(key, { files, uses: 1 });
       }
-      this.dropTemplatesExcept(needed);
+      let preferred: [string, { files: string[]; uses: number }] | undefined;
+      for (const entry of candidates) {
+        if (!preferred || entry[1].uses > preferred[1].uses) preferred = entry;
+      }
+      this.dropTemplatesExcept(new Set(preferred ? [preferred[0]] : []));
+      if (preferred) {
+        const [key, { files }] = preferred;
+        building = this.warm(key, files).catch(() => false);
+        templates.set(key, building);
+      }
     }
-    if (precollect)
-      for (const [position, job] of jobs.entries()) {
-        const key = await this.templateCandidate(job, plans[position].files, ctx.projects[0]);
-        if (!key || templates.has(key)) continue;
-        const known = this.templates.get(key);
-        if (known !== undefined) {
-          templates.set(key, Promise.resolve(known));
-          continue;
-        }
-        const build = building.then(() => this.warm(key, plans[position].files)).catch(() => false);
-        building = build;
-        templates.set(key, build);
-      }
     // Unhandled errors carry no project. One that arrives while lanes run taints
     // them all, as in a barrier batch; one that no lane can have caused (none
     // running) is not taken from any lane's result, but never goes unseen.
@@ -681,7 +678,7 @@ export class SharedLanes {
     } finally {
       state.catchError = catchError;
       this.laneDeadlines.clear();
-      await building.catch(() => {});
+      await building;
       // Pools of other slots may still be draining after a failure.
       for (const [position, job] of jobs.entries())
         results[position] ??= envelope(job, {
