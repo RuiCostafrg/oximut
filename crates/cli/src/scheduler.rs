@@ -1529,6 +1529,7 @@ mod tests {
 
     #[test]
     fn the_watchdog_reruns_only_timeouts_that_could_be_a_stalled_zygote() {
+        let _guard = PROCESS_TEST.lock().unwrap_or_else(|e| e.into_inner());
         let mut options = options();
         options.zygote = true;
         let mut scheduler = Scheduler::new(&options).unwrap();
@@ -1550,18 +1551,17 @@ mod tests {
         scheduler.zygote.disabled = true;
         assert!(!scheduler.watching(&timed_out(Some(TimeoutKind::Idle))));
         assert!(!scheduler.watching(&timed_out(None)));
-        scheduler.finish(&mut vec![]);
     }
 
     #[test]
     fn without_the_zygote_no_timeout_is_ever_watched() {
+        let _guard = PROCESS_TEST.lock().unwrap_or_else(|e| e.into_inner());
         let mut options = options();
         options.zygote = false;
         let mut scheduler = Scheduler::new(&options).unwrap();
         assert!(!scheduler.watching(&timed_out(None)));
         assert!(!scheduler.watching(&timed_out(Some(TimeoutKind::Idle))));
         assert_eq!(scheduler.zygote.genuine, 0);
-        scheduler.finish(&mut vec![]);
     }
 
     fn passed(request: &Request) -> Vec<u8> {
