@@ -122,7 +122,7 @@ measured round. The median paired wall ratio was 1.018× (three pairs).
 This matched-operator corpus has different edits in each tool and is
 separate from the exact 206-mutant Colord-scale zygote campaign.
 
-The first measured four-worker round projected 90.5k planned tests from
+The first measured four-worker round projected 89.5k planned tests from
 109.3k with whole-file selection on `es-toolkit-no-globalthis` when
 using baseline hit identities. Ambiguous names retain their entire
 file. Counts describe plans before bail. The 89 Oximut timeouts include
@@ -160,3 +160,24 @@ gh workflow run multi-project-benchmark.yml --ref perf/per-test-selection \
   -f projects=pathe -f workers=4 -f rounds=1 -f warmups=0 \
   -f diagnostic_timeout_constant_ms=1000
 ```
+
+The pilot took 11.28 s at 1,000 ms slack and 30.07 s with the default
+slack. Both completed all 139 mutant verdicts with the same three
+timeouts and three watchdog reruns. The 423 baseline test identities
+and every per-mutant whole-file plan matched. Ten test names include
+the checkout path, which was normalized for the comparison. This
+fixed-order, single-host observation does not qualify a new default.
+[Native deadline pilot](https://github.com/RuiCostafrg/oximut/actions/runs/45888382669)
+
+Allowing the read-only `process.cwd()` idiom in shared mutation
+switching removed the static fallback for Pathe's `src/_path.ts`. In
+five native four-worker pairs at default deadlines, Oximut took a
+median 11.33 s and Stryker took 12.33 s. The paired ratios were 0.919×
+wall (range 0.916–0.949), 0.757× CPU and 1.097× sampled peak aggregate
+RSS. Oximut preserved all 139 mutant identities and verdicts, 423
+baseline test identities, and the whole-file plan for each mutant
+against the earlier Oximut run. It still classified the same three
+mutants as timeouts. Live worker CPU evidence let the watchdog keep
+those timeouts without rerunning them. The independent Stryker run had
+132 mutants, of which 128 edits were shared and 127 verdicts agreed.
+[Native switch qualification](https://github.com/RuiCostafrg/oximut/actions/runs/45889000726)

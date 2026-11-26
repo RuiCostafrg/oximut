@@ -400,7 +400,7 @@ function startZygote(entry, args, options, template) {
     },
   ]);
   counters.zygotes++;
-  if (trace) trace.emit('pool', 'zygote_start', { zygotePid: process_.pid });
+  if (trace) trace.emit('pool', 'zygote_start', { zygotePid: process_.pid, template });
   // Children inherit the zygote's stdio, so their output arrives here.
   process_.stdout.pipe(process.stdout, { end: false });
   process_.stderr.pipe(process.stderr, { end: false });
