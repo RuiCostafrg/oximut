@@ -890,6 +890,8 @@ impl<'a> Scheduler<'a> {
                             .baseline_fork_limit(capacity, &active_pids)
                             .min(1024),
                     );
+                    // The baseline controller's tree holds that many forks at once.
+                    self.budget.lanes_per_worker = request.workers.unwrap_or(1).max(1) as u64;
                 }
                 let existed = self.slots[slot].is_some();
                 trace::event("dispatch_begin", || trace_job(slot, index, &request));
@@ -1087,10 +1089,13 @@ impl<'a> Scheduler<'a> {
     /// A controller that ran lanes has given up its ordinary Vitest instance.
     fn retire_lane_controllers(&mut self) {
         if std::mem::take(&mut self.lanes_ran) {
+            self.budget.lanes_per_worker = 1;
             self.close_slots(&(0..self.slots.len()).collect::<Vec<_>>());
         }
     }
     pub fn run_jobs(&mut self, jobs: Vec<(usize, Request)>, results: &mut [MutantResult]) {
+        // Mutant jobs are priced per job until a lane batch says otherwise.
+        self.budget.lanes_per_worker = 1;
         if self.options.shared_controller && self.slots.len() >= 2 {
             // Fixed at the first batch, so that later batches reuse the same lanes.
             let total = jobs.len();
@@ -1157,6 +1162,8 @@ impl<'a> Scheduler<'a> {
                         "encoded": encoded, "reason": reason, "pending": pending.len(),
                     })
                 });
+                // This controller's tree holds `width` lanes: price it per lane.
+                self.budget.lanes_per_worker = width as u64;
                 let response = self.execute(&lane_batch(&batch, width));
                 self.lanes_ran = true;
                 // Unsupported projects run with one controller per worker instead.
@@ -1170,6 +1177,7 @@ impl<'a> Scheduler<'a> {
                         "shared controller unavailable, using one controller per worker: {}",
                         response.errors.join("; ")
                     ));
+                    self.budget.lanes_per_worker = 1;
                     let mut rest: Vec<_> = batch;
                     rest.extend(pending);
                     for (index, response) in self.dispatch(rest.into(), false) {
