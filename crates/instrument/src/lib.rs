@@ -115,6 +115,47 @@ struct Edit {
     operator: &'static str,
     replacement: &'static str,
     load_time: bool,
+    /// Spans the static (single-mutant) code parenthesizes so the replaced
+    /// token swaps one operator and nothing else: `a && b && c` with its first
+    /// `&&` turned into `||` is `(a || b) && c`, not `a || b && c`. Switched
+    /// code already wraps every edited expression, so it needs none.
+    wrap: Vec<Span>,
+}
+
+/// Where a logical expression sits among other logical expressions, which is
+/// all that decides whether swapping its operator regroups its neighbours.
+struct Grouping {
+    /// The operator of an unparenthesized logical expression this one is a direct operand of.
+    parent: Option<LogicalOperator>,
+    /// Unparenthesized logical operands of this expression.
+    operands: Vec<(Span, LogicalOperator)>,
+}
+
+/// `&&` binds tighter than `||` and `??`; the latter two do not mix with the
+/// former or each other without parentheses.
+fn logical_precedence(operator: LogicalOperator) -> u8 {
+    match operator {
+        LogicalOperator::And => 2,
+        LogicalOperator::Or | LogicalOperator::Coalesce => 1,
+    }
+}
+
+impl Grouping {
+    fn wraps(&self, expression: Span, replacement: &str) -> Vec<Span> {
+        let replaced = if replacement == "&&" { 2 } else { 1 };
+        let mut spans: Vec<Span> = self
+            .operands
+            .iter()
+            .filter(|(_, operator)| logical_precedence(*operator) < replaced)
+            .map(|(span, _)| *span)
+            .collect();
+        if let Some(parent) = self.parent
+            && (replaced < logical_precedence(parent) || parent == LogicalOperator::Coalesce)
+        {
+            spans.push(expression);
+        }
+        spans
+    }
 }
 
 impl Edit {
@@ -139,6 +180,8 @@ struct Collector<'s> {
     /// effect of the surrounding construct (`const f = () => ..`): their bodies
     /// run when called, not when the module loads.
     deferred_bodies: std::collections::HashSet<(u32, u32)>,
+    /// Enclosing logical expressions: operator and the spans of both operands.
+    logical_frames: Vec<(LogicalOperator, Span, Span)>,
 }
 
 /// Look through parentheses and TypeScript-only wrappers to the expression that
@@ -187,7 +230,13 @@ impl Collector<'_> {
     /// Apply every selected rule whose token the AST says sits in `gap` (the
     /// source between two operands, or between an operand and the end of its
     /// expression). Only that token is located, never text inside comments.
-    fn token(&mut self, rules: &[Rule], gap: (u32, u32), expression: Span) {
+    fn token(
+        &mut self,
+        rules: &[Rule],
+        gap: (u32, u32),
+        expression: Span,
+        grouping: Option<&Grouping>,
+    ) {
         for &(family, original, replacement) in rules {
             if !self.selects(family) {
                 continue;
@@ -218,6 +267,7 @@ impl Collector<'_> {
                 operator: family,
                 replacement,
                 load_time: self.deferred == 0,
+                wrap: grouping.map_or(vec![], |grouping| grouping.wraps(expression, replacement)),
             });
         }
     }
@@ -248,24 +298,44 @@ impl<'a> Visit<'a> for Collector<'_> {
             operator: BOOLEAN,
             replacement: if it.value { "false" } else { "true" },
             load_time: self.deferred == 0,
+            wrap: vec![],
         });
     }
 
     fn visit_binary_expression(&mut self, it: &BinaryExpression<'a>) {
         let gap = (it.left.span().end, it.right.span().start);
-        self.token(binary_rules(it.operator), gap, it.span);
+        self.token(binary_rules(it.operator), gap, it.span, None);
         walk::walk_binary_expression(self, it);
     }
 
     fn visit_logical_expression(&mut self, it: &LogicalExpression<'a>) {
         let gap = (it.left.span().end, it.right.span().start);
-        self.token(logical_rules(it.operator), gap, it.span);
+        let direct =
+            |frame: &&(LogicalOperator, Span, Span)| it.span == frame.1 || it.span == frame.2;
+        let grouping = Grouping {
+            parent: self
+                .logical_frames
+                .last()
+                .filter(direct)
+                .map(|frame| frame.0),
+            operands: [&it.left, &it.right]
+                .into_iter()
+                .filter_map(|operand| match operand {
+                    Expression::LogicalExpression(inner) => Some((inner.span, inner.operator)),
+                    _ => None,
+                })
+                .collect(),
+        };
+        self.token(logical_rules(it.operator), gap, it.span, Some(&grouping));
+        self.logical_frames
+            .push((it.operator, it.left.span(), it.right.span()));
         walk::walk_logical_expression(self, it);
+        self.logical_frames.pop();
     }
 
     fn visit_unary_expression(&mut self, it: &UnaryExpression<'a>) {
         let gap = (it.span.start, it.argument.span().start);
-        self.token(unary_rules(it.operator), gap, it.span);
+        self.token(unary_rules(it.operator), gap, it.span, None);
         walk::walk_unary_expression(self, it);
     }
 
@@ -276,7 +346,7 @@ impl<'a> Visit<'a> for Collector<'_> {
         } else {
             (it.argument.span().end, it.span.end)
         };
-        self.token(update_rules(it.operator), gap, it.span);
+        self.token(update_rules(it.operator), gap, it.span, None);
         walk::walk_update_expression(self, it);
     }
 
@@ -326,7 +396,7 @@ impl<'a> Visit<'a> for Collector<'_> {
 
     fn visit_assignment_expression(&mut self, it: &AssignmentExpression<'a>) {
         let gap = (it.left.span().end, it.right.span().start);
-        self.token(assignment_rules(it.operator), gap, it.span);
+        self.token(assignment_rules(it.operator), gap, it.span, None);
         self.defer_body(&it.right);
         walk::walk_assignment_expression(self, it);
     }
@@ -490,6 +560,7 @@ pub fn generate(
         diagnostics: vec![],
         deferred: 0,
         deferred_bodies: Default::default(),
+        logical_frames: vec![],
     };
     collector.visit_program(&parsed.program);
     collector
@@ -525,7 +596,7 @@ pub fn generate(
                 ]
             })
             .collect::<String>();
-        let code = format!("{}{}{}", &source[..start], edit.replacement, &source[end..]);
+        let (code, origins) = edited_code(source, &edit);
         // Reparse replacements: grammar-invalid transformations never reach Vitest.
         let transformed = Parser::new(&allocator, &code, source_type).parse();
         if transformed.fatal_error || !transformed.diagnostics.is_empty() {
@@ -553,7 +624,7 @@ pub fn generate(
                 start: position(source, start),
                 end: position(source, end),
             },
-            map: source_map(&file, source, start, end, edit.replacement),
+            map: mapped_code(&file, source, &code, &origins),
             code,
             load_time: edit.load_time,
         });
@@ -651,6 +722,7 @@ fn switch(
         diagnostics: vec![],
         deferred: 0,
         deferred_bodies: Default::default(),
+        logical_frames: vec![],
     };
     collector.visit_program(&parsed.program);
     // The M1 generator may reject a replacement; retain exactly its candidates.
@@ -921,6 +993,7 @@ pub fn generate_probes(
         diagnostics: vec![],
         deferred: 0,
         deferred_bodies: Default::default(),
+        logical_frames: vec![],
     };
     collector.visit_program(&parsed.program);
     let mut opens = std::collections::BTreeMap::<usize, Vec<(usize, String)>>::new();
@@ -1019,26 +1092,45 @@ fn vlq(value: i64, output: &mut String) {
 
 /// High-resolution version 3 map. All untouched characters map to their exact
 /// original UTF-16 position; replacement characters map to the replaced token.
-fn source_map(
-    file: &str,
-    source: &str,
-    start: usize,
-    end: usize,
-    replacement: &str,
-) -> serde_json::Value {
-    let code = format!("{}{}{}", &source[..start], replacement, &source[end..]);
-    let origins: Vec<_> = (0..code.len())
-        .map(|byte| {
-            if byte < start {
-                byte
-            } else if byte < start + replacement.len() {
-                start
-            } else {
-                byte + (end - start) - replacement.len()
-            }
-        })
+/// The source with `edit` applied, and the source offset every byte of it came
+/// from (the replacement and inserted parentheses map to the token they edit).
+fn edited_code(source: &str, edit: &Edit) -> (String, Vec<usize>) {
+    let (start, end) = (edit.span.start as usize, edit.span.end as usize);
+    let mut parens: Vec<(usize, &str)> = edit
+        .wrap
+        .iter()
+        .flat_map(|span| [(span.start as usize, "("), (span.end as usize, ")")])
         .collect();
-    mapped_code(file, source, &code, &origins)
+    parens.sort_by_key(|(offset, _)| *offset);
+    let mut code = String::with_capacity(source.len() + edit.replacement.len() + parens.len());
+    let mut origins = Vec::with_capacity(code.capacity());
+    let mut cursor = 0;
+    let mut push = |text: &str, from: usize, origin: Option<usize>| {
+        code.push_str(text);
+        match origin {
+            Some(origin) => origins.extend(std::iter::repeat_n(origin, text.len())),
+            None => origins.extend(from..from + text.len()),
+        }
+    };
+    // Parentheses at or before the token (`(a)&&b` ends one exactly at it) precede
+    // the replacement; those at or after its end follow it.
+    let (before, after): (Vec<_>, Vec<_>) =
+        parens.into_iter().partition(|(offset, _)| *offset <= start);
+    for (offset, text) in before {
+        push(&source[cursor..offset], cursor, None);
+        push(text, offset, Some(offset));
+        cursor = offset;
+    }
+    push(&source[cursor..start], cursor, None);
+    push(edit.replacement, start, Some(start));
+    cursor = end;
+    for (offset, text) in after {
+        push(&source[cursor..offset], cursor, None);
+        push(text, offset, Some(offset));
+        cursor = offset;
+    }
+    push(&source[cursor..], cursor, None);
+    (code, origins)
 }
 
 fn mapped_code(file: &str, source: &str, code: &str, origins: &[usize]) -> serde_json::Value {
@@ -1818,6 +1910,43 @@ console.log(JSON.stringify([a, b, c, iterator.next(), iterator.next(7), true, ca
                 "x = (a ?? b) || c || d;"
             ]
         );
+    }
+
+    #[test]
+    fn a_swapped_logical_operator_regroups_nothing_around_it() {
+        // Swapping one `&&` of a chain must not turn `a && b && c` into the
+        // differently grouped `a || b && c`: that is another program.
+        assert_eq!(
+            codes("x = a && b && c;", LOGICAL),
+            ["x = (a || b) && c;", "x = a && b || c;"]
+        );
+        assert_eq!(
+            codes("x = a || b || c;", LOGICAL),
+            ["x = a && b || c;", "x = (a || b) && c;"]
+        );
+        assert_eq!(
+            codes("x = a ?? b ?? c;", LOGICAL),
+            ["x = (a && b) ?? c;", "x = (a ?? b) && c;"]
+        );
+        // The deepest operand of a longer chain, without spaces to hide behind.
+        assert_eq!(
+            codes("x = a&&b&&c&&d;", LOGICAL),
+            ["x = (a||b)&&c&&d;", "x = (a&&b||c)&&d;", "x = a&&b&&c||d;"]
+        );
+        // Mixed levels: only the operand the new operator out-binds is wrapped.
+        assert_eq!(
+            codes("x = a || b && c;", LOGICAL),
+            ["x = a && b && c;", "x = a || b || c;"]
+        );
+    }
+
+    #[test]
+    fn a_wrapped_logical_mutant_keeps_a_source_map_for_every_byte() {
+        let source = "x = a && b && c;";
+        let mutant = &only(source, LOGICAL).mutants[0];
+        assert_eq!(mutant.code, "x = (a || b) && c;");
+        let mappings = mutant.map["mappings"].as_str().unwrap();
+        assert!(!mappings.is_empty() && !mappings.contains(';'));
     }
 
     #[test]
