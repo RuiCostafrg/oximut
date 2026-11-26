@@ -112,3 +112,51 @@ python3 benchmarks/multi_project.py --projects ufo --workers 4 --rounds 3 --outp
 python3 benchmarks/multi_project_report.py /tmp/cell
 python3 benchmarks/tests/test_multi_project.py
 ```
+
+## Post-#104 selection and deadline diagnostics
+
+Run 45844836123 measured main at `450457e`. At four workers,
+`es-toolkit-no-globalthis` had 1,323 Oximut mutants and 1,305 Stryker
+mutants. The tools agreed on 1,269 of 1,270 shared edits in the first
+measured round. The median paired wall ratio was 1.018× (three pairs).
+This matched-operator corpus has different edits in each tool and is
+separate from the exact 206-mutant Colord-scale zygote campaign.
+
+The first measured four-worker round projected 90.5k planned tests from
+109.3k with whole-file selection on `es-toolkit-no-globalthis` when
+using baseline hit identities. Ambiguous names retain their entire
+file. Counts describe plans before bail. The 89 Oximut timeouts include
+87 scheduler deadlines with 517.4 seconds of configured lane budgets.
+87 of the 89 edits also timed out under Stryker and the other two
+were killed. Deadline budgets describe limits rather than measured
+slot occupancy.
+
+The Vitest exact-ID adapter can select a particular test. On the
+sequential-state fixture, the transition test exercises the mutation
+and passes, while the observer detects its effect. The observer is
+skipped by exact-ID selection and the mutant survives. Keep whole-file
+selection as the default. Treat any narrower selection experiment as a
+distinct policy and compare exact outcomes against whole-file runs.
+
+[Native matrix run](https://github.com/RuiCostafrg/oximut/actions/runs/45844836123)
+
+```sh
+evidence=$(mktemp -d)
+gh run download 45844836123 -D "$evidence"
+python3 benchmarks/per_test_scope.py "$evidence"
+npm ci --ignore-scripts
+node benchmarks/probe_exact_test_selection.mjs
+```
+
+A deadline pilot leaves the selected files and mutation operators
+unchanged and modifies only the CLI's existing deadline slack. It adds
+one Oximut-only invocation to each requested native cell. The pilot
+retains its arguments and reports under `deadline-pilot/`. Compare
+exact Oximut edits and verdicts with the default control before deciding
+whether to run alternating score pairs.
+
+```sh
+gh workflow run multi-project-benchmark.yml --ref perf/per-test-selection \
+  -f projects=pathe -f workers=4 -f rounds=1 -f warmups=0 \
+  -f diagnostic_timeout_constant_ms=1000
+```

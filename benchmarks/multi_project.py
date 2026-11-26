@@ -202,7 +202,7 @@ def prepare_run(project, source, destination):
 
 # --- commands -------------------------------------------------------------------------------
 
-def tool_command(tool, binary, project_dir, files, workers, report):
+def tool_command(tool, binary, project_dir, files, workers, report, *, timeout_constant_ms=None):
     if tool == 'vitest':
         return ['node', str(ROOT / 'node_modules/vitest/vitest.mjs'), 'run', '--config', CONFIG_NAME,
                 '--reporter=default', '--reporter=json', f'--outputFile.json={report}']
@@ -213,6 +213,8 @@ def tool_command(tool, binary, project_dir, files, workers, report):
     # so every run is clean, and the scope and report path are stated.
     command = [str(binary), '--root', str(project_dir), '--config', CONFIG_NAME,
                '--workers', str(workers), '--no-cache', '--report', str(report)]
+    if timeout_constant_ms is not None:
+        command.extend(['--timeout-constant-ms', str(timeout_constant_ms)])
     for name in files:
         command.extend(['--source', name])
     return command
@@ -423,6 +425,9 @@ def run_cell(args, project, checkout):
     """Run every round of one cell. Returns the cell record; never retries or drops a run."""
     source = project_source(project, checkout)
     files = resolve_mutate(project, source)
+    timeout_constant_ms = args.diagnostic_timeout_constant_ms
+    oximut_arguments = ('defaults (--no-cache only)' if timeout_constant_ms is None
+                        else f'diagnostic (--no-cache --timeout-constant-ms {timeout_constant_ms})')
     cell = {
         'schemaVersion': SCHEMA_VERSION, 'status': 'ok', 'error': None,
         'project': {key: project[key] for key in ('name', 'kind', 'repository', 'commit', 'description')},
@@ -432,7 +437,7 @@ def run_cell(args, project, checkout):
         'machine': {'cpu_model': cpu_model(), 'usable_cpus': usable_cpus(), 'platform': platform.platform()},
         'versions': measurement.metadata()['versions'],
         'oximut': {'binary': str(args.binary), 'binary_sha256': measurement.file_hash(args.binary),
-                   'arguments': 'defaults (--no-cache only)', 'git_revision': measurement.capture(['git', 'rev-parse', 'HEAD'])},
+                   'arguments': oximut_arguments, 'git_revision': measurement.capture(['git', 'rev-parse', 'HEAD'])},
         'runs': [], 'first_outcomes': {}, 'scope_comparison': None,
     }
     maps = {}
@@ -448,7 +453,8 @@ def run_cell(args, project, checkout):
             if tool == 'stryker':
                 write_stryker_config(project_dir, config)
             env = {**os.environ, 'CI': 'true', 'NO_COLOR': '1', 'OXIMUT_BENCH_REPORT': str(report)}
-            command = tool_command(tool, args.binary, project_dir, files, args.workers, report)
+            command = tool_command(tool, args.binary, project_dir, files, args.workers, report,
+                                   timeout_constant_ms=timeout_constant_ms)
             print(f'round {index}{" (warmup)" if warmup else ""}: {tool}', flush=True)
             row = measurement.run_command(command, project_dir, directory / 'output.log',
                                           args.timeout, .02, 16_777_216, env)
@@ -525,6 +531,8 @@ def main(argv=None):
     parser.add_argument('--warmups', type=int, default=1)
     parser.add_argument('--rounds', type=int, default=3, help='measured rounds per tool')
     parser.add_argument('--timeout', type=float, default=1800, help='seconds per tool run')
+    parser.add_argument('--diagnostic-timeout-constant-ms', type=int,
+                        help='override only Oximut deadline slack in an Oximut-only diagnostic')
     parser.add_argument('--binary', type=Path, default=ROOT / 'target/release/oximut')
     parser.add_argument('--work-dir', type=Path, default=WORK_DIR)
     parser.add_argument('--output', type=Path, help='cell directory (must not exist)')
@@ -566,6 +574,11 @@ def main(argv=None):
             parser.error('--workers must be between 1 and 1024')
         if not math.isfinite(args.timeout) or args.timeout <= 0:
             parser.error('--timeout must be positive and finite')
+        if args.diagnostic_timeout_constant_ms is not None:
+            if args.tools != ['oximut']:
+                parser.error('--diagnostic-timeout-constant-ms requires --tools oximut')
+            if args.diagnostic_timeout_constant_ms < 0:
+                parser.error('--diagnostic-timeout-constant-ms must be non-negative')
         if len(set(args.tools)) != len(args.tools):
             parser.error('--tools must not repeat a tool')
         args.binary = args.binary.resolve()

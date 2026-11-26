@@ -42,6 +42,10 @@ on:
         type: string
         default: '1'
         description: 'Discarded warmup rounds'
+      diagnostic_timeout_constant_ms:
+        type: string
+        default: ''
+        description: 'Optional Oximut-only deadline slack pilot. Retained separately from scored rounds.'
       scope:
         type: choice
         default: matched
@@ -176,6 +180,19 @@ jobs:
             --scope "$SCOPE" --warmups "$WARMUPS" --rounds "$ROUNDS" \
             --binary "$RUNNER_TEMP/oximut-binary/oximut" --skip-oversubscribed \
             --output "$RUNNER_TEMP/cell"
+      - name: Run the optional deadline pilot
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.diagnostic_timeout_constant_ms != '' }}
+        env:
+          PROJECT: ${{ matrix.project }}
+          WORKERS: ${{ matrix.workers }}
+          SCOPE: ${{ needs.plan.outputs.scope }}
+          DEADLINE_SLACK: ${{ inputs.diagnostic_timeout_constant_ms }}
+        run: |
+          python3 benchmarks/multi_project.py --projects "$PROJECT" --workers "$WORKERS" \
+            --scope "$SCOPE" --warmups 0 --rounds 1 --tools oximut \
+            --diagnostic-timeout-constant-ms "$DEADLINE_SLACK" \
+            --binary "$RUNNER_TEMP/oximut-binary/oximut" --skip-oversubscribed \
+            --output "$RUNNER_TEMP/cell/deadline-pilot"
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
