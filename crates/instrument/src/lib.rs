@@ -1,5 +1,5 @@
 //! AST-based single-edit mutation generation. Inactive instrumentation is identity.
-use std::{collections::BTreeSet, path::Path};
+use std::{collections::BTreeSet, path::Path, sync::Arc};
 
 use oxc_allocator::Allocator;
 use oxc_ast::ast::*;
@@ -624,8 +624,8 @@ pub fn generate(
                 start: position(source, start),
                 end: position(source, end),
             },
-            map: mapped_code(&file, source, &code, &origins),
-            code,
+            map: mapped_code(&file, source, &code, &origins).into(),
+            code: code.into(),
             load_time: edit.load_time,
         });
     }
@@ -643,7 +643,7 @@ pub fn identity_module(path: &Path, source: &str) -> oximut_core::Mutation {
     let origins: Vec<usize> = (0..source.len()).collect();
     oximut_core::Mutation {
         id: "__oximut_resident__".into(),
-        map: mapped_code(&file, source, source, &origins),
+        map: mapped_code(&file, source, source, &origins).into(),
         file,
         code: source.into(),
     }
@@ -886,16 +886,17 @@ fn switch(
         return Ok((generated, Switch::Static));
     };
     let file = path.to_string_lossy().into_owned();
-    let map = mapped_code(&file, source, &output.code, &output.origins);
+    let map = Arc::new(mapped_code(&file, source, &output.code, &output.origins));
+    let code: Arc<str> = output.code.into();
     for mutant in &mut generated.mutants {
-        mutant.code.clone_from(&output.code);
-        mutant.map.clone_from(&map);
+        mutant.code = Arc::clone(&code);
+        mutant.map = Arc::clone(&map);
     }
     let switched = if probed {
         Switch::Probed(oximut_core::Mutation {
             id: "__oximut_probes__".into(),
             file,
-            code: output.code,
+            code,
             map,
         })
     } else {
@@ -1047,8 +1048,8 @@ pub fn generate_probes(
     Ok(oximut_core::Mutation {
         id: "__oximut_probes__".into(),
         file: path.to_string_lossy().into_owned(),
-        map: mapped_code(&path.to_string_lossy(), source, &code, &origins),
-        code,
+        map: mapped_code(&path.to_string_lossy(), source, &code, &origins).into(),
+        code: code.into(),
     })
 }
 
@@ -1382,7 +1383,10 @@ mod tests {
         let source = "const a = true; const b = x /* < true */ < /* false */ y; const c = 1+2-3*4/5; // false";
         let result = mutations(source);
         assert_eq!(result.mutants.len(), 6);
-        assert_eq!(result.mutants[0].code, source.replacen("true", "false", 1));
+        assert_eq!(
+            result.mutants[0].code.as_ref(),
+            source.replacen("true", "false", 1)
+        );
         assert!(
             result.mutants[1]
                 .code
@@ -1547,7 +1551,10 @@ await run();
     fn switching_falls_back_for_shadowed_process_and_large_expansion() {
         let source = "function f(process) { return true; }";
         let result = generate_switched("a.ts", Path::new("a.ts"), source).unwrap();
-        assert_eq!(result.mutants[0].code, source.replace("true", "false"));
+        assert_eq!(
+            result.mutants[0].code.as_ref(),
+            source.replace("true", "false")
+        );
         assert!(
             result
                 .diagnostics
@@ -1668,7 +1675,7 @@ console.log(JSON.stringify([a, b, c, iterator.next(), iterator.next(7), true, ca
                 .iter()
                 .any(|d| d.contains("switching fallback"))
         );
-        assert_eq!(generated.mutants[0].code, source.replace('+', "-"));
+        assert_eq!(generated.mutants[0].code.as_ref(), source.replace('+', "-"));
         assert_eq!(
             coverage.unwrap().code,
             generate_probes("src/a.ts", path, source).unwrap().code
@@ -1677,7 +1684,7 @@ console.log(JSON.stringify([a, b, c, iterator.next(), iterator.next(7), true, ca
         let (generated, coverage) =
             generate_switched_probed("src/a.ts", path, "export const x = 1;").unwrap();
         assert!(generated.mutants.is_empty());
-        assert_eq!(coverage.unwrap().code, "export const x = 1;");
+        assert_eq!(coverage.unwrap().code.as_ref(), "export const x = 1;");
     }
 
     #[test]
@@ -1692,7 +1699,10 @@ console.log(JSON.stringify([a, b, c, iterator.next(), iterator.next(7), true, ca
                 .iter()
                 .any(|d| d.contains("switching fallback") && d.contains("with statement"))
         );
-        assert_eq!(generated.mutants[0].code, source.replacen('+', "-", 1));
+        assert_eq!(
+            generated.mutants[0].code.as_ref(),
+            source.replacen('+', "-", 1)
+        );
         assert_eq!(coverage.unwrap_err(), "probe-globalThis-conflict");
         assert_eq!(
             generate_probes("src/a.js", path, source).unwrap_err(),
@@ -1801,7 +1811,7 @@ console.log(JSON.stringify([a, b, c, iterator.next(), iterator.next(7), true, ca
         only(source, family)
             .mutants
             .into_iter()
-            .map(|m| m.code)
+            .map(|m| m.code.to_string())
             .collect()
     }
 
@@ -1910,7 +1920,7 @@ console.log(JSON.stringify([a, b, c, iterator.next(), iterator.next(7), true, ca
                 m.original,
                 m.replacement
             );
-            assert_ne!(m.code, source);
+            assert_ne!(m.code.as_ref(), source);
         }
         assert_eq!(both.mutants.len(), 8);
         let ids: std::collections::BTreeSet<_> = both.mutants.iter().map(|m| &m.id).collect();
@@ -1967,7 +1977,7 @@ console.log(JSON.stringify([a, b, c, iterator.next(), iterator.next(7), true, ca
     fn a_wrapped_logical_mutant_keeps_a_source_map_for_every_byte() {
         let source = "x = a && b && c;";
         let mutant = &only(source, LOGICAL).mutants[0];
-        assert_eq!(mutant.code, "x = (a || b) && c;");
+        assert_eq!(mutant.code.as_ref(), "x = (a || b) && c;");
         let mappings = mutant.map["mappings"].as_str().unwrap();
         assert!(!mappings.is_empty() && !mappings.contains(';'));
     }
@@ -2089,7 +2099,7 @@ console.log(JSON.stringify([a, b, c, iterator.next(), iterator.next(7), true, ca
             result
                 .mutants
                 .iter()
-                .map(|m| m.code.as_str())
+                .map(|m| m.code.as_ref())
                 .collect::<Vec<_>>(),
             [
                 "if (!ready) {} const m = ~~n;",
@@ -2364,7 +2374,7 @@ console.log(JSON.stringify([a, b, c, t, m, n, calls]));
         let path = Path::new("/project/src/a.ts");
         let module = identity_module(path, source);
         assert_eq!(module.id, "__oximut_resident__");
-        assert_eq!(module.code, source);
+        assert_eq!(module.code.as_ref(), source);
         assert_eq!(module.file, path.to_string_lossy());
         assert_eq!(module.map["sourcesContent"][0], source);
         assert_eq!(module.map["version"], 3);

@@ -1,4 +1,6 @@
 //! Shared M1 protocol and report semantics. No execution failures count as kills.
+use std::sync::Arc;
+
 use serde::{Deserialize, Serialize};
 
 pub const PROTOCOL: u32 = 1;
@@ -29,8 +31,9 @@ pub struct Mutant {
     pub original: String,
     pub replacement: String,
     pub location: Location,
-    pub code: String,
-    pub map: serde_json::Value,
+    /// Switched mutants from one file share the same immutable module and map.
+    pub code: Arc<str>,
+    pub map: Arc<serde_json::Value>,
     /// Whether the mutated expression may be evaluated while its module loads
     /// (top level, class field initializers, static blocks, immediately invoked
     /// functions) rather than only inside a function body called later. Unknown
@@ -81,8 +84,8 @@ pub struct Tests {
 pub struct Mutation {
     pub id: String,
     pub file: String,
-    pub code: String,
-    pub map: serde_json::Value,
+    pub code: Arc<str>,
+    pub map: Arc<serde_json::Value>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -1376,8 +1379,8 @@ mod tests {
         let module = Mutation {
             id: "__oximut_resident__".into(),
             file: "/project/a.ts".into(),
-            code: String::new(),
-            map: serde_json::json!({}),
+            code: "".into(),
+            map: serde_json::json!({}).into(),
         };
         let mut response = Response {
             lanes: None,

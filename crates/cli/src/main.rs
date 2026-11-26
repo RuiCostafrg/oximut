@@ -972,8 +972,8 @@ fn resident_reference(mutation: &Mutation) -> Mutation {
     Mutation {
         id: mutation.id.clone(),
         file: mutation.file.clone(),
-        code: String::new(),
-        map: serde_json::Value::Null,
+        code: "".into(),
+        map: serde_json::Value::Null.into(),
     }
 }
 
@@ -2746,8 +2746,8 @@ mod tests {
         let module = |file: &str, bytes: usize| Mutation {
             id: "__oximut_resident__".into(),
             file: file.into(),
-            code: "x".repeat(bytes),
-            map: serde_json::json!({}),
+            code: "x".repeat(bytes).into(),
+            map: serde_json::json!({}).into(),
         };
         let modules = vec![module("/a", 100), module("/b", 100), module("/c", 1000)];
         let sizes: Vec<_> = modules.iter().map(encoded_len).collect();

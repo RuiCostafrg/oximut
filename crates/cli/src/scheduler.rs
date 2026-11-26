@@ -1632,8 +1632,8 @@ mod tests {
         let module = |name: &str| Mutation {
             id: "__oximut_resident__".into(),
             file: format!("/p/{name}.ts"),
-            code: "c".repeat(10_000),
-            map: serde_json::json!({"version": 3, "sources": [], "mappings": ""}),
+            code: "c".repeat(10_000).into(),
+            map: serde_json::json!({"version": 3, "sources": [], "mappings": ""}).into(),
         };
         let set = Arc::new(vec![module("a"), module("b")]);
         let lane = |id: &str, resident: Option<Arc<Vec<Mutation>>>| {
@@ -1714,7 +1714,7 @@ mod tests {
             id: "__oximut_resident__".into(),
             file: format!("/p/{name}.ts"),
             code: code.into(),
-            map: serde_json::json!({"version": 3, "sources": ["é\"x"], "mappings": ""}),
+            map: serde_json::json!({"version": 3, "sources": ["é\"x"], "mappings": ""}).into(),
         };
         let set = Arc::new(vec![module("a", "a = 1"), module("b", &"é\n".repeat(500))]);
         let mut sizes = RequestSizes::default();
@@ -1770,8 +1770,8 @@ mod tests {
         let module = |name: &str| Mutation {
             id: "__oximut_resident__".into(),
             file: format!("/p/{name}.ts"),
-            code: code.clone(),
-            map: serde_json::json!({"version": 3, "sources": [], "mappings": "AAAA"}),
+            code: code.clone().into(),
+            map: serde_json::json!({"version": 3, "sources": [], "mappings": "AAAA"}).into(),
         };
         let set = Arc::new(vec![module("a"), module("b")]);
         let lane = |id: &str, file: &str| {
@@ -1804,7 +1804,7 @@ mod tests {
         assert!(wire < 2 * encoded_len(&*set) + 2 * code.len() / 2);
         // A mutation that is not its file's resident module keeps its own code.
         let mut other = lane("4", "a");
-        other.mutation.as_mut().unwrap().code.push('!');
+        other.mutation.as_mut().unwrap().code = format!("{code}!").into();
         assert!(sizes.lane_len(&mut other, Some(&set)) > code.len());
         assert!(sizes.lane_len(&mut jobs[1].1, Some(&set)) < 1000);
         // A lane that does not share the batch's set is priced whole.
@@ -1843,8 +1843,8 @@ mod tests {
             job.resident = Some(Arc::new(vec![Mutation {
                 id: "__oximut_resident__".into(),
                 file: "/p/module.ts".into(),
-                code: "x".repeat(megabytes * 1024 * 1024),
-                map: serde_json::json!({"version": 3, "sources": [], "mappings": ""}),
+                code: "x".repeat(megabytes * 1024 * 1024).into(),
+                map: serde_json::json!({"version": 3, "sources": [], "mappings": ""}).into(),
             }]));
             job
         };

@@ -1496,7 +1496,7 @@ mod tests {
             id: first.job_id.clone(),
             file: "/p/module.ts".into(),
             code: "export const n = 1; // é\n".into(),
-            map: json!({"version": 3, "sources": ["é\".ts"], "mappings": "AAAA"}),
+            map: json!({"version": 3, "sources": ["é\".ts"], "mappings": "AAAA"}).into(),
         });
         first.resident = Some(Arc::new(vec![first.mutation.clone().unwrap()]));
         first.selection = Some(
@@ -1578,13 +1578,13 @@ mod tests {
         let lane = &mut equal_copy.lanes.as_mut().unwrap()[1];
         lane.resident = Some(Arc::new(lane.resident.as_deref().unwrap().clone()));
         let mut changed_map = equal_copy.clone();
-        Arc::make_mut(
+        let changed_modules = Arc::make_mut(
             changed_map.lanes.as_mut().unwrap()[1]
                 .resident
                 .as_mut()
                 .unwrap(),
-        )[0]
-        .map["mappings"] = json!("AACA");
+        );
+        Arc::make_mut(&mut changed_modules[0].map)["mappings"] = json!("AACA");
         let mut missing = batch.clone();
         missing.lanes.as_mut().unwrap()[1].resident = None;
         let mut empty_residents = batch.clone();
