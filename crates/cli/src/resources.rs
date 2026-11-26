@@ -566,21 +566,35 @@ fn rss_counter(pid: u32) -> Result<Option<u64>, String> {
         .map(Some)
         .ok_or_else(|| format!("RSS statm overflow for PID {pid}"))
 }
-fn rollup_rss(rollup: &str) -> Result<u64, String> {
-    let mut fields = rollup
+/// The `Rss` or `Pss` line of a smaps rollup, in bytes.
+fn rollup_field(rollup: &str, name: &str) -> Result<Option<u64>, String> {
+    let Some(line) = rollup
         .lines()
-        .find_map(|line| line.strip_prefix("Rss:"))
-        .ok_or("RSS rollup is missing Rss")?
-        .split_whitespace();
+        .find_map(|line| line.strip_prefix(name)?.strip_prefix(':'))
+    else {
+        return Ok(None);
+    };
+    let mut fields = line.split_whitespace();
     let kib: u64 = fields
         .next()
         .and_then(|value| value.parse().ok())
-        .ok_or("RSS rollup has invalid Rss")?;
+        .ok_or_else(|| format!("RSS rollup has invalid {name}"))?;
     if fields.next() != Some("kB") || fields.next().is_some() {
-        return Err("RSS rollup has invalid Rss units".into());
+        return Err(format!("RSS rollup has invalid {name} units"));
     }
     kib.checked_mul(1024)
-        .ok_or_else(|| "RSS rollup Rss overflow".into())
+        .map(Some)
+        .ok_or_else(|| format!("RSS rollup {name} overflow"))
+}
+/// The memory one process is charged for. Pss splits every shared page among the
+/// processes mapping it, so a tree of forks that share a warm zygote's or a
+/// template's pages (copy-on-write) is charged for those pages once, as the
+/// kernel's own counters see it; Rss would charge them once per process and
+/// price a four-lane controller at several times its real footprint. A rollup
+/// without Pss (it has been there since Linux 4.14) falls back to Rss.
+fn rollup_rss(rollup: &str) -> Result<u64, String> {
+    let rss = rollup_field(rollup, "Rss")?.ok_or("RSS rollup is missing Rss")?;
+    Ok(rollup_field(rollup, "Pss")?.map_or(rss, |pss| pss.min(rss)))
 }
 // Discovery is shared and identities are re-checked fresh for every aggregate/
 // slot observation, including roots and the final CLI floor. Each verified PID's
@@ -634,6 +648,11 @@ pub struct Budget {
     pub peak_aggregate_rss_bytes: u64,
     pub measured_worker_peak_bytes: u64,
     pub admission_worker_cost_bytes: u64,
+    /// Lanes one sampled worker tree runs at once. A shared controller runs its
+    /// whole batch of lanes in one tree, so its size is the cost of that many
+    /// admitted jobs, not of one; ordinary workers run one job (1).
+    #[serde(skip)]
+    pub lanes_per_worker: u64,
     pub max_active_jobs: usize,
     pub admission_pauses: u64,
     pub recycled_idle_workers: u64,
@@ -705,12 +724,13 @@ impl Budget {
             budget_bytes: budget,
             reserve_bytes: reserve,
             cgroups,
-            measurement: "Peaks and decisions use exact Linux /proc smaps_rollup Rss samples (forced and periodic escalations at least once per second), approximate stat RSS fallback on older/restricted kernels; other periodic samples use kernel counters only to decide escalation; main CLI and all descendants, shared pages counted per process",
+            measurement: "Peaks and decisions use exact Linux /proc smaps_rollup Pss samples (Rss if the rollup has no Pss) (forced and periodic escalations at least once per second), approximate stat RSS fallback on older/restricted kernels; other periodic samples use kernel counters only to decide escalation; main CLI and all descendants, each shared page divided among the processes mapping it (proportional set size, so a copy-on-write page shared by forks is counted once in total)",
             enforcement: "best-effort sampled admission and process-tree cancellation; existing cgroup limits are OS-enforced; no new hard cap installed",
             sample_interval_ms: SAMPLE_MS,
             peak_aggregate_rss_bytes: 0,
             measured_worker_peak_bytes: 0,
             admission_worker_cost_bytes: 0,
+            lanes_per_worker: 1,
             max_active_jobs: 0,
             admission_pauses: 0,
             recycled_idle_workers: 0,
@@ -981,7 +1001,13 @@ impl Budget {
             self.observed_workers.clear();
             for &pid in workers {
                 let bytes = tree_rss(pid, &table, &mut profiled_identity, &mut profiled_rss)?;
-                self.measured_worker_peak_bytes = self.measured_worker_peak_bytes.max(bytes);
+                // Admission prices one job. A tree running several lanes is
+                // priced per lane, so lanes are admitted against their own cost
+                // and the ordinary workers that follow are not priced as if each
+                // were a whole shared controller.
+                self.measured_worker_peak_bytes = self
+                    .measured_worker_peak_bytes
+                    .max(bytes.div_ceil(self.lanes_per_worker.max(1)));
                 self.admission_worker_cost_bytes = self
                     .measured_worker_peak_bytes
                     .saturating_add(self.measured_worker_peak_bytes.div_ceil(4));
@@ -1147,6 +1173,7 @@ mod tests {
             peak_aggregate_rss_bytes: 0,
             measured_worker_peak_bytes: 0,
             admission_worker_cost_bytes: 0,
+            lanes_per_worker: 1,
             max_active_jobs: 0,
             admission_pauses: 0,
             recycled_idle_workers: 0,
@@ -1350,6 +1377,34 @@ mod tests {
             !state.last_sample_was_counter,
             "a forced exact sample clears the flag"
         );
+    }
+
+    #[test]
+    fn a_shared_controller_tree_is_priced_per_lane() {
+        let cli = std::process::id();
+        let controller = cli + 1;
+        let identity = move |pid: u32| Ok(Some((if pid == cli { 0 } else { cli }, u64::from(pid))));
+        let sample = |state: &mut Budget| {
+            state.sample_with_readers(
+                &[controller],
+                true,
+                || ProcessTable::collect([Ok(Some(cli)), Ok(Some(controller))], identity),
+                identity,
+                |pid| Ok(Some(if pid == controller { 400 * MIB } else { MIB })),
+            );
+        };
+        // Four lanes live in the one tree: its 400 MiB is 100 MiB per admitted job.
+        let mut shared = budget();
+        shared.lanes_per_worker = 4;
+        sample(&mut shared);
+        assert_eq!(shared.measured_worker_peak_bytes, 100 * MIB);
+        assert_eq!(shared.admission_worker_cost_bytes, 125 * MIB);
+        // The same tree as an ordinary worker is one job.
+        let mut ordinary = budget();
+        sample(&mut ordinary);
+        assert_eq!(ordinary.measured_worker_peak_bytes, 400 * MIB);
+        // The observed tree itself stays whole: reservations credit its real size.
+        assert_eq!(shared.observed_workers[&controller], 400 * MIB);
     }
 
     #[test]
@@ -2378,17 +2433,27 @@ mod tests {
     }
 
     #[test]
-    fn rollup_uses_resident_rss_and_rejects_invalid_accounting() {
+    fn rollup_charges_shared_pages_by_proportion_and_rejects_invalid_accounting() {
+        // Pss is the charge; Pss_Anon and friends are other lines.
         assert_eq!(
-            rollup_rss("Pss: 1 kB\nRss: 65536 kB\nAnonymous: 2 kB\n").unwrap(),
+            rollup_rss("Rss: 65536 kB\nPss: 1024 kB\nPss_Anon: 7 kB\nAnonymous: 2 kB\n").unwrap(),
+            MIB
+        );
+        // No Pss: the resident size stands.
+        assert_eq!(
+            rollup_rss("Rss: 65536 kB\nAnonymous: 2 kB\n").unwrap(),
             64 * MIB
         );
+        // A Pss above Rss cannot be right; the smaller figure is never exceeded.
+        assert_eq!(rollup_rss("Rss: 1024 kB\nPss: 2048 kB\n").unwrap(), MIB);
         for invalid in [
             "Pss: 10 kB\n",
             "Rss: not-a-number kB\n",
             "Rss: 10 MB\n",
             "Rss: 10 kB extra\n",
             "Rss: 18446744073709551615 kB\n",
+            "Rss: 10 kB\nPss: nope kB\n",
+            "Rss: 10 kB\nPss: 1 MB\n",
         ] {
             assert!(rollup_rss(invalid).is_err(), "{invalid}");
         }
