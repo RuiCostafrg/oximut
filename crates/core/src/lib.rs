@@ -152,7 +152,13 @@ pub struct Coverage {
     pub complete: bool,
     pub tests: Vec<TestIdentity>,
     pub hits: Vec<Hit>,
+    /// Run-level reasons attribution cannot be trusted for any mutant.
     pub reasons: Vec<String>,
+    /// Mutant ids whose source file could not carry probes, with the file and
+    /// reason. Attribution for every other mutant stays sound, so only these
+    /// mutants fall back to the full suite. Set by the CLI, never by an adapter.
+    #[serde(default, skip_serializing_if = "std::collections::BTreeMap::is_empty")]
+    pub unprobed: std::collections::BTreeMap<String, String>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -223,6 +229,10 @@ impl Coverage {
             if !self.complete {
                 selection.reasons.push("incomplete-attribution".into());
             }
+            return selection;
+        }
+        if let Some(why) = self.unprobed.get(mutant_id) {
+            selection.reasons.push(format!("unprobed-file: {why}"));
             return selection;
         }
         let hit = self.hits.iter().find(|hit| hit.mutant_id == mutant_id);
@@ -761,6 +771,7 @@ mod tests {
                 },
             ],
             reasons: vec![],
+            unprobed: Default::default(),
         }
     }
 
@@ -886,6 +897,30 @@ mod tests {
         assert_eq!(selected.total_tests, 3);
         assert_eq!(coverage.select("uncovered").mode, "none");
         assert_eq!(coverage.select("missing").mode, "full");
+    }
+
+    #[test]
+    fn an_unprobed_file_widens_only_its_own_mutants() {
+        let mut coverage = coverage();
+        coverage
+            .unprobed
+            .insert("loose".into(), "src/e.ts: probe-globalThis-conflict".into());
+        // The unprobed mutant never reads as uncovered, even with no hit record.
+        let loose = coverage.select("loose");
+        assert_eq!(loose.mode, "full");
+        assert_eq!(loose.selected_tests, 3);
+        assert_eq!(
+            loose.reasons,
+            ["unprobed-file: src/e.ts: probe-globalThis-conflict"]
+        );
+        // Every other mutant keeps its narrow selection.
+        assert_eq!(coverage.select("covered").mode, "files");
+        assert_eq!(coverage.select("uncovered").mode, "none");
+        // Run-level uncertainty still widens everything, with its own reasons.
+        coverage.complete = false;
+        let all = coverage.select("covered");
+        assert_eq!(all.mode, "full");
+        assert!(all.reasons.contains(&"incomplete-attribution".to_string()));
     }
 
     #[test]
