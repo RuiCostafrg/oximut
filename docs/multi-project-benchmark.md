@@ -37,7 +37,16 @@ the corpus):
 * radix3 (`src`, 688 mutants): the suite's longest file pushed Oximut's instrumented baseline past 30 s; with
   that file removed, 61 of the first 177 mutants (mostly parser loops) ran into the 30 s job deadline and a round
   did not finish in 30 minutes; with the parser-like files removed, the baseline failed with `controller message
-  exceeds the response limit`.
+  exceeds the response limit`. Re-measured on `c3bdbf5b` (unjs/radix3, now rou3; `src`, 688 mutants; the
+  eleven test files that need only Vitest, 2,300 tests, 23 s in plain Vitest, its own 10 s and 60 s per-test
+  timeouts kept; the four files that import `oxfmt`/`ripgrep` and the URLPattern conformance test left out):
+  the original baseline takes 14 s, but the instrumented baseline took 217 s and timed out on a 10 s and a 60 s
+  test. With the O(1) coverage probe it takes 113 s and only the 60 s test (suffix enumeration) still times out; with
+  test selection off (switching code, no probes) it takes 103 s. So the probe is no longer the limit: what remains is
+  the switch's `process.env.OXIMUT_ACTIVE_MUTANT` read on every evaluation of a switched expression, about 240 ns
+  against 7 ns for a variable (a Node microbenchmark), which a 60 s parser/enumeration loop multiplies. Hoisting that
+  read (it cannot be a module-level constant while precollected templates are forked before the mutant is chosen)
+  is the next lever; radix3 joins the corpus when it completes.
 * es-toolkit with the lodash-compatible array, object and predicate modules: about a minute of suite, so
   Oximut's baseline timed out.
 
