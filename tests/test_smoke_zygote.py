@@ -13,8 +13,14 @@ SPEC.loader.exec_module(SMOKE)
 ON = "execution=persistent; isolation=fresh-test-forks; zygote=on; rolling-lanes=on"
 
 
-def report(diagnostics=(ON,), hits=0):
-    return {"diagnostics": list(diagnostics), "cache": {"outcomeHits": hits}}
+def report(diagnostics=(ON,), executed=1, hits=0):
+    """A report whose mutants were ``executed`` by workers and ``hits`` served from the outcome cache."""
+    sources = ["executed"] * executed + ["cache"] * hits
+    return {
+        "diagnostics": list(diagnostics),
+        "cache": {"outcomeHits": hits},
+        "mutants": [{"provenance": {"source": source, "reason": "test"}} for source in sources],
+    }
 
 
 class ZygoteSmokeCheck(unittest.TestCase):
@@ -47,10 +53,29 @@ class ZygoteSmokeCheck(unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError, "zygote=on"):
                 self.check(report(diagnostics), self.counters({"forks": 3}))
 
-    def test_cached_outcomes_ran_no_mutants(self):
-        self.assertIsNone(self.check(report(hits=2), self.counters()))
+    def test_fully_cached_run_passes_without_forks(self):
+        # Every mutant came from the outcome cache, so no worker existed to fork.
+        self.assertIsNone(self.check(report(executed=0, hits=2), self.counters()))
+
+    def test_fully_cached_run_must_still_say_zygote_on(self):
         with self.assertRaisesRegex(RuntimeError, "zygote=on"):
-            self.check(report((), hits=2), self.counters())
+            self.check(report((), executed=0, hits=2), self.counters())
+
+    def test_run_with_no_executed_mutant_and_no_cache_hit_fails(self):
+        # Nothing ran and nothing was cached, so the zygote's use was never shown.
+        with self.assertRaisesRegex(RuntimeError, "none was served from the cache"):
+            self.check(report(executed=0, hits=0), self.counters())
+
+    def test_executed_mutants_with_no_forks_fail(self):
+        with self.assertRaisesRegex(RuntimeError, "no mutant worker was forked"):
+            self.check(report(executed=3), self.counters({"forks": 0, "zygoteFailures": 0}))
+        with self.assertRaisesRegex(RuntimeError, "wrote no counters"):
+            self.check(report(executed=3), self.counters())
+
+    def test_partially_cached_run_must_still_show_forks(self):
+        with self.assertRaisesRegex(RuntimeError, "no mutant worker was forked"):
+            self.check(report(executed=1, hits=2), self.counters({"forks": 0, "zygoteFailures": 0}))
+        self.assertEqual(self.check(report(executed=1, hits=2), self.counters({"forks": 2})), 2)
 
     def test_prefix_without_addon_is_rejected_before_running(self):
         with tempfile.TemporaryDirectory() as directory:
