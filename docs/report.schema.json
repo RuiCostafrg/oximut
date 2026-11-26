@@ -147,7 +147,16 @@
       "properties": {
         "mutantId": { "type": "string" },
         "tests": { "type": "array", "items": { "type": "string" } },
-        "outsideTest": { "type": "boolean" }
+        "outsideTest": { "type": "boolean" },
+        "testRanges": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": { "type": "integer", "minimum": 0 },
+            "minItems": 2,
+            "maxItems": 2
+          }
+        }
       }
     },
     "coverage": {

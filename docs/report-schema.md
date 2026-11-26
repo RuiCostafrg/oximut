@@ -80,7 +80,9 @@ stale report, including files that have zero mutants (they are still listed).
 
 `baseline.coverage`, when present, has `complete`, `tests`, `hits`, and
 `reasons`. A test identity has `id`, `file`, and `name`. A hit has `mutantId`,
-test identity IDs in `tests`, and `outsideTest`. Selection has `mode` (`full`,
+test identity IDs in `tests`, and `outsideTest`. For a very large suite (more than 250,000 hit
+test ids in all), a hit lists its tests as `testRanges` instead: inclusive `[first, last]`
+index runs into `tests`, ascending and disjoint, with `tests` empty. Selection has `mode` (`full`,
 `files`, or `none` in current implementation), selected `files`,
 `selectedTests`, `totalTests`, `expectedSkipped`, and fallback/evidence `reasons`.
 Whole files are retained to preserve sequential state and hooks.

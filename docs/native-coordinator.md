@@ -158,8 +158,9 @@ deliberately in its own commit with the reason.
   file polling). `m2-runner.mjs` and `supervisor.py` leave the execution path.
 - The protocol contract stays the same: requests of at most 8 MiB and
   responses of at most 1 MiB, enforced on both sides. A baseline's coverage is the
-  only payload that grows with the suite, so the reference adapter fits it to the limit
-  (see [m3.md](m3.md#coverage-and-the-response-limit)) instead of exceeding it. The Node layer keeps
+  only payload that grows with the suite, so the reference adapter writes it to a file in a
+  run-private directory the CLI offers and names the file in its response
+  (see [m3.md](m3.md#coverage-at-scale)) instead of exceeding the limit. The Node layer keeps
   `validateRequest`, and Rust keeps `Response::validate` (identity, generation,
   staleness). Conformance tests cover the limits and rejection paths before the
   old path is removed.

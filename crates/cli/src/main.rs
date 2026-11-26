@@ -504,6 +504,7 @@ fn infrastructure(request: &Request, error: impl Into<String>) -> Response {
         tests: Tests::default(),
         errors: vec![error.into()],
         coverage: None,
+        coverage_file: None,
         resident: None,
         file_timings: None,
         timeout_kind: None,
@@ -1039,6 +1040,47 @@ fn plan_groups(modules: Vec<Mutation>, budget: usize) -> Vec<Vec<Mutation>> {
     groups.into_iter().map(|(_, _, members)| members).collect()
 }
 
+/// The largest coverage file the CLI reads: well beyond any suite's inventory and
+/// hit runs, bounded so an adapter cannot make the CLI read without end.
+const COVERAGE_FILE_LIMIT: u64 = 512 * 1024 * 1024;
+/// A report spells out hit lists as test ids while they stay under this many ids.
+const REPORT_EXPLICIT_TEST_IDS: u64 = 250_000;
+
+/// Reads the coverage an adapter wrote, by name, into the run's private directory.
+/// The name is a plain file name; the file must be a regular file (never a link)
+/// owned by whoever owns the directory and writable by no one else.
+fn load_coverage_file(directory: &Path, name: &str) -> Result<Coverage, String> {
+    use std::os::unix::fs::{MetadataExt, OpenOptionsExt};
+    let invalid = |why: &str| format!("invalid-coverage-file: {why}");
+    if !oximut_core::is_plain_file_name(name) {
+        return Err(invalid("not a plain file name"));
+    }
+    let owner = fs::metadata(directory)
+        .map_err(|e| invalid(&e.to_string()))?
+        .uid();
+    // No symlink may stand in for the file, and a FIFO must not block the open.
+    let file = fs::OpenOptions::new()
+        .read(true)
+        .custom_flags(libc::O_NOFOLLOW | libc::O_NONBLOCK)
+        .open(directory.join(name))
+        .map_err(|e| invalid(&e.to_string()))?;
+    let metadata = file.metadata().map_err(|e| invalid(&e.to_string()))?;
+    if !metadata.is_file() || metadata.uid() != owner || metadata.mode() & 0o022 != 0 {
+        return Err(invalid("not a private regular file"));
+    }
+    if metadata.len() > COVERAGE_FILE_LIMIT {
+        return Err(COVERAGE_TOO_LARGE.into());
+    }
+    let mut bytes = Vec::with_capacity(metadata.len() as usize);
+    file.take(COVERAGE_FILE_LIMIT + 1)
+        .read_to_end(&mut bytes)
+        .map_err(|e| invalid(&e.to_string()))?;
+    if bytes.len() as u64 > COVERAGE_FILE_LIMIT {
+        return Err(COVERAGE_TOO_LARGE.into());
+    }
+    serde_json::from_slice(&bytes).map_err(|e| invalid(&format!("malformed: {e}")))
+}
+
 fn validate_coverage(
     coverage: &Coverage,
     inventory: &[String],
@@ -1301,6 +1343,7 @@ fn run_attempt(options: &Options, previous: Option<RetryEvidence>) -> Result<Att
             .then(|| "threads".into()),
         mutation: None,
         collect_coverage: None,
+        coverage_dir: None,
         resident: None,
         selection: None,
         bypass_zygote: None,
@@ -1396,6 +1439,19 @@ fn run_attempt(options: &Options, previous: Option<RetryEvidence>) -> Result<Att
         request.mutation = None;
         request.resident = group.and_then(|index| residual(&groups[index], coverage));
         request.collect_coverage = coverage.then(|| probe_transforms.clone());
+        // Where the adapter may put coverage too large for a response. Private to this
+        // run (mode 0700, owned by us) and removed when the run ends.
+        let coverage_directory = coverage
+            .then(|| {
+                tempfile::Builder::new()
+                    .prefix("oximut-coverage-")
+                    .tempdir()
+            })
+            .transpose()
+            .map_err(|e| format!("could not create the coverage directory: {e}"))?;
+        request.coverage_dir = coverage_directory
+            .as_ref()
+            .map(|directory| directory.path().to_string_lossy().into_owned());
         // A request over the adapter's hard limit (only possible for a lone
         // module too large to share a request) cannot be transported; refuse
         // it here, naming its largest module, instead of dispatching it.
@@ -1421,6 +1477,17 @@ fn run_attempt(options: &Options, previous: Option<RetryEvidence>) -> Result<Att
         } else {
             scheduler.execute(&request)
         };
+        // Large coverage arrives as a file the adapter wrote in the directory above; the
+        // CLI reads it itself and validates it exactly like an inline payload.
+        let mut coverage_file_error = None;
+        if let (Some(name), Some(directory)) =
+            (collected.coverage_file.take(), coverage_directory.as_ref())
+        {
+            match load_coverage_file(directory.path(), &name) {
+                Ok(loaded) => collected.coverage = Some(loaded),
+                Err(reason) => coverage_file_error = Some(reason),
+            }
+        }
         if collected.outcome == TestOutcome::Passed {
             suite_timings.observe(&collected, started.elapsed().as_secs_f64() * 1000.0);
         }
@@ -1460,11 +1527,11 @@ fn run_attempt(options: &Options, previous: Option<RetryEvidence>) -> Result<Att
                 complete: false,
                 tests: vec![],
                 hits: vec![],
-                reasons: vec!["missing-coverage".into()],
+                reasons: vec![coverage_file_error.unwrap_or_else(|| "missing-coverage".into())],
                 unprobed: BTreeMap::new(),
             });
-            // Adapters send long hit lists as index runs to fit the response limit.
-            if collected_coverage.expand_ranges().is_err() {
+            // Adapters send long hit lists as index runs; selection reads them as runs.
+            if collected_coverage.check_ranges().is_err() {
                 collected_coverage.complete = false;
                 collected_coverage.hits.clear();
                 collected_coverage
@@ -1479,7 +1546,7 @@ fn run_attempt(options: &Options, previous: Option<RetryEvidence>) -> Result<Att
                 .any(|reason| reason == COVERAGE_TOO_LARGE);
             if dropped {
                 diagnostics.push(
-                    "coverage exceeded the 1 MiB response limit; test selection falls back to full suites"
+                    "coverage exceeded the transport limit (1 MiB response, or the coverage file limit); test selection falls back to full suites"
                         .into(),
                 );
             } else if let Err(reason) = validate_coverage(
@@ -1505,6 +1572,7 @@ fn run_attempt(options: &Options, previous: Option<RetryEvidence>) -> Result<Att
             baseline.coverage = Some(collected_coverage);
         }
         request.collect_coverage = None;
+        request.coverage_dir = None;
         request.resident = None;
     }
     if collect && !coverage_fits && baseline.outcome == TestOutcome::Passed {
@@ -1681,6 +1749,7 @@ fn run_attempt(options: &Options, previous: Option<RetryEvidence>) -> Result<Att
                         vec!["baseline did not pass; mutant was not executed".into()]
                     },
                     coverage: None,
+                    coverage_file: None,
                     resident: None,
                     file_timings: None,
                     timeout_kind: None,
@@ -1826,6 +1895,14 @@ fn run_attempt(options: &Options, previous: Option<RetryEvidence>) -> Result<Att
         &baseline.tests,
         &results,
     );
+    // Selection read hit lists as index runs. The report lists explicit test ids, as it
+    // always has, unless that would be enormous (a mutant every test of a huge suite
+    // reaches): then the runs stay, and a reader expands `testRanges` over `tests`.
+    if let Some(coverage) = baseline.coverage.as_mut()
+        && coverage.range_ids() <= REPORT_EXPLICIT_TEST_IDS
+    {
+        let _ = coverage.expand_ranges();
+    }
     let mut report = Report {
         schema_version: 1,
         run_id,
@@ -2520,6 +2597,52 @@ mod tests {
     }
 
     #[test]
+    fn a_coverage_file_is_read_only_when_it_is_a_private_regular_file_in_the_directory() {
+        use std::os::unix::fs::{PermissionsExt, symlink};
+        let directory = tempfile::tempdir().unwrap();
+        let write = |name: &str, body: &str, mode: u32| {
+            let path = directory.path().join(name);
+            fs::write(&path, body).unwrap();
+            fs::set_permissions(&path, fs::Permissions::from_mode(mode)).unwrap();
+        };
+        let body = r#"{"complete":true,"tests":[{"id":"t","file":"/a.test.ts","name":"n"}],
+            "hits":[{"mutantId":"m","tests":[],"outsideTest":false,"testRanges":[[0,0]]}],
+            "reasons":[]}"#;
+        write("coverage-1-0.json", body, 0o600);
+        let loaded = load_coverage_file(directory.path(), "coverage-1-0.json").unwrap();
+        assert_eq!(loaded.tests.len(), 1);
+        assert_eq!(loaded.hits[0].test_ranges, [[0, 0]]);
+
+        let refused = |name: &str| load_coverage_file(directory.path(), name).unwrap_err();
+        // A name with a directory part, or a hidden one, is never opened.
+        assert!(refused("../coverage-1-0.json").starts_with("invalid-coverage-file"));
+        assert!(refused(".coverage").starts_with("invalid-coverage-file"));
+        // A link, even to a good file, is not followed.
+        symlink(
+            directory.path().join("coverage-1-0.json"),
+            directory.path().join("link.json"),
+        )
+        .unwrap();
+        assert!(refused("link.json").starts_with("invalid-coverage-file"));
+        // Others must not be able to write it.
+        write("shared.json", body, 0o666);
+        assert!(refused("shared.json").contains("private regular file"));
+        // A directory, a missing file and malformed JSON are refused, not trusted.
+        fs::create_dir(directory.path().join("folder.json")).unwrap();
+        assert!(refused("folder.json").starts_with("invalid-coverage-file"));
+        assert!(refused("missing.json").starts_with("invalid-coverage-file"));
+        write("garbage.json", "{\"complete\":", 0o600);
+        assert!(refused("garbage.json").contains("malformed"));
+        // Unknown fields are as unwelcome as in an inline payload.
+        write(
+            "extra.json",
+            r#"{"complete":true,"tests":[],"hits":[],"reasons":[],"x":1}"#,
+            0o600,
+        );
+        assert!(refused("extra.json").contains("malformed"));
+    }
+
+    #[test]
     fn coverage_inventory_is_validated_before_subset_projection() {
         use oximut_core::{Hit, TestIdentity};
         let root = std::env::current_dir().unwrap();
@@ -2648,6 +2771,7 @@ mod tests {
             pool: None,
             mutation: None,
             collect_coverage: None,
+            coverage_dir: None,
             resident: None,
             selection: None,
             bypass_zygote: None,
