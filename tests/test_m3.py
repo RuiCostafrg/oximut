@@ -161,6 +161,54 @@ class PreciseSelection(unittest.TestCase):
             self.assertEqual(selection['selectedTests'], selection['totalTests'], mutant)
             self.assertTrue(any('concurrent' in reason.lower() for reason in selection['reasons']), mutant)
 
+    def test_setup_files_do_not_disable_selection(self):
+        # A setup file that imports the mutated module and registers a beforeEach.
+        # Hits while it loads have no test to attribute to, so those mutants run the
+        # whole suite; hits inside tests (including the setup file's own beforeEach)
+        # keep their narrow selection, and no kill is lost.
+        config, source = 'setup-files.config.ts', 'src/setup-subject.ts'
+        for execution in ('fresh', 'persistent'):
+            with self.subTest(execution=execution):
+                full = self.run_fixture(config, source, False, execution)
+                selected = self.run_fixture(config, source, True, execution)
+                self.assert_equivalent(full, selected)
+                self.assertEqual(
+                    {i for i, o in self.outcome_map(full).items() if o == 'killed'},
+                    {i for i, o in self.outcome_map(selected).items() if o == 'killed'},
+                )
+                coverage = selected['baseline']['coverage']
+                self.assertTrue(coverage['complete'], coverage)
+                self.assertEqual(coverage['reasons'], [], coverage)
+                by_function = {}
+                for mutant in selected['mutants']:
+                    line = mutant['location']['start']['line']
+                    name = {5: 'setupValue', 9: 'hookValue', 13: 'alpha', 17: 'beta'}[line]
+                    by_function.setdefault(name, []).append(mutant)
+                self.assertEqual(set(by_function), {'setupValue', 'hookValue', 'alpha', 'beta'})
+                for name, mutants in by_function.items():
+                    self.assertTrue(any(m['outcome'] == 'killed' for m in mutants), name)
+                # Hit while the setup file loads: outside any test, so the full suite.
+                for mutant in by_function['setupValue']:
+                    selection = mutant['selection']
+                    self.assertEqual(selection['mode'], 'full', mutant)
+                    self.assertEqual(selection['selectedTests'], selection['totalTests'], mutant)
+                    self.assertIn('outside-test-execution', selection['reasons'], mutant)
+                    self.assertNotIn('setup-files', selection['reasons'], mutant)
+                # Hit by the setup file's beforeEach in every test: attributed to tests.
+                for mutant in by_function['hookValue']:
+                    selection = mutant['selection']
+                    self.assertEqual(selection['mode'], 'files', mutant)
+                    self.assertEqual(selection['selectedTests'], selection['totalTests'], mutant)
+                    self.assertNotIn('outside-test-execution', selection['reasons'], mutant)
+                # Hit only by one test file: that file alone runs.
+                for name, file in (('alpha', 'setup-alpha.test.ts'), ('beta', 'setup-beta.test.ts')):
+                    for mutant in by_function[name]:
+                        selection = mutant['selection']
+                        self.assertEqual(selection['mode'], 'files', mutant)
+                        self.assertEqual(
+                            [pathlib.Path(f).name for f in selection['files']], [file], mutant)
+                        self.assertLess(selection['selectedTests'], selection['totalTests'], mutant)
+
     def test_global_setup_forces_full_suite_with_reason(self):
         report = self.run_fixture('global-setup.config.ts', 'src/subject.ts', True)
         full = self.run_fixture('global-setup.config.ts', 'src/subject.ts', False)

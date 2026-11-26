@@ -234,6 +234,37 @@ test('hook', () => expect(enabled() && initialized).toBe(true));`,
   assert.ok(concurrent.coverage.reasons.includes('concurrent-tests'));
 });
 
+test('M3 attributes setup-file hits instead of falling back run-wide', {
+  timeout: 90000,
+}, async (t) => {
+  const root = await fixture(t);
+  // The setup file loads the mutated module (outside any test) and registers a
+  // beforeEach that calls it (inside each test).
+  await Promise.all([
+    writeFile(
+      join(root, 'vitest.config.mjs'),
+      "export default { test: { include: ['*.test.ts'], setupFiles: ['./setup.ts'] } };",
+    ),
+    writeFile(
+      join(root, 'setup.ts'),
+      `import { beforeEach } from 'vitest'; import { enabled, hook } from './source';
+enabled(); beforeEach(() => { hook(); });`,
+    ),
+  ]);
+  const result = await run(root, collect(root));
+  assert.equal(result.coverage.complete, true, JSON.stringify(result));
+  assert.deepEqual(result.coverage.reasons, []);
+  const hits = new Map(result.coverage.hits.map((hit) => [hit.mutantId, hit]));
+  // Hit while the setup file loads: no test owns it.
+  assert.equal(hits.get(covered).outsideTest, true);
+  // Hit by the setup file's beforeEach: attributed to the tests it wraps.
+  assert.equal(hits.get(hook).outsideTest, false);
+  assert.equal(hits.get(hook).tests.length, result.coverage.tests.length);
+  // Never executed at all: explicit empty hit, not a missing record.
+  assert.deepEqual(hits.get(uncalled).tests, []);
+  assert.equal(hits.get(uncalled).outsideTest, false);
+});
+
 test('M3 persistent collection does not retain probes or test filters across jobs', {
   timeout: 120000,
 }, async (t) => {

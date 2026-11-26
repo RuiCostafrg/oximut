@@ -976,6 +976,24 @@ mod tests {
     }
 
     #[test]
+    fn an_outside_test_hit_widens_only_its_own_mutant() {
+        // Hits while a setup file or module loads have no test to attribute to. They
+        // run the full suite for that mutant, but never make the run incomplete.
+        let mut coverage = coverage();
+        coverage.hits.push(Hit {
+            mutant_id: "setup".into(),
+            outside_test: true,
+            ..Default::default()
+        });
+        let setup = coverage.select("setup");
+        assert_eq!(setup.mode, "full");
+        assert_eq!(setup.selected_tests, 3);
+        assert_eq!(setup.reasons, ["outside-test-execution"]);
+        assert_eq!(coverage.select("covered").mode, "files");
+        assert_eq!(coverage.select("uncovered").mode, "none");
+    }
+
+    #[test]
     fn uncertain_attribution_always_selects_full_suite() {
         let mut coverage = coverage();
         coverage.hits[0].outside_test = true;
