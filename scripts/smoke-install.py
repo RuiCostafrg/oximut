@@ -29,19 +29,30 @@ def project_dependencies(prefix, root, isolated):
 ADDON = Path("lib/oximut/packages/vitest-adapter/native/build/zygote-fork.node")
 
 
+def executed_mutants(data):
+    """Count mutants a worker ran in this invocation. Cache hits and skips do not count."""
+    return sum(1 for mutant in data.get("mutants", [])
+               if (mutant.get("provenance") or {}).get("source") == "executed")
+
+
 def check_zygote(data, counters_dir, label):
     """Assert a persistent run really forked its mutant workers from the zygote.
 
     ``zygote=on`` only says the mode was requested. A missing or unloadable addon
-    falls back to normal workers and still passes, so the pool's own counters
-    (written when the controller exits) must show forks and no zygote failure.
-    Returns the number of zygote forks.
+    falls back to normal workers and still passes, so whenever a run executed at
+    least one mutant, the pool's own counters (written when the controller exits)
+    must show forks and no zygote failure. A partially cached run is still such a
+    run. A fully cache-served run executes no mutant and forks nothing; it passes
+    only if it still says ``zygote=on`` and the outcome cache served its results.
+    Returns the number of zygote forks, or None when no mutant was executed.
     """
     diagnostics = data.get("diagnostics", [])
     if not any("zygote=on" in line for line in diagnostics):
         raise RuntimeError(f"{label}: report lacks the zygote=on diagnostic: {diagnostics}")
-    if (data.get("cache") or {}).get("outcomeHits"):
-        return None  # Served from the outcome cache: no mutant ran.
+    if executed_mutants(data) == 0:
+        if not (data.get("cache") or {}).get("outcomeHits"):
+            raise RuntimeError(f"{label}: no mutant was executed and none was served from the cache")
+        return None
     files = sorted(counters_dir.iterdir())
     if not files:
         raise RuntimeError(f"{label}: zygote=on but the pool wrote no counters (addon unavailable?)")
