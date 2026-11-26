@@ -5,6 +5,7 @@ import importlib.util
 import json
 import os
 from pathlib import Path
+import re
 import subprocess
 import shutil
 import tempfile
@@ -55,6 +56,19 @@ def check_zygote(data, counters_dir, label):
     return totals["forks"]
 
 
+def check_auto_workers(data, label):
+    """Assert a run without --workers resolved the automatic worker count.
+
+    Every other case pins ``--workers 1``; the default users get is ``auto``, so
+    one persistent run must report it. Returns the resolved count.
+    """
+    for line in data.get("diagnostics", []):
+        match = re.search(r"\bworkers=(\d+) \(auto: ", line)
+        if match:
+            return int(match.group(1))
+    raise RuntimeError(f"{label}: report lacks a workers=N (auto: ...) diagnostic: {data.get('diagnostics')}")
+
+
 def smoke(prefix, *, reports_dir=None, validator=None, isolated=False, require_zygote=False):
     if (reports_dir is None) != (validator is None):
         raise ValueError("reports-dir and validator must be supplied together")
@@ -93,6 +107,9 @@ def smoke(prefix, *, reports_dir=None, validator=None, isolated=False, require_z
             # Give each mode a cold cache before testing reuse and invalidation.
             shutil.rmtree(root / ".oximut", ignore_errors=True)
             cases = ("cold", "warm", "force", "source", "test", "config") if reports_dir else ("smoke",)
+            if execution == "persistent":
+                # No --workers: the automatic default must work on the installed prefix.
+                cases += ("auto",)
             expected_summary = None
             for case in cases:
                 if case in ("source", "test", "config"):
@@ -109,12 +126,13 @@ def smoke(prefix, *, reports_dir=None, validator=None, isolated=False, require_z
                 shutil.rmtree(counters, ignore_errors=True)
                 counters.mkdir()
                 arguments = ["--cache", "--cache-inputs-complete", "--cache-policy", "always"] if reports_dir else []
-                if case == "force":
+                if case in ("force", "auto"):
                     arguments.append("--force")
+                workers = [] if case == "auto" else ["--workers", "1"]
                 command = [
                     str(prefix / "bin" / "oximut"), "--root", str(root),
                     "--config", "vitest.config.mjs", "--source", "subject.js",
-                    "--execution", execution, "--workers", "1", "--report", str(report), *arguments,
+                    "--execution", execution, *workers, "--report", str(report), *arguments,
                 ]
                 if isolated:
                     SANDBOX.run(command, cwd=root, writable=[Path(temporary)],
@@ -154,12 +172,14 @@ def smoke(prefix, *, reports_dir=None, validator=None, isolated=False, require_z
                 forks = None
                 if require_zygote and execution == "persistent":
                     forks = check_zygote(data, counters, f"{execution}/{case}")
+                auto_workers = check_auto_workers(data, f"{execution}/{case}") if case == "auto" else None
                 results.append({"execution": execution, "case": case, "summary": summary,
                                 "cache": data.get("cache"), "zygoteForks": forks,
+                                "autoWorkers": auto_workers,
                                 "report": str(archived if reports_dir else report)})
-                note = ""
+                note = f", workers={auto_workers} (auto)" if auto_workers else ""
                 if require_zygote and execution == "persistent":
-                    note = f", zygote=on ({forks} forked workers)" if forks else ", zygote=on (cached outcomes)"
+                    note += f", zygote=on ({forks} forked workers)" if forks else ", zygote=on (cached outcomes)"
                 print(f"{execution}/{case}: baseline passed, {data['summary']['killed']} mutants killed{note}")
         if reports_dir:
             (reports_dir / "tests.json").write_text(json.dumps(results, indent=2) + "\n")

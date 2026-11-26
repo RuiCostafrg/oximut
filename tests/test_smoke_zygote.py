@@ -58,5 +58,18 @@ class ZygoteSmokeCheck(unittest.TestCase):
                 SMOKE.smoke(Path(directory), require_zygote=True)
 
 
+class AutoWorkersSmokeCheck(unittest.TestCase):
+    def test_resolved_automatic_count_is_returned(self):
+        lines = [ON, "workers=4 (auto: 4 CPUs)"]
+        self.assertEqual(SMOKE.check_auto_workers(report(lines), "persistent/auto"), 4)
+        capped = ["workers=3 (auto: 16 CPUs, limited by 2048 MiB of memory)"]
+        self.assertEqual(SMOKE.check_auto_workers(report(capped), "persistent/auto"), 3)
+
+    def test_explicit_or_missing_count_fails(self):
+        for diagnostics in ((), (ON,), ("workers=1 (explicit)",)):
+            with self.assertRaisesRegex(RuntimeError, "auto"):
+                SMOKE.check_auto_workers(report(diagnostics), "persistent/auto")
+
+
 if __name__ == "__main__":
     unittest.main()

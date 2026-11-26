@@ -1,6 +1,6 @@
 {
   "name": "oximut",
-  "version": "1.0.0-rc.2",
+  "version": "1.0.0-rc.3",
   "private": true,
   "type": "module",
   "description": "Rust/Oxc mutation testing with a Vitest adapter — feasibility prototype",

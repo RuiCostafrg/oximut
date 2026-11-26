@@ -9,7 +9,7 @@ status record, not proof that a gate has passed.
 
 ## Candidate status
 
-The source-only `1.0.0-rc.2` candidate is being prepared. Candidate acceptance
+The source-only `1.0.0-rc.3` candidate is being prepared. Candidate acceptance
 is pending. It has no published binaries and no binary target matrix. No item
 below should be treated as complete without a recorded result tied to the
 candidate revision.

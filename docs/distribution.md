@@ -1,6 +1,6 @@
 # Candidate source distribution
 
-The distribution format for **1.0.0-rc.2** (unchanged since rc.1) is a versioned source archive
+The distribution format for **1.0.0-rc.3** (unchanged since rc.1) is a versioned source archive
 intended for a GitHub Release attachment. This is a release candidate, not stable
 1.0.0. The builder creates local artifacts only: it does not create a release,
 push, tag, publish to npm/crates.io, or build downloadable binaries. GitHub's
@@ -25,10 +25,10 @@ and engine declarations must agree with the lockfile root entry.
 revision="$(git rev-parse HEAD)"
 python3 scripts/build-source.py \
   --revision "$revision" \
-  --version 1.0.0-rc.2 \
+  --version 1.0.0-rc.3 \
   --output-dir /tmp/oximut-source-candidate
 cd /tmp/oximut-source-candidate
-sha256sum -c oximut-1.0.0-rc.2-source.tar.gz.sha256
+sha256sum -c oximut-1.0.0-rc.3-source.tar.gz.sha256
 ```
 
 Use a new output directory outside the checkout; existing artifacts are never
@@ -76,11 +76,11 @@ sufficient disk space for the release build and full npm development dependency
 graph. The source builder does not download or check these toolchains.
 
 ```sh
-tar -xzf oximut-1.0.0-rc.2-source.tar.gz
-cd oximut-1.0.0-rc.2
+tar -xzf oximut-1.0.0-rc.3-source.tar.gz
+cd oximut-1.0.0-rc.3
 sha256sum -c SOURCE-DISTRIBUTION/SHA256SUMS
-python3 scripts/install-source.py --prefix "$HOME/oximut-rc2"
-python3 scripts/smoke-install.py --prefix "$HOME/oximut-rc2"          # add --require-zygote on glibc Linux
+python3 scripts/install-source.py --prefix "$HOME/oximut-rc3"
+python3 scripts/smoke-install.py --prefix "$HOME/oximut-rc3"          # add --require-zygote on glibc Linux
 ```
 
 The existing installer uses `cargo build --locked --release` and a fresh
@@ -92,9 +92,9 @@ To reinstall, run the installer into a new empty prefix. It refuses to overwrite
 an existing installation. Move the **whole prefix** together to relocate it:
 
 ```sh
-mv "$HOME/oximut-rc2" "$HOME/oximut-rc2-relocated"
-python3 scripts/smoke-install.py --prefix "$HOME/oximut-rc2-relocated"
-export PATH="$HOME/oximut-rc2-relocated/bin:$PATH"
+mv "$HOME/oximut-rc3" "$HOME/oximut-rc3-relocated"
+python3 scripts/smoke-install.py --prefix "$HOME/oximut-rc3-relocated"
+export PATH="$HOME/oximut-rc3-relocated/bin:$PATH"
 oximut --help
 ```
 
@@ -111,8 +111,8 @@ python3 -m unittest discover -s tests -p 'test_distribution.py' -v
 python3 -m unittest discover -s tests -p 'test_install.py' -v
 ```
 
-For RC2 notes, third-party licensing scope, and the manual source
-provenance gate, see [draft release notes](release-notes-1.0.0-rc.2.md),
+For RC3 notes, third-party licensing scope, and the manual source
+provenance gate, see [draft release notes](release-notes-1.0.0-rc.3.md),
 [notices](../NOTICE.md), and [source provenance](source-provenance.md).
 ## R3 exact artifact gate
 
@@ -153,7 +153,9 @@ from a separate temporary directory outside the checkout and creates an independ
 project using only the installed dependencies. It checks the installed adapter
 paths and runs the exact installed command in fresh and persistent modes. For each
 mode it checks cold cache, warm reuse, forced execution, and invalidation after
-source, test and config changes. Each run must pass its baseline, complete mutation
+source, test and config changes. Those runs pin `--workers 1`; one more persistent
+run without `--workers` must report the automatic default (`workers=N (auto: ...)`),
+and with `--require-zygote` still fork its mutant workers from the zygote. Each run must pass its baseline, complete mutation
 execution, kill a mutant, preserve outcome totals, and pass the strict published
 report schema. The gate repeats these checks after moving the **whole prefix**
 between paths containing spaces, and verifies the native executable hash is unchanged.

@@ -14,7 +14,7 @@ ROOT = Path(__file__).resolve().parents[1]
 SPEC = importlib.util.spec_from_file_location("source_builder", ROOT / "scripts/build-source.py")
 BUILDER = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(BUILDER)
-VERSION = "1.0.0-rc.2"
+VERSION = "1.0.0-rc.3"
 
 
 class SourceDistribution(unittest.TestCase):
@@ -232,10 +232,10 @@ class SourceDistribution(unittest.TestCase):
 
     def test_metadata_mismatches(self):
         changes = [
-            ("Cargo.toml", 'version = "1.0.0-rc.2"', 'version = "0.0.0"'),
-            ("Cargo.lock", 'version = "1.0.0-rc.2"', 'version = "0.0.0"'),
-            ("package-lock.json", '"version": "1.0.0-rc.2"', '"version": "0.0.0"'),
-            ("packages/vitest-adapter/package.json", '"version": "1.0.0-rc.2"', '"version": "0.0.0"'),
+            ("Cargo.toml", 'version = "1.0.0-rc.3"', 'version = "0.0.0"'),
+            ("Cargo.lock", 'version = "1.0.0-rc.3"', 'version = "0.0.0"'),
+            ("package-lock.json", '"version": "1.0.0-rc.3"', '"version": "0.0.0"'),
+            ("packages/vitest-adapter/package.json", '"version": "1.0.0-rc.3"', '"version": "0.0.0"'),
             ("package.json", '"ajv": "8.20.0"', '"ajv": "0.0.0"'),
         ]
         for name, before, after in changes:

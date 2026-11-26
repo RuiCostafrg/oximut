@@ -16,7 +16,7 @@ def check(archive, evidence, revision):
     if (data.get('gate') != 'R3' or data.get('status') != 'passed'
             or data.get('archiveSha256') != digest
             or data.get('source', {}).get('commit') != revision
-            or data.get('version') != '1.0.0-rc.2'
+            or data.get('version') != '1.0.0-rc.3'
             or data.get('isolation') != 'bubblewrap-pid-mount-v1'
             or data.get('buildCount') != 1
             or data.get('extractedSourceRemoved') is not True

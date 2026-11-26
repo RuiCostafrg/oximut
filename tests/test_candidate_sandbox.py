@@ -125,7 +125,7 @@ print('ISOLATED')
                 files, {'source': {'commit': 'a' * 40}}, 'b' * 64)), \
                 mock.patch.object(GATE, 'run', return_value='tool version'):
             with self.assertRaises(FileNotFoundError):
-                GATE.validate(self.base / 'unused', '1.0.0-rc.2', 'a' * 40, 'c' * 40, output)
+                GATE.validate(self.base / 'unused', '1.0.0-rc.3', 'a' * 40, 'c' * 40, output)
         self.assertEqual(json.loads(self.evidence.read_text())['status'], 'failed')
         self.assertEqual(self.harness.read_text(), 'trusted')
 
@@ -234,7 +234,11 @@ else:
             SANDBOX.safe_tree(prefix)
             results = SMOKE.smoke(prefix, reports_dir=self.base / phase,
                                   validator=ROOT / 'scripts/validate-reports.mjs', isolated=True)
-            self.assertEqual(len(results), 12)
+            # fresh and persistent cases pinned to one worker, plus one persistent run on the default.
+            self.assertEqual(len(results), 13)
+            auto = [r for r in results if r['case'] == 'auto']
+            self.assertEqual([r['execution'] for r in auto], ['persistent'])
+            self.assertGreaterEqual(auto[0]['autoWorkers'], 1)
 
     def test_readonly_assets_and_untrusted_output_types(self):
         asset = self.base / 'asset'
