@@ -71,6 +71,9 @@ time, randomness, and other undeclared behavior remain outside outcome-cache
 correctness guarantees. Outcome caching requires the user assertion
 `--cache-inputs-complete`; do not use it when relevant inputs are uncontrolled.
 Concurrent workers require tests with isolated external inputs and outputs.
+`--workers` defaults to `auto` (StrykerJS's rule on the usable CPUs, see
+[M5](m5.md#worker-count)); pass `--workers 1` for a project whose tests share
+ports, files or databases.
 
 For milestone behavior and known limitations, see [M1](m1.md), [M2](m2.md),
 [M3](m3.md), [M4](m4.md), and [M5](m5.md). The schema and command-line outcomes

@@ -105,7 +105,7 @@ class CliContract(unittest.TestCase):
                         config = {"test": {"include": ["sample.test.ts"], "projects": projects}}
                         (root / "vitest.config.ts").write_text("export default " + json.dumps(config))
                         result = self.invoke("--root", root, "--source", "subject.ts",
-                                             "--execution", execution, "--report", "-")
+                                             "--execution", execution, "--workers", "1", "--report", "-")
                         self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
                         report = json.loads(result.stdout)
                         self.assertFalse(report["summary"]["complete"])
@@ -122,7 +122,7 @@ class CliContract(unittest.TestCase):
             adapter.write_text(COVERAGE_ADAPTER)
             result = subprocess.run(
                 [str(BINARY), *map(str, self.fixture_args()), "--adapter", str(adapter),
-                 "--execution", "fresh", "--test-selection", "--report", "-"],
+                 "--execution", "fresh", "--test-selection", "--workers", "1", "--report", "-"],
                 cwd=REPO, text=True, capture_output=True, timeout=30,
                 env={**os.environ, "OXIMUT_BAD_COVERAGE": "valid",
                      "OXIMUT_MUTANT_IDS": json.dumps(ids)},

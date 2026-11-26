@@ -26,7 +26,8 @@ class VerticalSlice(unittest.TestCase):
         root = REPO / "fixtures" / fixture
         return subprocess.run(
             [str(BINARY), "--root", str(root), "--config",
-             str(root / "vitest.config.ts"), "--execution", "fresh", "--no-test-selection", *map(str, args)],
+             str(root / "vitest.config.ts"), "--execution", "fresh", "--no-test-selection",
+             "--workers", "1", *map(str, args)],
             cwd=REPO, text=True, capture_output=True, timeout=120,
         )
 

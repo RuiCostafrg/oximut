@@ -59,7 +59,8 @@ same list to Oximut `--source` and Stryker `mutate`). They do not generate the s
 
 ## Cells and measurement
 
-One cell is one project at one worker count: Stryker `concurrency` = Oximut `--workers`. Each round runs
+One cell is one project at one worker count: Stryker `concurrency` = Oximut `--workers`
+(always passed explicitly: Oximut's default is `auto`, which would not match the cell's count). Each round runs
 plain Vitest (suite time, for diagnosis), Oximut and Stryker sequentially in clean private copies with no
 cache, alternating the order, using the same process-tree measurement as the other campaigns
 (`benchmarks/run.py`: wall, CPU from `wait4` rusage, peak aggregate RSS). A cell fails (and records why)

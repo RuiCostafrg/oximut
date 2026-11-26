@@ -443,6 +443,17 @@ pub fn cache_policy(options: &Options) -> Result<serde_json::Value, String> {
         "policy": "sampled-rss-admission-subreeper-v1"
     }))
 }
+/// Physical memory and the tightest cgroup memory limit above this process,
+/// each `None` when it cannot be read or does not exist. The automatic worker
+/// count reads them; a run that cannot account for memory fails later, in
+/// `Budget::new`.
+pub fn host_memory() -> (Option<u64>, Option<u64>) {
+    let physical = meminfo("MemTotal");
+    let limit = memory_cgroups()
+        .ok()
+        .and_then(|groups| groups.iter().filter_map(|group| group.limit_bytes).min());
+    (physical, limit)
+}
 pub fn cpu_limit() -> usize {
     let mut limit = std::thread::available_parallelism().map_or(1, usize::from);
     for (path, unified) in hierarchy_paths("cpu") {

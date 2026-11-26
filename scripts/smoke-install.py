@@ -114,7 +114,7 @@ def smoke(prefix, *, reports_dir=None, validator=None, isolated=False, require_z
                 command = [
                     str(prefix / "bin" / "oximut"), "--root", str(root),
                     "--config", "vitest.config.mjs", "--source", "subject.js",
-                    "--execution", execution, "--report", str(report), *arguments,
+                    "--execution", execution, "--workers", "1", "--report", str(report), *arguments,
                 ]
                 if isolated:
                     SANDBOX.run(command, cwd=root, writable=[Path(temporary)],

@@ -45,7 +45,7 @@ class CompileCache(unittest.TestCase):
             result = subprocess.run([
                 str(REPO / 'target/debug/oximut'), '--root', str(REPO / 'fixtures/m1'),
                 '--baseline-only', '--execution', 'persistent', '--adapter', str(adapter),
-                '--report', '-', '--timeout-ms', '5000', '--no-cache',
+                '--report', '-', '--timeout-ms', '5000', '--no-cache', '--workers', '1',
             ], env=env, text=True, capture_output=True, timeout=60)
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertEqual(json.loads(result.stdout)['baseline']['outcome'], 'passed')

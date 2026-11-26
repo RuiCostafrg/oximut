@@ -19,7 +19,7 @@ class PreciseSelection(unittest.TestCase):
             command = [
                 str(BINARY), '--root', str(root), '--config', str(root / config),
                 *[arg for item in sources for arg in ('--source', str(root / item))],
-                '--execution', execution,
+                '--execution', execution, '--workers', '1',
                 '--order-seed', '73', '--report', str(report),
             ]
             # Selection is on by default; the full-suite runs opt out explicitly.

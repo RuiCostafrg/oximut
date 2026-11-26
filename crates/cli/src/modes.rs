@@ -8,6 +8,55 @@
 
 use super::{Execution, Isolation};
 
+/// The most simultaneous jobs `--workers` accepts.
+pub const MAX_WORKERS: usize = 1024;
+
+/// Memory an automatically chosen worker is assumed to need before any worker
+/// has been measured: one test fork plus its share of the controller. Runtime
+/// memory admission replaces the assumption with measurements.
+const AUTO_WORKER_MEMORY_MIB: u64 = 512;
+
+const MIB: u64 = 1024 * 1024;
+
+/// What `--workers` asked for.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum Workers {
+    /// No `--workers`, or `--workers auto`: derived from the host.
+    #[default]
+    Auto,
+    Count(usize),
+}
+
+impl Workers {
+    pub fn parse(value: &str) -> Result<Self, String> {
+        if value == "auto" {
+            return Ok(Workers::Auto);
+        }
+        let count: usize = value
+            .parse()
+            .map_err(|_| "--workers requires an integer or auto")?;
+        if !(1..=MAX_WORKERS).contains(&count) {
+            return Err(format!("--workers must be 1..{MAX_WORKERS}"));
+        }
+        Ok(Workers::Count(count))
+    }
+}
+
+/// StrykerJS's default concurrency applied to the CPUs this process may use:
+/// all of them up to four, and one fewer above that so the machine stays
+/// responsive. The result is at least one and at most `MAX_WORKERS`.
+pub fn auto_workers(cpus: usize) -> usize {
+    let cpus = cpus.max(1);
+    (if cpus <= 4 { cpus } else { cpus - 1 }).min(MAX_WORKERS)
+}
+
+/// How many automatically chosen workers the memory budget can hold at their
+/// assumed cost; always at least one.
+fn memory_workers(budget_bytes: u64, reserve_bytes: u64) -> usize {
+    let affordable = budget_bytes.saturating_sub(reserve_bytes) / (AUTO_WORKER_MEMORY_MIB * MIB);
+    affordable.clamp(1, MAX_WORKERS as u64) as usize
+}
+
 /// What a mode flag pair asked for.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub enum Choice {
@@ -43,7 +92,9 @@ pub struct Requested {
     /// `None` when `--execution` was not given.
     pub execution: Option<Execution>,
     pub isolation: Isolation,
-    pub workers: usize,
+    pub workers: Workers,
+    pub memory_budget_mib: Option<u64>,
+    pub memory_reserve_mib: u64,
     pub no_shared_controller: bool,
     pub test_selection: Choice,
     pub zygote: Choice,
@@ -51,13 +102,25 @@ pub struct Requested {
     pub rolling_lanes: Choice,
 }
 
-/// Facts about the host the modes depend on, injected so they can be tested
-/// without the operating system.
-#[derive(Debug)]
-pub struct Host {
+/// Facts about the machine, injected so the modes can be tested without it.
+#[derive(Clone, Debug)]
+pub struct Platform {
     /// The platform supports the zygote (Linux with glibc is checked later by
     /// the addon itself).
     pub zygote_platform: bool,
+    /// CPUs this process may use: the scheduler's affinity mask and any cgroup
+    /// CPU quota, not the host's core count.
+    pub cpu_limit: usize,
+    /// Physical memory, when it can be read.
+    pub physical_memory_bytes: Option<u64>,
+    /// The tightest cgroup memory limit above this process, if any.
+    pub cgroup_memory_limit_bytes: Option<u64>,
+}
+
+/// Facts about the host the modes depend on.
+#[derive(Debug)]
+pub struct Host {
+    pub platform: Platform,
     /// Whether the adapter is the reference persistent adapter, or why that
     /// could not be determined.
     pub reference_adapter: Result<bool, String>,
@@ -67,6 +130,10 @@ pub struct Host {
 #[derive(Debug, PartialEq, Eq)]
 pub struct Modes {
     pub execution: Execution,
+    /// The maximum simultaneous jobs; memory admission may lower it at run time.
+    pub workers: usize,
+    /// How the count was chosen: `explicit`, or `auto: N CPUs` with any memory limit.
+    pub workers_source: String,
     pub test_selection: bool,
     pub shared_controller: bool,
     pub zygote: bool,
@@ -112,7 +179,43 @@ fn auto_zygote(
     Ok(())
 }
 
+/// The worker count for a request: an explicit count as given, otherwise the
+/// automatic rule on the CPU limit, held to what the memory budget can carry.
+fn resolve_workers(requested: &Requested, platform: &Platform) -> (usize, String) {
+    match requested.workers {
+        Workers::Count(count) => (count, "explicit".into()),
+        Workers::Auto => {
+            let by_cpu = auto_workers(platform.cpu_limit);
+            let configured = requested
+                .memory_budget_mib
+                .map(|mib| mib.saturating_mul(MIB));
+            let budget = configured
+                .or(platform.physical_memory_bytes)
+                .into_iter()
+                .chain(platform.cgroup_memory_limit_bytes)
+                .min();
+            let cpus = platform.cpu_limit.max(1);
+            match budget {
+                Some(budget) => {
+                    let by_memory =
+                        memory_workers(budget, requested.memory_reserve_mib.saturating_mul(MIB));
+                    if by_memory < by_cpu {
+                        let mib = budget / MIB;
+                        return (
+                            by_memory,
+                            format!("auto: {cpus} CPUs, limited by {mib} MiB of memory"),
+                        );
+                    }
+                    (by_cpu, format!("auto: {cpus} CPUs"))
+                }
+                None => (by_cpu, format!("auto: {cpus} CPUs")),
+            }
+        }
+    }
+}
+
 pub fn resolve(requested: &Requested, host: &Host) -> Result<Modes, String> {
+    let (workers, workers_source) = resolve_workers(requested, &host.platform);
     let reference_adapter = host
         .reference_adapter
         .as_ref()
@@ -138,7 +241,7 @@ pub fn resolve(requested: &Requested, host: &Host) -> Result<Modes, String> {
         }
         Choice::Off => (false, Some("--no-zygote".to_string())),
         Choice::Auto => match auto_zygote(
-            host.zygote_platform,
+            host.platform.zygote_platform,
             execution,
             requested.isolation,
             reference_adapter,
@@ -153,7 +256,7 @@ pub fn resolve(requested: &Requested, host: &Host) -> Result<Modes, String> {
     // Default for parallel persistent runs; unsupported projects fall back at run time.
     let shared_controller = !requested.no_shared_controller
         && execution == Execution::Persistent
-        && requested.workers >= 2
+        && workers >= 2
         && reference_adapter;
 
     let mut precollect_off_reason = None;
@@ -220,6 +323,7 @@ pub fn resolve(requested: &Requested, host: &Host) -> Result<Modes, String> {
             state(test_selection),
             requested.test_selection.source("default")
         ),
+        format!("workers={workers} ({workers_source})"),
         match (&zygote_off_reason, requested.zygote) {
             (Some(reason), Choice::Auto) => format!("zygote=off (auto: {reason})"),
             _ => format!(
@@ -250,6 +354,8 @@ pub fn resolve(requested: &Requested, host: &Host) -> Result<Modes, String> {
 
     Ok(Modes {
         execution,
+        workers,
+        workers_source,
         test_selection,
         shared_controller,
         zygote,
@@ -268,7 +374,9 @@ mod tests {
         Requested {
             execution: None,
             isolation: Isolation::FreshProcess,
-            workers: 4,
+            workers: Workers::Count(4),
+            memory_budget_mib: None,
+            memory_reserve_mib: 64,
             no_shared_controller: false,
             test_selection: Choice::Auto,
             zygote: Choice::Auto,
@@ -277,10 +385,33 @@ mod tests {
         }
     }
 
-    fn linux() -> Host {
+    fn host(zygote_platform: bool, reference_adapter: Result<bool, String>) -> Host {
         Host {
-            zygote_platform: true,
-            reference_adapter: Ok(true),
+            platform: Platform {
+                zygote_platform,
+                cpu_limit: 8,
+                physical_memory_bytes: Some(64 * 1024 * MIB),
+                cgroup_memory_limit_bytes: None,
+            },
+            reference_adapter,
+        }
+    }
+
+    fn linux() -> Host {
+        host(true, Ok(true))
+    }
+
+    fn platform(cpu_limit: usize, memory_mib: u64) -> Host {
+        let mut host = linux();
+        host.platform.cpu_limit = cpu_limit;
+        host.platform.physical_memory_bytes = Some(memory_mib * MIB);
+        host
+    }
+
+    fn auto() -> Requested {
+        Requested {
+            workers: Workers::Auto,
+            ..requested()
         }
     }
 
@@ -293,7 +424,7 @@ mod tests {
         assert!(modes.zygote && modes.zygote_precollect && modes.rolling_lanes);
         assert_eq!(
             modes.summary,
-            "modes: execution=persistent (default), test-selection=on (default), zygote=on (auto), zygote-precollect=on (auto), rolling-lanes=on (auto)"
+            "modes: execution=persistent (default), test-selection=on (default), workers=4 (explicit), zygote=on (auto), zygote-precollect=on (auto), rolling-lanes=on (auto)"
         );
     }
 
@@ -301,7 +432,7 @@ mod tests {
     fn missing_prerequisites_skip_automatic_modes_without_error() {
         // One worker has no shared controller: neither rolling lanes nor precollect.
         let mut one = requested();
-        one.workers = 1;
+        one.workers = Workers::Count(1);
         let modes = resolve(&one, &linux()).unwrap();
         assert!(modes.zygote && modes.test_selection);
         assert!(!modes.zygote_precollect && !modes.rolling_lanes);
@@ -316,10 +447,7 @@ mod tests {
                 .contains("rolling-lanes=off (auto: no shared controller)")
         );
         // Off Linux the zygote and, with it, precollect stay off; rolling lanes need no zygote.
-        let other = Host {
-            zygote_platform: false,
-            reference_adapter: Ok(true),
-        };
+        let other = host(false, Ok(true));
         let modes = resolve(&requested(), &other).unwrap();
         assert!(!modes.zygote && !modes.zygote_precollect && modes.rolling_lanes);
         assert_eq!(modes.zygote_off_reason.as_deref(), Some("not Linux"));
@@ -330,10 +458,7 @@ mod tests {
                 .contains("zygote-precollect=off (auto: zygote off: not Linux)")
         );
         // A custom adapter has no native zygote or shared controller.
-        let custom = Host {
-            zygote_platform: true,
-            reference_adapter: Ok(false),
-        };
+        let custom = host(true, Ok(false));
         let modes = resolve(&requested(), &custom).unwrap();
         assert!(!modes.zygote && !modes.shared_controller);
         assert!(!modes.zygote_precollect && !modes.rolling_lanes);
@@ -414,10 +539,7 @@ mod tests {
         assert!(
             error(
                 &|r| r.zygote_precollect = Choice::On,
-                &Host {
-                    zygote_platform: false,
-                    reference_adapter: Ok(true)
-                }
+                &host(false, Ok(true))
             )
             .contains("--zygote-precollect requires the zygote, which is off (not Linux)")
         );
@@ -443,7 +565,7 @@ mod tests {
         );
         for edit in [
             (&|r: &mut Requested| {
-                r.workers = 1;
+                r.workers = Workers::Count(1);
                 r.rolling_lanes = Choice::On;
             }) as &dyn Fn(&mut Requested),
             &|r| {
@@ -483,10 +605,7 @@ mod tests {
                     r.execution = Some(Execution::Persistent);
                     r.zygote = Choice::On;
                 },
-                &Host {
-                    zygote_platform: true,
-                    reference_adapter: Ok(false)
-                }
+                &host(true, Ok(false))
             )
             .contains("--zygote requires the reference persistent adapter")
         );
@@ -496,10 +615,7 @@ mod tests {
                     r.execution = Some(Execution::Persistent);
                     r.zygote = Choice::On;
                 },
-                &Host {
-                    zygote_platform: true,
-                    reference_adapter: Err("adapter: missing".into())
-                }
+                &host(true, Err("adapter: missing".into()))
             ),
             "adapter: missing"
         );
@@ -507,10 +623,7 @@ mod tests {
 
     #[test]
     fn explicit_on_overrides_a_platform_the_auto_mode_would_skip() {
-        let other = Host {
-            zygote_platform: false,
-            reference_adapter: Ok(true),
-        };
+        let other = host(false, Ok(true));
         let mut request = requested();
         request.zygote = Choice::On;
         let modes = resolve(&request, &other).unwrap();
@@ -527,6 +640,105 @@ mod tests {
         assert_eq!(
             choice.request("rolling-lanes", false).unwrap_err(),
             "--rolling-lanes and --no-rolling-lanes cannot be combined"
+        );
+    }
+
+    #[test]
+    fn the_automatic_count_is_strykers_rule() {
+        // Up to four CPUs every CPU is used; above four, one is left free.
+        for (cpus, expected) in [
+            (0, 1),
+            (1, 1),
+            (2, 2),
+            (3, 3),
+            (4, 4),
+            (5, 4),
+            (8, 7),
+            (16, 15),
+            (1025, 1024),
+            (4096, 1024),
+        ] {
+            assert_eq!(auto_workers(cpus), expected, "{cpus} CPUs");
+        }
+    }
+
+    #[test]
+    fn the_default_resolves_to_auto_on_the_effective_cpu_limit() {
+        for (cpus, expected) in [(1, 1), (2, 2), (4, 4), (5, 4), (8, 7), (16, 15)] {
+            let modes = resolve(&auto(), &platform(cpus, 64 * 1024)).unwrap();
+            assert_eq!(modes.workers, expected, "{cpus} CPUs");
+            assert!(
+                modes
+                    .summary
+                    .contains(&format!("workers={expected} (auto: {cpus} CPUs)")),
+                "{}",
+                modes.summary
+            );
+        }
+        // The fast modes need two workers: a one-CPU host (a cgroup quota of
+        // one core, say) quietly keeps its automatic modes off.
+        let one = resolve(&auto(), &platform(1, 64 * 1024)).unwrap();
+        assert!(!one.shared_controller && !one.rolling_lanes && !one.zygote_precollect);
+        let two = resolve(&auto(), &platform(2, 64 * 1024)).unwrap();
+        assert!(two.shared_controller && two.rolling_lanes && two.zygote_precollect);
+        assert_eq!(Workers::default(), Workers::Auto);
+    }
+
+    #[test]
+    fn an_explicit_count_ignores_the_host() {
+        let mut request = requested();
+        request.workers = Workers::Count(12);
+        let modes = resolve(&request, &platform(2, 1024)).unwrap();
+        assert_eq!(modes.workers, 12);
+        assert!(modes.summary.contains("workers=12 (explicit)"));
+    }
+
+    #[test]
+    fn automatic_workers_do_not_oversubscribe_a_small_memory_budget() {
+        // 2 vCPU / 4 GiB: two workers fit.
+        let modes = resolve(&auto(), &platform(2, 4096)).unwrap();
+        assert_eq!(modes.workers, 2);
+        // 16 CPUs on 2 GiB: 2048 - 64 MiB reserve holds three 512 MiB workers.
+        let modes = resolve(&auto(), &platform(16, 2048)).unwrap();
+        assert_eq!(modes.workers, 3);
+        assert!(
+            modes
+                .summary
+                .contains("workers=3 (auto: 16 CPUs, limited by 2048 MiB of memory)")
+        );
+        // A cgroup limit below physical memory counts; so does --memory-budget-mib.
+        let mut limited = platform(16, 64 * 1024);
+        limited.platform.cgroup_memory_limit_bytes = Some(1024 * MIB);
+        assert_eq!(resolve(&auto(), &limited).unwrap().workers, 1);
+        let mut budget = auto();
+        budget.memory_budget_mib = Some(2048);
+        assert_eq!(
+            resolve(&budget, &platform(16, 64 * 1024)).unwrap().workers,
+            3
+        );
+        // Never below one worker, however little memory there is.
+        assert_eq!(resolve(&auto(), &platform(8, 256)).unwrap().workers, 1);
+        // An unreadable memory budget leaves the CPU rule alone; admission still runs.
+        let mut unknown = platform(8, 0);
+        unknown.platform.physical_memory_bytes = None;
+        assert_eq!(resolve(&auto(), &unknown).unwrap().workers, 7);
+        // An explicit count is never lowered here: admission does that at run time.
+        let mut explicit = requested();
+        explicit.workers = Workers::Count(8);
+        assert_eq!(resolve(&explicit, &platform(16, 1024)).unwrap().workers, 8);
+    }
+
+    #[test]
+    fn workers_parse_as_auto_or_a_bounded_integer() {
+        assert_eq!(Workers::parse("auto"), Ok(Workers::Auto));
+        assert_eq!(Workers::parse("1"), Ok(Workers::Count(1)));
+        assert_eq!(Workers::parse("1024"), Ok(Workers::Count(1024)));
+        for bad in ["0", "1025", "-1", "", "Auto", "2.5", "two"] {
+            assert!(Workers::parse(bad).is_err(), "{bad:?}");
+        }
+        assert_eq!(
+            Workers::parse("1025").unwrap_err(),
+            "--workers must be 1..1024"
         );
     }
 }

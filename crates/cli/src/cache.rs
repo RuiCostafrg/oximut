@@ -1080,6 +1080,7 @@ mod tests {
             cache_inputs: vec![],
             cache_env: vec![],
             workers: 1,
+            workers_source: String::new(),
             shared_controller: false,
             zygote: false,
             zygote_off_reason: None,
@@ -1291,6 +1292,28 @@ mod tests {
         );
         assert_ne!(missing.finalize(), present.finalize());
     }
+    /// The worker count can change outcomes (tests that share external state
+    /// fail under concurrency), so the resolved count is part of the identity.
+    /// How it was chosen is not: `--workers auto` on a machine that resolves to
+    /// N shares outcomes with `--workers N`.
+    #[test]
+    fn fingerprint_follows_the_resolved_worker_count_not_how_it_was_chosen() {
+        let (_root, mut options, runtime) = project();
+        options.workers = 4;
+        options.workers_source = "explicit".into();
+        let explicit = fingerprint_with_runtime(&options, "tool", &runtime).unwrap();
+        options.workers_source = "auto: 5 CPUs".into();
+        assert_eq!(
+            explicit,
+            fingerprint_with_runtime(&options, "tool", &runtime).unwrap()
+        );
+        options.workers = 3;
+        assert_ne!(
+            explicit,
+            fingerprint_with_runtime(&options, "tool", &runtime).unwrap()
+        );
+    }
+
     #[test]
     fn project_fingerprint_tracks_settings_tool_operators_and_runtime() {
         let (root, mut options, runtime) = project();

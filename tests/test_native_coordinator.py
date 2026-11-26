@@ -240,7 +240,9 @@ def alive(pid):
 
 def pinned_modes(extra):
     """Selection and rolling lanes are on by default; these tests name the modes they cover."""
+    # --workers defaults to auto; these tests name the concurrency they cover.
     return ['--no-test-selection',
+            *([] if '--workers' in extra else ['--workers', '1']),
             *([] if '--rolling-lanes' in extra else ['--no-rolling-lanes'])]
 
 class NativeCoordinator(unittest.TestCase):
@@ -256,7 +258,7 @@ class NativeCoordinator(unittest.TestCase):
             args = [str(REPO / 'target/debug/oximut'), '--root', str(ROOT),
                     '--source', str(ROOT / 'src/subject.ts'), '--baseline-only',
                     '--execution', 'persistent', '--isolation', 'fresh-thread',
-                    '--adapter', str(adapter), '--report', '-']
+                    '--workers', '1', '--adapter', str(adapter), '--report', '-']
             rejected = subprocess.run(args, cwd=REPO, capture_output=True, text=True, timeout=60)
             self.assertEqual(rejected.returncode, 2, rejected.stdout + rejected.stderr)
             self.assertIn('requires the reference persistent adapter', rejected.stderr)
@@ -584,6 +586,39 @@ class NativeCoordinator(unittest.TestCase):
         if report['resources']['cpuLimitWorkers'] < 2:
             self.skipTest('spare warming requires at least two usable CPUs')
         self.assertGreaterEqual(report['resources']['effectiveWorkers'], 2)
+
+    def test_default_workers_resolve_to_the_automatic_rule(self):
+        """No --workers and --workers auto both resolve once, by StrykerJS's rule on the CPU limit."""
+        for flags in ((), ('--workers', 'auto')):
+            with self.subTest(flags=flags), tempfile.TemporaryDirectory(prefix='oximut-native-') as directory:
+                adapter = Path(directory) / 'm2-runner.mjs'
+                adapter.write_text('throw new Error("the native coordinator must not run this");\n')
+                (Path(directory) / 'm2-worker.ts').write_text(CONTROLLER)
+                log = Path(directory) / 'log.jsonl'
+                result = subprocess.run([
+                    str(REPO / 'target/debug/oximut'), '--root', str(ROOT),
+                    '--source', str(ROOT / 'src/subject.ts'), '--baseline-only',
+                    '--execution', 'persistent', '--adapter', str(adapter), '--report', '-',
+                    '--timeout-ms', '5000', '--no-cache', '--no-test-selection', *flags,
+                ], env={**os.environ, 'OXIMUT_FAKE_MODE': 'normal', 'OXIMUT_FAKE_LOG': str(log)},
+                    text=True, capture_output=True, timeout=120)
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                resources = json.loads(result.stdout)['resources']
+                cpus = resources['cpuLimitWorkers']
+                rule = cpus if cpus <= 4 else cpus - 1
+                # Memory can hold the count below the CPU rule on a small host; nothing raises it.
+                resolved = resources['configuredWorkers']
+                self.assertTrue(1 <= resolved <= rule, resources)
+                self.assertEqual(resources['effectiveWorkers'], min(resolved, cpus), resources)
+                self.assertIn(f'workers={resolved} (auto: {cpus} CPUs', result.stderr)
+                self.assertIn(f'workers={resolved} (auto: {cpus} CPUs', ' '.join(json.loads(result.stdout)['diagnostics']))
+
+    def test_explicit_workers_override_the_automatic_count(self):
+        result, report, _ = self.run_cli('normal', extra_args=('--workers', '1'))
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertEqual(report['resources']['configuredWorkers'], 1)
+        self.assertIn('workers=1 (explicit)', result.stderr)
+        self.assertIn('workers=1 (explicit)', ' '.join(report['diagnostics']))
 
     def test_native_lane_encoding_negotiates_with_the_controller(self):
         self.require_two_workers()
