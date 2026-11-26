@@ -186,13 +186,33 @@ def check_engagement(mode, report, counters):
     return problems
 
 
-def check_run(mode, report, exit_code):
-    """A run is comparable only when it finished: survivors (exit 1) are fine, incomplete (2) is not."""
+def only_approved_timeouts(summary, timeouts, approved):
+    """True when timeouts are the run's only incompleteness and every one is pre-approved.
+
+    A mutant that never terminates (a loop counter turned the wrong way) exhausts its
+    deadline in every mode, and Oximut never counts a timeout as a kill, so such a run is
+    incomplete by design. The corpus may list those mutants, after someone checked that
+    each really does not terminate; any other timeout, or any other cause of
+    incompleteness, still fails the run.
+    """
+    blocking = sum(summary.get(key, 0) for key in
+                   ('invalid', 'infrastructureError', 'resourceExhausted', 'skipped'))
+    return bool(timeouts) and summary.get('timeout') == len(timeouts) and blocking == 0 \
+        and timeouts <= approved
+
+
+def check_run(mode, report, exit_code, approved_timeouts=frozenset(), timeouts=frozenset()):
+    """A run is comparable only when it finished: survivors (exit 1) are fine, incomplete (2) is not.
+
+    `timeouts` are the keys (see refinement_key) of the mutants this run timed out;
+    runs whose only incompleteness is approved timeouts (see only_approved_timeouts) are comparable.
+    """
     problems = []
     summary = report.get('summary', {})
-    if exit_code not in (0, 1):
+    tolerated = only_approved_timeouts(summary, timeouts, approved_timeouts)
+    if exit_code not in (0, 1) and not (tolerated and exit_code == 2):
         problems.append(f'{mode}: exit code {exit_code}')
-    if summary.get('complete') is not True:
+    if summary.get('complete') is not True and not tolerated:
         problems.append(f'{mode}: run is not complete: {summary}')
     if not report.get('mutants'):
         problems.append(f'{mode}: report has no mutants')
@@ -276,19 +296,25 @@ def run_mode(binary, project, project_dir, mode, mode_args, workers, timeout, di
 def evaluate_project(binary, project, project_dir, modes, workers, timeout, directory):
     """Run `modes` for one project; returns the project's result record."""
     records, runs, problems, differences = {}, {}, [], {}
+    approved_timeouts = frozenset(
+        (r['file'], r['line'], r['original'], r['replacement']) for r in project.get('expectedTimeouts', []))
     for mode, mode_args, _, _ in MODES:
         if mode not in modes:
             continue
         run = run_mode(binary, project, project_dir, mode, mode_args, workers, timeout, directory)
         runs[mode] = run
-        mode_problems = check_run(mode, run['report'], run['exit_code']) + \
+        records[mode] = mutant_records(run['report'], project_dir)
+        timed_out = {refinement_key(record) for record in records[mode].values()
+                     if record['outcome'] == 'timeout'}
+        mode_problems = check_run(mode, run['report'], run['exit_code'], approved_timeouts, timed_out) + \
             check_engagement(mode, run['report'], run['counters'])
+        mode_problems += [f'{mode}: expected timeout {key} was not observed; update corpus.json'
+                          for key in sorted(approved_timeouts - timed_out)]
         if mode_problems:
             problems.extend(mode_problems)
             print(f"::group::{project['name']} / {mode} output tail", flush=True)
             print(run['output_tail'], flush=True)
             print('::endgroup::', flush=True)
-        records[mode] = mutant_records(run['report'], project_dir)
     allowed = {(r['file'], r['line'], r['original'], r['replacement']) for r in project.get('expectedRefinements', [])}
     explained = {}
     if REFERENCE in records:

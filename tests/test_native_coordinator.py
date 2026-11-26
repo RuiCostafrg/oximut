@@ -242,6 +242,7 @@ def pinned_modes(extra):
     """Selection and rolling lanes are on by default; these tests name the modes they cover."""
     # --workers defaults to auto; these tests name the concurrency they cover.
     return ['--no-test-selection',
+            *([] if '--mutators' in extra else ['--mutators', 'arithmetic,boolean-literal,comparison-boundary']),
             *([] if '--workers' in extra else ['--workers', '1']),
             *([] if '--rolling-lanes' in extra else ['--no-rolling-lanes'])]
 
@@ -465,11 +466,16 @@ class NativeCoordinator(unittest.TestCase):
     def test_zygote_watchdog_reports_a_timeout_that_the_rerun_repeats(self):
         result, report, events = self.run_cli('zygote-always-timeout', full=True,
                                               extra_args=('--zygote',))
-        self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
-        self.assertFalse(report['summary']['complete'])
+        # Timeouts are detections, as in StrykerJS: complete, scored, exit 0.
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertTrue(report['summary']['complete'])
         mutants = report['mutants']
         self.assertGreaterEqual(len(mutants), 2)
         self.assertEqual({m['outcome'] for m in mutants}, {'timeout'})
+        self.assertEqual(report['summary']['timeout'], len(mutants))
+        self.assertEqual(report['summary']['detected'], len(mutants))
+        self.assertEqual(report['summary']['killed'], 0)
+        self.assertEqual(report['summary']['score'], 100.0)
         runs = self.mutant_runs(events)
         for mutant in mutants:
             # Exactly one rerun, never more.
@@ -483,7 +489,7 @@ class NativeCoordinator(unittest.TestCase):
         for mode in ('zygote-always-timeout-busy', 'zygote-always-timeout-test'):
             with self.subTest(mode=mode):
                 result, report, events = self.run_cli(mode, full=True, extra_args=('--zygote',))
-                self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
                 mutants = report['mutants']
                 self.assertGreaterEqual(len(mutants), 2)
                 self.assertEqual({m['outcome'] for m in mutants}, {'timeout'})
@@ -500,7 +506,7 @@ class NativeCoordinator(unittest.TestCase):
     def test_a_timeout_from_a_stalled_worker_is_still_rerun(self):
         result, report, events = self.run_cli('zygote-always-timeout-idle', full=True,
                                               extra_args=('--zygote',))
-        self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         mutants = report['mutants']
         for mutant in mutants:
             self.assertEqual(self.mutant_runs(events)[mutant['id']], [None, True], mutant['id'])

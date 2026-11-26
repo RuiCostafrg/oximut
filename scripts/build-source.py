@@ -81,6 +81,10 @@ def validate_metadata(files, version):
         # Candidates from before baselines reported evidence have no such module.
         if source and "./baseline-evidence.ts" in source[1].decode():
             required.add("packages/vitest-adapter/baseline-evidence.ts")
+    setup = files.get("packages/vitest-adapter/m3-setup.ts")
+    # Candidates from before the probe's bookkeeping moved out of the setup file have no such module.
+    if setup and "./probe-recorder.ts" in setup[1].decode():
+        required.add("packages/vitest-adapter/probe-recorder.ts")
     missing = required - files.keys()
     if missing:
         raise ValueError(f"missing required source files: {sorted(missing)}")

@@ -15,7 +15,7 @@ use std::{
 };
 
 const SCHEMA: u32 = 1;
-const OPERATORS: &str = "boolean-literal,comparison-boundary,arithmetic;oxc=0.152.0";
+const OPERATORS: &str = "boolean-literal,comparison-boundary,arithmetic,equality-operator,logical-operator,unary-operator,update-operator,assignment-operator;static-grouping=2;active-global=1;oxc=0.152.0";
 type Probe = Option<Result<Mutation, String>>;
 type Instrumented = (oximut_instrument::Generated, Probe);
 
@@ -214,18 +214,26 @@ fn instrument(
 ) -> Result<Instrumented, String> {
     match (options.execution, options.test_selection) {
         (Execution::Persistent, true) => {
-            let (generated, probe) =
-                oximut_instrument::generate_switched_probed(identity, path, source)?;
+            let (generated, probe) = oximut_instrument::generate_switched_probed(
+                identity,
+                path,
+                source,
+                &options.mutators,
+            )?;
             Ok((generated, Some(probe)))
         }
         (execution, selection) => Ok((
             match execution {
-                Execution::Fresh => oximut_instrument::generate(identity, path, source)?,
+                Execution::Fresh => {
+                    oximut_instrument::generate(identity, path, source, &options.mutators)?
+                }
                 Execution::Persistent => {
-                    oximut_instrument::generate_switched(identity, path, source)?
+                    oximut_instrument::generate_switched(identity, path, source, &options.mutators)?
                 }
             },
-            selection.then(|| oximut_instrument::generate_probes(identity, path, source)),
+            selection.then(|| {
+                oximut_instrument::generate_probes(identity, path, source, &options.mutators)
+            }),
         )),
     }
 }
@@ -317,6 +325,7 @@ impl Cache {
                 source,
                 options.execution == Execution::Persistent,
                 options.test_selection,
+                &options.mutators,
             ))
             .map_err(|e| e.to_string())?,
         );
@@ -578,6 +587,11 @@ impl Cache {
         }
         if !complete || options.baseline_only {
             self.report.persistence = "incomplete-or-baseline-only-run-not-persisted".into();
+            return None;
+        }
+        // A timeout reflects this machine's speed and load, so it is never replayed.
+        if results.iter().any(|r| r.outcome == Outcome::Timeout) {
+            self.report.persistence = "run-with-timeouts-not-persisted".into();
             return None;
         }
         let key = self.report.fingerprint.as_ref()?;
@@ -1463,12 +1477,47 @@ mod tests {
         assert_eq!(cache.report.instrumentation_hits, 1);
     }
     #[test]
+    fn instrumentation_follows_the_family_selection_and_the_operator_list() {
+        for family in oximut_core::MUTATOR_FAMILIES {
+            assert!(
+                OPERATORS.contains(family),
+                "{family} would not invalidate caches"
+            );
+        }
+        let root = tempfile::tempdir().unwrap();
+        let path = root.path().join("source.ts");
+        let source = "export const value = (a: number) => !a && a < 1 + 2;";
+        fs::write(&path, source).unwrap();
+        let mut cache = cache(root.path());
+        let mut options = options(root.path());
+        let count = |cache: &mut Cache, options: &Options| {
+            cache
+                .artifact(options, "source.ts", &path, source)
+                .unwrap()
+                .0
+                .mutants
+                .len()
+        };
+        let everything = count(&mut cache, &options);
+        options.mutators.insert("arithmetic".into());
+        let arithmetic = count(&mut cache, &options);
+        assert_eq!(arithmetic, 1);
+        assert!(everything > arithmetic);
+        // Each selection is its own cache entry, and both are reused.
+        assert_eq!(cache.report.instrumentation_misses, 2);
+        assert_eq!(count(&mut cache, &options), arithmetic);
+        options.mutators.clear();
+        assert_eq!(count(&mut cache, &options), everything);
+        assert_eq!(cache.report.instrumentation_hits, 2);
+    }
+    #[test]
     fn outcomes_require_integrity_inventory_and_valid_success_evidence() {
         let (root, _, _) = project();
         let generated = oximut_instrument::generate(
             "source.ts",
             &root.path().join("source.ts"),
             "export const value = true;",
+            &Default::default(),
         )
         .unwrap();
         let mutant = &generated.mutants[0];
@@ -1569,6 +1618,47 @@ mod tests {
                 .is_none()
         );
         assert_eq!(read::<Outcomes>(&path).unwrap().run_id, "run");
+    }
+    #[test]
+    fn a_run_with_a_timeout_is_complete_but_never_persisted() {
+        let (root, options, _) = project();
+        let mut cache = cache(root.path());
+        let position = |column| oximut_core::Position {
+            offset: column,
+            line: 1,
+            column,
+        };
+        let tests = Tests::default();
+        let result = MutantResult {
+            id: "m".into(),
+            file: "a.ts".into(),
+            operator: "op".into(),
+            original: "a".into(),
+            replacement: "b".into(),
+            location: oximut_core::Location {
+                start: position(0),
+                end: position(1),
+            },
+            outcome: Outcome::Timeout,
+            tests: Tests::default(),
+            errors: vec![],
+            selection: None,
+            deadline_ms: Some(1000),
+            provenance: Provenance {
+                source: "executed".into(),
+                reason: "test".into(),
+                fingerprint: None,
+                original_run_id: None,
+            },
+        };
+        assert!(
+            cache
+                .stage(&options, true, true, "run", &tests, &[result])
+                .is_none()
+        );
+        assert_eq!(cache.report.persistence, "run-with-timeouts-not-persisted");
+        let path = root.path().join(".oximut/cache/outcomes/fingerprint.json");
+        assert!(!path.exists());
     }
     #[cfg(unix)]
     #[test]

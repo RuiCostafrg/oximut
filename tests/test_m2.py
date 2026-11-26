@@ -6,7 +6,7 @@ import subprocess
 import tempfile
 import unittest
 
-from test_m1 import BINARY, REPO, sources
+from test_m1 import BINARY, LEGACY_FAMILIES, REPO, sources
 
 
 class PersistentEquivalence(unittest.TestCase):
@@ -19,7 +19,8 @@ class PersistentEquivalence(unittest.TestCase):
                 '--source', str(root / 'src' / source), '--execution', mode,
                 '--order-seed', str(seed), '--report', str(report), '--workers', '1',
                 # Selection is on by default; these tests name the modes they compare.
-                *([] if '--test-selection' in extra else ['--no-test-selection']), *extra,
+                *([] if '--test-selection' in extra else ['--no-test-selection']),
+                *([] if '--mutators' in extra else LEGACY_FAMILIES), *extra,
             ], cwd=REPO, text=True, capture_output=True, timeout=180)
             self.assertIn(result.returncode, (0, 1), result.stdout + result.stderr)
             payload = json.loads(report.read_text())

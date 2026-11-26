@@ -17,6 +17,8 @@
       "test/m1.test.mjs",
       "test/m2.test.mjs",
       "test/m3.test.mjs",
+      "test/m3-selection.test.mjs",
+      "test/probe-recorder.test.mjs",
       "test/contract.test.mjs",
       "test/compile-cache.test.mjs"
     ]

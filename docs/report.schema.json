@@ -30,7 +30,7 @@
       "required": ["selection", "families"],
       "properties": {
         "selection": { "enum": ["all", "subset"] },
-        "families": { "type": "array", "items": { "enum": ["arithmetic", "boolean-literal", "comparison-boundary"] } }
+        "families": { "type": "array", "items": { "enum": ["arithmetic", "assignment-operator", "boolean-literal", "comparison-boundary", "equality-operator", "logical-operator", "unary-operator", "update-operator"] } }
       }
     },
     "resources": {
@@ -147,7 +147,16 @@
       "properties": {
         "mutantId": { "type": "string" },
         "tests": { "type": "array", "items": { "type": "string" } },
-        "outsideTest": { "type": "boolean" }
+        "outsideTest": { "type": "boolean" },
+        "testRanges": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": { "type": "integer", "minimum": 0 },
+            "minItems": 2,
+            "maxItems": 2
+          }
+        }
       }
     },
     "coverage": {
@@ -258,6 +267,7 @@
         "infrastructureError": { "type": "integer", "minimum": 0 },
         "resourceExhausted": { "type": "integer", "minimum": 0 },
         "skipped": { "type": "integer", "minimum": 0 },
+        "detected": { "type": "integer", "minimum": 0, "description": "killed + timeout. Optional within schema version 1: reports from earlier releases omit it." },
         "scoreDenominator": { "type": "integer", "minimum": 0 },
         "score": { "type": ["number", "null"], "minimum": 0, "maximum": 100 },
         "complete": { "type": "boolean" }

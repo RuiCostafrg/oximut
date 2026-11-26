@@ -25,7 +25,7 @@ class ScaledDeadlines(unittest.TestCase):
             result = subprocess.run(
                 [str(BINARY), '--root', str(ROOT), '--config', str(ROOT / 'vitest.config.ts'),
                  '--source', 'src/subject.ts', '--no-cache', '--workers', '1',
-                 '--report', str(report), *flags],
+                 '--report', str(report), '--mutators', 'arithmetic,boolean-literal,comparison-boundary', *flags],
                 cwd=REPO, text=True, capture_output=True, timeout=240)
             self.assertTrue(report.exists(), result.stdout + result.stderr)
             return json.loads(report.read_text()), result
@@ -36,7 +36,11 @@ class ScaledDeadlines(unittest.TestCase):
         self.assertGreaterEqual(len(report['mutants']), 2)
         self.assertEqual({m['outcome'] for m in report['mutants']}, {'timeout'})
         self.assertEqual({m['deadlineMs'] for m in report['mutants']}, {2000})
-        self.assertEqual(result.returncode, 2)
+        # A timeout is a detection (StrykerJS semantics): the run is complete and exits 0.
+        self.assertTrue(report['summary']['complete'])
+        self.assertEqual(report['summary']['detected'], len(report['mutants']))
+        self.assertEqual(report['summary']['score'], 100.0)
+        self.assertEqual(result.returncode, 0)
 
     def test_the_derived_deadline_follows_the_time_the_mutants_tests_take(self):
         # A small constant keeps the check quick; 1.5 times the file's 2.5 s is the rest.

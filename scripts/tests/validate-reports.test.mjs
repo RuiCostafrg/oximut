@@ -26,6 +26,7 @@ test('allows an incomplete invocation report', async t => {
   report.summary.total = 0;
   report.summary.killed = 0;
   report.summary.survived = 0;
+  report.summary.detected = 0;
   report.summary.scoreDenominator = 0;
   report.summary.score = null;
   const file = join(directory, 'incomplete-report.json');
@@ -111,7 +112,7 @@ test('checks that sources and mutators agree with the mutant list', async () => 
   const { validateReport } = await import(validator.href);
   const hash = 'a'.repeat(64);
   const bound = (sources, mutators) => ({ ...structuredClone(sample), sources, mutators });
-  const all = { selection: 'all', families: ['arithmetic', 'boolean-literal', 'comparison-boundary'] };
+  const all = { selection: 'all', families: ['arithmetic', 'assignment-operator', 'boolean-literal', 'comparison-boundary', 'equality-operator', 'logical-operator', 'unary-operator', 'update-operator'] };
   const subject = '/fixture/src/subject.ts';
 
   // A file that kept no mutants is still listed, with a zero count.
@@ -131,4 +132,15 @@ test('checks that sources and mutators agree with the mutant list', async () => 
   ]) {
     assert.throws(() => validateReport(bound(sources, mutators), 'case'), message);
   }
+});
+
+test('accepts a schema version 1 report from before summary.detected existed', async t => {
+  const directory = await mkdtemp(join(tmpdir(), 'oximut-legacy-report-'));
+  t.after(() => rm(directory, { recursive: true, force: true }));
+  const legacy = structuredClone(sample);
+  delete legacy.summary.detected;
+  const file = join(directory, 'legacy-report.json');
+  await writeFile(file, JSON.stringify(legacy));
+  const result = run(file);
+  assert.equal(result.status, 0, result.stderr);
 });

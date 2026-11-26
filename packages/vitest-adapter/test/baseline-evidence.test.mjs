@@ -1,4 +1,7 @@
 import assert from 'node:assert/strict';
+import { mkdtempSync, readFileSync, readdirSync, rmSync, statSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import test from 'node:test';
 import {
   attachBaselineEvidence,
@@ -142,4 +145,44 @@ test('timings too large for a response are left out instead of failing it', () =
   attachBaselineEvidence(job, modules, baseline);
   assert.equal(baseline.fileTimings, undefined);
   assert.ok(size(baseline) < MAX_RESPONSE_BYTES);
+});
+
+test('coverage goes to a new private file in the directory the CLI offered, whatever its size', () => {
+  const directory = mkdtempSync(join(tmpdir(), 'oximut-evidence-test-'));
+  try {
+    // A suite whose coverage cannot be made to fit a response at all.
+    const coverage = suite(300, 40, 300, (mutant, position) => position % 2 === 0);
+    const baseline = result(coverage);
+    attachBaselineEvidence({ ...job, coverageDir: directory }, [module('a', { duration: 5 })], baseline);
+    assert.equal(baseline.coverage, undefined);
+    assert.ok(size(baseline) < MAX_RESPONSE_BYTES);
+    assert.equal(baseline.fileTimings.length, 1);
+    const written = join(directory, baseline.coverageFile);
+    assert.deepEqual(JSON.parse(readFileSync(written, 'utf8')), coverage);
+    // Owner-only: the CLI refuses a file anyone else could have written.
+    assert.equal(statSync(written).mode & 0o077, 0);
+    // Another baseline in the same directory never replaces it.
+    const again = result(coverage);
+    attachBaselineEvidence({ ...job, coverageDir: directory }, [], again);
+    assert.notEqual(again.coverageFile, baseline.coverageFile);
+    assert.equal(readdirSync(directory).length, 2);
+    // Mutant jobs carry no evidence, directory or not.
+    const mutant = result(coverage);
+    attachBaselineEvidence({ kind: 'mutant', coverageDir: directory }, [], mutant);
+    assert.equal(mutant.coverageFile, undefined);
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+  }
+});
+
+test('without a usable coverage directory coverage keeps to the response limit', () => {
+  const coverage = suite(120, 30, 400);
+  const missing = join(tmpdir(), 'oximut-evidence-test-missing', 'nowhere');
+  for (const input of [job, { ...job, coverageDir: missing }]) {
+    const baseline = result(coverage);
+    attachBaselineEvidence(input, [], baseline);
+    assert.equal(baseline.coverageFile, undefined);
+    assert.ok(size(baseline) < MAX_RESPONSE_BYTES);
+    assert.equal(baseline.coverage.complete, true);
+  }
 });

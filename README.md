@@ -28,8 +28,10 @@ Faster execution and lower memory use than Stryker remain hypotheses to measure.
 Oximut is a working name.
 
 Use repeatable `--mutators` options to select a comma-separated union of declared
-families (`arithmetic`, `boolean-literal`, `comparison-boundary`). With no filter,
-all families remain enabled. A filtered report describes only the requested subset;
+families (`arithmetic`, `assignment-operator`, `boolean-literal`, `comparison-boundary`,
+`equality-operator`, `logical-operator`, `unary-operator`, `update-operator`; the
+operators of each are in [compatibility.md](docs/compatibility.md#mutation-operators)).
+With no filter, all families remain enabled. A filtered report describes only the requested subset;
 excluded families are not reported as full-project mutation results. Family filters
 are for matched tool comparisons and scoped analysis, not performance-target gaming.
 

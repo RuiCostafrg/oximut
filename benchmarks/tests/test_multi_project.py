@@ -86,6 +86,24 @@ class ScopeTests(ProjectCase):
         self.assertIn('ConditionalExpression', excluded)
         self.assertEqual(bench.stryker_excluded('full'), [])
 
+    def test_every_oximut_family_has_a_stryker_operator_in_the_matched_scope(self):
+        import re
+        core = (Path(__file__).resolve().parents[2] / 'crates/core/src/lib.rs').read_text()
+        families = re.findall(r'"([a-z-]+)"', re.search(r'MUTATOR_FAMILIES: \[&str; \d+\] = \[(.*?)\];', core, re.S).group(1))
+        self.assertEqual(len(families), 8)
+        self.assertEqual(sorted(families), sorted(bench.STRYKER_FAMILIES))
+        excluded = set(bench.stryker_excluded('matched'))
+        self.assertTrue(set(bench.STRYKER_FAMILIES.values()).isdisjoint(excluded))
+        self.assertEqual(set(bench.STRYKER_FAMILIES.values()), {
+            'ArithmeticOperator', 'AssignmentOperator', 'BooleanLiteral', 'EqualityOperator',
+            'LogicalOperator', 'UnaryOperator', 'UpdateOperator'})
+        # Both of Oximut's comparison families are Stryker's one EqualityOperator.
+        self.assertEqual(bench.STRYKER_FAMILIES['comparison-boundary'], bench.STRYKER_FAMILIES['equality-operator'])
+        # What is left excluded has no Oximut family yet.
+        self.assertEqual(excluded, {
+            'CallExpression', 'ArrayDeclaration', 'ArrowFunction', 'BlockStatement', 'ConditionalExpression',
+            'MethodExpression', 'ObjectLiteral', 'OptionalChaining', 'Regex', 'StringLiteral'})
+
     def test_stryker_is_configured_for_the_matched_concurrency_and_per_test_coverage(self):
         matched = bench.stryker_config(['src/a.ts'], 4, 'matched')
         self.assertEqual((matched['concurrency'], matched['coverageAnalysis'], matched['testRunner']),
@@ -242,8 +260,15 @@ class AnalyzeTests(ProjectCase):
         self.assertEqual(extra['selection_modes'], {'files': 1, 'full': 1})
         self.assertEqual(extra['full_suite_reasons'], {'incomplete-attribution': 1, 'probe-globalThis-conflict': 1})
 
-    def test_an_oximut_run_with_timeouts_is_kept_but_marked_incomplete(self):
-        path = self.write_report(oximut_report(self.project, ['killed', 'timeout'], complete=False))
+    def test_an_oximut_run_with_timeouts_is_complete(self):
+        # A timeout is a detection (StrykerJS semantics): Oximut reports the run complete.
+        path = self.write_report(oximut_report(self.project, ['killed', 'timeout']))
+        extra = bench.analyze('oximut', clean_row(), path, self.project, 2)
+        self.assertTrue(extra['complete'])
+        self.assertEqual(sorted(extra['outcomes'].values()), ['killed', 'timeout'])
+
+    def test_an_oximut_run_with_invalid_mutants_is_kept_but_marked_incomplete(self):
+        path = self.write_report(oximut_report(self.project, ['killed', 'invalid'], complete=False))
         extra = bench.analyze('oximut', clean_row(exit_code=2), path, self.project, 2)
         self.assertFalse(extra['complete'])
 
@@ -423,7 +448,7 @@ class ReportTests(unittest.TestCase):
                 entry['complete'] = False
         flags = report.summarize_cell(cell(runs))['flags']
         self.assertIn('Oximut outcomes differ between rounds', flags)
-        self.assertIn('Oximut run incomplete (timeout or invalid mutants)', flags)
+        self.assertIn('Oximut run incomplete (invalid, skipped or failed mutants)', flags)
 
     def test_whole_suite_fallback_for_most_mutants_is_flagged_with_its_reason(self):
         fallback = {'selection_modes': {'full': 9, 'files': 1}, 'full_suite_reasons': {'probe-globalThis-conflict': 9}}

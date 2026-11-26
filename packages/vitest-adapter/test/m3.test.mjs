@@ -189,6 +189,40 @@ test('M3 collects stable duplicate identities, explicit empty hits and preserves
   assert.match(mismatch.errors.join(), /inventory changed/);
 });
 
+test('M3 hands a collecting baseline’s coverage over as a file when offered a directory', {
+  timeout: 120000,
+}, async (t) => {
+  const root = await fixture(t);
+  const inline = await run(root, collect(root));
+  const coverageDir = join(root, 'coverage-out');
+  await mkdir(coverageDir);
+  const sent = await run(root, { ...collect(root), coverageDir });
+  assert.equal(sent.outcome, 'passed', JSON.stringify(sent));
+  assert.equal(sent.coverage, undefined);
+  assert.match(sent.coverageFile, /^coverage-\d+-\d+\.json$/);
+  const written = JSON.parse(await readFile(join(coverageDir, sent.coverageFile), 'utf8'));
+  assert.deepEqual(written, inline.coverage);
+  assert.throws(() => validateRequest({ ...request(root), coverageDir }), /coverageDir/);
+});
+
+test('M3 attributes a hot loop’s hits to its test without recording each one', {
+  timeout: 120000,
+}, async (t) => {
+  const root = await fixture(t);
+  await writeFile(
+    join(root, 'a.test.ts'),
+    `import { test, expect } from 'vitest'; import { enabled } from './source';
+test('hot', () => { let hits = 0; for (let i = 0; i < 2_000_000; i++) if (enabled()) hits++; expect(hits).toBe(2_000_000); });
+test('cold', () => expect(1).toBe(1));`,
+  );
+  const result = await run(root, collect(root));
+  assert.equal(result.outcome, 'passed', JSON.stringify(result));
+  assert.equal(result.coverage.complete, true, JSON.stringify(result.coverage));
+  const hot = result.coverage.tests.filter((test) => test.name === 'hot');
+  assert.equal(hot.length, 1);
+  assert.deepEqual(result.coverage.hits.find((hit) => hit.mutantId === covered).tests, [hot[0].id]);
+});
+
 test('M3 treats native require bypass as incomplete collection', { timeout: 60000 }, async (t) => {
   const root = await fixture(t);
   await writeFile(join(root, 'native.cjs'), 'module.exports = { enabled: true };');

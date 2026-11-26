@@ -37,7 +37,16 @@ the corpus):
 * radix3 (`src`, 688 mutants): the suite's longest file pushed Oximut's instrumented baseline past 30 s; with
   that file removed, 61 of the first 177 mutants (mostly parser loops) ran into the 30 s job deadline and a round
   did not finish in 30 minutes; with the parser-like files removed, the baseline failed with `controller message
-  exceeds the response limit`.
+  exceeds the response limit`. Re-measured on `c3bdbf5b` (unjs/radix3, now rou3; `src`, 688 mutants; the
+  eleven test files that need only Vitest, 2,300 tests, 23 s in plain Vitest, its own 10 s and 60 s per-test
+  timeouts kept; the four files that import `oxfmt`/`ripgrep` and the URLPattern conformance test left out):
+  the original baseline takes 14 s, but the instrumented baseline took 217 s and timed out on a 10 s and a 60 s
+  test. With the O(1) coverage probe it takes 113 s and only the 60 s test (suffix enumeration) still times out; with
+  test selection off (switching code, no probes) it takes 103 s. So the probe is no longer the limit: what remains is
+  the switch's `process.env.OXIMUT_ACTIVE_MUTANT` read on every evaluation of a switched expression, about 240 ns
+  against 7 ns for a variable (a Node microbenchmark), which a 60 s parser/enumeration loop multiplies. Hoisting that
+  read (it cannot be a module-level constant while precollected templates are forked before the mutant is chosen)
+  is the next lever; radix3 joins the corpus when it completes.
 * es-toolkit with the lodash-compatible array, object and predicate modules: about a minute of suite, so
   Oximut's baseline timed out.
 
@@ -46,12 +55,17 @@ the corpus):
 Both tools mutate exactly the same source files (the harness resolves the globs once and passes the
 same list to Oximut `--source` and Stryker `mutate`). They do not generate the same mutants:
 
-* Oximut has three families: arithmetic, boolean-literal, comparison-boundary. In the default `matched`
-  scope, Stryker runs only the operators that correspond (`ArithmeticOperator`, `BooleanLiteral`,
-  `EqualityOperator`); every other Stryker operator is excluded. `--scope full` runs everything each tool
-  has by default (Stryker then generates many times more mutants).
-* The operators still differ in detail (Stryker's equality operator also flips `===`, its boolean operator
-  also drops `!`, it reprints some expressions), so every cell records both exact edited-file identity
+* Oximut has eight families (see [compatibility.md](compatibility.md#mutation-operators)). In the default
+  `matched` scope, Stryker runs only the operators that correspond (`ArithmeticOperator`,
+  `AssignmentOperator`, `BooleanLiteral`, `EqualityOperator`, `LogicalOperator`, `UnaryOperator`,
+  `UpdateOperator`; `benchmarks/multi_project.py` `STRYKER_FAMILIES` maps each family to its operator, and
+  `comparison-boundary` and `equality-operator` are both Stryker's `EqualityOperator`); every other Stryker
+  operator (strings, arrays, objects, blocks, conditionals, optional chaining, regular expressions,
+  method calls, arrow bodies) is excluded until Oximut has a family for it. `--scope full` runs everything
+  each tool has by default (Stryker then generates many times more mutants).
+* The operators still differ in detail (Stryker's arithmetic operator also rewrites `%`, it reprints some
+  expressions, and it keeps a replacement Oximut drops when it would fuse with the preceding token), so
+  every cell records both exact edited-file identity
   sets (`benchmarks/m6.py` `mutation_identity`), how many edits are shared, and whether the tools agree
   on the shared mutants. Unlike the colord harness, unequal scopes are reported, not rejected.
 * `vitest.related` is switched off for Stryker, as in the colord benchmark; pass `--stryker-related` to keep
@@ -65,8 +79,8 @@ plain Vitest (suite time, for diagnosis), Oximut and Stryker sequentially in cle
 cache, alternating the order, using the same process-tree measurement as the other campaigns
 (`benchmarks/run.py`: wall, CPU from `wait4` rusage, peak aggregate RSS). A cell fails (and records why)
 when a run times out, a command fails, the Oximut baseline fails, Oximut reports engine failures
-(infrastructure error, resource exhaustion) or ran fewer workers than requested. Oximut timeouts and
-invalid mutants keep the run (they are real behavior) but flag it incomplete, and so do memory-pressure pauses of
+(infrastructure error, resource exhaustion) or ran fewer workers than requested. Oximut timeouts are detections
+(a complete run, like Stryker's) and invalid mutants keep the run (they are real behavior) but flag it incomplete, and so do memory-pressure pauses of
 Oximut's admission (its default memory budget; the colord harness rejects them).
 
 Worker counts above the usable CPUs are recorded as `skipped`, never run: Oximut caps its workers at the

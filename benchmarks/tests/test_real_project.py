@@ -336,6 +336,33 @@ class WorkloadSelectionTests(unittest.TestCase):
             'MethodExpression', 'ObjectLiteral', 'OptionalChaining', 'Regex', 'StringLiteral',
             'UnaryOperator', 'UpdateOperator'])
 
+    def test_colord_workloads_stay_pinned_to_their_families(self):
+        # The operator families are on by default in Oximut, so the colord workloads pin the
+        # families they were qualified with, for both tools; their numbers stay comparable.
+        self.assertEqual(benchmark.load_manifest('colord')['families'], ['arithmetic', 'boolean-literal'])
+        scale = benchmark.load_manifest('colord-scale')
+        self.assertEqual(scale['families'], ['arithmetic'])
+        self.assertEqual(benchmark.stryker_excluded_mutations(scale)[-1], 'BooleanLiteral')
+        for name in benchmark.WORKLOADS:
+            excluded = benchmark.stryker_excluded_mutations(benchmark.load_manifest(name))
+            self.assertTrue({'EqualityOperator', 'LogicalOperator', 'UnaryOperator', 'UpdateOperator',
+                             'AssignmentOperator'} <= set(excluded))
+            self.assertEqual(len(excluded), len(set(excluded)))
+
+    def test_a_declared_operator_family_keeps_its_stryker_operator(self):
+        manifest = {'families': ['arithmetic', 'logical-operator', 'equality-operator']}
+        excluded = benchmark.stryker_excluded_mutations(manifest)
+        self.assertNotIn('LogicalOperator', excluded)
+        self.assertNotIn('EqualityOperator', excluded)
+        self.assertNotIn('ArithmeticOperator', excluded)
+        self.assertIn('UnaryOperator', excluded)
+        self.assertIn('BooleanLiteral', excluded)
+        self.assertEqual(len(excluded), len(set(excluded)))
+        # Either of the comparison families alone is enough to keep Stryker's EqualityOperator.
+        for family in ('comparison-boundary', 'equality-operator'):
+            self.assertNotIn('EqualityOperator',
+                             benchmark.stryker_excluded_mutations({'families': [family]}))
+
     def test_unknown_workload_is_rejected_before_any_side_effect(self):
         import contextlib
         import io
