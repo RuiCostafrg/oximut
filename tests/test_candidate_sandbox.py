@@ -234,7 +234,11 @@ else:
             SANDBOX.safe_tree(prefix)
             results = SMOKE.smoke(prefix, reports_dir=self.base / phase,
                                   validator=ROOT / 'scripts/validate-reports.mjs', isolated=True)
-            self.assertEqual(len(results), 12)
+            # fresh and persistent cases pinned to one worker, plus one persistent run on the default.
+            self.assertEqual(len(results), 13)
+            auto = [r for r in results if r['case'] == 'auto']
+            self.assertEqual([r['execution'] for r in auto], ['persistent'])
+            self.assertGreaterEqual(auto[0]['autoWorkers'], 1)
 
     def test_readonly_assets_and_untrusted_output_types(self):
         asset = self.base / 'asset'
