@@ -651,8 +651,7 @@ pub fn identity_module(path: &Path, source: &str) -> oximut_core::Mutation {
 
 /// Generate a shared Node-only module containing inline mutation switches.
 /// Branches remain in their original lexical context, including await and yield.
-/// Files referring to `process` fall back to static mutants because the selector
-/// could otherwise resolve to a shadowed binding.
+/// Files that can interfere with the selector fall back to static mutants.
 pub fn generate_switched(
     identity: &str,
     path: &Path,
@@ -706,15 +705,14 @@ fn switch(
     let allocator = Allocator::default();
     let source_type = SourceType::from_path(path).map_err(|e| e.to_string())?;
     let parsed = Parser::new(&allocator, source, source_type).parse();
-    if may_shadow(&parsed.program, "process") {
-        generated.diagnostics.push("mutation switching fallback: process identifier or with statement may shadow or modify the Node selector; using fresh static mutants".into());
+    if injected_global_conflict(&parsed.program)
+        || source.contains("__oximut_active__")
+        || process_selector_conflict(&parsed.program)
+    {
+        generated.diagnostics.push("mutation switching fallback: selector binding, process access, or with statement can interfere with the Node selector; using fresh static mutants".into());
         return Ok((generated, Switch::Static));
     }
-    let global_conflict = if probes {
-        probe_conflict(&parsed.program, source)
-    } else {
-        None
-    };
+    let global_conflict = (probes && source.contains(PROBE_HOOK)).then_some("probe-reserved-name");
     let mut collector = Collector {
         source,
         families,
@@ -914,6 +912,10 @@ fn probe_conflict(program: &Program<'_>, source: &str) -> Option<&'static str> {
     if source.contains(PROBE_HOOK) {
         return Some("probe-reserved-name");
     }
+    injected_global_conflict(program).then_some("probe-globalThis-conflict")
+}
+
+fn injected_global_conflict(program: &Program<'_>) -> bool {
     struct Conflict(bool);
     impl<'a> Visit<'a> for Conflict {
         fn visit_binding_identifier(&mut self, it: &BindingIdentifier<'a>) {
@@ -941,7 +943,7 @@ fn probe_conflict(program: &Program<'_>, source: &str) -> Option<&'static str> {
     }
     let mut found = Conflict(false);
     found.visit_program(program);
-    found.0.then_some("probe-globalThis-conflict")
+    found.0
 }
 
 const PROBE_HOOK: &str = "__oximut_m3_hit__";
@@ -955,26 +957,41 @@ const PROBE_HOOK: &str = "__oximut_m3_hit__";
 const ACTIVE_MUTANT: &str =
     "(globalThis.__oximut_active__ ??= process.env.OXIMUT_ACTIVE_MUTANT ?? \"\")";
 
-/// Whether an injected free reference to `name` could resolve to something
-/// other than the global: the source names it, or a sloppy-mode `with` scope
-/// could supply a same-named property without naming it.
-fn may_shadow(program: &Program<'_>, name: &str) -> bool {
-    struct Use<'n>(&'n str, bool);
-    impl<'a> Visit<'a> for Use<'_> {
+/// The selector reads `process.env` on first use. Allow the read-only cwd
+/// idiom, while preserving static fallback for bindings and other process use.
+fn process_selector_conflict(program: &Program<'_>) -> bool {
+    fn is_process(expression: &Expression<'_>) -> bool {
+        matches!(expression, Expression::Identifier(identifier) if identifier.name == "process")
+    }
+    fn is_process_cwd(expression: &Expression<'_>) -> bool {
+        matches!(expression, Expression::StaticMemberExpression(member)
+            if is_process(&member.object) && member.property.name == "cwd")
+    }
+
+    struct Conflict(bool);
+    impl<'a> Visit<'a> for Conflict {
         fn visit_identifier_reference(&mut self, it: &IdentifierReference<'a>) {
-            self.1 |= it.name == self.0;
+            self.0 |= it.name == "process";
         }
         fn visit_binding_identifier(&mut self, it: &BindingIdentifier<'a>) {
-            self.1 |= it.name == self.0;
+            self.0 |= it.name == "process";
         }
-        fn visit_with_statement(&mut self, it: &WithStatement<'a>) {
-            self.1 = true;
-            walk::walk_with_statement(self, it);
+        fn visit_unary_expression(&mut self, it: &UnaryExpression<'a>) {
+            if it.operator != UnaryOperator::Typeof
+                || !(is_process(&it.argument) || is_process_cwd(&it.argument))
+            {
+                walk::walk_unary_expression(self, it);
+            }
+        }
+        fn visit_call_expression(&mut self, it: &CallExpression<'a>) {
+            if !it.arguments.is_empty() || !is_process_cwd(&it.callee) {
+                walk::walk_call_expression(self, it);
+            }
         }
     }
-    let mut found = Use(name, false);
+    let mut found = Conflict(false);
     found.visit_program(program);
-    found.1
+    found.0
 }
 
 /// Probe expression evaluation without changing values, operand order, or the
@@ -1563,6 +1580,32 @@ await run();
         assert!(result.diagnostics.iter().any(|d| d.contains("size budget")));
     }
     #[test]
+    fn process_cwd_queries_keep_switched_mutants() {
+        let source = r#"
+function value() {
+    if (typeof process !== "undefined" && typeof process.cwd === "function") {
+        return process.cwd().length + 1;
+    }
+    return 0;
+}
+console.log(value());
+"#;
+        let path = Path::new("a.js");
+        let families = Families::from([ARITHMETIC.into()]);
+        let original = super::generate("a.js", path, source, &families).unwrap();
+        let switched = super::generate_switched("a.js", path, source, &families).unwrap();
+        assert_eq!(switched.mutants.len(), 1);
+        let mutant = &switched.mutants[0];
+        assert_eq!(original.mutants[0].id, mutant.id);
+        assert_eq!(execute(&mutant.code, ""), execute(source, ""));
+        assert_ne!(execute(&mutant.code, &mutant.id), execute(source, ""));
+        assert_eq!(
+            execute(&mutant.code, &mutant.id),
+            execute(&original.mutants[0].code, "")
+        );
+    }
+
+    #[test]
     fn probes_preserve_nested_evaluation_coercion_short_circuit_await_and_yield() {
         let source = r#"
 let calls = [];
@@ -1650,13 +1693,13 @@ console.log(JSON.stringify([a, b, c, iterator.next(), iterator.next(7), true, ca
     #[test]
     fn probed_switching_reports_unprobed_and_static_fallbacks() {
         let path = Path::new("/project/src/a.ts");
-        // A shadowed globalThis: switching stays shared, probes are refused.
+        // A shadowed globalThis: switching and probes both fall back.
         let source = "function f(globalThis) { return 1; } export const x = 1 + 2;";
         let (generated, coverage) = generate_switched_probed("src/a.ts", path, source).unwrap();
         assert_eq!(coverage.unwrap_err(), "probe-globalThis-conflict");
         assert_eq!(
             generated.mutants[0].code,
-            generate_switched("src/a.ts", path, source).unwrap().mutants[0].code
+            generate("src/a.ts", path, source).unwrap().mutants[0].code
         );
         assert!(!generated.mutants[0].code.contains("__oximut_m3_hit__"));
         // process use: static mutants keep the separate probe-only module.

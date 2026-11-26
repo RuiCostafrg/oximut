@@ -53,6 +53,7 @@ async function check(root) {
 
 try {
   await cp(join(repository, 'fixtures/m3'), scratch, { recursive: true });
+  await writeFile(join(scratch, 'package.json'), '{"type":"module"}\n');
   await symlink(join(repository, 'node_modules'), join(scratch, 'node_modules'), 'dir');
   const original = await check(scratch);
   const sourcePath = join(scratch, 'src/subject.ts');
