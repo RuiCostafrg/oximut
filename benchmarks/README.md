@@ -226,3 +226,7 @@ Samples are sequential, not atomic; short-lived processes and between-sample
 peaks may be missed. The harness is excluded and its overhead remains a limitation,
 especially on emulated/PRoot hosts. CPU is `wait4` user+system seconds, including
 reaped child subtrees once. Report native versus emulated hosts explicitly.
+
+## Multi-project comparison
+
+`multi_project.py` and `multi_project_report.py` compare Oximut with StrykerJS on the pinned parity corpus and two larger real projects at several worker counts; see [docs/multi-project-benchmark.md](../docs/multi-project-benchmark.md).
