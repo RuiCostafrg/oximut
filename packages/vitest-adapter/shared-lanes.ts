@@ -7,6 +7,14 @@ import { fileURLToPath } from 'node:url';
 import { createVitest, ForksPoolWorker, ThreadsPoolWorker, version } from 'vitest/node';
 import { envelope, type Request, type Response, type Result } from './protocol.ts';
 import {
+  type CpuSample,
+  classifyCpu,
+  cpuTicks,
+  killTree,
+  sampleWindowMs,
+  type TimeoutKind,
+} from './worker-liveness.ts';
+import {
   fingerprint,
   type ProjectLike,
   type TransformService,
@@ -107,6 +115,7 @@ type LaneFork = {
   signalCode: string | null;
   kill(signal: string): boolean;
   once(event: 'exit', listener: () => void): unknown;
+  pid?: number;
 };
 
 /** The slice of the zygote pool (zygote/pool.cjs) that precollection uses. */
@@ -124,6 +133,9 @@ export class SharedLanes {
   private modules = new Map<string, NonNullable<Request['mutation']>>();
   private files = new Map<string, string[]>();
   private failures = new Map<string, string>();
+  // Lanes stopped at their deadline: whether the worker was on the CPU, for the
+  // CLI's zygote watchdog (see worker-liveness.ts).
+  private timeoutKinds = new Map<string, TimeoutKind>();
   private deadline = 0;
   // Rolling batches: each lane's own deadline, from the moment that lane starts.
   private laneDeadlines = new Map<string, number>();
@@ -183,6 +195,7 @@ export class SharedLanes {
     const started = performance.now();
     this.deadline = started + Math.max(...jobs.map((job) => job.deadlineMs));
     this.failures.clear();
+    this.timeoutKinds.clear();
     this.files.clear();
     this.laneDeadlines.clear();
     if (!rolling)
@@ -252,6 +265,12 @@ export class SharedLanes {
                   const deserialize = worker.deserialize.bind(worker);
                   const name = options.project.name;
                   let timer: ReturnType<typeof setTimeout> | undefined;
+                  // Reads the worker's CPU time shortly before the deadline stops it.
+                  let sampler: ReturnType<typeof setTimeout> | undefined;
+                  const clearTimers = () => {
+                    clearTimeout(timer);
+                    clearTimeout(sampler);
+                  };
                   let finished = false;
                   let stopping = false;
                   // Rolling lanes on zygote workers: the worker was killed at its result.
@@ -282,7 +301,7 @@ export class SharedLanes {
                     worker.on('exit', () => {
                       note?.('lane_exit');
                       this.liveForks.delete(live);
-                      clearTimeout(timer);
+                      clearTimers();
                       if (!finished && !stopping && !this.failures.has(name))
                         this.failures.set(name, LANE_EXITED);
                     });
@@ -308,7 +327,7 @@ export class SharedLanes {
                     stopping = true;
                     killed = true;
                     live.draining = true;
-                    clearTimeout(timer);
+                    clearTimers();
                     const gone = new Promise<void>((resolve) => fork.once('exit', () => resolve()));
                     this.exiting.add(gone);
                     void gone.then(() => this.exiting.delete(gone));
@@ -340,26 +359,51 @@ export class SharedLanes {
                         context: { files: { filepath: string }[] };
                       };
                       run.context.files = this.files.get(name)!.map((filepath) => ({ filepath }));
-                      timer = setTimeout(
-                        () => {
-                          this.failures.set(name, HARD_DEADLINE);
-                          if (worker instanceof ThreadsPoolWorker) {
-                            // terminate() also stops synchronous infinite loops. The pool
-                            // still owns stop() and awaits exit before the next batch.
-                            void (
-                              worker as unknown as { thread: { terminate(): Promise<number> } }
-                            ).thread.terminate();
-                          } else {
-                            (
-                              worker as unknown as { fork: { kill(signal: string): void } }
-                            ).fork.kill('SIGKILL');
-                          }
-                        },
-                        Math.max(
-                          1,
-                          (this.laneDeadlines.get(name) ?? this.deadline) - performance.now(),
-                        ),
+                      const delay = Math.max(
+                        1,
+                        (this.laneDeadlines.get(name) ?? this.deadline) - performance.now(),
                       );
+                      const forkPid = () => {
+                        try {
+                          return (worker as unknown as { fork: LaneFork }).fork.pid;
+                        } catch {
+                          return undefined;
+                        }
+                      };
+                      let before: CpuSample | undefined;
+                      const window = sampleWindowMs(delay);
+                      sampler = setTimeout(
+                        () => {
+                          const ticks = cpuTicks(forkPid());
+                          before =
+                            ticks === undefined ? undefined : { ticks, at: performance.now() };
+                        },
+                        Math.max(0, delay - window),
+                      );
+                      timer = setTimeout(() => {
+                        this.failures.set(name, HARD_DEADLINE);
+                        if (worker instanceof ThreadsPoolWorker) {
+                          // terminate() also stops synchronous infinite loops. The pool
+                          // still owns stop() and awaits exit before the next batch.
+                          void (
+                            worker as unknown as { thread: { terminate(): Promise<number> } }
+                          ).thread.terminate();
+                        } else {
+                          const pid = forkPid();
+                          const ticks = cpuTicks(pid);
+                          const kind = classifyCpu(
+                            before,
+                            ticks === undefined ? undefined : { ticks, at: performance.now() },
+                          );
+                          if (kind) this.timeoutKinds.set(name, kind);
+                          // The worker's own children go with it, so that its memory and
+                          // theirs are released now.
+                          if (pid !== undefined) killTree(pid);
+                          (worker as unknown as { fork: { kill(signal: string): void } }).fork.kill(
+                            'SIGKILL',
+                          );
+                        }
+                      }, delay);
                     }
                     return send(message);
                   };
@@ -379,7 +423,7 @@ export class SharedLanes {
                   let stopped: Promise<void> | undefined;
                   worker.stop = () => {
                     stopping = true;
-                    clearTimeout(timer);
+                    clearTimers();
                     if (killed) return Promise.resolve();
                     if (!(worker instanceof ThreadsPoolWorker)) return stop();
                     stopped ??= stop().then(() => {
@@ -659,6 +703,7 @@ export class SharedLanes {
     const plan = await this.plan(specs, name, job);
     this.files.set(name, plan.files);
     this.failures.delete(name);
+    this.timeoutKinds.delete(name);
     tainted.delete(name);
     // A template still being built is waited for; a lane never forks from one
     // that is not ready, and its own deadline has not started yet.
@@ -791,11 +836,20 @@ export class SharedLanes {
         tests.skipped !== (job.selection.expectedSkipped ?? 0))
     )
       outcome = 'infrastructure-error';
+    // Why a timeout happened, for the CLI's zygote watchdog: the worker either
+    // answered (Vitest's own test timeout) or was stopped at the deadline.
+    const timeoutKind =
+      outcome !== 'timeout'
+        ? undefined
+        : failure === HARD_DEADLINE
+          ? this.timeoutKinds.get(name)
+          : 'test-timeout';
     return envelope(job, {
       outcome,
       tests,
       errors: [...(untrusted ? [untrusted] : []), ...messages].slice(0, 8),
       ...(job.resident ? { resident: job.resident.length } : {}),
+      ...(timeoutKind ? { timeoutKind } : {}),
     });
   }
 

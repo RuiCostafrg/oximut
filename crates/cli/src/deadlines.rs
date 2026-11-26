@@ -25,6 +25,17 @@ pub const MAX_TIMEOUT_MS: u64 = 86_400_000;
 pub const DEFAULT_BASELINE_TIMEOUT_MS: u64 = 600_000;
 pub const DEFAULT_TIMEOUT_FACTOR: f64 = 1.5;
 pub const DEFAULT_TIMEOUT_CONSTANT_MS: u64 = 10_000;
+/// The constant of a mutant that runs as a lane of the shared controller. Its
+/// deadline starts when its worker is asked to run, after the controller is warm,
+/// the template ready and the worker forked, so it covers only what happens inside
+/// the run: collection (already behind a precollected template), the result and a
+/// loaded host's jitter. Measured on a traced colord-scale run (4 workers): the
+/// non-test part of a lane's run is 3 ms to start collecting, 7 ms (p90 15 ms) to
+/// collect and 12 ms (p90 34 ms) from the last test to the result, so 5 s is more
+/// than 50 times the p90 and equals what StrykerJS adds. Cold controller start-up,
+/// worker forks and the lane's reruns on an ordinary worker keep
+/// [`DEFAULT_TIMEOUT_CONSTANT_MS`].
+pub const DEFAULT_LANE_CONSTANT_MS: u64 = 5_000;
 /// Warming a spare controller runs no tests.
 pub const WARM_TIMEOUT_MS: u64 = 30_000;
 /// The largest `--timeout-factor`, so that `time * factor` stays representable.
@@ -37,6 +48,11 @@ pub struct Deadlines {
     /// `--baseline-timeout-ms`, else `--timeout-ms`, else the default.
     pub baseline_ms: u64,
     pub factor: f64,
+    /// Added to jobs that run as lanes of a shared controller with rolling lanes;
+    /// see [`DEFAULT_LANE_CONSTANT_MS`]. An explicit `--timeout-constant-ms` sets both.
+    pub lane_constant_ms: u64,
+    /// Added to every other mutant job: it covers a cold controller's start-up and
+    /// the fork of the worker too.
     pub constant_ms: u64,
 }
 
@@ -46,6 +62,7 @@ impl Default for Deadlines {
             fixed_ms: None,
             baseline_ms: DEFAULT_BASELINE_TIMEOUT_MS,
             factor: DEFAULT_TIMEOUT_FACTOR,
+            lane_constant_ms: DEFAULT_LANE_CONSTANT_MS,
             constant_ms: DEFAULT_TIMEOUT_CONSTANT_MS,
         }
     }
@@ -59,6 +76,24 @@ impl Deadlines {
 
     /// The deadline of a mutant job that runs `selection` (`None`: the whole suite).
     pub fn for_mutant(&self, timings: &SuiteTimings, selection: Option<&Selection>) -> u64 {
+        self.derive(timings, selection, self.constant_ms)
+    }
+
+    /// The deadline of such a job when it runs as a lane of a shared controller.
+    pub fn for_lane(&self, timings: &SuiteTimings, selection: Option<&Selection>) -> u64 {
+        self.derive(timings, selection, self.lane_constant_ms)
+    }
+
+    /// What a lane's deadline gains when its job runs on an ordinary worker instead
+    /// (a rerun, a fallback): the difference between the two constants.
+    pub fn cold_extra_ms(&self) -> u64 {
+        if self.fixed_ms.is_some() {
+            return 0;
+        }
+        self.constant_ms.saturating_sub(self.lane_constant_ms)
+    }
+
+    fn derive(&self, timings: &SuiteTimings, selection: Option<&Selection>, constant: u64) -> u64 {
         if let Some(fixed) = self.fixed_ms {
             return fixed;
         }
@@ -69,9 +104,7 @@ impl Deadlines {
         } else {
             MAX_TIMEOUT_MS
         };
-        scaled
-            .saturating_add(self.constant_ms)
-            .clamp(1, MAX_TIMEOUT_MS)
+        scaled.saturating_add(constant).clamp(1, MAX_TIMEOUT_MS)
     }
 }
 
@@ -176,6 +209,7 @@ mod tests {
             errors: vec![],
             coverage: None,
             resident: None,
+            timeout_kind: None,
             file_timings: Some(
                 timings
                     .iter()
@@ -248,6 +282,40 @@ mod tests {
         let mut huge = SuiteTimings::new(1);
         huge.observe(&baseline(&[("/a.test.ts", 1e15)], 1), 1e15);
         assert_eq!(deadlines.for_mutant(&huge, None), MAX_TIMEOUT_MS);
+    }
+
+    #[test]
+    fn a_lane_gets_the_smaller_constant_and_its_rerun_gets_the_difference_back() {
+        let deadlines = Deadlines::default();
+        let selection = files(&["/a.test.ts"], 4, 10);
+        let lane = deadlines.for_lane(&suite(), Some(&selection));
+        let cold = deadlines.for_mutant(&suite(), Some(&selection));
+        assert_eq!(
+            cold - lane,
+            DEFAULT_TIMEOUT_CONSTANT_MS - DEFAULT_LANE_CONSTANT_MS
+        );
+        assert_eq!(lane + deadlines.cold_extra_ms(), cold);
+        // The factor still applies to the file time; only the constant differs.
+        let time = (suite().run_time_ms(Some(&selection)) * DEFAULT_TIMEOUT_FACTOR).ceil() as u64;
+        assert_eq!(lane, time + DEFAULT_LANE_CONSTANT_MS);
+        // An explicit constant is every job's constant: nothing to add back.
+        let explicit = Deadlines {
+            constant_ms: 700,
+            lane_constant_ms: 700,
+            ..Deadlines::default()
+        };
+        assert_eq!(explicit.cold_extra_ms(), 0);
+        assert_eq!(
+            explicit.for_lane(&suite(), Some(&selection)),
+            explicit.for_mutant(&suite(), Some(&selection))
+        );
+        // A fixed deadline is never derived, so it never grows.
+        let fixed = Deadlines {
+            fixed_ms: Some(1_234),
+            ..Deadlines::default()
+        };
+        assert_eq!(fixed.for_lane(&suite(), None), 1_234);
+        assert_eq!(fixed.cold_extra_ms(), 0);
     }
 
     #[test]

@@ -306,6 +306,31 @@ pub struct Response {
     /// tests), the basis for per-mutant deadlines. Baselines only; optional.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub file_timings: Option<Vec<FileTiming>>,
+    /// Timeouts only, optional: what the adapter saw when the job timed out. The
+    /// zygote watchdog reruns a timeout only when it is not known to be genuine.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub timeout_kind: Option<TimeoutKind>,
+}
+
+/// Why a job timed out, as far as the adapter could tell.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize, Serialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum TimeoutKind {
+    /// The test runner's own timeout, reported by a worker that was alive.
+    TestTimeout,
+    /// The worker was stopped at the job deadline while burning CPU: a real loop.
+    Busy,
+    /// The worker was stopped at the job deadline without using the CPU: it looks
+    /// stalled, which is what a deadlocked zygote child looks like.
+    Idle,
+}
+
+impl TimeoutKind {
+    /// Whether the timeout is the mutant's doing. Only a worker that sat idle until
+    /// its deadline could have been stalled by the zygote.
+    pub fn is_genuine(self) -> bool {
+        !matches!(self, TimeoutKind::Idle)
+    }
 }
 
 /// One test file's time in a baseline run.
@@ -583,6 +608,31 @@ mod tests {
     use super::*;
 
     #[test]
+    fn a_timeout_kind_is_optional_and_only_a_stalled_worker_is_not_genuine() {
+        let response = |kind: Option<&str>| {
+            let mut value = serde_json::json!({"protocol": 1, "runId": "r", "jobId": "j",
+                "generation": 0, "outcome": "timeout",
+                "tests": {"passed": 0, "failed": 0, "skipped": 0}, "errors": []});
+            if let Some(kind) = kind {
+                value["timeoutKind"] = kind.into();
+            }
+            serde_json::from_value::<Response>(value)
+        };
+        assert_eq!(response(None).unwrap().timeout_kind, None);
+        for (wire, kind, genuine) in [
+            ("test-timeout", TimeoutKind::TestTimeout, true),
+            ("busy", TimeoutKind::Busy, true),
+            ("idle", TimeoutKind::Idle, false),
+        ] {
+            let parsed = response(Some(wire)).unwrap();
+            assert_eq!(parsed.timeout_kind, Some(kind));
+            assert_eq!(kind.is_genuine(), genuine);
+            assert_eq!(serde_json::to_value(&parsed).unwrap()["timeoutKind"], wire);
+        }
+        assert!(response(Some("spinning")).is_err());
+    }
+
+    #[test]
     fn request_pool_is_optional_and_round_trips() {
         let value = serde_json::json!({"protocol": 1, "runId": "r", "jobId": "j", "generation": 0,
             "kind": "baseline", "root": "/p", "config": "/p/c", "deadlineMs": 10, "mutation": null});
@@ -636,6 +686,7 @@ mod tests {
             coverage: None,
             resident: None,
             file_timings: None,
+            timeout_kind: None,
         };
         assert_eq!(response.mutant_outcome(), Outcome::InfrastructureError);
         assert!(response.validate(&request).is_ok());
@@ -689,6 +740,7 @@ mod tests {
             coverage: None,
             resident: None,
             file_timings: None,
+            timeout_kind: None,
         };
         let mut batch = lane("a");
         batch.lanes = Some(vec![lane("a"), lane("b")]);
@@ -981,6 +1033,7 @@ mod tests {
             coverage: None,
             resident: None,
             file_timings: None,
+            timeout_kind: None,
         };
         assert!(response.validate(&request).is_err());
         response.tests.passed = 2;
@@ -1024,6 +1077,7 @@ mod tests {
             coverage: None,
             resident: Some(1),
             file_timings: None,
+            timeout_kind: None,
         };
         assert!(
             response

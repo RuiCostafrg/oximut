@@ -104,8 +104,11 @@ process.on('message', (message) => {
       ? request.lanes.slice(0, Math.floor(request.lanes.length / 2)) : request.lanes;
     // Under the watchdog mode the first lane of every batch deadlocks in a zygote
     // worker and passes in a real fork.
-    const stuck = (lane, index) => mode === 'lanes-rolling-watchdog' && index === 0
-      && !lane.bypassZygote;
+    // The -busy and -idle variants say what the adapter saw of the stopped worker.
+    const laneKind = { 'lanes-rolling-watchdog-busy': 'busy', 'lanes-rolling-watchdog-idle': 'idle',
+      'lanes-rolling-watchdog-test': 'test-timeout' }[mode];
+    const stuck = (lane, index) => (mode === 'lanes-rolling-watchdog' || laneKind !== undefined)
+      && index === 0 && !lane.bypassZygote;
     // 'lanes-ineligible': a controller reporting precollect templates it did not use.
     const ineligible = mode === 'lanes-ineligible' ? { precollectIneligible: [
       { template: '["/a.test.ts"]', reasons: { handles: ['Timeout x2'],
@@ -117,7 +120,7 @@ process.on('message', (message) => {
       ...passed, protocol: lane.protocol, jobId: lane.jobId, runId: lane.runId,
       generation: lane.generation,
       ...(stuck(lane, index) ? { outcome: 'timeout', tests: { passed: 0, failed: 0, skipped: 0 },
-        errors: ['Job deadline exceeded'] } : {}),
+        errors: ['Job deadline exceeded'], ...(laneKind ? { timeoutKind: laneKind } : {}) } : {}),
     })) } });
   }
   if (mode.startsWith('lanes-') && command !== 'run')
@@ -179,9 +182,13 @@ process.on('message', (message) => {
   }
   if (mode.startsWith('zygote-') && request.kind === 'mutant') {
     // A zygote worker that deadlocks looks like a timeout; a real fork does not.
-    const timesOut = mode === 'zygote-always-timeout' || !request.bypassZygote;
+    // The -busy, -idle and -test variants say what the adapter saw of the stopped worker.
+    const kind = { 'zygote-always-timeout-busy': 'busy', 'zygote-always-timeout-idle': 'idle',
+      'zygote-always-timeout-test': 'test-timeout' }[mode];
+    const timesOut = mode.startsWith('zygote-always-timeout') || !request.bypassZygote;
     if (timesOut) return reply({ result: { outcome: 'timeout',
-      tests: { passed: 0, failed: 0, skipped: 0 }, errors: ['Test timed out in 5ms'] } });
+      tests: { passed: 0, failed: 0, skipped: 0 }, errors: ['Test timed out in 5ms'],
+      ...(kind ? { timeoutKind: kind } : {}) } });
   }
   if (mode.startsWith('helper') && !helper) {
     // A long-lived direct child the controller declares, like a worker zygote.
@@ -401,16 +408,34 @@ class NativeCoordinator(unittest.TestCase):
         self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
         first = report['mutants'][0]['id']
         batch = next(e for e in events if e['event'] == 'lanes')
-        # Every lane keeps the deadline derived for it; the batch allows each round of
-        # two lanes that long again, and a moment to report.
-        self.assertEqual(set(batch['jobs']), {13_000})
+        # A lane's clock starts when its worker runs, so it gets the smaller constant
+        # (5 s, not 10 s); the batch allows each round of two lanes that long again,
+        # and a moment to report.
+        self.assertEqual(set(batch['jobs']), {8_000})
         rounds = -(-len(batch['jobs']) // 2)
-        self.assertEqual(batch['deadline'], rounds * 14_000)
+        self.assertEqual(batch['deadline'], rounds * 9_000)
         # The first 'run' is the batch itself (named for its first lane); the last is the
-        # lane's rerun, a job of its own.
+        # lane's rerun, a job of its own on an ordinary worker, which also pays for a
+        # cold controller and so gets the full constant back.
         rerun = [e for e in events if e['event'] == 'run' and e['job'] == first]
         self.assertEqual(rerun[0]['deadline'], batch['deadline'])
         self.assertEqual(rerun[-1].get('bypass'), True)
+        self.assertEqual(rerun[-1]['deadline'], 13_000)
+        # The report says what the lane ran under.
+        self.assertEqual(report['mutants'][0]['deadlineMs'], 8_000)
+
+    def test_an_explicit_timeout_constant_applies_to_lanes_too(self):
+        self.require_two_workers()
+        result, report, events = self.run_cli(
+            'lanes-rolling-watchdog', timeout_ms=None, full=True, shared=True,
+            extra_args=('--workers', '2', '--zygote', '--rolling-lanes',
+                        '--timeout-constant-ms', '10000'),
+            env={'OXIMUT_FAKE_TIMINGS': self.TIMINGS})
+        self.require_spare_capacity(report)
+        batch = next(e for e in events if e['event'] == 'lanes')
+        self.assertEqual(set(batch['jobs']), {13_000})
+        first = report['mutants'][0]['id']
+        rerun = [e for e in events if e['event'] == 'run' and e['job'] == first]
         self.assertEqual(rerun[-1]['deadline'], 13_000)
 
     def test_zygote_watchdog_reruns_a_timeout_without_the_zygote(self):
@@ -450,6 +475,36 @@ class NativeCoordinator(unittest.TestCase):
         diagnostics = report['diagnostics']
         self.assertIn(f'zygote watchdog: {len(mutants)} timeout reruns', diagnostics)
         self.assertFalse(any('zygote disabled' in d for d in diagnostics), diagnostics)
+        self.assert_reaped(events)
+
+    def test_a_timeout_from_a_worker_that_was_running_is_not_rerun(self):
+        for mode in ('zygote-always-timeout-busy', 'zygote-always-timeout-test'):
+            with self.subTest(mode=mode):
+                result, report, events = self.run_cli(mode, full=True, extra_args=('--zygote',))
+                self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
+                mutants = report['mutants']
+                self.assertGreaterEqual(len(mutants), 2)
+                self.assertEqual({m['outcome'] for m in mutants}, {'timeout'})
+                for mutant in mutants:
+                    # Run once under the zygote and never again: the verdict stands.
+                    self.assertEqual(self.mutant_runs(events)[mutant['id']], [None], mutant['id'])
+                diagnostics = report['diagnostics']
+                self.assertFalse(any('timeout reruns' in d for d in diagnostics), diagnostics)
+                self.assertIn(f'zygote watchdog: {len(mutants)} timeouts kept without a rerun '
+                              '(worker was running, not stalled)', diagnostics)
+                self.assertFalse(any('zygote disabled' in d for d in diagnostics), diagnostics)
+                self.assert_reaped(events)
+
+    def test_a_timeout_from_a_stalled_worker_is_still_rerun(self):
+        result, report, events = self.run_cli('zygote-always-timeout-idle', full=True,
+                                              extra_args=('--zygote',))
+        self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
+        mutants = report['mutants']
+        for mutant in mutants:
+            self.assertEqual(self.mutant_runs(events)[mutant['id']], [None, True], mutant['id'])
+        diagnostics = report['diagnostics']
+        self.assertIn(f'zygote watchdog: {len(mutants)} timeout reruns', diagnostics)
+        self.assertFalse(any('kept without a rerun' in d for d in diagnostics), diagnostics)
         self.assert_reaped(events)
 
     def test_timeouts_are_never_rerun_without_zygote(self):
@@ -610,6 +665,43 @@ class NativeCoordinator(unittest.TestCase):
         self.assertEqual(sum('zygote worker timed out where a normal worker did not; '
                              'zygote disabled for the rest of the run' == d for d in diagnostics), 1,
                          diagnostics)
+        self.assert_reaped(events)
+
+    def test_a_rolling_lane_that_timed_out_while_running_is_not_rerun(self):
+        self.require_two_workers()
+        for mode in ('lanes-rolling-watchdog-busy', 'lanes-rolling-watchdog-test'):
+            with self.subTest(mode=mode):
+                result, report, events = self.run_cli(
+                    mode, full=True, shared=True,
+                    extra_args=('--workers', '2', '--zygote', '--rolling-lanes'))
+                self.require_spare_capacity(report)
+                first = report['mutants'][0]['id']
+                outcomes = [m['outcome'] for m in report['mutants']]
+                self.assertEqual(outcomes[0], 'timeout', outcomes)
+                self.assertEqual(set(outcomes[1:]), {'survived'}, outcomes)
+                # Only the batch itself ran the lane: no job of its own, zygote still on.
+                runs = [e for e in events if e['event'] == 'run' and e['job'] == first]
+                self.assertEqual(len(runs), 1, runs)
+                self.assertNotEqual(runs[0].get('bypass'), True)
+                diagnostics = report['diagnostics']
+                self.assertFalse(any('timeout reruns' in d for d in diagnostics), diagnostics)
+                self.assertIn('zygote watchdog: 1 timeouts kept without a rerun '
+                              '(worker was running, not stalled)', diagnostics)
+                self.assertFalse(any('zygote disabled' in d for d in diagnostics), diagnostics)
+                self.assert_reaped(events)
+
+    def test_a_rolling_lane_that_stalled_is_still_rerun(self):
+        self.require_two_workers()
+        result, report, events = self.run_cli(
+            'lanes-rolling-watchdog-idle', full=True, shared=True,
+            extra_args=('--workers', '2', '--zygote', '--rolling-lanes'))
+        self.require_spare_capacity(report)
+        first = report['mutants'][0]['id']
+        self.assertEqual({m['outcome'] for m in report['mutants']}, {'survived'})
+        runs = [e for e in events if e['event'] == 'run' and e['job'] == first]
+        self.assertEqual(runs[-1].get('bypass'), True, runs)
+        diagnostics = report['diagnostics']
+        self.assertIn('zygote watchdog: 1 timeout reruns', diagnostics)
         self.assert_reaped(events)
 
     def test_ineligible_precollect_templates_are_reported_and_never_part_of_a_result(self):

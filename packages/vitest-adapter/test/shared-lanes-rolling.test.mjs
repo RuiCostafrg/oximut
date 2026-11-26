@@ -29,7 +29,10 @@ async function fixture(t) {
   // - `mid*` mutants hold their slot for MID_MS;
   // - `hang` waits until four `f*` mutants have finished, then never yields: the
   //   neighbouring slot must keep serving lanes while `hang` holds its own slot;
-  // - `crash` kills its own process, `killed` fails; every other mutant passes at once.
+  // - `crash` kills its own process, `killed` fails; every other mutant passes at once;
+  // - `spin` loops forever on the CPU, `stall` sleeps forever without using it (what a
+  //   deadlocked zygote child looks like), `orphan` starts a child process and then spins,
+  //   `testtimeout` outlasts its own 300 ms Vitest test timeout.
   // The events record when each mutant's worker entered and finished.
   await writeFile(
     join(root, 'rolling.test.ts'),
@@ -46,6 +49,15 @@ const WAIT_MS = ${WAIT_MS};
 const pause = (ms) => Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
 log('enter');
 test('work', async () => {
+  if (active === 'spin') while (true) {}
+  if (active === 'stall') pause(10 * 60 * 1000);
+  if (active === 'orphan') {
+    const { spawn } = await import('node:child_process');
+    const child = spawn(process.execPath, ['-e', 'setInterval(() => {}, 1000)'], { stdio: 'ignore' });
+    appendFileSync(events, JSON.stringify({ type: 'child', id: active, pid: child.pid }) + '\\n');
+    while (true) {}
+  }
+  if (active === 'testtimeout') await new Promise((r) => setTimeout(r, 20000));
   if (active.startsWith('slow')) {
     const give_up = Date.now() + WAIT_MS;
     while (finishedFast() < 3) {
@@ -65,7 +77,7 @@ test('work', async () => {
   }
   expect(active.startsWith('killed')).toBe(false);
   log('done');
-});`,
+}, active === 'testtimeout' ? 300 : undefined);`,
   );
   const module = {
     id: '__resident__',
@@ -247,5 +259,64 @@ test('a changed resident module drains every slot first', { timeout: 180000 }, a
   assert.deepEqual(summary(second.lanes), changed.map((job) => [job.jobId, 'passed']));
   const log = await s.events();
   gone([...new Set(log.map((event) => event.pid))]);
+  await c.close();
+});
+
+test('a timeout says whether its worker was running, stalled or answering', {
+  timeout: 240000,
+}, async (t) => {
+  const s = await fixture(t);
+  const c = await s.controller();
+  // The deadline outlasts a worker's start-up on a loaded host, and is long enough
+  // for the sampling window (a fifth of it) to see the difference.
+  const ids = ['spin', 'stall', 'testtimeout', 'f1'];
+  const jobs = ids.map((id) => s.job(id, 10000));
+  const result = await c.run({ ...jobs[0], workers: 2, lanes: jobs });
+  assert.deepEqual(summary(result.lanes), [
+    ['spin', 'timeout'],
+    ['stall', 'timeout'],
+    ['testtimeout', 'timeout'],
+    ['f1', 'passed'],
+  ]);
+  // A genuine infinite loop: the worker was on the CPU to the end, so no rerun is owed.
+  assert.equal(result.lanes[0].timeoutKind, 'busy');
+  // A worker that stopped without using the CPU looks like a stalled zygote child,
+  // which the CLI reruns on an ordinary worker.
+  assert.equal(result.lanes[1].timeoutKind, 'idle');
+  // Vitest's own timeout came from a worker that was alive and said so.
+  assert.equal(result.lanes[2].timeoutKind, 'test-timeout');
+  assert.equal(result.lanes[3].timeoutKind, undefined);
+  const log = await s.events();
+  gone([...new Set(log.map((event) => event.pid))]);
+  await c.close();
+});
+
+test('a lane stopped at its deadline takes its whole process tree with it', {
+  timeout: 240000,
+}, async (t) => {
+  const s = await fixture(t);
+  const c = await s.controller();
+  const jobs = ['orphan', 'f1'].map((id) => s.job(id, 10000));
+  const result = await c.run({ ...jobs[0], workers: 2, lanes: jobs });
+  assert.deepEqual(summary(result.lanes), [
+    ['orphan', 'timeout'],
+    ['f1', 'passed'],
+  ]);
+  assert.equal(result.lanes[0].timeoutKind, 'busy');
+  const log = await s.events();
+  const child = log.find((event) => event.type === 'child').pid;
+  // Killed with the worker, not left for the end-of-run sweep (a zombie awaiting its
+  // reaper still answers signal 0, so look at its state).
+  const running = async () => {
+    try {
+      const stat = await readFile(`/proc/${child}/stat`, 'utf8');
+      return !/^[ZX]/.test(stat.slice(stat.lastIndexOf(')') + 2));
+    } catch {
+      return false;
+    }
+  };
+  for (let waited = 0; waited < 5000 && (await running()); waited += 50)
+    await new Promise((r) => setTimeout(r, 50));
+  assert.equal(await running(), false, 'the worker\'s child outlived the worker');
   await c.close();
 });
