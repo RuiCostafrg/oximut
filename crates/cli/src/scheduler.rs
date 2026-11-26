@@ -386,6 +386,12 @@ struct ZygoteWatchdog {
     /// Mutant indexes whose single bypassed rerun is queued or running.
     rerunning: BTreeSet<usize>,
 }
+/// Splits jobs into those that can be lanes of a shared controller (they carry the
+/// resident module of their file) and those that cannot (see [`Scheduler::run_jobs`]).
+fn split_unshared(jobs: Vec<(usize, Request)>) -> (Vec<(usize, Request)>, Vec<(usize, Request)>) {
+    jobs.into_iter()
+        .partition(|(_, job)| job.resident.is_some())
+}
 /// Whether a job still fits the request limit once wrapped as a one-lane batch.
 // Leaves room for the batch's own, slightly longer, deadline field.
 const MAX_LANE_BATCH: usize = 8 * 1024 * 1024 - 64;
@@ -1097,6 +1103,24 @@ impl<'a> Scheduler<'a> {
         // Mutant jobs are priced per job until a lane batch says otherwise.
         self.budget.lanes_per_worker = 1;
         if self.options.shared_controller && self.slots.len() >= 2 {
+            // A lane needs the resident module of its file. A mutant without one
+            // (a static fresh mutant, from a file that cannot be switched) cannot
+            // be a lane, and one such job in a batch would fail the whole batch
+            // and move the rest of the run off the shared controller. It runs on
+            // an ordinary worker instead, before the lanes start.
+            let (jobs, unshared) = split_unshared(jobs);
+            if !unshared.is_empty() {
+                trace::event(
+                    "unshared_jobs",
+                    || serde_json::json!({ "count": unshared.len() }),
+                );
+                for (index, response) in self.dispatch(unshared.into(), false) {
+                    results[index].outcome = response.mutant_outcome();
+                    results[index].tests = response.tests;
+                    results[index].errors = response.errors;
+                }
+                self.budget.lanes_per_worker = 1;
+            }
             // Fixed at the first batch, so that later batches reuse the same lanes.
             let total = jobs.len();
             let mut width = None;
@@ -1717,6 +1741,24 @@ mod tests {
         b.resident = None;
         assert!(!sizes.same_resident(&a, &b));
         assert!(sizes.same_resident(&b, &b.clone()));
+    }
+
+    #[test]
+    fn a_mutant_without_a_resident_module_is_never_a_lane() {
+        let set = Arc::new(vec![]);
+        let job = |id: usize, resident: Option<Arc<Vec<Mutation>>>| {
+            let mut job = request();
+            job.job_id = id.to_string();
+            job.resident = resident;
+            (id, job)
+        };
+        let (lanes, unshared) = split_unshared(vec![
+            job(0, Some(set.clone())),
+            job(1, None),
+            job(2, Some(set)),
+        ]);
+        assert_eq!(lanes.iter().map(|(i, _)| *i).collect::<Vec<_>>(), [0, 2]);
+        assert_eq!(unshared.iter().map(|(i, _)| *i).collect::<Vec<_>>(), [1]);
     }
 
     #[test]
