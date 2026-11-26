@@ -750,7 +750,7 @@ fn runtime_identity(options: &Options) -> Result<Vec<u8>, String> {
     }
     let existing = super::descendants(std::process::id());
     let mut child = command.spawn().map_err(|e| format!("node runtime: {e}"))?;
-    let deadline = Instant::now() + Duration::from_millis(options.timeout_ms.min(5_000));
+    let deadline = Instant::now() + Duration::from_millis(options.deadlines.baseline_ms.min(5_000));
     let mut owned = std::collections::BTreeMap::new();
     let result = loop {
         owned.extend(super::descendants(child.id()));
@@ -994,7 +994,7 @@ fn fingerprint_inputs(
             options.execution == Execution::Persistent,
             options.test_selection,
             options.isolation,
-            options.timeout_ms,
+            &options.deadlines,
             options.workers,
             options.memory_budget_mib,
             options.memory_reserve_mib,
@@ -1061,7 +1061,11 @@ mod tests {
             config: root.join("vitest.config.ts"),
             sources: vec![root.join("source.ts")],
             report: None,
-            timeout_ms: 1_000,
+            deadlines: crate::deadlines::Deadlines {
+                fixed_ms: Some(1_000),
+                baseline_ms: 1_000,
+                ..Default::default()
+            },
             adapter: root.join("adapter.mjs"),
             list: false,
             baseline_only: false,
@@ -1322,12 +1326,12 @@ mod tests {
             fingerprint_with_runtime(&options, "tool-and-operators-a", &runtime).unwrap()
         );
         fs::write(root.path().join("node"), "node-binary-a").unwrap();
-        options.timeout_ms += 1;
+        options.deadlines.constant_ms += 1;
         assert_ne!(
             key,
             fingerprint_with_runtime(&options, "tool-and-operators-a", &runtime).unwrap()
         );
-        options.timeout_ms -= 1;
+        options.deadlines.constant_ms -= 1;
         options.execution = Execution::Persistent;
         assert_ne!(
             key,
@@ -1460,6 +1464,7 @@ mod tests {
             },
             errors: vec![],
             selection: None,
+            deadline_ms: None,
             provenance: Provenance {
                 source: "executed".into(),
                 reason: "test".into(),

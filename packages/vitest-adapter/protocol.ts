@@ -19,7 +19,13 @@ export interface Selection {
 export interface Coverage {
   complete: boolean;
   tests: { id: string; file: string; name: string }[];
-  hits: { mutantId: string; tests: string[]; outsideTest: boolean }[];
+  hits: {
+    mutantId: string;
+    tests: string[];
+    outsideTest: boolean;
+    /** Compact form of `tests` for large suites: inclusive index runs into `Coverage.tests`. */
+    testRanges?: [number, number][];
+  }[];
   reasons: string[];
 }
 
@@ -56,6 +62,8 @@ export interface Result {
   tests: { passed: number; failed: number; skipped: number };
   errors: string[];
   coverage?: Coverage;
+  /** Baselines only: how long each test file took (import, setup and tests). */
+  fileTimings?: { file: string; durationMs: number }[];
   /** Count of resident modules served; required whenever the request had any. */
   resident?: number;
 }

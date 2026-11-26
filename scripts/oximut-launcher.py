@@ -11,6 +11,7 @@ def command(prefix, arguments):
     # Consume values exactly as the native CLI does, including repeated options.
     takes_value = {
         "--root", "--config", "--source", "--report", "--timeout-ms",
+        "--baseline-timeout-ms", "--timeout-factor", "--timeout-constant-ms",
         "--adapter", "--execution", "--order-seed", "--cache-input",
         "--cache-env", "--workers", "--memory-budget-mib", "--memory-reserve-mib",
     }

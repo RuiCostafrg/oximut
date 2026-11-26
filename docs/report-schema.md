@@ -64,8 +64,8 @@ The top-level object contains:
 | --- | --- |
 | `schemaVersion` | Report format version, currently integer `1`. |
 | `runId` | Run identity shared with adapter evidence. |
-| `baseline` | Adapter response for the original, unmutated project. Its `outcome`, `tests`, `errors`, and optional M3 `coverage` describe baseline evidence. |
-| `mutants` | One result per generated mutant, with stable identities; array order can vary with scheduling and execution order. Each result includes source location, operator and replacement, outcome, test counts, errors, optional selection, and provenance. |
+| `baseline` | Adapter response for the original, unmutated project. Its `outcome`, `tests`, `errors`, optional M3 `coverage` and optional `fileTimings` (`{file, durationMs}` per test file: the slowest time the baseline runs saw, which mutant deadlines derive from) describe baseline evidence. |
+| `mutants` | One result per generated mutant, with stable identities; array order can vary with scheduling and execution order. Each result includes source location, operator and replacement, outcome, test counts, errors, optional selection, optional `deadlineMs` (the deadline an executed mutant's job ran under, see [deadlines.md](deadlines.md)), and provenance. |
 | `diagnostics` | Run-level selection, adapter-reuse, cleanup, or resource messages. |
 | `sources` | Optional (always emitted by current versions). One `{file, sha256, mutants}` per `--source` file in option order: `file` uses the same path string as mutant `file`, `sha256` is the lowercase hex SHA-256 of the exact bytes read for generation in the final attempt, and `mutants` counts that file's entries in `mutants` (0 for `--baseline-only`). |
 | `mutators` | Optional (always emitted). `{selection, families}`: `selection` is `all` or `subset`; `families` is the sorted list of families in scope (all three when `all`). |

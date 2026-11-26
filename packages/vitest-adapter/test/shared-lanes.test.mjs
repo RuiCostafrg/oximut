@@ -194,6 +194,25 @@ test('a crashed shared fork fails closed and every fork exits', { timeout: 90000
   await c.close();
 });
 
+test('every lane of a batch is stopped at its own deadline', { timeout: 90000 }, async (t) => {
+  const s = await fixture(t);
+  const c = await s.controller();
+  // The hung lane is not the first: its deadline, not the first lane's, must stop it.
+  const jobs = [
+    { ...s.job('survived'), deadlineMs: 60000 },
+    { ...s.job('hang'), deadlineMs: 3000 },
+  ];
+  const started = performance.now();
+  const result = await c.run({ ...jobs[0], deadlineMs: 61000, lanes: jobs });
+  assert.deepEqual(
+    result.lanes.map((lane) => lane.outcome),
+    ['passed', 'timeout'],
+  );
+  assert.ok(performance.now() - started < 30000, 'the hung lane ran past its own deadline');
+  await assertGone(s.root);
+  await c.close();
+});
+
 test('batch assignments reject conflicting modules and duplicate identities', {
   timeout: 90000,
 }, async (t) => {

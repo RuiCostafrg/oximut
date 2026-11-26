@@ -1,6 +1,7 @@
 //! Sequential fresh-reference and persistent-controller runners.
 mod cache;
 mod coordinator;
+mod deadlines;
 mod modes;
 mod processes;
 mod resources;
@@ -22,7 +23,9 @@ use std::{
     time::{Duration, Instant, SystemTime, UNIX_EPOCH},
 };
 
-const HELP: &str = "Usage: oximut [--root DIR] [--config FILE] --source FILE [--source FILE ...]\n  --version           Print the Cargo package version\n  --report FILE       JSON report (- for stdout)\n  --timeout-ms N      Per-job deadline, default 30000 ms\n  --workers N         Maximum simultaneous mutation jobs / persistent baseline files (default 1; bounded by CPU limits)\n  --memory-budget-mib N Aggregate sampled RSS budget in MiB (1 MiB = 1048576 bytes); default host/container limit\n  --memory-reserve-mib N Reserved admission headroom in MiB (default 64)\n  --execution MODE   persistent (default: one reused controller; every mutant still runs in a fresh process) or fresh (a new controller per mutant, the reference for CI)\n  --isolation MODE   fresh-process (default) or fresh-thread (requires persistent)\n  --zygote            Fork Vitest mutant workers from one warm Node process; on by default for persistent runs on Linux with fresh-process isolation and the reference persistent adapter (explicit --zygote errors if those do not hold)\n  --zygote-precollect Fork a mutant's worker from a warm process that already collected its one test file; mutants evaluated at module load keep the ordinary zygote path. On by default when the zygote, test selection and the shared controller are active; explicit --zygote-precollect errors without the zygote or test selection\n  --rolling-lanes     Keep every lane slot busy and start the next mutant as soon as a lane's worker has exited, instead of waiting for the slowest lane of a batch. On by default with the shared controller; explicit --rolling-lanes errors without it\n  --no-zygote         Opt out of the zygote and use normal workers\n  --no-zygote-precollect Opt out of precollected templates\n  --no-rolling-lanes  Opt out of rolling lanes and run lanes in barrier batches\n  --no-shared-controller Use one Vitest controller per worker instead of the default shared controller\n  --test-selection    Collect baseline hits and conservatively select hit test files (default)\n  --no-test-selection Run the whole suite for every mutant\n  --mutators FAMILIES Repeatable comma-separated union: arithmetic,boolean-literal,comparison-boundary (default: all)\n  --order-seed N     Deterministically shuffle mutant execution order\n  --adapter FILE      Node adapter entry point override (an m2-runner.mjs beside m2-worker.ts runs natively)\n  --cache             Cache instrumentation; outcomes require --cache-inputs-complete\n  --cache-policy MODE  auto (default) learns whether outcome caching saves work; always validates/reuses eligible outcomes\n  --cache-inputs-complete Assert all nondeterministic/external inputs are declared\n  --cache-input FILE  Additional input file/directory (repeatable)\n  --cache-env NAME    Additional environment input (repeatable; values stay private)\n  --no-cache, --force Bypass all cache reads and writes\n  --list              Generate mutants as JSON without executing tests\n  --baseline-only     Run original sources without mutants\nExit: 0 complete/no survivors; 1 survivors/no coverage; 2 incomplete/error.\nScore: killed/(killed+survived+no-coverage)*100; empty denominator => null.\nInvalid/timeout/infrastructure-error/resource-exhausted/skipped are excluded and make a run incomplete.";
+/// The reason an adapter gives for dropping coverage that does not fit a response.
+const COVERAGE_TOO_LARGE: &str = "coverage-payload-too-large";
+const HELP: &str = "Usage: oximut [--root DIR] [--config FILE] --source FILE [--source FILE ...]\n  --version           Print the Cargo package version\n  --report FILE       JSON report (- for stdout)\n  --timeout-ms N      Fixed deadline in ms for every job (baselines and mutants); by default mutant deadlines are derived from the baseline: the time of the test files the mutant runs * --timeout-factor + --timeout-constant-ms\n  --baseline-timeout-ms N Deadline of each baseline run (default 600000 ms; --timeout-ms when that is given)\n  --timeout-factor F  Multiplier of the baseline time of a mutant's tests in its derived deadline (default 1.5)\n  --timeout-constant-ms N Added to every derived mutant deadline for worker start-up and collection (default 10000 ms)\n  --workers N         Maximum simultaneous mutation jobs / persistent baseline files (default 1; bounded by CPU limits)\n  --memory-budget-mib N Aggregate sampled RSS budget in MiB (1 MiB = 1048576 bytes); default host/container limit\n  --memory-reserve-mib N Reserved admission headroom in MiB (default 64)\n  --execution MODE   persistent (default: one reused controller; every mutant still runs in a fresh process) or fresh (a new controller per mutant, the reference for CI)\n  --isolation MODE   fresh-process (default) or fresh-thread (requires persistent)\n  --zygote            Fork Vitest mutant workers from one warm Node process; on by default for persistent runs on Linux with fresh-process isolation and the reference persistent adapter (explicit --zygote errors if those do not hold)\n  --zygote-precollect Fork a mutant's worker from a warm process that already collected its one test file; mutants evaluated at module load keep the ordinary zygote path. On by default when the zygote, test selection and the shared controller are active; explicit --zygote-precollect errors without the zygote or test selection\n  --rolling-lanes     Keep every lane slot busy and start the next mutant as soon as a lane's worker has exited, instead of waiting for the slowest lane of a batch. On by default with the shared controller; explicit --rolling-lanes errors without it\n  --no-zygote         Opt out of the zygote and use normal workers\n  --no-zygote-precollect Opt out of precollected templates\n  --no-rolling-lanes  Opt out of rolling lanes and run lanes in barrier batches\n  --no-shared-controller Use one Vitest controller per worker instead of the default shared controller\n  --test-selection    Collect baseline hits and conservatively select hit test files (default)\n  --no-test-selection Run the whole suite for every mutant\n  --mutators FAMILIES Repeatable comma-separated union: arithmetic,boolean-literal,comparison-boundary (default: all)\n  --order-seed N     Deterministically shuffle mutant execution order\n  --adapter FILE      Node adapter entry point override (an m2-runner.mjs beside m2-worker.ts runs natively)\n  --cache             Cache instrumentation; outcomes require --cache-inputs-complete\n  --cache-policy MODE  auto (default) learns whether outcome caching saves work; always validates/reuses eligible outcomes\n  --cache-inputs-complete Assert all nondeterministic/external inputs are declared\n  --cache-input FILE  Additional input file/directory (repeatable)\n  --cache-env NAME    Additional environment input (repeatable; values stay private)\n  --no-cache, --force Bypass all cache reads and writes\n  --list              Generate mutants as JSON without executing tests\n  --baseline-only     Run original sources without mutants\nExit: 0 complete/no survivors; 1 survivors/no coverage; 2 incomplete/error.\nScore: killed/(killed+survived+no-coverage)*100; empty denominator => null.\nInvalid/timeout/infrastructure-error/resource-exhausted/skipped are excluded and make a run incomplete.";
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 enum Execution {
@@ -52,7 +55,7 @@ struct Options {
     config: PathBuf,
     sources: Vec<PathBuf>,
     report: Option<PathBuf>,
-    timeout_ms: u64,
+    deadlines: deadlines::Deadlines,
     adapter: PathBuf,
     list: bool,
     baseline_only: bool,
@@ -112,7 +115,10 @@ fn parse_options_on(
     let mut config = PathBuf::from("vitest.config.ts");
     let mut sources = vec![];
     let mut report = None;
-    let mut timeout_ms = 30_000;
+    let mut timeout_ms: Option<u64> = None;
+    let mut baseline_timeout_ms: Option<u64> = None;
+    let mut timeout_factor = deadlines::DEFAULT_TIMEOUT_FACTOR;
+    let mut timeout_constant_ms = deadlines::DEFAULT_TIMEOUT_CONSTANT_MS;
     let mut adapter =
         Path::new(env!("CARGO_MANIFEST_DIR")).join("../../packages/vitest-adapter/m1-runner.mjs");
     let mut adapter_override = false;
@@ -180,6 +186,9 @@ fn parse_options_on(
             | "--source"
             | "--report"
             | "--timeout-ms"
+            | "--baseline-timeout-ms"
+            | "--timeout-factor"
+            | "--timeout-constant-ms"
             | "--adapter"
             | "--execution"
             | "--isolation"
@@ -258,10 +267,29 @@ fn parse_options_on(
                                 .map_err(|_| "--order-seed must be an unsigned integer")?,
                         )
                     }
-                    _ => {
-                        timeout_ms = value
+                    "--timeout-ms" => {
+                        timeout_ms = Some(
+                            value
+                                .parse()
+                                .map_err(|_| "--timeout-ms must be a positive integer")?,
+                        )
+                    }
+                    "--baseline-timeout-ms" => {
+                        baseline_timeout_ms = Some(
+                            value
+                                .parse()
+                                .map_err(|_| "--baseline-timeout-ms must be a positive integer")?,
+                        )
+                    }
+                    "--timeout-constant-ms" => {
+                        timeout_constant_ms = value
                             .parse()
-                            .map_err(|_| "--timeout-ms must be a positive integer")?
+                            .map_err(|_| "--timeout-constant-ms must be a non-negative integer")?
+                    }
+                    _ => {
+                        timeout_factor = value
+                            .parse()
+                            .map_err(|_| "--timeout-factor must be a number")?
                     }
                 }
             }
@@ -299,9 +327,32 @@ fn parse_options_on(
     if memory_budget_mib.is_some_and(|n| memory_reserve_mib >= n) {
         return Err("--memory-reserve-mib must be smaller than --memory-budget-mib".into());
     }
-    if timeout_ms == 0 || timeout_ms > 86_400_000 {
-        return Err("--timeout-ms must be 1..86400000".into());
+    let max = deadlines::MAX_TIMEOUT_MS;
+    if timeout_ms.is_some_and(|ms| !(1..=max).contains(&ms)) {
+        return Err(format!("--timeout-ms must be 1..{max}"));
     }
+    if baseline_timeout_ms.is_some_and(|ms| !(1..=max).contains(&ms)) {
+        return Err(format!("--baseline-timeout-ms must be 1..{max}"));
+    }
+    if timeout_constant_ms > max {
+        return Err(format!("--timeout-constant-ms must be 0..{max}"));
+    }
+    if !(timeout_factor.is_finite()
+        && (1.0..=deadlines::MAX_TIMEOUT_FACTOR).contains(&timeout_factor))
+    {
+        return Err(format!(
+            "--timeout-factor must be 1..{}",
+            deadlines::MAX_TIMEOUT_FACTOR
+        ));
+    }
+    let deadlines = deadlines::Deadlines {
+        fixed_ms: timeout_ms,
+        baseline_ms: baseline_timeout_ms
+            .or(timeout_ms)
+            .unwrap_or(deadlines::DEFAULT_BASELINE_TIMEOUT_MS),
+        factor: timeout_factor,
+        constant_ms: timeout_constant_ms,
+    };
     if list && baseline_only {
         return Err("--list and --baseline-only cannot be combined".into());
     }
@@ -384,7 +435,7 @@ fn parse_options_on(
         config,
         sources: unique.into_iter().collect(),
         report,
-        timeout_ms,
+        deadlines,
         adapter,
         list,
         baseline_only,
@@ -423,6 +474,7 @@ fn infrastructure(request: &Request, error: impl Into<String>) -> Response {
         errors: vec![error.into()],
         coverage: None,
         resident: None,
+        file_timings: None,
     }
 }
 
@@ -552,7 +604,7 @@ fn invoke(options: &Options, request: &Request) -> Response {
             .spawn()
             .map_err(|e| format!("could not start Node adapter: {e}"))?;
         let started = Instant::now();
-        let limit = Duration::from_millis(options.timeout_ms + 5_000);
+        let limit = Duration::from_millis(request.deadline_ms + 5_000);
         let mut owned = BTreeMap::new();
         let mut last_snapshot = Instant::now() - Duration::from_secs(1);
         let status = loop {
@@ -974,12 +1026,19 @@ fn validate_coverage(
             let unique: BTreeSet<_> = hit.tests.iter().collect();
             unique.len() != hit.tests.len() || hit.tests.iter().any(|id| !ids.contains(id))
         })
-        || coverage.tests.iter().any(|test| {
-            let file = Path::new(&test.file);
-            !file.is_absolute()
-                || !file.starts_with(root)
-                || file.canonicalize().ok().as_deref() != Some(file)
-        })
+        || coverage
+            .tests
+            .iter()
+            .map(|test| test.file.as_str())
+            .collect::<BTreeSet<_>>()
+            .into_iter()
+            // Once per file, however many tests it holds.
+            .any(|file| {
+                let file = Path::new(file);
+                !file.is_absolute()
+                    || !file.starts_with(root)
+                    || file.canonicalize().ok().as_deref() != Some(file)
+            })
     {
         return Err("invalid-coverage-inventory".into());
     }
@@ -1199,7 +1258,7 @@ fn run_attempt(options: &Options, previous: Option<RetryEvidence>) -> Result<Att
         kind: "baseline".into(),
         root: options.root.to_string_lossy().into_owned(),
         config: options.config.to_string_lossy().into_owned(),
-        deadline_ms: options.timeout_ms,
+        deadline_ms: options.deadlines.baseline_ms,
         workers: None,
         pool: (options.execution == Execution::Persistent
             && options.isolation == Isolation::FreshThread)
@@ -1219,6 +1278,7 @@ fn run_attempt(options: &Options, previous: Option<RetryEvidence>) -> Result<Att
     if !options.baseline_only && !mutants.is_empty() {
         let mut warm_request = request.clone();
         warm_request.job_id = "spare-warm".into();
+        warm_request.deadline_ms = options.deadlines.warm_ms();
         warm_request.resident = groups.first().cloned();
         scheduler.prepare_spares(&warm_request);
     }
@@ -1232,6 +1292,12 @@ fn run_attempt(options: &Options, previous: Option<RetryEvidence>) -> Result<Att
         "originalBaseline",
         baseline_started.elapsed().as_secs_f64() * 1000.0,
     );
+    // What the baselines say about how long the suite, and each test file, takes:
+    // mutant deadlines are derived from it.
+    let mut suite_timings = deadlines::SuiteTimings::new(options.workers);
+    if baseline.outcome == TestOutcome::Passed {
+        suite_timings.observe(&baseline, baseline_started.elapsed().as_secs_f64() * 1000.0);
+    }
     // Instrumented runs validate inactive switching for the exact module groups
     // mutant jobs serve and, with selection, collect per-test coverage from the
     // same code. Normally one group and one run; groups split only to keep each
@@ -1319,6 +1385,9 @@ fn run_attempt(options: &Options, previous: Option<RetryEvidence>) -> Result<Att
         } else {
             scheduler.execute(&request)
         };
+        if collected.outcome == TestOutcome::Passed {
+            suite_timings.observe(&collected, started.elapsed().as_secs_f64() * 1000.0);
+        }
         if collected.outcome == TestOutcome::Passed
             && (collected.tests.passed != baseline.tests.passed
                 || collected.tests.failed != baseline.tests.failed
@@ -1358,7 +1427,26 @@ fn run_attempt(options: &Options, previous: Option<RetryEvidence>) -> Result<Att
                 reasons: vec!["missing-coverage".into()],
                 unprobed: BTreeMap::new(),
             });
-            if let Err(reason) = validate_coverage(
+            // Adapters send long hit lists as index runs to fit the response limit.
+            if collected_coverage.expand_ranges().is_err() {
+                collected_coverage.complete = false;
+                collected_coverage.hits.clear();
+                collected_coverage
+                    .reasons
+                    .push("invalid-coverage-ranges".into());
+            }
+            // The adapter drops coverage it cannot fit in a response, and says so;
+            // there is no inventory left to validate.
+            let dropped = collected_coverage
+                .reasons
+                .iter()
+                .any(|reason| reason == COVERAGE_TOO_LARGE);
+            if dropped {
+                diagnostics.push(
+                    "coverage exceeded the 1 MiB response limit; test selection falls back to full suites"
+                        .into(),
+                );
+            } else if let Err(reason) = validate_coverage(
                 &collected_coverage,
                 &inventory,
                 &options.root,
@@ -1400,6 +1488,9 @@ fn run_attempt(options: &Options, previous: Option<RetryEvidence>) -> Result<Att
         "instrumentedBaseline",
         instrumented_started.elapsed().as_secs_f64() * 1000.0,
     );
+    if baseline.outcome == TestOutcome::Passed {
+        baseline.file_timings = suite_timings.file_timings();
+    }
     let generation_offset = request.generation;
     let post_baseline_started = Instant::now();
     let baseline_ok = baseline.outcome == TestOutcome::Passed;
@@ -1476,6 +1567,8 @@ fn run_attempt(options: &Options, previous: Option<RetryEvidence>) -> Result<Att
                 && let Some(previous) = reusable_result(&indexed, &mutant, &selection, baseline_ok)
             {
                 let mut reused = previous.clone();
+                // Not executed in this run.
+                reused.deadline_ms = None;
                 reused.provenance = Provenance {
                     source: "cache".into(),
                     reason: "matching-project-fingerprint-and-fresh-baseline".into(),
@@ -1489,11 +1582,17 @@ fn run_attempt(options: &Options, previous: Option<RetryEvidence>) -> Result<Att
             if cache.report.outcomes_enabled {
                 cache.report.outcome_misses += 1;
             }
+            let mut deadline_ms = None;
             let response = if baseline_ok && !no_coverage {
                 request.job_id = mutant.id.clone();
                 request.generation = generation_offset + index as u64 + 1;
                 request.kind = "mutant".into();
                 request.selection = selection.clone();
+                // Part of the job, so a zygote watchdog rerun keeps it.
+                request.deadline_ms = options
+                    .deadlines
+                    .for_mutant(&suite_timings, selection.as_ref());
+                deadline_ms = Some(request.deadline_ms);
                 // A load-time mutant would never see its mutation in a worker that
                 // already evaluated the module, so it keeps the ordinary zygote path,
                 // as does anything that is not a selection of whole test files.
@@ -1539,6 +1638,7 @@ fn run_attempt(options: &Options, previous: Option<RetryEvidence>) -> Result<Att
                     },
                     coverage: None,
                     resident: None,
+                    file_timings: None,
                 }
             };
             results.push(MutantResult {
@@ -1556,6 +1656,7 @@ fn run_attempt(options: &Options, previous: Option<RetryEvidence>) -> Result<Att
                 tests: response.tests,
                 errors: response.errors,
                 selection,
+                deadline_ms,
                 provenance: Provenance {
                     source: if no_coverage {
                         "baseline-coverage"
@@ -2178,6 +2279,72 @@ mod tests {
     }
 
     #[test]
+    fn deadlines_are_derived_unless_an_explicit_timeout_fixes_them() {
+        let derived = parse_on(true, &[]).unwrap().unwrap().deadlines;
+        assert_eq!(derived, deadlines::Deadlines::default());
+        assert_eq!(derived.fixed_ms, None);
+        assert_eq!(derived.baseline_ms, deadlines::DEFAULT_BASELINE_TIMEOUT_MS);
+        // `--timeout-ms` keeps its meaning: every job, baselines included.
+        let fixed = parse_on(true, &["--timeout-ms", "5000"])
+            .unwrap()
+            .unwrap()
+            .deadlines;
+        assert_eq!((fixed.fixed_ms, fixed.baseline_ms), (Some(5000), 5000));
+        // The baseline has a flag of its own, which wins for the baseline only.
+        let both = parse_on(
+            true,
+            &["--timeout-ms", "5000", "--baseline-timeout-ms", "90000"],
+        )
+        .unwrap()
+        .unwrap()
+        .deadlines;
+        assert_eq!((both.fixed_ms, both.baseline_ms), (Some(5000), 90000));
+        let tuned = parse_on(
+            true,
+            &["--timeout-factor", "2.5", "--timeout-constant-ms", "0"],
+        )
+        .unwrap()
+        .unwrap()
+        .deadlines;
+        assert_eq!((tuned.factor, tuned.constant_ms), (2.5, 0));
+        for (args, message) in [
+            (
+                &["--timeout-ms", "0"][..],
+                "--timeout-ms must be 1..86400000",
+            ),
+            (
+                &["--baseline-timeout-ms", "0"][..],
+                "--baseline-timeout-ms must be 1..86400000",
+            ),
+            (
+                &["--baseline-timeout-ms", "86400001"][..],
+                "--baseline-timeout-ms must be 1..86400000",
+            ),
+            (
+                &["--timeout-factor", "0.5"][..],
+                "--timeout-factor must be 1..",
+            ),
+            (
+                &["--timeout-factor", "NaN"][..],
+                "--timeout-factor must be 1..",
+            ),
+            (
+                &["--timeout-factor", "x"][..],
+                "--timeout-factor must be a number",
+            ),
+            (
+                &["--timeout-constant-ms", "86400001"][..],
+                "--timeout-constant-ms must be 0..86400000",
+            ),
+        ] {
+            assert!(
+                parse_on(true, args).err().unwrap().contains(message),
+                "{args:?}"
+            );
+        }
+    }
+
+    #[test]
     fn automatic_modes_are_skipped_silently_and_explicit_ones_error() {
         // The default single worker has no shared controller.
         let single = parse_on(true, &[]).unwrap().unwrap();
@@ -2273,11 +2440,13 @@ mod tests {
                     mutant_id: "a".into(),
                     tests: vec!["t".into()],
                     outside_test: false,
+                    ..Default::default()
                 },
                 Hit {
                     mutant_id: "b".into(),
                     tests: vec![],
                     outside_test: false,
+                    ..Default::default()
                 },
             ],
             reasons: vec![],
@@ -2297,6 +2466,7 @@ mod tests {
             mutant_id: "bogus".into(),
             tests: vec![],
             outside_test: false,
+            ..Default::default()
         });
         assert!(validate_coverage(&coverage, &inventory, &root, &tests).is_err());
         assert!(validate_coverage(&coverage, &["a".into(), "a".into()], &root, &tests).is_err());

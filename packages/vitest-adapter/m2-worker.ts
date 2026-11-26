@@ -4,6 +4,7 @@ import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { normalizePath } from 'vite';
 import { createVitest, type Reporter, version } from 'vitest/node';
+import { attachBaselineEvidence } from './baseline-evidence.ts';
 import { SelectionSupport } from './m3-selection.ts';
 import {
   type Request,
@@ -437,6 +438,7 @@ async function command(name: string, args: Request): Promise<unknown> {
   // executed results from adapters that ignore them.
   if (job.resident) result.resident = job.resident.length;
   result.coverage = selectionSupport.finish(vitest, job, modules, result);
+  attachBaselineEvidence(job, modules, result);
   selectionSupport.close();
   return result;
 }

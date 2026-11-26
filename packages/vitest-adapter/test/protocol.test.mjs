@@ -177,7 +177,6 @@ test('compact lane messages still enforce shape and expanded request constraints
   for (const [bad, message] of [
     [{ lanes: [{ ...mutant, root: '/other' }] }, /Invalid lane assignment/],
     [{ lanes: [{ ...mutant, deadlineMs: 1002 }] }, /Invalid lane assignment/],
-    [{ lanes: [{ ...mutant, deadlineMs: 2 }, mutant] }, /Invalid lane assignment/],
     [{ lanes: [{ ...mutant, deadlineMs: 0 }] }, /Invalid deadlineMs/],
     [{ lanes: [{ ...mutant, lanes: [] }] }, /Invalid lane assignment/],
     [{ lanes: [mutant, mutant] }, /Invalid lane assignment/],
@@ -196,6 +195,25 @@ test('compact lane messages still enforce shape and expanded request constraints
     runtime.restoreLaneResidents(request);
     assert.throws(() => runtime.validateRequest(request), message);
   }
+});
+
+test('lanes carry their own deadlines, none beyond the batch deadline', () => {
+  // A mutant's deadline is derived from the tests it runs, so lanes differ.
+  const batch = (...deadlines) => {
+    const request = structuredClone(compactLaneRequest());
+    request.lanes = deadlines.map((deadlineMs, index) => ({
+      ...request.lanes[0],
+      jobId: `lane-${index}`,
+      mutation: { ...request.lanes[0].mutation, id: `lane-${index}` },
+      deadlineMs,
+    }));
+    request.deadlineMs = 1001;
+    runtime.restoreLaneResidents(request);
+    return request;
+  };
+  runtime.validateRequest(batch(2, 1, 1001));
+  assert.throws(() => runtime.validateRequest(batch(2, 1002)), /Invalid lane assignment/);
+  assert.throws(() => runtime.validateRequest(batch(1001, 0)), /Invalid deadlineMs/);
 });
 
 test('validation preserves rejection order and exact diagnostic messages', () => {
@@ -398,7 +416,7 @@ test('shared lane batches reject every inconsistent assignment', () => {
     [batch([lane('a', { runId: 'other' })]), /Invalid lane assignment/],
     [batch([lane('a', { deadlineMs: 2 })]), /Invalid lane assignment/],
     [
-      batch([lane('a'), lane('b', { deadlineMs: 2 })], { deadlineMs: 9 }),
+      batch([lane('a'), lane('b', { deadlineMs: 10 })], { deadlineMs: 9 }),
       /Invalid lane assignment/,
     ],
     [batch([lane('a', { pool: 'threads' })]), /Invalid lane assignment/],
