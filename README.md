@@ -55,6 +55,7 @@ are for matched tool comparisons and scoped analysis, not performance-target gam
 - [M6 decision](docs/m6.md): measured scope, release gates, and remaining work.
 - [Compatibility](docs/compatibility.md), [report schema](docs/report-schema.md), and [source installation](docs/install.md).
 - [Zygote workers](docs/zygote.md): Linux fast path, precollect and rolling lanes, on by default when their prerequisites hold (`--no-zygote`, `--no-zygote-precollect`, `--no-rolling-lanes` opt out).
+- Concurrency: `--workers` defaults to `auto`, StrykerJS's rule on the CPUs the process may use ([M5](docs/m5.md#worker-count)); `--workers N` overrides it and `--workers 1` runs one job at a time.
 - [Architecture](docs/architecture.md): ownership, execution protocol, and correctness rules.
 - [Benchmark plan](docs/benchmarks.md): fair comparison with Stryker and success criteria.
 - [Vitest lifecycle decision](docs/adr/0001-vitest-lifecycle.md): measured reuse boundaries.
@@ -128,8 +129,10 @@ combination only when supported by tests.
 Browser mode, Jest, framework-specific source formats, and TypeScript semantic
 checking are deferred. Unsupported constructs
 must be reported, not silently treated as covered or successfully tested.
-Concurrent workers require tests whose external inputs and outputs are isolated;
-the default remains one worker.
+Concurrent workers require tests whose external inputs and outputs are isolated.
+The default `--workers auto` runs as many workers as the usable CPUs allow
+(StrykerJS's rule; see [M5](docs/m5.md#worker-count)); a project whose tests share
+ports, files or databases should pass `--workers 1`.
 
 ## References
 

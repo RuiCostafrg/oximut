@@ -51,7 +51,7 @@ class InstrumentedBaseline(unittest.TestCase):
             command = [
                 str(REPO / 'target/debug/oximut'), '--root', str(ROOT),
                 '--execution', 'persistent', '--adapter', str(adapter), '--report', '-',
-                '--timeout-ms', '5000', '--no-cache',
+                '--timeout-ms', '5000', '--no-cache', '--workers', '1',
             ]
             for source in SOURCES:
                 command += ['--source', str(source)]

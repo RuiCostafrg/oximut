@@ -72,7 +72,7 @@ class CliFailurePaths(unittest.TestCase):
             [
                 str(BINARY), "--root", str(root), "--config", str(root / "vitest.config.ts"),
                 "--source", str(SOURCE), "--execution", "fresh", "--adapter", str(self.adapter),
-                "--report", str(self.report),
+                "--report", str(self.report), "--workers", "1",
                 "--timeout-ms", "1000",
             ],
             cwd=REPO,

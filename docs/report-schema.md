@@ -162,7 +162,9 @@ are summed. Fingerprint profiles retain both attempts in chronological order.
 `runnerHashMs` sums both executable hashes when the final cache remains enabled;
 disabled final cache reports always keep it at zero, including runner-read failures.
 
-Current `resources` fields are `configuredWorkers`, `effectiveWorkers`,
+`configuredWorkers` is the resolved `--workers` count (an explicit value, or the
+automatic rule's result; a `workers=N (explicit|auto: C CPUs)` line in
+`diagnostics` says which). Current `resources` fields are `configuredWorkers`, `effectiveWorkers`,
 `cpuLimitWorkers`, `configuredBudgetBytes` (nullable), `budgetBytes`,
 `reserveBytes`, `cgroups`, `measurement`, `enforcement`, `sampleIntervalMs`,
 `peakAggregateRssBytes`, `measuredWorkerPeakBytes`,

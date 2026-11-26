@@ -66,7 +66,7 @@ class CollectionErrors(unittest.TestCase):
             result = subprocess.run([
                 str(BINARY), '--root', str(root), '--source', 'source.ts',
                 '--config', 'vitest.config.mjs', '--no-cache', '--mutators', 'arithmetic',
-                '--report', str(report), *MODES[mode],
+                '--report', str(report), '--workers', '1', *MODES[mode],
             ], cwd=REPO, capture_output=True, text=True, timeout=180)
             self.assertTrue(report.is_file(), result.stdout + result.stderr)
             return result, json.loads(report.read_text())

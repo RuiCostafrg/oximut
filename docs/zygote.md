@@ -38,14 +38,19 @@ naming both is an error.
 | Persistent execution | on | `--execution fresh` | none (fresh is the CI reference) |
 | Test selection | on | `--no-test-selection` | none |
 | Zygote | auto | `--no-zygote` | Linux, persistent, `--isolation fresh-process`, reference adapter |
-| Zygote precollect | auto | `--no-zygote-precollect` | zygote on, test selection on, shared controller (`--workers 2` or more) |
-| Rolling lanes | auto | `--no-rolling-lanes` | shared controller (persistent, `--workers 2` or more, no `--no-shared-controller`) |
+| Zygote precollect | auto | `--no-zygote-precollect` | zygote on, test selection on, shared controller (two or more workers) |
+| Rolling lanes | auto | `--no-rolling-lanes` | shared controller (persistent, two or more workers, no `--no-shared-controller`) |
+
+`--workers` defaults to `auto` (StrykerJS's rule on the CPU limit; see
+[M5](m5.md#worker-count)), so these modes are on by default on any host with at
+least two usable CPUs. `--workers 1` turns the shared controller, precollect and
+rolling lanes off.
 
 A missing prerequisite silently skips an *auto* mode. The run prints one line to
 stderr before it starts, for example
 
 ```
-oximut: modes: execution=persistent (default), test-selection=on (default), zygote=on (auto), zygote-precollect=on (auto), rolling-lanes=on (auto)
+oximut: modes: execution=persistent (default), test-selection=on (default), workers=3 (auto: 4 CPUs), zygote=on (auto), zygote-precollect=on (auto), rolling-lanes=on (auto)
 ```
 
 naming the resolved modes and whether each was explicit, default or auto, with

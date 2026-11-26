@@ -17,7 +17,7 @@ class PersistentEquivalence(unittest.TestCase):
             result = subprocess.run([
                 str(BINARY), '--root', str(root), '--config', str(root / 'vitest.config.ts'),
                 '--source', str(root / 'src' / source), '--execution', mode,
-                '--order-seed', str(seed), '--report', str(report),
+                '--order-seed', str(seed), '--report', str(report), '--workers', '1',
                 # Selection is on by default; these tests name the modes they compare.
                 *([] if '--test-selection' in extra else ['--no-test-selection']), *extra,
             ], cwd=REPO, text=True, capture_output=True, timeout=180)

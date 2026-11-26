@@ -80,7 +80,7 @@ class BaselineEvidence(unittest.TestCase):
             command = [
                 str(REPO / 'target/debug/oximut'), '--root', str(ROOT),
                 '--execution', 'persistent', '--adapter', str(adapter), '--report', '-',
-                '--no-cache', '--test-selection', *extra,
+                '--no-cache', '--test-selection', '--workers', '1', *extra,
             ]
             for source in SOURCES:
                 command += ['--source', str(source)]

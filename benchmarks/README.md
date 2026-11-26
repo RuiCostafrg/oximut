@@ -137,7 +137,9 @@ Each invocation starts fresh processes and uses isolated fixture copies with
 shared installed dependencies. Setup is excluded and recorded; OS filesystem
 caches are left untouched. Scenario/fixture order and forced/incremental pair
 order alternate. The default is five measured repetitions after one warmup.
-`--workers` sets Oximut worker concurrency and Stryker concurrency; ordinary
+`--workers` sets Oximut worker concurrency and Stryker concurrency (Oximut's own
+default is `auto`; the harnesses always pass the count so tools run at matched
+concurrency); ordinary
 Vitest stays fixed at `--maxWorkers=1`. `--memory-budget-mib` sets Oximut's soft
 admission budget only. Separate runs can explore budgets without implying that
 Stryker implements an equivalent cap.

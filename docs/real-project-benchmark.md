@@ -118,7 +118,9 @@ the overall cross-tool gate remains false because there is no comparison.
 Persistent execution defaults to fresh forks per test file. `--isolation fresh-thread` opts into fresh Vitest worker threads; see [m2.md](m2.md) for semantics. The harness still passes `--execution persistent --test-selection` explicitly, because the pinned before candidate predates those defaults; the after candidate also gets the automatic zygote, precollect and rolling lanes (for at least two workers) with no extra arguments. The benchmark measures that unless its dispatch input passes extra arguments such as the opt-outs `--no-zygote`, `--no-zygote-precollect`, `--no-rolling-lanes` or `--no-test-selection` (which replaces the pinned `--test-selection`).
 
 Each run uses a new private copy, `--concurrency` workers (one by default;
-Stryker gets the same value, and it must not exceed the usable CPUs), file isolation and disabled
+Stryker gets the same value, and it must not exceed the usable CPUs; the harness
+always passes `--workers` to Oximut explicitly, because the default is `auto`
+and a comparison needs matched concurrency), file isolation and disabled
 outcome caches. The two tools do not run the same pool. Oximut runs one fresh Vitest fork
 per mutant. Stryker's configuration sets no pool, so its Vitest runner uses its default,
 `vitest.pool: threads`, and forces `maxWorkers: 1` per Stryker worker process, overriding the

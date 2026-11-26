@@ -44,7 +44,7 @@ writeFileSync(output, JSON.stringify(response));
 class AttributionFailurePaths(unittest.TestCase):
     def test_incomplete_or_invalid_inventory_never_establishes_no_coverage(self):
         root = REPO / 'fixtures/m1'
-        base = [str(BINARY), '--root', str(root), '--source', 'src/subject.ts']
+        base = [str(BINARY), '--root', str(root), '--source', 'src/subject.ts', '--workers', '1']
         generated = subprocess.run(base + ['--list'], cwd=REPO, text=True,
                                    capture_output=True, check=True)
         ids = [mutant['id'] for mutant in json.loads(generated.stdout)['mutants']]

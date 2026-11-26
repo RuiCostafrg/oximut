@@ -38,7 +38,7 @@ class PersistentFailurePaths(unittest.TestCase):
             result = subprocess.run([
                 str(REPO / 'target/debug/oximut'), '--root', str(REPO / 'fixtures/m1'),
                 '--baseline-only', '--execution', 'persistent', '--adapter', str(adapter),
-                '--report', '-', '--timeout-ms', '1000',
+                '--report', '-', '--timeout-ms', '1000', '--workers', '1',
             ], env={**os.environ, 'OXIMUT_FAKE_MODE': mode},
                 text=True, capture_output=True, timeout=15)
             self.assertEqual(result.returncode, 2, result.stderr + result.stdout)

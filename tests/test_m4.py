@@ -116,7 +116,8 @@ for (;;) {
 def pinned_modes(extra):
     """Execution and selection are on by default; these tests name the modes they cover."""
     extra = [str(item) for item in extra]
-    return [*([] if "--execution" in extra else ["--execution", "fresh"]),
+    return [*([] if "--workers" in extra else ["--workers", "1"]),
+            *([] if "--execution" in extra else ["--execution", "fresh"]),
             *([] if "--test-selection" in extra else ["--no-test-selection"])]
 
 class IncrementalCache(unittest.TestCase):

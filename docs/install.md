@@ -54,7 +54,9 @@ On Linux with glibc and a C compiler, the installer also compiles an optional
 native "zygote" addon into the bundle; otherwise it prints a skip notice, the
 install still succeeds, and Oximut uses normal workers. It is used by default on
 Linux, because persistent execution is the default (opt out with `--no-zygote` or
-`--execution fresh`); see [Zygote workers](zygote.md).
+`--execution fresh`); see [Zygote workers](zygote.md). `--workers` defaults to
+`auto`, StrykerJS's rule on the CPUs the process may use ([M5](m5.md#worker-count));
+pass `--workers 1` for tests that share ports or files.
 
 The installer refuses to overwrite an existing `PREFIX/bin/oximut` or
 `PREFIX/lib/oximut`. To update, install into a new prefix and switch your PATH.

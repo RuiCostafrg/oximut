@@ -24,7 +24,8 @@ class ScaledDeadlines(unittest.TestCase):
             report = pathlib.Path(directory) / 'report.json'
             result = subprocess.run(
                 [str(BINARY), '--root', str(ROOT), '--config', str(ROOT / 'vitest.config.ts'),
-                 '--source', 'src/subject.ts', '--no-cache', '--report', str(report), *flags],
+                 '--source', 'src/subject.ts', '--no-cache', '--workers', '1',
+                 '--report', str(report), *flags],
                 cwd=REPO, text=True, capture_output=True, timeout=240)
             self.assertTrue(report.exists(), result.stdout + result.stderr)
             return json.loads(report.read_text()), result

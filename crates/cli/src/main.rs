@@ -25,7 +25,7 @@ use std::{
 
 /// The reason an adapter gives for dropping coverage that does not fit a response.
 const COVERAGE_TOO_LARGE: &str = "coverage-payload-too-large";
-const HELP: &str = "Usage: oximut [--root DIR] [--config FILE] --source FILE [--source FILE ...]\n  --version           Print the Cargo package version\n  --report FILE       JSON report (- for stdout)\n  --timeout-ms N      Fixed deadline in ms for every job (baselines and mutants); by default mutant deadlines are derived from the baseline: the time of the test files the mutant runs * --timeout-factor + --timeout-constant-ms\n  --baseline-timeout-ms N Deadline of each baseline run (default 600000 ms; --timeout-ms when that is given)\n  --timeout-factor F  Multiplier of the baseline time of a mutant's tests in its derived deadline (default 1.5)\n  --timeout-constant-ms N Added to every derived mutant deadline for worker start-up and collection (default 10000 ms; 5000 ms for a mutant that runs as a rolling lane of the shared controller, whose clock starts when its worker runs)\n  --workers N         Maximum simultaneous mutation jobs / persistent baseline files (default 1; bounded by CPU limits)\n  --memory-budget-mib N Aggregate sampled RSS budget in MiB (1 MiB = 1048576 bytes); default host/container limit\n  --memory-reserve-mib N Reserved admission headroom in MiB (default 64)\n  --execution MODE   persistent (default: one reused controller; every mutant still runs in a fresh process) or fresh (a new controller per mutant, the reference for CI)\n  --isolation MODE   fresh-process (default) or fresh-thread (requires persistent)\n  --zygote            Fork Vitest mutant workers from one warm Node process; on by default for persistent runs on Linux with fresh-process isolation and the reference persistent adapter (explicit --zygote errors if those do not hold)\n  --zygote-precollect Fork a mutant's worker from a warm process that already collected its one test file; mutants evaluated at module load keep the ordinary zygote path. On by default when the zygote, test selection and the shared controller are active; explicit --zygote-precollect errors without the zygote or test selection\n  --rolling-lanes     Keep every lane slot busy and start the next mutant as soon as a lane's worker has exited, instead of waiting for the slowest lane of a batch. On by default with the shared controller; explicit --rolling-lanes errors without it\n  --no-zygote         Opt out of the zygote and use normal workers\n  --no-zygote-precollect Opt out of precollected templates\n  --no-rolling-lanes  Opt out of rolling lanes and run lanes in barrier batches\n  --no-shared-controller Use one Vitest controller per worker instead of the default shared controller\n  --test-selection    Collect baseline hits and conservatively select hit test files (default)\n  --no-test-selection Run the whole suite for every mutant\n  --mutators FAMILIES Repeatable comma-separated union: arithmetic,boolean-literal,comparison-boundary (default: all)\n  --order-seed N     Deterministically shuffle mutant execution order\n  --adapter FILE      Node adapter entry point override (an m2-runner.mjs beside m2-worker.ts runs natively)\n  --cache             Cache instrumentation; outcomes require --cache-inputs-complete\n  --cache-policy MODE  auto (default) learns whether outcome caching saves work; always validates/reuses eligible outcomes\n  --cache-inputs-complete Assert all nondeterministic/external inputs are declared\n  --cache-input FILE  Additional input file/directory (repeatable)\n  --cache-env NAME    Additional environment input (repeatable; values stay private)\n  --no-cache, --force Bypass all cache reads and writes\n  --list              Generate mutants as JSON without executing tests\n  --baseline-only     Run original sources without mutants\nExit: 0 complete/no survivors; 1 survivors/no coverage; 2 incomplete/error.\nScore: killed/(killed+survived+no-coverage)*100; empty denominator => null.\nInvalid/timeout/infrastructure-error/resource-exhausted/skipped are excluded and make a run incomplete.";
+const HELP: &str = "Usage: oximut [--root DIR] [--config FILE] --source FILE [--source FILE ...]\n  --version           Print the Cargo package version\n  --report FILE       JSON report (- for stdout)\n  --timeout-ms N      Fixed deadline in ms for every job (baselines and mutants); by default mutant deadlines are derived from the baseline: the time of the test files the mutant runs * --timeout-factor + --timeout-constant-ms\n  --baseline-timeout-ms N Deadline of each baseline run (default 600000 ms; --timeout-ms when that is given)\n  --timeout-factor F  Multiplier of the baseline time of a mutant's tests in its derived deadline (default 1.5)\n  --timeout-constant-ms N Added to every derived mutant deadline for worker start-up and collection (default 10000 ms; 5000 ms for a mutant that runs as a rolling lane of the shared controller, whose clock starts when its worker runs)\n  --workers N|auto    Maximum simultaneous mutation jobs / persistent baseline files, 1..1024 (default auto: the CPUs this process may use, per the affinity mask and any cgroup quota, minus one above four, as StrykerJS does; held to what the memory budget carries at about 512 MiB a worker; memory admission can still lower it at run time). The resolved count is in the modes line and the report diagnostics\n  --memory-budget-mib N Aggregate sampled RSS budget in MiB (1 MiB = 1048576 bytes); default host/container limit\n  --memory-reserve-mib N Reserved admission headroom in MiB (default 64)\n  --execution MODE   persistent (default: one reused controller; every mutant still runs in a fresh process) or fresh (a new controller per mutant, the reference for CI)\n  --isolation MODE   fresh-process (default) or fresh-thread (requires persistent)\n  --zygote            Fork Vitest mutant workers from one warm Node process; on by default for persistent runs on Linux with fresh-process isolation and the reference persistent adapter (explicit --zygote errors if those do not hold)\n  --zygote-precollect Fork a mutant's worker from a warm process that already collected its one test file; mutants evaluated at module load keep the ordinary zygote path. On by default when the zygote, test selection and the shared controller are active; explicit --zygote-precollect errors without the zygote or test selection\n  --rolling-lanes     Keep every lane slot busy and start the next mutant as soon as a lane's worker has exited, instead of waiting for the slowest lane of a batch. On by default with the shared controller; explicit --rolling-lanes errors without it\n  --no-zygote         Opt out of the zygote and use normal workers\n  --no-zygote-precollect Opt out of precollected templates\n  --no-rolling-lanes  Opt out of rolling lanes and run lanes in barrier batches\n  --no-shared-controller Use one Vitest controller per worker instead of the default shared controller\n  --test-selection    Collect baseline hits and conservatively select hit test files (default)\n  --no-test-selection Run the whole suite for every mutant\n  --mutators FAMILIES Repeatable comma-separated union: arithmetic,boolean-literal,comparison-boundary (default: all)\n  --order-seed N     Deterministically shuffle mutant execution order\n  --adapter FILE      Node adapter entry point override (an m2-runner.mjs beside m2-worker.ts runs natively)\n  --cache             Cache instrumentation; outcomes require --cache-inputs-complete\n  --cache-policy MODE  auto (default) learns whether outcome caching saves work; always validates/reuses eligible outcomes\n  --cache-inputs-complete Assert all nondeterministic/external inputs are declared\n  --cache-input FILE  Additional input file/directory (repeatable)\n  --cache-env NAME    Additional environment input (repeatable; values stay private)\n  --no-cache, --force Bypass all cache reads and writes\n  --list              Generate mutants as JSON without executing tests\n  --baseline-only     Run original sources without mutants\nExit: 0 complete/no survivors; 1 survivors/no coverage; 2 incomplete/error.\nScore: killed/(killed+survived+no-coverage)*100; empty denominator => null.\nInvalid/timeout/infrastructure-error/resource-exhausted/skipped are excluded and make a run incomplete.";
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 enum Execution {
@@ -71,7 +71,11 @@ struct Options {
     no_cache: bool,
     cache_inputs: Vec<PathBuf>,
     cache_env: Vec<String>,
+    /// The resolved count: an explicit `--workers N`, or the automatic rule's.
     workers: usize,
+    /// How `workers` was chosen, for the summary and report diagnostics.
+    #[serde(default)]
+    workers_source: String,
     #[serde(default)]
     shared_controller: bool,
     /// Experimental: controllers serve mutant workers from a zygote.
@@ -111,14 +115,25 @@ fn options() -> Result<Option<Options>, String> {
 }
 
 fn parse_options(args: impl Iterator<Item = String>) -> Result<Option<Options>, String> {
-    parse_options_on(args, cfg!(target_os = "linux"))
+    parse_options_on(args, detect_platform())
 }
 
-/// `zygote_platform` says whether the host can run the zygote, so the automatic
-/// modes can be exercised on any platform.
+/// What this machine offers the automatic modes: whether it can run the zygote
+/// and the CPU and memory limits the automatic worker count follows.
+fn detect_platform() -> modes::Platform {
+    let (physical_memory_bytes, cgroup_memory_limit_bytes) = resources::host_memory();
+    modes::Platform {
+        zygote_platform: cfg!(target_os = "linux"),
+        cpu_limit: resources::cpu_limit(),
+        physical_memory_bytes,
+        cgroup_memory_limit_bytes,
+    }
+}
+
+/// `platform` is injected so the automatic modes can be exercised on any host.
 fn parse_options_on(
     mut args: impl Iterator<Item = String>,
-    zygote_platform: bool,
+    platform: modes::Platform,
 ) -> Result<Option<Options>, String> {
     let mut root = env::current_dir().map_err(|e| e.to_string())?;
     let mut config = PathBuf::from("vitest.config.ts");
@@ -144,7 +159,7 @@ fn parse_options_on(
     let mut no_cache = false;
     let mut cache_inputs = vec![];
     let mut cache_env = vec![];
-    let mut workers = 1;
+    let mut workers = modes::Workers::default();
     let mut no_shared_controller = false;
     let mut zygote = modes::Choice::Auto;
     let mut zygote_precollect = modes::Choice::Auto;
@@ -220,9 +235,7 @@ fn parse_options_on(
                             _ => return Err("--cache-policy must be auto or always".into()),
                         };
                     }
-                    "--workers" => {
-                        workers = value.parse().map_err(|_| "--workers requires an integer")?
-                    }
+                    "--workers" => workers = modes::Workers::parse(&value)?,
                     "--memory-budget-mib" => {
                         memory_budget_mib = Some(
                             value
@@ -324,9 +337,6 @@ fn parse_options_on(
         adapter = Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../packages/vitest-adapter/m2-runner.mjs");
     }
-    if !(1..=1024).contains(&workers) {
-        return Err("--workers must be 1..1024".into());
-    }
     if memory_budget_mib == Some(0)
         || memory_budget_mib.is_some_and(|n| n > u64::MAX / resources::MIB)
         || memory_reserve_mib > u64::MAX / resources::MIB
@@ -418,6 +428,8 @@ fn parse_options_on(
             execution: execution_flag,
             isolation,
             workers,
+            memory_budget_mib,
+            memory_reserve_mib,
             no_shared_controller,
             test_selection,
             zygote,
@@ -425,7 +437,7 @@ fn parse_options_on(
             rolling_lanes,
         },
         &modes::Host {
-            zygote_platform,
+            platform,
             reference_adapter: adapter
                 .canonicalize()
                 .map(|adapter| coordinator::native_worker(&adapter).is_some())
@@ -467,7 +479,8 @@ fn parse_options_on(
         no_cache,
         cache_inputs,
         cache_env,
-        workers,
+        workers: modes.workers,
+        workers_source: modes.workers_source,
         shared_controller: modes.shared_controller,
         zygote: modes.zygote,
         zygote_off_reason: modes.zygote_off_reason,
@@ -1231,6 +1244,10 @@ fn run_attempt(options: &Options, previous: Option<RetryEvidence>) -> Result<Att
         Execution::Fresh => "execution=fresh; isolation=fresh-controller-and-test-process".into(),
         Execution::Persistent => format!("execution=persistent; isolation={}; controller reuse only; baseline=original-and-instrumented{}{}{}", if options.isolation == Isolation::FreshThread { "fresh-test-threads" } else { "fresh-test-forks" }, match (options.zygote, &options.zygote_off_reason) { (true, _) => "; zygote=on".to_string(), (false, Some(reason)) => format!("; zygote=off ({reason})"), (false, None) => "; zygote=off".to_string() }, if options.zygote_precollect { "; zygote-precollect=on" } else { "" }, if options.rolling_lanes { "; rolling-lanes=on" } else { "" }),
     });
+    diagnostics.push(format!(
+        "workers={} ({})",
+        options.workers, options.workers_source
+    ));
     diagnostics.push(if options.mutators.is_empty() {
         "mutator families=all".into()
     } else {
@@ -2219,7 +2236,7 @@ mod tests {
                 .into_iter()
                 .chain(args.iter().copied())
                 .map(str::to_string),
-                true,
+                test_platform(true, 8),
             )
             .unwrap()
             .unwrap()
@@ -2229,9 +2246,23 @@ mod tests {
         assert!(!on_linux(&["--execution", "fresh"]).zygote);
     }
 
+    /// A machine with `cpu_limit` CPUs and plenty of memory, whatever the host is.
+    fn test_platform(zygote_platform: bool, cpu_limit: usize) -> modes::Platform {
+        modes::Platform {
+            zygote_platform,
+            cpu_limit,
+            physical_memory_bytes: Some(64 << 30),
+            cgroup_memory_limit_bytes: None,
+        }
+    }
+
     /// Parse against a host whose platform does (or does not) support the zygote,
     /// on the m1 fixture, so the automatic modes behave the same everywhere.
     fn parse_on(zygote_platform: bool, args: &[&str]) -> Result<Option<Options>, String> {
+        parse_with(test_platform(zygote_platform, 8), args)
+    }
+
+    fn parse_with(platform: modes::Platform, args: &[&str]) -> Result<Option<Options>, String> {
         parse_options_on(
             [
                 "--root",
@@ -2245,8 +2276,51 @@ mod tests {
             .into_iter()
             .chain(args.iter().copied())
             .map(str::to_string),
-            zygote_platform,
+            platform,
         )
+    }
+
+    #[test]
+    fn the_default_worker_count_is_automatic_and_each_spelling_resolves_once() {
+        let workers = |cpus: usize, args: &[&str]| {
+            let options = parse_with(test_platform(true, cpus), args)
+                .unwrap()
+                .unwrap();
+            (
+                options.workers,
+                options.workers_source,
+                options.modes_summary,
+            )
+        };
+        for (cpus, expected) in [(1, 1), (2, 2), (4, 4), (5, 4), (8, 7), (16, 15)] {
+            let (count, source, summary) = workers(cpus, &[]);
+            assert_eq!(count, expected, "{cpus} CPUs");
+            assert_eq!(source, format!("auto: {cpus} CPUs"));
+            assert!(summary.contains(&format!("workers={expected} (auto: {cpus} CPUs)")));
+            // `--workers auto` is the same request as no flag.
+            assert_eq!(workers(cpus, &["--workers", "auto"]).0, expected);
+        }
+        // A quota-limited container reports its quota as the CPU limit.
+        assert_eq!(workers(3, &[]).0, 3);
+        let (count, source, summary) = workers(16, &["--workers", "3"]);
+        assert_eq!((count, source.as_str()), (3, "explicit"));
+        assert!(summary.contains("workers=3 (explicit)"));
+        // A single worker stays available, and the fast modes follow it.
+        let one = parse_with(test_platform(true, 16), &["--workers", "1"])
+            .unwrap()
+            .unwrap();
+        assert!(!one.shared_controller && !one.rolling_lanes);
+        let default = parse_with(test_platform(true, 16), &[]).unwrap().unwrap();
+        assert!(default.shared_controller && default.rolling_lanes && default.zygote_precollect);
+        let error = |value: &str| parse_on(true, &["--workers", value]).err();
+        for bad in ["0", "1025", "many", ""] {
+            assert!(error(bad).is_some(), "{bad:?}");
+        }
+        assert_eq!(error("1025").unwrap(), "--workers must be 1..1024");
+        assert_eq!(
+            error("many").unwrap(),
+            "--workers requires an integer or auto"
+        );
     }
 
     #[test]
@@ -2374,8 +2448,8 @@ mod tests {
 
     #[test]
     fn automatic_modes_are_skipped_silently_and_explicit_ones_error() {
-        // The default single worker has no shared controller.
-        let single = parse_on(true, &[]).unwrap().unwrap();
+        // One worker has no shared controller.
+        let single = parse_on(true, &["--workers", "1"]).unwrap().unwrap();
         assert!(single.zygote && !single.zygote_precollect && !single.rolling_lanes);
         // A host without the zygote still gets rolling lanes.
         let other = parse_on(false, &["--workers", "2"]).unwrap().unwrap();
@@ -2397,7 +2471,7 @@ mod tests {
                 "--zygote-precollect requires the zygote",
             ),
             (
-                &["--rolling-lanes"][..],
+                &["--workers", "1", "--rolling-lanes"][..],
                 "--rolling-lanes requires the shared controller",
             ),
             (
