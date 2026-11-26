@@ -201,7 +201,9 @@ def artifact(tool, path, project, row):
                 mutants.append((relative.as_posix(), source, mutant, status[mutant['status']]))
     identities = {}
     for filename, source, mutant, outcome in mutants:
-        if outcome not in ('killed', 'survived', 'no-coverage'):
+        # A timeout is a detection in both tools (StrykerJS semantics); the tools still have to
+        # agree on each mutant's outcome, so a timeout against a kill is a reported mismatch.
+        if outcome not in ('killed', 'survived', 'no-coverage', 'timeout'):
             raise ValueError(f'incomplete/non-comparable mutation outcome: {outcome}')
         if (tool == 'oximut' and outcome in ('killed', 'survived')
                 and mutant.get('provenance', {}).get('source') != 'cache'

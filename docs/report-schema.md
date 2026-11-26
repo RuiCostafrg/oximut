@@ -69,7 +69,7 @@ The top-level object contains:
 | `diagnostics` | Run-level selection, adapter-reuse, cleanup, or resource messages. |
 | `sources` | Optional (always emitted by current versions). One `{file, sha256, mutants}` per `--source` file in option order: `file` uses the same path string as mutant `file`, `sha256` is the lowercase hex SHA-256 of the exact bytes read for generation in the final attempt, and `mutants` counts that file's entries in `mutants` (0 for `--baseline-only`). |
 | `mutators` | Optional (always emitted). `{selection, families}`: `selection` is `all` or `subset`; `families` is the sorted list of families in scope (all three when `all`). |
-| `summary` | Counts by outcome, score denominator and score, and completeness. |
+| `summary` | Counts by outcome, `detected` (`killed + timeout`), score denominator and score, and completeness. |
 | `cache` | Cache opt-in/eligibility, fingerprint and reason, hit/miss counts, and persistence state. |
 | `resources` | Configured/effective worker and memory policy plus sampled process-tree observations. Resource policy strings explain measurement/enforcement. |
 
@@ -191,19 +191,28 @@ Mutant outcomes are `killed`, `survived`, `no-coverage`, `invalid`, `timeout`,
 `infrastructure-error`, `resource-exhausted`, and `skipped`. Test response
 outcomes use the corresponding test-level values (`passed`, `failed`, `invalid`,
 `timeout`, `infrastructure-error`, `resource-exhausted`, and `skipped`).
-Infrastructure faults, invalid transforms, timeouts, resource exhaustion, and
-skips never count as kills. A failed test response needs a failed test or error
+Infrastructure faults, invalid transforms, resource exhaustion, and skips never
+count as kills. A `timeout` is its own outcome, never reported as `killed`, but it
+counts as detected, as in StrykerJS (see below). A failed test response needs a failed test or error
 evidence: a test file whose collection throws (or whose suite hook throws) while a
 mutant is active fails with that error and no failed test, and kills the mutant.
 
-The denominator is exactly `killed + survived + noCoverage`. The score is
-`100 * killed / denominator`, or JSON `null` when the denominator is zero.
-Invalid, timeout, infrastructure-error, resource-exhausted, or skipped results
-make the summary incomplete and are excluded from the denominator.
+`summary.detected` is `killed + timeout`: the mutants the tests caught, a mutant
+that hangs the tests (an infinite loop) included. The denominator,
+`summary.scoreDenominator`, is exactly `detected + survived + noCoverage`. The
+score is `100 * detected / denominator`, or JSON `null` when the denominator is
+zero; this is the StrykerJS mutation score. Invalid, infrastructure-error,
+resource-exhausted, or skipped results make the summary incomplete and are
+excluded from the denominator. A timeout does not make the summary incomplete.
+
+A timeout depends on the machine's speed and load, so outcome caching never
+replays one: a run with any `timeout` is complete and scored but is not persisted
+(`cache.persistence` is `run-with-timeouts-not-persisted`), and the next run
+executes every mutant again.
 
 | Process exit | Meaning |
 | --- | --- |
-| `0` | Complete run with no survivors and no no-coverage mutants; also successful baseline-only execution. |
+| `0` | Complete run with no survivors and no no-coverage mutants (timeouts count as detected); also successful baseline-only execution. |
 | `1` | Complete run with at least one survivor or no-coverage mutant. |
 | `2` | Incomplete run, failed baseline/cleanup, or invocation/configuration error. |
 
