@@ -731,6 +731,17 @@ impl<'a> Scheduler<'a> {
         let mut completed = vec![];
         let mut paused = false;
         let mut idle_pressure_since = None;
+        // A mutant planned as a lane of the shared controller has the lane's small
+        // constant; run on an ordinary worker (a rerun, a fallback) it also pays for
+        // a cold controller and the worker's fork, so it gets the difference back.
+        if self.options.lanes_expected() {
+            let extra = self.options.deadlines.cold_extra_ms();
+            for (_, job) in pending.iter_mut() {
+                if job.kind == "mutant" && job.lanes.is_none() {
+                    job.deadline_ms = job.deadline_ms.saturating_add(extra).min(MAX_DEADLINE_MS);
+                }
+            }
+        }
         while !pending.is_empty() || self.budget.active > 0 || !self.spares.is_empty() {
             if INTERRUPTED.load(Ordering::Relaxed) {
                 self.budget.exhausted("run interrupted by SIGINT/SIGTERM");

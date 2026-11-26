@@ -408,16 +408,34 @@ class NativeCoordinator(unittest.TestCase):
         self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
         first = report['mutants'][0]['id']
         batch = next(e for e in events if e['event'] == 'lanes')
-        # Every lane keeps the deadline derived for it; the batch allows each round of
-        # two lanes that long again, and a moment to report.
-        self.assertEqual(set(batch['jobs']), {13_000})
+        # A lane's clock starts when its worker runs, so it gets the smaller constant
+        # (5 s, not 10 s); the batch allows each round of two lanes that long again,
+        # and a moment to report.
+        self.assertEqual(set(batch['jobs']), {8_000})
         rounds = -(-len(batch['jobs']) // 2)
-        self.assertEqual(batch['deadline'], rounds * 14_000)
+        self.assertEqual(batch['deadline'], rounds * 9_000)
         # The first 'run' is the batch itself (named for its first lane); the last is the
-        # lane's rerun, a job of its own.
+        # lane's rerun, a job of its own on an ordinary worker, which also pays for a
+        # cold controller and so gets the full constant back.
         rerun = [e for e in events if e['event'] == 'run' and e['job'] == first]
         self.assertEqual(rerun[0]['deadline'], batch['deadline'])
         self.assertEqual(rerun[-1].get('bypass'), True)
+        self.assertEqual(rerun[-1]['deadline'], 13_000)
+        # The report says what the lane ran under.
+        self.assertEqual(report['mutants'][0]['deadlineMs'], 8_000)
+
+    def test_an_explicit_timeout_constant_applies_to_lanes_too(self):
+        self.require_two_workers()
+        result, report, events = self.run_cli(
+            'lanes-rolling-watchdog', timeout_ms=None, full=True, shared=True,
+            extra_args=('--workers', '2', '--zygote', '--rolling-lanes',
+                        '--timeout-constant-ms', '10000'),
+            env={'OXIMUT_FAKE_TIMINGS': self.TIMINGS})
+        self.require_spare_capacity(report)
+        batch = next(e for e in events if e['event'] == 'lanes')
+        self.assertEqual(set(batch['jobs']), {13_000})
+        first = report['mutants'][0]['id']
+        rerun = [e for e in events if e['event'] == 'run' and e['job'] == first]
         self.assertEqual(rerun[-1]['deadline'], 13_000)
 
     def test_zygote_watchdog_reruns_a_timeout_without_the_zygote(self):

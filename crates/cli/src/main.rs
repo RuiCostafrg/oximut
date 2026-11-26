@@ -25,7 +25,7 @@ use std::{
 
 /// The reason an adapter gives for dropping coverage that does not fit a response.
 const COVERAGE_TOO_LARGE: &str = "coverage-payload-too-large";
-const HELP: &str = "Usage: oximut [--root DIR] [--config FILE] --source FILE [--source FILE ...]\n  --version           Print the Cargo package version\n  --report FILE       JSON report (- for stdout)\n  --timeout-ms N      Fixed deadline in ms for every job (baselines and mutants); by default mutant deadlines are derived from the baseline: the time of the test files the mutant runs * --timeout-factor + --timeout-constant-ms\n  --baseline-timeout-ms N Deadline of each baseline run (default 600000 ms; --timeout-ms when that is given)\n  --timeout-factor F  Multiplier of the baseline time of a mutant's tests in its derived deadline (default 1.5)\n  --timeout-constant-ms N Added to every derived mutant deadline for worker start-up and collection (default 10000 ms)\n  --workers N         Maximum simultaneous mutation jobs / persistent baseline files (default 1; bounded by CPU limits)\n  --memory-budget-mib N Aggregate sampled RSS budget in MiB (1 MiB = 1048576 bytes); default host/container limit\n  --memory-reserve-mib N Reserved admission headroom in MiB (default 64)\n  --execution MODE   persistent (default: one reused controller; every mutant still runs in a fresh process) or fresh (a new controller per mutant, the reference for CI)\n  --isolation MODE   fresh-process (default) or fresh-thread (requires persistent)\n  --zygote            Fork Vitest mutant workers from one warm Node process; on by default for persistent runs on Linux with fresh-process isolation and the reference persistent adapter (explicit --zygote errors if those do not hold)\n  --zygote-precollect Fork a mutant's worker from a warm process that already collected its one test file; mutants evaluated at module load keep the ordinary zygote path. On by default when the zygote, test selection and the shared controller are active; explicit --zygote-precollect errors without the zygote or test selection\n  --rolling-lanes     Keep every lane slot busy and start the next mutant as soon as a lane's worker has exited, instead of waiting for the slowest lane of a batch. On by default with the shared controller; explicit --rolling-lanes errors without it\n  --no-zygote         Opt out of the zygote and use normal workers\n  --no-zygote-precollect Opt out of precollected templates\n  --no-rolling-lanes  Opt out of rolling lanes and run lanes in barrier batches\n  --no-shared-controller Use one Vitest controller per worker instead of the default shared controller\n  --test-selection    Collect baseline hits and conservatively select hit test files (default)\n  --no-test-selection Run the whole suite for every mutant\n  --mutators FAMILIES Repeatable comma-separated union: arithmetic,boolean-literal,comparison-boundary (default: all)\n  --order-seed N     Deterministically shuffle mutant execution order\n  --adapter FILE      Node adapter entry point override (an m2-runner.mjs beside m2-worker.ts runs natively)\n  --cache             Cache instrumentation; outcomes require --cache-inputs-complete\n  --cache-policy MODE  auto (default) learns whether outcome caching saves work; always validates/reuses eligible outcomes\n  --cache-inputs-complete Assert all nondeterministic/external inputs are declared\n  --cache-input FILE  Additional input file/directory (repeatable)\n  --cache-env NAME    Additional environment input (repeatable; values stay private)\n  --no-cache, --force Bypass all cache reads and writes\n  --list              Generate mutants as JSON without executing tests\n  --baseline-only     Run original sources without mutants\nExit: 0 complete/no survivors; 1 survivors/no coverage; 2 incomplete/error.\nScore: killed/(killed+survived+no-coverage)*100; empty denominator => null.\nInvalid/timeout/infrastructure-error/resource-exhausted/skipped are excluded and make a run incomplete.";
+const HELP: &str = "Usage: oximut [--root DIR] [--config FILE] --source FILE [--source FILE ...]\n  --version           Print the Cargo package version\n  --report FILE       JSON report (- for stdout)\n  --timeout-ms N      Fixed deadline in ms for every job (baselines and mutants); by default mutant deadlines are derived from the baseline: the time of the test files the mutant runs * --timeout-factor + --timeout-constant-ms\n  --baseline-timeout-ms N Deadline of each baseline run (default 600000 ms; --timeout-ms when that is given)\n  --timeout-factor F  Multiplier of the baseline time of a mutant's tests in its derived deadline (default 1.5)\n  --timeout-constant-ms N Added to every derived mutant deadline for worker start-up and collection (default 10000 ms; 5000 ms for a mutant that runs as a rolling lane of the shared controller, whose clock starts when its worker runs)\n  --workers N         Maximum simultaneous mutation jobs / persistent baseline files (default 1; bounded by CPU limits)\n  --memory-budget-mib N Aggregate sampled RSS budget in MiB (1 MiB = 1048576 bytes); default host/container limit\n  --memory-reserve-mib N Reserved admission headroom in MiB (default 64)\n  --execution MODE   persistent (default: one reused controller; every mutant still runs in a fresh process) or fresh (a new controller per mutant, the reference for CI)\n  --isolation MODE   fresh-process (default) or fresh-thread (requires persistent)\n  --zygote            Fork Vitest mutant workers from one warm Node process; on by default for persistent runs on Linux with fresh-process isolation and the reference persistent adapter (explicit --zygote errors if those do not hold)\n  --zygote-precollect Fork a mutant's worker from a warm process that already collected its one test file; mutants evaluated at module load keep the ordinary zygote path. On by default when the zygote, test selection and the shared controller are active; explicit --zygote-precollect errors without the zygote or test selection\n  --rolling-lanes     Keep every lane slot busy and start the next mutant as soon as a lane's worker has exited, instead of waiting for the slowest lane of a batch. On by default with the shared controller; explicit --rolling-lanes errors without it\n  --no-zygote         Opt out of the zygote and use normal workers\n  --no-zygote-precollect Opt out of precollected templates\n  --no-rolling-lanes  Opt out of rolling lanes and run lanes in barrier batches\n  --no-shared-controller Use one Vitest controller per worker instead of the default shared controller\n  --test-selection    Collect baseline hits and conservatively select hit test files (default)\n  --no-test-selection Run the whole suite for every mutant\n  --mutators FAMILIES Repeatable comma-separated union: arithmetic,boolean-literal,comparison-boundary (default: all)\n  --order-seed N     Deterministically shuffle mutant execution order\n  --adapter FILE      Node adapter entry point override (an m2-runner.mjs beside m2-worker.ts runs natively)\n  --cache             Cache instrumentation; outcomes require --cache-inputs-complete\n  --cache-policy MODE  auto (default) learns whether outcome caching saves work; always validates/reuses eligible outcomes\n  --cache-inputs-complete Assert all nondeterministic/external inputs are declared\n  --cache-input FILE  Additional input file/directory (repeatable)\n  --cache-env NAME    Additional environment input (repeatable; values stay private)\n  --no-cache, --force Bypass all cache reads and writes\n  --list              Generate mutants as JSON without executing tests\n  --baseline-only     Run original sources without mutants\nExit: 0 complete/no survivors; 1 survivors/no coverage; 2 incomplete/error.\nScore: killed/(killed+survived+no-coverage)*100; empty denominator => null.\nInvalid/timeout/infrastructure-error/resource-exhausted/skipped are excluded and make a run incomplete.";
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 enum Execution {
@@ -97,6 +97,15 @@ struct Options {
     modes_summary: String,
 }
 
+impl Options {
+    /// Whether mutants are planned as rolling lanes of the shared controller, whose
+    /// deadlines start when the worker runs (see `deadlines::DEFAULT_LANE_CONSTANT_MS`).
+    /// Jobs that end up on an ordinary worker anyway get the difference back.
+    fn lanes_expected(&self) -> bool {
+        self.shared_controller && self.rolling_lanes
+    }
+}
+
 fn options() -> Result<Option<Options>, String> {
     parse_options(env::args().skip(1))
 }
@@ -119,6 +128,7 @@ fn parse_options_on(
     let mut baseline_timeout_ms: Option<u64> = None;
     let mut timeout_factor = deadlines::DEFAULT_TIMEOUT_FACTOR;
     let mut timeout_constant_ms = deadlines::DEFAULT_TIMEOUT_CONSTANT_MS;
+    let mut timeout_constant_given = false;
     let mut adapter =
         Path::new(env!("CARGO_MANIFEST_DIR")).join("../../packages/vitest-adapter/m1-runner.mjs");
     let mut adapter_override = false;
@@ -282,6 +292,7 @@ fn parse_options_on(
                         )
                     }
                     "--timeout-constant-ms" => {
+                        timeout_constant_given = true;
                         timeout_constant_ms = value
                             .parse()
                             .map_err(|_| "--timeout-constant-ms must be a non-negative integer")?
@@ -351,6 +362,13 @@ fn parse_options_on(
             .or(timeout_ms)
             .unwrap_or(deadlines::DEFAULT_BASELINE_TIMEOUT_MS),
         factor: timeout_factor,
+        // An explicit constant is the user's for every job; otherwise lanes get the
+        // smaller default (docs/deadlines.md).
+        lane_constant_ms: if timeout_constant_given {
+            timeout_constant_ms
+        } else {
+            deadlines::DEFAULT_LANE_CONSTANT_MS.min(timeout_constant_ms)
+        },
         constant_ms: timeout_constant_ms,
     };
     if list && baseline_only {
@@ -1590,9 +1608,17 @@ fn run_attempt(options: &Options, previous: Option<RetryEvidence>) -> Result<Att
                 request.kind = "mutant".into();
                 request.selection = selection.clone();
                 // Part of the job, so a zygote watchdog rerun keeps it.
-                request.deadline_ms = options
-                    .deadlines
-                    .for_mutant(&suite_timings, selection.as_ref());
+                // A lane of the shared controller starts its clock when its worker is
+                // asked to run; every other job's covers a cold start too.
+                request.deadline_ms = if options.lanes_expected() {
+                    options
+                        .deadlines
+                        .for_lane(&suite_timings, selection.as_ref())
+                } else {
+                    options
+                        .deadlines
+                        .for_mutant(&suite_timings, selection.as_ref())
+                };
                 deadline_ms = Some(request.deadline_ms);
                 // A load-time mutant would never see its mutation in a worker that
                 // already evaluated the module, so it keeps the ordinary zygote path,
