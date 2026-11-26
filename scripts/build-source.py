@@ -78,6 +78,9 @@ def validate_metadata(files, version):
         # Only candidates whose workers load the compile-cache preload need it.
         if source and "compile-cache.cjs" in source[1].decode():
             required.add("packages/vitest-adapter/compile-cache.cjs")
+        # Candidates from before baselines reported evidence have no such module.
+        if source and "./baseline-evidence.ts" in source[1].decode():
+            required.add("packages/vitest-adapter/baseline-evidence.ts")
     missing = required - files.keys()
     if missing:
         raise ValueError(f"missing required source files: {sorted(missing)}")

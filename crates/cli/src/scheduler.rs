@@ -391,6 +391,25 @@ const ROLLING_MAX_ROUNDS: usize = 32;
 /// The adapter's request validation bounds job deadlines.
 const MAX_DEADLINE_MS: u64 = 2_147_483_647;
 
+/// The deadline of a lane batch: one that cannot fire before its last lane could
+/// still be running.
+///
+/// Each lane has its own deadline from the moment it starts, and then a moment to
+/// report. Lanes of a rolling batch run one after another in each slot, so the
+/// batch may take, for every round of `width` lanes in request order, as long as
+/// that round's slowest lane. That is a bound however the lanes happen to pair up
+/// with slots: a lane starts no later than the end of the round before it.
+fn batch_deadline_ms(batch: &[(usize, Request)], width: usize) -> u64 {
+    batch
+        .chunks(width.max(1))
+        .map(|round| {
+            let slowest = round.iter().map(|(_, lane)| lane.deadline_ms).max();
+            slowest.unwrap_or(0).saturating_add(LANE_REPORT_MS)
+        })
+        .fold(0u64, u64::saturating_add)
+        .min(MAX_DEADLINE_MS)
+}
+
 /// A lane batch of `batch`, run by `width` lanes at a time. A batch of more
 /// lanes than the width is rolling: the controller keeps `width` lanes busy
 /// and starts the next one as each finishes.
@@ -406,16 +425,7 @@ fn lane_batch(batch: &[(usize, Request)], width: usize) -> Request {
         }
         .min(1024),
     );
-    // Each lane has the job deadline from the moment it starts and then a
-    // moment to report. Lanes of a rolling batch run one after another in each
-    // slot, so the batch as a whole may take that long once per round: a
-    // batch deadline that cannot fire before the last lane could still be running.
-    let rounds = batch.len().div_ceil(width.max(1)).max(1) as u64;
-    request.deadline_ms = request
-        .deadline_ms
-        .saturating_add(LANE_REPORT_MS)
-        .saturating_mul(rounds)
-        .min(MAX_DEADLINE_MS);
+    request.deadline_ms = batch_deadline_ms(batch, width);
     request.lanes = Some(batch.iter().map(|(_, r)| r.clone()).collect());
     request
 }
@@ -1761,6 +1771,32 @@ mod tests {
         job.deadline_ms = u64::MAX / 4;
         let huge = lane_batch(&[(0, job.clone()), (1, job)], 1);
         assert_eq!(huge.deadline_ms, MAX_DEADLINE_MS);
+    }
+
+    #[test]
+    fn lanes_with_their_own_deadlines_bound_the_batch_by_each_rounds_slowest_lane() {
+        let lane = |deadline_ms| {
+            let mut job = request();
+            job.deadline_ms = deadline_ms;
+            (0, job)
+        };
+        let lanes = [lane(1_000), lane(9_000), lane(2_000), lane(3_000)];
+        // Two rounds of two lanes: the 9 s lane bounds the first, the 3 s lane the second.
+        let rolling = lane_batch(&lanes, 2);
+        assert_eq!(rolling.deadline_ms, 9_000 + 3_000 + 2 * LANE_REPORT_MS);
+        // Every lane keeps its own deadline for the adapter to enforce.
+        let each: Vec<_> = rolling
+            .lanes
+            .as_ref()
+            .unwrap()
+            .iter()
+            .map(|lane| lane.deadline_ms)
+            .collect();
+        assert_eq!(each, [1_000, 9_000, 2_000, 3_000]);
+        // One round is bounded by its slowest lane alone.
+        assert_eq!(lane_batch(&lanes, 4).deadline_ms, 9_000 + LANE_REPORT_MS);
+        // A rolling batch never allows less than any lane's own deadline and report time.
+        assert!(rolling.deadline_ms >= 9_000 + LANE_REPORT_MS);
     }
 
     fn request() -> Request {
