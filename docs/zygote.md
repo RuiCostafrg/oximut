@@ -85,16 +85,32 @@ every later worker in that run is a normal fork.
 ## Timeout watchdog
 
 A zygote worker that deadlocks looks like a timeout, which a normal worker would
-not produce. So the controller treats a zygote timeout with suspicion:
+not produce. So the controller treats a zygote timeout with suspicion, unless the
+adapter saw that the worker was alive and working:
 
-- A mutant that times out under the zygote is **rerun once on a normal worker**.
-  The rerun's result is the one reported. It is the same request, so it has the
-  mutant's own scaled deadline ([deadlines.md](deadlines.md)).
+- The adapter reads a lane worker's CPU time (`/proc/<pid>/stat`) a fifth of the
+  deadline (100 ms to 2 s) before the deadline and again when the deadline stops it,
+  and reports the timeout as `timeoutKind`: `busy` (at least 20% of a core used in
+  that window: a real infinite loop), `idle` (the worker was not running: a stalled
+  or deadlocked process) or, when Vitest's own test timeout fired in a worker that
+  answered, `test-timeout`. A deadlocked fork child sleeps on a futex; a looping
+  mutant burns CPU to the last millisecond. Progress events are not used: a
+  synchronous loop blocks the event loop that would send them, and the V8 deadlock
+  happened during garbage collection, which also occurs after tests started.
+- A `busy` or `test-timeout` timeout is the mutant's own: **no rerun**, the verdict
+  stands, and the diagnostics count it (`zygote watchdog: N timeouts kept without a
+  rerun`).
+- Any other timeout (`idle`, no evidence, an adapter that reports none, a job that
+  was not a lane) is **rerun once on a normal worker**. The rerun's result is the one
+  reported. It is the same request, so it has the mutant's own scaled deadline
+  ([deadlines.md](deadlines.md)).
 - If the rerun does **not** time out (a mismatch), the zygote is **disabled for
   the rest of the run**.
 - If the rerun times out too, the timeout stands and the zygote stays enabled.
-- Costs: a timed-out mutant takes up to two deadlines instead of one, and runs
-  without the zygote never rerun timeouts.
+- Costs: a timed-out mutant that could have been stalled takes up to two deadlines
+  instead of one, and runs without the zygote never rerun timeouts. A genuine hang
+  pays one.
+- A lane stopped at its deadline is killed together with its whole process tree.
 
 ## Isolation change
 
@@ -219,8 +235,9 @@ errors without the shared controller. They work with or without the zygote:
   batch arrives, in the order its lanes need them, and builds one after another
   while the first lanes already run. A lane whose template is still building waits
   for it; its deadline has not started.
-- The zygote watchdog is unchanged: a lane that times out under the zygote is
-  rerun once on its own with the zygote bypassed.
+- The zygote watchdog treats a lane like any job: a lane that times out under the
+  zygote while its worker was idle (or without evidence) is rerun once on its own
+  with the zygote bypassed; one whose worker was running keeps its verdict.
 
 The timeline trace keeps its per-lane events. In rolling mode the batch-oriented
 metrics (pool_run, lane tail skew, result to reply) do not apply; the analyzer

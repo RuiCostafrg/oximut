@@ -59,9 +59,9 @@ tests. `--baseline-timeout-ms` can still give the baseline its own.
   that passes. The deadline of the batch itself is a bound that cannot fire while a lane
   could still run: for each round of `width` lanes in order, that round's longest lane
   deadline plus one second to report, summed.
-* A mutant that times out under `--zygote` is rerun once on a normal worker (see
-  [zygote.md](zygote.md)). The rerun is the same request with `bypassZygote` set, so it has
-  the same scaled deadline.
+* A mutant that times out under `--zygote` is rerun once on a normal worker, unless its
+  worker was seen burning CPU or reported Vitest's own timeout (see [zygote.md](zygote.md)).
+  The rerun is the same request with `bypassZygote` set, so it has the same scaled deadline.
 * Controller start-up is charged to the first jobs of a cold controller as before, which is
   why the constant is not small.
 

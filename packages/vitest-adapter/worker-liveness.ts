@@ -116,8 +116,11 @@ export function processTree(pid: number): number[] {
   const tree = [pid];
   let scanned: Map<number, number[]> | undefined;
   for (let index = 0; index < tree.length; index++) {
-    const direct = scanned === undefined ? listedChildren(tree[index]) : undefined;
-    const children = direct ?? (scanned ??= parentMap()).get(tree[index]) ?? [];
+    let children = scanned === undefined ? listedChildren(tree[index]) : undefined;
+    if (children === undefined) {
+      scanned ??= parentMap();
+      children = scanned.get(tree[index]) ?? [];
+    }
     for (const child of children) if (!tree.includes(child)) tree.push(child);
   }
   return tree;
