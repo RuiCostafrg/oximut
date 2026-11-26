@@ -29,6 +29,18 @@ forks, a requested flag not reported on) or when the run is not complete.
 A `survived` mutant that test selection reports as `no-coverage` counts as a
 difference; it is not normalised away.
 
+`corpus.json` can approve two kinds of expected result per project, each with a `reason`
+that someone checked against the project's tests, and each failing the run when it is no
+longer observed:
+
+- `expectedRefinements`: a mutant no test reaches, which test selection reports as
+  `no-coverage` and the full-suite modes as `survived`. Only that one change is
+  approved, and only for the `defaults` mode.
+- `expectedTimeouts`: a mutant that does not terminate (a loop counter turned the wrong
+  way), which exhausts its deadline in every mode. Oximut never counts a timeout as a
+  kill, so such a run exits 2 and is incomplete; it is comparable when every timeout is
+  listed and nothing else made it incomplete. Modes still have to agree on each one.
+
 ```sh
 cargo build --release -p oximut-cli
 python3 scripts/build-zygote-addon.py
