@@ -1572,7 +1572,13 @@ mod tests {
         ] {
             let workload: Value =
                 serde_json::from_slice(&fs::read(corpus.join(manifest)).unwrap()).unwrap();
-            let families = workload["families"].as_array().unwrap();
+            // The workload pins its families, so its modules carry only those.
+            let families: oximut_instrument::Families = workload["families"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .map(|family| family.as_str().unwrap().to_string())
+                .collect();
             let mut modules = Vec::new();
             let mut mutants = Vec::new();
             for file in workload["mutate"].as_array().unwrap() {
@@ -1581,6 +1587,7 @@ mod tests {
                     file,
                     &root.join(file),
                     &fs::read_to_string(corpus.join(file)).unwrap(),
+                    &families,
                 )
                 .unwrap();
                 assert!(
@@ -1589,19 +1596,16 @@ mod tests {
                         .iter()
                         .any(|d| d.contains("switching fallback"))
                 );
-                let first = &generated.mutants[0];
-                modules.push(Mutation {
-                    id: "__oximut_resident__".into(),
-                    file: first.file.clone(),
-                    code: first.code.clone(),
-                    map: first.map.clone(),
-                });
-                mutants.extend(
-                    generated
-                        .mutants
-                        .into_iter()
-                        .filter(|m| families.contains(&json!(m.operator))),
-                );
+                // A file with no selected mutant contributes no resident module.
+                if let Some(first) = generated.mutants.first() {
+                    modules.push(Mutation {
+                        id: "__oximut_resident__".into(),
+                        file: first.file.clone(),
+                        code: first.code.clone(),
+                        map: first.map.clone(),
+                    });
+                }
+                mutants.extend(generated.mutants);
             }
             assert_eq!(mutants.len(), count);
             let mut groups = plan_groups(modules, REQUEST_LIMIT - REQUEST_HEADROOM);

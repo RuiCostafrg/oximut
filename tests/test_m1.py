@@ -10,6 +10,9 @@ import unittest
 
 REPO = pathlib.Path(__file__).resolve().parents[1]
 BINARY = REPO / "target/debug/oximut"
+# The operator families are on by default; the acceptance fixtures' expected outcomes were
+# qualified with the three families that predate them, so these tests name those.
+LEGACY_FAMILIES = ["--mutators", "arithmetic,boolean-literal,comparison-boundary"]
 
 
 def sources():
@@ -27,7 +30,7 @@ class VerticalSlice(unittest.TestCase):
         return subprocess.run(
             [str(BINARY), "--root", str(root), "--config",
              str(root / "vitest.config.ts"), "--execution", "fresh", "--no-test-selection",
-             "--workers", "1", *map(str, args)],
+             "--workers", "1", *([] if "--mutators" in args else LEGACY_FAMILIES), *map(str, args)],
             cwd=REPO, text=True, capture_output=True, timeout=120,
         )
 

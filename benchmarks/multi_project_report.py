@@ -263,7 +263,8 @@ def render_markdown(summaries):
     scopes = sorted({summary['scope'] for summary in summaries if summary.get('scope')})
     if scopes:
         out += [f"Scope: {', '.join(scopes)}. `matched` limits Stryker to the operators that correspond to Oximut's "
-                'three families (arithmetic, boolean-literal, comparison-boundary); the tools still generate '
+                'families (arithmetic, assignment-operator, boolean-literal, comparison-boundary, equality-operator, '
+                'logical-operator, unary-operator, update-operator); the tools still generate '
                 'different mutants, so the mutant counts are shown.', '']
     for kind in KIND_ORDER:
         group = [summary for summary in summaries if summary['kind'] == kind]

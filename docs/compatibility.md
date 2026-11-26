@@ -56,14 +56,50 @@ fresh test forks. A controller fallback does not bypass M5
 configuration validation: a multi-project configuration remains unsupported in
 either execution mode.
 
-Instrumentation supports a deliberately small JS/TS expression set: boolean
-literal inversion, comparison boundary changes, and selected arithmetic
-replacements. Type-only syntax, declaration files, ambient declarations, enums,
+Instrumentation supports a deliberately small JS/TS expression set: the operator
+families listed under [Mutation operators](#mutation-operators). Type-only syntax, declaration files, ambient declarations, enums,
 namespaces, and decorator expressions are excluded; unsupported contexts are
 diagnosed. This is not TypeScript semantic checking. Source scope is JS/TS ESM
 through the supported Vitest/Vite transform graph. Browser projects, Jest,
 framework-specific formats, native/custom VM execution, and arbitrary plugin
 graphs have no support claim.
+
+## Mutation operators
+
+Eight families are on by default; `--mutators` selects a subset (a report records
+exactly which). Each mutant replaces one token that Oxc identifies as the operator of
+its node, so operator-looking text in comments or strings is never touched. The
+operators and replacements follow StrykerJS's operators of the same names, so the
+mutants are equivalent to Stryker's wherever the tables overlap.
+
+| Family | Rewrites | StrykerJS operator |
+| --- | --- | --- |
+| `boolean-literal` | `true` → `false`, `false` → `true` | BooleanLiteral (see `unary-operator` for `!x`) |
+| `comparison-boundary` | `<` → `<=`, `<=` → `<`, `>` → `>=`, `>=` → `>` | EqualityOperator |
+| `equality-operator` | `===` → `!==`, `!==` → `===`, `==` → `!=`, `!=` → `==`; and the other rewrite of each comparison: `<` → `>=`, `<=` → `>`, `>` → `<=`, `>=` → `<` | EqualityOperator |
+| `arithmetic` | `+` → `-`, `-` → `+`, `*` → `/`, `/` → `*` | ArithmeticOperator (which also rewrites `%`; Oximut does not yet) |
+| `logical-operator` | `&&` → `\|\|`, `\|\|` → `&&`, `??` → `&&` | LogicalOperator |
+| `unary-operator` | `-x` → `+x`, `+x` → `-x`, `~x` → `x`, `!x` → `x` | UnaryOperator, plus BooleanLiteral's negation removal |
+| `update-operator` | `x++` → `x--`, `x--` → `x++`, `++x` → `--x`, `--x` → `++x` | UpdateOperator |
+| `assignment-operator` | `+=` ↔ `-=`, `*=` ↔ `/=`, `<<=` ↔ `>>=`, `&=` ↔ `\|=`, `&&=` ↔ `\|\|=`, `%=` → `*=`, `??=` → `&&=` | AssignmentOperator |
+
+Notes:
+
+* Each StrykerJS comparison rewrite appears once: `comparison-boundary` has the
+  boundary change and `equality-operator` the others, so selecting both gives
+  StrykerJS's EqualityOperator mutants and no duplicates.
+* `!x` → `x` is grouped under `unary-operator` (it is a prefix-operator edit), not
+  `boolean-literal`; `boolean-literal` generates exactly what it always has.
+  The replacement is empty and the reported original is the `!` token.
+* A mutant is dropped, with a diagnostic, when its operator token cannot be located
+  between its operands, when a prefix replacement would fuse with the preceding
+  token (`a-+b` would become `a--b`; `typeof!x` would lose its keyword), or when
+  the edited file no longer parses.
+* Mutant identities hash file identity, content, span, family and replacement, so
+  adding families never changes the identity of a mutant that an older family
+  produced.
+* Selecting families shapes instrumentation too: unselected families add no mutation
+  switches or coverage probes, and the instrumentation cache keys on the selection.
 
 Test selection is on by default (`--no-test-selection` opts out) and retains whole test files when attribution is sound;
 uncertain attribution falls back to broader execution. External files, services,

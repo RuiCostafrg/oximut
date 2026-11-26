@@ -58,6 +58,13 @@ constrains the choice of files:
 - `random.ts` (`Math.random`) and `constants.ts` (module-level edits) are left out as
   not stable cross-tool comparisons.
 
+Both manifests pin their families for both tools (`families` is passed to Oximut as
+`--mutators` and every Stryker operator outside it is excluded). That keeps these
+workloads, their mutant sets and their numbers unchanged now that Oximut's
+equality, logical, unary, update and assignment operator families are on by default:
+a workload only gains one by declaring it, and `real_project.py` maps each family to
+its Stryker operator (`STRYKER_FAMILIES`).
+
 The manifest's `scopeNotes` repeats this. The sets were compared offline by hashing each
 edited file from `oximut --list --mutators arithmetic` and from Stryker 10.1.1's
 instrumenter; only a native run confirms outcomes. A workload name outside the

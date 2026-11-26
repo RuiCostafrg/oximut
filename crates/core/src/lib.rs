@@ -584,7 +584,16 @@ pub struct Report {
 }
 
 /// Every mutator family this version can generate, sorted.
-pub const MUTATOR_FAMILIES: [&str; 3] = ["arithmetic", "boolean-literal", "comparison-boundary"];
+pub const MUTATOR_FAMILIES: [&str; 8] = [
+    "arithmetic",
+    "assignment-operator",
+    "boolean-literal",
+    "comparison-boundary",
+    "equality-operator",
+    "logical-operator",
+    "unary-operator",
+    "update-operator",
+];
 
 /// Binds report evidence to the exact bytes of one `--source` file.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]

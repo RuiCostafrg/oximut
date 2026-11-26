@@ -22,15 +22,29 @@ METRICS = m6.METRICS
 # command, gate and test exactly as it was.
 WORKLOADS = {'colord': 'workload.json', 'colord-scale': 'workload-scale.json'}
 DEFAULT_WORKLOAD = 'colord'
-# Stryker operators outside the compared scope are always excluded; the compared families
-# map onto Stryker's own operators, and a family a workload does not declare is excluded too.
+# Stryker operators a run excludes unless a declared Oximut family maps onto them (the
+# first ten have no Oximut family at all). Each family maps onto the Stryker operator that
+# makes the same kind of edit, and a family a workload does not declare is excluded too.
 STRYKER_ALWAYS_EXCLUDED = [
     'EqualityOperator', 'AssignmentOperator', 'CallExpression', 'ArrayDeclaration',
     'ArrowFunction', 'BlockStatement', 'ConditionalExpression', 'LogicalOperator',
     'MethodExpression', 'ObjectLiteral', 'OptionalChaining', 'Regex', 'StringLiteral',
     'UnaryOperator', 'UpdateOperator',
 ]
-STRYKER_FAMILIES = {'arithmetic': 'ArithmeticOperator', 'boolean-literal': 'BooleanLiteral'}
+STRYKER_FAMILIES = {
+    'arithmetic': 'ArithmeticOperator',
+    'boolean-literal': 'BooleanLiteral',
+    # Stryker's EqualityOperator is both Oximut families: it flips `===`/`!==`/`==`/`!=` and
+    # rewrites each comparison twice (`<` to `<=` and to `>=`), which Oximut splits into
+    # comparison-boundary (first rewrite) and equality-operator (the rest).
+    'comparison-boundary': 'EqualityOperator',
+    'equality-operator': 'EqualityOperator',
+    'logical-operator': 'LogicalOperator',
+    # Oximut's unary-operator also removes `!`, which Stryker counts under BooleanLiteral.
+    'unary-operator': 'UnaryOperator',
+    'update-operator': 'UpdateOperator',
+    'assignment-operator': 'AssignmentOperator',
+}
 
 
 def workload_name(value):
@@ -74,9 +88,11 @@ def workload_digest(manifest):
 
 
 def stryker_excluded_mutations(manifest):
-    return STRYKER_ALWAYS_EXCLUDED + [
+    kept = {STRYKER_FAMILIES[family] for family in manifest['families']}
+    return [operator for operator in STRYKER_ALWAYS_EXCLUDED if operator not in kept] + [
         operator for family, operator in STRYKER_FAMILIES.items()
-        if family not in manifest['families']]
+        if family not in manifest['families'] and operator not in kept
+        and operator not in STRYKER_ALWAYS_EXCLUDED]
 
 
 def manifest_provenance_paths(name=DEFAULT_WORKLOAD):

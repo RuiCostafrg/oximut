@@ -30,7 +30,7 @@
       "required": ["selection", "families"],
       "properties": {
         "selection": { "enum": ["all", "subset"] },
-        "families": { "type": "array", "items": { "enum": ["arithmetic", "boolean-literal", "comparison-boundary"] } }
+        "families": { "type": "array", "items": { "enum": ["arithmetic", "assignment-operator", "boolean-literal", "comparison-boundary", "equality-operator", "logical-operator", "unary-operator", "update-operator"] } }
       }
     },
     "resources": {
