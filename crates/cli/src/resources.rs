@@ -648,6 +648,11 @@ pub struct Budget {
     pub peak_aggregate_rss_bytes: u64,
     pub measured_worker_peak_bytes: u64,
     pub admission_worker_cost_bytes: u64,
+    /// Lanes one sampled worker tree runs at once. A shared controller runs its
+    /// whole batch of lanes in one tree, so its size is the cost of that many
+    /// admitted jobs, not of one; ordinary workers run one job (1).
+    #[serde(skip)]
+    pub lanes_per_worker: u64,
     pub max_active_jobs: usize,
     pub admission_pauses: u64,
     pub recycled_idle_workers: u64,
@@ -725,6 +730,7 @@ impl Budget {
             peak_aggregate_rss_bytes: 0,
             measured_worker_peak_bytes: 0,
             admission_worker_cost_bytes: 0,
+            lanes_per_worker: 1,
             max_active_jobs: 0,
             admission_pauses: 0,
             recycled_idle_workers: 0,
@@ -995,7 +1001,13 @@ impl Budget {
             self.observed_workers.clear();
             for &pid in workers {
                 let bytes = tree_rss(pid, &table, &mut profiled_identity, &mut profiled_rss)?;
-                self.measured_worker_peak_bytes = self.measured_worker_peak_bytes.max(bytes);
+                // Admission prices one job. A tree running several lanes is
+                // priced per lane, so lanes are admitted against their own cost
+                // and the ordinary workers that follow are not priced as if each
+                // were a whole shared controller.
+                self.measured_worker_peak_bytes = self
+                    .measured_worker_peak_bytes
+                    .max(bytes.div_ceil(self.lanes_per_worker.max(1)));
                 self.admission_worker_cost_bytes = self
                     .measured_worker_peak_bytes
                     .saturating_add(self.measured_worker_peak_bytes.div_ceil(4));
@@ -1161,6 +1173,7 @@ mod tests {
             peak_aggregate_rss_bytes: 0,
             measured_worker_peak_bytes: 0,
             admission_worker_cost_bytes: 0,
+            lanes_per_worker: 1,
             max_active_jobs: 0,
             admission_pauses: 0,
             recycled_idle_workers: 0,
@@ -1364,6 +1377,34 @@ mod tests {
             !state.last_sample_was_counter,
             "a forced exact sample clears the flag"
         );
+    }
+
+    #[test]
+    fn a_shared_controller_tree_is_priced_per_lane() {
+        let cli = std::process::id();
+        let controller = cli + 1;
+        let identity = move |pid: u32| Ok(Some((if pid == cli { 0 } else { cli }, u64::from(pid))));
+        let sample = |state: &mut Budget| {
+            state.sample_with_readers(
+                &[controller],
+                true,
+                || ProcessTable::collect([Ok(Some(cli)), Ok(Some(controller))], identity),
+                identity,
+                |pid| Ok(Some(if pid == controller { 400 * MIB } else { MIB })),
+            );
+        };
+        // Four lanes live in the one tree: its 400 MiB is 100 MiB per admitted job.
+        let mut shared = budget();
+        shared.lanes_per_worker = 4;
+        sample(&mut shared);
+        assert_eq!(shared.measured_worker_peak_bytes, 100 * MIB);
+        assert_eq!(shared.admission_worker_cost_bytes, 125 * MIB);
+        // The same tree as an ordinary worker is one job.
+        let mut ordinary = budget();
+        sample(&mut ordinary);
+        assert_eq!(ordinary.measured_worker_peak_bytes, 400 * MIB);
+        // The observed tree itself stays whole: reservations credit its real size.
+        assert_eq!(shared.observed_workers[&controller], 400 * MIB);
     }
 
     #[test]
