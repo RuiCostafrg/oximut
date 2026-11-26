@@ -70,12 +70,9 @@ test('rejects missing fields, wrong field types, malformed JSON, and list output
   delete missing.cache;
   const wrongType = structuredClone(sample);
   wrongType.summary.complete = 'true';
-  const undetected = structuredClone(sample);
-  delete undetected.summary.detected;
   for (const [name, contents, message] of [
     ['missing.json', JSON.stringify(missing), /cache/],
     ['wrong-type.json', JSON.stringify(wrongType), /boolean/],
-    ['no-detected.json', JSON.stringify(undetected), /detected/],
     ['malformed.json', '{', /cannot read JSON/],
     ['list.json', JSON.stringify({ schemaVersion: 1, mutants: [], diagnostics: [] }), /required/],
   ]) {
@@ -135,4 +132,15 @@ test('checks that sources and mutators agree with the mutant list', async () => 
   ]) {
     assert.throws(() => validateReport(bound(sources, mutators), 'case'), message);
   }
+});
+
+test('accepts a schema version 1 report from before summary.detected existed', async t => {
+  const directory = await mkdtemp(join(tmpdir(), 'oximut-legacy-report-'));
+  t.after(() => rm(directory, { recursive: true, force: true }));
+  const legacy = structuredClone(sample);
+  delete legacy.summary.detected;
+  const file = join(directory, 'legacy-report.json');
+  await writeFile(file, JSON.stringify(legacy));
+  const result = run(file);
+  assert.equal(result.status, 0, result.stderr);
 });
