@@ -47,8 +47,9 @@ CONFIG_NAME = 'bench.vitest.config.ts'
 TOOLS = ('vitest', 'oximut', 'stryker')
 SCOPES = ('matched', 'full')
 KINDS = ('startup', 'large')
-# Oximut generates exactly these families; Stryker's operators that cover the same kinds of edit.
-STRYKER_FAMILIES = {**real_project.STRYKER_FAMILIES, 'comparison-boundary': 'EqualityOperator'}
+# Every Oximut family and the Stryker operator that covers the same kind of edit (several
+# families may share one operator). Matched scope keeps these and excludes the rest.
+STRYKER_FAMILIES = real_project.STRYKER_FAMILIES
 STRYKER_OPERATORS = real_project.STRYKER_ALWAYS_EXCLUDED + list(real_project.STRYKER_FAMILIES.values())
 DETECTED = frozenset({'killed', 'timeout'})
 UNDETECTED = frozenset({'survived', 'no-coverage'})

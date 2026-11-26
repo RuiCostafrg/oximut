@@ -116,7 +116,8 @@ for (;;) {
 def pinned_modes(extra):
     """Execution and selection are on by default; these tests name the modes they cover."""
     extra = [str(item) for item in extra]
-    return [*([] if "--workers" in extra else ["--workers", "1"]),
+    return [*([] if "--mutators" in extra else ["--mutators", "arithmetic,boolean-literal,comparison-boundary"]),
+            *([] if "--workers" in extra else ["--workers", "1"]),
             *([] if "--execution" in extra else ["--execution", "fresh"]),
             *([] if "--test-selection" in extra else ["--no-test-selection"])]
 

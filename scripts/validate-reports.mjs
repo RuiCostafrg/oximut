@@ -8,7 +8,7 @@ const schema = JSON.parse(await readFile(new URL('../docs/report.schema.json', i
 const ajv = new Ajv2020({ allErrors: true });
 const validate = ajv.compile(schema);
 
-const FAMILIES = ['arithmetic', 'boolean-literal', 'comparison-boundary'];
+const FAMILIES = ['arithmetic', 'assignment-operator', 'boolean-literal', 'comparison-boundary', 'equality-operator', 'logical-operator', 'unary-operator', 'update-operator'];
 
 // Cross-field rules the JSON schema cannot express. Consumers such as ts-crap
 // reject reports that break them, so CI checks every emitted report too.

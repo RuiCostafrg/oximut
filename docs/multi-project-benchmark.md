@@ -55,12 +55,17 @@ the corpus):
 Both tools mutate exactly the same source files (the harness resolves the globs once and passes the
 same list to Oximut `--source` and Stryker `mutate`). They do not generate the same mutants:
 
-* Oximut has three families: arithmetic, boolean-literal, comparison-boundary. In the default `matched`
-  scope, Stryker runs only the operators that correspond (`ArithmeticOperator`, `BooleanLiteral`,
-  `EqualityOperator`); every other Stryker operator is excluded. `--scope full` runs everything each tool
-  has by default (Stryker then generates many times more mutants).
-* The operators still differ in detail (Stryker's equality operator also flips `===`, its boolean operator
-  also drops `!`, it reprints some expressions), so every cell records both exact edited-file identity
+* Oximut has eight families (see [compatibility.md](compatibility.md#mutation-operators)). In the default
+  `matched` scope, Stryker runs only the operators that correspond (`ArithmeticOperator`,
+  `AssignmentOperator`, `BooleanLiteral`, `EqualityOperator`, `LogicalOperator`, `UnaryOperator`,
+  `UpdateOperator`; `benchmarks/multi_project.py` `STRYKER_FAMILIES` maps each family to its operator, and
+  `comparison-boundary` and `equality-operator` are both Stryker's `EqualityOperator`); every other Stryker
+  operator (strings, arrays, objects, blocks, conditionals, optional chaining, regular expressions,
+  method calls, arrow bodies) is excluded until Oximut has a family for it. `--scope full` runs everything
+  each tool has by default (Stryker then generates many times more mutants).
+* The operators still differ in detail (Stryker's arithmetic operator also rewrites `%`, it reprints some
+  expressions, and it keeps a replacement Oximut drops when it would fuse with the preceding token), so
+  every cell records both exact edited-file identity
   sets (`benchmarks/m6.py` `mutation_identity`), how many edits are shared, and whether the tools agree
   on the shared mutants. Unlike the colord harness, unequal scopes are reported, not rejected.
 * `vitest.related` is switched off for Stryker, as in the colord benchmark; pass `--stryker-related` to keep

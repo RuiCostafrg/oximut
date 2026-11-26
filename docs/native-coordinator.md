@@ -125,7 +125,7 @@ deliberately in its own commit with the reason.
 ### P1 — Instrument once: one validated instrumented baseline
 
 - Oxc emits a combined transform per switched file:
-  `(process.env.OXIMUT_ACTIVE_MUTANT === "id" ? (replacement) : (globalThis.__oximut_m3_hit__?.("id"), (original)))`.
+  `((globalThis.__oximut_active__ ??= process.env.OXIMUT_ACTIVE_MUTANT ?? "") === "id" ? (replacement) : (globalThis.__oximut_m3_hit__?.("id"), (original)))`.
   Files where switching falls back (static mutants) keep probe-only coverage
   code. Files that cannot carry probes (a shadowed or reassigned `globalThis`, a
   `with` scope) keep switch-only code; only that file's mutants run the full suite

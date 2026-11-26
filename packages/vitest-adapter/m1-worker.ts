@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { createVitest, version, type Reporter } from 'vitest/node';
 import type { Request, Result } from './protocol.ts';
 import { attachBaselineEvidence } from './baseline-evidence.ts';
+import { bailLimit, observeCancellations, stoppedAtFirstFailure } from './bail.ts';
 import { SelectionSupport } from './m3-selection.ts';
 
 const compileCacheFlush = fileURLToPath(new URL('./compile-cache.cjs', import.meta.url));
@@ -130,6 +131,11 @@ async function command(name: string, args: Request): Promise<unknown> {
         `Unsupported test environment ${environment} in ${spec.moduleId}; Node is required`,
       );
   }
+  // Same stop-at-first-failure policy as the persistent path (see bail.ts). The fresh
+  // controller serves exactly one job, so nothing needs restoring afterwards.
+  const cancellations: string[] = [];
+  observeCancellations(vitest, cancellations);
+  for (const project of vitest.projects) project.config.bail = bailLimit(job.kind);
   await vitest.runTestSpecifications(selected, true);
   if (!currentRun) throw new Error('Missing onTestRunEnd event');
   const [modules, unhandled, reason] = currentRun as Parameters<
@@ -141,16 +147,28 @@ async function command(name: string, args: Request): Promise<unknown> {
     ...[...module.children.allSuites()].flatMap((suite) => suite.errors()),
   ]);
   const errors = [...unhandled, ...moduleErrors];
-  let incomplete = reason === 'interrupted';
+  let pending = false;
+  let hasTestError = false;
   for (const module of modules) {
     for (const test of module.children.allTests()) {
       const result = test.result();
       if (result.state === 'passed' || result.state === 'failed' || result.state === 'skipped')
         tests[result.state]++;
-      else incomplete = true;
-      if (result.state === 'failed') errors.push(...(result.errors ?? []));
+      else pending = true;
+      if (result.state === 'failed') {
+        hasTestError ||= Boolean(result.errors?.length);
+        errors.push(...(result.errors ?? []));
+      }
     }
   }
+  const bailed = stoppedAtFirstFailure({
+    kind: job.kind,
+    reason,
+    cancellations,
+    failed: tests.failed,
+    hasTestError,
+  });
+  const incomplete = (reason === 'interrupted' || pending || cancellations.length > 0) && !bailed;
   let outcome: Result['outcome'];
   const processFailure = errors.some((error) =>
     /process\.exit unexpectedly called/.test(String(error.message ?? '')),

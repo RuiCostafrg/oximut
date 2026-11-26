@@ -158,6 +158,24 @@ class RunGateTests(unittest.TestCase):
         self.assertTrue(parity.check_run('zygote', report([{}], complete=False), 0))
         self.assertTrue(parity.check_run('zygote', report([]), 0))
 
+    def test_a_run_is_comparable_with_timeouts_only_when_each_one_is_approved(self):
+        key = ('src/a.ts', 2, '+', '-')
+        other = ('src/a.ts', 3, '*', '/')
+
+        def timed_out(**extra):
+            summary = {'complete': False, 'timeout': 1, 'invalid': 0, 'infrastructureError': 0,
+                       'resourceExhausted': 0, 'skipped': 0, **extra}
+            return {'summary': summary, 'diagnostics': [], 'mutants': [{}]}
+        # The exit code is 2 for any timeout; approved ones are the only way that passes.
+        self.assertEqual(parity.check_run('zygote', timed_out(), 2, {key}, {key}), [])
+        self.assertTrue(parity.check_run('zygote', timed_out(), 2, set(), {key}))
+        self.assertTrue(parity.check_run('zygote', timed_out(timeout=2), 2, {key}, {key, other}))
+        # Nothing else that makes a run incomplete is tolerated alongside them.
+        for cause in ('invalid', 'infrastructureError', 'resourceExhausted', 'skipped'):
+            self.assertTrue(parity.check_run('zygote', timed_out(**{cause: 1}), 2, {key}, {key}), cause)
+        # Exit 2 stays an error when the run has no approved timeout to explain it.
+        self.assertTrue(parity.check_run('zygote', report([{}], complete=False), 2, {key}, frozenset()))
+
     def test_zygote_mode_requires_forks_and_no_failures(self):
         diagnostics = ['execution=persistent; zygote=on']
         counters = dict(zygotes=1, forks=5, exits=5, zygoteFailures=0, fallbacks=0)

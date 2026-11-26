@@ -25,7 +25,7 @@ use std::{
 
 /// The reason an adapter gives for dropping coverage that does not fit a response.
 const COVERAGE_TOO_LARGE: &str = "coverage-payload-too-large";
-const HELP: &str = "Usage: oximut [--root DIR] [--config FILE] --source FILE [--source FILE ...]\n  --version           Print the Cargo package version\n  --report FILE       JSON report (- for stdout)\n  --timeout-ms N      Fixed deadline in ms for every job (baselines and mutants); by default mutant deadlines are derived from the baseline: the time of the test files the mutant runs * --timeout-factor + --timeout-constant-ms\n  --baseline-timeout-ms N Deadline of each baseline run (default 600000 ms; --timeout-ms when that is given)\n  --timeout-factor F  Multiplier of the baseline time of a mutant's tests in its derived deadline (default 1.5)\n  --timeout-constant-ms N Added to every derived mutant deadline for worker start-up and collection (default 10000 ms; 5000 ms for a mutant that runs as a rolling lane of the shared controller, whose clock starts when its worker runs)\n  --workers N|auto    Maximum simultaneous mutation jobs / persistent baseline files, 1..1024 (default auto: the CPUs this process may use, per the affinity mask and any cgroup quota, minus one above four, as StrykerJS does; held to what the memory budget carries at about 512 MiB a worker; memory admission can still lower it at run time). The resolved count is in the modes line and the report diagnostics\n  --memory-budget-mib N Aggregate sampled RSS budget in MiB (1 MiB = 1048576 bytes); default host/container limit\n  --memory-reserve-mib N Reserved admission headroom in MiB (default 64)\n  --execution MODE   persistent (default: one reused controller; every mutant still runs in a fresh process) or fresh (a new controller per mutant, the reference for CI)\n  --isolation MODE   fresh-process (default) or fresh-thread (requires persistent)\n  --zygote            Fork Vitest mutant workers from one warm Node process; on by default for persistent runs on Linux with fresh-process isolation and the reference persistent adapter (explicit --zygote errors if those do not hold)\n  --zygote-precollect Fork a mutant's worker from a warm process that already collected its one test file; mutants evaluated at module load keep the ordinary zygote path. On by default when the zygote, test selection and the shared controller are active; explicit --zygote-precollect errors without the zygote or test selection\n  --rolling-lanes     Keep every lane slot busy and start the next mutant as soon as a lane's worker has exited, instead of waiting for the slowest lane of a batch. On by default with the shared controller; explicit --rolling-lanes errors without it\n  --no-zygote         Opt out of the zygote and use normal workers\n  --no-zygote-precollect Opt out of precollected templates\n  --no-rolling-lanes  Opt out of rolling lanes and run lanes in barrier batches\n  --no-shared-controller Use one Vitest controller per worker instead of the default shared controller\n  --test-selection    Collect baseline hits and conservatively select hit test files (default)\n  --no-test-selection Run the whole suite for every mutant\n  --mutators FAMILIES Repeatable comma-separated union: arithmetic,boolean-literal,comparison-boundary (default: all)\n  --order-seed N     Deterministically shuffle mutant execution order\n  --adapter FILE      Node adapter entry point override (an m2-runner.mjs beside m2-worker.ts runs natively)\n  --cache             Cache instrumentation; outcomes require --cache-inputs-complete\n  --cache-policy MODE  auto (default) learns whether outcome caching saves work; always validates/reuses eligible outcomes\n  --cache-inputs-complete Assert all nondeterministic/external inputs are declared\n  --cache-input FILE  Additional input file/directory (repeatable)\n  --cache-env NAME    Additional environment input (repeatable; values stay private)\n  --no-cache, --force Bypass all cache reads and writes\n  --list              Generate mutants as JSON without executing tests\n  --baseline-only     Run original sources without mutants\nExit: 0 complete/no survivors; 1 survivors/no coverage; 2 incomplete/error.\nScore: (killed+timeout)/(killed+timeout+survived+no-coverage)*100, as StrykerJS; empty denominator => null. A timeout (the tests hang or run past the deadline) counts as detected and stays its own outcome; the cache never reuses it.\nInvalid/infrastructure-error/resource-exhausted/skipped are excluded and make a run incomplete.";
+const HELP: &str = "Usage: oximut [--root DIR] [--config FILE] --source FILE [--source FILE ...]\n  --version           Print the Cargo package version\n  --report FILE       JSON report (- for stdout)\n  --timeout-ms N      Fixed deadline in ms for every job (baselines and mutants); by default mutant deadlines are derived from the baseline: the time of the test files the mutant runs * --timeout-factor + --timeout-constant-ms\n  --baseline-timeout-ms N Deadline of each baseline run (default 600000 ms; --timeout-ms when that is given)\n  --timeout-factor F  Multiplier of the baseline time of a mutant's tests in its derived deadline (default 1.5)\n  --timeout-constant-ms N Added to every derived mutant deadline for worker start-up and collection (default 10000 ms; 5000 ms for a mutant that runs as a rolling lane of the shared controller, whose clock starts when its worker runs)\n  --workers N|auto    Maximum simultaneous mutation jobs / persistent baseline files, 1..1024 (default auto: the CPUs this process may use, per the affinity mask and any cgroup quota, minus one above four, as StrykerJS does; held to what the memory budget carries at about 512 MiB a worker; memory admission can still lower it at run time). The resolved count is in the modes line and the report diagnostics\n  --memory-budget-mib N Aggregate sampled RSS budget in MiB (1 MiB = 1048576 bytes); default host/container limit\n  --memory-reserve-mib N Reserved admission headroom in MiB (default 64)\n  --execution MODE   persistent (default: one reused controller; every mutant still runs in a fresh process) or fresh (a new controller per mutant, the reference for CI)\n  --isolation MODE   fresh-process (default) or fresh-thread (requires persistent)\n  --zygote            Fork Vitest mutant workers from one warm Node process; on by default for persistent runs on Linux with fresh-process isolation and the reference persistent adapter (explicit --zygote errors if those do not hold)\n  --zygote-precollect Fork a mutant's worker from a warm process that already collected its one test file; mutants evaluated at module load keep the ordinary zygote path. On by default when the zygote, test selection and the shared controller are active; explicit --zygote-precollect errors without the zygote or test selection\n  --rolling-lanes     Keep every lane slot busy and start the next mutant as soon as a lane's worker has exited, instead of waiting for the slowest lane of a batch. On by default with the shared controller; explicit --rolling-lanes errors without it\n  --no-zygote         Opt out of the zygote and use normal workers\n  --no-zygote-precollect Opt out of precollected templates\n  --no-rolling-lanes  Opt out of rolling lanes and run lanes in barrier batches\n  --no-shared-controller Use one Vitest controller per worker instead of the default shared controller\n  --test-selection    Collect baseline hits and conservatively select hit test files (default)\n  --no-test-selection Run the whole suite for every mutant\n  --mutators FAMILIES Repeatable comma-separated union: arithmetic,assignment-operator,boolean-literal,comparison-boundary,equality-operator,logical-operator,unary-operator,update-operator (default: all)\n  --order-seed N     Deterministically shuffle mutant execution order\n  --adapter FILE      Node adapter entry point override (an m2-runner.mjs beside m2-worker.ts runs natively)\n  --cache             Cache instrumentation; outcomes require --cache-inputs-complete\n  --cache-policy MODE  auto (default) learns whether outcome caching saves work; always validates/reuses eligible outcomes\n  --cache-inputs-complete Assert all nondeterministic/external inputs are declared\n  --cache-input FILE  Additional input file/directory (repeatable)\n  --cache-env NAME    Additional environment input (repeatable; values stay private)\n  --no-cache, --force Bypass all cache reads and writes\n  --list              Generate mutants as JSON without executing tests\n  --baseline-only     Run original sources without mutants\nExit: 0 complete/no survivors; 1 survivors/no coverage; 2 incomplete/error.\nScore: (killed+timeout)/(killed+timeout+survived+no-coverage)*100, as StrykerJS; empty denominator => null. A timeout (the tests hang or run past the deadline) counts as detected and stays its own outcome; the cache never reuses it.\nInvalid/infrastructure-error/resource-exhausted/skipped are excluded and make a run incomplete.";
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 enum Execution {
@@ -185,7 +185,8 @@ fn parse_options_on(
                 for family in value.split(',') {
                     if family.is_empty() || !oximut_core::MUTATOR_FAMILIES.contains(&family) {
                         return Err(format!(
-                            "unknown or empty mutator family {family:?}; expected arithmetic, boolean-literal, comparison-boundary"
+                            "unknown or empty mutator family {family:?}; expected {}",
+                            oximut_core::MUTATOR_FAMILIES.join(", ")
                         ));
                     }
                     mutators.insert(family.to_string());
@@ -1257,20 +1258,27 @@ fn run_attempt(options: &Options, previous: Option<RetryEvidence>) -> Result<Att
                 .diagnostics
                 .iter()
                 .any(|d| d.contains("switching fallback"))
-            && let Some(first) = generated.mutants.first()
         {
-            // All mutants of a switched file share this module.
-            resident.push(Mutation {
-                id: "__oximut_resident__".into(),
-                file: first.file.clone(),
-                code: first.code.clone(),
-                map: first.map.clone(),
-            });
+            if let Some(first) = generated.mutants.first() {
+                // All mutants of a switched file share this module.
+                resident.push(Mutation {
+                    id: "__oximut_resident__".into(),
+                    file: first.file.clone(),
+                    code: first.code.clone(),
+                    map: first.map.clone(),
+                });
+            } else if !options.mutators.is_empty()
+                && !oximut_instrument::generate(&identity, path, &source, &Default::default())?
+                    .mutants
+                    .is_empty()
+            {
+                // A file only unselected families would mutate is still validated.
+                resident.push(oximut_instrument::identity_module(path, &source));
+            }
         }
         let before = mutants.len();
-        mutants.extend(generated.mutants.into_iter().filter(|mutant| {
-            options.mutators.is_empty() || options.mutators.contains(&mutant.operator)
-        }));
+        // The generator already honours `--mutators`, so these are the selection.
+        mutants.extend(generated.mutants);
         sources.push(source_binding(path, &source, mutants.len() - before));
         diagnostics.extend(
             generated
@@ -2084,7 +2092,9 @@ mod tests {
         let mut bindings = vec![];
         for path in &paths {
             let source = fs::read_to_string(path).unwrap();
-            let generated = oximut_instrument::generate("src/subject.ts", path, &source).unwrap();
+            let generated =
+                oximut_instrument::generate("src/subject.ts", path, &source, &Default::default())
+                    .unwrap();
             let file = path.to_string_lossy().into_owned();
             assert!(generated.mutants.iter().all(|m| m.file == file));
             let selected = generated
@@ -2107,7 +2117,9 @@ mod tests {
         );
         // A whole filter family can remove every mutant of a listed file.
         let source = fs::read_to_string(subject).unwrap();
-        let generated = oximut_instrument::generate("src/subject.ts", subject, &source).unwrap();
+        let generated =
+            oximut_instrument::generate("src/subject.ts", subject, &source, &Default::default())
+                .unwrap();
         let arithmetic = generated
             .mutants
             .iter()
@@ -2124,7 +2136,7 @@ mod tests {
         let all = serde_json::to_value(mutator_selection(&BTreeSet::new())).unwrap();
         assert_eq!(
             all,
-            serde_json::json!({"selection":"all","families":["arithmetic","boolean-literal","comparison-boundary"]})
+            serde_json::json!({"selection":"all","families":oximut_core::MUTATOR_FAMILIES})
         );
         let subset: BTreeSet<String> = ["comparison-boundary", "arithmetic"]
             .map(String::from)
@@ -2133,6 +2145,38 @@ mod tests {
             serde_json::to_value(mutator_selection(&subset)).unwrap(),
             serde_json::json!({"selection":"subset","families":["arithmetic","comparison-boundary"]})
         );
+    }
+
+    #[test]
+    fn every_declared_family_is_accepted_and_documented() {
+        let parse = |families: &str| {
+            parse_options(
+                [
+                    "--root",
+                    concat!(env!("CARGO_MANIFEST_DIR"), "/../../fixtures/m1"),
+                    "--source",
+                    "src/subject.ts",
+                    "--mutators",
+                    families,
+                ]
+                .map(str::to_string)
+                .into_iter(),
+            )
+        };
+        for family in oximut_core::MUTATOR_FAMILIES {
+            let options = parse(family).unwrap().expect("options");
+            assert_eq!(options.mutators, BTreeSet::from([family.to_string()]));
+            assert!(HELP.contains(family), "{family} is missing from --help");
+        }
+        let joined = oximut_core::MUTATOR_FAMILIES.join(",");
+        assert_eq!(
+            parse(&joined).unwrap().expect("options").mutators.len(),
+            oximut_core::MUTATOR_FAMILIES.len()
+        );
+        let error = parse("logical-operator,string-literal").err().unwrap();
+        for family in oximut_core::MUTATOR_FAMILIES {
+            assert!(error.contains(family), "{error}");
+        }
     }
 
     #[test]

@@ -86,6 +86,24 @@ class ScopeTests(ProjectCase):
         self.assertIn('ConditionalExpression', excluded)
         self.assertEqual(bench.stryker_excluded('full'), [])
 
+    def test_every_oximut_family_has_a_stryker_operator_in_the_matched_scope(self):
+        import re
+        core = (Path(__file__).resolve().parents[2] / 'crates/core/src/lib.rs').read_text()
+        families = re.findall(r'"([a-z-]+)"', re.search(r'MUTATOR_FAMILIES: \[&str; \d+\] = \[(.*?)\];', core, re.S).group(1))
+        self.assertEqual(len(families), 8)
+        self.assertEqual(sorted(families), sorted(bench.STRYKER_FAMILIES))
+        excluded = set(bench.stryker_excluded('matched'))
+        self.assertTrue(set(bench.STRYKER_FAMILIES.values()).isdisjoint(excluded))
+        self.assertEqual(set(bench.STRYKER_FAMILIES.values()), {
+            'ArithmeticOperator', 'AssignmentOperator', 'BooleanLiteral', 'EqualityOperator',
+            'LogicalOperator', 'UnaryOperator', 'UpdateOperator'})
+        # Both of Oximut's comparison families are Stryker's one EqualityOperator.
+        self.assertEqual(bench.STRYKER_FAMILIES['comparison-boundary'], bench.STRYKER_FAMILIES['equality-operator'])
+        # What is left excluded has no Oximut family yet.
+        self.assertEqual(excluded, {
+            'CallExpression', 'ArrayDeclaration', 'ArrowFunction', 'BlockStatement', 'ConditionalExpression',
+            'MethodExpression', 'ObjectLiteral', 'OptionalChaining', 'Regex', 'StringLiteral'})
+
     def test_stryker_is_configured_for_the_matched_concurrency_and_per_test_coverage(self):
         matched = bench.stryker_config(['src/a.ts'], 4, 'matched')
         self.assertEqual((matched['concurrency'], matched['coverageAnalysis'], matched['testRunner']),

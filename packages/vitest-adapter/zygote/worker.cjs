@@ -71,6 +71,10 @@ if (addonPath) {
         if (!Object.hasOwn(env, key)) delete process.env[key];
       for (const [key, value] of Object.entries(env)) process.env[key] = String(value);
     }
+    // The switches of the instrumented modules read this global, not the environment
+    // (see ACTIVE_MUTANT in crates/instrument): modules a precollected template
+    // already evaluated hold the template's (empty) value.
+    globalThis.__oximut_active__ = process.env.OXIMUT_ACTIVE_MUTANT ?? '';
     addon.closeFd(parentEnd);
     process.once('disconnect', () => {
       addon.clearCloexec(childEnd);
