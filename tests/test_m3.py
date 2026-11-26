@@ -7,7 +7,7 @@ import subprocess
 import tempfile
 import unittest
 
-from test_m1 import BINARY, REPO
+from test_m1 import BINARY, LEGACY_FAMILIES, REPO
 
 
 class PreciseSelection(unittest.TestCase):
@@ -20,7 +20,7 @@ class PreciseSelection(unittest.TestCase):
                 str(BINARY), '--root', str(root), '--config', str(root / config),
                 *[arg for item in sources for arg in ('--source', str(root / item))],
                 '--execution', execution, '--workers', '1',
-                '--order-seed', '73', '--report', str(report),
+                '--order-seed', '73', '--report', str(report), *LEGACY_FAMILIES,
             ]
             # Selection is on by default; the full-suite runs opt out explicitly.
             command.append('--test-selection' if selection else '--no-test-selection')

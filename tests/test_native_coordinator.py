@@ -242,6 +242,7 @@ def pinned_modes(extra):
     """Selection and rolling lanes are on by default; these tests name the modes they cover."""
     # --workers defaults to auto; these tests name the concurrency they cover.
     return ['--no-test-selection',
+            *([] if '--mutators' in extra else ['--mutators', 'arithmetic,boolean-literal,comparison-boundary']),
             *([] if '--workers' in extra else ['--workers', '1']),
             *([] if '--rolling-lanes' in extra else ['--no-rolling-lanes'])]
 

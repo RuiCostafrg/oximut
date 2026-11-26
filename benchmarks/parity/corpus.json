@@ -22,6 +22,20 @@
           "original": "+",
           "replacement": "-",
           "reason": "parseURL(input, defaultProto): no ufo test passes a default protocol, so `defaultProto + input` is never evaluated; selection reports no-coverage where the full suite reports survived."
+        },
+        {
+          "file": "src/url.ts",
+          "line": 61,
+          "original": "===",
+          "replacement": "!==",
+          "reason": "`$URL.isAbsolute` is `this.hasProtocol || this.pathname[0] === \"/\"`; every test that reads it (the `getters` test, and `href`, which asks `hasProtocol && isAbsolute`) has a protocol, so `||` short-circuits and `pathname[0] === \"/\"` is never evaluated. Selection reports no-coverage where the full suite reports survived."
+        },
+        {
+          "file": "src/utils.ts",
+          "line": 644,
+          "original": "!==",
+          "replacement": "===",
+          "reason": "`resolveURL` overrides the hash only when `urlSegment.hash && urlSegment.hash !== \"#\"`; no test passes a later segment that carries a hash (test/resolve.test.ts has a hash only in the first, base segment), so `hash !== \"#\"` is never evaluated."
         }
       ]
     },
@@ -36,6 +50,38 @@
       "mutate": [
         "src/_path.ts",
         "src/utils.ts"
+      ],
+      "expectedTimeouts": [
+        {
+          "file": "src/_path.ts",
+          "line": 108,
+          "original": "--",
+          "replacement": "++",
+          "reason": "`index` in the resolve loop (`index >= -1 && !resolvedAbsolute`) counts up instead of down, so with no absolute segment its condition never fails and the loop never ends."
+        },
+        {
+          "file": "src/_path.ts",
+          "line": 154,
+          "original": "++",
+          "replacement": "--",
+          "reason": "`index` in the normalize loop (`index <= path.length`) counts down instead of up, so the condition always holds and the loop never ends."
+        },
+        {
+          "file": "src/_path.ts",
+          "line": 274,
+          "original": "--",
+          "replacement": "++",
+          "reason": "`i` in the segment loop (`i >= 0`) counts up instead of down, so the condition always holds and the loop never ends."
+        }
+      ],
+      "expectedRefinements": [
+        {
+          "file": "src/utils.ts",
+          "line": 91,
+          "original": "-",
+          "replacement": "+",
+          "reason": "`reverseResolveAlias` evaluates `alias.slice(0, -1)` only for an alias target that ends in a slash; every target in test/utils.spec.ts (`/src`, `C:/src`, `/root`, `/root/some/assets`, ...) has none, so the `-1` is never evaluated."
+        }
       ]
     },
     {
@@ -50,6 +96,22 @@
         "src/hookable.ts",
         "src/utils.ts",
         "src/debugger.ts"
+      ],
+      "expectedRefinements": [
+        {
+          "file": "src/utils.ts",
+          "line": 118,
+          "original": "||",
+          "replacement": "&&",
+          "reason": "`serialCaller` is a deprecated export: no hookable test and no hookable source calls it, so its `arguments_ || []` is never evaluated."
+        },
+        {
+          "file": "src/utils.ts",
+          "line": 125,
+          "original": "||",
+          "replacement": "&&",
+          "reason": "`parallelCaller` is a deprecated export: no hookable test and no hookable source calls it, so its `args || []` is never evaluated."
+        }
       ]
     },
     {
@@ -75,6 +137,108 @@
       "mutate": [
         "src/subpaths/throttle.ts",
         "src/core/masking.ts"
+      ],
+      "expectedTimeouts": [
+        {
+          "file": "src/core/masking.ts",
+          "line": 134,
+          "original": "++",
+          "replacement": "--",
+          "reason": "`i` in the argument loop (`i < args.length`) counts down, so the condition always holds and the loop never ends."
+        },
+        {
+          "file": "src/core/masking.ts",
+          "line": 253,
+          "original": ">",
+          "replacement": "<=",
+          "reason": "inertClones is built only when no mask path is compiled, the inverse of what the diamond-graph tests configure, so shared references under mask.paths are re-walked exponentially; the mutated module never finishes the masking tests (no completion in 60 s locally, the worker dies after ~52 s)."
+        },
+        {
+          "file": "src/core/masking.ts",
+          "line": 278,
+          "original": "||",
+          "replacement": "&&",
+          "reason": "isPathInert needs both a suspended path and a full-depth stack, so inert clones are almost never reused and the diamond-graph tests re-walk shared references exponentially; no completion in 60 s locally (worker dies after ~52 s)."
+        },
+        {
+          "file": "src/core/masking.ts",
+          "line": 327,
+          "original": "++",
+          "replacement": "--",
+          "reason": "`i` in the path-match loop (`i < segments.length`) counts down, so the condition always holds and the loop never ends."
+        },
+        {
+          "file": "src/core/masking.ts",
+          "line": 388,
+          "original": "===",
+          "replacement": "!==",
+          "reason": "`typeof memoized !== \"object\"` disables reuse of the in-progress and inert clones, so cyclic and shared structures are walked without end; no completion in 60 s locally."
+        },
+        {
+          "file": "src/core/masking.ts",
+          "line": 388,
+          "original": "!==",
+          "replacement": "===",
+          "reason": "`memoized === null` disables reuse of the in-progress and inert clones, so cyclic and shared structures are walked without end; no completion in 60 s locally."
+        },
+        {
+          "file": "src/core/masking.ts",
+          "line": 457,
+          "original": "++",
+          "replacement": "--",
+          "reason": "`index` in the array-masking loop (`index < source.length`) counts down, so the condition always holds and the loop never ends."
+        },
+        {
+          "file": "src/core/masking.ts",
+          "line": 823,
+          "original": "++",
+          "replacement": "--",
+          "reason": "`i` in the hash loop (`i < input.length`) counts down, so the condition always holds and the loop never ends."
+        },
+        {
+          "file": "src/subpaths/throttle.ts",
+          "line": 77,
+          "original": "++",
+          "replacement": "--",
+          "reason": "`i` in the digest loop (`i < args.length`) counts down, so the condition always holds and the loop never ends."
+        }
+      ],
+      "expectedRefinements": [
+        {
+          "file": "src/core/masking.ts",
+          "line": 224,
+          "original": "===",
+          "replacement": "!==",
+          "reason": "`toLegacySeen` is reached with a caller-supplied `seen`; the corpus tests call `recursiveCloneAndMaskValuesOfKeys` with two arguments and the logger never passes one, so `!Array.isArray(seen)` always short-circuits and `seen.length === 0` is never evaluated."
+        },
+        {
+          "file": "src/core/masking.ts",
+          "line": 229,
+          "original": "!==",
+          "replacement": "===",
+          "reason": "The loop that seeds the legacy `seen` guard only runs for a caller-supplied `seen` array, which no corpus test (and no tslog source) passes."
+        },
+        {
+          "file": "src/core/masking.ts",
+          "line": 229,
+          "original": "&&",
+          "replacement": "||",
+          "reason": "The loop that seeds the legacy `seen` guard only runs for a caller-supplied `seen` array, which no corpus test (and no tslog source) passes."
+        },
+        {
+          "file": "src/core/masking.ts",
+          "line": 229,
+          "original": "===",
+          "replacement": "!==",
+          "reason": "The loop that seeds the legacy `seen` guard only runs for a caller-supplied `seen` array, which no corpus test (and no tslog source) passes."
+        },
+        {
+          "file": "src/core/masking.ts",
+          "line": 417,
+          "original": "===",
+          "replacement": "!==",
+          "reason": "Applies to the `typeof key === \"bigint\"` operand (column 55): the Map keys in the corpus tests are strings and numbers, so a key that is neither (and would reach `bigint`) never occurs. The `typeof key === \"number\"` operand with the same replacement (column 28) is reached and killed in every mode; this entry covers only the survived-to-no-coverage change."
+        }
       ]
     }
   ]

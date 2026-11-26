@@ -112,7 +112,7 @@ test('checks that sources and mutators agree with the mutant list', async () => 
   const { validateReport } = await import(validator.href);
   const hash = 'a'.repeat(64);
   const bound = (sources, mutators) => ({ ...structuredClone(sample), sources, mutators });
-  const all = { selection: 'all', families: ['arithmetic', 'boolean-literal', 'comparison-boundary'] };
+  const all = { selection: 'all', families: ['arithmetic', 'assignment-operator', 'boolean-literal', 'comparison-boundary', 'equality-operator', 'logical-operator', 'unary-operator', 'update-operator'] };
   const subject = '/fixture/src/subject.ts';
 
   // A file that kept no mutants is still listed, with a zero count.
