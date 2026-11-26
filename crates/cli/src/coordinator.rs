@@ -1010,14 +1010,7 @@ impl Coordinator {
                 return self.retire_with(request, failure);
             }
         };
-        let lane_failure = response.lanes.as_ref().is_some_and(|lanes| {
-            lanes.iter().any(|lane| {
-                matches!(
-                    lane.outcome,
-                    TestOutcome::Timeout | TestOutcome::InfrastructureError
-                )
-            })
-        });
+        let lane_failure = lanes_taint_controller(&response);
         let retire = lane_failure
             || matches!(
                 response.outcome,
@@ -1277,10 +1270,68 @@ fn charge_lane_startup(args: &mut serde_json::Value, spent: Duration) {
     }
 }
 
+/// Whether a lane batch's result leaves the controller in doubt. A lane that failed
+/// the infrastructure, or that stopped at its deadline without using the CPU (what a
+/// stalled zygote child looks like), does. A lane stopped at its deadline while its
+/// worker was running a loop, or answering with the test runner's timeout, is the
+/// mutant's own: the adapter killed that worker's tree and checked its exit, and
+/// the controller kept running other lanes beside it. Retiring the controller then
+/// cost a cold start and every template the batch had built, once per batch.
+fn lanes_taint_controller(response: &Response) -> bool {
+    response.lanes.as_ref().is_some_and(|lanes| {
+        lanes.iter().any(|lane| match lane.outcome {
+            TestOutcome::InfrastructureError => true,
+            TestOutcome::Timeout => !lane.timeout_kind.is_some_and(TimeoutKind::is_genuine),
+            _ => false,
+        })
+    })
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use serde_json::{Value, json};
+
+    #[test]
+    fn only_a_lane_that_could_have_been_a_stalled_worker_taints_the_controller() {
+        let base = infrastructure(&request(), "");
+        let batch = |lane: Response| Response {
+            lanes: Some(vec![empty(&request(), TestOutcome::Failed, ""), lane]),
+            ..base.clone()
+        };
+        let lane = |outcome, kind| {
+            let mut lane = empty(&request(), outcome, "");
+            lane.timeout_kind = kind;
+            lane
+        };
+        assert!(!lanes_taint_controller(&base));
+        assert!(!lanes_taint_controller(&batch(lane(
+            TestOutcome::Passed,
+            None
+        ))));
+        // A loop, or the runner's own timeout, is the mutant's.
+        assert!(!lanes_taint_controller(&batch(lane(
+            TestOutcome::Timeout,
+            Some(TimeoutKind::Busy)
+        ))));
+        assert!(!lanes_taint_controller(&batch(lane(
+            TestOutcome::Timeout,
+            Some(TimeoutKind::TestTimeout)
+        ))));
+        // A worker that sat idle, or one nothing is known about, may be a stalled fork.
+        assert!(lanes_taint_controller(&batch(lane(
+            TestOutcome::Timeout,
+            Some(TimeoutKind::Idle)
+        ))));
+        assert!(lanes_taint_controller(&batch(lane(
+            TestOutcome::Timeout,
+            None
+        ))));
+        assert!(lanes_taint_controller(&batch(lane(
+            TestOutcome::InfrastructureError,
+            None
+        ))));
+    }
 
     #[test]
     fn ineligible_templates_are_counted_and_named_by_kind_only() {
