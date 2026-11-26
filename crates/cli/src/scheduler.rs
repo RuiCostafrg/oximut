@@ -388,7 +388,8 @@ struct ZygoteWatchdog {
 }
 /// Splits jobs into those that can be lanes of a shared controller (they carry the
 /// resident module of their file) and those that cannot (see [`Scheduler::run_jobs`]).
-fn split_unshared(jobs: Vec<(usize, Request)>) -> (Vec<(usize, Request)>, Vec<(usize, Request)>) {
+type Jobs = Vec<(usize, Request)>;
+fn split_unshared(jobs: Jobs) -> (Jobs, Jobs) {
     jobs.into_iter()
         .partition(|(_, job)| job.resident.is_some())
 }
@@ -749,6 +750,10 @@ impl<'a> Scheduler<'a> {
                             self.slots[slot].as_ref().unwrap().busy.as_ref().unwrap();
                         let mut job = trace_job(slot, *index, request);
                         job["ok"] = result.is_ok().into();
+                        if let Ok(response) = &result {
+                            job["outcome"] = serde_json::json!(response.outcome);
+                            job["timeoutKind"] = serde_json::json!(response.timeout_kind);
+                        }
                         job
                     });
                 }
@@ -1263,7 +1268,16 @@ impl<'a> Scheduler<'a> {
                     failed_batches = 0;
                 }
                 if !timed_out.is_empty() {
-                    for (index, response) in self.rerun_timeouts(timed_out) {
+                    trace::event(
+                        "lane_timeouts_rerun_begin",
+                        || serde_json::json!({ "count": timed_out.len() }),
+                    );
+                    let reruns = self.rerun_timeouts(timed_out);
+                    trace::event(
+                        "lane_timeouts_rerun_end",
+                        || serde_json::json!({ "count": reruns.len() }),
+                    );
+                    for (index, response) in reruns {
                         results[index].outcome = response.mutant_outcome();
                         results[index].tests = response.tests;
                         results[index].errors = response.errors;

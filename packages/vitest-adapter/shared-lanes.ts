@@ -290,7 +290,8 @@ export class SharedLanes {
                   // The slot may hold its next mutant by the time this worker exits.
                   const mutant = this.laneMutants.get(name);
                   const note = trace
-                    ? (event: string) => trace.emit('controller', event, { lane: name, mutant })
+                    ? (event: string, extra?: Record<string, unknown>) =>
+                        trace.emit('controller', event, { lane: name, mutant, ...extra })
                     : undefined;
                   worker.start = async () => {
                     note?.('lane_fork_requested');
@@ -396,6 +397,15 @@ export class SharedLanes {
                             ticks === undefined ? undefined : { ticks, at: performance.now() },
                           );
                           if (kind) this.timeoutKinds.set(name, kind);
+                          note?.('lane_deadline_kind', {
+                            kind: kind ?? null,
+                            pid: pid ?? null,
+                            zygote: Boolean(
+                              (worker as unknown as { fork?: LaneFork }).fork?.oximutZygote,
+                            ),
+                            before: before ?? null,
+                            after: ticks === undefined ? null : { ticks, at: performance.now() },
+                          });
                           // The worker's own children go with it, so that its memory and
                           // theirs are released now.
                           if (pid !== undefined) killTree(pid);
