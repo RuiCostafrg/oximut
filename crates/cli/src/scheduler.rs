@@ -862,6 +862,8 @@ impl<'a> Scheduler<'a> {
                             .baseline_fork_limit(capacity, &active_pids)
                             .min(1024),
                     );
+                    // The baseline controller's tree holds that many forks at once.
+                    self.budget.lanes_per_worker = request.workers.unwrap_or(1).max(1) as u64;
                 }
                 let existed = self.slots[slot].is_some();
                 trace::event("dispatch_begin", || trace_job(slot, index, &request));
@@ -1053,6 +1055,8 @@ impl<'a> Scheduler<'a> {
         }
     }
     pub fn run_jobs(&mut self, jobs: Vec<(usize, Request)>, results: &mut [MutantResult]) {
+        // Mutant jobs are priced per job until a lane batch says otherwise.
+        self.budget.lanes_per_worker = 1;
         if self.options.shared_controller && self.slots.len() >= 2 {
             // Fixed at the first batch, so that later batches reuse the same lanes.
             let total = jobs.len();
