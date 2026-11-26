@@ -176,6 +176,7 @@ mod tests {
             errors: vec![],
             coverage: None,
             resident: None,
+            timeout_kind: None,
             file_timings: Some(
                 timings
                     .iter()

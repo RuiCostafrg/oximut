@@ -434,6 +434,9 @@ async function command(name: string, args: Request): Promise<unknown> {
     tests,
     errors: errors.slice(0, 8).map((error) => String(error.message ?? error).slice(0, 2048)),
   };
+  // Vitest's own timeout was reported by a live worker: nothing for the CLI's zygote
+  // watchdog to second-guess. (A job stopped at its deadline never gets here.)
+  if (outcome === 'timeout') result.timeoutKind = 'test-timeout';
   // Acknowledge the resident modules this job served; the CLI rejects
   // executed results from adapters that ignore them.
   if (job.resident) result.resident = job.resident.length;

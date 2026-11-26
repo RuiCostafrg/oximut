@@ -369,13 +369,20 @@ pub struct Scheduler<'a> {
     zygote: ZygoteWatchdog,
 }
 /// Guards `--zygote` runs against a deadlocked forked worker, which would look
-/// like a timeout and could count as a detection. A Timeout is rerun once with
-/// the zygote bypassed; if the rerun gives another outcome, the zygote is
-/// disabled for the rest of the run.
+/// like a timeout and could count as a detection. A Timeout that could be a
+/// deadlock is rerun once with the zygote bypassed; if the rerun gives another
+/// outcome, the zygote is disabled for the rest of the run. A timeout whose
+/// worker the adapter saw on the CPU, or answering with the test runner's own
+/// timeout, is the mutant's own and keeps its verdict without a rerun; so does
+/// any timeout from an adapter that reports nothing about it, the other way
+/// round: no evidence means a rerun.
 #[derive(Default)]
 struct ZygoteWatchdog {
     disabled: bool,
     reruns: u64,
+    /// Timeouts left alone because the adapter saw the worker alive and working
+    /// (see [`TimeoutKind`]): a deadlocked zygote child is neither.
+    genuine: u64,
     /// Mutant indexes whose single bypassed rerun is queued or running.
     rerunning: BTreeSet<usize>,
 }
@@ -985,9 +992,20 @@ impl<'a> Scheduler<'a> {
         }
         request.kind == "mutant" && request.lanes.is_none() && self.watching(response)
     }
-    /// Whether a timed-out mutant is a watchdog case: zygote on and not yet disabled.
-    fn watching(&self, response: &Response) -> bool {
-        self.options.zygote && !self.zygote.disabled && response.outcome == TestOutcome::Timeout
+    /// Whether a timed-out mutant is a watchdog case: zygote on and not yet disabled,
+    /// and nothing shows the worker was alive and working when it timed out.
+    fn watching(&mut self, response: &Response) -> bool {
+        if !(self.options.zygote
+            && !self.zygote.disabled
+            && response.outcome == TestOutcome::Timeout)
+        {
+            return false;
+        }
+        if response.timeout_kind.is_some_and(TimeoutKind::is_genuine) {
+            self.zygote.genuine += 1;
+            return false;
+        }
+        true
     }
     /// Rerun timed-out lane jobs one by one with the zygote bypassed. The lane
     /// controllers give way to ordinary ones, and each rerun goes through the
@@ -1283,6 +1301,12 @@ impl<'a> Scheduler<'a> {
                 self.zygote.reruns
             ));
         }
+        if self.zygote.genuine > 0 {
+            self.diagnostics.push(format!(
+                "zygote watchdog: {} timeouts kept without a rerun (worker was running, not stalled)",
+                self.zygote.genuine
+            ));
+        }
         diagnostics.append(&mut self.diagnostics);
         self.cleanup_ok && self.budget.exhaustion.is_none()
     }
@@ -1483,6 +1507,50 @@ mod tests {
         rx.recv_timeout(Duration::from_secs(60))
             .expect("an event ended the wait")
             .unwrap()
+    }
+
+    fn timed_out(kind: Option<TimeoutKind>) -> Response {
+        let mut response = infrastructure(&request(), "");
+        response.outcome = TestOutcome::Timeout;
+        response.timeout_kind = kind;
+        response
+    }
+
+    #[test]
+    fn the_watchdog_reruns_only_timeouts_that_could_be_a_stalled_zygote() {
+        let mut options = options();
+        options.zygote = true;
+        let mut scheduler = Scheduler::new(&options).unwrap();
+        // A worker that sat idle until its deadline, and an adapter that says
+        // nothing, could be a deadlocked zygote child.
+        assert!(scheduler.watching(&timed_out(Some(TimeoutKind::Idle))));
+        assert!(scheduler.watching(&timed_out(None)));
+        assert_eq!(scheduler.zygote.genuine, 0);
+        // One that was burning CPU, or answered with the runner's own timeout, is
+        // the mutant's: no rerun, and counted.
+        assert!(!scheduler.watching(&timed_out(Some(TimeoutKind::Busy))));
+        assert!(!scheduler.watching(&timed_out(Some(TimeoutKind::TestTimeout))));
+        assert_eq!(scheduler.zygote.genuine, 2);
+        // Other outcomes are never watched.
+        let mut passed = timed_out(Some(TimeoutKind::Idle));
+        passed.outcome = TestOutcome::Passed;
+        assert!(!scheduler.watching(&passed));
+        // Once the zygote is disabled nothing is rerun at all.
+        scheduler.zygote.disabled = true;
+        assert!(!scheduler.watching(&timed_out(Some(TimeoutKind::Idle))));
+        assert!(!scheduler.watching(&timed_out(None)));
+        scheduler.finish(&mut vec![]);
+    }
+
+    #[test]
+    fn without_the_zygote_no_timeout_is_ever_watched() {
+        let mut options = options();
+        options.zygote = false;
+        let mut scheduler = Scheduler::new(&options).unwrap();
+        assert!(!scheduler.watching(&timed_out(None)));
+        assert!(!scheduler.watching(&timed_out(Some(TimeoutKind::Idle))));
+        assert_eq!(scheduler.zygote.genuine, 0);
+        scheduler.finish(&mut vec![]);
     }
 
     fn passed(request: &Request) -> Vec<u8> {

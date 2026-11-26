@@ -10,7 +10,7 @@ mod trace;
 mod wait;
 use oximut_core::{
     Coverage, Mutant, MutantResult, Mutation, MutatorSelection, Outcome, PROTOCOL, Provenance,
-    Report, Request, Response, SourceBinding, Summary, TestOutcome, Tests,
+    Report, Request, Response, SourceBinding, Summary, TestOutcome, Tests, TimeoutKind,
 };
 use std::sync::Arc;
 use std::{
@@ -475,6 +475,7 @@ fn infrastructure(request: &Request, error: impl Into<String>) -> Response {
         coverage: None,
         resident: None,
         file_timings: None,
+        timeout_kind: None,
     }
 }
 
@@ -1639,6 +1640,7 @@ fn run_attempt(options: &Options, previous: Option<RetryEvidence>) -> Result<Att
                     coverage: None,
                     resident: None,
                     file_timings: None,
+                    timeout_kind: None,
                 }
             };
             results.push(MutantResult {
