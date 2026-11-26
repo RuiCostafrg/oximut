@@ -148,7 +148,7 @@ def flags_for(summary):
     if oximut.get('admission_pauses'):
         flags.append(f"memory pressure paused Oximut's admission {oximut['admission_pauses']} time(s)")
     if not oximut['complete']:
-        flags.append('Oximut run incomplete (timeout or invalid mutants)')
+        flags.append('Oximut run incomplete (invalid, skipped or failed mutants)')
     if summary['vitest']['failures']:
         flags.append(f"plain Vitest run failed in {len(summary['vitest']['failures'])} round(s): "
                      f"{summary['vitest']['failures'][0]}")

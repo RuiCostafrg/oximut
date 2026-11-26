@@ -159,8 +159,11 @@ Stryker's explicitly configured ignored operators remain in its raw report and
 are published as scope exclusions with identities and reasons. Active mutants
 are never postfiltered to manufacture an overlap benchmark. Edited-source
 identity includes the file and exact complete edited content, so whitespace and
-parenthesis differences remain mismatches. Timeout, invalid, resource and
-infrastructure outcomes invalidate qualification.
+parenthesis differences remain mismatches. Invalid, resource and
+infrastructure outcomes invalidate qualification. A timeout is a detection in both
+tools (StrykerJS semantics) and does not make the run incomplete, but the tools
+and the modes must still agree on it per mutant: a timeout against a kill is a
+reported mismatch.
 
 A ratio is emitted only when ordinary tests and both mutation runs qualify, the
 family declarations and available test scope agree, and the complete exact edited

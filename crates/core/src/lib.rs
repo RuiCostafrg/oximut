@@ -573,6 +573,9 @@ pub struct Summary {
     pub infrastructure_error: usize,
     pub resource_exhausted: usize,
     pub skipped: usize,
+    /// Mutants the tests caught: `killed + timeout`. A mutant that hangs the
+    /// tests is detected, as in StrykerJS; `timeout` stays its own outcome.
+    pub detected: usize,
     pub score_denominator: usize,
     pub score: Option<f64>,
     pub complete: bool,
@@ -589,9 +592,10 @@ impl Summary {
         let killed = count(Outcome::Killed);
         let survived = count(Outcome::Survived);
         let no_coverage = count(Outcome::NoCoverage);
-        let denominator = killed + survived + no_coverage;
-        let invalid = count(Outcome::Invalid);
         let timeout = count(Outcome::Timeout);
+        let detected = killed + timeout;
+        let denominator = detected + survived + no_coverage;
+        let invalid = count(Outcome::Invalid);
         let infrastructure_error = count(Outcome::InfrastructureError);
         let skipped = count(Outcome::Skipped);
         let resource_exhausted = count(Outcome::ResourceExhausted);
@@ -605,10 +609,18 @@ impl Summary {
             infrastructure_error,
             resource_exhausted,
             skipped,
+            detected,
             score_denominator: denominator,
-            score: (denominator > 0).then(|| 100.0 * killed as f64 / denominator as f64),
-            complete: invalid + timeout + infrastructure_error + resource_exhausted + skipped == 0,
+            score: (denominator > 0).then(|| 100.0 * detected as f64 / denominator as f64),
+            complete: invalid + infrastructure_error + resource_exhausted + skipped == 0,
         }
+    }
+
+    /// Whether the run's outcomes may be saved for reuse: a complete run with no
+    /// timeouts. A timeout depends on the machine's speed and load, so it is
+    /// evidence for this run only and is never replayed from the cache.
+    pub fn cacheable(&self) -> bool {
+        self.complete && self.timeout == 0
     }
 
     /// 0: complete with no survivors; 1: survivors/no coverage; 2: incomplete/error.
@@ -846,6 +858,85 @@ mod tests {
         let summary = Summary::from_results(&[]);
         assert_eq!(summary.score, None);
         assert_eq!(summary.score_denominator, 0);
+    }
+
+    fn outcome_result(outcome: Outcome) -> MutantResult {
+        let position = |column| Position {
+            offset: column,
+            line: 1,
+            column,
+        };
+        MutantResult {
+            id: "m".into(),
+            file: "a.ts".into(),
+            operator: "op".into(),
+            original: "a".into(),
+            replacement: "b".into(),
+            location: Location {
+                start: position(0),
+                end: position(1),
+            },
+            outcome,
+            tests: Tests::default(),
+            errors: vec![],
+            selection: None,
+            deadline_ms: None,
+            provenance: Provenance {
+                source: "execution".into(),
+                reason: "test".into(),
+                fingerprint: None,
+                original_run_id: None,
+            },
+        }
+    }
+
+    fn summary_of(outcomes: &[Outcome]) -> Summary {
+        let results: Vec<_> = outcomes.iter().copied().map(outcome_result).collect();
+        Summary::from_results(&results)
+    }
+
+    #[test]
+    fn a_timeout_counts_as_detected_in_the_score_like_stryker() {
+        use Outcome::*;
+        let summary = summary_of(&[Killed, Timeout, Survived, NoCoverage]);
+        assert_eq!(
+            (summary.killed, summary.timeout, summary.detected),
+            (1, 1, 2)
+        );
+        assert_eq!(summary.score_denominator, 4);
+        assert_eq!(summary.score, Some(50.0));
+        // The outcome stays its own value and is not folded into `killed`.
+        assert_eq!(summary.killed, 1);
+        assert!(summary.complete);
+    }
+
+    #[test]
+    fn a_run_with_timeouts_exits_like_a_run_with_kills() {
+        use Outcome::*;
+        assert_eq!(summary_of(&[Killed, Timeout]).exit_code(), 0);
+        assert_eq!(summary_of(&[Timeout]).score, Some(100.0));
+        assert_eq!(summary_of(&[Timeout, Survived]).exit_code(), 1);
+        assert_eq!(summary_of(&[Timeout, NoCoverage]).exit_code(), 1);
+    }
+
+    #[test]
+    fn other_non_verdicts_stay_excluded_and_incomplete() {
+        use Outcome::*;
+        for outcome in [Invalid, InfrastructureError, ResourceExhausted, Skipped] {
+            let summary = summary_of(&[Killed, Timeout, outcome]);
+            assert!(!summary.complete, "{outcome:?}");
+            assert_eq!(summary.exit_code(), 2, "{outcome:?}");
+            assert_eq!(summary.score_denominator, 2, "{outcome:?}");
+            assert_eq!(summary.score, Some(100.0), "{outcome:?}");
+        }
+    }
+
+    #[test]
+    fn only_a_complete_run_without_timeouts_is_cacheable() {
+        use Outcome::*;
+        assert!(summary_of(&[Killed, Survived]).cacheable());
+        assert!(!summary_of(&[Killed, Timeout]).cacheable());
+        assert!(!summary_of(&[Killed, Invalid]).cacheable());
     }
     fn coverage() -> Coverage {
         Coverage {

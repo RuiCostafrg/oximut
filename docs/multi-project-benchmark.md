@@ -74,8 +74,8 @@ plain Vitest (suite time, for diagnosis), Oximut and Stryker sequentially in cle
 cache, alternating the order, using the same process-tree measurement as the other campaigns
 (`benchmarks/run.py`: wall, CPU from `wait4` rusage, peak aggregate RSS). A cell fails (and records why)
 when a run times out, a command fails, the Oximut baseline fails, Oximut reports engine failures
-(infrastructure error, resource exhaustion) or ran fewer workers than requested. Oximut timeouts and
-invalid mutants keep the run (they are real behavior) but flag it incomplete, and so do memory-pressure pauses of
+(infrastructure error, resource exhaustion) or ran fewer workers than requested. Oximut timeouts are detections
+(a complete run, like Stryker's) and invalid mutants keep the run (they are real behavior) but flag it incomplete, and so do memory-pressure pauses of
 Oximut's admission (its default memory budget; the colord harness rejects them).
 
 Worker counts above the usable CPUs are recorded as `skipped`, never run: Oximut caps its workers at the

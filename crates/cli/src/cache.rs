@@ -580,6 +580,11 @@ impl Cache {
             self.report.persistence = "incomplete-or-baseline-only-run-not-persisted".into();
             return None;
         }
+        // A timeout reflects this machine's speed and load, so it is never replayed.
+        if results.iter().any(|r| r.outcome == Outcome::Timeout) {
+            self.report.persistence = "run-with-timeouts-not-persisted".into();
+            return None;
+        }
         let key = self.report.fingerprint.as_ref()?;
         let entry = Outcomes::new(key.clone(), run_id.into(), tests.clone(), results.to_vec());
         let path = self.directory.join("outcomes").join(format!("{key}.json"));
@@ -1569,6 +1574,47 @@ mod tests {
                 .is_none()
         );
         assert_eq!(read::<Outcomes>(&path).unwrap().run_id, "run");
+    }
+    #[test]
+    fn a_run_with_a_timeout_is_complete_but_never_persisted() {
+        let (root, options, _) = project();
+        let mut cache = cache(root.path());
+        let position = |column| oximut_core::Position {
+            offset: column,
+            line: 1,
+            column,
+        };
+        let tests = Tests::default();
+        let result = MutantResult {
+            id: "m".into(),
+            file: "a.ts".into(),
+            operator: "op".into(),
+            original: "a".into(),
+            replacement: "b".into(),
+            location: oximut_core::Location {
+                start: position(0),
+                end: position(1),
+            },
+            outcome: Outcome::Timeout,
+            tests: Tests::default(),
+            errors: vec![],
+            selection: None,
+            deadline_ms: Some(1000),
+            provenance: Provenance {
+                source: "executed".into(),
+                reason: "test".into(),
+                fingerprint: None,
+                original_run_id: None,
+            },
+        };
+        assert!(
+            cache
+                .stage(&options, true, true, "run", &tests, &[result])
+                .is_none()
+        );
+        assert_eq!(cache.report.persistence, "run-with-timeouts-not-persisted");
+        let path = root.path().join(".oximut/cache/outcomes/fingerprint.json");
+        assert!(!path.exists());
     }
     #[cfg(unix)]
     #[test]

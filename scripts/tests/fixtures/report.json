@@ -123,6 +123,7 @@
     "infrastructureError": 0,
     "resourceExhausted": 0,
     "skipped": 0,
+    "detected": 2,
     "scoreDenominator": 3,
     "score": 66.66666666666667,
     "complete": true

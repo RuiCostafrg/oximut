@@ -85,7 +85,7 @@ class ArtifactTests(unittest.TestCase):
         self.value['mutants'] = [mutant]
         self.value['summary'].update(total=1, killed=0, survived=1, noCoverage=0,
                                      invalid=0, timeout=0, infrastructureError=0,
-                                     resourceExhausted=0, skipped=0, scoreDenominator=1, score=0.0,
+                                     resourceExhausted=0, skipped=0, detected=0, scoreDenominator=1, score=0.0,
                                      complete=True)
 
     def validate(self):
@@ -228,12 +228,12 @@ class ArtifactTests(unittest.TestCase):
                                 'line': 6, 'column': column},
                       'end': {'offset': sum(len(line) + 1 for line in source.read_text().splitlines()[:5]) + column,
                               'line': 6, 'column': column + 1}})
-        self.value['summary'].update(killed=0, survived=1, score=0.0)
+        self.value['summary'].update(killed=0, survived=1, detected=0, score=0.0)
         self.report.write_text(json.dumps(self.value))
         with self.assertRaisesRegex(ValueError, 'sentinel was not killed'):
             m6.artifact('oximut', self.report, project, {'exit_code': 1, 'fixture': 'm1'})
         self.value['mutants'][0].update(outcome='killed', tests={'passed': 1, 'failed': 1, 'skipped': 0})
-        self.value['summary'].update(killed=1, survived=0, score=100.0)
+        self.value['summary'].update(killed=1, survived=0, detected=1, score=100.0)
         self.report.write_text(json.dumps(self.value))
         validated = m6.artifact('oximut', self.report, project, {'exit_code': 0, 'fixture': 'm1'})
         self.assertIn(validated['known_killed_sentinel_identity'], validated['mutations'])
@@ -242,6 +242,12 @@ class ArtifactTests(unittest.TestCase):
         self.value['baseline']['tests']['skipped'] = 1
         with self.assertRaises(ValueError):
             self.validate()
+
+    def test_a_timeout_is_an_accepted_comparable_outcome(self):
+        self.value['mutants'][0].update(outcome='timeout', tests={'passed': 0, 'failed': 0, 'skipped': 0})
+        self.value['summary'].update(survived=0, timeout=1, detected=1, score=100.0)
+        validated = self.validate()
+        self.assertEqual([m['outcome'] for m in validated['mutations'].values()], ['timeout'])
 
     def test_resource_failure_never_becomes_kill(self):
         self.value['mutants'][0]['outcome'] = 'resource-exhausted'

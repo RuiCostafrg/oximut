@@ -26,6 +26,7 @@ test('allows an incomplete invocation report', async t => {
   report.summary.total = 0;
   report.summary.killed = 0;
   report.summary.survived = 0;
+  report.summary.detected = 0;
   report.summary.scoreDenominator = 0;
   report.summary.score = null;
   const file = join(directory, 'incomplete-report.json');
@@ -69,9 +70,12 @@ test('rejects missing fields, wrong field types, malformed JSON, and list output
   delete missing.cache;
   const wrongType = structuredClone(sample);
   wrongType.summary.complete = 'true';
+  const undetected = structuredClone(sample);
+  delete undetected.summary.detected;
   for (const [name, contents, message] of [
     ['missing.json', JSON.stringify(missing), /cache/],
     ['wrong-type.json', JSON.stringify(wrongType), /boolean/],
+    ['no-detected.json', JSON.stringify(undetected), /detected/],
     ['malformed.json', '{', /cannot read JSON/],
     ['list.json', JSON.stringify({ schemaVersion: 1, mutants: [], diagnostics: [] }), /required/],
   ]) {
