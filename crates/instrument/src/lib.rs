@@ -498,6 +498,7 @@ pub fn generate(
     let file = path.to_string_lossy().into_owned();
     let normalized_identity = identity.replace('\\', "/");
     let mut mutants = vec![];
+    let mut distinct = BTreeSet::new();
     for edit in collector.edits {
         let start = edit.span.start as usize;
         let end = edit.span.end as usize;
@@ -531,6 +532,15 @@ pub fn generate(
             collector
                 .diagnostics
                 .push(format!("excluded {id}: replacement is not valid syntax"));
+            continue;
+        }
+        // Different edits can yield the very same file (`!!x` loses either `!`).
+        // Keep the first; never drop a mutant of the three older families.
+        let first_of_its_kind = distinct.insert(Sha256::digest(code.as_bytes()).to_vec());
+        if !first_of_its_kind && !matches!(edit.operator, ARITHMETIC | BOOLEAN | COMPARISON) {
+            collector.diagnostics.push(format!(
+                "excluded {id}: the edited file is identical to an earlier mutant's"
+            ));
             continue;
         }
         mutants.push(Mutant {
@@ -1903,6 +1913,29 @@ console.log(JSON.stringify([a, b, c, iterator.next(), iterator.next(7), true, ca
         assert_eq!(codes("(a) += (1);", ASSIGNMENT), ["(a) -= (1);"]);
         assert_eq!(codes("++(a);", UPDATE), ["--(a);"]);
         assert_eq!(codes("((a))++;", UPDATE), ["((a))--;"]);
+    }
+
+    #[test]
+    fn edits_that_yield_the_same_file_produce_one_mutant() {
+        // Removing either `!` of `!!x` (or `~` of `~~x`) leaves the same program.
+        let result = only("if (!!ready) {} const m = ~~n;", UNARY);
+        assert_eq!(
+            result
+                .mutants
+                .iter()
+                .map(|m| m.code.as_str())
+                .collect::<Vec<_>>(),
+            [
+                "if (!ready) {} const m = ~~n;",
+                "if (!!ready) {} const m = ~n;"
+            ]
+        );
+        assert!(result.diagnostics.iter().any(|d| d.contains("identical")));
+        // Distinct edits of nested signs stay distinct.
+        assert_eq!(codes("x = - -y;", UNARY), ["x = + -y;", "x = - +y;"]);
+        // Mutants of the older families are never merged.
+        let both = super::generate("a.ts", Path::new("a.ts"), "a + b; a + b;", &legacy()).unwrap();
+        assert_eq!(both.mutants.len(), 2);
     }
 
     #[test]
