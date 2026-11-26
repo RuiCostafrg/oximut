@@ -564,6 +564,20 @@ pub fn generate(
     })
 }
 
+/// The resident module of a file none of whose mutants is selected: the source
+/// itself, so the instrumented baseline still validates that the file loads
+/// through the transform, as it does for every other `--source` file.
+pub fn identity_module(path: &Path, source: &str) -> oximut_core::Mutation {
+    let file = path.to_string_lossy().into_owned();
+    let origins: Vec<usize> = (0..source.len()).collect();
+    oximut_core::Mutation {
+        id: "__oximut_resident__".into(),
+        map: mapped_code(&file, source, source, &origins),
+        file,
+        code: source.into(),
+    }
+}
+
 /// Generate a shared Node-only module containing inline mutation switches.
 /// Branches remain in their original lexical context, including await and yield.
 /// Files referring to `process` fall back to static mutants because the selector
@@ -2190,6 +2204,24 @@ console.log(JSON.stringify([a, b, c, t, m, n, calls]));
                 execute(&switched.code, &switched.id)
             );
         }
+    }
+
+    #[test]
+    fn a_file_without_selected_mutants_has_an_identity_resident_module() {
+        let source = "export const f = (a: number) => (a < 1 ? 1 : 2);\n// é\n";
+        let path = Path::new("/project/src/a.ts");
+        let module = identity_module(path, source);
+        assert_eq!(module.id, "__oximut_resident__");
+        assert_eq!(module.code, source);
+        assert_eq!(module.file, path.to_string_lossy());
+        assert_eq!(module.map["sourcesContent"][0], source);
+        assert_eq!(module.map["version"], 3);
+        assert!(
+            super::generate("a.ts", path, source, &select(&[ARITHMETIC]))
+                .unwrap()
+                .mutants
+                .is_empty()
+        );
     }
 
     #[test]

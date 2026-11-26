@@ -1216,15 +1216,23 @@ fn run_attempt(options: &Options, previous: Option<RetryEvidence>) -> Result<Att
                 .diagnostics
                 .iter()
                 .any(|d| d.contains("switching fallback"))
-            && let Some(first) = generated.mutants.first()
         {
-            // All mutants of a switched file share this module.
-            resident.push(Mutation {
-                id: "__oximut_resident__".into(),
-                file: first.file.clone(),
-                code: first.code.clone(),
-                map: first.map.clone(),
-            });
+            if let Some(first) = generated.mutants.first() {
+                // All mutants of a switched file share this module.
+                resident.push(Mutation {
+                    id: "__oximut_resident__".into(),
+                    file: first.file.clone(),
+                    code: first.code.clone(),
+                    map: first.map.clone(),
+                });
+            } else if !options.mutators.is_empty()
+                && !oximut_instrument::generate(&identity, path, &source, &Default::default())?
+                    .mutants
+                    .is_empty()
+            {
+                // A file only unselected families would mutate is still validated.
+                resident.push(oximut_instrument::identity_module(path, &source));
+            }
         }
         let before = mutants.len();
         // The generator already honours `--mutators`, so these are the selection.
