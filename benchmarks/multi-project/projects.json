@@ -1,0 +1,69 @@
+{
+  "schemaVersion": 1,
+  "projects": [
+    {
+      "name": "es-toolkit",
+      "kind": "large",
+      "repository": "https://github.com/toss/es-toolkit",
+      "commit": "24e7a7b8cb8035fae1ea2e7b507aab96698a38b9",
+      "license": "MIT",
+      "description": "Utility library: array, math, string, object, predicate and util modules plus the lodash-compatible math, string and util ones; colocated spec files.",
+      "vitestConfig": "configs/es-toolkit.vitest.config.ts",
+      "root": ".",
+      "copy": [
+        "src",
+        "package.json"
+      ],
+      "mutate": [
+        "src/array/*.ts",
+        "src/math/*.ts",
+        "src/string/*.ts",
+        "src/object/*.ts",
+        "src/predicate/*.ts",
+        "src/util/*.ts",
+        "src/compat/math/*.ts",
+        "src/compat/string/*.ts",
+        "src/compat/util/*.ts"
+      ],
+      "mutateExclude": [
+        "*.spec.ts",
+        "*/index.ts",
+        "*.d.ts",
+        "*/isBrowser.ts"
+      ]
+    },
+    {
+      "name": "es-toolkit-no-globalthis",
+      "kind": "large",
+      "repository": "https://github.com/toss/es-toolkit",
+      "commit": "24e7a7b8cb8035fae1ea2e7b507aab96698a38b9",
+      "license": "MIT",
+      "description": "Utility library: array, math, string, object, predicate and util modules plus the lodash-compatible math, string and util ones; colocated spec files. Same scope without isBuffer.ts and isPlainObject.ts, the two sources that mention globalThis: Oximut refuses to probe such files, which turns test selection off for the whole run.",
+      "vitestConfig": "configs/es-toolkit.vitest.config.ts",
+      "root": ".",
+      "copy": [
+        "src",
+        "package.json"
+      ],
+      "mutate": [
+        "src/array/*.ts",
+        "src/math/*.ts",
+        "src/string/*.ts",
+        "src/object/*.ts",
+        "src/predicate/*.ts",
+        "src/util/*.ts",
+        "src/compat/math/*.ts",
+        "src/compat/string/*.ts",
+        "src/compat/util/*.ts"
+      ],
+      "mutateExclude": [
+        "*.spec.ts",
+        "*/index.ts",
+        "*.d.ts",
+        "*/isBrowser.ts",
+        "*/isBuffer.ts",
+        "*/isPlainObject.ts"
+      ]
+    }
+  ]
+}
