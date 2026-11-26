@@ -82,3 +82,8 @@ Each executed mutant records the deadline it ran under in `deadlineMs`
 ([report-schema.md](report-schema.md)). A `timeout` outcome with a deadline well above the
 selected files' baseline time means the mutant really did not finish; one close to the
 constant means the files were fast and the mutant looped.
+
+A `timeout` is a detection, as in StrykerJS: it counts in the score's numerator
+and denominator (`summary.detected = killed + timeout`), does not make the run
+incomplete, and exits like a kill. It stays its own outcome so you can see it, and
+outcome caching never reuses it because it depends on the machine's speed.

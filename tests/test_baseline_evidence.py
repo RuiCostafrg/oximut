@@ -21,7 +21,7 @@ TEST_FILES = [str(ROOT / f'test/arithmetic-{index}.test.ts') for index in range(
 # A suite far larger than the fixture's, so that explicit hit lists would not fit 1 MiB.
 TESTS_PER_FILE = 700
 ADAPTER = r"""
-import { appendFileSync, existsSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
+import { appendFileSync, existsSync, readFileSync, renameSync, symlinkSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 const session = process.argv[2];
 const mode = process.env.OXIMUT_FAKE_MODE;
@@ -38,7 +38,9 @@ for (;;) {
   if (!existsSync(input)) { await new Promise(r => setTimeout(r, 5)); continue; }
   const request = JSON.parse(readFileSync(input, 'utf8'));
   appendFileSync(process.env.OXIMUT_FAKE_LOG, JSON.stringify({ jobId: request.jobId, kind: request.kind,
-    deadlineMs: request.deadlineMs, selection: request.selection ?? null }) + '\n');
+    deadlineMs: request.deadlineMs, selection: request.selection ?? null,
+    coverageDir: request.coverageDir ?? null,
+    coverageDirExists: request.coverageDir ? existsSync(request.coverageDir) : null }) + '\n');
   const response = { protocol: request.protocol, runId: request.runId, jobId: request.jobId,
     generation: request.generation, outcome: 'passed',
     tests: { passed: total, failed: 0, skipped: 0 }, errors: [] };
@@ -51,7 +53,24 @@ for (;;) {
   if (request.collectCoverage) {
     const ids = request.collectCoverage.flatMap((probe) =>
       [...probe.code.matchAll(/__oximut_m3_hit__\?\.\("([a-f0-9]{64})"\)/g)].map((m) => m[1]));
-    if (mode === 'too-large') {
+    if (mode === 'file' || mode === 'file-symlink') {
+      // A suite whose inventory alone exceeds a response: the coverage goes to a file in
+      // the directory the CLI offered. Mutant i is hit by every test of the files from
+      // i % 8 on, as runs.
+      const coverage = { complete: true, tests, reasons: [], hits: ids.map((mutantId, i) => {
+        const first = (i % files.length) * perFile;
+        return { mutantId, tests: [], outsideTest: false, testRanges: [[first, total - 1]] };
+      }) };
+      const name = 'coverage-fake.json';
+      if (mode === 'file') {
+        writeFileSync(join(request.coverageDir, name), JSON.stringify(coverage), { flag: 'wx', mode: 0o600 });
+      } else {
+        const target = join(session, 'elsewhere.json');
+        writeFileSync(target, JSON.stringify(coverage), { mode: 0o600 });
+        symlinkSync(target, join(request.coverageDir, name));
+      }
+      response.coverageFile = name;
+    } else if (mode === 'too-large') {
       response.coverage = { complete: false, tests: [], hits: [], reasons: ['coverage-payload-too-large'] };
     } else {
       // Mutant i is hit by every test of the files from i % 8 on (all files for 0),
@@ -130,6 +149,40 @@ class BaselineEvidence(unittest.TestCase):
         self.assertEqual({t['file']: t['durationMs'] for t in report['baseline']['fileTimings']},
                          {file: float(ms) for file, ms in seconds.items()})
 
+    def test_a_suite_past_the_response_limit_sends_coverage_by_file_and_stays_narrow(self):
+        # 8 files of 3,200 tests: the inventory alone is megabytes, over any response.
+        per_file = 3200
+        report, requests, result = self.run_cli('file', per_file=per_file)
+        self.assertEqual(report['baseline']['outcome'], 'passed', report['baseline'])
+        coverage = report['baseline']['coverage']
+        self.assertTrue(coverage['complete'], coverage['reasons'])
+        total = per_file * FILES
+        self.assertEqual(len(coverage['tests']), total)
+        self.assertGreater(len(json.dumps(coverage['tests'])), 2 * 1024 * 1024)
+        self.assertEqual(coverage['reasons'], [])
+        # The CLI offered a private directory to the coverage run only, and removed it.
+        offered = [r for r in requests if r['coverageDir']]
+        self.assertEqual(len(offered), 1, requests)
+        self.assertTrue(os.path.isabs(offered[0]['coverageDir']))
+        self.assertTrue(offered[0]['coverageDirExists'])
+        self.assertFalse(os.path.exists(offered[0]['coverageDir']))
+        # Selection stays narrow: a mutant runs the files it reaches, not the whole suite.
+        modes = {m['selection']['mode'] for m in report['mutants']}
+        self.assertEqual(modes, {'files'})
+        self.assertEqual({m['selection']['selectedTests'] for m in report['mutants']},
+                         {per_file * n for n in range(1, FILES + 1)})
+        self.assertLess(min(m['selection']['selectedTests'] for m in report['mutants']), total)
+        self.assertNotIn('coverage exceeded', ' '.join(report['diagnostics']))
+
+    def test_a_coverage_file_that_is_a_link_is_refused_and_falls_back_to_the_whole_suite(self):
+        report, requests, result = self.run_cli('file-symlink', per_file=10)
+        self.assertEqual(report['baseline']['outcome'], 'passed', report['baseline'])
+        coverage = report['baseline']['coverage']
+        self.assertFalse(coverage['complete'])
+        self.assertTrue(any(reason.startswith('invalid-coverage-file') for reason in coverage['reasons']),
+                        coverage['reasons'])
+        self.assertEqual({m['selection']['mode'] for m in report['mutants']}, {'full'})
+
     def test_coverage_dropped_for_size_falls_back_to_the_whole_suite_and_its_time(self):
         report, requests, result = self.run_cli('too-large', per_file=10)
         self.assertEqual(report['baseline']['outcome'], 'passed', report['baseline'])
@@ -139,8 +192,8 @@ class BaselineEvidence(unittest.TestCase):
         self.assertIn('coverage-payload-too-large', coverage['reasons'])
         # Nothing to validate, so no misleading second reason.
         self.assertNotIn('invalid-coverage-inventory', coverage['reasons'])
-        self.assertIn('coverage exceeded the 1 MiB response limit; test selection falls back to '
-                      'full suites', report['diagnostics'])
+        self.assertIn('coverage exceeded the transport limit (1 MiB response, or the coverage file '
+                      'limit); test selection falls back to full suites', report['diagnostics'])
         # Every mutant runs the whole suite, which the eight files make 36 s: 36 * 1.5 + 10.
         self.assertEqual({m['selection']['mode'] for m in report['mutants']}, {'full'})
         self.assertEqual({m['deadlineMs'] for m in report['mutants']}, {64_000})

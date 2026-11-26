@@ -26,6 +26,7 @@ test('allows an incomplete invocation report', async t => {
   report.summary.total = 0;
   report.summary.killed = 0;
   report.summary.survived = 0;
+  report.summary.detected = 0;
   report.summary.scoreDenominator = 0;
   report.summary.score = null;
   const file = join(directory, 'incomplete-report.json');
@@ -131,4 +132,15 @@ test('checks that sources and mutators agree with the mutant list', async () => 
   ]) {
     assert.throws(() => validateReport(bound(sources, mutators), 'case'), message);
   }
+});
+
+test('accepts a schema version 1 report from before summary.detected existed', async t => {
+  const directory = await mkdtemp(join(tmpdir(), 'oximut-legacy-report-'));
+  t.after(() => rm(directory, { recursive: true, force: true }));
+  const legacy = structuredClone(sample);
+  delete legacy.summary.detected;
+  const file = join(directory, 'legacy-report.json');
+  await writeFile(file, JSON.stringify(legacy));
+  const result = run(file);
+  assert.equal(result.status, 0, result.stderr);
 });

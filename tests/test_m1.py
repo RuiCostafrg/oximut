@@ -54,6 +54,7 @@ class VerticalSlice(unittest.TestCase):
         self.assertEqual(report["baseline"]["outcome"], "passed")
         self.assertEqual(report["summary"]["killed"], 2)
         self.assertEqual(report["summary"]["survived"], 1)
+        self.assertEqual(report["summary"]["detected"], 2)
         self.assertEqual(report["summary"]["scoreDenominator"], 3)
         self.assertAlmostEqual(report["summary"]["score"], 200 / 3)
         self.assertTrue(report["summary"]["complete"])

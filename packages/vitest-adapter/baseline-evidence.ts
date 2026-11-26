@@ -1,4 +1,5 @@
-import { resolve } from 'node:path';
+import { writeFileSync } from 'node:fs';
+import { join, resolve } from 'node:path';
 import type { TestModule } from 'vitest/node';
 import { MAX_RESPONSE_BYTES, type Coverage, type Request, type Result } from './protocol.ts';
 
@@ -14,6 +15,8 @@ const RESERVED_BYTES = 128 * 1024;
 const MAX_TIMINGS_BYTES = 128 * 1024;
 
 export const COVERAGE_TOO_LARGE = 'coverage-payload-too-large';
+/** The CLI refuses coverage files above this size, so the adapter does not write them. */
+export const MAX_COVERAGE_FILE_BYTES = 512 * 1024 * 1024;
 
 const size = (value: unknown): number => Buffer.byteLength(JSON.stringify(value));
 
@@ -66,9 +69,31 @@ export function compactHits(coverage: Coverage): Coverage {
   };
 }
 
+let files = 0;
+
 /**
- * Attaches the baseline's evidence to `result`, within the response limit.
- * Coverage that cannot be made to fit is dropped with a reason, so the run goes on
+ * Writes the coverage to a new private file in the run's coverage directory, so a
+ * suite's inventory is not bound by the response limit. Returns the file's name, or
+ * undefined (nothing written) when the directory or the size does not allow it.
+ */
+function writeCoverageFile(directory: string, coverage: Coverage): string | undefined {
+  try {
+    const text = JSON.stringify(coverage);
+    if (Buffer.byteLength(text) > MAX_COVERAGE_FILE_BYTES) return undefined;
+    const name = `coverage-${process.pid}-${files++}.json`;
+    // `wx`: never replace or follow anything already there; owner-only.
+    writeFileSync(join(directory, name), text, { flag: 'wx', mode: 0o600 });
+    return name;
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * Attaches the baseline's evidence to `result`.
+ * Coverage goes to a file in the run's coverage directory when the CLI offered one
+ * (no response limit applies to it). Otherwise it must fit the response limit, and
+ * coverage that cannot be made to fit is dropped with a reason, so the run goes on
  * with the whole suite for every mutant instead of failing its baseline.
  */
 export function attachBaselineEvidence(
@@ -81,6 +106,12 @@ export function attachBaselineEvidence(
   if (timings?.length && size(timings) <= MAX_TIMINGS_BYTES) result.fileTimings = timings;
   const { coverage } = result;
   if (!coverage) return;
+  const file = job.coverageDir ? writeCoverageFile(job.coverageDir, coverage) : undefined;
+  if (file) {
+    result.coverage = undefined;
+    result.coverageFile = file;
+    return;
+  }
   const budget =
     MAX_RESPONSE_BYTES - RESERVED_BYTES - (result.fileTimings ? size(result.fileTimings) : 0);
   if (size(coverage) <= budget) return;
