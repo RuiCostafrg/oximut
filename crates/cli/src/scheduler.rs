@@ -443,14 +443,6 @@ fn lane_batch(batch: &[(usize, Request)], width: usize) -> Request {
     request
 }
 
-/// Encoded size of a batch holding just this request.
-#[cfg(test)]
-fn one_lane_len(request: &Request) -> usize {
-    let mut wrapped = request.clone();
-    wrapped.lanes = Some(vec![request.clone()]);
-    encoded_len(&wrapped)
-}
-
 /// Exact encoded sizes of requests that share their resident modules.
 ///
 /// Every request of a run repeats the same resident module set (megabytes),
@@ -487,12 +479,6 @@ impl RequestSizes {
         request.resident = Some(set.clone());
         rest.saturating_add(Self::RESIDENT_MEMBER)
             .saturating_add(self.resident_len(&set))
-    }
-    /// What `one_lane_len(request)` would return: the job priced expanded, as
-    /// the whole batch would travel to a controller without compact lanes.
-    fn one_lane_len(&mut self, request: &mut Request) -> usize {
-        let one = self.request_len(request);
-        one.saturating_mul(2).saturating_add(Self::LANES_MEMBER)
     }
     /// Size of `request` as a lane of a batch whose resident set is `set`: as
     /// `without_duplicate_lane_residents` sends it, without the shared resident
@@ -1128,9 +1114,13 @@ impl<'a> Scheduler<'a> {
             let mut sizes = RequestSizes::default();
             let mut failed_batches = 0u32;
             while let Some(first) = pending.pop_front() {
-                // A request too large to wrap in a lane batch still runs normally.
+                // A request too large to wrap in a lane batch still runs normally. What
+                // counts is the frame the batch travels in: the resident set once, then
+                // the lane without it. Pricing the expanded job instead (the set twice)
+                // sent every job of a run with more than 4 MiB of resident modules down
+                // the ordinary path, one controller per worker.
                 let mut first = first;
-                if sizes.one_lane_len(&mut first.1) > MAX_LANE_BATCH {
+                if sizes.batch_len(&mut first.1) > MAX_LANE_BATCH {
                     self.retire_lane_controllers();
                     for (index, response) in self.dispatch(VecDeque::from([first]), false) {
                         results[index].outcome = response.mutant_outcome();
@@ -1724,7 +1714,6 @@ mod tests {
                 job.resident = resident.clone();
                 job.mutation = mutation;
                 assert_eq!(sizes.request_len(&mut job), encoded_len(&job));
-                assert_eq!(sizes.one_lane_len(&mut job), one_lane_len(&job));
                 assert_eq!(job.resident.is_some(), resident.is_some(), "restored");
             }
         }
@@ -1835,20 +1824,27 @@ mod tests {
 
     #[test]
     fn oversized_requests_do_not_become_lane_batches() {
-        let mut job = request();
-        assert!(one_lane_len(&job) <= MAX_LANE_BATCH);
-        // A compact frame could fit, but admission still prices the expanded job.
-        job.resident = Some(Arc::new(vec![Mutation {
-            id: "__oximut_resident__".into(),
-            file: "/p/module.ts".into(),
-            code: "x".repeat(5 * 1024 * 1024),
-            map: serde_json::json!({"version": 3, "sources": [], "mappings": ""}),
-        }]));
+        let resident = |megabytes: usize| {
+            let mut job = request();
+            job.resident = Some(Arc::new(vec![Mutation {
+                id: "__oximut_resident__".into(),
+                file: "/p/module.ts".into(),
+                code: "x".repeat(megabytes * 1024 * 1024),
+                map: serde_json::json!({"version": 3, "sources": [], "mappings": ""}),
+            }]));
+            job
+        };
         let mut sizes = RequestSizes::default();
-        assert!(sizes.request_len(&mut job) <= MAX_REQUEST);
-        assert!(sizes.one_lane_len(&mut job) > MAX_LANE_BATCH);
-        let batch = lane_batch(&[(0, job)], 1);
+        assert!(sizes.batch_len(&mut request()) <= MAX_LANE_BATCH);
+        // The batch sends the resident set once, so a set of more than half the
+        // limit still travels as a one-lane batch.
+        let mut big = resident(5);
+        assert!(sizes.request_len(&mut big) <= MAX_REQUEST);
+        assert!(sizes.batch_len(&mut big) <= MAX_LANE_BATCH);
+        let batch = lane_batch(&[(0, big)], 1);
         assert!(encoded_len(&without_duplicate_lane_residents(&batch).unwrap()) < MAX_LANE_BATCH);
+        // One that cannot travel in a frame is not a lane.
+        assert!(sizes.batch_len(&mut resident(8)) > MAX_LANE_BATCH);
     }
 
     #[test]
