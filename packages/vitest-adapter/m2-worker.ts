@@ -123,6 +123,17 @@ async function awaitWorkerTermination(context: NonNullable<typeof vitest>, remai
   }
 }
 
+/**
+ * The mutant the instrumented modules switch on. Forks inherit the environment; a
+ * module evaluated in this process reads the global, which is dropped here so that
+ * its next read takes the environment again.
+ */
+function setActiveMutant(id: string | undefined) {
+  delete process.env.OXIMUT_ACTIVE_MUTANT;
+  delete (globalThis as { __oximut_active__?: string }).__oximut_active__;
+  if (id) process.env.OXIMUT_ACTIVE_MUTANT = id;
+}
+
 async function command(name: string, args: Request): Promise<unknown> {
   if (name === 'initialize') {
     if (vitest) throw new Error('Already initialized');
@@ -134,8 +145,7 @@ async function command(name: string, args: Request): Promise<unknown> {
     probes = args.collectCoverage;
     resident = args.resident;
     servedModules = served(mutation, resident);
-    delete process.env.OXIMUT_ACTIVE_MUTANT;
-    if (args.kind === 'mutant' && mutation) process.env.OXIMUT_ACTIVE_MUTANT = mutation.id;
+    setActiveMutant(args.kind === 'mutant' ? mutation?.id : undefined);
     vitest = await createVitest(
       'test',
       {
@@ -322,8 +332,7 @@ async function command(name: string, args: Request): Promise<unknown> {
     };
   }
   currentRun = undefined;
-  delete process.env.OXIMUT_ACTIVE_MUTANT;
-  if (job.kind === 'mutant' && next) process.env.OXIMUT_ACTIVE_MUTANT = next.id;
+  setActiveMutant(job.kind === 'mutant' ? next?.id : undefined);
   zygote?.bypass(job.bypassZygote && next ? [next.id] : []);
   const previousWorkers = vitest.projects.map((project) => project.config.maxWorkers);
   const previousBail = vitest.projects.map((project) => project.config.bail);
@@ -364,7 +373,7 @@ async function command(name: string, args: Request): Promise<unknown> {
       project.config.bail = previousBail[index];
       project.config.maxWorkers = previousWorkers[index];
     }
-    delete process.env.OXIMUT_ACTIVE_MUTANT;
+    setActiveMutant(undefined);
     zygote?.bypass([]);
   }
   if (!currentRun) throw new Error('Missing onTestRunEnd event');

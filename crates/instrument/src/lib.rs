@@ -832,10 +832,7 @@ fn switch(
             let nested: Vec<usize> = skip.iter().chain(&group).copied().collect();
             for &index in &group {
                 let (edit, id) = edits[index];
-                output.insert(
-                    &format!("(process.env.OXIMUT_ACTIVE_MUTANT === \"{id}\" ? ("),
-                    a,
-                );
+                output.insert(&format!("({ACTIVE_MUTANT} === \"{id}\" ? ("), a);
                 render(source, a, b, edits, &nested, Some(edit), probes, output);
                 output.insert(") : (", a);
             }
@@ -948,6 +945,15 @@ fn probe_conflict(program: &Program<'_>, source: &str) -> Option<&'static str> {
 }
 
 const PROBE_HOOK: &str = "__oximut_m3_hit__";
+
+/// The active mutant, as a switch reads it. Reading `process.env` costs about 190 ns
+/// (3 ns for a global), and a loop evaluates a switched expression on every
+/// iteration, so the switch reads a global that is filled from the environment the
+/// first time it is read. Whatever changes the environment of a process whose
+/// modules have already run (a worker forked from a precollected template) must
+/// set `globalThis.__oximut_active__` too: see `zygote/worker.cjs`.
+const ACTIVE_MUTANT: &str =
+    "(globalThis.__oximut_active__ ??= process.env.OXIMUT_ACTIVE_MUTANT ?? \"\")";
 
 /// Whether an injected free reference to `name` could resolve to something
 /// other than the global: the source names it, or a sloppy-mode `with` scope
@@ -1518,6 +1524,23 @@ await run();
             );
         }
         assert_eq!(shared.mutants[0].map["sourcesContent"][0], source);
+    }
+
+    #[test]
+    fn a_switch_reads_a_global_that_a_forked_worker_can_set() {
+        let source = "export const f = (a, b) => a + b;";
+        let shared = generate_switched("a.ts", Path::new("/p/a.ts"), source).unwrap();
+        let (code, id) = (&shared.mutants[0].code, &shared.mutants[0].id);
+        // The global is filled from the environment on the first read...
+        let script = format!("{code}\nconsole.log(f(5, 2), globalThis.__oximut_active__);");
+        assert_eq!(execute(&script, ""), "7 \n");
+        assert_eq!(execute(&script, id), format!("3 {id}\n"));
+        // ...and then it, not the environment, decides: a worker forked from a template
+        // that already ran the module sets it (zygote/worker.cjs) and the mutant is active.
+        let forked = format!(
+            "{code}\nconst first = f(5, 2); globalThis.__oximut_active__ = '{id}'; console.log(first, f(5, 2));"
+        );
+        assert_eq!(execute(&forked, ""), "7 3\n");
     }
 
     #[test]

@@ -15,7 +15,7 @@ use std::{
 };
 
 const SCHEMA: u32 = 1;
-const OPERATORS: &str = "boolean-literal,comparison-boundary,arithmetic,equality-operator,logical-operator,unary-operator,update-operator,assignment-operator;static-grouping=2;oxc=0.152.0";
+const OPERATORS: &str = "boolean-literal,comparison-boundary,arithmetic,equality-operator,logical-operator,unary-operator,update-operator,assignment-operator;static-grouping=2;active-global=1;oxc=0.152.0";
 type Probe = Option<Result<Mutation, String>>;
 type Instrumented = (oximut_instrument::Generated, Probe);
 

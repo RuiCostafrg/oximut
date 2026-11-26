@@ -145,9 +145,12 @@ opts out. An explicit `--zygote-precollect` needs the zygote and test selection
 without them. A mutant worker is forked from a *template* zygote
 that already fetched, and for one selected test file also evaluated, the work that
 worker would repeat.
-The mutant is still chosen when the instrumented expression is evaluated
-(`process.env.OXIMUT_ACTIVE_MUTANT`), and every mutant still runs in its own
-forked process.
+The mutant is still chosen when the instrumented expression is evaluated, and every
+mutant still runs in its own forked process. The expression reads the global
+`globalThis.__oximut_active__`, filled from `process.env.OXIMUT_ACTIVE_MUTANT` the
+first time it is read (a read of `process.env` costs about 190 ns, of a global 3 ns,
+and a loop pays it on every iteration); a worker forked from a template sets the
+global with its environment, because the template's modules already ran.
 
 A template is built per selected set of test files, on first use, by a hidden
 Vitest project, so fetches, resolves and RPC use Vitest's own pool code; its
