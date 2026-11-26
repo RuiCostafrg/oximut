@@ -79,7 +79,7 @@ process.on('message', (message) => {
   const request = args.request;
   jobs++;
   log({ event: 'run', job: request.jobId, workers: request.workers,
-    bypass: request.bypassZygote, kind: request.kind });
+    bypass: request.bypassZygote, kind: request.kind, deadline: request.deadlineMs });
   if (mode.startsWith('lanes-') && request.lanes) {
     const compact = mode === 'lanes-compact';
     const expected = compact ? 'run-shared-lane-resident-v2' : 'run';
@@ -207,9 +207,12 @@ process.on('message', (message) => {
   // 'helper' declares its own child; 'helper-stranger' a live process that is
   // not the controller's child (the slot worker above it).
   const declared = mode === 'helper' ? [helper.pid] : mode === 'helper-stranger' ? [process.ppid] : undefined;
+  // Baselines report how long each test file took when the test says so.
+  const timings = request.kind === 'baseline' && process.env.OXIMUT_FAKE_TIMINGS
+    ? { fileTimings: JSON.parse(process.env.OXIMUT_FAKE_TIMINGS) } : {};
   reply({ result: { outcome: 'passed', tests: { passed: 1, failed: 0, skipped: 0 },
     errors: [], ...(request.resident ? { resident: request.resident.length } : {}),
-    ...(declared ? { residentHelpers: declared } : {}) } });
+    ...(declared ? { residentHelpers: declared } : {}), ...timings } });
 });
 process.once('disconnect', () => process.exit(0));
 """
@@ -333,6 +336,83 @@ class NativeCoordinator(unittest.TestCase):
                 runs.setdefault(event['job'], []).append(event.get('bypass'))
         return runs
 
+    TIMINGS = json.dumps([{'file': str(ROOT / 'test/subject.test.ts'), 'durationMs': 2000}])
+
+    def job_deadlines(self, events, kind):
+        return [e['deadline'] for e in events if e['event'] == 'run' and e['kind'] == kind]
+
+    def test_deadlines_are_derived_from_the_baseline_unless_a_timeout_is_given(self):
+        # Derived: the baseline's 2 s for the one test file, times 1.5, plus 10 s; the
+        # baseline itself gets the generous default.
+        result, report, events = self.run_cli(
+            'ok', timeout_ms=None, full=True, env={'OXIMUT_FAKE_TIMINGS': self.TIMINGS})
+        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+        self.assertEqual(set(self.job_deadlines(events, 'baseline')), {600_000})
+        self.assertEqual(set(self.job_deadlines(events, 'mutant')), {13_000})
+        self.assertEqual({m['deadlineMs'] for m in report['mutants']}, {13_000})
+        self.assertEqual(report['baseline']['fileTimings'],
+                         [{'file': str(ROOT / 'test/subject.test.ts'), 'durationMs': 2000.0}])
+        # The factor, the constant and the baseline deadline are flags of their own.
+        result, report, events = self.run_cli(
+            'ok', timeout_ms=None, full=True, env={'OXIMUT_FAKE_TIMINGS': self.TIMINGS},
+            extra_args=('--timeout-factor', '3', '--timeout-constant-ms', '500',
+                        '--baseline-timeout-ms', '90000'))
+        self.assertEqual(set(self.job_deadlines(events, 'baseline')), {90_000})
+        self.assertEqual({m['deadlineMs'] for m in report['mutants']}, {6_500})
+        # Explicit: one deadline for every job, baselines included, as always.
+        result, report, events = self.run_cli(
+            'ok', timeout_ms=7_000, full=True, env={'OXIMUT_FAKE_TIMINGS': self.TIMINGS})
+        self.assertEqual(set(self.job_deadlines(events, 'baseline')), {7_000})
+        self.assertEqual({m['deadlineMs'] for m in report['mutants']}, {7_000})
+        # ...unless the baseline has its own.
+        result, report, events = self.run_cli(
+            'ok', timeout_ms=7_000, full=True, env={'OXIMUT_FAKE_TIMINGS': self.TIMINGS},
+            extra_args=('--baseline-timeout-ms', '70000'))
+        self.assertEqual(set(self.job_deadlines(events, 'baseline')), {70_000})
+        self.assertEqual({m['deadlineMs'] for m in report['mutants']}, {7_000})
+
+    def test_without_baseline_timings_the_wall_time_of_the_baseline_stands_in(self):
+        result, report, events = self.run_cli('ok', timeout_ms=None, full=True)
+        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+        deadlines = {m['deadlineMs'] for m in report['mutants']}
+        self.assertEqual(len(deadlines), 1, deadlines)
+        # Seconds of fake baseline at most, scaled, plus the constant.
+        self.assertTrue(10_000 <= deadlines.pop() < 10_000 + 1.5 * 60_000)
+        self.assertNotIn('fileTimings', report['baseline'])
+
+    def test_a_zygote_watchdog_rerun_keeps_the_scaled_deadline(self):
+        result, report, events = self.run_cli(
+            'zygote-watchdog', timeout_ms=None, full=True, extra_args=('--zygote',),
+            env={'OXIMUT_FAKE_TIMINGS': self.TIMINGS})
+        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+        first = report['mutants'][0]['id']
+        attempts = [e for e in events if e['event'] == 'run' and e['job'] == first]
+        self.assertEqual([e.get('bypass') for e in attempts], [None, True])
+        self.assertEqual([e['deadline'] for e in attempts], [13_000, 13_000])
+        self.assertEqual(report['mutants'][0]['deadlineMs'], 13_000)
+
+    def test_a_zygote_watchdog_rerun_of_a_lane_keeps_its_own_deadline(self):
+        self.require_two_workers()
+        result, report, events = self.run_cli(
+            'lanes-rolling-watchdog', timeout_ms=None, full=True, shared=True,
+            extra_args=('--workers', '2', '--zygote', '--rolling-lanes'),
+            env={'OXIMUT_FAKE_TIMINGS': self.TIMINGS})
+        self.require_spare_capacity(report)
+        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+        first = report['mutants'][0]['id']
+        batch = next(e for e in events if e['event'] == 'lanes')
+        # Every lane keeps the deadline derived for it; the batch allows each round of
+        # two lanes that long again, and a moment to report.
+        self.assertEqual(set(batch['jobs']), {13_000})
+        rounds = -(-len(batch['jobs']) // 2)
+        self.assertEqual(batch['deadline'], rounds * 14_000)
+        # The first 'run' is the batch itself (named for its first lane); the last is the
+        # lane's rerun, a job of its own.
+        rerun = [e for e in events if e['event'] == 'run' and e['job'] == first]
+        self.assertEqual(rerun[0]['deadline'], batch['deadline'])
+        self.assertEqual(rerun[-1].get('bypass'), True)
+        self.assertEqual(rerun[-1]['deadline'], 13_000)
+
     def test_zygote_watchdog_reruns_a_timeout_without_the_zygote(self):
         result, report, events = self.run_cli('zygote-watchdog', full=True,
                                               extra_args=('--zygote',))
@@ -398,7 +478,7 @@ class NativeCoordinator(unittest.TestCase):
             return result, None, None
 
     def run_cli(self, mode, timeout_ms=5000, extra_args=(), full=False, shared=False,
-                fixture=None):
+                fixture=None, env=None):
         root = REPO / fixture if fixture else ROOT
         source = root / ('src/arithmetic.ts' if fixture else 'src/subject.ts')
         with tempfile.TemporaryDirectory(prefix='oximut-native-') as directory:
@@ -410,10 +490,10 @@ class NativeCoordinator(unittest.TestCase):
                 str(REPO / 'target/debug/oximut'), '--root', str(root),
                 '--source', str(source), *([] if full else ['--baseline-only']),
                 '--execution', 'persistent', '--adapter', str(adapter), '--report', '-',
-                '--timeout-ms', str(timeout_ms), '--no-cache',
+                *([] if timeout_ms is None else ['--timeout-ms', str(timeout_ms)]), '--no-cache',
                 *([] if shared else ['--no-shared-controller']),
                 *pinned_modes(extra_args), *extra_args,
-            ], env={**os.environ, 'OXIMUT_FAKE_MODE': mode, 'OXIMUT_FAKE_LOG': str(log)},
+            ], env={**os.environ, 'OXIMUT_FAKE_MODE': mode, 'OXIMUT_FAKE_LOG': str(log), **(env or {})},
                 text=True, capture_output=True, timeout=120)
             events = [json.loads(line) for line in log.read_text().splitlines()]
             return result, json.loads(result.stdout), events

@@ -185,7 +185,20 @@
         "outcome": { "enum": ["passed", "failed", "invalid", "timeout", "infrastructure-error", "resource-exhausted", "skipped"] },
         "tests": { "$ref": "#/$defs/tests" },
         "errors": { "type": "array", "items": { "type": "string" } },
-        "coverage": { "$ref": "#/$defs/coverage" }
+        "coverage": { "$ref": "#/$defs/coverage" },
+        "fileTimings": {
+          "type": "array",
+          "description": "Baselines only: how long each test file took (import, setup and tests), which mutant deadlines are derived from.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["file", "durationMs"],
+            "properties": {
+              "file": { "type": "string" },
+              "durationMs": { "type": "number", "minimum": 0 }
+            }
+          }
+        }
       }
     },
     "selection": {
@@ -227,6 +240,7 @@
         "tests": { "$ref": "#/$defs/tests" },
         "errors": { "type": "array", "items": { "type": "string" } },
         "selection": { "$ref": "#/$defs/selection" },
+        "deadlineMs": { "type": "integer", "minimum": 1, "description": "The deadline the mutant's job ran under; absent when it was not executed in this run." },
         "provenance": { "$ref": "#/$defs/provenance" }
       }
     },

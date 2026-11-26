@@ -127,8 +127,9 @@ deliberately in its own commit with the reason.
 - Oxc emits a combined transform per switched file:
   `(process.env.OXIMUT_ACTIVE_MUTANT === "id" ? (replacement) : (globalThis.__oximut_m3_hit__?.("id"), (original)))`.
   Files where switching falls back (static mutants) keep probe-only coverage
-  code. Files that cannot carry probes (e.g. `globalThis` use) keep switch-only
-  code and mark coverage incomplete, as today.
+  code. Files that cannot carry probes (a shadowed or reassigned `globalThis`, a
+  `with` scope) keep switch-only code; only that file's mutants run the full suite
+  (`unprobed-file` selection reason), coverage for other files stays complete.
 - One **instrumented baseline** serves the combined code for *all* switched files
   with no active mutant. It must pass with test counts identical to the original
   baseline, the same check the per-file disabled runs applied. This validates
@@ -156,7 +157,9 @@ deliberately in its own commit with the reason.
   length-bounded NDJSON over a dedicated channel (no stdout/stderr sharing, no
   file polling). `m2-runner.mjs` and `supervisor.py` leave the execution path.
 - The protocol contract stays the same: requests of at most 8 MiB and
-  responses of at most 1 MiB, enforced on both sides. The Node layer keeps
+  responses of at most 1 MiB, enforced on both sides. A baseline's coverage is the
+  only payload that grows with the suite, so the reference adapter fits it to the limit
+  (see [m3.md](m3.md#coverage-and-the-response-limit)) instead of exceeding it. The Node layer keeps
   `validateRequest`, and Rust keeps `Response::validate` (identity, generation,
   staleness). Conformance tests cover the limits and rejection paths before the
   old path is removed.

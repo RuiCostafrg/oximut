@@ -13,11 +13,13 @@ from test_m1 import BINARY, REPO
 class PreciseSelection(unittest.TestCase):
     def run_fixture(self, config, source, selection, execution='fresh'):
         root = REPO / 'fixtures' / 'm3'
+        sources = [source] if isinstance(source, str) else source
         with tempfile.TemporaryDirectory(prefix='oximut-m3-acceptance-') as temporary:
             report = pathlib.Path(temporary) / 'report.json'
             command = [
                 str(BINARY), '--root', str(root), '--config', str(root / config),
-                '--source', str(root / source), '--execution', execution,
+                *[arg for item in sources for arg in ('--source', str(root / item))],
+                '--execution', execution,
                 '--order-seed', '73', '--report', str(report),
             ]
             # Selection is on by default; the full-suite runs opt out explicitly.
@@ -107,6 +109,47 @@ class PreciseSelection(unittest.TestCase):
         )
         self.assert_equivalent(full, persistent)
         self.assertEqual(before, self.fixture_sources(), 'Selection changed fixture sources')
+
+    def test_one_unprobeable_file_does_not_widen_other_files(self):
+        sources = ['src/environment.ts', 'src/shadowed.ts', 'src/plain.ts']
+        config = 'global-this.config.ts'
+        for execution in ('fresh', 'persistent'):
+            with self.subTest(execution=execution):
+                full = self.run_fixture(config, sources, False, execution)
+                selected = self.run_fixture(config, sources, True, execution)
+                self.assert_equivalent(full, selected)
+                # Kills are never lost: every killed full-suite mutant is killed.
+                self.assertEqual(
+                    {i for i, o in self.outcome_map(full).items() if o == 'killed'},
+                    {i for i, o in self.outcome_map(selected).items() if o == 'killed'},
+                )
+                coverage = selected['baseline']['coverage']
+                # The run-level decision stays sound: complete, no run-level reasons.
+                self.assertTrue(coverage['complete'], coverage)
+                self.assertEqual(coverage['reasons'], [], coverage)
+                by_file = {}
+                for mutant in selected['mutants']:
+                    by_file.setdefault(pathlib.Path(mutant['file']).name, []).append(mutant)
+                self.assertEqual(set(by_file), {'environment.ts', 'shadowed.ts', 'plain.ts'})
+                # The shadowing file alone runs the full suite, with its reason.
+                for mutant in by_file['shadowed.ts']:
+                    selection = mutant['selection']
+                    self.assertEqual(selection['mode'], 'full', mutant)
+                    self.assertEqual(selection['selectedTests'], selection['totalTests'], mutant)
+                    self.assertTrue(any(
+                        reason.startswith('unprobed-file:') and 'probe-globalThis-conflict' in reason
+                        for reason in selection['reasons']), mutant)
+                    self.assertEqual(mutant['outcome'], 'killed', mutant)
+                # Files that merely read globalThis are probed and keep narrow selection.
+                for name in ('environment.ts', 'plain.ts'):
+                    for mutant in by_file[name]:
+                        selection = mutant['selection']
+                        self.assertIn(selection['mode'], ('files', 'none'), mutant)
+                        self.assertLess(selection['selectedTests'], selection['totalTests'], mutant)
+                        self.assertFalse(
+                            any(reason.startswith('unprobed-file:') for reason in selection['reasons']),
+                            mutant)
+                self.assertTrue(any(m['outcome'] == 'killed' for m in by_file['environment.ts']))
 
     def test_concurrent_tests_force_full_suite_with_reason(self):
         report = self.run_fixture('concurrent.config.ts', 'src/subject.ts', True)

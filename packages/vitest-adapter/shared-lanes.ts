@@ -177,11 +177,17 @@ export class SharedLanes {
     const rolling = jobs.length > slots;
     if (rolling && (pool !== 'forks' || !(await rollingPoolFactory())))
       return this.runInRounds(batch, slots);
-    // The batch's own deadline adds time to report after a lane is stopped.
-    this.deadline = performance.now() + jobs[0].deadlineMs;
+    // Each lane has its own deadline (a mutant's is derived from the tests it runs),
+    // counted from the batch's start in a barrier batch and from the lane's in a
+    // rolling one. The batch's own deadline adds time to report after a lane is stopped.
+    const started = performance.now();
+    this.deadline = started + Math.max(...jobs.map((job) => job.deadlineMs));
     this.failures.clear();
     this.files.clear();
     this.laneDeadlines.clear();
+    if (!rolling)
+      for (const [index, job] of jobs.entries())
+        this.laneDeadlines.set(`oximut-lane-${index}`, started + job.deadlineMs);
     const modules = new Map<string, NonNullable<Request['mutation']>>();
     for (const job of jobs) {
       // Active-only modules cannot be served under one URL in concurrent lanes.

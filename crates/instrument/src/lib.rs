@@ -433,7 +433,11 @@ fn switch(
         generated.diagnostics.push("mutation switching fallback: process identifier or with statement may shadow or modify the Node selector; using fresh static mutants".into());
         return Ok((generated, Switch::Static));
     }
-    let global_conflict = probes && uses_global_this(&parsed.program);
+    let global_conflict = if probes {
+        probe_conflict(&parsed.program, source)
+    } else {
+        None
+    };
     let mut collector = Collector {
         source,
         edits: vec![],
@@ -570,13 +574,9 @@ fn switch(
         let transformed = Parser::new(&allocator, &output.code, source_type).parse();
         (!transformed.fatal_error && transformed.diagnostics.is_empty()).then_some(output)
     };
-    let mut probed = probes && !global_conflict;
+    let mut probed = probes && global_conflict.is_none();
     let mut output = if probed { rendered(true) } else { None };
-    let mut unprobed = if global_conflict {
-        "probe-globalThis-conflict"
-    } else {
-        "probes-not-requested"
-    };
+    let mut unprobed = global_conflict.unwrap_or("probes-not-requested");
     if probed && output.is_none() {
         probed = false;
         unprobed = "unsupported-probe-syntax";
@@ -607,9 +607,47 @@ fn switch(
     Ok((generated, switched))
 }
 
-fn uses_global_this(program: &Program<'_>) -> bool {
-    may_shadow(program, "globalThis")
+/// Why a file cannot carry probes, if it cannot. Probes are free references to
+/// `globalThis` calling the reserved `__oximut_m3_hit__` hook, so a file is only
+/// refused when such a reference could resolve to something other than the real
+/// global or when the file addresses the hook itself. Merely *reading* the
+/// global (`typeof globalThis`, `globalThis.Buffer`, `globalThis.x = 1`) is safe:
+/// the injected reference resolves exactly as the file's own does.
+fn probe_conflict(program: &Program<'_>, source: &str) -> Option<&'static str> {
+    if source.contains(PROBE_HOOK) {
+        return Some("probe-reserved-name");
+    }
+    struct Conflict(bool);
+    impl<'a> Visit<'a> for Conflict {
+        fn visit_binding_identifier(&mut self, it: &BindingIdentifier<'a>) {
+            self.0 |= it.name == "globalThis";
+        }
+        fn visit_with_statement(&mut self, it: &WithStatement<'a>) {
+            self.0 = true;
+            walk::walk_with_statement(self, it);
+        }
+        // Writing the binding itself (`globalThis = x`, `globalThis++`,
+        // `for (globalThis of xs)`, `({ globalThis } = o)`) could redirect it.
+        fn visit_simple_assignment_target(&mut self, it: &SimpleAssignmentTarget<'a>) {
+            if let SimpleAssignmentTarget::AssignmentTargetIdentifier(target) = it {
+                self.0 |= target.name == "globalThis";
+            }
+            walk::walk_simple_assignment_target(self, it);
+        }
+        fn visit_assignment_target_property_identifier(
+            &mut self,
+            it: &AssignmentTargetPropertyIdentifier<'a>,
+        ) {
+            self.0 |= it.binding.name == "globalThis";
+            walk::walk_assignment_target_property_identifier(self, it);
+        }
+    }
+    let mut found = Conflict(false);
+    found.visit_program(program);
+    found.0.then_some("probe-globalThis-conflict")
 }
+
+const PROBE_HOOK: &str = "__oximut_m3_hit__";
 
 /// Whether an injected free reference to `name` could resolve to something
 /// other than the global: the source names it, or a sloppy-mode `with` scope
@@ -644,8 +682,8 @@ pub fn generate_probes(
     let allocator = Allocator::default();
     let source_type = SourceType::from_path(path).map_err(|e| e.to_string())?;
     let parsed = Parser::new(&allocator, source, source_type).parse();
-    if uses_global_this(&parsed.program) {
-        return Err("probe-globalThis-conflict".into());
+    if let Some(reason) = probe_conflict(&parsed.program, source) {
+        return Err(reason.into());
     }
     let mut collector = Collector {
         source,
@@ -1236,8 +1274,8 @@ console.log(JSON.stringify([a, b, c, iterator.next(), iterator.next(7), true, ca
     #[test]
     fn probed_switching_reports_unprobed_and_static_fallbacks() {
         let path = Path::new("/project/src/a.ts");
-        // globalThis use: switching stays shared, probes are refused.
-        let source = "globalThis.y = 1; export const x = 1 + 2;";
+        // A shadowed globalThis: switching stays shared, probes are refused.
+        let source = "function f(globalThis) { return 1; } export const x = 1 + 2;";
         let (generated, coverage) = generate_switched_probed("src/a.ts", path, source).unwrap();
         assert_eq!(coverage.unwrap_err(), "probe-globalThis-conflict");
         assert_eq!(
@@ -1287,15 +1325,67 @@ console.log(JSON.stringify([a, b, c, iterator.next(), iterator.next(7), true, ca
     }
 
     #[test]
-    fn probes_refuse_shadowed_or_referenced_global_this() {
+    fn probes_refuse_only_shadowed_or_rewritten_global_this() {
         for source in [
             "function f(globalThis) { return true; }",
-            "globalThis.x = true;",
+            "var globalThis = {}; export const x = 1 + 2;",
+            "import { globalThis } from './g.js'; export const x = 1 + 2;",
+            "globalThis = {}; export const x = 1 + 2;",
+            "globalThis += 1; export const x = 1 + 2;",
+            "globalThis++; export const x = 1 + 2;",
+            "for (globalThis of []) {} export const x = 1 + 2;",
+            "({ globalThis } = {}); export const x = 1 + 2;",
+            "[globalThis] = [{}]; export const x = 1 + 2;",
         ] {
             assert_eq!(
                 generate_probes("a.ts", Path::new("a.ts"), source).unwrap_err(),
-                "probe-globalThis-conflict"
+                "probe-globalThis-conflict",
+                "{source}"
             );
+        }
+        for source in [
+            "globalThis.__oximut_m3_hit__ = () => {}; export const x = 1 + 2;",
+            "export const x = 1 + 2; delete globalThis['__oximut_m3_hit__'];",
+        ] {
+            assert_eq!(
+                generate_probes("a.ts", Path::new("a.ts"), source).unwrap_err(),
+                "probe-reserved-name",
+                "{source}"
+            );
+        }
+    }
+
+    #[test]
+    fn probes_allow_files_that_read_or_extend_global_this() {
+        // Patterns from real libraries (es-toolkit's isBuffer / isPlainObject):
+        // reading the global never changes what the injected probe resolves to.
+        let path = Path::new("/project/src/a.ts");
+        for source in [
+            "export function isBuffer(x: unknown) { return typeof globalThis !== 'undefined' && typeof (globalThis as any).Buffer !== 'undefined' && (globalThis as any).Buffer.isBuffer(x) && 1 + 1 === 2; }",
+            "globalThis.y = 1; export const x = 1 + 2;",
+            "const g = globalThis; export const x = g.y ?? 1 + 2;",
+            "export const has = (k) => k in globalThis && 1 + 1 === 2;",
+        ] {
+            let probe = generate_probes("src/a.ts", path, source).unwrap();
+            let (generated, coverage) = generate_switched_probed("src/a.ts", path, source).unwrap();
+            let coverage = coverage.unwrap();
+            assert!(!generated.mutants.is_empty(), "{source}");
+            for mutant in &generated.mutants {
+                assert_eq!(probe.code.matches(&mutant.id).count(), 1, "{source}");
+                assert_eq!(mutant.code, coverage.code);
+            }
+        }
+        // The probes still observe every mutant of a file that uses globalThis.
+        let source = "globalThis.seen = (globalThis.seen ?? 0) + 1; export const x = 1 + 2;";
+        let (generated, coverage) = generate_switched_probed("src/a.ts", path, source).unwrap();
+        let coverage = coverage.unwrap();
+        let record = format!(
+            "const hits = []; globalThis.__oximut_m3_hit__ = id => {{ hits.push(id); }}; {}\nprocess.on('exit', () => console.log(JSON.stringify(hits)));",
+            coverage.code
+        );
+        let hits: Vec<String> = serde_json::from_str(execute(&record, "").trim()).unwrap();
+        for mutant in &generated.mutants {
+            assert!(hits.contains(&mutant.id), "{}", mutant.id);
         }
     }
 }
