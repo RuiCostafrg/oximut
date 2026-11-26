@@ -20,7 +20,7 @@ class EvidenceTests(unittest.TestCase):
             archive.write_bytes(b'exact source archive')
             digest = hashlib.sha256(archive.read_bytes()).hexdigest()
             data = dict(gate='R3', status='passed', archiveSha256=digest,
-                        source={'commit': 'a' * 40}, version='1.0.0-rc.2', buildCount=1,
+                        source={'commit': 'a' * 40}, version='1.0.0-rc.3', buildCount=1,
                         isolation='bubblewrap-pid-mount-v1', extractedSourceRemoved=True, binarySha256='b' * 64,
                         tests=[{'phase': 'installed', 'passed': True}, {'phase': 'relocated', 'passed': True}])
             evidence.write_text(json.dumps(data))

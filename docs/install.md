@@ -1,6 +1,6 @@
 # Install from source
 
-Oximut supports source checkout installation. The initial **1.0.0-rc.2**
+Oximut supports source checkout installation. The initial **1.0.0-rc.3**
 candidate source archive format and its prerequisites are described in
 [Source distribution](distribution.md). There is no supported
 public npm or crates.io installation yet. The workspace packages remain private.
@@ -79,7 +79,9 @@ The smoke runs baseline and mutation testing in fresh and persistent modes from
 a temporary directory outside the checkout. Its isolated example project links
 to the bundle's Vitest dependency for test imports. It requires at least one
 killed mutant and a complete report in each mode, and records the actual Node
-runner entrypoints to verify they come from the installed prefix. The prefix remains available
+runner entrypoints to verify they come from the installed prefix. Every case pins
+`--workers 1`, except one extra persistent run without `--workers` that must report the
+automatic default (`workers=N (auto: ...)`) and still kill a mutant. The prefix remains available
 for inspection; remove its temporary parent directory when finished.
 
 The repository uses the MIT license in [LICENSE](../LICENSE). Bundled dependencies

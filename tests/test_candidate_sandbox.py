@@ -125,7 +125,7 @@ print('ISOLATED')
                 files, {'source': {'commit': 'a' * 40}}, 'b' * 64)), \
                 mock.patch.object(GATE, 'run', return_value='tool version'):
             with self.assertRaises(FileNotFoundError):
-                GATE.validate(self.base / 'unused', '1.0.0-rc.2', 'a' * 40, 'c' * 40, output)
+                GATE.validate(self.base / 'unused', '1.0.0-rc.3', 'a' * 40, 'c' * 40, output)
         self.assertEqual(json.loads(self.evidence.read_text())['status'], 'failed')
         self.assertEqual(self.harness.read_text(), 'trusted')
 
