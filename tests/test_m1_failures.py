@@ -12,6 +12,9 @@ import unittest
 REPO = pathlib.Path(__file__).resolve().parents[1]
 BINARY = REPO / "target/debug/oximut"
 SOURCE = REPO / "fixtures/m1/src/subject.ts"
+# The operator families are on by default; the fixture's mutant count was qualified with
+# the three families that predate them.
+LEGACY_FAMILIES = ["--mutators", "arithmetic,boolean-literal,comparison-boundary"]
 
 
 FAKE_ADAPTER = r"""
@@ -73,7 +76,7 @@ class CliFailurePaths(unittest.TestCase):
                 str(BINARY), "--root", str(root), "--config", str(root / "vitest.config.ts"),
                 "--source", str(SOURCE), "--execution", "fresh", "--adapter", str(self.adapter),
                 "--report", str(self.report), "--workers", "1",
-                "--timeout-ms", "1000",
+                "--timeout-ms", "1000", *LEGACY_FAMILIES,
             ],
             cwd=REPO,
             env=environment,

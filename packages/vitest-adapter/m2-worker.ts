@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { normalizePath } from 'vite';
 import { createVitest, type Reporter, version } from 'vitest/node';
 import { attachBaselineEvidence } from './baseline-evidence.ts';
+import { bailLimit, observeCancellations, stoppedAtFirstFailure } from './bail.ts';
 import { SelectionSupport } from './m3-selection.ts';
 import {
   type Request,
@@ -329,15 +330,11 @@ async function command(name: string, args: Request): Promise<unknown> {
   const cancellations: string[] = [];
   // runFiles clears onCancel listeners before starting workers (5.1.0).
   // Observe the public cancellation entry point instead, scoped to this job.
-  const cancelCurrentRun = vitest.cancelCurrentRun;
-  vitest.cancelCurrentRun = function (reason) {
-    cancellations.push(String(reason));
-    return cancelCurrentRun.call(this, reason);
-  };
+  const stopObserving = observeCancellations(vitest, cancellations);
   try {
     // Vitest 5.1.0 serializes project.config afresh for each worker start.
     for (const project of vitest.projects) {
-      project.config.bail = job.kind === 'mutant' ? 1 : 0;
+      project.config.bail = bailLimit(job.kind);
       // 5.1.0 groupSpecs reads this on every run; createPool calls
       // setMaxWorkers for that group. Isolation still gives each file a fresh runner.
       project.config.maxWorkers = job.kind === 'baseline' ? (job.workers ?? 1) : 1;
@@ -362,7 +359,7 @@ async function command(name: string, args: Request): Promise<unknown> {
     await vitest.runTestSpecifications(selected, true);
     await awaitWorkerTermination(vitest, job.deadlineMs - (performance.now() - started));
   } finally {
-    vitest.cancelCurrentRun = cancelCurrentRun;
+    stopObserving();
     for (const [index, project] of vitest.projects.entries()) {
       project.config.bail = previousBail[index];
       project.config.maxWorkers = previousWorkers[index];
@@ -401,15 +398,13 @@ async function command(name: string, args: Request): Promise<unknown> {
   const timedOut = errors.some((error) =>
     /(?:Test|Hook) timed out in \d+ms/.test(String(error.message ?? '')),
   );
-  // The reporter reason is 'interrupted', not the cancellation's 'test-failure'.
-  // Require both signals and a real test error; all other error precedence stays intact.
-  const bailed =
-    job.kind === 'mutant' &&
-    reason === 'interrupted' &&
-    cancellations.length > 0 &&
-    cancellations.every((reason) => reason === 'test-failure') &&
-    tests.failed > 0 &&
-    hasTestError;
+  const bailed = stoppedAtFirstFailure({
+    kind: job.kind,
+    reason,
+    cancellations,
+    failed: tests.failed,
+    hasTestError,
+  });
   const incomplete = (reason === 'interrupted' || pending || cancellations.length > 0) && !bailed;
   if (unhandled.length || incomplete || processFailure) outcome = 'infrastructure-error';
   else if (moduleErrors.some(transformError)) outcome = 'invalid';

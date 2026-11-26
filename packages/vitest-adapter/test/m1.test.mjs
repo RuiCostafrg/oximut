@@ -139,6 +139,51 @@ test('M1 distinguishes invalid transforms from assertions and worker crashes', {
   assert.equal(exited.outcome, 'infrastructure-error', JSON.stringify(exited));
 });
 
+test('M1 stops a killed mutant at its first failing test, as the persistent path does', {
+  timeout: 90000,
+}, async (t) => {
+  const root = await fixture(t);
+  const observations = join(root, 'executed');
+  await writeFile(
+    join(root, 'sample.test.ts'),
+    `import { test, expect } from 'vitest';
+import { appendFileSync } from 'node:fs';
+import { enabled } from './source';
+test('fails first', () => { appendFileSync(${JSON.stringify(observations)}, '0'); expect(enabled).toBe(true); });
+test('hangs when mutated', () => { appendFileSync(${JSON.stringify(observations)}, '1'); if (!enabled) while (true) {} });
+`,
+  );
+  const mutant = request(root, source.replace('= true', '= false'));
+  const killed = await run(root, { ...mutant, deadlineMs: 20000 });
+  assert.equal(killed.outcome, 'failed', JSON.stringify(killed));
+  assert.equal(killed.tests.failed, 1, JSON.stringify(killed));
+  assert.equal(await readFile(observations, 'utf8'), '0', 'the hanging test never started');
+  // The unmutated code runs every test: bail applies to mutants only.
+  await rm(observations);
+  const baseline = await run(root, request(root));
+  assert.equal(baseline.outcome, 'passed', JSON.stringify(baseline));
+  assert.equal(baseline.tests.passed, 2);
+  assert.equal(await readFile(observations, 'utf8'), '01');
+});
+
+test('M1 baselines run every test even when the project config requests bail', {
+  timeout: 90000,
+}, async (t) => {
+  const root = await fixture(
+    t,
+    `import { test, expect } from 'vitest';
+for (let i = 0; i < 3; i++) test('fails ' + i, () => expect(1).toBe(2));
+`,
+  );
+  await writeFile(
+    join(root, 'vitest.config.mjs'),
+    "export default { test: { include: ['sample.test.ts'], bail: 1 } };\n",
+  );
+  const baseline = await run(root, request(root));
+  assert.equal(baseline.outcome, 'failed', JSON.stringify(baseline));
+  assert.equal(baseline.tests.failed, 3, JSON.stringify(baseline));
+});
+
 test('M1 never passes empty or entirely skipped execution', { timeout: 90000 }, async (t) => {
   const root = await fixture(t, "import { test } from 'vitest'; test.skip('skipped', () => {});\n");
   assert.equal((await run(root, request(root))).outcome, 'skipped');
