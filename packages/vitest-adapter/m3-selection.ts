@@ -39,8 +39,10 @@ export class SelectionSupport {
     if (vitest.projects.length !== 1) reasons.add('multiple-projects');
     for (const project of vitest.projects) {
       const config = project.config;
+      // globalSetup runs in the host process, outside every probe and test window, and
+      // may seed state shared across files, so it makes attribution unsound run-wide.
+      // Per-file setupFiles do not: their hits are attributed (see m3-setup.ts).
       if (config.globalSetup?.length) reasons.add('global-setup');
-      if (config.setupFiles.some((file) => file !== setup)) reasons.add('setup-files');
       if (config.environment !== 'node') reasons.add('unsupported-environment');
       if (config.server?.deps?.external?.length) reasons.add('externalized-dependencies');
       if (config.runner) reasons.add('custom-runner');

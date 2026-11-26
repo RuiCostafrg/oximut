@@ -2,7 +2,11 @@ import { appendFileSync } from 'node:fs';
 import { threadId } from 'node:worker_threads';
 import { TestRunner } from 'vitest';
 
-// Installed before test module imports; user setup files require full fallback.
+// Installed before the user's setup files and test module imports. A hit is attributed
+// to the test that is running (`TestRunner.getCurrentTest()`): hooks, including ones a
+// setup file registers, run inside their test's lifecycle. A hit while no test runs
+// (setup-file or test-file module load, beforeAll, suite bodies) has a null identity, so
+// the mutant is recorded as outside-test execution and runs the full suite.
 // Sync, deduplicated records include hooks and survive fresh-fork termination.
 const directory = process.env.OXIMUT_M3_COVERAGE;
 if (!directory) throw new Error('Missing Oximut coverage destination');
