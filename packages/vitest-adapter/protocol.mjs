@@ -150,8 +150,18 @@ export function validateRequest(value) {
         kind: 'mutant',
         mutation,
         collectCoverage: undefined,
+        coverageDir: undefined,
         resident: undefined,
       });
+  }
+  if (value.coverageDir !== undefined) {
+    if (
+      value.collectCoverage === undefined ||
+      typeof value.coverageDir !== 'string' ||
+      !isAbsolute(value.coverageDir) ||
+      value.coverageDir.includes('\0')
+    )
+      throw new Error('coverageDir must be an absolute path and needs coverage collection');
   }
   if (value.resident !== undefined) {
     if (!Array.isArray(value.resident) || value.resident.length === 0)
@@ -164,6 +174,7 @@ export function validateRequest(value) {
         kind: 'mutant',
         mutation,
         collectCoverage: undefined,
+        coverageDir: undefined,
         resident: undefined,
         selection: undefined,
       });

@@ -44,6 +44,12 @@ export interface Request {
   mutation: null | { id: string; file: string; code: string; map: Record<string, unknown> };
   pool?: 'threads';
   collectCoverage?: NonNullable<Request['mutation']>[];
+  /**
+   * Baselines that collect coverage: an absolute directory private to this run where
+   * the adapter may write a coverage payload too large for a response, naming it in
+   * `Result.coverageFile`. Optional; an adapter that ignores it sends coverage inline.
+   */
+  coverageDir?: string;
   /** Shared switched modules served for every listed file throughout the job. */
   resident?: NonNullable<Request['mutation']>[];
   selection?: Selection;
@@ -62,6 +68,11 @@ export interface Result {
   tests: { passed: number; failed: number; skipped: number };
   errors: string[];
   coverage?: Coverage;
+  /**
+   * Instead of `coverage`: the plain name of a file in the request's `coverageDir`
+   * holding the coverage JSON. The CLI reads and validates it like an inline payload.
+   */
+  coverageFile?: string;
   /** Baselines only: how long each test file took (import, setup and tests). */
   fileTimings?: { file: string; durationMs: number }[];
   /** Count of resident modules served; required whenever the request had any. */

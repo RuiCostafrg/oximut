@@ -444,3 +444,18 @@ test('shared batches require every lane to use the same isolation pool', () => {
   ])
     assert.throws(() => runtime.validateRequest(invalid), /Invalid lane assignment/);
 });
+
+test('a coverage directory is an absolute path offered to a collecting baseline only', () => {
+  const probes = [mutation];
+  const collecting = { ...baseline, collectCoverage: probes };
+  runtime.validateRequest({ ...collecting, coverageDir: '/tmp/oximut-coverage-1' });
+  for (const invalid of [
+    { ...collecting, coverageDir: 'relative/directory' },
+    { ...collecting, coverageDir: '/tmp/with\0nul' },
+    { ...collecting, coverageDir: 7 },
+    // Without coverage collection there is nothing to write.
+    { ...baseline, coverageDir: '/tmp/oximut-coverage-1' },
+    { ...mutant, coverageDir: '/tmp/oximut-coverage-1' },
+  ])
+    assert.throws(() => runtime.validateRequest(invalid), /coverageDir|baseline/);
+});

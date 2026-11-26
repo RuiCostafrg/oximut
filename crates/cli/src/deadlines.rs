@@ -208,6 +208,7 @@ mod tests {
             },
             errors: vec![],
             coverage: None,
+            coverage_file: None,
             resident: None,
             timeout_kind: None,
             file_timings: Some(

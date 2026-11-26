@@ -105,6 +105,11 @@ pub struct Request {
     pub mutation: Option<Mutation>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub collect_coverage: Option<Vec<Mutation>>,
+    /// Baselines that collect coverage only: an absolute directory the CLI created
+    /// for this run (private, empty), where an adapter may write a coverage payload
+    /// too large for a response and name it in `Response::coverage_file`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub coverage_dir: Option<String>,
     /// Shared switched modules served for every listed file throughout a job.
     /// The instrumented baseline validates exactly these with no active mutant;
     /// mutant jobs keep serving them so executed code equals validated code.
@@ -174,42 +179,56 @@ pub struct Selection {
 }
 
 impl Coverage {
-    /// Replaces each hit's `test_ranges` with the test ids they index.
-    ///
-    /// A hit carries either explicit ids or ranges, never both; ranges must be
-    /// ascending, disjoint and inside the inventory. Anything else is a malformed
-    /// payload and leaves the coverage untouched.
-    pub fn expand_ranges(&mut self) -> Result<(), String> {
-        let total = self.tests.len() as u64;
-        let mut expanded = Vec::with_capacity(self.hits.len());
+    /// Whether every hit's `test_ranges` is well formed: a hit carries either
+    /// explicit ids or ranges, never both; ranges must be ascending, disjoint and
+    /// inside the inventory.
+    pub fn check_ranges(&self) -> Result<(), String> {
         for hit in &self.hits {
-            if hit.test_ranges.is_empty() {
-                expanded.push(None);
-                continue;
-            }
-            if !hit.tests.is_empty() {
+            if !hit.test_ranges.is_empty() && !hit.tests.is_empty() {
                 return Err("hit carries both test ids and test ranges".into());
             }
-            let mut next = 0u64;
-            let mut ids = Vec::new();
-            for &[first, last] in &hit.test_ranges {
-                if first < next || last < first || last >= total {
-                    return Err("hit test ranges are out of order or outside the inventory".into());
-                }
-                ids.extend(
-                    self.tests[first as usize..=last as usize]
-                        .iter()
-                        .map(|test| test.id.clone()),
-                );
-                next = last + 1;
+            if !self.ranges_are_valid(hit) {
+                return Err("hit test ranges are out of order or outside the inventory".into());
             }
-            expanded.push(Some(ids));
         }
-        for (hit, ids) in self.hits.iter_mut().zip(expanded) {
-            if let Some(ids) = ids {
-                hit.tests = ids;
-                hit.test_ranges.clear();
+        Ok(())
+    }
+
+    fn ranges_are_valid(&self, hit: &Hit) -> bool {
+        let total = self.tests.len() as u64;
+        let mut next = 0u64;
+        hit.test_ranges.iter().all(|&[first, last]| {
+            let valid = first >= next && last >= first && last < total;
+            next = last.saturating_add(1);
+            valid
+        })
+    }
+
+    /// How many test ids expanding every hit's ranges would add.
+    pub fn range_ids(&self) -> u64 {
+        self.hits
+            .iter()
+            .flat_map(|hit| &hit.test_ranges)
+            .map(|&[first, last]| last.saturating_sub(first) + 1)
+            .sum()
+    }
+
+    /// Replaces each hit's `test_ranges` with the test ids they index. Malformed
+    /// ranges leave the coverage untouched. Selection reads ranges directly, so
+    /// this is only for presenting coverage with explicit ids.
+    pub fn expand_ranges(&mut self) -> Result<(), String> {
+        self.check_ranges()?;
+        for hit in &mut self.hits {
+            if hit.test_ranges.is_empty() {
+                continue;
             }
+            hit.tests = hit
+                .test_ranges
+                .iter()
+                .flat_map(|&[first, last]| &self.tests[first as usize..=last as usize])
+                .map(|test| test.id.clone())
+                .collect();
+            hit.test_ranges.clear();
         }
         Ok(())
     }
@@ -244,28 +263,41 @@ impl Coverage {
             selection.reasons.push("outside-test-execution".into());
             return selection;
         }
-        let ids = hit.map_or(&[][..], |hit| hit.tests.as_slice());
-        // Sets, so that a mutant every test of a large suite reaches costs a pass over
-        // the tests, not a pass per test.
-        let known: std::collections::HashSet<_> =
-            self.tests.iter().map(|test| test.id.as_str()).collect();
-        if ids.iter().any(|id| !known.contains(id.as_str())) {
-            selection.reasons.push("unknown-test-identity".into());
-            return selection;
-        }
-        let wanted: std::collections::HashSet<_> = ids.iter().map(String::as_str).collect();
-        let files: std::collections::BTreeSet<_> = self
-            .tests
-            .iter()
-            .filter(|test| wanted.contains(test.id.as_str()))
-            .map(|test| test.file.clone())
-            .collect();
+        let hit = hit.expect("checked above");
+        let files: std::collections::BTreeSet<&String> = if hit.test_ranges.is_empty() {
+            let ids = hit.tests.as_slice();
+            // Sets, so that a mutant every test of a large suite reaches costs a pass over
+            // the tests, not a pass per test.
+            let known: std::collections::HashSet<_> =
+                self.tests.iter().map(|test| test.id.as_str()).collect();
+            if ids.iter().any(|id| !known.contains(id.as_str())) {
+                selection.reasons.push("unknown-test-identity".into());
+                return selection;
+            }
+            let wanted: std::collections::HashSet<_> = ids.iter().map(String::as_str).collect();
+            self.tests
+                .iter()
+                .filter(|test| wanted.contains(test.id.as_str()))
+                .map(|test| &test.file)
+                .collect()
+        } else {
+            // Index runs, as an adapter sends them: no per-test ids are built.
+            if !hit.tests.is_empty() || !self.ranges_are_valid(hit) {
+                selection.reasons.push("invalid-test-ranges".into());
+                return selection;
+            }
+            hit.test_ranges
+                .iter()
+                .flat_map(|&[first, last]| &self.tests[first as usize..=last as usize])
+                .map(|test| &test.file)
+                .collect()
+        };
         selection.selected_tests = self
             .tests
             .iter()
             .filter(|test| files.contains(&test.file))
             .count() as u64;
-        selection.files = files.into_iter().collect();
+        selection.files = files.into_iter().cloned().collect();
         selection.mode = if selection.files.is_empty() {
             "none"
         } else {
@@ -298,6 +330,11 @@ pub struct Response {
     pub errors: Vec<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub coverage: Option<Coverage>,
+    /// Instead of `coverage`: the name of a file in the request's `coverage_dir`
+    /// holding the coverage JSON, for suites whose inventory exceeds a response.
+    /// Only a plain file name; the CLI reads and validates the file itself.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub coverage_file: Option<String>,
     /// Number of resident modules the adapter registered for this job. An
     /// adapter that ignores `resident` cannot report a validated execution.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -339,6 +376,16 @@ impl TimeoutKind {
 pub struct FileTiming {
     pub file: String,
     pub duration_ms: f64,
+}
+
+/// A file name with no directory part: what an adapter may name in `coverage_file`.
+pub fn is_plain_file_name(name: &str) -> bool {
+    !name.is_empty()
+        && name.len() <= 128
+        && !name.starts_with('.')
+        && name
+            .bytes()
+            .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'.' | b'-' | b'_'))
 }
 
 impl Response {
@@ -383,6 +430,14 @@ impl Response {
             .ok_or("adapter test counts overflow")?;
         if self.coverage.is_some() && request.collect_coverage.is_none() {
             return Err("unsolicited adapter coverage".into());
+        }
+        if let Some(name) = &self.coverage_file
+            && (request.collect_coverage.is_none()
+                || request.coverage_dir.is_none()
+                || self.coverage.is_some()
+                || !is_plain_file_name(name))
+        {
+            return Err("invalid or unsolicited coverage file".into());
         }
         if let Some(timings) = &self.file_timings
             && (request.kind != "baseline"
@@ -669,6 +724,7 @@ mod tests {
             pool: None,
             mutation: None,
             collect_coverage: None,
+            coverage_dir: None,
             resident: None,
             selection: None,
             bypass_zygote: None,
@@ -684,6 +740,7 @@ mod tests {
             tests: Tests::default(),
             errors: vec!["crash".into()],
             coverage: None,
+            coverage_file: None,
             resident: None,
             file_timings: None,
             timeout_kind: None,
@@ -723,6 +780,7 @@ mod tests {
             pool: None,
             mutation: None,
             collect_coverage: None,
+            coverage_dir: None,
             resident: None,
             selection: None,
             bypass_zygote: None,
@@ -738,6 +796,7 @@ mod tests {
             tests: Tests::default(),
             errors: vec![],
             coverage: None,
+            coverage_file: None,
             resident: None,
             file_timings: None,
             timeout_kind: None,
@@ -868,6 +927,164 @@ mod tests {
                 .unwrap()
                 .contains("testRanges")
         );
+    }
+
+    /// A suite far past the 1 MiB response limit, as an adapter reports it: `files`
+    /// files of `per_file` tests, in the sorted order whose runs are per-file.
+    fn huge(files: usize, per_file: usize) -> Coverage {
+        let tests = (0..files)
+            .flat_map(|file| {
+                (0..per_file).map(move |test| TestIdentity {
+                    id: format!("{file:06x}_{test}"),
+                    file: format!("/project/test/f{file:05}.test.ts"),
+                    name: format!("suite {file} > case {test} handles an ordinary example"),
+                })
+            })
+            .collect::<Vec<_>>();
+        let total = tests.len() as u64;
+        Coverage {
+            complete: true,
+            tests,
+            hits: vec![
+                // One test of one file.
+                Hit {
+                    mutant_id: "narrow".into(),
+                    test_ranges: vec![[7 * per_file as u64 + 3, 7 * per_file as u64 + 3]],
+                    ..Default::default()
+                },
+                // Every test of three files, apart.
+                Hit {
+                    mutant_id: "three".into(),
+                    test_ranges: vec![
+                        [0, per_file as u64 - 1],
+                        [100 * per_file as u64, 101 * per_file as u64 - 1],
+                        [total - per_file as u64, total - 1],
+                    ],
+                    ..Default::default()
+                },
+                // Every test: a mutant reached while a module every file imports loads.
+                Hit {
+                    mutant_id: "all".into(),
+                    test_ranges: vec![[0, total - 1]],
+                    ..Default::default()
+                },
+                Hit {
+                    mutant_id: "unreached".into(),
+                    ..Default::default()
+                },
+            ],
+            reasons: vec![],
+            unprobed: Default::default(),
+        }
+    }
+
+    #[test]
+    fn a_huge_suites_runs_select_narrowly_without_expanding() {
+        // 25,000 tests: the inventory alone is several MiB, far past one response.
+        let coverage = huge(500, 50);
+        assert_eq!(coverage.tests.len(), 25_000);
+        assert!(serde_json::to_vec(&coverage.tests).unwrap().len() > 2 * 1024 * 1024);
+        coverage.check_ranges().unwrap();
+        assert_eq!(coverage.range_ids(), 1 + 150 + 25_000);
+
+        let narrow = coverage.select("narrow");
+        assert_eq!(narrow.mode, "files");
+        assert_eq!(narrow.files, ["/project/test/f00007.test.ts"]);
+        assert_eq!((narrow.selected_tests, narrow.total_tests), (50, 25_000));
+
+        let three = coverage.select("three");
+        assert_eq!(three.mode, "files");
+        assert_eq!(three.files.len(), 3);
+        assert_eq!(three.selected_tests, 150);
+
+        // Reaching every test is the only way to select the whole suite.
+        let all = coverage.select("all");
+        assert_eq!(all.mode, "files");
+        assert_eq!(all.files.len(), 500);
+        assert_eq!(all.selected_tests, 25_000);
+        assert_eq!(coverage.select("unreached").mode, "none");
+
+        // Selection never built ids: the runs are still runs.
+        assert!(coverage.hits.iter().all(|hit| hit.tests.is_empty()));
+    }
+
+    #[test]
+    fn selection_refuses_malformed_runs_instead_of_narrowing() {
+        let mut coverage = huge(4, 5);
+        coverage.hits[0].test_ranges = vec![[3, 99]];
+        let outside = coverage.select("narrow");
+        assert_eq!(outside.mode, "full");
+        assert!(outside.reasons.contains(&"invalid-test-ranges".to_string()));
+        coverage.hits[0].test_ranges = vec![[2, 4], [3, 3]];
+        assert_eq!(coverage.select("narrow").mode, "full");
+        coverage.hits[0].test_ranges = vec![[0, 0]];
+        coverage.hits[0].tests = vec!["000000_0".into()];
+        assert_eq!(coverage.select("narrow").mode, "full");
+        assert!(coverage.check_ranges().is_err());
+    }
+
+    #[test]
+    fn a_coverage_file_is_named_plainly_and_only_for_a_collecting_baseline() {
+        for name in ["coverage-1-0.json", "a.b_c-d"] {
+            assert!(is_plain_file_name(name), "{name}");
+        }
+        for name in [
+            "",
+            ".hidden",
+            "../x",
+            "a/b",
+            "a\\b",
+            "a b",
+            "nul\0",
+            &"x".repeat(129),
+        ] {
+            assert!(!is_plain_file_name(name), "{name:?}");
+        }
+        let request = |directory: Option<&str>, collecting: bool| -> Request {
+            serde_json::from_value(serde_json::json!({
+                "protocol": 1, "runId": "r", "jobId": "j", "generation": 1,
+                "kind": "baseline", "root": "/p", "config": "/p/c", "deadlineMs": 10,
+                "mutation": null,
+                "collectCoverage": collecting.then(Vec::<serde_json::Value>::new),
+                "coverageDir": directory,
+            }))
+            .unwrap()
+        };
+        let response = |file: &str, inline: bool| -> Response {
+            serde_json::from_value(serde_json::json!({
+                "protocol": 1, "runId": "r", "jobId": "j", "generation": 1,
+                "outcome": "skipped", "tests": {"passed": 0, "failed": 0, "skipped": 0},
+                "errors": [],
+                "coverageFile": file,
+                "coverage": inline.then(|| serde_json::json!({
+                    "complete": false, "tests": [], "hits": [], "reasons": []})),
+            }))
+            .unwrap()
+        };
+        assert!(
+            response("coverage-1-0.json", false)
+                .validate(&request(Some("/tmp/d"), true))
+                .is_ok()
+        );
+        for (response, request) in [
+            (response("coverage-1-0.json", false), request(None, true)),
+            (
+                response("coverage-1-0.json", false),
+                request(Some("/tmp/d"), false),
+            ),
+            (response("../escape", false), request(Some("/tmp/d"), true)),
+            (
+                response("coverage-1-0.json", true),
+                request(Some("/tmp/d"), true),
+            ),
+        ] {
+            assert!(
+                response
+                    .validate(&request)
+                    .unwrap_err()
+                    .contains("coverage file")
+            );
+        }
     }
 
     #[test]
@@ -1031,6 +1248,7 @@ mod tests {
             },
             errors: vec![],
             coverage: None,
+            coverage_file: None,
             resident: None,
             file_timings: None,
             timeout_kind: None,
@@ -1075,6 +1293,7 @@ mod tests {
             },
             errors: vec![],
             coverage: None,
+            coverage_file: None,
             resident: Some(1),
             file_timings: None,
             timeout_kind: None,
