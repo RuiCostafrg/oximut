@@ -651,8 +651,7 @@ pub fn identity_module(path: &Path, source: &str) -> oximut_core::Mutation {
 
 /// Generate a shared Node-only module containing inline mutation switches.
 /// Branches remain in their original lexical context, including await and yield.
-/// Files referring to `process` fall back to static mutants because the selector
-/// could otherwise resolve to a shadowed binding.
+/// Files that can interfere with the selector fall back to static mutants.
 pub fn generate_switched(
     identity: &str,
     path: &Path,
@@ -706,15 +705,14 @@ fn switch(
     let allocator = Allocator::default();
     let source_type = SourceType::from_path(path).map_err(|e| e.to_string())?;
     let parsed = Parser::new(&allocator, source, source_type).parse();
-    if may_shadow(&parsed.program, "process") {
-        generated.diagnostics.push("mutation switching fallback: process identifier or with statement may shadow or modify the Node selector; using fresh static mutants".into());
+    if may_shadow(&parsed.program, "process")
+        || injected_global_conflict(&parsed.program, Some(ACTIVE_MUTANT_SLOT))
+        || source.contains(ACTIVE_MUTANT_SLOT)
+    {
+        generated.diagnostics.push("mutation switching fallback: process, globalThis, reserved selector name, or with statement may interfere with the Node selector; using fresh static mutants".into());
         return Ok((generated, Switch::Static));
     }
-    let global_conflict = if probes {
-        probe_conflict(&parsed.program, source)
-    } else {
-        None
-    };
+    let global_conflict = (probes && source.contains(PROBE_HOOK)).then_some("probe-reserved-name");
     let mut collector = Collector {
         source,
         families,
@@ -914,37 +912,76 @@ fn probe_conflict(program: &Program<'_>, source: &str) -> Option<&'static str> {
     if source.contains(PROBE_HOOK) {
         return Some("probe-reserved-name");
     }
-    struct Conflict(bool);
-    impl<'a> Visit<'a> for Conflict {
+    injected_global_conflict(program, None).then_some("probe-globalThis-conflict")
+}
+
+fn injected_global_conflict(program: &Program<'_>, reserved: Option<&str>) -> bool {
+    struct Conflict<'r> {
+        found: bool,
+        reserved: Option<&'r str>,
+    }
+    fn global_property(member: &MemberExpression<'_>) -> bool {
+        member
+            .object()
+            .without_parentheses()
+            .is_specific_id("globalThis")
+            && member
+                .static_property_name()
+                .is_none_or(|name| name == "globalThis")
+    }
+
+    impl<'a> Visit<'a> for Conflict<'_> {
         fn visit_binding_identifier(&mut self, it: &BindingIdentifier<'a>) {
-            self.0 |= it.name == "globalThis";
+            self.found |= it.name == "globalThis";
+        }
+        fn visit_identifier_name(&mut self, it: &IdentifierName<'a>) {
+            self.found |= self.reserved == Some(it.name.as_str());
+        }
+        fn visit_string_literal(&mut self, it: &StringLiteral<'a>) {
+            self.found |= self.reserved == Some(it.value.as_str());
+        }
+        fn visit_computed_member_expression(&mut self, it: &ComputedMemberExpression<'a>) {
+            if let Some(name) = it.static_property_name() {
+                self.found |= self.reserved == Some(name.as_str());
+            }
+            walk::walk_computed_member_expression(self, it);
         }
         fn visit_with_statement(&mut self, it: &WithStatement<'a>) {
-            self.0 = true;
+            self.found = true;
             walk::walk_with_statement(self, it);
         }
         // Writing the binding itself (`globalThis = x`, `globalThis++`,
         // `for (globalThis of xs)`, `({ globalThis } = o)`) could redirect it.
         fn visit_simple_assignment_target(&mut self, it: &SimpleAssignmentTarget<'a>) {
             if let SimpleAssignmentTarget::AssignmentTargetIdentifier(target) = it {
-                self.0 |= target.name == "globalThis";
+                self.found |= target.name == "globalThis";
             }
+            self.found |= it.as_member_expression().is_some_and(global_property);
             walk::walk_simple_assignment_target(self, it);
+        }
+        fn visit_unary_expression(&mut self, it: &UnaryExpression<'a>) {
+            self.found |= it.operator == UnaryOperator::Delete
+                && it.argument.get_member_expr().is_some_and(global_property);
+            walk::walk_unary_expression(self, it);
         }
         fn visit_assignment_target_property_identifier(
             &mut self,
             it: &AssignmentTargetPropertyIdentifier<'a>,
         ) {
-            self.0 |= it.binding.name == "globalThis";
+            self.found |= it.binding.name == "globalThis";
             walk::walk_assignment_target_property_identifier(self, it);
         }
     }
-    let mut found = Conflict(false);
-    found.visit_program(program);
-    found.0.then_some("probe-globalThis-conflict")
+    let mut conflict = Conflict {
+        found: false,
+        reserved,
+    };
+    conflict.visit_program(program);
+    conflict.found
 }
 
 const PROBE_HOOK: &str = "__oximut_m3_hit__";
+const ACTIVE_MUTANT_SLOT: &str = "__oximut_active__";
 
 /// The active mutant, as a switch reads it. Reading `process.env` costs about 190 ns
 /// (3 ns for a global), and a loop evaluates a switched expression on every
@@ -1650,13 +1687,13 @@ console.log(JSON.stringify([a, b, c, iterator.next(), iterator.next(7), true, ca
     #[test]
     fn probed_switching_reports_unprobed_and_static_fallbacks() {
         let path = Path::new("/project/src/a.ts");
-        // A shadowed globalThis: switching stays shared, probes are refused.
+        // A shadowed globalThis cannot carry either injected hook.
         let source = "function f(globalThis) { return 1; } export const x = 1 + 2;";
         let (generated, coverage) = generate_switched_probed("src/a.ts", path, source).unwrap();
         assert_eq!(coverage.unwrap_err(), "probe-globalThis-conflict");
         assert_eq!(
             generated.mutants[0].code,
-            generate_switched("src/a.ts", path, source).unwrap().mutants[0].code
+            generate("src/a.ts", path, source).unwrap().mutants[0].code
         );
         assert!(!generated.mutants[0].code.contains("__oximut_m3_hit__"));
         // process use: static mutants keep the separate probe-only module.
@@ -1678,6 +1715,30 @@ console.log(JSON.stringify([a, b, c, iterator.next(), iterator.next(7), true, ca
             generate_switched_probed("src/a.ts", path, "export const x = 1;").unwrap();
         assert!(generated.mutants.is_empty());
         assert_eq!(coverage.unwrap().code, "export const x = 1;");
+    }
+
+    #[test]
+    fn static_fallback_applies_mutations_when_the_global_selector_is_unavailable() {
+        let path = Path::new("/project/a.js");
+        for source in [
+            "function value(globalThis) { return 5 + 2; } console.log(value(null));",
+            "globalThis.__oximut_active__ = ''; console.log(5 + 2);",
+            r"globalThis.__oximut_act\u0069ve__ = ''; console.log(5 + 2);",
+            r"globalThis['__oximut_act\u0069ve__'] = ''; console.log(5 + 2);",
+            r"globalThis[`__oximut_act\u0069ve__`] = ''; console.log(5 + 2);",
+            "globalThis.globalThis = null; console.log(5 + 2);",
+            "globalThis['globalThis'] = null; console.log(5 + 2);",
+            "delete globalThis.globalThis; console.log(5 + 2);",
+            "delete globalThis?.globalThis; console.log(5 + 2);",
+            "const key = ['__oximut', 'active__'].join('_'); globalThis[key] = ''; console.log(5 + 2);",
+        ] {
+            let static_mutant = &generate("a.js", path, source).unwrap().mutants[0];
+            let switched = generate_switched("a.js", path, source).unwrap();
+            assert_eq!(switched.mutants[0].id, static_mutant.id);
+            assert_eq!(switched.mutants[0].code, static_mutant.code);
+            assert_eq!(execute(source, ""), "7\n");
+            assert_eq!(execute(&switched.mutants[0].code, ""), "3\n");
+        }
     }
 
     #[test]
