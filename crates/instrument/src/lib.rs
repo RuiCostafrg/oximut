@@ -921,7 +921,13 @@ fn injected_global_conflict(program: &Program<'_>, reserved: Option<&str>) -> bo
         reserved: Option<&'r str>,
     }
     fn global_property(member: &MemberExpression<'_>) -> bool {
-        member.is_specific_member_access("globalThis", "globalThis")
+        member
+            .object()
+            .without_parentheses()
+            .is_specific_id("globalThis")
+            && member
+                .static_property_name()
+                .is_none_or(|name| name == "globalThis")
     }
 
     impl<'a> Visit<'a> for Conflict<'_> {
@@ -955,11 +961,7 @@ fn injected_global_conflict(program: &Program<'_>, reserved: Option<&str>) -> bo
         }
         fn visit_unary_expression(&mut self, it: &UnaryExpression<'a>) {
             self.found |= it.operator == UnaryOperator::Delete
-                && it
-                    .argument
-                    .without_parentheses()
-                    .as_member_expression()
-                    .is_some_and(global_property);
+                && it.argument.get_member_expr().is_some_and(global_property);
             walk::walk_unary_expression(self, it);
         }
         fn visit_assignment_target_property_identifier(
@@ -1727,6 +1729,8 @@ console.log(JSON.stringify([a, b, c, iterator.next(), iterator.next(7), true, ca
             "globalThis.globalThis = null; console.log(5 + 2);",
             "globalThis['globalThis'] = null; console.log(5 + 2);",
             "delete globalThis.globalThis; console.log(5 + 2);",
+            "delete globalThis?.globalThis; console.log(5 + 2);",
+            "const key = ['__oximut', 'active__'].join('_'); globalThis[key] = ''; console.log(5 + 2);",
         ] {
             let static_mutant = &generate("a.js", path, source).unwrap().mutants[0];
             let switched = generate_switched("a.js", path, source).unwrap();
