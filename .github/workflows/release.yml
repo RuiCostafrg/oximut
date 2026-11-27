@@ -6,6 +6,7 @@ on:
   pull_request:
     paths:
       - .github/workflows/release.yml
+      - .github/workflows/npm-publish.yml
       - package.json
       - scripts/source-release-metadata.py
       - scripts/check-source-evidence.py
@@ -162,6 +163,13 @@ jobs:
           BUNDLE_PATH: ${{ steps.attest.outputs.bundle-path }}
         run: |
           set -euo pipefail
+          tag_object=$(gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$GITHUB_REF_NAME" |
+            jq -er 'select(.object.type == "tag") | .object.sha')
+          notes="$RUNNER_TEMP/release-notes.md"
+          gh api "repos/$GITHUB_REPOSITORY/git/tags/$tag_object" |
+            jq -er --arg tag "$GITHUB_REF_NAME" --arg revision "$GITHUB_SHA" \
+              'select(.tag == $tag and .object.type == "commit" and .object.sha == $revision) |
+               .message | select(length > 0)' > "$notes"
           cp -- "$BUNDLE_PATH" release-assets/provenance.sigstore.json
           gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --verify-tag \
-            --title "Oximut $GITHUB_REF_NAME" --notes-from-tag release-assets/*
+            --title "Oximut $GITHUB_REF_NAME" --notes-file "$notes" release-assets/*

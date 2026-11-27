@@ -25,8 +25,9 @@ Review the [release checklist](maintenance.md) against the final revision.
    package, use an authenticated maintainer session for the first publication
    and configure npm's trusted publisher for `npm-publish.yml` with the
    `release` environment afterward. When the trusted publisher is configured,
-   the Npm publication workflow verifies the release attestation and stages
-   the tarball for approval on npm.
+   dispatch the workflow with `gh workflow run npm-publish.yml --ref v1.0.0`.
+   It verifies the release attestation and stages the tarball for approval on npm.
+   npm provenance identifies the tag and commit used for the staging run.
 
 The stable prefix is `validated-prefix.tar.gz`. It uses the same layout as the
 RC prefix and carries the launcher, executable, adapter, locked dependencies,
