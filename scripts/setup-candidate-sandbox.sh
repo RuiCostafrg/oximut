@@ -4,8 +4,12 @@ set -euo pipefail
 . /etc/os-release
 [[ "$ID" == ubuntu && "$VERSION_ID" == 24.04 ]]
 [[ "$(id -u)" != 0 ]]
-sudo apt-get update -qq
-sudo apt-get install -y bubblewrap apparmor
+# Both packages come from Ubuntu. Runner images also carry third-party APT
+# sources that are unrelated to sandbox provisioning.
+ubuntu_archive=(-o Dir::Etc::sourcelist=/etc/apt/sources.list.d/ubuntu.sources
+                -o Dir::Etc::sourceparts=-)
+sudo apt-get "${ubuntu_archive[@]}" update -qq
+sudo apt-get "${ubuntu_archive[@]}" install -y bubblewrap apparmor
 # Ubuntu's default userns policy denies namespace-local NET_ADMIN, breaking
 # bwrap's loopback initialization. Allow userns for this system binary only.
 # Do not disable AppArmor or its global unprivileged-userns restriction.
