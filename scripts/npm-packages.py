@@ -268,7 +268,7 @@ def smoke_install(tarball, expected, evidence):
         command = project / "node_modules/.bin/oximut"
         require(command.is_symlink() and command.resolve() == prefix / LAUNCHER,
                 "npm did not correctly link the oximut command")
-        version = VALIDATOR.SANDBOX.run([command, "--version"], cwd=project, readonly=[project])
+        version = VALIDATOR.SANDBOX.run([command, "--version"], cwd=project, writable=[project])
         require(version.strip() == f"oximut {evidence['version']}", "unexpected installed CLI version")
         load_script("smoke-install").smoke(prefix, isolated=True, require_zygote=True)
 
