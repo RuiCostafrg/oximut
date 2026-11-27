@@ -21,8 +21,15 @@ Review the [release checklist](maintenance.md) against the final revision.
 5. Verify the attached `oximut.rb` against the same release workflow, tag, and
    commit, then open its update PR in the public Homebrew tap. Run the formula's
    fresh and persistent installation smoke on Ubuntu 24.04 x86-64 before merging.
+6. Publish the attested `oximut-1.0.0.tgz` to npm. For a newly registered
+   package, use an authenticated maintainer session for the first publication
+   and configure npm's trusted publisher for `npm-publish.yml` with the
+   `release` environment afterward. When the trusted publisher is configured,
+   the Npm publication workflow verifies the release attestation and stages
+   the tarball for approval on npm.
 
 The stable prefix is `validated-prefix.tar.gz`. It uses the same layout as the
 RC prefix and carries the launcher, executable, adapter, locked dependencies,
 and native zygote addon. Its build provenance is signed by
 `.github/workflows/release.yml` at the exact release tag.
+The [npm package](npm-packaging.md) is smoke-tested from the same prefix.

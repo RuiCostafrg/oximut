@@ -9,6 +9,10 @@ on:
       - scripts/source-release-metadata.py
       - scripts/check-source-evidence.py
       - scripts/release-homebrew.py
+      - scripts/npm-packages.py
+      - packaging/npm/**
+      - action.yml
+      - action/**
       - packaging/homebrew/oximut.rb.in
   workflow_dispatch:
 
@@ -97,6 +101,11 @@ jobs:
           cd "$assets"
           sha256sum validated-prefix.tar.gz > validated-prefix.tar.gz.sha256
           sha256sum --strict --check "oximut-$VERSION-source.tar.gz.sha256" validated-prefix.tar.gz.sha256
+          npm_output="$RUNNER_TEMP/release-npm"
+          python3 "$GITHUB_WORKSPACE/scripts/npm-packages.py" --assets "$assets" \
+            --evidence "$validation/evidence.json" --version "$VERSION" \
+            --revision "$GITHUB_SHA" --tree "$tree" --output "$npm_output" --smoke
+          cp "$npm_output/oximut-$VERSION.tgz" "$assets/"
           sha256sum -- * > SHA256SUMS
       - id: upload
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -137,6 +146,7 @@ jobs:
             release-assets/r3-validation.evidence.json
             release-assets/validated-prefix.tar.gz
             release-assets/oximut.rb
+            release-assets/oximut-1.0.0.tgz
             release-assets/SHA256SUMS
       - name: Publish GitHub Release
         env:
