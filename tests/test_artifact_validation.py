@@ -13,7 +13,7 @@ import test_distribution as distribution_fixture
 SPEC = importlib.util.spec_from_file_location("artifact_validator", Path(__file__).resolve().parents[1] / "scripts/validate-source.py")
 GATE = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(GATE)
-VERSION = "1.0.0-rc.3"
+VERSION = distribution_fixture.VERSION
 
 
 class ArtifactValidation(unittest.TestCase):

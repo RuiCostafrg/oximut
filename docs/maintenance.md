@@ -9,10 +9,9 @@ status record, not proof that a gate has passed.
 
 ## Candidate status
 
-The source-only `1.0.0-rc.3` candidate is being prepared. Candidate acceptance
-is pending. It has no published binaries and no binary target matrix. No item
-below should be treated as complete without a recorded result tied to the
-candidate revision.
+The [stable 1.0.0 procedure](stable-release.md) describes the release candidate,
+the Ubuntu 24.04 x86-64 artifact, and its distribution checks. Record acceptance
+against the exact release revision and artifact.
 
 ## Release checklist
 

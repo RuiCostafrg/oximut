@@ -13,6 +13,11 @@ on:
       - packaging/npm/**
       - action.yml
       - action/**
+      - Cargo.toml
+      - Cargo.lock
+      - package.json
+      - package-lock.json
+      - packages/vitest-adapter/package.json
       - packaging/homebrew/oximut.rb.in
   workflow_dispatch:
 

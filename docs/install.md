@@ -1,13 +1,10 @@
 # Install from source
 
-Oximut supports source checkout installation. The initial **1.0.0-rc.3**
-candidate source archive format and its prerequisites are described in
-[Source distribution](distribution.md). There is no supported
-public npm or crates.io installation yet. The workspace packages remain private.
-The `oximut` npm name returned HTTP 404 on 2026-10-26; this is an availability
-observation, not a reservation or a published package.
+Oximut supports source checkout installation. See the
+[1.0.0 release notes](release-notes-1.0.0.md) for the release channels and
+[source distribution](distribution.md) for the archive format and prerequisites.
 
-The supported environment is Linux with Rust **1.96.0**, Node **26.3.1**, npm
+The stable source validation host is Ubuntu 24.04 x86-64 with Rust **1.96.0**, Node **26.3.1**, npm
 **11.16.0**, and Python 3. Use the checkout's `rust-toolchain.toml`, `.node-version`,
 and `package.json` pins. Node and Python must also be on PATH when running the
 installed command. A source build needs network access to the Cargo and npm
