@@ -13,7 +13,7 @@ jobs:
   stage:
     if: >-
       github.repository == 'RuiCostafrg/oximut' &&
-      github.ref == 'refs/heads/main' &&
+      github.ref == 'refs/tags/v1.0.0' &&
       github.actor == github.repository_owner
     runs-on: ubuntu-24.04
     timeout-minutes: 15
@@ -49,9 +49,10 @@ jobs:
             jq -e '(.isDraft or .isPrerelease) | not' >/dev/null
           gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --pattern "$PACKAGE" --dir assets
           revision=$(gh api "repos/$GITHUB_REPOSITORY/commits/$TAG" --jq .sha)
+          test "$revision" = "$GITHUB_SHA"
           gh attestation verify "assets/$PACKAGE" --repo "$GITHUB_REPOSITORY" \
             --signer-workflow "$GITHUB_REPOSITORY/.github/workflows/release.yml" \
-            --source-ref "refs/tags/$TAG" --source-digest "$revision" --deny-self-hosted-runners
+            --source-ref "$GITHUB_REF" --source-digest "$GITHUB_SHA" --deny-self-hosted-runners
           tar -xOzf "assets/$PACKAGE" package/package.json |
             jq -e '.name == "oximut" and .version == "1.0.0" and (.private != true) and (has("scripts") | not)' >/dev/null
       - name: Stage the verified npm package
