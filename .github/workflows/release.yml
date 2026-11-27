@@ -6,10 +6,13 @@ on:
   pull_request:
     paths:
       - .github/workflows/release.yml
+      - package.json
       - scripts/source-release-metadata.py
       - scripts/check-source-evidence.py
       - scripts/release-homebrew.py
       - scripts/npm-packages.py
+      - scripts/setup-candidate-sandbox.sh
+      - scripts/smoke-install.py
       - packaging/npm/**
       - action.yml
       - action/**
