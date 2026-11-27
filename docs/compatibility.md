@@ -1,9 +1,8 @@
 # Compatibility and support boundary
 
-Oximut is a pinned feasibility prototype. The only demonstrated host is Linux
-arm64 in Ubuntu userspace under Android/Termux PRoot. The repository does not
-claim a broad OS or runtime support range. A compatible dependency version is
-not evidence that every project using it is supported.
+Oximut 1.0.0 targets Ubuntu 24.04 Linux x86-64 with the pinned toolchain
+and one Node Vitest project. The runtime matrix also names historical
+developer and release-candidate environments.
 
 ## Runtime matrix
 

@@ -5,7 +5,8 @@
 Mutation testing for JavaScript and TypeScript, designed around a Rust + Oxc
 instrumentation engine and a thin Vitest adapter.
 
-**Status: M6 benchmark and alpha release evaluation.** The repository generates JS/TS mutants with
+The [1.0.0 release notes](docs/release-notes-1.0.0.md) describe the initial
+Ubuntu 24.04 x86-64 distribution. The repository generates JS/TS mutants with
 Oxc and executes them with bounded worker concurrency, with text and JSON reports. Persistent
 execution is the default: it shares transformed code and one Vitest controller across mutants while
 every mutant still runs in a fresh test process (StrykerJS likewise reuses its test-runner process).
@@ -23,8 +24,7 @@ validation/reuse. See the [cache decision](docs/cache-performance.md).
 Resource admission accounts for the complete owned process tree, reserves memory
 headroom, and reports resource exhaustion separately from mutation kills.
 It also retains the M0 lifecycle experiments and baseline benchmarks.
-There is no published package.
-Faster execution and lower memory use than Stryker remain hypotheses to measure.
+See [GitHub Releases](https://github.com/RuiCostafrg/oximut/releases) for available versions and artifacts.
 Oximut is a working name.
 
 Use repeatable `--mutators` options to select a comma-separated union of declared

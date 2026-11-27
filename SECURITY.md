@@ -14,11 +14,10 @@ an email address or promise a response time.
 
 ## Scope and support
 
-The supported configuration, when a release is made, is limited to the exact
-contract in [the compatibility matrix](docs/compatibility.md). The current
-source-only `1.0.0-rc.3` is a release candidate, not a stable release. Its
-acceptance is pending; no binary target matrix is claimed. See the
-[release checklist](docs/maintenance.md) for pending gates and evidence.
+The supported configuration follows
+[the compatibility matrix](docs/compatibility.md). The first stable
+distribution targets Ubuntu 24.04 x86-64. See the
+[release checklist](docs/maintenance.md) for gates and evidence.
 
 There is no security response SLA or guaranteed remediation timeline. No
 release or support commitment should be inferred from this policy.

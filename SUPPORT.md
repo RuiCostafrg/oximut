@@ -6,11 +6,9 @@ Linux, Node, npm, Python, Rust, Oxc, Vitest, project, and instrumentation
 constraints. A pinned dependency version alone does not establish support for
 every project using it.
 
-The `1.0.0-rc.3` candidate is source-only and pending acceptance. It does not
-establish a stable release or a binary compatibility matrix. The current
-release gates and their evidence status are tracked in the
-[maintenance checklist](docs/maintenance.md). Until those gates are accepted,
-do not interpret candidate status as a completed public support commitment.
+The first stable distribution targets Ubuntu 24.04 x86-64 with the pinned
+runtime and Vitest versions. The [maintenance checklist](docs/maintenance.md)
+describes the evidence required for each release.
 
 ## Defects and support expectations
 
