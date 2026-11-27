@@ -706,7 +706,7 @@ fn switch(
     let source_type = SourceType::from_path(path).map_err(|e| e.to_string())?;
     let parsed = Parser::new(&allocator, source, source_type).parse();
     if may_shadow(&parsed.program, "process")
-        || injected_global_conflict(&parsed.program)
+        || injected_global_conflict(&parsed.program, Some(ACTIVE_MUTANT_SLOT))
         || source.contains(ACTIVE_MUTANT_SLOT)
     {
         generated.diagnostics.push("mutation switching fallback: process, globalThis, reserved selector name, or with statement may interfere with the Node selector; using fresh static mutants".into());
@@ -912,38 +912,70 @@ fn probe_conflict(program: &Program<'_>, source: &str) -> Option<&'static str> {
     if source.contains(PROBE_HOOK) {
         return Some("probe-reserved-name");
     }
-    injected_global_conflict(program).then_some("probe-globalThis-conflict")
+    injected_global_conflict(program, None).then_some("probe-globalThis-conflict")
 }
 
-fn injected_global_conflict(program: &Program<'_>) -> bool {
-    struct Conflict(bool);
-    impl<'a> Visit<'a> for Conflict {
+fn injected_global_conflict(program: &Program<'_>, reserved: Option<&str>) -> bool {
+    struct Conflict<'r> {
+        found: bool,
+        reserved: Option<&'r str>,
+    }
+    fn global_property(member: &MemberExpression<'_>) -> bool {
+        member.is_specific_member_access("globalThis", "globalThis")
+    }
+
+    impl<'a> Visit<'a> for Conflict<'_> {
         fn visit_binding_identifier(&mut self, it: &BindingIdentifier<'a>) {
-            self.0 |= it.name == "globalThis";
+            self.found |= it.name == "globalThis";
+        }
+        fn visit_identifier_name(&mut self, it: &IdentifierName<'a>) {
+            self.found |= self.reserved == Some(it.name.as_str());
+        }
+        fn visit_string_literal(&mut self, it: &StringLiteral<'a>) {
+            self.found |= self.reserved == Some(it.value.as_str());
+        }
+        fn visit_computed_member_expression(&mut self, it: &ComputedMemberExpression<'a>) {
+            if let Some(name) = it.static_property_name() {
+                self.found |= self.reserved == Some(name.as_str());
+            }
+            walk::walk_computed_member_expression(self, it);
         }
         fn visit_with_statement(&mut self, it: &WithStatement<'a>) {
-            self.0 = true;
+            self.found = true;
             walk::walk_with_statement(self, it);
         }
         // Writing the binding itself (`globalThis = x`, `globalThis++`,
         // `for (globalThis of xs)`, `({ globalThis } = o)`) could redirect it.
         fn visit_simple_assignment_target(&mut self, it: &SimpleAssignmentTarget<'a>) {
             if let SimpleAssignmentTarget::AssignmentTargetIdentifier(target) = it {
-                self.0 |= target.name == "globalThis";
+                self.found |= target.name == "globalThis";
             }
+            self.found |= it.as_member_expression().is_some_and(global_property);
             walk::walk_simple_assignment_target(self, it);
+        }
+        fn visit_unary_expression(&mut self, it: &UnaryExpression<'a>) {
+            self.found |= it.operator == UnaryOperator::Delete
+                && it
+                    .argument
+                    .without_parentheses()
+                    .as_member_expression()
+                    .is_some_and(global_property);
+            walk::walk_unary_expression(self, it);
         }
         fn visit_assignment_target_property_identifier(
             &mut self,
             it: &AssignmentTargetPropertyIdentifier<'a>,
         ) {
-            self.0 |= it.binding.name == "globalThis";
+            self.found |= it.binding.name == "globalThis";
             walk::walk_assignment_target_property_identifier(self, it);
         }
     }
-    let mut found = Conflict(false);
-    found.visit_program(program);
-    found.0
+    let mut conflict = Conflict {
+        found: false,
+        reserved,
+    };
+    conflict.visit_program(program);
+    conflict.found
 }
 
 const PROBE_HOOK: &str = "__oximut_m3_hit__";
@@ -1689,6 +1721,12 @@ console.log(JSON.stringify([a, b, c, iterator.next(), iterator.next(7), true, ca
         for source in [
             "function value(globalThis) { return 5 + 2; } console.log(value(null));",
             "globalThis.__oximut_active__ = ''; console.log(5 + 2);",
+            r"globalThis.__oximut_act\u0069ve__ = ''; console.log(5 + 2);",
+            r"globalThis['__oximut_act\u0069ve__'] = ''; console.log(5 + 2);",
+            r"globalThis[`__oximut_act\u0069ve__`] = ''; console.log(5 + 2);",
+            "globalThis.globalThis = null; console.log(5 + 2);",
+            "globalThis['globalThis'] = null; console.log(5 + 2);",
+            "delete globalThis.globalThis; console.log(5 + 2);",
         ] {
             let static_mutant = &generate("a.js", path, source).unwrap().mutants[0];
             let switched = generate_switched("a.js", path, source).unwrap();
