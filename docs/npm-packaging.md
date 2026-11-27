@@ -27,8 +27,10 @@ The tarball retains the runtime under `lib/oximut`, including the full locked
 dependency tree and native addon. It omits the internal npm-generated
 `node_modules/.bin` symlinks, which npm drops during extraction and the
 Oximut runtime does not use. The root manifest has no dependencies or lifecycle
-hooks. npm links the existing Python launcher as the `oximut` command. Use the
-generated tarball directly to preserve its verified inventory and modes.
+hooks. npm links a wrapper as the `oximut` command. The wrapper preloads a Node
+hook for the bundled adapter's TypeScript files under `node_modules`, then
+executes the original prefix launcher. Use the generated tarball directly to
+preserve its verified inventory and modes.
 
 With `--smoke`, the script installs the tarball offline in a fresh directory
 outside the checkout, verifies the installed inventory and executable bits,

@@ -30,6 +30,8 @@ PREFIX = "relocated prefix with spaces"
 ARCHIVE = "validated-prefix.tar.gz"
 BUNDLE = "lib/oximut"
 LAUNCHER = "bin/oximut"
+NPM_LAUNCHER = "bin/oximut-npm"
+TS_PRELOAD = f"{BUNDLE}/packages/vitest-adapter/npm-typescript.mjs"
 BINARY = f"{BUNDLE}/oximut"
 ADDON = f"{BUNDLE}/packages/vitest-adapter/native/build/zygote-fork.node"
 LICENSE = f"{BUNDLE}/LICENSE"
@@ -161,7 +163,7 @@ def package_files(archive, files, evidence, prefix_digest, version):
         "description": "Mutation testing for JavaScript and TypeScript with Vitest",
         "license": "MIT",
         "repository": {"type": "git", "url": "git+https://github.com/RuiCostafrg/oximut.git"},
-        "bin": {"oximut": LAUNCHER},
+        "bin": {"oximut": NPM_LAUNCHER},
         "engines": {"node": node},
         "os": ["linux"],
         "cpu": ["x64"],
@@ -177,16 +179,25 @@ def package_files(archive, files, evidence, prefix_digest, version):
     with archive.extractfile(files[LICENSE]) as stream:
         license_text = stream.read(1024 * 1024 + 1)
     require(len(license_text) <= 1024 * 1024, "oversized prefix license")
-    return {
+    packaging = ROOT / "packaging/npm"
+    generated = {
         "package.json": BUILDER.json_bytes(manifest),
         "BUILD-PROVENANCE.json": BUILDER.json_bytes(provenance),
         "LICENSE": license_text,
-        "README.md": (ROOT / "packaging/npm/README.md").read_bytes(),
+        "README.md": (packaging / "README.md").read_bytes(),
+        NPM_LAUNCHER: (packaging / "launch.py").read_bytes(),
+        TS_PRELOAD: (packaging / "typescript.mjs").read_bytes(),
     }
+    require(not (generated.keys() & files.keys()), "npm package files collide with the prefix")
+    return generated
 
 
 def executable_mode(entry):
     return 0o755 if entry.mode & 0o111 else 0o644
+
+
+def generated_mode(name):
+    return 0o755 if name == NPM_LAUNCHER else 0o644
 
 
 def write_package(destination, archive, files, generated):
@@ -201,7 +212,7 @@ def write_package(destination, archive, files, generated):
                 entry.mtime = MTIME
                 if name in generated:
                     data = generated[name]
-                    entry.size, entry.mode = len(data), 0o644
+                    entry.size, entry.mode = len(data), generated_mode(name)
                     package.addfile(entry, io.BytesIO(data))
                 else:
                     source = files[name]
@@ -213,7 +224,7 @@ def write_package(destination, archive, files, generated):
 def verify_package(destination, archive, files, generated):
     expected = {name: (executable_mode(entry), member_digest(archive, entry))
                 for name, entry in files.items()}
-    expected.update({name: (0o644, BUILDER.sha(data)) for name, data in generated.items()})
+    expected.update({name: (generated_mode(name), BUILDER.sha(data)) for name, data in generated.items()})
     observed = set()
     with tarfile.open(destination, mode="r|gz") as package:
         for entry in package:
@@ -266,11 +277,12 @@ def smoke_install(tarball, expected, evidence):
         prefix = project / "node_modules/oximut"
         verify_install(prefix, expected)
         command = project / "node_modules/.bin/oximut"
-        require(command.is_symlink() and command.resolve() == prefix / LAUNCHER,
+        require(command.is_symlink() and command.resolve() == prefix / NPM_LAUNCHER,
                 "npm did not correctly link the oximut command")
         version = VALIDATOR.SANDBOX.run([command, "--version"], cwd=project, writable=[project])
         require(version.strip() == f"oximut {evidence['version']}", "unexpected installed CLI version")
-        load_script("smoke-install").smoke(prefix, isolated=True, require_zygote=True)
+        load_script("smoke-install").smoke(prefix, launcher=command.resolve(),
+                                          isolated=True, require_zygote=True)
 
 
 def build(assets, evidence_path, version, revision, tree, output, *, smoke=False):

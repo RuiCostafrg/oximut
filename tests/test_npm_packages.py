@@ -3,7 +3,10 @@ import hashlib
 import importlib.util
 import io
 import json
+import os
 from pathlib import Path
+import shutil
+import subprocess
 import tarfile
 import tempfile
 import unittest
@@ -90,12 +93,13 @@ class NpmPackageTest(unittest.TestCase):
         with tarfile.open(first) as archive:
             self.assertEqual(set(archive.getnames()), {
                 f"package/{name}" for name in self.files.keys()
-                | {"package.json", "BUILD-PROVENANCE.json", "README.md", "LICENSE"}
+                | {"package.json", "BUILD-PROVENANCE.json", "README.md", "LICENSE",
+                   NPM.NPM_LAUNCHER, NPM.TS_PRELOAD}
             })
             for name, contents in self.files.items():
                 self.assertEqual(archive.extractfile(f"package/{name}").read(), contents)
             manifest = json.load(archive.extractfile("package/package.json"))
-            self.assertEqual(manifest["bin"], {"oximut": "bin/oximut"})
+            self.assertEqual(manifest["bin"], {"oximut": NPM.NPM_LAUNCHER})
             self.assertEqual((manifest["name"], manifest["version"]), ("oximut", VERSION))
             self.assertEqual((manifest["os"], manifest["cpu"], manifest["libc"]),
                              (["linux"], ["x64"], ["glibc"]))
@@ -106,6 +110,50 @@ class NpmPackageTest(unittest.TestCase):
             self.assertEqual(provenance["binarySha256"], self.evidence["binarySha256"])
         with self.assertRaisesRegex(ValueError, "output already exists"):
             self.build()
+
+    @unittest.skipUnless(shutil.which("node") and shutil.which("npm"), "requires Node and npm")
+    def test_npm_command_loads_bundled_typescript_only_and_preserves_node_options(self):
+        node = subprocess.check_output(["node", "--version"], text=True).strip()
+        if node != self.evidence["toolVersions"]["node"]:
+            self.skipTest("requires the npm package's pinned Node version")
+        worker = f"{NPM.BUNDLE}/packages/vitest-adapter/m2-worker.ts"
+        dependency = f"{NPM.BUNDLE}/node_modules/vitest/example.ts"
+        module = b"const value: number = globalThis.base + 2; console.log(value);\n"
+        self.files[worker] = self.files[dependency] = module
+        self.files[NPM.LAUNCHER] = (
+            b"#!/usr/bin/env python3\n"
+            b"import os, sys\nfrom pathlib import Path\n"
+            b"prefix = Path(__file__).resolve().parent.parent\n"
+            b"os.execvp('node', ['node', str(prefix / sys.argv[1])])\n"
+        )
+        self.write_inputs()
+        tarball = self.build()
+        project = self.root / "npm consumer"
+        project.mkdir()
+        (project / "package.json").write_text('{"private": true}')
+        install = subprocess.run([
+            "npm", "install", "--offline", "--ignore-scripts", "--no-audit", "--no-fund",
+            "--force", "--cache", str(self.root / "cache"), str(tarball),
+        ], cwd=project, capture_output=True, text=True, timeout=60)
+        self.assertEqual(install.returncode, 0, install.stderr)
+
+        commands = project / "node_modules"
+        env = {**os.environ, "NODE_OPTIONS": "--import=data:text/javascript,globalThis.base%3D40"}
+        original = subprocess.run([commands / "oximut" / NPM.LAUNCHER, worker], cwd=project,
+                                  env=env, capture_output=True, text=True, timeout=15)
+        self.assertNotEqual(original.returncode, 0)
+        self.assertIn("ERR_UNSUPPORTED_NODE_MODULES_TYPE_STRIPPING", original.stderr)
+
+        linked = commands / ".bin/oximut"
+        bundled = subprocess.run([linked, worker], cwd=project, env=env, capture_output=True,
+                                 text=True, timeout=15)
+        self.assertEqual(bundled.returncode, 0, bundled.stderr)
+        self.assertEqual(bundled.stdout.strip(), "42")
+
+        unrelated = subprocess.run([linked, dependency], cwd=project, env=env, capture_output=True,
+                                   text=True, timeout=15)
+        self.assertNotEqual(unrelated.returncode, 0)
+        self.assertIn("ERR_UNSUPPORTED_NODE_MODULES_TYPE_STRIPPING", unrelated.stderr)
 
     def test_rejects_wrong_asset_checksum_and_binary_hash(self):
         self.evidence["binarySha256"] = "0" * 64
