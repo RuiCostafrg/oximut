@@ -1,0 +1,87 @@
+class Oximut < Formula
+  desc "Rust/Oxc mutation testing with a Vitest adapter"
+  homepage "https://github.com/RuiCostafrg/oximut"
+  url "https://github.com/RuiCostafrg/oximut/releases/download/v@VERSION@/validated-prefix.tar.gz"
+  version "@VERSION@"
+  sha256 "@PREFIX_SHA256@"
+  license "MIT"
+
+  depends_on :linux
+  depends_on arch: :x86_64
+  depends_on "python@3.13"
+  # Preserve the exact native binary and npm tree; no strip, rebuild or npm ci.
+  skip_clean :all
+
+  resource "node-runtime" do
+    url "https://nodejs.org/dist/v26.3.1/node-v26.3.1-linux-x64.tar.xz"
+    sha256 "55647180e4ae58ffeaa3294e89aa4abda7c371dfbd64b44cbdb022980177aae0"
+  end
+
+  def install
+    # Homebrew normally strips the sole top-level archive directory.
+    root = buildpath
+    root /= "relocated prefix with spaces" unless (root/"bin/oximut").file?
+    odie "Missing validated prefix" unless (root/"lib/oximut/oximut").file?
+    (libexec/"validated-prefix").install root/"bin", root/"lib"
+    resource("node-runtime").stage { (libexec/"node").install Dir["*"] }
+    node = libexec/"node/bin/node"
+    npm = libexec/"node/bin/npm"
+    ENV.prepend_path "PATH", libexec/"node/bin"
+    odie "Wrong Node" unless Utils.safe_popen_read(node, "--version").strip == "v26.3.1"
+    odie "Wrong npm" unless Utils.safe_popen_read(npm, "--version").strip == "11.16.0"
+    odie "Binary differs from reviewed R3" unless Digest::SHA256.file(libexec/"validated-prefix/lib/oximut/oximut").hexdigest == "@BINARY_SHA256@"
+    (bin/"oximut").write <<~SH
+      #!/bin/sh
+      export PATH="#{libexec}/node/bin:#{Formula["python@3.13"].opt_libexec}/bin:$PATH"
+      exec "#{Formula["python@3.13"].opt_bin}/python3.13" "#{libexec}/validated-prefix/bin/oximut" "$@"
+    SH
+    (bin/"oximut").chmod 0755
+  end
+
+  def caveats
+    <<~EOS
+      Validated on Ubuntu 24.04 x86-64 with glibc 2.39.
+      Node 26.3.1 and npm 11.16.0 are bundled runtime resources.
+      This formula installs the exact validated GitHub release prefix.
+    EOS
+  end
+
+  test do
+    assert_match "@VERSION@", shell_output("#{bin}/oximut --version")
+    assert_match "--source", shell_output("#{bin}/oximut --help")
+    (testpath/"package.json").write '{"type":"module"}'
+    (testpath/"vitest.config.mjs").write 'export default { test: { include: ["subject.test.js"] } };'
+    (testpath/"subject.js").write 'export const positive = value => value > 0;'
+    (testpath/"subject.test.js").write <<~JS
+      import { test, expect } from "vitest";
+      import { positive } from "./subject.js";
+      import { execFileSync } from "node:child_process";
+      test("Python runtime", () => { expect(execFileSync("python3", ["-c", "import sys; print(sys.version_info[:2])"]).toString().trim()).toBe("(3, 13)"); });
+      test("host PATH", () => { expect(execFileSync("true").length).toBe(0); });
+      test("positive", () => { expect(positive(1)).toBe(true); expect(positive(0)).toBe(false); });
+    JS
+    cp_r libexec/"validated-prefix/lib/oximut/node_modules", testpath/"node_modules"
+    ["fresh", "persistent"].each do |execution|
+      report = testpath/"#{execution}.json"
+      counters = testpath/"zygote-counters-#{execution}"
+      counters.mkpath
+      with_env("OXIMUT_ZYGOTE_COUNTERS_DIR" => counters.to_s) do
+        system bin/"oximut", "--root", testpath, "--config", "vitest.config.mjs",
+               "--source", "subject.js", "--execution", execution, "--report", report
+      end
+      data = JSON.parse(report.read)
+      assert_equal "passed", data.fetch("baseline").fetch("outcome")
+      assert_equal true, data.fetch("summary").fetch("complete")
+      assert_operator data.fetch("summary").fetch("killed"), :>=, 1
+      next unless execution == "persistent"
+
+      # zygote=on only says it was requested; the pool's counters prove the
+      # prebuilt addon loaded under the private Node and forked mutant workers.
+      assert data.fetch("diagnostics").any? { |line| line.include?("zygote=on") }, "zygote is not on"
+      totals = Hash.new(0)
+      counters.children.each { |file| JSON.parse(file.read).each { |key, value| totals[key] += value } }
+      assert_operator totals["forks"], :>, 0, "no mutant worker was forked from the zygote"
+      assert_equal 0, totals["zygoteFailures"]
+    end
+  end
+end
