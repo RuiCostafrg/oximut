@@ -1,0 +1,71 @@
+name: Npm publication
+
+on:
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: npm-publish
+  cancel-in-progress: false
+
+jobs:
+  stage:
+    if: >-
+      github.repository == 'RuiCostafrg/oximut' &&
+      github.ref == 'refs/tags/v1.0.0' &&
+      github.actor == github.repository_owner
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment: release
+    permissions:
+      contents: read
+      attestations: read
+      id-token: write
+    env:
+      TAG: v1.0.0
+      PACKAGE: oximut-1.0.0.tgz
+    steps:
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '26.3.1'
+          package-manager-cache: false
+          registry-url: https://registry.npmjs.org
+      - name: Install the pinned npm CLI
+        run: |
+          set -euo pipefail
+          file="$RUNNER_TEMP/npm-12.2.3.tgz"
+          curl --proto '=https' --tlsv1.2 -fsSL -o "$file" https://registry.npmjs.org/npm/-/npm-12.2.3.tgz
+          echo "a2f98d4517bbe89bdca7513a88e78f43a1fd66be1730eaea81f69e18d86d46f3f75d29762e8fdaf42d4de7f8d194b2ebb2a09e9bfa268067591e96796baca7d5  $file" | sha512sum --strict --check
+          npm install -g --ignore-scripts --no-audit --no-fund "$file"
+          test "$(npm --version)" = "12.2.3"
+      - name: Verify the exact published GitHub release package
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p assets
+          gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json isDraft,isPrerelease |
+            jq -e '(.isDraft or .isPrerelease) | not' >/dev/null
+          gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --pattern "$PACKAGE" --dir assets
+          revision=$(gh api "repos/$GITHUB_REPOSITORY/commits/$TAG" --jq .sha)
+          test "$revision" = "$GITHUB_SHA"
+          gh attestation verify "assets/$PACKAGE" --repo "$GITHUB_REPOSITORY" \
+            --signer-workflow "$GITHUB_REPOSITORY/.github/workflows/release.yml" \
+            --source-ref "$GITHUB_REF" --source-digest "$GITHUB_SHA" --deny-self-hosted-runners
+          tar -xOzf "assets/$PACKAGE" package/package.json |
+            jq -e '.name == "oximut" and .version == "1.0.0" and (.private != true) and (has("scripts") | not)' >/dev/null
+      - name: Stage the verified npm package
+        run: |
+          set -euo pipefail
+          file="./assets/$PACKAGE"
+          integrity="sha512-$(openssl dgst -sha512 -binary "$file" | openssl base64 -A)"
+          errors="$RUNNER_TEMP/npm-view.err"
+          if existing=$(npm view oximut@1.0.0 dist.integrity 2>"$errors"); then
+            test "$existing" = "$integrity" || { echo 'Published npm package differs from release bytes.' >&2; exit 1; }
+            echo 'oximut@1.0.0 is already published with the expected integrity.' >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          grep -qx 'npm error code E404' "$errors" || { cat "$errors" >&2; exit 1; }
+          npm stage publish "$file" --access public --provenance --tag latest | tee -a "$GITHUB_STEP_SUMMARY"
+          echo 'Approve the staged package in npm to make it public.' >> "$GITHUB_STEP_SUMMARY"

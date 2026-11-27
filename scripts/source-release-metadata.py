@@ -70,7 +70,7 @@ def inventory(npm, cargo, commit, archive_sha, timestamp):
     }
 
 
-def generate(repo, revision, workflow_commit, archive):
+def generate(repo, revision, workflow_commit, archive, version="1.0.0-rc.3"):
     for value in (revision, workflow_commit):
         if not re.fullmatch(r"[0-9a-f]{40}", value):
             raise ValueError("candidate and workflow revisions must be full lowercase commit SHAs")
@@ -80,11 +80,11 @@ def generate(repo, revision, workflow_commit, archive):
     builder.git(repo, "merge-base", "--is-ancestor", revision, workflow_commit)
     archive = archive.resolve()
     with tempfile.TemporaryDirectory(prefix="oximut-source-recheck-") as temporary:
-        expected = builder.build(repo, revision, "1.0.0-rc.3", Path(temporary))
+        expected = builder.build(repo, revision, version, Path(temporary))
         digest = builder.sha(archive.read_bytes())
         if archive.name != expected.name or digest != builder.sha(expected.read_bytes()):
             raise ValueError("archive differs from trusted builder output for candidate revision")
-    root = "oximut-1.0.0-rc.3/"
+    root = f"oximut-{version}/"
     with tarfile.open(archive, "r:gz") as tar:
         read = lambda name: tar.extractfile(root + name).read()
         manifest = json.loads(read("SOURCE-DISTRIBUTION/manifest.json"))
@@ -93,7 +93,7 @@ def generate(repo, revision, workflow_commit, archive):
                      digest, manifest["source"]["commitTime"])
     sbom_bytes = builder.json_bytes(sbom)
     evidence = {
-        "formatVersion": 1, "version": "1.0.0-rc.3", "candidateCommit": revision,
+        "formatVersion": 1, "version": version, "candidateCommit": revision,
         "workflowCommit": workflow_commit,
         "builderSha256": manifest["builderSha256"],
         "metadataGeneratorSha256": builder.sha(Path(__file__).read_bytes()),
@@ -115,8 +115,10 @@ if __name__ == "__main__":
     parser.add_argument("--revision", required=True)
     parser.add_argument("--workflow-commit", required=True)
     parser.add_argument("--archive", type=Path, required=True)
+    parser.add_argument("--version", default="1.0.0-rc.3")
     args = parser.parse_args()
     try:
-        print(json.dumps(generate(args.repo, args.revision, args.workflow_commit, args.archive), indent=2))
+        print(json.dumps(generate(args.repo, args.revision, args.workflow_commit, args.archive,
+                                  args.version), indent=2))
     except (ValueError, KeyError, OSError, builder.subprocess.CalledProcessError) as error:
         parser.exit(1, f"source metadata failed: {error}\n")

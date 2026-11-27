@@ -7,7 +7,7 @@ from pathlib import Path
 import re
 
 
-def check(archive, evidence, revision):
+def check(archive, evidence, revision, version='1.0.0-rc.3'):
     if not re.fullmatch(r'[0-9a-f]{40}', revision):
         raise ValueError('full candidate revision required')
     data = json.loads(evidence.read_text())
@@ -16,7 +16,7 @@ def check(archive, evidence, revision):
     if (data.get('gate') != 'R3' or data.get('status') != 'passed'
             or data.get('archiveSha256') != digest
             or data.get('source', {}).get('commit') != revision
-            or data.get('version') != '1.0.0-rc.3'
+            or data.get('version') != version
             or data.get('isolation') != 'bubblewrap-pid-mount-v1'
             or data.get('buildCount') != 1
             or data.get('extractedSourceRemoved') is not True
@@ -34,8 +34,9 @@ if __name__ == '__main__':
     parser.add_argument('--archive', required=True, type=Path)
     parser.add_argument('--evidence', required=True, type=Path)
     parser.add_argument('--revision', required=True)
+    parser.add_argument('--version', default='1.0.0-rc.3')
     args = parser.parse_args()
     try:
-        print(check(args.archive, args.evidence, args.revision))
+        print(check(args.archive, args.evidence, args.revision, args.version))
     except (ValueError, TypeError, AttributeError, OSError) as error:
         parser.exit(1, f'evidence check failed: {error}\n')

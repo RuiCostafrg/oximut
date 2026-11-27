@@ -51,6 +51,18 @@ class SourceMetadata(unittest.TestCase):
             self.generate()
         self.assertFalse(Path(str(self.archive) + ".evidence.json").exists())
 
+    def test_stable_inventory_uses_the_candidate_version(self):
+        for name in ("Cargo.toml", "Cargo.lock", "package.json", "package-lock.json",
+                     "packages/vitest-adapter/package.json"):
+            path = self.fixture.repo / name
+            path.write_text(path.read_text().replace(distribution.VERSION, "1.0.0"))
+        self.fixture.commit()
+        revision = self.fixture.git("rev-parse", "HEAD").strip()
+        archive = self.fixture.build("stable", revision=revision, version="1.0.0")
+        evidence = METADATA.generate(self.fixture.repo, revision, revision, archive, "1.0.0")
+        self.assertEqual(evidence["version"], "1.0.0")
+        self.assertEqual(evidence["archive"]["name"], "oximut-1.0.0-source.tar.gz")
+
     def test_origin_must_be_current_and_candidate_must_be_ancestor(self):
         (self.fixture.repo / "README.md").write_text("later trusted commit")
         self.fixture.commit()

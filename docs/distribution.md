@@ -216,3 +216,77 @@ the `Zygote workers` workflow.
 Neither tarball nor evidence is a signed or attested binary: the attestation
 workflow (`source-candidate.yml`) attests the source archive and its metadata
 only.
+
+## GitHub Action
+
+Use the composite action on `ubuntu-24.04` x86-64 once a stable Oximut release
+with an attested prefix is available. Specify an exact stable `version` such as
+`1.0.0` or `v1.0.0`. The existing release candidates have unattested prefixes.
+Use a full commit SHA for the action ref. For a separate pin on the artifact's
+source and signing workflow, set `release-commit` to the full reviewed release
+tag commit SHA.
+
+Set up Node.js **26.3.1** and a current Python **3.13** patch release (minimum
+**3.13.5**) on `PATH` before calling the action. GitHub's Ubuntu runner includes
+`gh` with artifact attestation support (verified CLI interface: **2.95.0**).
+The action uses the job's GitHub token by default. Use a read-only token with
+access to the release assets and attestations if overriding `token`. The project
+still needs its own test dependencies and a working Vitest configuration.
+
+```yaml
+jobs:
+  mutation:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      attestations: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '26.3.1'
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: '3.13'
+      - run: npm ci
+      - uses: RuiCostafrg/oximut@ACTION_COMMIT_SHA # Replace with the reviewed action commit.
+        id: oximut
+        with:
+          version: '1.0.0'
+      - run: oximut --source 'src/example file.ts' --report mutation-report.json
+```
+
+The action installs under the runner's temporary directory outside the project
+checkout. The successful step exports `version`, `bin-dir`, and `executable`,
+and adds `bin-dir` to `PATH` for subsequent steps. Rust and an Oximut dependency
+install are unnecessary because the archive already includes the native binary,
+launcher, adapters, and runtime dependencies.
+
+To run immediately after installing, replace the last `run` step above with the
+following inputs on the action. `working-directory` defaults to `.`. Each
+nonempty line in `args` is one literal argument, including embedded spaces.
+Oximut's exit status determines the step result.
+
+```yaml
+with:
+  version: '1.0.0'
+  run: 'true'
+  args: |
+    --source
+    src/example file.ts
+    --report
+    mutation-report.json
+```
+
+The release must contain `validated-prefix.tar.gz` and its canonical
+`validated-prefix.tar.gz.sha256` sidecar from the exact R3-validated Ubuntu
+24.04 x86-64 prefix. The action checks the SHA-256 and verifies a GitHub-hosted
+SLSA build provenance attestation registered in `RuiCostafrg/oximut`. It requires
+the signed repository ID `1431290496`, the exact signing identity
+`https://github.com/RuiCostafrg/oximut/.github/workflows/release.yml@refs/tags/vVERSION`,
+the corresponding source tag, and a subject named `validated-prefix.tar.gz`
+with the archive digest. With `release-commit`, it also verifies both signed
+commit digests. Publish the exact prevalidated prefix with that attestation and
+protect the version tag against changes.

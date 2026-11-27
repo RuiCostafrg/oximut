@@ -1,0 +1,170 @@
+name: Stable release
+
+on:
+  push:
+    tags: ['v1.0.0']
+  pull_request:
+    paths:
+      - .github/workflows/release.yml
+      - .github/workflows/npm-publish.yml
+      - package.json
+      - scripts/source-release-metadata.py
+      - scripts/check-source-evidence.py
+      - scripts/release-homebrew.py
+      - scripts/npm-packages.py
+      - scripts/setup-candidate-sandbox.sh
+      - scripts/smoke-install.py
+      - packaging/npm/**
+      - action.yml
+      - action/**
+      - packaging/homebrew/oximut.rb.in
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: stable-release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  qualify:
+    if: github.repository == 'RuiCostafrg/oximut'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    permissions:
+      contents: read
+      actions: read
+    outputs:
+      artifact: ${{ steps.upload.outputs.artifact-id }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - id: revision
+        name: Verify release revision
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          version=$(jq -er .version package.json)
+          [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-rc\.[0-9]+)?$ ]]
+          if [[ "$GITHUB_EVENT_NAME" == push ]]; then
+            test "$GITHUB_REF" = "refs/tags/v1.0.0"
+            test "$version" = "1.0.0"
+            test "$GITHUB_ACTOR" = "$GITHUB_REPOSITORY_OWNER"
+            git merge-base --is-ancestor "$GITHUB_SHA" origin/main
+            for workflow in ci.yml outcome-parity.yml; do
+              gh api --method GET "repos/$GITHUB_REPOSITORY/actions/workflows/$workflow/runs" \
+                -f branch=main -f head_sha="$GITHUB_SHA" -f status=completed -F per_page=20 |
+                jq -e --arg sha "$GITHUB_SHA" 'any(.workflow_runs[]; .head_sha == $sha and .conclusion == "success")' >/dev/null
+            done
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .node-version
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: '3.13'
+      - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # stable
+        with:
+          toolchain: '1.96.0'
+      - name: Set up the native validation host
+        run: |
+          set -euo pipefail
+          test "$(uname -s)-$(uname -m)" = Linux-x86_64
+          bash scripts/setup-candidate-sandbox.sh
+          OXIMUT_REQUIRE_SANDBOX=1 python3 -m unittest discover -s tests -p test_candidate_sandbox.py -v
+          npm ci --include=dev --ignore-scripts --no-audit --no-fund
+      - name: Build and qualify release assets
+        env:
+          VERSION: ${{ steps.revision.outputs.version }}
+        run: |
+          set -euo pipefail
+          assets="$RUNNER_TEMP/release-assets"
+          validation="$RUNNER_TEMP/release-validation"
+          tree=$(git rev-parse 'HEAD^{tree}')
+          python3 scripts/build-source.py --revision "$GITHUB_SHA" --version "$VERSION" --output-dir "$assets"
+          archive="$assets/oximut-$VERSION-source.tar.gz"
+          python3 scripts/source-release-metadata.py --revision "$GITHUB_SHA" \
+            --workflow-commit "$GITHUB_SHA" --version "$VERSION" --archive "$archive"
+          python3 scripts/validate-source.py --archive "$archive" --version "$VERSION" \
+            --revision "$GITHUB_SHA" --tree "$tree" --output-dir "$validation"
+          python3 scripts/check-source-evidence.py --archive "$archive" --version "$VERSION" \
+            --evidence "$validation/evidence.json" --revision "$GITHUB_SHA"
+          prefix='relocated prefix with spaces'
+          binary_sha=$(sha256sum "$validation/$prefix/lib/oximut/oximut" | cut -d ' ' -f 1)
+          jq -e --arg sha "$binary_sha" '.binarySha256 == $sha' "$validation/evidence.json" >/dev/null
+          cp "$validation/evidence.json" "$assets/r3-validation.evidence.json"
+          tar -C "$validation" -czf "$assets/validated-prefix.tar.gz" "$prefix"
+          python3 scripts/release-homebrew.py --prefix "$assets/validated-prefix.tar.gz" \
+            --evidence "$validation/evidence.json" --version "$VERSION" > "$assets/oximut.rb"
+          ruby -c "$assets/oximut.rb"
+          cd "$assets"
+          sha256sum validated-prefix.tar.gz > validated-prefix.tar.gz.sha256
+          sha256sum --strict --check "oximut-$VERSION-source.tar.gz.sha256" validated-prefix.tar.gz.sha256
+          npm_output="$RUNNER_TEMP/release-npm"
+          python3 "$GITHUB_WORKSPACE/scripts/npm-packages.py" --assets "$assets" \
+            --evidence "$validation/evidence.json" --version "$VERSION" \
+            --revision "$GITHUB_SHA" --tree "$tree" --output "$npm_output" --smoke
+          cp "$npm_output/oximut-$VERSION.tgz" "$assets/"
+          sha256sum -- * > SHA256SUMS
+      - id: upload
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: qualified-release-linux-x64
+          path: ${{ runner.temp }}/release-assets/*
+          if-no-files-found: error
+          compression-level: 0
+          overwrite: false
+
+  publish:
+    needs: qualify
+    if: github.event_name == 'push' && github.ref == 'refs/tags/v1.0.0' && github.repository == 'RuiCostafrg/oximut'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    environment: release
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          artifact-ids: ${{ needs.qualify.outputs.artifact }}
+          path: release-assets
+          digest-mismatch: error
+      - name: Verify candidate bytes
+        working-directory: release-assets
+        run: sha256sum --strict --check SHA256SUMS
+      - name: Attest the qualified assets
+        id: attest
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-path: |
+            release-assets/oximut-1.0.0-source.tar.gz
+            release-assets/oximut-1.0.0-source.tar.gz.spdx.json
+            release-assets/oximut-1.0.0-source.tar.gz.evidence.json
+            release-assets/r3-validation.evidence.json
+            release-assets/validated-prefix.tar.gz
+            release-assets/oximut.rb
+            release-assets/oximut-1.0.0.tgz
+            release-assets/SHA256SUMS
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BUNDLE_PATH: ${{ steps.attest.outputs.bundle-path }}
+        run: |
+          set -euo pipefail
+          tag_object=$(gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$GITHUB_REF_NAME" |
+            jq -er 'select(.object.type == "tag") | .object.sha')
+          notes="$RUNNER_TEMP/release-notes.md"
+          gh api "repos/$GITHUB_REPOSITORY/git/tags/$tag_object" |
+            jq -er --arg tag "$GITHUB_REF_NAME" --arg revision "$GITHUB_SHA" \
+              'select(.tag == $tag and .object.type == "commit" and .object.sha == $revision) |
+               .message | select(length > 0)' > "$notes"
+          cp -- "$BUNDLE_PATH" release-assets/provenance.sigstore.json
+          gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --verify-tag \
+            --title "Oximut $GITHUB_REF_NAME" --notes-file "$notes" release-assets/*

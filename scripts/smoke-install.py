@@ -80,7 +80,7 @@ def check_auto_workers(data, label):
     raise RuntimeError(f"{label}: report lacks a workers=N (auto: ...) diagnostic: {data.get('diagnostics')}")
 
 
-def smoke(prefix, *, reports_dir=None, validator=None, isolated=False, require_zygote=False):
+def smoke(prefix, *, launcher=None, reports_dir=None, validator=None, isolated=False, require_zygote=False):
     if (reports_dir is None) != (validator is None):
         raise ValueError("reports-dir and validator must be supplied together")
     if reports_dir is not None:
@@ -89,6 +89,8 @@ def smoke(prefix, *, reports_dir=None, validator=None, isolated=False, require_z
         validator = validator.resolve()
     results = []
     prefix = prefix.resolve()
+    if launcher is None:
+        launcher = prefix / "bin" / "oximut"
     if require_zygote and not (prefix / ADDON).is_file():
         raise RuntimeError(f"zygote addon missing from the installed prefix: {prefix / ADDON}")
     with tempfile.TemporaryDirectory(prefix="oximut-installed-project-") as temporary:
@@ -141,7 +143,7 @@ def smoke(prefix, *, reports_dir=None, validator=None, isolated=False, require_z
                     arguments.append("--force")
                 workers = [] if case == "auto" else ["--workers", "1"]
                 command = [
-                    str(prefix / "bin" / "oximut"), "--root", str(root),
+                    str(launcher), "--root", str(root),
                     "--config", "vitest.config.mjs", "--source", "subject.js",
                     "--execution", execution, *workers, "--report", str(report), *arguments,
                 ]

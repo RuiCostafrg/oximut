@@ -25,6 +25,8 @@ class EvidenceTests(unittest.TestCase):
                         tests=[{'phase': 'installed', 'passed': True}, {'phase': 'relocated', 'passed': True}])
             evidence.write_text(json.dumps(data))
             self.assertEqual(CHECK.check(archive, evidence, 'a' * 40), digest)
+            evidence.write_text(json.dumps(dict(data, version='1.0.0')))
+            self.assertEqual(CHECK.check(archive, evidence, 'a' * 40, '1.0.0'), digest)
             for key, value in [('status', 'failed'), ('archiveSha256', '0' * 64),
                                ('source', {'commit': 'c' * 40}), ('version', '1.0.0'),
                                ('isolation', None), ('isolation', 'same-uid'), ('buildCount', 2), ('extractedSourceRemoved', False),
