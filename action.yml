@@ -1,0 +1,55 @@
+name: Oximut
+description: Install a provenance-verified Oximut release and optionally run mutation testing.
+author: RuiCostafrg
+branding:
+  icon: check-circle
+  color: orange
+inputs:
+  version:
+    description: Published stable version to install, such as 1.0.0. A leading v is accepted.
+    required: true
+  release-commit:
+    description: Optional full Git commit SHA to pin both the release source and the signing workflow.
+    default: ''
+  token:
+    description: GitHub token used to download and verify the release assets.
+    default: ${{ github.token }}
+  run:
+    description: Run Oximut after installing it.
+    default: 'false'
+  args:
+    description: Arguments for Oximut, one per line. Empty lines are ignored and shell syntax is literal.
+    default: ''
+  working-directory:
+    description: Directory from which to run Oximut when run is true.
+    default: '.'
+outputs:
+  version:
+    description: Installed Oximut version without a leading v.
+    value: ${{ steps.install.outputs.version }}
+  bin-dir:
+    description: Directory containing Oximut, added to PATH.
+    value: ${{ steps.install.outputs.bin-dir }}
+  executable:
+    description: Full path to the installed Oximut launcher.
+    value: ${{ steps.install.outputs.executable }}
+runs:
+  using: composite
+  steps:
+    - name: Install verified Oximut release
+      id: install
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.token }}
+        OXIMUT_ACTION_VERSION: ${{ inputs.version }}
+        OXIMUT_ACTION_RELEASE_COMMIT: ${{ inputs.release-commit }}
+        OXIMUT_ACTION_RUN: ${{ inputs.run }}
+      run: python3 -IB "$GITHUB_ACTION_PATH/action/install.py"
+    - name: Run Oximut
+      if: inputs.run == 'true'
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      env:
+        OXIMUT_ACTION_EXECUTABLE: ${{ steps.install.outputs.executable }}
+        OXIMUT_ACTION_ARGS: ${{ inputs.args }}
+      run: bash "$GITHUB_ACTION_PATH/action/run.sh"

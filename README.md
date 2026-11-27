@@ -56,6 +56,7 @@ are for matched tool comparisons and scoped analysis, not performance-target gam
 - [M5 budgets](docs/m5.md): worker limits, memory units, admission, and enforcement limits.
 - [M6 decision](docs/m6.md): measured scope, release gates, and remaining work.
 - [Compatibility](docs/compatibility.md), [report schema](docs/report-schema.md), and [source installation](docs/install.md).
+- [GitHub Action](docs/distribution.md#github-action) for installing a verified release on Ubuntu 24.04 x86-64.
 - [Zygote workers](docs/zygote.md): Linux fast path, precollect and rolling lanes, on by default when their prerequisites hold (`--no-zygote`, `--no-zygote-precollect`, `--no-rolling-lanes` opt out).
 - Concurrency: `--workers` defaults to `auto`, StrykerJS's rule on the CPUs the process may use ([M5](docs/m5.md#worker-count)); `--workers N` overrides it and `--workers 1` runs one job at a time.
 - [Architecture](docs/architecture.md): ownership, execution protocol, and correctness rules.
